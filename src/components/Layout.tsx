@@ -93,14 +93,14 @@ export default function Layout({ children }: LayoutProps) {
               </div>
               <div>
                 <h2 className="font-bold text-lg text-white">Pilar BOT</h2>
-                <p className="text-xs text-slate-400">Atendimento IA</p>
+                <p className="text-xs text-white/70">Atendimento IA</p>
               </div>
             </div>
           </div>
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="text-slate-400">Menu Principal</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-white/70">Menu Principal</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (

@@ -34,8 +34,8 @@ export default function Campanhas() {
       <div className="p-8 space-y-8 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Campanhas</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold mb-2 text-white">Campanhas</h1>
+            <p className="text-white/70">
               Gerencie suas campanhas de mensagens em massa
             </p>
           </div>
@@ -46,58 +46,58 @@ export default function Campanhas() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-white">
                 Total de Campanhas
               </CardTitle>
-              <Send className="h-4 w-4 text-muted-foreground" />
+              <Send className="h-4 w-4 text-white/70" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{campaigns.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <div className="text-2xl font-bold text-white">{campaigns.length}</div>
+              <p className="text-xs text-white/70 mt-1">
                 Este mês
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-white">
                 Destinatários Alcançados
               </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-white/70" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-white">
                 {campaigns.reduce((acc, c) => acc + c.sent, 0)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-white/70 mt-1">
                 +18% vs mês anterior
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-white">
                 Taxa de Engajamento
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-white/70" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">87%</div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <div className="text-2xl font-bold text-white">87%</div>
+              <p className="text-xs text-white/70 mt-1">
                 +5% esta semana
               </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle>Todas as Campanhas</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Todas as Campanhas</CardTitle>
+            <CardDescription className="text-white/70">
               Acompanhe o status e desempenho de suas campanhas
             </CardDescription>
           </CardHeader>
@@ -106,32 +106,32 @@ export default function Campanhas() {
               {campaigns.map((campaign) => (
                 <div
                   key={campaign.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 border border-slate-700 rounded-lg hover:bg-slate-700/50 transition-colors"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-medium">{campaign.name}</h3>
+                      <h3 className="font-medium text-white">{campaign.name}</h3>
                       <Badge variant={getStatusColor(campaign.status)}>
                         {getStatusLabel(campaign.status)}
                       </Badge>
                     </div>
-                    <div className="flex gap-6 text-sm text-muted-foreground">
+                    <div className="flex gap-6 text-sm text-white/70">
                       <span>
-                        Destinatários: <strong>{campaign.recipients}</strong>
+                        Destinatários: <strong className="text-white">{campaign.recipients}</strong>
                       </span>
                       <span>
-                        Enviadas: <strong>{campaign.sent}</strong>
+                        Enviadas: <strong className="text-white">{campaign.sent}</strong>
                       </span>
                       {campaign.sent > 0 && (
                         <span>
-                          Progresso: <strong>
+                          Progresso: <strong className="text-white">
                             {Math.round((campaign.sent / campaign.recipients) * 100)}%
                           </strong>
                         </span>
                       )}
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="bg-slate-900 border-slate-700 text-white hover:bg-slate-700">
                     Ver Detalhes
                   </Button>
                 </div>
