@@ -337,6 +337,8 @@ function BotBuilderContent() {
               selectedNode={nodes.find(n => n.id === selectedNode.id) || selectedNode}
               onUpdateNode={handleUpdateNode}
               onDeleteNode={handleDeleteNode}
+              nodes={nodes}
+              edges={edges}
             />
           )}
         </div>

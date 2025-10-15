@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Node } from "@xyflow/react";
+import { Node, Edge } from "@xyflow/react";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,17 +13,22 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { VariableExplorer } from "./VariableExplorer";
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
   onUpdateNode: (nodeId: string, data: Partial<FlowNodeData>) => void;
   onDeleteNode: (nodeId: string) => void;
+  nodes: Node[];
+  edges: Edge[];
 }
 
 export const PropertiesPanel = ({ 
   selectedNode, 
   onUpdateNode,
-  onDeleteNode 
+  onDeleteNode,
+  nodes,
+  edges
 }: PropertiesPanelProps) => {
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -707,6 +712,14 @@ export const PropertiesPanel = ({
           <Separator />
 
           {renderConfigFields()}
+
+          <Separator className="my-4" />
+
+          <VariableExplorer 
+            selectedNode={selectedNode}
+            nodes={nodes}
+            edges={edges}
+          />
         </div>
       </ScrollArea>
 
