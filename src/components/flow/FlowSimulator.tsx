@@ -16,6 +16,8 @@ interface Message {
   text: string;
   timestamp: Date;
   nodeId?: string;
+  mediaUrl?: string;
+  mediaType?: "image" | "video" | "audio" | "file";
 }
 
 interface FlowSimulatorProps {
@@ -156,20 +158,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           console.log("No media URL, adding fallback message");
           addBotMessage("📎 [Mídia não configurada]", node.id);
         } else {
-          let mediaIcon = "📎";
-          if (mediaType === "image") mediaIcon = "🖼️";
-          else if (mediaType === "video") mediaIcon = "🎥";
-          else if (mediaType === "audio") mediaIcon = "🎵";
-          else if (mediaType === "file") mediaIcon = "📄";
-          
-          console.log("Adding media message with icon:", mediaIcon);
-          addBotMessage(`${mediaIcon} [${mediaType.toUpperCase()}]`, node.id);
-          if (caption) {
-            setTimeout(() => {
-              console.log("Adding caption:", caption);
-              addBotMessage(caption, node.id);
-            }, 500);
-          }
+          console.log("Adding media message with URL:", mediaUrl);
+          addBotMediaMessage(mediaUrl, mediaType as any, caption, node.id);
         }
         
         setTimeout(() => {
@@ -849,6 +839,23 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     });
   };
 
+  const addBotMediaMessage = (mediaUrl: string, mediaType: "image" | "video" | "audio" | "file", caption: string, nodeId?: string) => {
+    console.log("Adding bot media message:", { mediaUrl, mediaType, caption });
+    const msg: Message = {
+      id: Date.now().toString(),
+      sender: "bot",
+      text: caption || "",
+      timestamp: new Date(),
+      nodeId,
+      mediaUrl,
+      mediaType,
+    };
+    setMessages((prev) => {
+      console.log("Media messages before:", prev.length, "after:", prev.length + 1);
+      return [...prev, msg];
+    });
+  };
+
   const addSystemMessage = (text: string) => {
     const msg: Message = {
       id: Date.now().toString(),
@@ -920,17 +927,59 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
                   </div>
                 ) : (
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                    className={`max-w-[80%] rounded-2xl overflow-hidden ${
                       msg.sender === "user"
                         ? "bg-gradient-primary text-primary-foreground"
                         : "bg-muted"
                     }`}
                   >
-                    <div className="flex items-start gap-2">
+                    {msg.mediaUrl && (
+                      <div className="w-full">
+                        {msg.mediaType === "image" && (
+                          <img 
+                            src={msg.mediaUrl} 
+                            alt="Media" 
+                            className="w-full max-w-xs object-cover"
+                            onError={(e) => {
+                              console.error("Image failed to load:", msg.mediaUrl);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        {msg.mediaType === "video" && (
+                          <video 
+                            src={msg.mediaUrl} 
+                            controls 
+                            className="w-full max-w-xs"
+                          />
+                        )}
+                        {msg.mediaType === "audio" && (
+                          <audio 
+                            src={msg.mediaUrl} 
+                            controls 
+                            className="w-full"
+                          />
+                        )}
+                        {msg.mediaType === "file" && (
+                          <div className="p-4 flex items-center gap-2">
+                            <span>📄</span>
+                            <a 
+                              href={msg.mediaUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm underline"
+                            >
+                              Download arquivo
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className={`flex items-start gap-2 ${msg.mediaUrl ? 'px-4 py-2' : 'px-4 py-2'}`}>
                       {msg.sender === "bot" && <Bot className="w-4 h-4 mt-0.5" />}
                       {msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
-                      <div>
-                        <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                      <div className="flex-1">
+                        {msg.text && <p className="text-sm whitespace-pre-wrap">{msg.text}</p>}
                         <span className="text-xs opacity-70 mt-1 block">
                           {msg.timestamp.toLocaleTimeString()}
                         </span>
