@@ -130,106 +130,84 @@ export const FlowNode = memo((props: any) => {
         </div>
         <p className="text-xs text-muted-foreground line-clamp-2">{data.label || blockDef.description}</p>
         
-        {/* Mostrar badges para saídas dinâmicas */}
+        {/* Mostrar opções com handles à direita */}
         {dynamicHandles && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {dynamicHandles.conditions?.map((cond: any, idx: number) => (
-              <Badge key={cond.id} variant="outline" className="text-xs">
-                {cond.label}
-              </Badge>
+          <div className="mt-3 space-y-1">
+            {/* Condições */}
+            {dynamicHandles.conditions?.map((cond: any, index: number) => (
+              <div key={cond.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
+                <span className="text-xs font-medium truncate">{cond.label}</span>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={cond.id}
+                  className="!bg-green-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  style={{ position: 'relative' }}
+                />
+              </div>
             ))}
+            
+            {/* Fallback */}
+            {dynamicHandles.fallback && (
+              <div className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
+                <span className="text-xs font-medium truncate">{dynamicHandles.fallback.label}</span>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={dynamicHandles.fallback.id}
+                  className="!bg-pink-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  style={{ position: 'relative' }}
+                />
+              </div>
+            )}
+
+            {/* Keywords */}
             {dynamicHandles.keywords?.map((kw: any) => (
-              <Badge key={kw.id} variant="outline" className="text-xs">
-                {kw.label}
-              </Badge>
+              <div key={kw.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
+                <span className="text-xs font-medium truncate">{kw.label}</span>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={kw.id}
+                  className="!bg-blue-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  style={{ position: 'relative' }}
+                />
+              </div>
             ))}
+
+            {/* Buttons */}
             {dynamicHandles.buttons?.map((btn: any) => (
-              <Badge key={btn.id} variant="outline" className="text-xs">
-                {btn.label}
-              </Badge>
+              <div key={btn.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
+                <span className="text-xs font-medium truncate">{btn.label}</span>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={btn.id}
+                  className="!bg-purple-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  style={{ position: 'relative' }}
+                />
+              </div>
             ))}
+
+            {/* Paths */}
             {dynamicHandles.paths?.map((path: any) => (
-              <Badge key={path.id} variant="outline" className="text-xs">
-                {path.label}
-              </Badge>
+              <div key={path.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
+                <span className="text-xs font-medium truncate">{path.label}</span>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={path.id}
+                  className={`!${path.color} !w-3 !h-3 !relative !transform-none !top-auto !right-0`}
+                  style={{ position: 'relative' }}
+                />
+              </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Handles de saída dinâmicos */}
-      {dynamicHandles ? (
-        <div className="relative pb-4">
-          {/* Condições */}
-          {dynamicHandles.conditions?.map((cond: any, index: number) => (
-            <Handle
-              key={cond.id}
-              type="source"
-              position={Position.Bottom}
-              id={cond.id}
-              className={`!${cond.color} !w-3 !h-3`}
-              style={{
-                left: `${((index + 1) * 100) / (dynamicHandles.conditions.length + (dynamicHandles.fallback ? 2 : 1))}%`
-              }}
-            />
-          ))}
-          
-          {/* Fallback */}
-          {dynamicHandles.fallback && (
-            <Handle
-              type="source"
-              position={Position.Bottom}
-              id={dynamicHandles.fallback.id}
-              className={`!${dynamicHandles.fallback.color} !w-3 !h-3`}
-              style={{
-                left: `${((dynamicHandles.conditions?.length || 0) + 1) * 100 / (dynamicHandles.conditions?.length + 2 || 2)}%`
-              }}
-            />
-          )}
-
-          {/* Keywords */}
-          {dynamicHandles.keywords?.map((kw: any, index: number) => (
-            <Handle
-              key={kw.id}
-              type="source"
-              position={Position.Bottom}
-              id={kw.id}
-              className={`!${kw.color} !w-3 !h-3`}
-              style={{
-                left: `${((index + 1) * 100) / (dynamicHandles.keywords.length + 1)}%`
-              }}
-            />
-          ))}
-
-          {/* Buttons */}
-          {dynamicHandles.buttons?.map((btn: any, index: number) => (
-            <Handle
-              key={btn.id}
-              type="source"
-              position={Position.Bottom}
-              id={btn.id}
-              className={`!${btn.color} !w-3 !h-3`}
-              style={{
-                left: `${((index + 1) * 100) / (dynamicHandles.buttons.length + 1)}%`
-              }}
-            />
-          ))}
-
-          {/* Paths */}
-          {dynamicHandles.paths?.map((path: any, index: number) => (
-            <Handle
-              key={path.id}
-              type="source"
-              position={Position.Bottom}
-              id={path.id}
-              className={`!${path.color} !w-3 !h-3`}
-              style={{
-                left: `${((index + 1) * 100) / (dynamicHandles.paths.length + 1)}%`
-              }}
-            />
-          ))}
-        </div>
-      ) : (
+      {/* Handle padrão para blocos sem saídas dinâmicas */}
+      {!dynamicHandles && (
         <Handle type="source" position={Position.Bottom} className="!bg-primary" />
       )}
     </Card>
