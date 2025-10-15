@@ -48,3 +48,7 @@ export {
   DynamicDataConfig,
   AIAgentConfig,
 } from './LowCodeBlocks';
+
+// Additional Blocks
+export { ABTestConfig } from './ABTestConfig';
+export { BotJumpConfig } from './BotJumpConfig';
