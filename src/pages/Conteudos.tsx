@@ -35,8 +35,8 @@ export default function Conteudos() {
       <div className="p-8 space-y-8 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Conteúdos</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold mb-2 text-white">Conteúdos</h1>
+            <p className="text-white/70">
               Base de conhecimento e materiais de apoio
             </p>
           </div>
@@ -48,8 +48,8 @@ export default function Conteudos() {
 
         <div className="flex gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar conteúdos..." className="pl-10" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70" />
+            <Input placeholder="Buscar conteúdos..." className="pl-10 bg-slate-800 border-slate-700 text-white" />
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export default function Conteudos() {
           {contents.map((content) => {
             const TypeIcon = getTypeIcon(content.tipo);
             return (
-              <Card key={content.id} className="hover:shadow-md transition-shadow">
+              <Card key={content.id} className="hover:shadow-md transition-shadow bg-slate-800 border-slate-700">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="p-3 rounded-lg bg-gradient-primary/10 text-primary">
@@ -67,8 +67,8 @@ export default function Conteudos() {
                       {getTypeLabel(content.tipo)}
                     </Badge>
                   </div>
-                  <CardTitle className="text-lg mt-4">{content.titulo}</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-lg mt-4 text-white">{content.titulo}</CardTitle>
+                  <CardDescription className="text-white/70">
                     {content.url ? (
                       <a href={content.url} className="text-primary hover:underline text-xs">
                         Ver documento
@@ -81,12 +81,12 @@ export default function Conteudos() {
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {content.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
+                      <Badge key={tag} variant="outline" className="text-xs border-slate-600 text-white">
                         {tag}
                       </Badge>
                     ))}
                   </div>
-                  <Button variant="outline" className="w-full mt-4" size="sm">
+                  <Button variant="outline" className="w-full mt-4 bg-slate-900 border-slate-700 text-white hover:bg-slate-700" size="sm">
                     Editar
                   </Button>
                 </CardContent>

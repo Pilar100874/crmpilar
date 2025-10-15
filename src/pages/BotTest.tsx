@@ -169,30 +169,30 @@ export default function BotTest() {
   return (
     <Layout>
       <div className="h-full flex flex-col">
-        <div className="p-4 border-b bg-card flex items-center justify-between">
+        <div className="p-4 border-b border-slate-800 bg-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold">Teste do Bot</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-lg font-bold text-white">Teste do Bot</h2>
+            <p className="text-sm text-white/70">
               Simule conversas e teste seu fluxo
             </p>
           </div>
           <div className="flex gap-2 items-center">
             <Select value={selectedBotId} onValueChange={handleBotChange}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[200px] bg-slate-900 border-slate-700 text-white">
                 <SelectValue placeholder="Selecione um bot" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-900 border-slate-700">
                 {savedBots.map((bot) => (
-                  <SelectItem key={bot.id} value={bot.id}>
+                  <SelectItem key={bot.id} value={bot.id} className="text-white">
                     {bot.name} {bot.active && "⭐"}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => selectedBotId && loadBot(selectedBotId)}>
+            <Button variant="outline" size="sm" onClick={() => selectedBotId && loadBot(selectedBotId)} className="bg-slate-900 border-slate-700 text-white hover:bg-slate-700">
               Recarregar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleClear}>
+            <Button variant="outline" size="sm" onClick={handleClear} className="bg-slate-900 border-slate-700 text-white hover:bg-slate-700">
               <Trash2 className="w-4 h-4 mr-2" />
               Limpar
             </Button>
@@ -200,9 +200,9 @@ export default function BotTest() {
         </div>
 
         <div className="flex-1 flex items-center justify-center p-6">
-          <Card className="w-full max-w-3xl h-[600px] flex flex-col">
+          <Card className="w-full max-w-3xl h-[600px] flex flex-col bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Bot className="w-5 h-5" />
                 Chat de Teste
               </CardTitle>
@@ -227,8 +227,8 @@ export default function BotTest() {
                           msg.role === "user"
                             ? "bg-primary text-primary-foreground"
                             : msg.role === "system"
-                            ? "bg-muted text-muted-foreground italic"
-                            : "bg-muted"
+                            ? "bg-slate-700 text-white/70 italic"
+                            : "bg-slate-700 text-white"
                         }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -248,11 +248,11 @@ export default function BotTest() {
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <Bot className="w-4 h-4 text-primary animate-pulse" />
                       </div>
-                      <div className="bg-muted rounded-lg px-4 py-2">
+                      <div className="bg-slate-700 rounded-lg px-4 py-2">
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-100" />
-                          <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-200" />
+                          <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce" />
+                          <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce delay-100" />
+                          <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce delay-200" />
                         </div>
                       </div>
                     </div>
@@ -260,7 +260,7 @@ export default function BotTest() {
                 </div>
               </ScrollArea>
 
-              <div className="border-t p-4">
+              <div className="border-t border-slate-700 p-4">
                 <div className="flex gap-2">
                   <Input
                     value={input}
@@ -268,7 +268,7 @@ export default function BotTest() {
                     onKeyPress={handleKeyPress}
                     placeholder="Digite sua mensagem..."
                     disabled={isLoading || !flowData}
-                    className="flex-1"
+                    className="flex-1 bg-slate-900 border-slate-700 text-white"
                   />
                   <Button
                     onClick={handleSend}
@@ -279,7 +279,7 @@ export default function BotTest() {
                   </Button>
                 </div>
                 {!flowData && (
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-sm text-white/70 mt-2">
                     ⚠️ Nenhum fluxo carregado. Crie e salve um fluxo no Bot Builder.
                   </p>
                 )}

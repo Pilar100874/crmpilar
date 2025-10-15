@@ -66,57 +66,60 @@ export default function WhatsAppConfig() {
     <Layout>
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Configuração WhatsApp Business API</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold mb-2 text-white">Configuração WhatsApp Business API</h1>
+          <p className="text-white/70">
             Configure sua integração com a API Oficial do WhatsApp Business
           </p>
         </div>
 
         <div className="grid gap-6">
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle>WhatsApp Business API</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">WhatsApp Business API</CardTitle>
+              <CardDescription className="text-white/70">
                 Configure suas credenciais da API Oficial do WhatsApp Business
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="whatsapp-token">WhatsApp Business Token</Label>
+                <Label htmlFor="whatsapp-token" className="text-white">WhatsApp Business Token</Label>
                 <Input
                   id="whatsapp-token"
                   type="password"
                   placeholder="EAAxxxxxxxxxx..."
                   value={whatsappToken}
                   onChange={(e) => setWhatsappToken(e.target.value)}
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/70">
                   Token de acesso permanente do WhatsApp Business
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone-number-id">Phone Number ID</Label>
+                <Label htmlFor="phone-number-id" className="text-white">Phone Number ID</Label>
                 <Input
                   id="phone-number-id"
                   placeholder="123456789012345"
                   value={phoneNumberId}
                   onChange={(e) => setPhoneNumberId(e.target.value)}
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/70">
                   ID do número de telefone do WhatsApp Business
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="business-account-id">Business Account ID (opcional)</Label>
+                <Label htmlFor="business-account-id" className="text-white">Business Account ID (opcional)</Label>
                 <Input
                   id="business-account-id"
                   placeholder="123456789012345"
                   value={businessAccountId}
                   onChange={(e) => setBusinessAccountId(e.target.value)}
+                  className="bg-slate-900 border-slate-700 text-white"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/70">
                   ID da conta de negócios do Meta
                 </p>
               </div>
@@ -128,70 +131,71 @@ export default function WhatsAppConfig() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle>Webhook URL</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Webhook URL</CardTitle>
+              <CardDescription className="text-white/70">
                 Configure este URL no WAHA para receber mensagens
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>URL do Webhook</Label>
+                <Label className="text-white">URL do Webhook</Label>
                 <div className="flex gap-2">
-                  <Input value={webhookUrl} readOnly />
+                  <Input value={webhookUrl} readOnly className="bg-slate-900 border-slate-700 text-white" />
                   <Button
                     variant="outline"
                     onClick={() => {
                       navigator.clipboard.writeText(webhookUrl);
                       toast.success("URL copiada!");
                     }}
+                    className="bg-slate-900 border-slate-700 text-white hover:bg-slate-700"
                   >
                     Copiar
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/70">
                   Use esta URL como webhook no WAHA para receber mensagens
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle>Como Configurar</CardTitle>
+              <CardTitle className="text-white">Como Configurar</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3 text-sm">
                 <div>
-                  <h3 className="font-semibold mb-1">1. Crie uma Conta Meta Business</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="font-semibold mb-1 text-white">1. Crie uma Conta Meta Business</h3>
+                  <p className="text-white/70">
                     Acesse business.facebook.com e crie uma conta de negócios
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-1">2. Configure WhatsApp Business</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="font-semibold mb-1 text-white">2. Configure WhatsApp Business</h3>
+                  <p className="text-white/70">
                     No Meta Business, adicione WhatsApp Business e configure seu número
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-1">3. Gere Token de Acesso</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="font-semibold mb-1 text-white">3. Gere Token de Acesso</h3>
+                  <p className="text-white/70">
                     Em Configurações do App, gere um token de acesso permanente
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-1">4. Configure Webhook</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="font-semibold mb-1 text-white">4. Configure Webhook</h3>
+                  <p className="text-white/70">
                     Use a URL de webhook acima nas configurações do WhatsApp Business
                   </p>
                 </div>
 
-                <Button variant="outline" className="w-full" asChild>
+                <Button variant="outline" className="w-full bg-slate-900 border-slate-700 text-white hover:bg-slate-700" asChild>
                   <a
                     href="https://developers.facebook.com/docs/whatsapp/cloud-api"
                     target="_blank"
