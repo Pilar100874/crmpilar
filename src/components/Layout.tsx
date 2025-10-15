@@ -86,7 +86,7 @@ export default function Layout({ children }: LayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-slate-900">
         <Sidebar className="border-r border-slate-800 bg-black">
-          <div className="p-6 border-b border-slate-800">
+          <div className="p-6 border-b border-slate-800 bg-black">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600">
                 <MessageSquare className="w-5 h-5 text-white" />
@@ -98,9 +98,9 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          <SidebarContent>
+          <SidebarContent className="bg-black">
             <SidebarGroup>
-              <SidebarGroupLabel className="text-white/70">Menu Principal</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-white/70 bg-black">Menu Principal</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
@@ -125,10 +125,10 @@ export default function Layout({ children }: LayoutProps) {
             </SidebarGroup>
           </SidebarContent>
 
-          <div className="p-4 border-t border-slate-800 mt-auto">
+          <div className="p-4 border-t border-slate-800 mt-auto bg-black">
             <Button
               variant="outline"
-              className="w-full justify-start bg-slate-900 border-slate-700 text-white hover:bg-slate-800 hover:text-white"
+              className="w-full justify-start bg-white border-white text-black hover:bg-slate-200 hover:text-black"
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-2" />
