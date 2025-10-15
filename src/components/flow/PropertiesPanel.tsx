@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { VariableExplorer } from "./VariableExplorer";
 import { VariableInput, VariableTextarea } from "./VariableInput";
 import { VariablePickerDialog } from "./VariablePickerDialog";
+import * as BlockConfigs from "./block-configs";
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -160,7 +161,90 @@ export const PropertiesPanel = ({
 
   const renderConfigFields = () => {
     const nodeData = selectedNode.data as any;
+    const configProps = {
+      config,
+      handleConfigChange,
+      inputRefs,
+      openVariablePicker,
+    };
+
     switch (nodeData.type) {
+      // Message Blocks
+      case "send_message":
+        return <BlockConfigs.SendMessageConfig {...configProps} />;
+      case "media":
+        return <BlockConfigs.MediaConfig {...configProps} />;
+      case "goodbye":
+        return <BlockConfigs.GoodbyeConfig {...configProps} />;
+
+      // Question Blocks
+      case "ask_name":
+        return <BlockConfigs.AskNameConfig {...configProps} />;
+      case "ask_question":
+        return <BlockConfigs.AskQuestionConfig {...configProps} />;
+      case "ask_email":
+        return <BlockConfigs.AskEmailConfig {...configProps} />;
+      case "ask_number":
+        return <BlockConfigs.AskNumberConfig {...configProps} />;
+      case "ask_phone":
+        return <BlockConfigs.AskPhoneConfig {...configProps} />;
+      case "ask_date":
+        return <BlockConfigs.AskDateConfig {...configProps} />;
+      case "ask_file":
+        return <BlockConfigs.AskFileConfig {...configProps} />;
+      case "ask_address":
+        return <BlockConfigs.AskAddressConfig {...configProps} />;
+      case "ask_url":
+        return <BlockConfigs.AskUrlConfig {...configProps} />;
+
+      // Button Blocks
+      case "reply_buttons":
+        return <BlockConfigs.ReplyButtonsConfig {...configProps} />;
+      case "list_buttons":
+        return <BlockConfigs.ListButtonsConfig {...configProps} />;
+
+      // WhatsApp Blocks
+      case "keyword_options":
+        return <BlockConfigs.KeywordOptionsConfig {...configProps} />;
+      case "message_template":
+        return <BlockConfigs.MessageTemplateConfig {...configProps} />;
+      case "opt_in_out":
+        return <BlockConfigs.OptInOutConfig {...configProps} />;
+      case "opt_in_check":
+        return <BlockConfigs.OptInCheckConfig {...configProps} />;
+      case "audience":
+        return <BlockConfigs.AudienceConfig {...configProps} />;
+
+      // Logic Blocks
+      case "condition":
+        return <BlockConfigs.ConditionConfig {...configProps} />;
+      case "set_field":
+        return <BlockConfigs.SetFieldConfig {...configProps} />;
+      case "keyword_jump":
+        return <BlockConfigs.KeywordJumpConfig {...configProps} />;
+      case "global_keywords":
+        return <BlockConfigs.GlobalKeywordsConfig {...configProps} />;
+      case "formulas":
+        return <BlockConfigs.FormulasConfig {...configProps} />;
+      case "jump_to":
+        return <BlockConfigs.JumpToConfig {...configProps} />;
+      case "lead_scoring":
+        return <BlockConfigs.LeadScoringConfig {...configProps} />;
+      case "goal":
+        return <BlockConfigs.GoalConfig {...configProps} />;
+
+      // Low Code Blocks
+      case "webhook":
+        return <BlockConfigs.WebhookConfig {...configProps} />;
+      case "n8n":
+        return <BlockConfigs.N8nConfig {...configProps} />;
+      case "trigger_automation":
+        return <BlockConfigs.TriggerAutomationConfig {...configProps} />;
+      case "dynamic_data":
+        return <BlockConfigs.DynamicDataConfig {...configProps} />;
+      case "ai_agent":
+        return <BlockConfigs.AIAgentConfig {...configProps} />;
+
       case "start":
         return (
           <div className="space-y-4">

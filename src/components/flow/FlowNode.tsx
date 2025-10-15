@@ -56,6 +56,50 @@ export const FlowNode = memo((props: any) => {
       };
     }
 
+    // List buttons - uma saída para cada item
+    if (data.type === "list_buttons" && config.sections) {
+      const sections = Array.isArray(config.sections) ? config.sections : [];
+      const allItems: any[] = [];
+      sections.forEach((section: any, sectionIdx: number) => {
+        if (section.items && Array.isArray(section.items)) {
+          section.items.forEach((item: any, itemIdx: number) => {
+            allItems.push({
+              id: `section_${sectionIdx}_item_${itemIdx}`,
+              label: item.title || `Item ${allItems.length + 1}`,
+              color: "bg-indigo-500"
+            });
+          });
+        }
+      });
+      if (allItems.length > 0) {
+        return { buttons: allItems };
+      }
+    }
+
+    // Keyword options (carousel) - uma saída para cada card
+    if (data.type === "keyword_options" && config.cards) {
+      const cards = Array.isArray(config.cards) ? config.cards : [];
+      return {
+        buttons: cards.map((card: any, index: number) => ({
+          id: `card_${index}`,
+          label: card.keyword || `Card ${index + 1}`,
+          color: "bg-cyan-500"
+        }))
+      };
+    }
+
+    // Perguntas de múltipla escolha - uma saída para cada opção
+    if (data.type === "ask_question" && config.questionType === "multiple" && config.options) {
+      const options = config.options.split('\n').filter((opt: string) => opt.trim());
+      return {
+        buttons: options.map((opt: string, index: number) => ({
+          id: `option_${index}`,
+          label: opt.trim(),
+          color: "bg-yellow-500"
+        }))
+      };
+    }
+
     // Opt-in check - saídas para subscribed/unsubscribed
     if (data.type === "opt_in_check") {
       return {

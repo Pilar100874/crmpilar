@@ -86,6 +86,11 @@ export class FlowEngine {
       case "ask_url":
         await this.handleQuestion(node);
         break;
+      case "reply_buttons":
+      case "list_buttons":
+      case "keyword_options":
+        await this.handleButtonsWithRouting(node);
+        break;
       case "condition":
         await this.handleCondition(node);
         break;
@@ -94,6 +99,12 @@ export class FlowEngine {
         break;
       case "set_field":
         await this.handleVariable(node);
+        break;
+      case "keyword_jump":
+        await this.handleKeywordJump(node);
+        break;
+      case "opt_in_check":
+        await this.handleOptInCheck(node);
         break;
       case "trigger_automation":
       case "dynamic_data":
@@ -164,7 +175,57 @@ export class FlowEngine {
     const conditions = config.conditions || [];
 
     for (const condition of conditions) {
-      if (this.evaluateCondition(condition.expression)) {
+      // Build condition expression from operator
+      let isConditionMet = false;
+      
+      if (condition.variable && condition.operator) {
+        const variableValue = this.context.vars[condition.variable];
+        const compareValue = this.interpolate(condition.value || "");
+        
+        switch (condition.operator) {
+          case "equals":
+            isConditionMet = variableValue == compareValue;
+            break;
+          case "not_equals":
+            isConditionMet = variableValue != compareValue;
+            break;
+          case "contains":
+            isConditionMet = String(variableValue).includes(compareValue);
+            break;
+          case "not_contains":
+            isConditionMet = !String(variableValue).includes(compareValue);
+            break;
+          case "greater":
+            isConditionMet = Number(variableValue) > Number(compareValue);
+            break;
+          case "less":
+            isConditionMet = Number(variableValue) < Number(compareValue);
+            break;
+          case "greater_equal":
+            isConditionMet = Number(variableValue) >= Number(compareValue);
+            break;
+          case "less_equal":
+            isConditionMet = Number(variableValue) <= Number(compareValue);
+            break;
+          case "is_set":
+            isConditionMet = variableValue !== undefined && variableValue !== null && variableValue !== "";
+            break;
+          case "is_not_set":
+            isConditionMet = variableValue === undefined || variableValue === null || variableValue === "";
+            break;
+          case "starts_with":
+            isConditionMet = String(variableValue).startsWith(compareValue);
+            break;
+          case "ends_with":
+            isConditionMet = String(variableValue).endsWith(compareValue);
+            break;
+        }
+      } else if (condition.expression) {
+        // Legacy: support old expression format
+        isConditionMet = this.evaluateCondition(condition.expression);
+      }
+
+      if (isConditionMet) {
         const edge = this.edges.find(
           (e) => e.source === node.id && e.sourceHandle === condition.id
         );
@@ -179,11 +240,11 @@ export class FlowEngine {
     }
 
     // Fallback: execute default path
-    const defaultEdge = this.edges.find(
-      (e) => e.source === node.id && !e.sourceHandle
+    const fallbackEdge = this.edges.find(
+      (e) => e.source === node.id && e.sourceHandle === "fallback"
     );
-    if (defaultEdge) {
-      const nextNode = this.nodes.find((n) => n.id === defaultEdge.target);
+    if (fallbackEdge) {
+      const nextNode = this.nodes.find((n) => n.id === fallbackEdge.target);
       if (nextNode) {
         await this.executeNode(nextNode);
       }
@@ -254,6 +315,143 @@ export class FlowEngine {
     // Placeholder for external automation/data calls
     console.log("External call:", data.type, config);
 
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
+  }
+
+  private async handleButtonsWithRouting(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+
+    // Apresentar botões ao usuário
+    await this.onResponse({
+      type: "buttons",
+      content: this.interpolate(config.text || config.content || ""),
+      buttons: config.buttons,
+      sections: config.sections,
+      cards: config.cards,
+      nodeType: data.type,
+    });
+
+    // Aguardar resposta do usuário e rotear baseado na escolha
+    // O userMessage deve conter o índice ou ID do botão selecionado
+    const userChoice = this.context.userMessage;
+    
+    // Salvar resposta em variável se configurado
+    if (config.variable) {
+      this.context.vars[config.variable] = userChoice;
+    }
+
+    // Encontrar a edge correspondente à escolha do usuário
+    let targetEdge = null;
+    
+    if (data.type === "reply_buttons" && config.buttons) {
+      const buttons = Array.isArray(config.buttons) ? config.buttons : [];
+      const buttonIndex = buttons.findIndex((btn: any) => 
+        btn.value === userChoice || btn.text === userChoice
+      );
+      if (buttonIndex >= 0) {
+        targetEdge = this.edges.find(
+          (e) => e.source === node.id && e.sourceHandle === `button_${buttonIndex}`
+        );
+      }
+    } else if (data.type === "list_buttons" && config.sections) {
+      // Procurar nas seções e itens
+      const sections = Array.isArray(config.sections) ? config.sections : [];
+      let itemFound = false;
+      sections.forEach((section: any, sectionIdx: number) => {
+        if (section.items && !itemFound) {
+          section.items.forEach((item: any, itemIdx: number) => {
+            if (item.id === userChoice || item.title === userChoice) {
+              targetEdge = this.edges.find(
+                (e) => e.source === node.id && e.sourceHandle === `section_${sectionIdx}_item_${itemIdx}`
+              );
+              itemFound = true;
+            }
+          });
+        }
+      });
+    } else if (data.type === "keyword_options" && config.cards) {
+      const cards = Array.isArray(config.cards) ? config.cards : [];
+      const cardIndex = cards.findIndex((card: any) => 
+        card.keyword === userChoice || card.title === userChoice
+      );
+      if (cardIndex >= 0) {
+        targetEdge = this.edges.find(
+          (e) => e.source === node.id && e.sourceHandle === `card_${cardIndex}`
+        );
+      }
+    }
+
+    if (targetEdge) {
+      const nextNode = this.nodes.find((n) => n.id === targetEdge.target);
+      if (nextNode) {
+        await this.executeNode(nextNode);
+        return;
+      }
+    }
+
+    // Fallback: continuar para próximo nó se não houver roteamento específico
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
+  }
+
+  private async handleKeywordJump(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+    const keywords = config.keywords || [];
+    const userMessage = this.context.userMessage.toLowerCase();
+
+    for (let i = 0; i < keywords.length; i++) {
+      const kw = keywords[i];
+      const keyword = kw.caseSensitive ? kw.keyword : kw.keyword.toLowerCase();
+      
+      if (userMessage.includes(keyword)) {
+        const edge = this.edges.find(
+          (e) => e.source === node.id && e.sourceHandle === `keyword_${i}`
+        );
+        if (edge) {
+          const nextNode = this.nodes.find((n) => n.id === edge.target);
+          if (nextNode) {
+            await this.executeNode(nextNode);
+            return;
+          }
+        }
+      }
+    }
+
+    // Nenhuma palavra-chave encontrada, continuar normalmente
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
+  }
+
+  private async handleOptInCheck(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+
+    // Verificar status de opt-in (placeholder)
+    const isSubscribed = this.context.vars[config.statusVariable || "opt_in_status"] === "subscribed";
+    
+    const handleId = isSubscribed ? "subscribed" : "unsubscribed";
+    const edge = this.edges.find(
+      (e) => e.source === node.id && e.sourceHandle === handleId
+    );
+
+    if (edge) {
+      const nextNode = this.nodes.find((n) => n.id === edge.target);
+      if (nextNode) {
+        await this.executeNode(nextNode);
+        return;
+      }
+    }
+
+    // Fallback
     const nextNodes = this.getNextNodes(node.id);
     for (const next of nextNodes) {
       await this.executeNode(next);
