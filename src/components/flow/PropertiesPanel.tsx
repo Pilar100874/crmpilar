@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Node, Edge } from "@xyflow/react";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,6 +14,8 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { VariableExplorer } from "./VariableExplorer";
+import { VariableInput, VariableTextarea } from "./VariableInput";
+import { VariablePickerDialog } from "./VariablePickerDialog";
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -31,6 +33,9 @@ export const PropertiesPanel = ({
   edges
 }: PropertiesPanelProps) => {
   const [hasChanges, setHasChanges] = useState(false);
+  const [showVariablePicker, setShowVariablePicker] = useState(false);
+  const [activeInputRef, setActiveInputRef] = useState<any>(null);
+  const inputRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
     if (hasChanges) {
@@ -70,6 +75,35 @@ export const PropertiesPanel = ({
   const handleLabelChange = (label: string) => {
     onUpdateNode(selectedNode.id, { label });
     setHasChanges(true);
+  };
+
+  const handleVariableInsert = (variableName: string) => {
+    const formattedVar = `{{${variableName}}}`;
+    
+    if (activeInputRef?.current) {
+      const input = activeInputRef.current;
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const currentValue = input.value || "";
+      
+      const newValue = currentValue.substring(0, start) + formattedVar + currentValue.substring(end);
+      
+      // Update the value based on which field is active
+      if (input.name) {
+        handleConfigChange(input.name, newValue);
+      }
+      
+      // Set cursor position after inserted variable
+      setTimeout(() => {
+        input.focus();
+        input.setSelectionRange(start + formattedVar.length, start + formattedVar.length);
+      }, 0);
+    }
+  };
+
+  const openVariablePicker = (ref: any) => {
+    setActiveInputRef(ref);
+    setShowVariablePicker(true);
   };
 
   const addCondition = () => {
@@ -173,8 +207,10 @@ export const PropertiesPanel = ({
 
             <div className="space-y-2">
               <Label>Conteúdo</Label>
-              <Textarea
+              <VariableTextarea
                 key={`content-${selectedNode.id}`}
+                name="content"
+                ref={(el) => (inputRefs.current['content'] = el)}
                 defaultValue={config.content || config.text || ""}
                 onBlur={(e) => {
                   console.log("Content blur:", e.target.value);
@@ -183,11 +219,12 @@ export const PropertiesPanel = ({
                 onChange={(e) => {
                   console.log("Content typing:", e.target.value);
                 }}
-                placeholder="Digite a mensagem... Use {{variavel}} para interpolação"
+                onVariableRequest={() => openVariablePicker(inputRefs.current['content'])}
+                placeholder="Digite a mensagem... Pressione Ctrl+V para inserir variáveis"
                 rows={6}
               />
-              <p className="text-xs text-muted-foreground">
-                Use {"{{"} variavel {"}"} para inserir valores do contexto
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                💡 Pressione <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">Ctrl+V</kbd> para inserir variáveis
               </p>
             </div>
 
@@ -241,12 +278,18 @@ export const PropertiesPanel = ({
 
             <div className="space-y-2">
               <Label>Pergunta</Label>
-              <Textarea
+              <VariableTextarea
+                name="question"
+                ref={(el) => (inputRefs.current['question'] = el)}
                 value={config.question || ""}
                 onChange={(e) => handleConfigChange("question", e.target.value)}
-                placeholder="Qual é o seu nome?"
+                onVariableRequest={() => openVariablePicker(inputRefs.current['question'])}
+                placeholder="Qual é o seu nome? (Ctrl+V para variáveis)"
                 rows={3}
               />
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                💡 <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">Ctrl+V</kbd> para inserir variáveis
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -317,10 +360,13 @@ export const PropertiesPanel = ({
 
             <div className="space-y-2">
               <Label>URL</Label>
-              <Input
+              <VariableInput
+                name="url"
+                ref={(el) => (inputRefs.current['url'] = el)}
                 value={config.url || ""}
                 onChange={(e) => handleConfigChange("url", e.target.value)}
-                placeholder="https://api.exemplo.com/endpoint"
+                onVariableRequest={() => openVariablePicker(inputRefs.current['url'])}
+                placeholder="https://api.exemplo.com/endpoint (Ctrl+V para variáveis)"
               />
             </div>
 
@@ -360,13 +406,19 @@ export const PropertiesPanel = ({
             {(config.method === "POST" || config.method === "PUT" || config.method === "PATCH") && (
               <div className="space-y-2">
                 <Label>Body (JSON)</Label>
-                <Textarea
+                <VariableTextarea
+                  name="body"
+                  ref={(el) => (inputRefs.current['body'] = el)}
                   value={config.body || ""}
                   onChange={(e) => handleConfigChange("body", e.target.value)}
-                  placeholder='{\n  "key": "{{variable}}"\n}'
+                  onVariableRequest={() => openVariablePicker(inputRefs.current['body'])}
+                  placeholder='{\n  "key": "{{variable}}"\n}\n\nCtrl+V para inserir variáveis'
                   rows={6}
                   className="font-mono text-xs"
                 />
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  💡 <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">Ctrl+V</kbd> para inserir variáveis
+                </p>
               </div>
             )}
 
@@ -734,6 +786,15 @@ export const PropertiesPanel = ({
           Excluir Bloco
         </Button>
       </div>
+
+      <VariablePickerDialog
+        open={showVariablePicker}
+        onClose={() => setShowVariablePicker(false)}
+        onSelectVariable={handleVariableInsert}
+        selectedNode={selectedNode}
+        nodes={nodes}
+        edges={edges}
+      />
     </div>
   );
 };
