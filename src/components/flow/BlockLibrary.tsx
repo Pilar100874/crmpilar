@@ -76,7 +76,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
         <Button
           onClick={() => setIsExpanded(true)}
           size="icon"
-          className="fixed left-4 top-20 z-50 h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+          className="fixed left-6 top-24 z-50 h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
         >
           <Plus className="h-6 w-6" />
         </Button>
@@ -88,7 +88,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
     <div className="w-80 bg-slate-800/95 backdrop-blur-sm border-r border-slate-700/50 flex flex-col h-full shadow-2xl">
       <div className="p-4 border-b border-slate-700/50 bg-gradient-to-r from-slate-800 to-slate-900">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-white">Building Blocks</h3>
+          <h3 className="font-semibold text-white">Blocos de Construção</h3>
           <Button
             variant="ghost"
             size="icon"
@@ -99,7 +99,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
           </Button>
         </div>
         <Input
-          placeholder="Search by name"
+          placeholder="Buscar por nome"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="h-9 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
@@ -167,7 +167,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
           
           {filteredCategories.length === 0 && (
             <div className="text-center py-8 text-slate-500">
-              <p className="text-sm">No blocks found</p>
+              <p className="text-sm">Nenhum bloco encontrado</p>
             </div>
           )}
         </div>

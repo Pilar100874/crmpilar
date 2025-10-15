@@ -57,15 +57,15 @@ export const BotManager = ({
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
           <Folder className="w-4 h-4 mr-2" />
           Gerenciar Bots ({savedBots.length})
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-[400px] sm:w-[540px] bg-slate-900 border-slate-700 text-white">
         <SheetHeader>
-          <SheetTitle>Gerenciamento de Bots</SheetTitle>
-          <SheetDescription>
+          <SheetTitle className="text-white">Gerenciamento de Bots</SheetTitle>
+          <SheetDescription className="text-slate-400">
             Crie, edite e gerencie seus bots de atendimento
           </SheetDescription>
         </SheetHeader>
@@ -73,7 +73,7 @@ export const BotManager = ({
         <div className="mt-6 space-y-4">
           {/* Current Bot Name */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Bot Atual</label>
+            <label className="text-sm font-medium text-white">Bot Atual</label>
             <div className="flex gap-2">
               {editingName ? (
                 <>
@@ -83,14 +83,15 @@ export const BotManager = ({
                     placeholder="Nome do bot"
                     autoFocus
                     onKeyPress={(e) => e.key === "Enter" && handleNameSave()}
+                    className="bg-slate-800 border-slate-700 text-white"
                   />
-                  <Button size="icon" onClick={handleNameSave}>
+                  <Button size="icon" onClick={handleNameSave} className="bg-cyan-600 hover:bg-cyan-700">
                     <Check className="w-4 h-4" />
                   </Button>
                 </>
               ) : (
                 <>
-                  <Input value={currentBotName} disabled className="flex-1" />
+                  <Input value={currentBotName} disabled className="flex-1 bg-slate-800 border-slate-700 text-white" />
                   <Button
                     variant="outline"
                     size="icon"
@@ -98,6 +99,7 @@ export const BotManager = ({
                       setTempName(currentBotName);
                       setEditingName(true);
                     }}
+                    className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
@@ -107,17 +109,17 @@ export const BotManager = ({
           </div>
 
           {/* New Bot Button */}
-          <Button onClick={onNewBot} className="w-full">
+          <Button onClick={onNewBot} className="w-full bg-cyan-600 hover:bg-cyan-700">
             Criar Novo Bot
           </Button>
 
           {/* Saved Bots List */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Bots Salvos</label>
+            <label className="text-sm font-medium text-white">Bots Salvos</label>
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
                 {savedBots.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-8 text-slate-400">
                     <Folder className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Nenhum bot salvo ainda</p>
                   </div>
@@ -125,8 +127,8 @@ export const BotManager = ({
                   savedBots.map((bot) => (
                     <Card
                       key={bot.id}
-                      className={`p-3 hover:bg-accent/50 transition-colors ${
-                        currentBotId === bot.id ? "border-primary" : ""
+                      className={`p-3 bg-slate-800 border-slate-700 hover:bg-slate-700/50 transition-colors ${
+                        currentBotId === bot.id ? "border-cyan-500" : ""
                       }`}
                     >
                       <div className="space-y-2">

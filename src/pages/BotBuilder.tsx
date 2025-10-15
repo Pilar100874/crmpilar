@@ -374,9 +374,9 @@ function BotBuilderContent() {
       <div className="h-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-between shadow-lg">
           <div>
-            <h2 className="text-lg font-bold text-white">Bot Builder</h2>
+            <h2 className="text-2xl font-bold text-white">CRIAR BOT</h2>
             <p className="text-sm text-slate-400">
-              Drag blocks to create your flow
+              Arraste blocos para criar seu fluxo
             </p>
           </div>
           <div className="flex gap-2">
@@ -392,19 +392,19 @@ function BotBuilderContent() {
             />
             <Button variant="outline" size="sm" onClick={handleImport} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
               <Upload className="w-4 h-4 mr-2" />
-              Import
+              Importar
             </Button>
             <Button variant="outline" size="sm" onClick={handleExport} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Exportar
             </Button>
             <Button variant="outline" size="sm" onClick={handleSave} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
               <Save className="w-4 h-4 mr-2" />
-              Save
+              Salvar
             </Button>
             <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg">
               <Play className="w-4 h-4 mr-2" />
-              {showSimulator ? "Close Test" : "Test Flow"}
+              {showSimulator ? "Fechar Teste" : "Testar Fluxo"}
             </Button>
           </div>
         </div>

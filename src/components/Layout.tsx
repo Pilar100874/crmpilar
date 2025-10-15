@@ -33,9 +33,9 @@ import { toast } from "sonner";
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Atendimento", url: "/atendimento", icon: MessageSquare },
-  { title: "Bot Builder", url: "/bot-builder", icon: Workflow },
+  { title: "CRIAR BOT", url: "/bot-builder", icon: Workflow },
   { title: "Teste do Bot", url: "/bot-test", icon: TestTube },
-  { title: "WhatsApp Config", url: "/whatsapp-config", icon: Smartphone },
+  { title: "Config WhatsApp", url: "/whatsapp-config", icon: Smartphone },
   { title: "Campanhas", url: "/campanhas", icon: Megaphone },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Conteúdos", url: "/conteudos", icon: FileText },
@@ -84,23 +84,23 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="border-r">
-          <div className="p-6 border-b">
+      <div className="min-h-screen flex w-full bg-slate-900">
+        <Sidebar className="border-r border-slate-800 bg-slate-950">
+          <div className="p-6 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-gradient-primary">
-                <MessageSquare className="w-5 h-5 text-primary-foreground" />
+              <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600">
+                <MessageSquare className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="font-bold text-lg">Omnicanal</h2>
-                <p className="text-xs text-muted-foreground">Atendimento IA</p>
+                <h2 className="font-bold text-lg text-white">Pilar BOT</h2>
+                <p className="text-xs text-slate-400">Atendimento IA</p>
               </div>
             </div>
           </div>
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-slate-400">Menu Principal</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
@@ -110,8 +110,8 @@ export default function Layout({ children }: LayoutProps) {
                           to={item.url}
                           className={({ isActive }) =>
                             isActive
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                              : "hover:bg-sidebar-accent/50"
+                              ? "bg-cyan-600/20 text-cyan-400 border-l-2 border-cyan-500"
+                              : "text-slate-300 hover:bg-slate-800/50"
                           }
                         >
                           <item.icon className="w-4 h-4" />
@@ -125,10 +125,10 @@ export default function Layout({ children }: LayoutProps) {
             </SidebarGroup>
           </SidebarContent>
 
-          <div className="p-4 border-t mt-auto">
+          <div className="p-4 border-t border-slate-800 mt-auto">
             <Button
               variant="outline"
-              className="w-full justify-start"
+              className="w-full justify-start bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-2" />
@@ -137,11 +137,11 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col">
-          <header className="h-14 border-b flex items-center px-4 bg-card">
-            <SidebarTrigger />
+        <main className="flex-1 flex flex-col bg-slate-900">
+          <header className="h-14 border-b border-slate-800 flex items-center px-4 bg-slate-950">
+            <SidebarTrigger className="text-slate-300" />
           </header>
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto bg-slate-900">
             {children}
           </div>
         </main>
