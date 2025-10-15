@@ -303,6 +303,33 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_config: {
+        Row: {
+          business_account_id: string | null
+          business_token: string
+          created_at: string | null
+          id: string
+          phone_number_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_account_id?: string | null
+          business_token: string
+          created_at?: string | null
+          id?: string
+          phone_number_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_account_id?: string | null
+          business_token?: string
+          created_at?: string | null
+          id?: string
+          phone_number_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
