@@ -21,7 +21,6 @@ export { ReplyButtonsConfig, ListButtonsConfig } from './ButtonBlocks';
 
 // WhatsApp Blocks
 export {
-  KeywordOptionsConfig,
   MessageTemplateConfig,
   OptInOutConfig,
   OptInCheckConfig,
@@ -45,10 +44,13 @@ export {
   WebhookConfig,
   N8nConfig,
   TriggerAutomationConfig,
-  DynamicDataConfig,
   AIAgentConfig,
 } from './LowCodeBlocks';
 
 // Additional Blocks
 export { ABTestConfig } from './ABTestConfig';
 export { BotJumpConfig } from './BotJumpConfig';
+export { CollectIntentConfig } from './CollectIntentConfig';
+export { ConditionsConfigNew } from './ConditionsConfigNew';
+export { DynamicDataConfig } from './DynamicDataConfig';
+export { KeywordOptionsConfig } from './KeywordOptionsConfig';

@@ -1,0 +1,196 @@
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
+import { Bold, Italic, Smile, Code, Heading, List, ListOrdered, Link, Quote } from "lucide-react";
+
+interface ConfigProps {
+  config: any;
+  handleConfigChange: (key: string, value: any) => void;
+  inputRefs: any;
+  openVariablePicker: (ref: any) => void;
+}
+
+const RichTextToolbar = ({ onFormat }: { onFormat: (format: string) => void }) => (
+  <div className="flex gap-1 mb-2 p-2 border rounded-md bg-muted/50">
+    <Button variant="ghost" size="sm" onClick={() => onFormat('bold')} className="h-8 w-8 p-0">
+      <Bold className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('italic')} className="h-8 w-8 p-0">
+      <Italic className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('emoji')} className="h-8 w-8 p-0">
+      <Smile className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('code')} className="h-8 w-8 p-0">
+      <Code className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('heading')} className="h-8 w-8 p-0">
+      <Heading className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('list')} className="h-8 w-8 p-0">
+      <List className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('ordered')} className="h-8 w-8 p-0">
+      <ListOrdered className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('link')} className="h-8 w-8 p-0">
+      <Link className="h-4 w-4" />
+    </Button>
+    <Button variant="ghost" size="sm" onClick={() => onFormat('quote')} className="h-8 w-8 p-0">
+      <Quote className="h-4 w-4" />
+    </Button>
+  </div>
+);
+
+export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+  const buttons = config.buttons || [];
+
+  const addButton = () => {
+    handleConfigChange("buttons", [
+      ...buttons,
+      { id: Date.now(), label: "", keywords: [] }
+    ]);
+  };
+
+  const updateButton = (index: number, field: string, value: any) => {
+    const newButtons = [...buttons];
+    newButtons[index] = { ...newButtons[index], [field]: value };
+    handleConfigChange("buttons", newButtons);
+  };
+
+  const removeButton = (index: number) => {
+    const newButtons = buttons.filter((_: any, i: number) => i !== index);
+    handleConfigChange("buttons", newButtons);
+  };
+
+  const addKeyword = (buttonIndex: number) => {
+    const newButtons = [...buttons];
+    const keywords = newButtons[buttonIndex].keywords || [];
+    newButtons[buttonIndex].keywords = [...keywords, ""];
+    handleConfigChange("buttons", newButtons);
+  };
+
+  const updateKeyword = (buttonIndex: number, keywordIndex: number, value: string) => {
+    const newButtons = [...buttons];
+    newButtons[buttonIndex].keywords[keywordIndex] = value;
+    handleConfigChange("buttons", newButtons);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label>Question text</Label>
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Number & word choices"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Number & word choices"
+          rows={2}
+          className="resize-none"
+        />
+        <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => openVariablePicker(inputRefs.current['question'])}
+          className="w-full"
+        >
+          Use field
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        <Label>Buttons</Label>
+        
+        {buttons.map((button: any, index: number) => (
+          <div key={button.id || index} className="space-y-3 p-4 bg-pink-500/10 border-2 border-pink-500 rounded-lg">
+            <div className="flex items-center gap-2">
+              <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
+              <Button 
+                variant="ghost" 
+                className="flex-1 bg-pink-500 text-white hover:bg-pink-600"
+              >
+                Click to edit
+              </Button>
+              <Button variant="ghost" size="icon">
+                <GripVertical className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => removeButton(index)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="bg-slate-700 rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2 text-white">
+                <span className="text-sm">{index + 1}</span>
+              </div>
+              
+              {(button.keywords || []).map((keyword: string, kIndex: number) => (
+                <Input
+                  key={kIndex}
+                  value={keyword}
+                  onChange={(e) => updateKeyword(index, kIndex, e.target.value)}
+                  placeholder="Type the keyword"
+                  className="bg-slate-600 border-slate-500 text-white placeholder:text-slate-400"
+                />
+              ))}
+
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => addKeyword(index)}
+                className="w-full text-white hover:bg-slate-600"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add keyword
+              </Button>
+            </div>
+          </div>
+        ))}
+
+        <Button 
+          variant="default" 
+          size="lg" 
+          onClick={addButton}
+          className="w-full bg-slate-700 hover:bg-slate-800 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add another button
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label>Validation error message</Label>
+        <Switch 
+          checked={config.showValidationError !== false}
+          onCheckedChange={(checked) => handleConfigChange("showValidationError", checked)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2">
+            Save user answer in the field
+            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+          </Label>
+        </div>
+        <Input
+          value={config.variable || ""}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="Search or create"
+          className="bg-accent/50"
+        />
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          ⚠️ If a field is not set, the answer won't be saved.
+        </p>
+      </div>
+    </div>
+  );
+};
