@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Bot, User, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,11 +23,33 @@ export default function BotTest() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(`test-${Date.now()}`);
   const [flowData, setFlowData] = useState<any>(null);
+  const [savedBots, setSavedBots] = useState<any[]>([]);
+  const [selectedBotId, setSelectedBotId] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadFlow();
+    loadSavedBots();
   }, []);
+
+  const loadSavedBots = async () => {
+    const { data, error } = await supabase
+      .from("bot_flows")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading bots:", error);
+      toast.error("Erro ao carregar bots");
+    } else {
+      setSavedBots(data || []);
+      // Auto-select active bot
+      const activeBot = data?.find(b => b.active);
+      if (activeBot) {
+        setSelectedBotId(activeBot.id);
+        loadBot(activeBot.id);
+      }
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -34,33 +57,32 @@ export default function BotTest() {
     }
   }, [messages]);
 
-  const loadFlow = async () => {
+  const loadBot = async (botId: string) => {
     try {
-      // Try to load from database first
-      const { data: dbFlow } = await supabase
+      const { data: dbFlow, error } = await supabase
         .from("bot_flows")
         .select("*")
-        .eq("active", true)
+        .eq("id", botId)
         .single();
 
-      if (dbFlow) {
-        setFlowData(dbFlow.flow_data);
-        addMessage("system", "Fluxo carregado do banco de dados!");
-      } else {
-        // Fallback to localStorage
-        const savedFlow = localStorage.getItem("bot-flow");
-        if (savedFlow) {
-          const flow = JSON.parse(savedFlow);
-          setFlowData(flow);
-          addMessage("system", "Fluxo carregado do localStorage!");
-        } else {
-          addMessage("system", "Nenhum fluxo encontrado. Crie um fluxo no Bot Builder primeiro.");
-        }
+      if (error) throw error;
+
+      if (dbFlow && dbFlow.flow_data) {
+        const flowData = dbFlow.flow_data as any;
+        setFlowData(flowData);
+        addMessage("system", `Bot "${dbFlow.name}" carregado!`);
       }
     } catch (error) {
-      console.error("Error loading flow:", error);
-      toast.error("Erro ao carregar fluxo");
+      console.error("Error loading bot:", error);
+      toast.error("Erro ao carregar bot");
+      setFlowData(null);
     }
+  };
+
+  const handleBotChange = (botId: string) => {
+    setSelectedBotId(botId);
+    setMessages([]);
+    loadBot(botId);
   };
 
   const addMessage = (role: "user" | "assistant" | "system", content: string) => {
@@ -154,9 +176,21 @@ export default function BotTest() {
               Simule conversas e teste seu fluxo
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={loadFlow}>
-              Recarregar Fluxo
+          <div className="flex gap-2 items-center">
+            <Select value={selectedBotId} onValueChange={handleBotChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Selecione um bot" />
+              </SelectTrigger>
+              <SelectContent>
+                {savedBots.map((bot) => (
+                  <SelectItem key={bot.id} value={bot.id}>
+                    {bot.name} {bot.active && "⭐"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={() => selectedBotId && loadBot(selectedBotId)}>
+              Recarregar
             </Button>
             <Button variant="outline" size="sm" onClick={handleClear}>
               <Trash2 className="w-4 h-4 mr-2" />

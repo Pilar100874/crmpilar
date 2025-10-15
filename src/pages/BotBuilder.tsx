@@ -22,6 +22,7 @@ import { FlowNode } from "@/components/flow/FlowNode";
 import { BlockLibrary } from "@/components/flow/BlockLibrary";
 import { PropertiesPanel } from "@/components/flow/PropertiesPanel";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
+import { BotManager } from "@/components/flow/BotManager";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
 
@@ -40,6 +41,28 @@ function BotBuilderContent() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [showSimulator, setShowSimulator] = useState(false);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [currentBotId, setCurrentBotId] = useState<string | null>(null);
+  const [currentBotName, setCurrentBotName] = useState("Novo Bot");
+  const [savedBots, setSavedBots] = useState<any[]>([]);
+
+  // Load saved bots on mount
+  useEffect(() => {
+    loadSavedBots();
+  }, []);
+
+  const loadSavedBots = async () => {
+    const { data, error } = await supabase
+      .from("bot_flows")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading bots:", error);
+      toast.error("Erro ao carregar bots");
+    } else {
+      setSavedBots(data || []);
+    }
+  };
 
   // Highlight node during simulation
   useEffect(() => {
@@ -153,31 +176,130 @@ function BotBuilderContent() {
     [setNodes, setEdges]
   );
 
+  const handleNewBot = useCallback(() => {
+    setNodes([]);
+    setEdges([]);
+    setCurrentBotId(null);
+    setCurrentBotName("Novo Bot");
+    setSelectedNode(null);
+    toast.success("Novo bot criado!");
+  }, [setNodes, setEdges]);
+
   const handleSave = useCallback(async () => {
+    if (!currentBotName.trim()) {
+      toast.error("Por favor, dê um nome ao bot");
+      return;
+    }
+
     const flow = {
       nodes,
       edges,
       viewport: reactFlowInstance?.getViewport(),
     };
-    
-    // Save to localStorage
-    localStorage.setItem("bot-flow", JSON.stringify(flow));
-    
-    // Save to database
-    const { error } = await supabase.from("bot_flows").upsert({
-      name: `Bot Flow ${new Date().toLocaleString()}`,
+
+    const botData = {
+      name: currentBotName,
       flow_data: flow,
-      active: true,
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    let error, data;
+    if (currentBotId) {
+      // Update existing bot
+      ({ error, data } = await supabase
+        .from("bot_flows")
+        .update(botData)
+        .eq("id", currentBotId)
+        .select()
+        .single());
+    } else {
+      // Create new bot
+      ({ error, data } = await supabase
+        .from("bot_flows")
+        .insert({ ...botData, active: false })
+        .select()
+        .single());
+      
+      if (data) {
+        setCurrentBotId(data.id);
+      }
+    }
 
     if (error) {
-      console.error("Error saving to database:", error);
-      toast.error("Erro ao salvar no banco de dados");
+      console.error("Error saving bot:", error);
+      toast.error("Erro ao salvar bot");
     } else {
-      toast.success("Fluxo salvo com sucesso!");
+      toast.success("Bot salvo com sucesso!");
+      loadSavedBots();
     }
-  }, [nodes, edges, reactFlowInstance]);
+  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId]);
+
+  const handleLoadBot = useCallback(async (botId: string) => {
+    const { data, error } = await supabase
+      .from("bot_flows")
+      .select("*")
+      .eq("id", botId)
+      .single();
+
+    if (error) {
+      console.error("Error loading bot:", error);
+      toast.error("Erro ao carregar bot");
+      return;
+    }
+
+    if (data && data.flow_data) {
+      const flowData = data.flow_data as any;
+      setNodes(flowData.nodes || []);
+      setEdges(flowData.edges || []);
+      setCurrentBotId(data.id);
+      setCurrentBotName(data.name);
+      setSelectedNode(null);
+      toast.success(`Bot "${data.name}" carregado!`);
+    }
+  }, [setNodes, setEdges]);
+
+  const handleToggleActive = useCallback(async (botId: string, currentActive: boolean) => {
+    // If activating, deactivate all others first
+    if (!currentActive) {
+      await supabase
+        .from("bot_flows")
+        .update({ active: false })
+        .neq("id", botId);
+    }
+
+    const { error } = await supabase
+      .from("bot_flows")
+      .update({ active: !currentActive })
+      .eq("id", botId);
+
+    if (error) {
+      console.error("Error toggling active:", error);
+      toast.error("Erro ao ativar/desativar bot");
+    } else {
+      toast.success(!currentActive ? "Bot ativado!" : "Bot desativado!");
+      loadSavedBots();
+    }
+  }, []);
+
+  const handleDeleteBot = useCallback(async (botId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este bot?")) return;
+
+    const { error } = await supabase
+      .from("bot_flows")
+      .delete()
+      .eq("id", botId);
+
+    if (error) {
+      console.error("Error deleting bot:", error);
+      toast.error("Erro ao excluir bot");
+    } else {
+      toast.success("Bot excluído!");
+      loadSavedBots();
+      if (currentBotId === botId) {
+        handleNewBot();
+      }
+    }
+  }, [currentBotId, handleNewBot]);
 
   const handleExport = useCallback(() => {
     const flow = {
@@ -258,10 +380,16 @@ function BotBuilderContent() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleNewFlow}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo
-            </Button>
+            <BotManager
+              savedBots={savedBots}
+              currentBotId={currentBotId}
+              currentBotName={currentBotName}
+              onNewBot={handleNewBot}
+              onLoadBot={handleLoadBot}
+              onToggleActive={handleToggleActive}
+              onDeleteBot={handleDeleteBot}
+              onNameChange={setCurrentBotName}
+            />
             <Button variant="outline" size="sm" onClick={handleImport}>
               <Upload className="w-4 h-4 mr-2" />
               Importar
