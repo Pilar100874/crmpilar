@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Atendimento from "./pages/Atendimento";
 import BotBuilder from "./pages/BotBuilder";
+import BotTest from "./pages/BotTest";
+import WhatsAppConfig from "./pages/WhatsAppConfig";
 import Campanhas from "./pages/Campanhas";
 import Clientes from "./pages/Clientes";
 import Conteudos from "./pages/Conteudos";
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/atendimento" element={<Atendimento />} />
           <Route path="/bot-builder" element={<BotBuilder />} />
+          <Route path="/bot-test" element={<BotTest />} />
+          <Route path="/whatsapp-config" element={<WhatsAppConfig />} />
           <Route path="/campanhas" element={<Campanhas />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/conteudos" element={<Conteudos />} />

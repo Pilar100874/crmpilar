@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Save, Download, Upload, X } from "lucide-react";
+import { Plus, Play, Save, Download, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ReactFlow,
   Background,
@@ -141,14 +142,30 @@ function BotBuilderContent() {
     [setNodes, setEdges]
   );
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const flow = {
       nodes,
       edges,
       viewport: reactFlowInstance?.getViewport(),
     };
+    
+    // Save to localStorage
     localStorage.setItem("bot-flow", JSON.stringify(flow));
-    toast.success("Fluxo salvo com sucesso!");
+    
+    // Save to database
+    const { error } = await supabase.from("bot_flows").upsert({
+      name: `Bot Flow ${new Date().toLocaleString()}`,
+      flow_data: flow,
+      active: true,
+      updated_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.error("Error saving to database:", error);
+      toast.error("Erro ao salvar no banco de dados");
+    } else {
+      toast.success("Fluxo salvo com sucesso!");
+    }
   }, [nodes, edges, reactFlowInstance]);
 
   const handleExport = useCallback(() => {

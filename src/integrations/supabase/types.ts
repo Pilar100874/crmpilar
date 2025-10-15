@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_flows: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          flow_data: Json
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          flow_data: Json
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          flow_data?: Json
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           created_at: string | null
@@ -50,6 +77,30 @@ export type Database = {
           status?: string | null
           template?: string
           variables?: string[] | null
+        }
+        Relationships: []
+      }
+      chat_sessions: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          id: string
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

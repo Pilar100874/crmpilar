@@ -23,6 +23,8 @@ import {
   Workflow,
   Megaphone,
   LogOut,
+  TestTube,
+  Smartphone,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,8 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Atendimento", url: "/atendimento", icon: MessageSquare },
   { title: "Bot Builder", url: "/bot-builder", icon: Workflow },
+  { title: "Teste do Bot", url: "/bot-test", icon: TestTube },
+  { title: "WhatsApp Config", url: "/whatsapp-config", icon: Smartphone },
   { title: "Campanhas", url: "/campanhas", icon: Megaphone },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Conteúdos", url: "/conteudos", icon: FileText },
