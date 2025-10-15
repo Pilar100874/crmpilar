@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Plus, Play, Save, Download, Upload } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import {
   ReactFlow,
   Background,
