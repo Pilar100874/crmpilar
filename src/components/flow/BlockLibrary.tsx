@@ -76,7 +76,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
         <Button
           onClick={() => setIsExpanded(true)}
           size="icon"
-          className="fixed left-[340px] top-[140px] z-40 h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+          className="fixed left-[264px] top-[160px] z-40 h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
         >
           <Plus className="h-6 w-6" />
         </Button>
