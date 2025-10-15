@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { VariableTextarea } from "../VariableInput";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Bold, Italic, Code, Heading, List, ListOrdered, Link as LinkIcon, Quote, ExternalLink } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface ConfigProps {
   config: any;
@@ -14,25 +15,170 @@ interface ConfigProps {
   openVariablePicker: (ref: any) => void;
 }
 
-export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
-  <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Mensagem</Label>
-      <VariableTextarea
-        name="text"
-        ref={(el) => (inputRefs.current['text'] = el)}
-        value={config.text || ""}
-        onChange={(e) => handleConfigChange("text", e.target.value)}
-        onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
-        placeholder="Digite a mensagem... (Ctrl+V para variáveis)"
-        rows={6}
-      />
-      <p className="text-xs text-muted-foreground">
-        💡 Use <kbd className="px-1.5 py-0.5 bg-muted rounded border">Ctrl+V</kbd> para inserir variáveis
-      </p>
+export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+  const messages = Array.isArray(config.messages) ? config.messages : [{ text: config.text || "" }];
+
+  const addMessage = () => {
+    handleConfigChange("messages", [...messages, { text: "" }]);
+  };
+
+  const updateMessage = (index: number, text: string) => {
+    const updated = [...messages];
+    updated[index] = { ...updated[index], text };
+    handleConfigChange("messages", updated);
+  };
+
+  const removeMessage = (index: number) => {
+    const updated = messages.filter((_, i) => i !== index);
+    handleConfigChange("messages", updated);
+  };
+
+  const addMedia = () => {
+    handleConfigChange("media", {
+      type: config.media?.type || "image",
+      url: config.media?.url || "",
+      caption: config.media?.caption || ""
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+            <span className="text-lg">💬</span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm">MESSAGES</h3>
+            <a href="https://docs.lovable.dev" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+              How to use <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {messages.map((message, index) => (
+        <Card key={index} className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Write a message</Label>
+            {messages.length > 1 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => removeMessage(index)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <VariableTextarea
+              name={`text_${index}`}
+              ref={(el) => (inputRefs.current[`text_${index}`] = el)}
+              value={message.text || ""}
+              onChange={(e) => updateMessage(index, e.target.value)}
+              onVariableRequest={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+              placeholder="Click to edit..."
+              rows={4}
+              className="resize-none"
+            />
+
+            {/* Barra de ferramentas de formatação */}
+            <div className="flex items-center justify-between border-t pt-2">
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Bold">
+                  <Bold className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Italic">
+                  <Italic className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Code">
+                  <Code className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Heading">
+                  <Heading className="w-3.5 h-3.5" />
+                </Button>
+                <div className="w-px h-4 bg-border mx-1" />
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Ordered List">
+                  <ListOrdered className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Bullet List">
+                  <List className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Link">
+                  <LinkIcon className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Quote">
+                  <Quote className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+                className="h-7 text-xs"
+              >
+                Use field
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ))}
+
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={addMessage} className="flex-1">
+          <Plus className="w-4 h-4 mr-1" />
+          Add message
+        </Button>
+        <Button variant="outline" size="sm" onClick={addMedia} className="flex-1">
+          <Plus className="w-4 h-4 mr-1" />
+          Add media
+        </Button>
+      </div>
+
+      {config.media && (
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Media</Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleConfigChange("media", null)}
+              className="h-6 w-6 p-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <Select
+            value={config.media.type || "image"}
+            onValueChange={(v) => handleConfigChange("media", { ...config.media, type: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="image">Image</SelectItem>
+              <SelectItem value="video">Video</SelectItem>
+              <SelectItem value="gif">GIF</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            value={config.media.url || ""}
+            onChange={(e) => handleConfigChange("media", { ...config.media, url: e.target.value })}
+            placeholder="Media URL"
+          />
+          <Input
+            value={config.media.caption || ""}
+            onChange={(e) => handleConfigChange("media", { ...config.media, caption: e.target.value })}
+            placeholder="Caption (optional)"
+          />
+        </Card>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => (
   <div className="space-y-4">
