@@ -46,12 +46,13 @@ export const PropertiesPanel = ({
 
   const nodeData = selectedNode.data as any;
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === nodeData.type);
-  const config = nodeData.config || {};
 
   const handleConfigChange = (key: string, value: any) => {
     console.log("Config change:", key, value);
+    // Get fresh config from selectedNode to avoid stale state
+    const currentConfig = (selectedNode.data as any).config || {};
     const newConfig = {
-      ...config,
+      ...currentConfig,
       [key]: value,
     };
     console.log("New config:", newConfig);
@@ -67,8 +68,9 @@ export const PropertiesPanel = ({
   };
 
   const addCondition = () => {
-    console.log("Adding condition, current conditions:", config.conditions);
-    const conditions = config.conditions || [];
+    const currentConfig = (selectedNode.data as any).config || {};
+    console.log("Adding condition, current conditions:", currentConfig.conditions);
+    const conditions = currentConfig.conditions || [];
     const newConditions = [
       ...conditions,
       { id: `cond_${Date.now()}`, expression: "", label: "" },
@@ -78,19 +80,22 @@ export const PropertiesPanel = ({
   };
 
   const removeCondition = (index: number) => {
-    const conditions = [...(config.conditions || [])];
+    const currentConfig = (selectedNode.data as any).config || {};
+    const conditions = [...(currentConfig.conditions || [])];
     conditions.splice(index, 1);
     handleConfigChange("conditions", conditions);
   };
 
   const updateCondition = (index: number, field: string, value: any) => {
-    const conditions = [...(config.conditions || [])];
+    const currentConfig = (selectedNode.data as any).config || {};
+    const conditions = [...(currentConfig.conditions || [])];
     conditions[index] = { ...conditions[index], [field]: value };
     handleConfigChange("conditions", conditions);
   };
 
   const addHeader = () => {
-    const headers = config.headers || [];
+    const currentConfig = (selectedNode.data as any).config || {};
+    const headers = currentConfig.headers || [];
     handleConfigChange("headers", [
       ...headers,
       { key: "", value: "" },
@@ -98,16 +103,21 @@ export const PropertiesPanel = ({
   };
 
   const updateHeader = (index: number, field: string, value: string) => {
-    const headers = [...(config.headers || [])];
+    const currentConfig = (selectedNode.data as any).config || {};
+    const headers = [...(currentConfig.headers || [])];
     headers[index] = { ...headers[index], [field]: value };
     handleConfigChange("headers", headers);
   };
 
   const removeHeader = (index: number) => {
-    const headers = [...(config.headers || [])];
+    const currentConfig = (selectedNode.data as any).config || {};
+    const headers = [...(currentConfig.headers || [])];
     headers.splice(index, 1);
     handleConfigChange("headers", headers);
   };
+
+  // Get fresh config for rendering
+  const config = (selectedNode.data as any).config || {};
 
   const renderConfigFields = () => {
     const nodeData = selectedNode.data as any;
