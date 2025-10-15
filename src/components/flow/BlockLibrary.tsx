@@ -76,7 +76,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
         <Button
           onClick={() => setIsExpanded(true)}
           size="icon"
-          className="fixed left-6 top-[140px] z-50 h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+          className="fixed left-[340px] top-[140px] z-40 h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
         >
           <Plus className="h-6 w-6" />
         </Button>
@@ -85,29 +85,44 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
   }
 
   return (
-    <div className="w-80 bg-slate-800/95 backdrop-blur-sm border-r border-slate-700/50 flex flex-col h-full shadow-2xl">
-      <div className="p-4 border-b border-slate-700/50 bg-gradient-to-r from-slate-800 to-slate-900">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-white">Blocos de Construção</h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsExpanded(false)}
-            className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700/50"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+    <div className="w-80 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 border-r border-cyan-500/20 flex flex-col h-full shadow-2xl relative">
+      {/* Header com gradiente */}
+      <div className="p-6 border-b border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+        {/* Efeito de brilho de fundo */}
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-cyan-500/5 animate-pulse"></div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30">
+                <Plus className="h-5 w-5 text-cyan-400" />
+              </div>
+              <h3 className="font-bold text-lg text-white">Blocos</h3>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsExpanded(false)}
+              className="h-9 w-9 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-all"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          {/* Search bar moderna */}
+          <div className="relative">
+            <Input
+              placeholder="Buscar blocos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-10 bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 pl-4 rounded-lg backdrop-blur-sm"
+            />
+          </div>
         </div>
-        <Input
-          placeholder="Buscar por nome"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-9 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
-        />
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-3 space-y-1.5">
+      <ScrollArea className="flex-1 dark-scrollbar">
+        <div className="p-4 space-y-2">
           {filteredCategories.map((category) => {
             const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
             const isOpen = openCategories.includes(category.name);
@@ -117,18 +132,23 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
                 key={category.name}
                 open={isOpen}
                 onOpenChange={() => toggleCategory(category.name)}
+                className="group"
               >
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-slate-700/50 transition-all duration-200 group">
-                  <div className="flex items-center gap-2.5">
-                    {CategoryIcon && <CategoryIcon className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300" />}
-                    <span className="font-medium text-sm text-slate-200 group-hover:text-white">{category.name}</span>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-slate-800/80 hover:to-slate-800/40 transition-all duration-200 group border border-transparent hover:border-cyan-500/20">
+                  <div className="flex items-center gap-3">
+                    {CategoryIcon && (
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 group-hover:border-cyan-500/40 transition-all">
+                        <CategoryIcon className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300" />
+                      </div>
+                    )}
+                    <span className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors">{category.name}</span>
                   </div>
                   <ChevronDown 
-                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-cyan-400' : ''}`}
+                    className={`w-4 h-4 text-slate-400 transition-all duration-200 ${isOpen ? 'rotate-180 text-cyan-400' : 'group-hover:text-cyan-300'}`}
                   />
                 </CollapsibleTrigger>
 
-                <CollapsibleContent className="pt-1.5 space-y-1.5 animate-accordion-down">
+                <CollapsibleContent className="pt-2 space-y-2 animate-accordion-down">
                   {category.blocks.map((blockType) => {
                     const blockDef = BLOCK_DEFINITIONS.find(b => b.type === blockType);
                     if (!blockDef) return null;
@@ -140,19 +160,19 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
                         key={blockDef.type}
                         draggable
                         onDragStart={(event) => onDragStart(event, blockDef.type)}
-                        className="p-3 ml-6 cursor-grab active:cursor-grabbing bg-slate-900/40 border-slate-700/50 hover:bg-slate-700/40 hover:border-cyan-500/30 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-500/10 group"
+                        className="p-4 ml-8 cursor-grab active:cursor-grabbing bg-slate-800/40 border-slate-700/30 hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-800/60 hover:border-cyan-500/40 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-500/10 group backdrop-blur-sm rounded-xl"
                       >
-                        <div className="flex items-start gap-2.5">
+                        <div className="flex items-start gap-3">
                           {IconComponent && (
-                            <div className="p-1.5 rounded-md bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 group-hover:border-cyan-400/50 transition-colors">
-                              <IconComponent className="w-3.5 h-3.5 text-cyan-400 group-hover:text-cyan-300" />
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/15 to-blue-500/15 border border-cyan-500/25 group-hover:border-cyan-400/50 group-hover:shadow-lg group-hover:shadow-cyan-500/20 transition-all">
+                              <IconComponent className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-sm text-slate-200 group-hover:text-white truncate transition-colors">
+                            <h4 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors mb-1">
                               {blockDef.label}
                             </h4>
-                            <p className="text-xs text-slate-500 group-hover:text-slate-400 line-clamp-2 mt-0.5 transition-colors">
+                            <p className="text-xs text-slate-400 group-hover:text-slate-300 line-clamp-2 transition-colors">
                               {blockDef.description}
                             </p>
                           </div>
@@ -166,8 +186,12 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
           })}
           
           {filteredCategories.length === 0 && (
-            <div className="text-center py-8 text-slate-500">
-              <p className="text-sm">Nenhum bloco encontrado</p>
+            <div className="text-center py-12 text-slate-500">
+              <div className="p-4 rounded-full bg-slate-800/50 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Plus className="w-8 h-8 text-slate-600" />
+              </div>
+              <p className="text-sm font-medium">Nenhum bloco encontrado</p>
+              <p className="text-xs mt-1">Tente outra busca</p>
             </div>
           )}
         </div>
