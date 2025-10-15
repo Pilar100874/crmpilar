@@ -371,12 +371,12 @@ function BotBuilderContent() {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b bg-card flex items-center justify-between">
+      <div className="h-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-between shadow-lg">
           <div>
-            <h2 className="text-lg font-bold">Bot Builder</h2>
-            <p className="text-sm text-muted-foreground">
-              Arraste blocos para criar seu fluxo
+            <h2 className="text-lg font-bold text-white">Bot Builder</h2>
+            <p className="text-sm text-slate-400">
+              Drag blocks to create your flow
             </p>
           </div>
           <div className="flex gap-2">
@@ -390,21 +390,21 @@ function BotBuilderContent() {
               onDeleteBot={handleDeleteBot}
               onNameChange={setCurrentBotName}
             />
-            <Button variant="outline" size="sm" onClick={handleImport}>
+            <Button variant="outline" size="sm" onClick={handleImport} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
               <Upload className="w-4 h-4 mr-2" />
-              Importar
+              Import
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
+            <Button variant="outline" size="sm" onClick={handleExport} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
               <Download className="w-4 h-4 mr-2" />
-              Exportar
+              Export
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSave}>
+            <Button variant="outline" size="sm" onClick={handleSave} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
               <Save className="w-4 h-4 mr-2" />
-              Salvar
+              Save
             </Button>
-            <Button size="sm" onClick={handleTest}>
+            <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg">
               <Play className="w-4 h-4 mr-2" />
-              {showSimulator ? "Fechar Teste" : "Testar Fluxo"}
+              {showSimulator ? "Close Test" : "Test Flow"}
             </Button>
           </div>
         </div>
@@ -427,10 +427,20 @@ function BotBuilderContent() {
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
               fitView
-              className="bg-muted/20"
+              className="bg-slate-900"
+              defaultEdgeOptions={{
+                style: { stroke: '#06b6d4', strokeWidth: 2 },
+                animated: true,
+              }}
             >
-              <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-              <Controls />
+              <Background 
+                variant={BackgroundVariant.Dots} 
+                gap={20} 
+                size={1.5}
+                color="#334155"
+                className="opacity-40"
+              />
+              <Controls className="bg-slate-800/90 border-slate-700/50 text-white [&>button]:bg-slate-700/50 [&>button]:border-slate-600 [&>button:hover]:bg-slate-600 [&>button]:text-white" />
               <MiniMap
                 nodeColor={(node) => {
                   const nodeData = node.data as any;
@@ -438,20 +448,21 @@ function BotBuilderContent() {
                     (b) => b.type === nodeData?.type
                   );
                   return blockDef?.color.includes("primary")
-                    ? "#6366f1"
+                    ? "#06b6d4"
                     : blockDef?.color.includes("success")
                     ? "#10b981"
                     : blockDef?.color.includes("warning")
                     ? "#f59e0b"
-                    : "#6b7280";
+                    : "#475569";
                 }}
-                className="bg-card border rounded-lg"
+                className="bg-slate-800/90 border border-slate-700/50 rounded-lg shadow-xl"
+                maskColor="rgba(15, 23, 42, 0.8)"
               />
             </ReactFlow>
           </div>
 
           {showSimulator && (
-            <div className="w-96 flex flex-col">
+            <div className="w-96 flex flex-col bg-slate-800/95 backdrop-blur-sm border-l border-slate-700/50">
               <FlowSimulator
                 nodes={nodes}
                 edges={edges}

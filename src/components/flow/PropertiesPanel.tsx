@@ -47,10 +47,15 @@ export const PropertiesPanel = ({
 
   if (!selectedNode) {
     return (
-      <div className="w-96 border-l bg-card p-4">
-        <p className="text-sm text-muted-foreground">
-          Clique 2x em um bloco para editar suas propriedades
-        </p>
+      <div className="w-96 bg-slate-800/95 backdrop-blur-sm border-l border-slate-700/50 p-6 shadow-2xl">
+        <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
+            <span className="text-2xl">👆</span>
+          </div>
+          <p className="text-sm text-slate-400">
+            Double-click a block to edit its properties
+          </p>
+        </div>
       </div>
     );
   }
@@ -816,40 +821,46 @@ export const PropertiesPanel = ({
   };
 
   return (
-    <div className="w-96 border-l bg-card flex flex-col h-full">
-      <div className="p-4 border-b">
+    <div className="w-96 bg-slate-800/95 backdrop-blur-sm border-l border-slate-700/50 flex flex-col h-full shadow-2xl flow-editor-dark">
+      <div className="p-5 border-b border-slate-700/50 bg-gradient-to-r from-slate-800 to-slate-900">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium text-sm mb-1">Propriedades do Bloco</h3>
+            <h3 className="font-semibold text-white mb-1">Block Properties</h3>
             {blockDef && (
-              <p className="text-xs text-muted-foreground">{blockDef.label}</p>
+              <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
+                {blockDef.label}
+              </p>
             )}
           </div>
           {hasChanges && (
-            <Badge variant="secondary" className="animate-in fade-in">
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-in fade-in">
               <Check className="w-3 h-3 mr-1" />
-              Salvo
+              Saved
             </Badge>
           )}
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
+      <ScrollArea className="flex-1 bg-slate-900/50">
+        <div className="p-5 space-y-4">
           <div className="space-y-2">
-            <Label>Nome do Bloco</Label>
+            <Label className="text-slate-300 text-sm font-medium">Block Name</Label>
             <Input
               value={nodeData.label || ""}
               onChange={(e) => handleLabelChange(e.target.value)}
               placeholder={blockDef?.label}
+              className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
             />
           </div>
 
-          <Separator />
+          <Separator className="bg-slate-700/50" />
 
-          {renderConfigFields()}
+          <div className="space-y-4">
+            {renderConfigFields()}
+          </div>
 
-          <Separator className="my-4" />
+          <Separator className="bg-slate-700/50 my-4" />
 
           <VariableExplorer 
             selectedNode={selectedNode}
@@ -859,15 +870,15 @@ export const PropertiesPanel = ({
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t border-slate-700/50 bg-slate-900/80">
         <Button
           variant="destructive"
           size="sm"
-          className="w-full"
+          className="w-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50"
           onClick={() => onDeleteNode(selectedNode.id)}
         >
           <Trash2 className="w-4 h-4 mr-2" />
-          Excluir Bloco
+          Delete Block
         </Button>
       </div>
 

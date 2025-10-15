@@ -117,31 +117,41 @@ export const FlowNode = memo((props: any) => {
 
   return (
     <Card
-      className={`min-w-[200px] transition-all ${
-        selected ? "ring-2 ring-primary shadow-lg" : "shadow-md"
+      className={`min-w-[220px] max-w-[280px] transition-all duration-300 bg-slate-800/90 backdrop-blur-sm border-slate-700/50 shadow-xl ${
+        selected 
+          ? "ring-2 ring-cyan-500 shadow-2xl shadow-cyan-500/20 border-cyan-500/50" 
+          : "hover:border-slate-600/70 hover:shadow-lg"
       }`}
     >
-      <Handle type="target" position={Position.Top} className="!bg-primary" />
+      <Handle 
+        type="target" 
+        position={Position.Top} 
+        className="!bg-gradient-to-r !from-cyan-500 !to-blue-600 !w-3 !h-3 !border-2 !border-slate-800" 
+      />
       
-      <div className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          {IconComponent && <IconComponent className={`w-4 h-4 ${blockDef.color}`} />}
-          <span className="font-medium text-sm">{blockDef.label}</span>
+      <div className="p-4">
+        <div className="flex items-center gap-2.5 mb-2">
+          {IconComponent && (
+            <div className="p-1.5 rounded-md bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
+              <IconComponent className="w-4 h-4 text-cyan-400" />
+            </div>
+          )}
+          <span className="font-semibold text-sm text-white">{blockDef.label}</span>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2">{data.label || blockDef.description}</p>
+        <p className="text-xs text-slate-400 line-clamp-2">{data.label || blockDef.description}</p>
         
         {/* Mostrar opções com handles à direita */}
         {dynamicHandles && (
-          <div className="mt-3 space-y-1">
+          <div className="mt-3 space-y-1.5">
             {/* Condições */}
             {dynamicHandles.conditions?.map((cond: any, index: number) => (
-              <div key={cond.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
-                <span className="text-xs font-medium truncate">{cond.label}</span>
+              <div key={cond.id} className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-green-500/10 border border-green-500/30 rounded-md group hover:bg-green-500/20 transition-colors">
+                <span className="text-xs font-medium truncate text-green-400">{cond.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={cond.id}
-                  className="!bg-green-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  className="!bg-gradient-to-r !from-green-500 !to-emerald-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -149,55 +159,65 @@ export const FlowNode = memo((props: any) => {
             
             {/* Fallback */}
             {dynamicHandles.fallback && (
-              <div className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
-                <span className="text-xs font-medium truncate">{dynamicHandles.fallback.label}</span>
+              <div className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-pink-500/10 border border-pink-500/30 rounded-md group hover:bg-pink-500/20 transition-colors">
+                <span className="text-xs font-medium truncate text-pink-400">{dynamicHandles.fallback.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={dynamicHandles.fallback.id}
-                  className="!bg-pink-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  className="!bg-gradient-to-r !from-pink-500 !to-rose-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
             )}
-
+            
             {/* Keywords */}
             {dynamicHandles.keywords?.map((kw: any) => (
-              <div key={kw.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
-                <span className="text-xs font-medium truncate">{kw.label}</span>
+              <div key={kw.id} className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-blue-500/10 border border-blue-500/30 rounded-md group hover:bg-blue-500/20 transition-colors">
+                <span className="text-xs font-medium truncate text-blue-400">{kw.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={kw.id}
-                  className="!bg-blue-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  className="!bg-gradient-to-r !from-blue-500 !to-indigo-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
             ))}
-
-            {/* Buttons */}
+            
+            {/* Buttons/Options/Cards */}
             {dynamicHandles.buttons?.map((btn: any) => (
-              <div key={btn.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
-                <span className="text-xs font-medium truncate">{btn.label}</span>
+              <div key={btn.id} className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-purple-500/10 border border-purple-500/30 rounded-md group hover:bg-purple-500/20 transition-colors">
+                <span className="text-xs font-medium truncate text-purple-400">{btn.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={btn.id}
-                  className="!bg-purple-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0"
+                  className="!bg-gradient-to-r !from-purple-500 !to-violet-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
             ))}
-
-            {/* Paths */}
+            
+            {/* Paths (opt-in check, etc) */}
             {dynamicHandles.paths?.map((path: any) => (
-              <div key={path.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2 bg-muted/50 rounded-md">
-                <span className="text-xs font-medium truncate">{path.label}</span>
+              <div key={path.id} className={`relative flex items-center justify-between gap-2 py-2 px-2.5 rounded-md group transition-colors ${
+                path.color === 'bg-green-500' 
+                  ? 'bg-green-500/10 border border-green-500/30 hover:bg-green-500/20' 
+                  : 'bg-red-500/10 border border-red-500/30 hover:bg-red-500/20'
+              }`}>
+                <span className={`text-xs font-medium truncate ${
+                  path.color === 'bg-green-500' ? 'text-green-400' : 'text-red-400'
+                }`}>{path.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={path.id}
-                  className={`!${path.color} !w-3 !h-3 !relative !transform-none !top-auto !right-0`}
+                  className={`!w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform ${
+                    path.color === 'bg-green-500' 
+                      ? '!bg-gradient-to-r !from-green-500 !to-emerald-500' 
+                      : '!bg-gradient-to-r !from-red-500 !to-rose-500'
+                  }`}
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -205,10 +225,14 @@ export const FlowNode = memo((props: any) => {
           </div>
         )}
       </div>
-
+      
       {/* Handle padrão para blocos sem saídas dinâmicas */}
       {!dynamicHandles && (
-        <Handle type="source" position={Position.Bottom} className="!bg-primary" />
+        <Handle 
+          type="source" 
+          position={Position.Bottom} 
+          className="!bg-gradient-to-r !from-cyan-500 !to-blue-600 !w-3 !h-3 !border-2 !border-slate-800" 
+        />
       )}
     </Card>
   );

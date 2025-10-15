@@ -135,3 +135,39 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Estilos específicos para o Bot Builder com tema escuro */
+  .flow-editor-dark input,
+  .flow-editor-dark textarea,
+  .flow-editor-dark select {
+    @apply bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500;
+  }
+  
+  .flow-editor-dark input:focus,
+  .flow-editor-dark textarea:focus,
+  .flow-editor-dark select:focus {
+    @apply border-cyan-500 ring-cyan-500/20;
+  }
+  
+  .flow-editor-dark label {
+    @apply text-slate-300;
+  }
+  
+  /* Scrollbar para tema escuro */
+  .dark-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .dark-scrollbar::-webkit-scrollbar-track {
+    @apply bg-slate-900/50;
+  }
+  
+  .dark-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded-full;
+  }
+  
+  .dark-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-600;
+  }
+}
