@@ -104,16 +104,59 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         }, 500);
         break;
 
-      case "message":
-        const messageText = interpolateVariables(config.text || "Mensagem não configurada", context);
-        addBotMessage(messageText, node.id);
+      case "send_message":
+        // Suporte para múltiplas mensagens
+        const messages = config.messages || [];
+        if (messages.length > 0) {
+          messages.forEach((msg: any, index: number) => {
+            setTimeout(() => {
+              const messageText = interpolateVariables(msg.text || "", context);
+              addBotMessage(messageText, node.id);
+            }, index * 500);
+          });
+          
+          setTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }
+          }, messages.length * 500 + 500);
+        } else {
+          // Fallback para texto simples
+          const messageText = interpolateVariables(config.text || "Mensagem não configurada", context);
+          addBotMessage(messageText, node.id);
+          
+          setTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }
+          }, 1000);
+        }
+        break;
+
+      case "media":
+        const mediaType = config.mediaType || "image";
+        const mediaUrl = interpolateVariables(config.url || "", context);
+        const caption = interpolateVariables(config.caption || "", context);
         
-        // Se houver variável de saída, salva a mensagem enviada
-        if (config.outputVariable) {
-          setContext((prev) => ({
-            ...prev,
-            [config.outputVariable]: messageText,
-          }));
+        if (!mediaUrl) {
+          addBotMessage("📎 [Mídia não configurada]", node.id);
+        } else {
+          let mediaIcon = "📎";
+          if (mediaType === "image") mediaIcon = "🖼️";
+          else if (mediaType === "video") mediaIcon = "🎥";
+          else if (mediaType === "audio") mediaIcon = "🎵";
+          else if (mediaType === "file") mediaIcon = "📄";
+          
+          addBotMessage(`${mediaIcon} [${mediaType.toUpperCase()}]`, node.id);
+          if (caption) {
+            setTimeout(() => {
+              addBotMessage(caption, node.id);
+            }, 500);
+          }
         }
         
         setTimeout(() => {
@@ -122,10 +165,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
             setCurrentNodeId(nextNode.id);
             executeNode(nextNode);
           }
-        }, 1000);
+        }, caption ? 1500 : 1000);
         break;
 
-      case "question":
+      case "goodbye":
+        const goodbyeText = interpolateVariables(config.text || "Até logo!", context);
+        addBotMessage(goodbyeText, node.id);
+        
+        if (config.showStartAgain !== false) {
+          setTimeout(() => {
+            addSystemMessage("💬 Conversa finalizada. Clique em 'Reiniciar' para começar novamente.");
+          }, 1000);
+        }
+        
+        setIsWaitingInput(false);
+        break;
+
+      case "ask_name":
+      case "ask_question":
+      case "ask_email":
+      case "ask_number":
+      case "ask_phone":
+      case "ask_date":
+      case "ask_file":
+      case "ask_address":
+      case "ask_url":
         const question = interpolateVariables(config.question || "Pergunta não configurada", context);
         const variable = config.variable || "resposta";
         addBotMessage(question, node.id);
