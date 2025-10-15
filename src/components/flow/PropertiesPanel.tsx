@@ -169,10 +169,14 @@ export const PropertiesPanel = ({
             <div className="space-y-2">
               <Label>Conteúdo</Label>
               <Textarea
-                value={config.content || config.text || ""}
-                onChange={(e) => {
-                  console.log("Content changed:", e.target.value);
+                key={`content-${selectedNode.id}`}
+                defaultValue={config.content || config.text || ""}
+                onBlur={(e) => {
+                  console.log("Content blur:", e.target.value);
                   handleConfigChange("content", e.target.value);
+                }}
+                onChange={(e) => {
+                  console.log("Content typing:", e.target.value);
                 }}
                 placeholder="Digite a mensagem... Use {{variavel}} para interpolação"
                 rows={6}
