@@ -874,8 +874,10 @@ export const PropertiesPanel = ({
         <Button
           variant="destructive"
           size="sm"
-          className="w-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50"
+          className="w-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => onDeleteNode(selectedNode.id)}
+          disabled={nodeData.type === "start"}
+          title={nodeData.type === "start" ? "O bloco Start não pode ser excluído" : "Excluir bloco"}
         >
           <Trash2 className="w-4 h-4 mr-2" />
           Excluir Bloco

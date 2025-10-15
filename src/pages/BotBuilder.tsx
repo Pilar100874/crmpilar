@@ -35,7 +35,22 @@ const getId = () => `node_${id++}`;
 
 function BotBuilderContent() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  
+  // Criar bloco Start por padrão
+  const initialNodes: Node[] = [
+    {
+      id: "start_node",
+      type: "custom",
+      position: { x: 250, y: 100 },
+      data: {
+        label: "Iniciar conversa",
+        type: "start",
+        config: {},
+      },
+    }
+  ];
+  
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -165,20 +180,40 @@ function BotBuilderContent() {
 
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
+      // Não permitir deletar o bloco Start
+      const nodeToDelete = nodes.find(n => n.id === nodeId);
+      if (nodeToDelete && (nodeToDelete.data as any).type === "start") {
+        toast.error("O bloco Start não pode ser excluído!");
+        return;
+      }
+      
       setNodes((nds) => nds.filter((node) => node.id !== nodeId));
       setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
       setSelectedNode(null);
       toast.success("Bloco excluído!");
     },
-    [setNodes, setEdges]
+    [setNodes, setEdges, nodes]
   );
 
   const handleNewBot = useCallback(() => {
-    setNodes([]);
-    setEdges([]);
     setCurrentBotId(null);
     setCurrentBotName("Novo Bot");
     setSelectedNode(null);
+    setEdges([]);
+    
+    // Criar bloco Start automaticamente
+    const startNode: Node = {
+      id: "start_node",
+      type: "custom",
+      position: { x: 250, y: 100 },
+      data: {
+        label: "Iniciar conversa",
+        type: "start",
+        config: {},
+      },
+    };
+    setNodes([startNode]);
+    
     toast.success("Novo bot criado!");
   }, [setNodes, setEdges]);
 
@@ -196,7 +231,7 @@ function BotBuilderContent() {
 
     const botData = {
       name: currentBotName,
-      flow_data: flow,
+      flow_data: flow as any, // Cast to any for Json compatibility
       updated_at: new Date().toISOString(),
     };
 
@@ -213,7 +248,7 @@ function BotBuilderContent() {
       // Create new bot
       ({ error, data } = await supabase
         .from("bot_flows")
-        .insert({ ...botData, active: false })
+        .insert([{ ...botData, active: false }])
         .select()
         .single());
       
@@ -246,7 +281,25 @@ function BotBuilderContent() {
 
     if (data && data.flow_data) {
       const flowData = data.flow_data as any;
-      setNodes(flowData.nodes || []);
+      const loadedNodes = flowData.nodes || [];
+      
+      // Garantir que tem um bloco Start
+      const hasStart = loadedNodes.some((node: any) => node.data.type === "start");
+      if (!hasStart) {
+        const startNode: Node = {
+          id: "start_node",
+          type: "custom",
+          position: { x: 250, y: 100 },
+          data: {
+            label: "Iniciar conversa",
+            type: "start",
+            config: {},
+          },
+        };
+        loadedNodes.unshift(startNode);
+      }
+      
+      setNodes(loadedNodes);
       setEdges(flowData.edges || []);
       setCurrentBotId(data.id);
       setCurrentBotName(data.name);
@@ -359,10 +412,23 @@ function BotBuilderContent() {
   }, [nodes]);
 
   const handleNewFlow = useCallback(() => {
-    setNodes([]);
     setEdges([]);
     setSelectedNode(null);
     id = 0;
+    
+    // Criar bloco Start automaticamente
+    const startNode: Node = {
+      id: "start_node",
+      type: "custom",
+      position: { x: 250, y: 100 },
+      data: {
+        label: "Iniciar conversa",
+        type: "start",
+        config: {},
+      },
+    };
+    setNodes([startNode]);
+    
     toast.success("Novo fluxo criado!");
   }, [setNodes, setEdges]);
 
