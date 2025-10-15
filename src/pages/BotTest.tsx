@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RotateCcw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RotateCcw, MessageSquare, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
+import { WhatsAppQRCode } from "@/components/WhatsAppQRCode";
 import { Node, Edge } from "@xyflow/react";
 
 export default function BotTest() {
@@ -114,23 +116,44 @@ export default function BotTest() {
           </div>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          {nodes.length > 0 ? (
-            <div className="flex-1 bg-slate-900">
-              <FlowSimulator 
-                key={key}
-                nodes={nodes} 
-                edges={edges} 
-              />
-            </div>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-slate-400">
-                <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
-                <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
+        <div className="flex-1 flex overflow-hidden p-4">
+          <Tabs defaultValue="simulator" className="flex-1 flex flex-col">
+            <TabsList className="bg-slate-800 border-slate-700 mb-4">
+              <TabsTrigger value="simulator" className="data-[state=active]:bg-slate-700">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Simulador
+              </TabsTrigger>
+              <TabsTrigger value="whatsapp" className="data-[state=active]:bg-slate-700">
+                <Smartphone className="w-4 h-4 mr-2" />
+                WhatsApp QR Code
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="simulator" className="flex-1 flex">
+              {nodes.length > 0 ? (
+                <div className="flex-1 bg-slate-900 rounded-lg overflow-hidden">
+                  <FlowSimulator 
+                    key={key}
+                    nodes={nodes} 
+                    edges={edges} 
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center text-slate-400">
+                    <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
+                    <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="whatsapp" className="flex-1 flex items-center justify-center">
+              <div className="w-full max-w-md">
+                <WhatsAppQRCode />
               </div>
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </Layout>
