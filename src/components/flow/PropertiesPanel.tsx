@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Node } from "@xyflow/react";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Plus, X } from "lucide-react";
+import { Trash2, Plus, X, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -23,6 +25,15 @@ export const PropertiesPanel = ({
   onUpdateNode,
   onDeleteNode 
 }: PropertiesPanelProps) => {
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    if (hasChanges) {
+      const timer = setTimeout(() => setHasChanges(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasChanges]);
+
   if (!selectedNode) {
     return (
       <div className="w-96 border-l bg-card p-4">
@@ -44,17 +55,19 @@ export const PropertiesPanel = ({
         [key]: value,
       },
     });
+    setHasChanges(true);
   };
 
   const handleLabelChange = (label: string) => {
     onUpdateNode(selectedNode.id, { label });
+    setHasChanges(true);
   };
 
   const addCondition = () => {
     const conditions = config.conditions || [];
     handleConfigChange("conditions", [
       ...conditions,
-      { expression: "", outputVariable: "", nextNode: "" },
+      { id: `cond_${Date.now()}`, expression: "", label: "" },
     ]);
   };
 
@@ -71,21 +84,22 @@ export const PropertiesPanel = ({
   };
 
   const addHeader = () => {
-    const headers = config.headers || {};
-    const newKey = `header_${Object.keys(headers).length + 1}`;
-    handleConfigChange("headers", { ...headers, [newKey]: "" });
+    const headers = config.headers || [];
+    handleConfigChange("headers", [
+      ...headers,
+      { key: "", value: "" },
+    ]);
   };
 
-  const updateHeader = (oldKey: string, newKey: string, value: string) => {
-    const headers = { ...config.headers };
-    delete headers[oldKey];
-    headers[newKey] = value;
+  const updateHeader = (index: number, field: string, value: string) => {
+    const headers = [...(config.headers || [])];
+    headers[index] = { ...headers[index], [field]: value };
     handleConfigChange("headers", headers);
   };
 
-  const removeHeader = (key: string) => {
-    const headers = { ...config.headers };
-    delete headers[key];
+  const removeHeader = (index: number) => {
+    const headers = [...(config.headers || [])];
+    headers.splice(index, 1);
     handleConfigChange("headers", headers);
   };
 
@@ -139,8 +153,8 @@ export const PropertiesPanel = ({
             <div className="space-y-2">
               <Label>Conteúdo</Label>
               <Textarea
-                value={config.text || ""}
-                onChange={(e) => handleConfigChange("text", e.target.value)}
+                value={config.content || config.text || ""}
+                onChange={(e) => handleConfigChange("content", e.target.value)}
                 placeholder="Digite a mensagem... Use {{variavel}} para interpolação"
                 rows={6}
               />
@@ -285,24 +299,24 @@ export const PropertiesPanel = ({
             <div className="space-y-2">
               <Label>Headers</Label>
               <div className="space-y-2">
-                {Object.entries(config.headers || {}).map(([key, value]) => (
-                  <div key={key} className="flex gap-2">
+                {(config.headers || []).map((header: any, index: number) => (
+                  <div key={index} className="flex gap-2">
                     <Input
-                      value={key}
-                      onChange={(e) => updateHeader(key, e.target.value, value as string)}
-                      placeholder="Header"
+                      value={header.key || ""}
+                      onChange={(e) => updateHeader(index, "key", e.target.value)}
+                      placeholder="Authorization"
                       className="flex-1"
                     />
                     <Input
-                      value={value as string}
-                      onChange={(e) => updateHeader(key, key, e.target.value)}
-                      placeholder="Value"
+                      value={header.value || ""}
+                      onChange={(e) => updateHeader(index, "value", e.target.value)}
+                      placeholder="Bearer {{token}}"
                       className="flex-1"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeHeader(key)}
+                      onClick={() => removeHeader(index)}
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -640,10 +654,20 @@ export const PropertiesPanel = ({
   return (
     <div className="w-96 border-l bg-card flex flex-col h-full">
       <div className="p-4 border-b">
-        <h3 className="font-medium text-sm mb-1">Propriedades do Bloco</h3>
-        {blockDef && (
-          <p className="text-xs text-muted-foreground">{blockDef.label}</p>
-        )}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium text-sm mb-1">Propriedades do Bloco</h3>
+            {blockDef && (
+              <p className="text-xs text-muted-foreground">{blockDef.label}</p>
+            )}
+          </div>
+          {hasChanges && (
+            <Badge variant="secondary" className="animate-in fade-in">
+              <Check className="w-3 h-3 mr-1" />
+              Salvo
+            </Badge>
+          )}
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
