@@ -89,7 +89,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     type: "goodbye",
     label: "Mensagem de despedida",
     description: "Finalizar conversa",
-    icon: "HandWave",
+    icon: "Hand",
     color: "text-warning",
     defaultData: { text: "Obrigado pelo contato!" },
   },
