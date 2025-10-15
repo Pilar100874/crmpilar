@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,68 +6,124 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Save, ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function WhatsAppConfig() {
-  const [wahaUrl, setWahaUrl] = useState("");
-  const [wahaToken, setWahaToken] = useState("");
+  const [whatsappToken, setWhatsappToken] = useState("");
+  const [phoneNumberId, setPhoneNumberId] = useState("");
+  const [businessAccountId, setBusinessAccountId] = useState("");
+  const [loading, setLoading] = useState(false);
   const [webhookUrl] = useState(
     "https://kiuztueouxtyqiecgdxk.supabase.co/functions/v1/whatsapp-webhook"
   );
 
+  useEffect(() => {
+    loadConfig();
+  }, []);
+
+  const loadConfig = async () => {
+    const { data, error } = await supabase
+      .from("whatsapp_config")
+      .select("*")
+      .single();
+
+    if (data) {
+      setWhatsappToken(data.business_token || "");
+      setPhoneNumberId(data.phone_number_id || "");
+      setBusinessAccountId(data.business_account_id || "");
+    }
+  };
+
   const handleSave = async () => {
-    // Here you would save to Supabase secrets
-    toast.success("Configurações salvas! Configure os secrets no backend.");
+    if (!whatsappToken || !phoneNumberId) {
+      toast.error("Preencha o Token e Phone Number ID");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("whatsapp_config")
+        .upsert({
+          business_token: whatsappToken,
+          phone_number_id: phoneNumberId,
+          business_account_id: businessAccountId,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      
+      toast.success("Configurações salvas com sucesso!");
+    } catch (error) {
+      console.error("Error saving config:", error);
+      toast.error("Erro ao salvar configurações");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Layout>
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Configuração WhatsApp</h1>
+          <h1 className="text-3xl font-bold mb-2">Configuração WhatsApp Business API</h1>
           <p className="text-muted-foreground">
-            Configure sua integração com WAHA para WhatsApp Web e WhatsApp Business API
+            Configure sua integração com a API Oficial do WhatsApp Business
           </p>
         </div>
 
         <div className="grid gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>WAHA Configuration</CardTitle>
+              <CardTitle>WhatsApp Business API</CardTitle>
               <CardDescription>
-                Configure sua instância WAHA (WhatsApp HTTP API)
+                Configure suas credenciais da API Oficial do WhatsApp Business
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="waha-url">WAHA URL</Label>
+                <Label htmlFor="whatsapp-token">WhatsApp Business Token</Label>
                 <Input
-                  id="waha-url"
-                  placeholder="https://waha.yourdomain.com"
-                  value={wahaUrl}
-                  onChange={(e) => setWahaUrl(e.target.value)}
+                  id="whatsapp-token"
+                  type="password"
+                  placeholder="EAAxxxxxxxxxx..."
+                  value={whatsappToken}
+                  onChange={(e) => setWhatsappToken(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  URL da sua instância WAHA (self-hosted ou cloud)
+                  Token de acesso permanente do WhatsApp Business
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="waha-token">WAHA Token</Label>
+                <Label htmlFor="phone-number-id">Phone Number ID</Label>
                 <Input
-                  id="waha-token"
-                  type="password"
-                  placeholder="seu-token-waha"
-                  value={wahaToken}
-                  onChange={(e) => setWahaToken(e.target.value)}
+                  id="phone-number-id"
+                  placeholder="123456789012345"
+                  value={phoneNumberId}
+                  onChange={(e) => setPhoneNumberId(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Token de autenticação da sua instância WAHA
+                  ID do número de telefone do WhatsApp Business
                 </p>
               </div>
 
-              <Button onClick={handleSave} className="w-full">
+              <div className="space-y-2">
+                <Label htmlFor="business-account-id">Business Account ID (opcional)</Label>
+                <Input
+                  id="business-account-id"
+                  placeholder="123456789012345"
+                  value={businessAccountId}
+                  onChange={(e) => setBusinessAccountId(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  ID da conta de negócios do Meta
+                </p>
+              </div>
+
+              <Button onClick={handleSave} className="w-full" disabled={loading}>
                 <Save className="w-4 h-4 mr-2" />
-                Salvar Configurações
+                {loading ? "Salvando..." : "Salvar Configurações"}
               </Button>
             </CardContent>
           </Card>
@@ -108,41 +164,41 @@ export default function WhatsAppConfig() {
             <CardContent className="space-y-4">
               <div className="space-y-3 text-sm">
                 <div>
-                  <h3 className="font-semibold mb-1">1. Instale WAHA</h3>
+                  <h3 className="font-semibold mb-1">1. Crie uma Conta Meta Business</h3>
                   <p className="text-muted-foreground">
-                    Use Docker: <code className="bg-muted px-2 py-1 rounded">docker run -it -p 3000:3000/tcp devlikeapro/waha</code>
+                    Acesse business.facebook.com e crie uma conta de negócios
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-1">2. Configure Webhook no WAHA</h3>
+                  <h3 className="font-semibold mb-1">2. Configure WhatsApp Business</h3>
                   <p className="text-muted-foreground">
-                    POST /api/session/start com webhook: {webhookUrl}
+                    No Meta Business, adicione WhatsApp Business e configure seu número
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-1">3. Configure Secrets</h3>
+                  <h3 className="font-semibold mb-1">3. Gere Token de Acesso</h3>
                   <p className="text-muted-foreground">
-                    Adicione WAHA_URL e WAHA_TOKEN como secrets no backend
+                    Em Configurações do App, gere um token de acesso permanente
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-1">4. WhatsApp Business API (Oficial)</h3>
+                  <h3 className="font-semibold mb-1">4. Configure Webhook</h3>
                   <p className="text-muted-foreground">
-                    WAHA suporta WhatsApp Business API. Configure suas credenciais do Meta Business no WAHA.
+                    Use a URL de webhook acima nas configurações do WhatsApp Business
                   </p>
                 </div>
 
                 <Button variant="outline" className="w-full" asChild>
                   <a
-                    href="https://github.com/devlikeapro/waha"
+                    href="https://developers.facebook.com/docs/whatsapp/cloud-api"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Documentação WAHA
+                    Documentação WhatsApp Business API
                   </a>
                 </Button>
               </div>
