@@ -1,12 +1,16 @@
 import { Node } from "@xyflow/react";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Trash2, Plus, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -21,9 +25,9 @@ export const PropertiesPanel = ({
 }: PropertiesPanelProps) => {
   if (!selectedNode) {
     return (
-      <div className="w-80 border-l bg-card p-4">
+      <div className="w-96 border-l bg-card p-4">
         <p className="text-sm text-muted-foreground">
-          Selecione um bloco para editar suas propriedades
+          Clique 2x em um bloco para editar suas propriedades
         </p>
       </div>
     );
@@ -42,14 +46,79 @@ export const PropertiesPanel = ({
     });
   };
 
+  const handleLabelChange = (label: string) => {
+    onUpdateNode(selectedNode.id, { label });
+  };
+
+  const addCondition = () => {
+    const conditions = config.conditions || [];
+    handleConfigChange("conditions", [
+      ...conditions,
+      { expression: "", outputVariable: "", nextNode: "" },
+    ]);
+  };
+
+  const removeCondition = (index: number) => {
+    const conditions = [...(config.conditions || [])];
+    conditions.splice(index, 1);
+    handleConfigChange("conditions", conditions);
+  };
+
+  const updateCondition = (index: number, field: string, value: any) => {
+    const conditions = [...(config.conditions || [])];
+    conditions[index] = { ...conditions[index], [field]: value };
+    handleConfigChange("conditions", conditions);
+  };
+
+  const addHeader = () => {
+    const headers = config.headers || {};
+    const newKey = `header_${Object.keys(headers).length + 1}`;
+    handleConfigChange("headers", { ...headers, [newKey]: "" });
+  };
+
+  const updateHeader = (oldKey: string, newKey: string, value: string) => {
+    const headers = { ...config.headers };
+    delete headers[oldKey];
+    headers[newKey] = value;
+    handleConfigChange("headers", headers);
+  };
+
+  const removeHeader = (key: string) => {
+    const headers = { ...config.headers };
+    delete headers[key];
+    handleConfigChange("headers", headers);
+  };
+
   const renderConfigFields = () => {
     const nodeData = selectedNode.data as any;
     switch (nodeData.type) {
+      case "start":
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Trigger</Label>
+              <Select
+                value={config.trigger || "manual"}
+                onValueChange={(v) => handleConfigChange("trigger", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="webhook">Webhook</SelectItem>
+                  <SelectItem value="schedule">Agendado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
       case "message":
         return (
-          <>
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Tipo</Label>
+              <Label>Tipo de Mensagem</Label>
               <Select
                 value={config.type || "text"}
                 onValueChange={(v) => handleConfigChange("type", v)}
@@ -62,24 +131,50 @@ export const PropertiesPanel = ({
                   <SelectItem value="media">Mídia</SelectItem>
                   <SelectItem value="buttons">Botões</SelectItem>
                   <SelectItem value="carousel">Carrossel</SelectItem>
+                  <SelectItem value="template">Template</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
-              <Label>Mensagem</Label>
+              <Label>Conteúdo</Label>
               <Textarea
                 value={config.text || ""}
                 onChange={(e) => handleConfigChange("text", e.target.value)}
-                placeholder="Digite a mensagem..."
-                rows={4}
+                placeholder="Digite a mensagem... Use {{variavel}} para interpolação"
+                rows={6}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use {"{{"} variavel {"}"} para inserir valores do contexto
+              </p>
+            </div>
+
+            {config.type === "buttons" && (
+              <div className="space-y-2">
+                <Label>Botões (JSON)</Label>
+                <Textarea
+                  value={config.buttons || '[\n  {"text": "Opção 1", "value": "1"},\n  {"text": "Opção 2", "value": "2"}\n]'}
+                  onChange={(e) => handleConfigChange("buttons", e.target.value)}
+                  rows={4}
+                  className="font-mono text-xs"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Variável de Saída (opcional)</Label>
+              <Input
+                value={config.outputVariable || ""}
+                onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
+                placeholder="message_sent"
               />
             </div>
-          </>
+          </div>
         );
 
       case "question":
         return (
-          <>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Tipo de Pergunta</Label>
               <Select
@@ -90,40 +185,77 @@ export const PropertiesPanel = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="free">Livre</SelectItem>
+                  <SelectItem value="free">Texto Livre</SelectItem>
                   <SelectItem value="multiple">Múltipla Escolha</SelectItem>
                   <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="phone">Telefone</SelectItem>
                   <SelectItem value="cpf">CPF/CNPJ</SelectItem>
                   <SelectItem value="date">Data</SelectItem>
+                  <SelectItem value="number">Número</SelectItem>
                   <SelectItem value="file">Arquivo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label>Pergunta</Label>
-              <Input
+              <Textarea
                 value={config.question || ""}
                 onChange={(e) => handleConfigChange("question", e.target.value)}
-                placeholder="O que deseja perguntar?"
+                placeholder="Qual é o seu nome?"
+                rows={3}
               />
             </div>
+
             <div className="space-y-2">
-              <Label>Variável</Label>
+              <Label>Salvar resposta em (variável) *</Label>
               <Input
                 value={config.variable || ""}
                 onChange={(e) => handleConfigChange("variable", e.target.value)}
-                placeholder="nome_variavel"
+                placeholder="user_name"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Esta variável estará disponível como {"{{"}{config.variable || "variavel"}{"}}"}
+              </p>
+            </div>
+
+            {config.questionType === "multiple" && (
+              <div className="space-y-2">
+                <Label>Opções (uma por linha)</Label>
+                <Textarea
+                  value={config.options || ""}
+                  onChange={(e) => handleConfigChange("options", e.target.value)}
+                  placeholder="Opção 1\nOpção 2\nOpção 3"
+                  rows={4}
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Validação (regex opcional)</Label>
+              <Input
+                value={config.validation || ""}
+                onChange={(e) => handleConfigChange("validation", e.target.value)}
+                placeholder="^[A-Za-z]+$"
               />
             </div>
-          </>
+
+            <div className="flex items-center justify-between">
+              <Label>Obrigatória</Label>
+              <Switch
+                checked={config.required !== false}
+                onCheckedChange={(checked) => handleConfigChange("required", checked)}
+              />
+            </div>
+          </div>
         );
 
       case "api":
         return (
-          <>
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Método</Label>
+              <Label>Método HTTP</Label>
               <Select
                 value={config.method || "GET"}
                 onValueChange={(v) => handleConfigChange("method", v)}
@@ -135,10 +267,12 @@ export const PropertiesPanel = ({
                   <SelectItem value="GET">GET</SelectItem>
                   <SelectItem value="POST">POST</SelectItem>
                   <SelectItem value="PUT">PUT</SelectItem>
+                  <SelectItem value="PATCH">PATCH</SelectItem>
                   <SelectItem value="DELETE">DELETE</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label>URL</Label>
               <Input
@@ -147,8 +281,67 @@ export const PropertiesPanel = ({
                 placeholder="https://api.exemplo.com/endpoint"
               />
             </div>
+
             <div className="space-y-2">
-              <Label>Retry (tentativas)</Label>
+              <Label>Headers</Label>
+              <div className="space-y-2">
+                {Object.entries(config.headers || {}).map(([key, value]) => (
+                  <div key={key} className="flex gap-2">
+                    <Input
+                      value={key}
+                      onChange={(e) => updateHeader(key, e.target.value, value as string)}
+                      placeholder="Header"
+                      className="flex-1"
+                    />
+                    <Input
+                      value={value as string}
+                      onChange={(e) => updateHeader(key, key, e.target.value)}
+                      placeholder="Value"
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeHeader(key)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={addHeader} className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Header
+                </Button>
+              </div>
+            </div>
+
+            {(config.method === "POST" || config.method === "PUT" || config.method === "PATCH") && (
+              <div className="space-y-2">
+                <Label>Body (JSON)</Label>
+                <Textarea
+                  value={config.body || ""}
+                  onChange={(e) => handleConfigChange("body", e.target.value)}
+                  placeholder='{\n  "key": "{{variable}}"\n}'
+                  rows={6}
+                  className="font-mono text-xs"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Variável de Saída</Label>
+              <Input
+                value={config.outputVariable || ""}
+                onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
+                placeholder="api_response"
+              />
+              <p className="text-xs text-muted-foreground">
+                Resultado da API será salvo nesta variável
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Retries (tentativas)</Label>
               <Input
                 type="number"
                 value={config.retries || 3}
@@ -157,12 +350,132 @@ export const PropertiesPanel = ({
                 max={10}
               />
             </div>
-          </>
+
+            <div className="space-y-2">
+              <Label>Timeout (ms)</Label>
+              <Input
+                type="number"
+                value={config.timeout || 5000}
+                onChange={(e) => handleConfigChange("timeout", parseInt(e.target.value))}
+                min={1000}
+                max={60000}
+              />
+            </div>
+          </div>
+        );
+
+      case "condition":
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Condições</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Avalia condições em ordem. Use variáveis com {"{{"} variavel {"}}"} 
+              </p>
+              <div className="space-y-3">
+                {(config.conditions || []).map((condition: any, index: number) => (
+                  <Card key={index} className="p-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline">Condição {index + 1}</Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeCondition(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <Input
+                        value={condition.expression || ""}
+                        onChange={(e) =>
+                          updateCondition(index, "expression", e.target.value)
+                        }
+                        placeholder="{{variable}} == 'valor' ou {{age}} > 18"
+                      />
+                      <Input
+                        value={condition.label || ""}
+                        onChange={(e) =>
+                          updateCondition(index, "label", e.target.value)
+                        }
+                        placeholder="Label da saída (opcional)"
+                      />
+                    </div>
+                  </Card>
+                ))}
+                <Button variant="outline" onClick={addCondition} className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Condição
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "variables":
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Operação</Label>
+              <Select
+                value={config.operation || "set"}
+                onValueChange={(v) => handleConfigChange("operation", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="set">Set (definir)</SelectItem>
+                  <SelectItem value="unset">Unset (remover)</SelectItem>
+                  <SelectItem value="merge">Merge (mesclar)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Variáveis (JSON)</Label>
+              <Textarea
+                value={config.variables || '{\n  "nome": "{{input_name}}",\n  "idade": 25\n}'}
+                onChange={(e) => handleConfigChange("variables", e.target.value)}
+                rows={8}
+                className="font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Use {"{{"} variavel {"}"} para referenciar outras variáveis
+              </p>
+            </div>
+          </div>
+        );
+
+      case "script":
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Código JavaScript</Label>
+              <Textarea
+                value={config.code || ""}
+                onChange={(e) => handleConfigChange("code", e.target.value)}
+                placeholder="// Acesse variáveis via context\n// Ex: const nome = context.user_name;\n\n// Retorne um objeto com as variáveis de saída\nreturn {\n  resultado: true,\n  mensagem: 'Sucesso'\n};"
+                rows={12}
+                className="font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Timeout (ms)</Label>
+              <Input
+                type="number"
+                value={config.timeout || 5000}
+                onChange={(e) => handleConfigChange("timeout", parseInt(e.target.value))}
+                min={100}
+                max={30000}
+              />
+            </div>
+          </div>
         );
 
       case "delay":
         return (
-          <>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Duração</Label>
               <Input
@@ -185,15 +498,16 @@ export const PropertiesPanel = ({
                   <SelectItem value="seconds">Segundos</SelectItem>
                   <SelectItem value="minutes">Minutos</SelectItem>
                   <SelectItem value="hours">Horas</SelectItem>
+                  <SelectItem value="days">Dias</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </>
+          </div>
         );
 
       case "handoff":
         return (
-          <>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Departamento</Label>
               <Input
@@ -203,79 +517,151 @@ export const PropertiesPanel = ({
               />
             </div>
             <div className="space-y-2">
-              <Label>Nota</Label>
+              <Label>Prioridade</Label>
+              <Select
+                value={config.priority || "normal"}
+                onValueChange={(v) => handleConfigChange("priority", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Baixa</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="urgent">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Nota para o agente</Label>
               <Textarea
                 value={config.note || ""}
                 onChange={(e) => handleConfigChange("note", e.target.value)}
-                placeholder="Informações para o agente..."
-                rows={3}
+                placeholder="Informações de contexto para o agente..."
+                rows={4}
               />
             </div>
-          </>
+          </div>
         );
 
       case "n8n":
         return (
-          <>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Workflow ID</Label>
               <Input
                 value={config.workflowId || ""}
                 onChange={(e) => handleConfigChange("workflowId", e.target.value)}
-                placeholder="ID do workflow n8n"
+                placeholder="1234"
               />
             </div>
             <div className="space-y-2">
-              <Label>Webhook URL (opcional)</Label>
+              <Label>Webhook URL</Label>
               <Input
                 value={config.webhookUrl || ""}
                 onChange={(e) => handleConfigChange("webhookUrl", e.target.value)}
-                placeholder="https://..."
+                placeholder="https://n8n.example.com/webhook/..."
               />
             </div>
-          </>
+            <div className="space-y-2">
+              <Label>Dados de Entrada (JSON)</Label>
+              <Textarea
+                value={config.inputData || '{\n  "message": "{{user_message}}"\n}'}
+                onChange={(e) => handleConfigChange("inputData", e.target.value)}
+                rows={6}
+                className="font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Variável de Saída</Label>
+              <Input
+                value={config.outputVariable || ""}
+                onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
+                placeholder="n8n_result"
+              />
+            </div>
+          </div>
         );
 
-      case "script":
+      case "intent":
         return (
-          <div className="space-y-2">
-            <Label>Código JavaScript</Label>
-            <Textarea
-              value={config.code || ""}
-              onChange={(e) => handleConfigChange("code", e.target.value)}
-              placeholder="// Seu código aqui\nreturn { resultado: true };"
-              rows={8}
-              className="font-mono text-xs"
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Confiança Mínima (0-1)</Label>
+              <Input
+                type="number"
+                value={config.minConfidence || 0.7}
+                onChange={(e) => handleConfigChange("minConfidence", parseFloat(e.target.value))}
+                min={0}
+                max={1}
+                step={0.1}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Modelo NLU (endpoint)</Label>
+              <Input
+                value={config.nluEndpoint || ""}
+                onChange={(e) => handleConfigChange("nluEndpoint", e.target.value)}
+                placeholder="https://n8n.example.com/webhook/nlu"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Variável com o texto</Label>
+              <Input
+                value={config.inputVariable || ""}
+                onChange={(e) => handleConfigChange("inputVariable", e.target.value)}
+                placeholder="user_message"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Variável de Saída</Label>
+              <Input
+                value={config.outputVariable || ""}
+                onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
+                placeholder="detected_intent"
+              />
+            </div>
           </div>
         );
 
       default:
         return (
           <div className="space-y-2">
-            <Label>Label</Label>
-            <Input
-              value={config.label || ""}
-              onChange={(e) => handleConfigChange("label", e.target.value)}
-              placeholder="Nome do bloco"
-            />
+            <Label>Configuração</Label>
+            <p className="text-sm text-muted-foreground">
+              Propriedades específicas para este bloco serão adicionadas em breve.
+            </p>
           </div>
         );
     }
   };
 
   return (
-    <div className="w-80 border-l bg-card flex flex-col h-full">
+    <div className="w-96 border-l bg-card flex flex-col h-full">
       <div className="p-4 border-b">
-        <h3 className="font-medium text-sm">Propriedades</h3>
+        <h3 className="font-medium text-sm mb-1">Propriedades do Bloco</h3>
         {blockDef && (
-          <p className="text-xs text-muted-foreground mt-1">{blockDef.label}</p>
+          <p className="text-xs text-muted-foreground">{blockDef.label}</p>
         )}
       </div>
 
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {renderConfigFields()}
-      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <Label>Nome do Bloco</Label>
+            <Input
+              value={nodeData.label || ""}
+              onChange={(e) => handleLabelChange(e.target.value)}
+              placeholder={blockDef?.label}
+            />
+          </div>
+
+          <Separator />
+
+          {renderConfigFields()}
+        </div>
+      </ScrollArea>
 
       <div className="p-4 border-t">
         <Button

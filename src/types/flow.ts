@@ -30,6 +30,8 @@ export interface FlowNodeData extends Record<string, any> {
   label: string;
   type: NodeType;
   config?: Record<string, any>;
+  inputs?: Record<string, any>;  // Valores de entrada do bloco anterior
+  outputs?: Record<string, any>; // Valores de saída para o próximo bloco
 }
 
 export const BLOCK_DEFINITIONS: BlockDefinition[] = [
