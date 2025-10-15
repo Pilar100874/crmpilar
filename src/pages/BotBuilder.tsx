@@ -1,7 +1,7 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Save, Download, Upload } from "lucide-react";
+import { Plus, Play, Save, Download, Upload, X } from "lucide-react";
 import {
   ReactFlow,
   Background,
@@ -20,6 +20,7 @@ import "@xyflow/react/dist/style.css";
 import { FlowNode } from "@/components/flow/FlowNode";
 import { BlockLibrary } from "@/components/flow/BlockLibrary";
 import { PropertiesPanel } from "@/components/flow/PropertiesPanel";
+import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
 
@@ -36,6 +37,20 @@ function BotBuilderContent() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+
+  // Highlight node during simulation
+  useEffect(() => {
+    if (highlightedNodeId) {
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          selected: node.id === highlightedNodeId,
+        }))
+      );
+    }
+  }, [highlightedNodeId, setNodes]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -173,8 +188,21 @@ function BotBuilderContent() {
   }, [setNodes, setEdges, reactFlowInstance]);
 
   const handleTest = useCallback(() => {
-    toast.info("Funcionalidade de teste será implementada em breve!");
-  }, []);
+    if (nodes.length === 0) {
+      toast.error("Adicione blocos ao fluxo antes de testar");
+      return;
+    }
+    const hasStart = nodes.some((node) => {
+      const nodeData = node.data as any;
+      return nodeData.type === "start";
+    });
+    if (!hasStart) {
+      toast.error("Adicione um bloco 'Start' para iniciar o teste");
+      return;
+    }
+    setShowSimulator(true);
+    toast.success("Simulador aberto!");
+  }, [nodes]);
 
   const handleNewFlow = useCallback(() => {
     setNodes([]);
@@ -213,15 +241,15 @@ function BotBuilderContent() {
             </Button>
             <Button size="sm" onClick={handleTest}>
               <Play className="w-4 h-4 mr-2" />
-              Testar
+              {showSimulator ? "Fechar Teste" : "Testar Fluxo"}
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           <BlockLibrary onDragStart={onDragStart} />
 
-          <div className="flex-1 relative" ref={reactFlowWrapper}>
+          <div className={`${showSimulator ? "flex-1" : "flex-1"} relative`} ref={reactFlowWrapper}>
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -258,11 +286,23 @@ function BotBuilderContent() {
             </ReactFlow>
           </div>
 
-          <PropertiesPanel
-            selectedNode={selectedNode}
-            onUpdateNode={handleUpdateNode}
-            onDeleteNode={handleDeleteNode}
-          />
+          {showSimulator && (
+            <div className="w-96 flex flex-col">
+              <FlowSimulator
+                nodes={nodes}
+                edges={edges}
+                onHighlightNode={setHighlightedNodeId}
+              />
+            </div>
+          )}
+
+          {!showSimulator && (
+            <PropertiesPanel
+              selectedNode={selectedNode}
+              onUpdateNode={handleUpdateNode}
+              onDeleteNode={handleDeleteNode}
+            />
+          )}
         </div>
       </div>
     </Layout>
