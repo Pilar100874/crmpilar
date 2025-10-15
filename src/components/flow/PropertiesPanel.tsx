@@ -49,11 +49,14 @@ export const PropertiesPanel = ({
   const config = nodeData.config || {};
 
   const handleConfigChange = (key: string, value: any) => {
+    console.log("Config change:", key, value);
+    const newConfig = {
+      ...config,
+      [key]: value,
+    };
+    console.log("New config:", newConfig);
     onUpdateNode(selectedNode.id, {
-      config: {
-        ...config,
-        [key]: value,
-      },
+      config: newConfig,
     });
     setHasChanges(true);
   };
@@ -64,11 +67,14 @@ export const PropertiesPanel = ({
   };
 
   const addCondition = () => {
+    console.log("Adding condition, current conditions:", config.conditions);
     const conditions = config.conditions || [];
-    handleConfigChange("conditions", [
+    const newConditions = [
       ...conditions,
       { id: `cond_${Date.now()}`, expression: "", label: "" },
-    ]);
+    ];
+    console.log("New conditions:", newConditions);
+    handleConfigChange("conditions", newConditions);
   };
 
   const removeCondition = (index: number) => {
@@ -154,7 +160,10 @@ export const PropertiesPanel = ({
               <Label>Conteúdo</Label>
               <Textarea
                 value={config.content || config.text || ""}
-                onChange={(e) => handleConfigChange("content", e.target.value)}
+                onChange={(e) => {
+                  console.log("Content changed:", e.target.value);
+                  handleConfigChange("content", e.target.value);
+                }}
                 placeholder="Digite a mensagem... Use {{variavel}} para interpolação"
                 rows={6}
               />

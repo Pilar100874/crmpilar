@@ -121,13 +121,24 @@ function BotBuilderContent() {
   const handleUpdateNode = useCallback(
     (nodeId: string, data: Partial<FlowNodeData>) => {
       setNodes((nds) =>
-        nds.map((node) =>
-          node.id === nodeId
-            ? { ...node, data: { ...node.data, ...data } }
-            : node
-        )
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+                config: {
+                  ...(node.data as any).config,
+                  ...data.config,
+                },
+              },
+            };
+          }
+          return node;
+        })
       );
-      toast.success("Propriedades atualizadas!");
+      console.log("Node updated:", nodeId, data);
     },
     [setNodes]
   );
