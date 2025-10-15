@@ -15,32 +15,32 @@ interface BlockLibraryProps {
 // Organizar blocos por categoria
 const blockCategories = [
   {
-    name: "AI",
+    name: "IA",
     icon: "Sparkles",
     blocks: ["ai_agent"] as NodeType[],
   },
   {
-    name: "Messages",
+    name: "Mensagens",
     icon: "MessageSquare",
     blocks: ["send_message", "media", "goodbye"] as NodeType[],
   },
   {
-    name: "WhatsApp Essential",
+    name: "WhatsApp Essencial",
     icon: "MessageCircle",
     blocks: ["reply_buttons", "list_buttons", "keyword_options", "message_template", "opt_in_out", "opt_in_check", "audience"] as NodeType[],
   },
   {
-    name: "Questions",
+    name: "Perguntas",
     icon: "HelpCircle",
     blocks: ["ask_name", "ask_question", "ask_email", "ask_number", "ask_phone", "ask_date", "ask_file", "ask_address", "ask_url"] as NodeType[],
   },
   {
-    name: "Logic",
+    name: "Lógica",
     icon: "GitBranch",
     blocks: ["condition", "set_field", "keyword_jump", "global_keywords", "formulas", "jump_to", "lead_scoring", "goal"] as NodeType[],
   },
   {
-    name: "Low code",
+    name: "Código",
     icon: "Code",
     blocks: ["webhook", "n8n", "trigger_automation", "dynamic_data"] as NodeType[],
   },
@@ -49,7 +49,7 @@ const blockCategories = [
 export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [openCategories, setOpenCategories] = useState<string[]>(["Messages", "Questions"]);
+  const [openCategories, setOpenCategories] = useState<string[]>(["Mensagens", "Perguntas"]);
 
   const toggleCategory = (categoryName: string) => {
     setOpenCategories(prev => 

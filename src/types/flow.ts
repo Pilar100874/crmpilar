@@ -53,7 +53,7 @@ export interface FlowNodeData extends Record<string, any> {
 export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   {
     type: "start",
-    label: "Start",
+    label: "Iniciar",
     description: "Início do fluxo",
     icon: "Play",
     color: "text-success",
@@ -62,7 +62,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   // AI
   {
     type: "ai_agent",
-    label: "AI Agent",
+    label: "Agente IA",
     description: "Agente de IA conversacional",
     icon: "Sparkles",
     color: "text-primary",
@@ -71,7 +71,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   // Messages
   {
     type: "send_message",
-    label: "Send a message",
+    label: "Enviar mensagem",
     description: "Enviar mensagem de texto",
     icon: "MessageSquare",
     color: "text-primary",
@@ -79,7 +79,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "media",
-    label: "Media",
+    label: "Mídia",
     description: "Enviar imagem, vídeo ou áudio",
     icon: "Image",
     color: "text-primary",
@@ -87,16 +87,16 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "goodbye",
-    label: "Goodbye message",
-    description: "Mensagem de despedida",
-    icon: "HandWaving",
+    label: "Mensagem de despedida",
+    description: "Finalizar conversa",
+    icon: "HandWave",
     color: "text-warning",
     defaultData: { text: "Obrigado pelo contato!" },
   },
   // WhatsApp Essential
   {
     type: "reply_buttons",
-    label: "Reply buttons",
+    label: "Botões de resposta",
     description: "Botões de resposta rápida",
     icon: "SquareStack",
     color: "text-success",
@@ -104,7 +104,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "list_buttons",
-    label: "List buttons",
+    label: "Botões de lista",
     description: "Menu de lista",
     icon: "List",
     color: "text-success",
@@ -112,7 +112,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "keyword_options",
-    label: "Keyword options",
+    label: "Opções por palavra-chave",
     description: "Opções por palavra-chave",
     icon: "Hash",
     color: "text-accent",
@@ -120,7 +120,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "message_template",
-    label: "Send a Message Template",
+    label: "Template de mensagem",
     description: "Template aprovado do WhatsApp",
     icon: "FileText",
     color: "text-primary",
@@ -136,7 +136,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "opt_in_check",
-    label: "Opt-in check",
+    label: "Verificar opt-in",
     description: "Verificar consentimento",
     icon: "CheckCircle2",
     color: "text-success",
@@ -144,7 +144,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "audience",
-    label: "Audience",
+    label: "Audiência",
     description: "Segmentar audiência",
     icon: "Users",
     color: "text-primary",
@@ -153,7 +153,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   // Questions
   {
     type: "ask_name",
-    label: "Ask for a name",
+    label: "Perguntar nome",
     description: "Capturar nome do usuário",
     icon: "User",
     color: "text-warning",
@@ -161,7 +161,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_question",
-    label: "Ask a question",
+    label: "Fazer pergunta",
     description: "Pergunta aberta",
     icon: "HelpCircle",
     color: "text-accent",
@@ -169,7 +169,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_email",
-    label: "Ask for an email",
+    label: "Perguntar email",
     description: "Capturar email",
     icon: "Mail",
     color: "text-primary",
@@ -177,7 +177,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_number",
-    label: "Ask for a number",
+    label: "Perguntar número",
     description: "Capturar número",
     icon: "Hash",
     color: "text-primary",
@@ -185,7 +185,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_phone",
-    label: "Ask for a phone",
+    label: "Perguntar telefone",
     description: "Capturar telefone",
     icon: "Phone",
     color: "text-success",
@@ -193,7 +193,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_date",
-    label: "Ask for a date",
+    label: "Perguntar data",
     description: "Capturar data",
     icon: "Calendar",
     color: "text-destructive",
@@ -201,7 +201,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_file",
-    label: "Ask for a file",
+    label: "Solicitar arquivo",
     description: "Solicitar upload de arquivo",
     icon: "Folder",
     color: "text-primary",
@@ -209,7 +209,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_address",
-    label: "Ask for an address",
+    label: "Perguntar endereço",
     description: "Capturar endereço",
     icon: "MapPin",
     color: "text-destructive",
@@ -217,7 +217,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "ask_url",
-    label: "Ask for a Url",
+    label: "Perguntar URL",
     description: "Capturar URL",
     icon: "Globe",
     color: "text-primary",
@@ -226,7 +226,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   // Logic
   {
     type: "condition",
-    label: "Conditions",
+    label: "Condições",
     description: "Ramificação condicional",
     icon: "GitBranch",
     color: "text-primary",
@@ -234,7 +234,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "set_field",
-    label: "Set a field",
+    label: "Definir campo",
     description: "Definir/atualizar variável",
     icon: "Variable",
     color: "text-accent",
@@ -242,7 +242,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "keyword_jump",
-    label: "Keyword jump",
+    label: "Pular por palavra-chave",
     description: "Pular para bloco por palavra-chave",
     icon: "CornerDownRight",
     color: "text-warning",
@@ -250,7 +250,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "global_keywords",
-    label: "Global keywords",
+    label: "Palavras-chave globais",
     description: "Palavras-chave globais",
     icon: "Globe",
     color: "text-primary",
@@ -258,7 +258,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "formulas",
-    label: "Formulas",
+    label: "Fórmulas",
     description: "Cálculos e transformações",
     icon: "Calculator",
     color: "text-warning",
@@ -266,7 +266,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "jump_to",
-    label: "Jump to",
+    label: "Pular para",
     description: "Ir para outro bloco",
     icon: "ArrowRight",
     color: "text-accent",
@@ -274,7 +274,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "lead_scoring",
-    label: "Lead scoring",
+    label: "Pontuação de leads",
     description: "Pontuação de leads",
     icon: "TrendingUp",
     color: "text-success",
@@ -282,7 +282,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "goal",
-    label: "Goal",
+    label: "Meta",
     description: "Meta de conversão",
     icon: "Flag",
     color: "text-destructive",
@@ -299,7 +299,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "n8n",
-    label: "N8n Workflow",
+    label: "Workflow N8n",
     description: "Executar workflow n8n",
     icon: "Workflow",
     color: "text-accent",
@@ -307,7 +307,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "trigger_automation",
-    label: "Trigger automation",
+    label: "Disparar automação",
     description: "Disparar automação externa",
     icon: "Zap",
     color: "text-warning",
@@ -315,7 +315,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "dynamic_data",
-    label: "Dynamic data",
+    label: "Dados dinâmicos",
     description: "Dados dinâmicos",
     icon: "Database",
     color: "text-accent",
