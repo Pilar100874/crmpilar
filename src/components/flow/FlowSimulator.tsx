@@ -91,6 +91,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     if (!blockDef) return;
 
     const config = nodeData.config || {};
+    
+    console.log("Executing node:", nodeData.type, { type: nodeData.type, label: nodeData.label, config });
 
     switch (nodeData.type) {
       case "start":
@@ -105,12 +107,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         break;
 
       case "send_message":
+        console.log("send_message config:", config);
         // Suporte para múltiplas mensagens
         const messages = config.messages || [];
+        console.log("messages array:", messages);
         if (messages.length > 0) {
+          console.log("Processing multiple messages:", messages.length);
           messages.forEach((msg: any, index: number) => {
+            console.log("Scheduling message", index, ":", msg);
             setTimeout(() => {
               const messageText = interpolateVariables(msg.text || "", context);
+              console.log("Adding message text:", messageText);
               addBotMessage(messageText, node.id);
             }, index * 500);
           });
@@ -124,6 +131,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           }, messages.length * 500 + 500);
         } else {
           // Fallback para texto simples
+          console.log("Using fallback text:", config.text);
           const messageText = interpolateVariables(config.text || "Mensagem não configurada", context);
           addBotMessage(messageText, node.id);
           
@@ -138,11 +146,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         break;
 
       case "media":
+        console.log("media config:", config);
         const mediaType = config.mediaType || "image";
         const mediaUrl = interpolateVariables(config.url || "", context);
         const caption = interpolateVariables(config.caption || "", context);
+        console.log("media details:", { mediaType, mediaUrl, caption });
         
         if (!mediaUrl) {
+          console.log("No media URL, adding fallback message");
           addBotMessage("📎 [Mídia não configurada]", node.id);
         } else {
           let mediaIcon = "📎";
@@ -151,9 +162,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           else if (mediaType === "audio") mediaIcon = "🎵";
           else if (mediaType === "file") mediaIcon = "📄";
           
+          console.log("Adding media message with icon:", mediaIcon);
           addBotMessage(`${mediaIcon} [${mediaType.toUpperCase()}]`, node.id);
           if (caption) {
             setTimeout(() => {
+              console.log("Adding caption:", caption);
               addBotMessage(caption, node.id);
             }, 500);
           }
@@ -822,6 +835,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
   };
 
   const addBotMessage = (text: string, nodeId?: string) => {
+    console.log("Adding bot message:", text);
     const msg: Message = {
       id: Date.now().toString(),
       sender: "bot",
@@ -829,7 +843,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
       timestamp: new Date(),
       nodeId,
     };
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => {
+      console.log("Messages before:", prev.length, "after:", prev.length + 1);
+      return [...prev, msg];
+    });
   };
 
   const addSystemMessage = (text: string) => {
