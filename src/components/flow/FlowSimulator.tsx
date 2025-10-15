@@ -413,6 +413,355 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         }, 1500);
         break;
 
+      case "ai_agent":
+        const aiModel = config.model || "gpt-4";
+        const systemPrompt = config.systemPrompt || "Você é um assistente útil";
+        addSystemMessage(`🤖 Agente IA ativado (${aiModel})`);
+        
+        if (isWaitingInput) {
+          // Se está esperando input, responde com IA
+          setTimeout(() => {
+            addBotMessage("Esta é uma resposta simulada do agente IA. Em produção, aqui seria processada uma resposta real.", node.id);
+            setIsWaitingInput(true); // Continua aguardando input
+          }, 1500);
+        } else {
+          // Senão, apenas passa para o próximo
+          setTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }
+          }, 1000);
+        }
+        break;
+
+      case "reply_buttons":
+        const replyText = interpolateVariables(config.text || "", context);
+        const replyButtons = config.buttons || [];
+        
+        if (replyText) {
+          addBotMessage(replyText, node.id);
+        }
+        
+        if (replyButtons.length > 0) {
+          const buttonsList = replyButtons.map((btn: any) => `▶️ ${btn.title || btn.text}`).join("\n");
+          setTimeout(() => {
+            addSystemMessage(`Botões disponíveis:\n${buttonsList}`);
+          }, 500);
+        }
+        
+        setIsWaitingInput(true);
+        setPendingVariable(config.variable || "button_response");
+        break;
+
+      case "list_buttons":
+        const listText = interpolateVariables(config.text || "", context);
+        const buttonText = config.buttonText || "Ver opções";
+        const sections = config.sections || [];
+        
+        if (listText) {
+          addBotMessage(listText, node.id);
+        }
+        
+        setTimeout(() => {
+          addSystemMessage(`📋 ${buttonText}`);
+          sections.forEach((section: any, idx: number) => {
+            addSystemMessage(`\n${section.title || `Seção ${idx + 1}`}:`);
+            (section.rows || []).forEach((row: any) => {
+              addSystemMessage(`  ▶️ ${row.title}`);
+            });
+          });
+        }, 500);
+        
+        setIsWaitingInput(true);
+        setPendingVariable(config.variable || "list_response");
+        break;
+
+      case "keyword_options":
+        const keywords = config.keywords || [];
+        addSystemMessage("🔑 Aguardando palavra-chave...");
+        
+        if (keywords.length > 0) {
+          const keywordsList = keywords.map((kw: any) => `"${kw.keyword}"`).join(", ");
+          setTimeout(() => {
+            addSystemMessage(`Palavras-chave disponíveis: ${keywordsList}`);
+          }, 500);
+        }
+        
+        setIsWaitingInput(true);
+        break;
+
+      case "message_template":
+        const templateName = config.templateName || "não configurado";
+        const language = config.language || "pt_BR";
+        addSystemMessage(`📧 Enviando template: ${templateName} (${language})`);
+        addBotMessage("📧 [Template do WhatsApp enviado]", node.id);
+        
+        setTimeout(() => {
+          addSuccessMessage("Template enviado com sucesso");
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1000);
+        break;
+
+      case "opt_in_out":
+        const optAction = config.action || "opt-in";
+        const category = config.category || "marketing";
+        addSystemMessage(`✅ ${optAction === "opt-in" ? "Registrando" : "Removendo"} consentimento (${category})`);
+        
+        setTimeout(() => {
+          addSuccessMessage(`Consentimento ${optAction === "opt-in" ? "registrado" : "removido"} com sucesso`);
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1000);
+        break;
+
+      case "opt_in_check":
+        const checkCategory = config.category || "marketing";
+        addSystemMessage(`🔍 Verificando consentimento (${checkCategory})`);
+        
+        // Simula que o usuário tem opt-in
+        const hasOptIn = true;
+        setTimeout(() => {
+          if (hasOptIn) {
+            addSuccessMessage("Usuário possui consentimento");
+          } else {
+            addSystemMessage("Usuário não possui consentimento");
+          }
+          
+          const nextNode = getNextNode(node.id, hasOptIn ? 0 : 1);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1000);
+        break;
+
+      case "audience":
+        const segments = config.segments || [];
+        const audienceAction = config.action || "add";
+        addSystemMessage(`👥 ${audienceAction === "add" ? "Adicionando a" : "Removendo de"} segmentos: ${segments.join(", ")}`);
+        
+        setTimeout(() => {
+          addSuccessMessage("Segmentação atualizada");
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1000);
+        break;
+
+      case "set_field":
+        const operations = config.operations || [];
+        addSystemMessage("📝 Definindo campos...");
+        
+        operations.forEach((op: any) => {
+          const value = interpolateVariables(op.value || "", context);
+          setContext((prev) => ({
+            ...prev,
+            [op.field]: value,
+          }));
+          addSuccessMessage(`${op.field} = ${value}`);
+        });
+        
+        setTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1000);
+        break;
+
+      case "keyword_jump":
+        const jumpKeywords = config.keywords || [];
+        addSystemMessage("🔀 Aguardando palavra-chave para pular...");
+        
+        if (jumpKeywords.length > 0) {
+          const jumpList = jumpKeywords.map((kw: any) => `"${kw.keyword}" → ${kw.targetNode}`).join(", ");
+          setTimeout(() => {
+            addSystemMessage(`Pulos disponíveis: ${jumpList}`);
+          }, 500);
+        }
+        
+        setIsWaitingInput(true);
+        break;
+
+      case "global_keywords":
+        const globalKeywords = config.keywords || [];
+        addSystemMessage(`🌐 Palavras-chave globais ativas: ${globalKeywords.length}`);
+        
+        setTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 500);
+        break;
+
+      case "formulas":
+        const formula = config.formula || "";
+        const outputVariable = config.outputVariable || "result";
+        addSystemMessage(`🧮 Calculando: ${formula}`);
+        
+        try {
+          const interpolatedFormula = interpolateVariables(formula, context);
+          // eslint-disable-next-line no-eval
+          const result = eval(interpolatedFormula);
+          
+          setContext((prev) => ({
+            ...prev,
+            [outputVariable]: result,
+          }));
+          
+          setTimeout(() => {
+            addSuccessMessage(`${outputVariable} = ${result}`);
+            const nextNode = getNextNode(node.id);
+            if (nextNode) {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }
+          }, 1000);
+        } catch (error) {
+          addSystemMessage(`❌ Erro ao calcular fórmula: ${error}`);
+          setTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }
+          }, 1000);
+        }
+        break;
+
+      case "jump_to":
+        const targetNodeId = config.targetNodeId || "";
+        addSystemMessage(`⏭️ Pulando para bloco: ${targetNodeId}`);
+        
+        setTimeout(() => {
+          const targetNode = nodes.find((n) => n.id === targetNodeId);
+          if (targetNode) {
+            setCurrentNodeId(targetNode.id);
+            executeNode(targetNode);
+          } else {
+            addSystemMessage("❌ Bloco de destino não encontrado");
+          }
+        }, 500);
+        break;
+
+      case "lead_scoring":
+        const scoreField = config.scoreField || "lead_score";
+        const points = config.points || 0;
+        const scoringAction = config.action || "add";
+        
+        const currentScore = context[scoreField] || 0;
+        const newScore = scoringAction === "add" ? currentScore + points : currentScore - points;
+        
+        setContext((prev) => ({
+          ...prev,
+          [scoreField]: newScore,
+        }));
+        
+        addSystemMessage(`📊 ${scoringAction === "add" ? "+" : "-"}${points} pontos`);
+        addSuccessMessage(`${scoreField} = ${newScore}`);
+        
+        setTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1000);
+        break;
+
+      case "goal":
+        const goalName = config.goalName || "conversão";
+        const goalValue = config.value || 0;
+        addSystemMessage(`🎯 Meta atingida: ${goalName}`);
+        addSuccessMessage(`Valor: ${goalValue}`);
+        
+        setTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1000);
+        break;
+
+      case "webhook":
+        const webhookUrl = interpolateVariables(config.url || "", context);
+        const method = config.method || "POST";
+        addSystemMessage(`🌐 Chamando webhook: ${method} ${webhookUrl}`);
+        
+        setTimeout(() => {
+          const mockResponse = {
+            status: 200,
+            data: { success: true, message: "Webhook simulado" },
+          };
+          
+          if (config.outputVariable) {
+            setContext((prev) => ({
+              ...prev,
+              [config.outputVariable]: mockResponse.data,
+            }));
+          }
+          
+          addSuccessMessage("Webhook respondeu com sucesso");
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 2000);
+        break;
+
+      case "trigger_automation":
+        const automationId = config.automationId || "não configurado";
+        addSystemMessage(`⚡ Disparando automação: ${automationId}`);
+        
+        setTimeout(() => {
+          addSuccessMessage("Automação disparada");
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1500);
+        break;
+
+      case "dynamic_data":
+        const source = config.source || "não configurado";
+        const query = config.query || "";
+        const dataOutputVariable = config.outputVariable || "data";
+        addSystemMessage(`💾 Buscando dados: ${source}`);
+        
+        setTimeout(() => {
+          const mockData = { items: [], count: 0, timestamp: new Date().toISOString() };
+          
+          setContext((prev) => ({
+            ...prev,
+            [dataOutputVariable]: mockData,
+          }));
+          
+          addSuccessMessage(`Dados salvos em "${dataOutputVariable}"`);
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 1500);
+        break;
+
       case "fallback":
         addBotMessage("Desculpe, não entendi. Pode reformular?", node.id);
         addSystemMessage("⚠️ Fallback acionado");
