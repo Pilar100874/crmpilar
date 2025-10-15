@@ -116,6 +116,8 @@ function BotBuilderContent() {
       };
 
       setNodes((nds) => nds.concat(newNode));
+      setSelectedNode(newNode); // Abre propriedades automaticamente
+      setShowSimulator(false); // Fecha simulador
       toast.success(`Bloco "${blockDef.label}" adicionado!`);
     },
     [reactFlowInstance, setNodes]
@@ -127,14 +129,9 @@ function BotBuilderContent() {
   };
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    // Single click apenas destaca o nó
-  }, []);
-
-  const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    // Double click abre o painel de propriedades
+    // Um clique já abre o painel de propriedades
     setSelectedNode(node);
     setShowSimulator(false); // Fecha o simulador se estiver aberto
-    toast.info("Edite as propriedades do bloco");
   }, []);
 
   const onPaneClick = useCallback(() => {
@@ -423,7 +420,6 @@ function BotBuilderContent() {
               onDrop={onDrop}
               onDragOver={onDragOver}
               onNodeClick={onNodeClick}
-              onNodeDoubleClick={onNodeDoubleClick}
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
               fitView

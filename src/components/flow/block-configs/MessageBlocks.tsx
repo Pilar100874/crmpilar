@@ -58,15 +58,15 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
       </div>
 
       {messages.map((message, index) => (
-        <Card key={index} className="p-4 space-y-3">
+        <Card key={index} className="p-4 space-y-3 bg-slate-900/50 border-slate-700">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Write a message</Label>
+            <Label className="text-sm font-medium text-slate-300">Escrever uma mensagem</Label>
             {messages.length > 1 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => removeMessage(index)}
-                className="h-6 w-6 p-0"
+                className="h-6 w-6 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -80,37 +80,37 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
               value={message.text || ""}
               onChange={(e) => updateMessage(index, e.target.value)}
               onVariableRequest={() => openVariablePicker(inputRefs.current[`text_${index}`])}
-              placeholder="Click to edit..."
+              placeholder="Clique para editar..."
               rows={4}
-              className="resize-none"
+              className="resize-none bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
             />
 
             {/* Barra de ferramentas de formatação */}
-            <div className="flex items-center justify-between border-t pt-2">
+            <div className="flex items-center justify-between border-t border-slate-700 pt-2">
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Bold">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Bold">
                   <Bold className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Italic">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Italic">
                   <Italic className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Code">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Code">
                   <Code className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Heading">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Heading">
                   <Heading className="w-3.5 h-3.5" />
                 </Button>
-                <div className="w-px h-4 bg-border mx-1" />
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Ordered List">
+                <div className="w-px h-4 bg-slate-700 mx-1" />
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Ordered List">
                   <ListOrdered className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Bullet List">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Bullet List">
                   <List className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Link">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Link">
                   <LinkIcon className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Quote">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" title="Quote">
                   <Quote className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -118,9 +118,9 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
                 variant="outline" 
                 size="sm" 
                 onClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
-                className="h-7 text-xs"
+                className="h-7 text-xs bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
               >
-                Use field
+                Usar campo
               </Button>
             </div>
           </div>
@@ -128,25 +128,25 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
       ))}
 
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={addMessage} className="flex-1">
+        <Button variant="outline" size="sm" onClick={addMessage} className="flex-1 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white">
           <Plus className="w-4 h-4 mr-1" />
-          Add message
+          Adicionar mensagem
         </Button>
-        <Button variant="outline" size="sm" onClick={addMedia} className="flex-1">
+        <Button variant="outline" size="sm" onClick={addMedia} className="flex-1 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white">
           <Plus className="w-4 h-4 mr-1" />
-          Add media
+          Adicionar mídia
         </Button>
       </div>
 
       {config.media && (
-        <Card className="p-4 space-y-3">
+        <Card className="p-4 space-y-3 bg-slate-900/50 border-slate-700">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Media</Label>
+            <Label className="text-sm font-medium text-slate-300">Mídia</Label>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleConfigChange("media", null)}
-              className="h-6 w-6 p-0"
+              className="h-6 w-6 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -155,24 +155,26 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
             value={config.media.type || "image"}
             onValueChange={(v) => handleConfigChange("media", { ...config.media, type: v })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="image">Image</SelectItem>
-              <SelectItem value="video">Video</SelectItem>
+            <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectItem value="image">Imagem</SelectItem>
+              <SelectItem value="video">Vídeo</SelectItem>
               <SelectItem value="gif">GIF</SelectItem>
             </SelectContent>
           </Select>
           <Input
             value={config.media.url || ""}
             onChange={(e) => handleConfigChange("media", { ...config.media, url: e.target.value })}
-            placeholder="Media URL"
+            placeholder="URL da mídia"
+            className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
           />
           <Input
             value={config.media.caption || ""}
             onChange={(e) => handleConfigChange("media", { ...config.media, caption: e.target.value })}
-            placeholder="Caption (optional)"
+            placeholder="Legenda (opcional)"
+            className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
           />
         </Card>
       )}
@@ -183,15 +185,15 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
 export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => (
   <div className="space-y-4">
     <div className="space-y-2">
-      <Label>Tipo de Mídia</Label>
+      <Label className="text-slate-300">Tipo de Mídia</Label>
       <Select
         value={config.mediaType || "image"}
         onValueChange={(v) => handleConfigChange("mediaType", v)}
       >
-        <SelectTrigger>
+        <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-slate-800 border-slate-700">
           <SelectItem value="image">Imagem</SelectItem>
           <SelectItem value="video">Vídeo</SelectItem>
           <SelectItem value="audio">Áudio</SelectItem>
@@ -202,21 +204,23 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => (
     </div>
 
     <div className="space-y-2">
-      <Label>URL da Mídia *</Label>
+      <Label className="text-slate-300">URL da Mídia *</Label>
       <Input
         value={config.url || ""}
         onChange={(e) => handleConfigChange("url", e.target.value)}
         placeholder="https://exemplo.com/imagem.jpg"
+        className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
       />
     </div>
 
     <div className="space-y-2">
-      <Label>Legenda (opcional)</Label>
+      <Label className="text-slate-300">Legenda (opcional)</Label>
       <Textarea
         value={config.caption || ""}
         onChange={(e) => handleConfigChange("caption", e.target.value)}
         placeholder="Descrição da mídia..."
         rows={3}
+        className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
       />
     </div>
   </div>

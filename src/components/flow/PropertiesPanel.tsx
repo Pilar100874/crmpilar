@@ -53,7 +53,7 @@ export const PropertiesPanel = ({
             <span className="text-2xl">👆</span>
           </div>
           <p className="text-sm text-slate-400">
-            Double-click a block to edit its properties
+            Clique em um bloco para editar suas propriedades
           </p>
         </div>
       </div>
@@ -825,7 +825,7 @@ export const PropertiesPanel = ({
       <div className="p-5 border-b border-slate-700/50 bg-gradient-to-r from-slate-800 to-slate-900">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-white mb-1">Block Properties</h3>
+            <h3 className="font-semibold text-white mb-1">Propriedades do Bloco</h3>
             {blockDef && (
               <p className="text-xs text-slate-400 flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
@@ -836,7 +836,7 @@ export const PropertiesPanel = ({
           {hasChanges && (
             <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-in fade-in">
               <Check className="w-3 h-3 mr-1" />
-              Saved
+              Salvo
             </Badge>
           )}
         </div>
@@ -845,7 +845,7 @@ export const PropertiesPanel = ({
       <ScrollArea className="flex-1 bg-slate-900/50">
         <div className="p-5 space-y-4">
           <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">Block Name</Label>
+            <Label className="text-slate-300 text-sm font-medium">Nome do Bloco</Label>
             <Input
               value={nodeData.label || ""}
               onChange={(e) => handleLabelChange(e.target.value)}
@@ -878,7 +878,7 @@ export const PropertiesPanel = ({
           onClick={() => onDeleteNode(selectedNode.id)}
         >
           <Trash2 className="w-4 h-4 mr-2" />
-          Delete Block
+          Excluir Bloco
         </Button>
       </div>
 
