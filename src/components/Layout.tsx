@@ -85,7 +85,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-slate-900">
-        <Sidebar className="border-r border-slate-800 bg-slate-950">
+        <Sidebar className="border-r border-slate-800 bg-black">
           <div className="p-6 border-b border-slate-800">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600">
@@ -111,7 +111,7 @@ export default function Layout({ children }: LayoutProps) {
                           className={({ isActive }) =>
                             isActive
                               ? "bg-cyan-600/20 text-cyan-400 border-l-2 border-cyan-500"
-                              : "text-slate-300 hover:bg-slate-800/50"
+                              : "text-white hover:bg-slate-900/50"
                           }
                         >
                           <item.icon className="w-4 h-4" />
@@ -128,7 +128,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="p-4 border-t border-slate-800 mt-auto">
             <Button
               variant="outline"
-              className="w-full justify-start bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+              className="w-full justify-start bg-slate-900 border-slate-700 text-white hover:bg-slate-800 hover:text-white"
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-2" />
@@ -139,7 +139,7 @@ export default function Layout({ children }: LayoutProps) {
 
         <main className="flex-1 flex flex-col bg-slate-900">
           <header className="h-14 border-b border-slate-800 flex items-center px-4 bg-slate-950">
-            <SidebarTrigger className="text-slate-300" />
+            <SidebarTrigger className="text-white" />
           </header>
           <div className="flex-1 overflow-auto bg-slate-900">
             {children}
