@@ -31,19 +31,28 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
       );
       break;
 
-    case "question":
+    // Question blocks (all ask_* types)
+    case "ask_name":
+    case "ask_question":
+    case "ask_email":
+    case "ask_number":
+    case "ask_phone":
+    case "ask_date":
+    case "ask_file":
+    case "ask_address":
+    case "ask_url":
       if (config.variable) {
         outputs.push({
           name: config.variable,
-          description: `Resposta da pergunta: ${config.question || 'pergunta'}`,
-          type: config.questionType === "number" ? "number" : 
-                config.questionType === "date" ? "datetime" : 
-                config.questionType === "file" ? "file" : "string"
+          description: `Resposta: ${config.question || 'pergunta'}`,
+          type: data.type === "ask_number" ? "number" : 
+                data.type === "ask_date" ? "datetime" : 
+                data.type === "ask_file" ? "file" : "string"
         });
       }
       break;
 
-    case "api":
+    case "webhook":
       if (config.outputVariable) {
         outputs.push({
           name: config.outputVariable,
@@ -63,63 +72,43 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
       }
       break;
 
-    case "variables":
-      if (config.operation === "set" && config.variables) {
-        try {
-          const vars = JSON.parse(config.variables);
-          Object.keys(vars).forEach(key => {
+    case "set_field":
+      if (config.operations && Array.isArray(config.operations)) {
+        config.operations.forEach((op: any) => {
+          if (op.variable) {
             outputs.push({
-              name: key,
-              description: `Variável definida: ${key}`,
-              type: typeof vars[key]
+              name: op.variable,
+              description: `Campo definido: ${op.variable}`,
+              type: "any"
             });
-          });
-        } catch (e) {
-          // Invalid JSON, skip
-        }
-      }
-      break;
-
-    case "entity":
-      if (config.entities && Array.isArray(config.entities)) {
-        config.entities.forEach((entity: any) => {
-          outputs.push({
-            name: `entity_${entity.name || entity}`,
-            description: `Entidade extraída: ${entity.name || entity}`,
-            type: "string"
-          });
+          }
         });
       }
       break;
 
-    case "intent":
-      outputs.push(
-        { name: "intent", description: "Intenção identificada", type: "string" },
-        { name: "intent_confidence", description: "Confiança da intenção (0-1)", type: "number" }
-      );
-      break;
-
-    case "script":
+    case "formulas":
       if (config.outputVariable) {
         outputs.push({
           name: config.outputVariable,
-          description: "Resultado do script JavaScript",
+          description: `Resultado da fórmula: ${config.formula || ''}`,
           type: "any"
         });
       }
       break;
 
-    case "n8n":
+    case "ai_agent":
       if (config.outputVariable) {
         outputs.push({
           name: config.outputVariable,
-          description: `Resultado do workflow n8n`,
-          type: "object"
+          description: "Resposta do agente IA",
+          type: "string"
         });
       }
       break;
 
-    case "message":
+    case "send_message":
+    case "media":
+    case "goodbye":
       if (config.outputVariable) {
         outputs.push({
           name: config.outputVariable,
@@ -127,6 +116,34 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
           type: "boolean"
         });
       }
+      break;
+
+    case "trigger_automation":
+      if (config.outputVariable) {
+        outputs.push({
+          name: config.outputVariable,
+          description: "Resultado da automação",
+          type: "object"
+        });
+      }
+      break;
+
+    case "dynamic_data":
+      if (config.outputVariable) {
+        outputs.push({
+          name: config.outputVariable,
+          description: `Dados dinâmicos: ${config.source || ''}`,
+          type: "object"
+        });
+      }
+      break;
+
+    case "lead_scoring":
+      outputs.push({
+        name: config.scoreField || "lead_score",
+        description: "Pontuação do lead",
+        type: "number"
+      });
       break;
   }
 

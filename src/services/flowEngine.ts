@@ -70,32 +70,34 @@ export class FlowEngine {
       case "start":
         await this.handleStart(node);
         break;
-      case "message":
+      case "send_message":
+      case "media":
+      case "goodbye":
         await this.handleMessage(node);
         break;
-      case "question":
+      case "ask_name":
+      case "ask_question":
+      case "ask_email":
+      case "ask_number":
+      case "ask_phone":
+      case "ask_date":
+      case "ask_file":
+      case "ask_address":
+      case "ask_url":
         await this.handleQuestion(node);
         break;
       case "condition":
         await this.handleCondition(node);
         break;
-      case "api":
+      case "webhook":
         await this.handleAPI(node);
         break;
-      case "script":
-        await this.handleScript(node);
-        break;
-      case "variables":
+      case "set_field":
         await this.handleVariable(node);
         break;
-      case "delay":
-        await this.handleDelay(node);
-        break;
-      case "n8n":
-        await this.handleN8n(node);
-        break;
-      case "handoff":
-        await this.handleHandoff(node);
+      case "trigger_automation":
+      case "dynamic_data":
+        await this.handleExternal(node);
         break;
       default:
         console.log(`Node type ${data.type} not implemented yet`);
@@ -117,13 +119,13 @@ export class FlowEngine {
     const data = node.data as FlowNodeData;
     const config = data.config as any;
 
-    const content = this.interpolate(config.content || "");
+    const content = this.interpolate(config.content || config.text || "");
     
     await this.onResponse({
       type: "message",
       content,
       buttons: config.buttons,
-      messageType: config.type || "text",
+      messageType: config.type || data.type,
     });
 
     const nextNodes = this.getNextNodes(node.id);
@@ -141,13 +143,13 @@ export class FlowEngine {
     await this.onResponse({
       type: "question",
       question,
-      questionType: config.questionType,
-      outputVariable: config.outputVariable,
+      questionType: data.type,
+      outputVariable: config.variable,
     });
 
     // Store user's answer in context
-    if (config.outputVariable) {
-      this.context.vars[config.outputVariable] = this.context.userMessage;
+    if (config.variable) {
+      this.context.vars[config.variable] = this.context.userMessage;
     }
 
     const nextNodes = this.getNextNodes(node.id);
@@ -227,102 +229,34 @@ export class FlowEngine {
     }
   }
 
-  private async handleScript(node: Node): Promise<void> {
-    const data = node.data as FlowNodeData;
-    const config = data.config as any;
-
-    try {
-      const script = config.script || "";
-      const func = new Function("context", script);
-      const result = func(this.context.vars);
-
-      if (config.outputVariable) {
-        this.context.vars[config.outputVariable] = result;
-      }
-
-      const nextNodes = this.getNextNodes(node.id);
-      for (const next of nextNodes) {
-        await this.executeNode(next);
-      }
-    } catch (error) {
-      console.error("Script execution failed:", error);
-      throw error;
-    }
-  }
-
   private async handleVariable(node: Node): Promise<void> {
     const data = node.data as FlowNodeData;
     const config = data.config as any;
 
-    if (config.operation === "set") {
-      try {
-        const vars = JSON.parse(this.interpolate(config.variables || "{}"));
-        Object.assign(this.context.vars, vars);
-      } catch (error) {
-        console.error("Failed to set variables:", error);
-      }
-    } else if (config.operation === "unset") {
-      const keys = config.keys?.split(",").map((k: string) => k.trim()) || [];
-      keys.forEach((key: string) => delete this.context.vars[key]);
-    }
-
-    const nextNodes = this.getNextNodes(node.id);
-    for (const next of nextNodes) {
-      await this.executeNode(next);
-    }
-  }
-
-  private async handleDelay(node: Node): Promise<void> {
-    const data = node.data as FlowNodeData;
-    const config = data.config as any;
-
-    const duration = parseInt(config.duration || "1000");
-    await new Promise((resolve) => setTimeout(resolve, duration));
-
-    const nextNodes = this.getNextNodes(node.id);
-    for (const next of nextNodes) {
-      await this.executeNode(next);
-    }
-  }
-
-  private async handleN8n(node: Node): Promise<void> {
-    const data = node.data as FlowNodeData;
-    const config = data.config as any;
-
-    try {
-      const webhookUrl = this.interpolate(config.webhookUrl || "");
-      const inputData = config.inputData ? JSON.parse(this.interpolate(config.inputData)) : {};
-
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(inputData),
+    if (config.operations && Array.isArray(config.operations)) {
+      config.operations.forEach((op: any) => {
+        if (op.variable && op.value !== undefined) {
+          this.context.vars[op.variable] = this.interpolate(String(op.value));
+        }
       });
+    }
 
-      const result = await response.json();
-
-      if (config.outputVariable) {
-        this.context.vars[config.outputVariable] = result;
-      }
-
-      const nextNodes = this.getNextNodes(node.id);
-      for (const next of nextNodes) {
-        await this.executeNode(next);
-      }
-    } catch (error) {
-      console.error("N8n call failed:", error);
-      throw error;
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
     }
   }
 
-  private async handleHandoff(node: Node): Promise<void> {
+  private async handleExternal(node: Node): Promise<void> {
     const data = node.data as FlowNodeData;
     const config = data.config as any;
 
-    await this.onResponse({
-      type: "handoff",
-      department: config.department,
-      note: this.interpolate(config.note || ""),
-    });
+    // Placeholder for external automation/data calls
+    console.log("External call:", data.type, config);
+
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
   }
 }
