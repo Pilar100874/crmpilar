@@ -122,6 +122,41 @@ export const PropertiesPanel = ({
     }
   };
 
+  const handleVariableInsertAtEnd = (variableName: string) => {
+    const formattedVar = `{{${variableName}}}`;
+    
+    if (activeInputRef?.current) {
+      const input = activeInputRef.current;
+      const currentValue = input.value || "";
+      const newValue = currentValue + formattedVar;
+      
+      // Update the input value directly
+      input.value = newValue;
+      
+      // Create and dispatch a synthetic change event
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value'
+      )?.set || Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      )?.set;
+      
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(input, newValue);
+      }
+      
+      const changeEvent = new Event('input', { bubbles: true });
+      input.dispatchEvent(changeEvent);
+      
+      // Set cursor position at the end
+      setTimeout(() => {
+        input.focus();
+        input.setSelectionRange(newValue.length, newValue.length);
+      }, 0);
+    }
+  };
+
   const openVariablePicker = (ref: any) => {
     setActiveInputRef(ref);
     setShowVariablePicker(true);
@@ -903,6 +938,7 @@ export const PropertiesPanel = ({
         open={showVariablePicker}
         onClose={() => setShowVariablePicker(false)}
         onSelectVariable={handleVariableInsert}
+        onInsertAtEnd={handleVariableInsertAtEnd}
         selectedNode={selectedNode}
         nodes={nodes}
         edges={edges}

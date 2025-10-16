@@ -18,6 +18,7 @@ interface VariablePickerDialogProps {
   open: boolean;
   onClose: () => void;
   onSelectVariable: (variable: string) => void;
+  onInsertAtEnd?: (variable: string) => void;
   selectedNode: Node | null;
   nodes: Node[];
   edges: Edge[];
@@ -188,6 +189,7 @@ export const VariablePickerDialog = ({
   open,
   onClose,
   onSelectVariable,
+  onInsertAtEnd,
   selectedNode,
   nodes,
   edges,
@@ -289,6 +291,7 @@ export const VariablePickerDialog = ({
                     key={idx}
                     className="w-full p-4 rounded-lg border border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all text-left group"
                     onClick={() => onSelectVariable(item.variable.name)}
+                    onDoubleClick={() => onInsertAtEnd?.(item.variable.name)}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <code className="text-sm font-mono text-cyan-400 bg-slate-950/50 px-3 py-1.5 rounded flex-1 group-hover:text-cyan-300">
@@ -327,7 +330,9 @@ export const VariablePickerDialog = ({
                 Modo de inserção múltipla ativo
               </p>
               <p className="text-xs text-slate-400">
-                Clique em quantas variáveis quiser. Use o botão "Fechar" quando terminar.
+                <strong>Clique simples:</strong> Insere na posição do cursor<br />
+                <strong>Duplo clique:</strong> Insere no final do texto<br />
+                Use o botão "Fechar" quando terminar.
               </p>
             </div>
           </div>
