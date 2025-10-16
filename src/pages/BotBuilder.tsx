@@ -244,11 +244,8 @@ function BotBuilderContent() {
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     if (showSimulator) {
-      setErrorDialog({
-        open: true,
-        title: "Simulação em Andamento",
-        description: "Por favor, feche o simulador antes de editar o fluxo.",
-      });
+      // Não mostrar erro, apenas prevenir a seleção
+      // O menu de contexto ainda funciona com botão direito
       return;
     }
     // Um clique já abre o painel de propriedades
@@ -801,6 +798,7 @@ function BotBuilderContent() {
                   ...node.data,
                   isBreakpoint: breakpointNodes.has(node.id),
                   isSkipped: skipNodes.has(node.id),
+                  simulatorActive: showSimulator,
                   onSetBreakpoint: (nodeId: string) => {
                     setBreakpointNodes(prev => {
                       const newSet = new Set(prev);
