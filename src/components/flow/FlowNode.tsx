@@ -5,9 +5,17 @@ import { BLOCK_DEFINITIONS } from "@/types/flow";
 import * as Icons from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu";
+import { Pause, SkipForward, X } from "lucide-react";
 
 export const FlowNode = memo((props: any) => {
-  const { data, selected } = props;
+  const { data, selected, id } = props;
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   if (!blockDef) return null;
 
@@ -115,14 +123,33 @@ export const FlowNode = memo((props: any) => {
 
   const dynamicHandles = getDynamicHandles();
 
+  // Determinar cor do card baseado no estado de debug
+  const getCardClassName = () => {
+    const baseClass = "min-w-[220px] max-w-[280px] transition-all duration-300 backdrop-blur-sm shadow-xl";
+    
+    if (data.isBreakpoint) {
+      return `${baseClass} bg-orange-900/40 border-2 border-orange-500 ${
+        selected ? "ring-2 ring-cyan-500 shadow-2xl shadow-orange-500/30" : "hover:border-orange-400 hover:shadow-lg shadow-orange-500/20"
+      }`;
+    }
+    
+    if (data.isSkipped) {
+      return `${baseClass} bg-slate-700/30 border-2 border-slate-500 opacity-60 ${
+        selected ? "ring-2 ring-cyan-500 shadow-2xl shadow-slate-500/20" : "hover:border-slate-400 hover:shadow-lg"
+      }`;
+    }
+    
+    return `${baseClass} bg-slate-800/90 border-slate-700/50 ${
+      selected 
+        ? "ring-2 ring-cyan-500 shadow-2xl shadow-cyan-500/20 border-cyan-500/50" 
+        : "hover:border-slate-600/70 hover:shadow-lg"
+    }`;
+  };
+
   return (
-    <Card
-      className={`min-w-[220px] max-w-[280px] transition-all duration-300 bg-slate-800/90 backdrop-blur-sm border-slate-700/50 shadow-xl ${
-        selected 
-          ? "ring-2 ring-cyan-500 shadow-2xl shadow-cyan-500/20 border-cyan-500/50" 
-          : "hover:border-slate-600/70 hover:shadow-lg"
-      }`}
-    >
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <Card className={getCardClassName()}>
       <Handle 
         type="target" 
         position={Position.Top} 
@@ -234,7 +261,50 @@ export const FlowNode = memo((props: any) => {
           className="!bg-gradient-to-r !from-cyan-500 !to-blue-600 !w-3 !h-3 !border-2 !border-slate-800" 
         />
       )}
+      
+      {/* Badge de estado de debug */}
+      {data.isBreakpoint && (
+        <div className="absolute -top-2 -right-2 bg-orange-500 text-white rounded-full p-1 shadow-lg">
+          <Pause className="w-3 h-3" />
+        </div>
+      )}
+      {data.isSkipped && (
+        <div className="absolute -top-2 -right-2 bg-slate-500 text-white rounded-full p-1 shadow-lg">
+          <SkipForward className="w-3 h-3" />
+        </div>
+      )}
     </Card>
+      </ContextMenuTrigger>
+      
+      <ContextMenuContent className="w-56 bg-slate-800 border-slate-700">
+        <ContextMenuItem
+          onClick={() => data.onSetBreakpoint?.(id)}
+          className="text-slate-200 focus:bg-slate-700 focus:text-white cursor-pointer"
+        >
+          <Pause className="w-4 h-4 mr-2 text-orange-400" />
+          {data.isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
+        </ContextMenuItem>
+        
+        <ContextMenuItem
+          onClick={() => data.onSetSkip?.(id)}
+          className="text-slate-200 focus:bg-slate-700 focus:text-white cursor-pointer"
+        >
+          <SkipForward className="w-4 h-4 mr-2 text-slate-400" />
+          {data.isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
+        </ContextMenuItem>
+        
+        <ContextMenuSeparator className="bg-slate-700" />
+        
+        <ContextMenuItem
+          onClick={() => data.onClearDebug?.(id)}
+          disabled={!data.isBreakpoint && !data.isSkipped}
+          className="text-slate-200 focus:bg-slate-700 focus:text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <X className="w-4 h-4 mr-2 text-red-400" />
+          Liberar Bloco
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 });
 

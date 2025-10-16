@@ -63,6 +63,8 @@ function BotBuilderContent() {
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
   const [flowVariables, setFlowVariables] = useState<FlowVariable[]>([]);
+  const [breakpointNodes, setBreakpointNodes] = useState<Set<string>>(new Set());
+  const [skipNodes, setSkipNodes] = useState<Set<string>>(new Set());
 
   // Load saved bots on mount
   useEffect(() => {
@@ -663,7 +665,60 @@ function BotBuilderContent() {
 
           <div className={`${showSimulator ? "flex-1" : "flex-1"} relative`} ref={reactFlowWrapper}>
             <ReactFlow
-              nodes={nodes}
+              nodes={nodes.map(node => ({
+                ...node,
+                data: {
+                  ...node.data,
+                  isBreakpoint: breakpointNodes.has(node.id),
+                  isSkipped: skipNodes.has(node.id),
+                  onSetBreakpoint: (nodeId: string) => {
+                    setBreakpointNodes(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has(nodeId)) {
+                        newSet.delete(nodeId);
+                      } else {
+                        newSet.add(nodeId);
+                        skipNodes.delete(nodeId);
+                      }
+                      return newSet;
+                    });
+                    setSkipNodes(prev => {
+                      const newSet = new Set(prev);
+                      newSet.delete(nodeId);
+                      return newSet;
+                    });
+                  },
+                  onSetSkip: (nodeId: string) => {
+                    setSkipNodes(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has(nodeId)) {
+                        newSet.delete(nodeId);
+                      } else {
+                        newSet.add(nodeId);
+                        breakpointNodes.delete(nodeId);
+                      }
+                      return newSet;
+                    });
+                    setBreakpointNodes(prev => {
+                      const newSet = new Set(prev);
+                      newSet.delete(nodeId);
+                      return newSet;
+                    });
+                  },
+                  onClearDebug: (nodeId: string) => {
+                    setBreakpointNodes(prev => {
+                      const newSet = new Set(prev);
+                      newSet.delete(nodeId);
+                      return newSet;
+                    });
+                    setSkipNodes(prev => {
+                      const newSet = new Set(prev);
+                      newSet.delete(nodeId);
+                      return newSet;
+                    });
+                  },
+                },
+              }))}
               edges={edges.map((edge) => ({
                 ...edge,
                 style: {
@@ -730,6 +785,8 @@ function BotBuilderContent() {
                 nodes={nodes}
                 edges={edges}
                 onHighlightNode={setHighlightedNodeId}
+                breakpointNodes={breakpointNodes}
+                skipNodes={skipNodes}
               />
             </div>
           )}

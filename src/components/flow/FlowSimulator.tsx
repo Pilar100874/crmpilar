@@ -25,9 +25,11 @@ interface FlowSimulatorProps {
   nodes: Node[];
   edges: Edge[];
   onHighlightNode?: (nodeId: string | null) => void;
+  breakpointNodes?: Set<string>;
+  skipNodes?: Set<string>;
 }
 
-export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorProps) => {
+export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set() }: FlowSimulatorProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
@@ -159,6 +161,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === nodeData.type);
     
     if (!blockDef) return;
+
+    // Verificar se o bloco deve ser pulado
+    if (skipNodes.has(node.id)) {
+      addSystemMessage(`⏭️ Bloco "${blockDef.label}" pulado`);
+      safeSetTimeout(() => {
+        const nextNode = getNextNode(node.id);
+        if (nextNode) {
+          setCurrentNodeId(nextNode.id);
+          executeNode(nextNode);
+        }
+      }, 300);
+      return;
+    }
+
+    // Verificar se há breakpoint neste bloco
+    if (breakpointNodes.has(node.id)) {
+      addSystemMessage(`⏸️ Pausa de breakpoint no bloco "${blockDef.label}"`);
+      return; // Interrompe a execução aqui
+    }
 
     const config = nodeData.config || {};
     
