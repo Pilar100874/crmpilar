@@ -58,7 +58,7 @@ const DesktopSidebar = ({ activePanel, onPanelChange }: DesktopSidebarProps) => 
                 <Icon className="h-5 w-5 lg:h-6 lg:w-6" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md">
+            <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md z-[100]">
               <p>{tool.label}</p>
             </TooltipContent>
           </Tooltip>
@@ -86,7 +86,7 @@ const DesktopSidebar = ({ activePanel, onPanelChange }: DesktopSidebarProps) => 
             <Layers className="h-5 w-5 lg:h-6 lg:w-6" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md">
+        <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md z-[100]">
           <p>Camadas</p>
         </TooltipContent>
       </Tooltip>
