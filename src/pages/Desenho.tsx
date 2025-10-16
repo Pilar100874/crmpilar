@@ -494,12 +494,11 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
     }}>
       <div className="h-screen flex flex-col bg-background">
         <EditorHeaderV2 onBack={() => {
-          if (onBack) {
-            if (hasCanvasContent()) {
-              handleNavigateAway(onBack);
-            } else {
-              onBack();
-            }
+          const backAction = onBack || (() => navigate('/'));
+          if (hasCanvasContent()) {
+            handleNavigateAway(backAction);
+          } else {
+            backAction();
           }
         }} />
 
