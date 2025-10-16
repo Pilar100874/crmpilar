@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bold, Italic, Smile, Code, Heading, List, ListOrdered, Link, Quote, Info } from "lucide-react";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
+import { FormattingToolbar } from "./FormattingToolbar";
 
 interface ConfigProps {
   config: any;
@@ -16,78 +17,74 @@ interface ConfigProps {
   openVariablePicker: (ref: any) => void;
 }
 
-const RichTextToolbar = ({ onFormat }: { onFormat: (format: string) => void }) => (
-  <div className="flex gap-1 mb-2 p-2 border rounded-md bg-muted/50">
-    <Button variant="ghost" size="sm" onClick={() => onFormat('bold')} className="h-8 w-8 p-0">
-      <Bold className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('italic')} className="h-8 w-8 p-0">
-      <Italic className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('emoji')} className="h-8 w-8 p-0">
-      <Smile className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('code')} className="h-8 w-8 p-0">
-      <Code className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('heading')} className="h-8 w-8 p-0">
-      <Heading className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('list')} className="h-8 w-8 p-0">
-      <List className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('ordered')} className="h-8 w-8 p-0">
-      <ListOrdered className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('link')} className="h-8 w-8 p-0">
-      <Link className="h-4 w-4" />
-    </Button>
-    <Button variant="ghost" size="sm" onClick={() => onFormat('quote')} className="h-8 w-8 p-0">
-      <Quote className="h-4 w-4" />
-    </Button>
-  </div>
-);
+const insertFormatting = (
+  textareaRef: HTMLTextAreaElement | null,
+  prefix: string,
+  suffix: string,
+  currentValue: string,
+  onChange: (value: string) => void
+) => {
+  if (!textareaRef) return;
+
+  const start = textareaRef.selectionStart;
+  const end = textareaRef.selectionEnd;
+  const selectedText = currentValue.substring(start, end);
+  const newText = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
+  
+  onChange(newText);
+
+  setTimeout(() => {
+    textareaRef.focus();
+    const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
+    textareaRef.setSelectionRange(newCursorPos, newCursorPos);
+  }, 0);
+};
 
 export const AskNameConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Question text</Label>
-      <Textarea
-        ref={(el) => (inputRefs.current['question'] = el)}
-        value={config.question || "What's your name?"}
-        onChange={(e) => handleConfigChange("question", e.target.value)}
-        placeholder="What's your name?"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['question'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          Save user answer in the field
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <ConfigSection title="Pergunta">
+      <div className="space-y-2">
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
         </Label>
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Qual é o seu nome?"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Qual é o seu nome?"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+        />
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+        />
       </div>
-      <Input
-        value={config.variable || "name"}
-        onChange={(e) => handleConfigChange("variable", e.target.value)}
-        placeholder="Search or create"
-        className="bg-accent/50"
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar"
+        value={config.variable || "nome"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="nome"
+        required
+        info="Se um campo não for definido, a resposta não será salva."
+        prefix="@"
       />
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        ⚠️ If a field is not set, the answer won't be saved.
-      </p>
-    </div>
+    </ConfigSection>
+
+    <ConfigInfo variant="info">
+      <p className="font-semibold mb-1">💡 Dica:</p>
+      <p>Use a formatação WhatsApp para deixar sua pergunta mais clara: *negrito*, _itálico_, ~tachado~, ```código```</p>
+    </ConfigInfo>
   </div>
 );
 
@@ -96,627 +93,530 @@ export const AskQuestionConfig = ({ config, handleConfigChange, inputRefs, openV
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Question text</Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
-          value={config.question || "Ask anything"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
-          placeholder="Ask anything"
-          rows={2}
-          className="resize-none"
-        />
-        <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => openVariablePicker(inputRefs.current['question'])}
-          className="w-full"
-        >
-          Use field
-        </Button>
-      </div>
+      <ConfigSection title="Pergunta">
+        <div className="space-y-2">
+          <Label className="text-white text-sm font-semibold flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+            Texto da Pergunta
+          </Label>
+          <Textarea
+            ref={(el) => (inputRefs.current['question'] = el)}
+            value={config.question || "Faça sua pergunta"}
+            onChange={(e) => handleConfigChange("question", e.target.value)}
+            placeholder="Faça sua pergunta"
+            rows={3}
+            className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          />
+          <FormattingToolbar
+            onFormat={(prefix, suffix) => insertFormatting(
+              inputRefs.current['question'],
+              prefix,
+              suffix,
+              config.question || "",
+              (val) => handleConfigChange("question", val)
+            )}
+            onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          />
+        </div>
+      </ConfigSection>
 
-      <div className="flex items-center justify-between py-2">
-        <Label>Settings</Label>
-        <Switch checked={showSettings} onCheckedChange={setShowSettings} />
-      </div>
+      <ConfigSwitch
+        label="Mostrar Configurações Avançadas"
+        checked={showSettings}
+        onChange={setShowSettings}
+      />
 
       {showSettings && (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Min. characters</Label>
-              <Input
-                type="number"
-                value={config.minChars || 0}
-                onChange={(e) => handleConfigChange("minChars", parseInt(e.target.value) || 0)}
-                placeholder="0"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Max. characters</Label>
-              <Input
-                type="number"
-                value={config.maxChars || 99999}
-                onChange={(e) => handleConfigChange("maxChars", parseInt(e.target.value) || 99999)}
-                placeholder="99999"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Regex pattern</Label>
-            <Input
-              value={config.validation || ""}
-              onChange={(e) => handleConfigChange("validation", e.target.value)}
-              placeholder=""
+        <ConfigSection title="Validação">
+          <div className="grid grid-cols-2 gap-3">
+            <ConfigInput
+              label="Min. caracteres"
+              type="number"
+              value={config.minChars || 0}
+              onChange={(v) => handleConfigChange("minChars", parseInt(v) || 0)}
+              placeholder="0"
+            />
+            <ConfigInput
+              label="Max. caracteres"
+              type="number"
+              value={config.maxChars || 99999}
+              onChange={(v) => handleConfigChange("maxChars", parseInt(v) || 99999)}
+              placeholder="99999"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Validation error message</Label>
-            <Textarea
-              value={config.errorMessage || "I'm afraid I didn't understand, could you try again, please?"}
-              onChange={(e) => handleConfigChange("errorMessage", e.target.value)}
-              placeholder="I'm afraid I didn't understand, could you try again, please?"
-              rows={2}
-              className="resize-none"
-            />
-          </div>
-        </>
+          <ConfigInput
+            label="Padrão Regex (opcional)"
+            value={config.regexPattern || ""}
+            onChange={(v) => handleConfigChange("regexPattern", v)}
+            placeholder="^[A-Za-z ]+$"
+            info="Use expressões regulares para validar o formato da resposta"
+          />
+
+          <ConfigTextarea
+            label="Mensagem de Erro Personalizada"
+            value={config.errorMessage || ""}
+            onChange={(v) => handleConfigChange("errorMessage", v)}
+            placeholder="Por favor, insira uma resposta válida"
+            rows={2}
+          />
+        </ConfigSection>
       )}
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2">
-            Save user answer in the field
-            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-          </Label>
-        </div>
-        <Input
-          value={config.variable || ""}
-          onChange={(e) => handleConfigChange("variable", e.target.value)}
-          placeholder="Search or create"
-          className="bg-accent/50"
+      <ConfigSection title="Salvar Resposta">
+        <ConfigInput
+          label="Campo para salvar"
+          value={config.variable || "resposta"}
+          onChange={(v) => handleConfigChange("variable", v)}
+          placeholder="resposta"
+          required
+          info="Se um campo não for definido, a resposta não será salva."
+          prefix="@"
         />
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          ⚠️ If a field is not set, the answer won't be saved.
-        </p>
-      </div>
+      </ConfigSection>
     </div>
   );
 };
 
 export const AskEmailConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Question text</Label>
-      <Textarea
-        ref={(el) => (inputRefs.current['question'] = el)}
-        value={config.question || "What's your email?"}
-        onChange={(e) => handleConfigChange("question", e.target.value)}
-        placeholder="What's your email?"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['question'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Validation error message</Label>
-      <Textarea
-        value={config.errorMessage || "I'm afraid I didn't understand, could you try again, please?"}
-        onChange={(e) => handleConfigChange("errorMessage", e.target.value)}
-        placeholder="I'm afraid I didn't understand, could you try again, please?"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['errorMessage'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          Save user answer in the field
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <ConfigSection title="Pergunta">
+      <div className="space-y-2">
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
         </Label>
-      </div>
-      <div className="relative">
-        <Input
-          value={config.variable || "email"}
-          onChange={(e) => handleConfigChange("variable", e.target.value)}
-          placeholder="email"
-          className="bg-red-50 border-red-200"
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Qual é o seu e-mail?"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Qual é o seu e-mail?"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
         />
-        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded">
-          T
-        </span>
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+        />
       </div>
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        ⚠️ If a field is not set, the answer won't be saved.
-      </p>
-    </div>
+    </ConfigSection>
+
+    <ConfigSection title="Validação">
+      <ConfigSwitch
+        label="Validar formato de e-mail"
+        checked={config.validateEmail !== false}
+        onChange={(checked) => handleConfigChange("validateEmail", checked)}
+        info="Verifica se o e-mail possui um formato válido"
+      />
+
+      <ConfigTextarea
+        label="Mensagem de Erro"
+        value={config.errorMessage || ""}
+        onChange={(v) => handleConfigChange("errorMessage", v)}
+        placeholder="Por favor, insira um e-mail válido"
+        rows={2}
+      />
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar"
+        value={config.variable || "email"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="email"
+        required
+        prefix="@"
+      />
+    </ConfigSection>
   </div>
 );
 
-export const AskNumberConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
-  const [showSettings, setShowSettings] = useState(true);
-
-  return (
-    <div className="space-y-4">
+export const AskNumberConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+  <div className="space-y-4">
+    <ConfigSection title="Pergunta">
       <div className="space-y-2">
-        <Label>Question text</Label>
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
+        </Label>
         <Textarea
           ref={(el) => (inputRefs.current['question'] = el)}
-          value={config.question || "Type a number, please"}
+          value={config.question || "Digite um número"}
           onChange={(e) => handleConfigChange("question", e.target.value)}
-          placeholder="Type a number, please"
-          rows={2}
-          className="resize-none"
+          placeholder="Digite um número"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
         />
-        <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => openVariablePicker(inputRefs.current['question'])}
-          className="w-full"
-        >
-          Use field
-        </Button>
-      </div>
-
-      <div className="flex items-center justify-between py-2">
-        <Label>Settings</Label>
-        <Switch checked={showSettings} onCheckedChange={setShowSettings} />
-      </div>
-
-      {showSettings && (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Format</Label>
-              <Select value={config.format || "Auto"} onValueChange={(v) => handleConfigChange("format", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Auto">Auto</SelectItem>
-                  <SelectItem value="Integer">Integer</SelectItem>
-                  <SelectItem value="Decimal">Decimal</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Add a prefix</Label>
-              <Input
-                value={config.prefix || ""}
-                onChange={(e) => handleConfigChange("prefix", e.target.value)}
-                placeholder="Examples: $, %"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Min. value</Label>
-              <Input
-                type="number"
-                value={config.min || 0}
-                onChange={(e) => handleConfigChange("min", parseFloat(e.target.value) || 0)}
-                placeholder="0"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Max. value</Label>
-              <Input
-                type="number"
-                value={config.max || 99999}
-                onChange={(e) => handleConfigChange("max", parseFloat(e.target.value) || 99999)}
-                placeholder="99999"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Validation error message</Label>
-            <Textarea
-              value={config.errorMessage || "I'm afraid I didn't understand, could you try again, please?"}
-              onChange={(e) => handleConfigChange("errorMessage", e.target.value)}
-              placeholder="I'm afraid I didn't understand, could you try again, please?"
-              rows={2}
-              className="resize-none"
-            />
-            <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => openVariablePicker(inputRefs.current['errorMessage'])}
-              className="w-full"
-            >
-              Use field
-            </Button>
-          </div>
-        </>
-      )}
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2">
-            Save user answer in the field
-            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-          </Label>
-        </div>
-        <Input
-          value={config.variable || ""}
-          onChange={(e) => handleConfigChange("variable", e.target.value)}
-          placeholder="Search or create"
-          className="bg-accent/50"
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
         />
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          ⚠️ If a field is not set, the answer won't be saved.
-        </p>
       </div>
-    </div>
-  );
-};
+    </ConfigSection>
+
+    <ConfigSection title="Validação">
+      <div className="grid grid-cols-2 gap-3">
+        <ConfigInput
+          label="Número Mínimo"
+          type="number"
+          value={config.min || ""}
+          onChange={(v) => handleConfigChange("min", v)}
+          placeholder="0"
+        />
+        <ConfigInput
+          label="Número Máximo"
+          type="number"
+          value={config.max || ""}
+          onChange={(v) => handleConfigChange("max", v)}
+          placeholder="999999"
+        />
+      </div>
+
+      <ConfigSwitch
+        label="Aceitar decimais"
+        checked={config.allowDecimals !== false}
+        onChange={(checked) => handleConfigChange("allowDecimals", checked)}
+      />
+
+      <ConfigTextarea
+        label="Mensagem de Erro"
+        value={config.errorMessage || ""}
+        onChange={(v) => handleConfigChange("errorMessage", v)}
+        placeholder="Por favor, insira um número válido"
+        rows={2}
+      />
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar"
+        value={config.variable || "numero"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="numero"
+        required
+        prefix="@"
+      />
+    </ConfigSection>
+  </div>
+);
 
 export const AskPhoneConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Question text</Label>
-      <Textarea
-        ref={(el) => (inputRefs.current['question'] = el)}
-        value={config.question || "What's your phone number?"}
-        onChange={(e) => handleConfigChange("question", e.target.value)}
-        placeholder="What's your phone number?"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['question'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          Save user answer in the field
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <ConfigSection title="Pergunta">
+      <div className="space-y-2">
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
         </Label>
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Qual é o seu telefone?"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Qual é o seu telefone?"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+        />
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+        />
       </div>
-      <Input
-        value={config.variable || "phone"}
-        onChange={(e) => handleConfigChange("variable", e.target.value)}
-        placeholder="Search or create"
-        className="bg-accent/50"
+    </ConfigSection>
+
+    <ConfigSection title="Validação">
+      <ConfigSelect
+        label="Formato"
+        value={config.format || "international"}
+        onChange={(v) => handleConfigChange("format", v)}
+        options={[
+          { value: "international", label: "Internacional (+55 11 99999-9999)" },
+          { value: "national", label: "Nacional (11 99999-9999)" },
+          { value: "any", label: "Qualquer formato" }
+        ]}
       />
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        ⚠️ If a field is not set, the answer won't be saved.
-      </p>
-    </div>
+
+      <ConfigSwitch
+        label="Validar formato"
+        checked={config.validateFormat !== false}
+        onChange={(checked) => handleConfigChange("validateFormat", checked)}
+      />
+
+      <ConfigTextarea
+        label="Mensagem de Erro"
+        value={config.errorMessage || ""}
+        onChange={(v) => handleConfigChange("errorMessage", v)}
+        placeholder="Por favor, insira um telefone válido"
+        rows={2}
+      />
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar"
+        value={config.variable || "telefone"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="telefone"
+        required
+        prefix="@"
+      />
+    </ConfigSection>
   </div>
 );
 
 export const AskDateConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Question text</Label>
-      <Textarea
-        ref={(el) => (inputRefs.current['question'] = el)}
-        value={config.question || "Select a date, please"}
-        onChange={(e) => handleConfigChange("question", e.target.value)}
-        placeholder="Select a date, please"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['question'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Format to save the date</Label>
-      <Select 
-        value={config.dateFormat || "YYYY/MM/DD - 2025/10/15"} 
-        onValueChange={(v) => handleConfigChange("dateFormat", v)}
-      >
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="YYYY/MM/DD - 2025/10/15">YYYY/MM/DD - 2025/10/15</SelectItem>
-          <SelectItem value="DD/MM/YYYY - 15/10/2025">DD/MM/YYYY - 15/10/2025</SelectItem>
-          <SelectItem value="MM/DD/YYYY - 10/15/2025">MM/DD/YYYY - 10/15/2025</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <Checkbox 
-        id="showDatePicker"
-        checked={config.showDatePicker !== false}
-        onCheckedChange={(checked) => handleConfigChange("showDatePicker", checked)}
-      />
-      <Label htmlFor="showDatePicker">Show date picker</Label>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Set available dates</Label>
-      <Select 
-        value={config.availableDates || "All"} 
-        onValueChange={(v) => handleConfigChange("availableDates", v)}
-      >
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="All">All</SelectItem>
-          <SelectItem value="Future">Future only</SelectItem>
-          <SelectItem value="Past">Past only</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Disable specific days</Label>
-      <div className="flex gap-2">
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => {
-          const disabledDays = config.disabledDays || [];
-          const isDisabled = disabledDays.includes(idx);
-          return (
-            <Button
-              key={idx}
-              variant={isDisabled ? "default" : "outline"}
-              size="icon"
-              className="w-10 h-10 rounded-full"
-              onClick={() => {
-                const newDisabled = isDisabled
-                  ? disabledDays.filter((d: number) => d !== idx)
-                  : [...disabledDays, idx];
-                handleConfigChange("disabledDays", newDisabled);
-              }}
-            >
-              {day}
-            </Button>
-          );
-        })}
-      </div>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Validation error message</Label>
-      <Textarea
-        value={config.errorMessage || "I'm afraid I didn't understand, could you try again, please?"}
-        onChange={(e) => handleConfigChange("errorMessage", e.target.value)}
-        placeholder="I'm afraid I didn't understand, could you try again, please?"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['errorMessage'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          Save user answer in the field
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <ConfigSection title="Pergunta">
+      <div className="space-y-2">
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
         </Label>
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Qual é a data?"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Qual é a data?"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+        />
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+        />
       </div>
-      <Input
-        value={config.variable || ""}
-        onChange={(e) => handleConfigChange("variable", e.target.value)}
-        placeholder="Search or create"
-        className="bg-accent/50"
+    </ConfigSection>
+
+    <ConfigSection title="Validação">
+      <ConfigSelect
+        label="Formato da Data"
+        value={config.dateFormat || "DD/MM/YYYY"}
+        onChange={(v) => handleConfigChange("dateFormat", v)}
+        options={[
+          { value: "DD/MM/YYYY", label: "DD/MM/AAAA (31/12/2024)" },
+          { value: "MM/DD/YYYY", label: "MM/DD/AAAA (12/31/2024)" },
+          { value: "YYYY-MM-DD", label: "AAAA-MM-DD (2024-12-31)" }
+        ]}
       />
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        ⚠️ If a field is not set, the answer won't be saved.
-      </p>
-    </div>
+
+      <ConfigInput
+        label="Data Mínima (opcional)"
+        value={config.minDate || ""}
+        onChange={(v) => handleConfigChange("minDate", v)}
+        placeholder="01/01/2024"
+      />
+
+      <ConfigInput
+        label="Data Máxima (opcional)"
+        value={config.maxDate || ""}
+        onChange={(v) => handleConfigChange("maxDate", v)}
+        placeholder="31/12/2024"
+      />
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar"
+        value={config.variable || "data"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="data"
+        required
+        prefix="@"
+      />
+    </ConfigSection>
   </div>
 );
 
 export const AskFileConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Question text</Label>
-      <Textarea
-        ref={(el) => (inputRefs.current['question'] = el)}
-        value={config.question || "File upload"}
-        onChange={(e) => handleConfigChange("question", e.target.value)}
-        placeholder="File upload"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['question'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Validation error message</Label>
-      <Textarea
-        value={config.errorMessage || "I'm afraid I didn't understand, could you try again, please?"}
-        onChange={(e) => handleConfigChange("errorMessage", e.target.value)}
-        placeholder="I'm afraid I didn't understand, could you try again, please?"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['errorMessage'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          Save user answer in the field
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <ConfigSection title="Pergunta">
+      <div className="space-y-2">
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
         </Label>
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Envie um arquivo"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Envie um arquivo"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+        />
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+        />
       </div>
-      <Input
-        value={config.variable || ""}
-        onChange={(e) => handleConfigChange("variable", e.target.value)}
-        placeholder="Search or create"
-        className="bg-accent/50"
+    </ConfigSection>
+
+    <ConfigSection title="Validação">
+      <ConfigSelect
+        label="Tipo de Arquivo Aceito"
+        value={config.fileType || "any"}
+        onChange={(v) => handleConfigChange("fileType", v)}
+        options={[
+          { value: "any", label: "Qualquer arquivo" },
+          { value: "image", label: "Apenas imagens" },
+          { value: "video", label: "Apenas vídeos" },
+          { value: "audio", label: "Apenas áudio" },
+          { value: "document", label: "Apenas documentos (PDF, DOC, etc)" }
+        ]}
       />
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        ⚠️ If a field is not set, the answer won't be saved.
-      </p>
-    </div>
+
+      <ConfigInput
+        label="Tamanho Máximo (MB)"
+        type="number"
+        value={config.maxSizeMB || 10}
+        onChange={(v) => handleConfigChange("maxSizeMB", v)}
+        placeholder="10"
+      />
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar URL"
+        value={config.variable || "arquivo"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="arquivo"
+        required
+        prefix="@"
+      />
+    </ConfigSection>
   </div>
 );
 
 export const AskAddressConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Question text</Label>
-      <Textarea
-        ref={(el) => (inputRefs.current['question'] = el)}
-        value={config.question || "Type your address, please"}
-        onChange={(e) => handleConfigChange("question", e.target.value)}
-        placeholder="Type your address, please"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['question'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          Save user answer in the field
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <ConfigSection title="Pergunta">
+      <div className="space-y-2">
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
         </Label>
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Qual é o seu endereço?"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Qual é o seu endereço?"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+        />
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+        />
       </div>
-      <Input
-        value={config.variable || ""}
-        onChange={(e) => handleConfigChange("variable", e.target.value)}
-        placeholder="Search or create"
-        className="bg-accent/50"
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar"
+        value={config.variable || "endereco"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="endereco"
+        required
+        prefix="@"
       />
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        ⚠️ If a field is not set, the answer won't be saved.
-      </p>
-    </div>
+    </ConfigSection>
+
+    <ConfigInfo variant="info">
+      <p className="font-semibold mb-1">ℹ️ Dica:</p>
+      <p>Você pode pedir o endereço completo ou dividir em campos separados (rua, número, cidade, etc)</p>
+    </ConfigInfo>
   </div>
 );
 
 export const AskUrlConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>Question text</Label>
-      <Textarea
-        ref={(el) => (inputRefs.current['question'] = el)}
-        value={config.question || "Type a Url"}
-        onChange={(e) => handleConfigChange("question", e.target.value)}
-        placeholder="Type a Url"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['question'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Validation error message</Label>
-      <Textarea
-        value={config.errorMessage || "I'm afraid I didn't understand, could you try again, please?"}
-        onChange={(e) => handleConfigChange("errorMessage", e.target.value)}
-        placeholder="I'm afraid I didn't understand, could you try again, please?"
-        rows={2}
-        className="resize-none"
-      />
-      <RichTextToolbar onFormat={(fmt) => console.log('Format:', fmt)} />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => openVariablePicker(inputRefs.current['errorMessage'])}
-        className="w-full"
-      >
-        Use field
-      </Button>
-    </div>
-
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          Save user answer in the field
-          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <ConfigSection title="Pergunta">
+      <div className="space-y-2">
+        <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          Texto da Pergunta
         </Label>
+        <Textarea
+          ref={(el) => (inputRefs.current['question'] = el)}
+          value={config.question || "Digite uma URL"}
+          onChange={(e) => handleConfigChange("question", e.target.value)}
+          placeholder="Digite uma URL"
+          rows={3}
+          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+        />
+        <FormattingToolbar
+          onFormat={(prefix, suffix) => insertFormatting(
+            inputRefs.current['question'],
+            prefix,
+            suffix,
+            config.question || "",
+            (val) => handleConfigChange("question", val)
+          )}
+          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+        />
       </div>
-      <Input
-        value={config.variable || ""}
-        onChange={(e) => handleConfigChange("variable", e.target.value)}
-        placeholder="Search or create"
-        className="bg-accent/50"
+    </ConfigSection>
+
+    <ConfigSection title="Validação">
+      <ConfigSwitch
+        label="Validar formato de URL"
+        checked={config.validateUrl !== false}
+        onChange={(checked) => handleConfigChange("validateUrl", checked)}
+        info="Verifica se a URL possui um formato válido (http:// ou https://)"
       />
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        ⚠️ If a field is not set, the answer won't be saved.
-      </p>
-    </div>
+
+      <ConfigTextarea
+        label="Mensagem de Erro"
+        value={config.errorMessage || ""}
+        onChange={(v) => handleConfigChange("errorMessage", v)}
+        placeholder="Por favor, insira uma URL válida"
+        rows={2}
+      />
+    </ConfigSection>
+
+    <ConfigSection title="Salvar Resposta">
+      <ConfigInput
+        label="Campo para salvar"
+        value={config.variable || "url"}
+        onChange={(v) => handleConfigChange("variable", v)}
+        placeholder="url"
+        required
+        prefix="@"
+      />
+    </ConfigSection>
   </div>
 );

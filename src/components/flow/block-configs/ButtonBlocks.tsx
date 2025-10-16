@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Image as ImageIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
+import { FormattingToolbar } from "./FormattingToolbar";
 
 interface ConfigProps {
   config: any;
@@ -15,7 +17,30 @@ interface ConfigProps {
   openVariablePicker: (ref: any) => void;
 }
 
-// Botões de Resposta Rápida (seção 5 do manual)
+const insertFormatting = (
+  textareaRef: HTMLTextAreaElement | null,
+  prefix: string,
+  suffix: string,
+  currentValue: string,
+  onChange: (value: string) => void
+) => {
+  if (!textareaRef) return;
+
+  const start = textareaRef.selectionStart;
+  const end = textareaRef.selectionEnd;
+  const selectedText = currentValue.substring(start, end);
+  const newText = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
+  
+  onChange(newText);
+
+  setTimeout(() => {
+    textareaRef.focus();
+    const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
+    textareaRef.setSelectionRange(newCursorPos, newCursorPos);
+  }, 0);
+};
+
+// Botões de Resposta Rápida
 export const ReplyButtonsConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const addButton = () => {
     const buttons = config.buttons || [];
@@ -36,156 +61,154 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, inputRefs, open
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Texto da Mensagem</Label>
-        <VariableTextarea
-          name="text"
-          ref={(el) => (inputRefs.current['text'] = el)}
-          value={config.text || ""}
-          onChange={(e) => handleConfigChange("text", e.target.value)}
-          onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
-          placeholder="Digite a mensagem antes dos botões... (Ctrl+V para variáveis)"
-          rows={4}
-        />
-        <p className="text-xs text-muted-foreground">
-          💡 Use {"{{"} variavel {"}"} para personalizar
-        </p>
-      </div>
+      <ConfigSection title="Mensagem">
+        <div className="space-y-2">
+          <Label className="text-white text-sm font-semibold flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+            Texto da Mensagem
+          </Label>
+          <VariableTextarea
+            name="text"
+            ref={(el) => (inputRefs.current['text'] = el)}
+            value={config.text || ""}
+            onChange={(e) => handleConfigChange("text", e.target.value)}
+            onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
+            placeholder="Digite a mensagem antes dos botões..."
+            rows={4}
+            className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          />
+          <FormattingToolbar
+            onFormat={(prefix, suffix) => insertFormatting(
+              inputRefs.current['text'],
+              prefix,
+              suffix,
+              config.text || "",
+              (val) => handleConfigChange("text", val)
+            )}
+            onVariableClick={() => openVariablePicker(inputRefs.current['text'])}
+          />
+          <ConfigInfo variant="info">
+            <p>💡 Use variáveis para personalizar: {"{{"} nome {"}}"}</p>
+          </ConfigInfo>
+        </div>
+      </ConfigSection>
 
-      {/* Opção de adicionar mídia */}
-      <div className="flex items-center justify-between">
-        <Label>Adicionar Mídia (GIF, Imagem, Vídeo)</Label>
-        <Switch
+      <ConfigSection title="Mídia (Opcional)">
+        <ConfigSwitch
+          label="Adicionar Mídia (GIF, Imagem, Vídeo)"
           checked={config.hasMedia || false}
-          onCheckedChange={(checked) => handleConfigChange("hasMedia", checked)}
+          onChange={(checked) => handleConfigChange("hasMedia", checked)}
         />
-      </div>
 
-      {config.hasMedia && (
-        <div className="space-y-2 pl-4 border-l-2 border-muted">
-          <div className="space-y-2">
-            <Label>Tipo de Mídia</Label>
-            <Select
+        {config.hasMedia && (
+          <div className="space-y-3 pl-4 border-l-2 border-cyan-500/30">
+            <ConfigSelect
+              label="Tipo de Mídia"
               value={config.mediaType || "image"}
-              onValueChange={(v) => handleConfigChange("mediaType", v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="image">Imagem</SelectItem>
-                <SelectItem value="gif">GIF</SelectItem>
-                <SelectItem value="video">Vídeo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>URL da Mídia</Label>
-            <Input
+              onChange={(v) => handleConfigChange("mediaType", v)}
+              options={[
+                { value: "image", label: "Imagem" },
+                { value: "gif", label: "GIF" },
+                { value: "video", label: "Vídeo" }
+              ]}
+            />
+            <ConfigInput
+              label="URL da Mídia"
               value={config.mediaUrl || ""}
-              onChange={(e) => handleConfigChange("mediaUrl", e.target.value)}
+              onChange={(url) => handleConfigChange("mediaUrl", url)}
               placeholder="https://exemplo.com/imagem.jpg"
             />
           </div>
-        </div>
-      )}
+        )}
+      </ConfigSection>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Botões de Resposta</Label>
-          <Button variant="outline" size="sm" onClick={addButton}>
-            <Plus className="w-4 h-4 mr-1" />
-            Adicionar
-          </Button>
-        </div>
-
-        <div className="space-y-2">
+      <ConfigSection title="Botões de Resposta">
+        <div className="space-y-3">
           {(config.buttons || []).map((button: any, index: number) => (
-            <Card key={index} className="p-3">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium">Botão {index + 1}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeButton(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <Input
-                  value={button.text || ""}
-                  onChange={(e) => updateButton(index, "text", e.target.value)}
-                  placeholder="Texto do botão"
-                />
-
-                <Input
-                  value={button.value || ""}
-                  onChange={(e) => updateButton(index, "value", e.target.value)}
-                  placeholder="Valor armazenado (opcional)"
-                />
-
-                {/* Opção de adicionar imagem ao botão (seção 8 do manual) */}
-                <div className="flex items-center gap-2 text-xs">
-                  <ImageIcon className="w-3 h-3" />
-                  <Input
-                    value={button.imageUrl || ""}
-                    onChange={(e) => updateButton(index, "imageUrl", e.target.value)}
-                    placeholder="URL da imagem do botão (opcional)"
-                    className="text-xs"
-                  />
-                </div>
+            <div key={index} className="p-3 border border-cyan-500/30 rounded-lg bg-slate-900/50 space-y-2 relative">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-white">Botão {index + 1}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeButton(index)}
+                  className="h-6 w-6 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
-            </Card>
+
+              <Input
+                value={button.text || ""}
+                onChange={(e) => updateButton(index, "text", e.target.value)}
+                placeholder="Texto do botão"
+                className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+              />
+
+              <Input
+                value={button.value || ""}
+                onChange={(e) => updateButton(index, "value", e.target.value)}
+                placeholder="Valor armazenado (opcional)"
+                className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+              />
+
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-cyan-400" />
+                <Input
+                  value={button.imageUrl || ""}
+                  onChange={(e) => updateButton(index, "imageUrl", e.target.value)}
+                  placeholder="URL da imagem do botão (opcional)"
+                  className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium text-xs"
+                />
+              </div>
+            </div>
           ))}
 
           {(!config.buttons || config.buttons.length === 0) && (
-            <p className="text-xs text-muted-foreground text-center py-4">
-              Nenhum botão adicionado. Clique em "Adicionar" para criar.
-            </p>
+            <ConfigInfo variant="info">
+              Nenhum botão adicionado. Clique em "Adicionar Botão" para criar.
+            </ConfigInfo>
           )}
-        </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label>Variável para Salvar Resposta (opcional)</Label>
-        <Input
+          <Button 
+            onClick={addButton}
+            variant="outline"
+            className="w-full border-cyan-500/40 hover:border-cyan-500 hover:bg-cyan-500/10"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar Botão
+          </Button>
+        </div>
+      </ConfigSection>
+
+      <ConfigSection title="Opções Avançadas">
+        <ConfigInput
+          label="Variável para Salvar Resposta"
           value={config.variable || ""}
-          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          onChange={(v) => handleConfigChange("variable", v)}
           placeholder="button_response"
+          info="A escolha do usuário será salva nesta variável"
+          prefix="@"
         />
-        <p className="text-xs text-muted-foreground">
-          A escolha do usuário será salva nesta variável
-        </p>
-      </div>
 
-      {/* Escolha Múltipla (seção 10 do manual) */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Label>Escolha Múltipla</Label>
-          <p className="text-xs text-muted-foreground">
-            Permitir selecionar vários botões
-          </p>
-        </div>
-        <Switch
+        <ConfigSwitch
+          label="Escolha Múltipla"
           checked={config.multipleChoice || false}
-          onCheckedChange={(checked) => handleConfigChange("multipleChoice", checked)}
+          onChange={(checked) => handleConfigChange("multipleChoice", checked)}
+          info="Permitir selecionar vários botões"
         />
-      </div>
 
-      {config.multipleChoice && (
-        <div className="pl-4 border-l-2 border-muted">
-          <div className="space-y-2">
-            <Label>Texto do Botão de Confirmação</Label>
-            <Input
+        {config.multipleChoice && (
+          <div className="pl-4 border-l-2 border-cyan-500/30 space-y-2">
+            <ConfigInput
+              label="Texto do Botão de Confirmação"
               value={config.confirmButtonText || "Confirmar"}
-              onChange={(e) => handleConfigChange("confirmButtonText", e.target.value)}
+              onChange={(v) => handleConfigChange("confirmButtonText", v)}
               placeholder="Confirmar"
             />
           </div>
-        </div>
-      )}
+        )}
+      </ConfigSection>
     </div>
   );
 };
@@ -234,46 +257,55 @@ export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openV
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Texto da Mensagem</Label>
-        <VariableTextarea
-          name="text"
-          ref={(el) => (inputRefs.current['text'] = el)}
-          value={config.text || ""}
-          onChange={(e) => handleConfigChange("text", e.target.value)}
-          onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
-          placeholder="Mensagem antes do menu..."
-          rows={3}
-        />
-      </div>
+      <ConfigSection title="Mensagem">
+        <div className="space-y-2">
+          <Label className="text-white text-sm font-semibold flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+            Texto da Mensagem
+          </Label>
+          <VariableTextarea
+            name="text"
+            ref={(el) => (inputRefs.current['text'] = el)}
+            value={config.text || ""}
+            onChange={(e) => handleConfigChange("text", e.target.value)}
+            onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
+            placeholder="Mensagem antes do menu..."
+            rows={3}
+            className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          />
+          <FormattingToolbar
+            onFormat={(prefix, suffix) => insertFormatting(
+              inputRefs.current['text'],
+              prefix,
+              suffix,
+              config.text || "",
+              (val) => handleConfigChange("text", val)
+            )}
+            onVariableClick={() => openVariablePicker(inputRefs.current['text'])}
+          />
+        </div>
+      </ConfigSection>
 
-      <div className="space-y-2">
-        <Label>Texto do Botão do Menu</Label>
-        <Input
+      <ConfigSection title="Configuração do Menu">
+        <ConfigInput
+          label="Texto do Botão do Menu"
           value={config.buttonText || "Ver opções"}
-          onChange={(e) => handleConfigChange("buttonText", e.target.value)}
+          onChange={(v) => handleConfigChange("buttonText", v)}
           placeholder="Ver opções"
         />
-      </div>
+      </ConfigSection>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Seções do Menu</Label>
-          <Button variant="outline" size="sm" onClick={addSection}>
-            <Plus className="w-4 h-4 mr-1" />
-            Seção
-          </Button>
-        </div>
-
-        {(config.sections || []).map((section: any, sectionIndex: number) => (
-          <Card key={sectionIndex} className="p-3">
-            <div className="space-y-3">
+      <ConfigSection title="Seções do Menu">
+        <div className="space-y-3">
+          {(config.sections || []).map((section: any, sectionIndex: number) => (
+            <div key={sectionIndex} className="p-3 border border-cyan-500/30 rounded-lg bg-slate-900/50 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Seção {sectionIndex + 1}</span>
+                <span className="text-sm font-semibold text-white">Seção {sectionIndex + 1}</span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => removeSection(sectionIndex)}
+                  className="h-6 w-6 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -283,15 +315,17 @@ export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openV
                 value={section.title || ""}
                 onChange={(e) => updateSection(sectionIndex, "title", e.target.value)}
                 placeholder="Título da seção"
+                className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
 
-              <div className="pl-3 border-l-2 border-muted space-y-2">
+              <div className="pl-3 border-l-2 border-cyan-500/30 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Itens</span>
+                  <span className="text-xs text-slate-400 font-medium">Itens</span>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => addItem(sectionIndex)}
+                    className="h-7 text-xs border-cyan-500/40 hover:border-cyan-500 hover:bg-cyan-500/10"
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Item
@@ -299,13 +333,13 @@ export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openV
                 </div>
 
                 {(section.items || []).map((item: any, itemIndex: number) => (
-                  <div key={itemIndex} className="space-y-1 p-2 bg-muted/30 rounded">
+                  <div key={itemIndex} className="space-y-1 p-2 bg-slate-800/50 rounded border border-slate-700/50">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs">Item {itemIndex + 1}</span>
+                      <span className="text-xs text-white font-medium">Item {itemIndex + 1}</span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-6 w-6 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                         onClick={() => removeItem(sectionIndex, itemIndex)}
                       >
                         <X className="w-3 h-3" />
@@ -315,30 +349,47 @@ export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openV
                       value={item.title || ""}
                       onChange={(e) => updateItem(sectionIndex, itemIndex, "title", e.target.value)}
                       placeholder="Título"
-                      className="text-xs"
+                      className="text-xs bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
                     />
                     <Input
                       value={item.description || ""}
                       onChange={(e) => updateItem(sectionIndex, itemIndex, "description", e.target.value)}
                       placeholder="Descrição (opcional)"
-                      className="text-xs"
+                      className="text-xs bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
                     />
                   </div>
                 ))}
               </div>
             </div>
-          </Card>
-        ))}
-      </div>
+          ))}
 
-      <div className="space-y-2">
-        <Label>Variável para Salvar Escolha</Label>
-        <Input
+          {(!config.sections || config.sections.length === 0) && (
+            <ConfigInfo variant="info">
+              Nenhuma seção adicionada. Clique em "Adicionar Seção" para criar.
+            </ConfigInfo>
+          )}
+
+          <Button 
+            onClick={addSection}
+            variant="outline"
+            className="w-full border-cyan-500/40 hover:border-cyan-500 hover:bg-cyan-500/10"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar Seção
+          </Button>
+        </div>
+      </ConfigSection>
+
+      <ConfigSection title="Salvar Resposta">
+        <ConfigInput
+          label="Variável para Salvar Escolha"
           value={config.variable || ""}
-          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          onChange={(v) => handleConfigChange("variable", v)}
           placeholder="menu_choice"
+          info="A escolha do usuário será salva nesta variável"
+          prefix="@"
         />
-      </div>
+      </ConfigSection>
     </div>
   );
 };
