@@ -107,7 +107,7 @@ export const WhatsAppQRCode = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 pb-4">
       {/* Status Alert */}
       {!hasActiveBot && (
         <Alert className="bg-amber-950/50 border-amber-800/50">

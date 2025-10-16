@@ -117,26 +117,28 @@ export default function BotTest() {
           </div>
         </div>
 
-        <div className="flex-1 flex overflow-hidden p-4">
-          <Tabs defaultValue="simulator" className="flex-1 flex flex-col">
-            <TabsList className="bg-slate-800 border-slate-700 mb-4">
-              <TabsTrigger value="simulator" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Simulador Web
-              </TabsTrigger>
-              <TabsTrigger value="twilio" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
-                <Zap className="w-4 h-4 mr-2" />
-                Twilio Sandbox (Grátis)
-              </TabsTrigger>
-              <TabsTrigger value="whatsapp" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">
-                <Smartphone className="w-4 h-4 mr-2" />
-                WhatsApp API Oficial
-              </TabsTrigger>
-            </TabsList>
+        <div className="flex-1 overflow-hidden">
+          <Tabs defaultValue="simulator" className="h-full flex flex-col">
+            <div className="px-4 pt-4">
+              <TabsList className="bg-slate-800 border-slate-700">
+                <TabsTrigger value="simulator" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Simulador Web
+                </TabsTrigger>
+                <TabsTrigger value="twilio" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Twilio Sandbox
+                </TabsTrigger>
+                <TabsTrigger value="whatsapp" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  WhatsApp Oficial
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="simulator" className="flex-1 flex">
+            <TabsContent value="simulator" className="flex-1 m-0 p-4">
               {nodes.length > 0 ? (
-                <div className="flex-1 bg-slate-900 rounded-lg overflow-hidden">
+                <div className="h-full bg-slate-900 rounded-lg overflow-hidden">
                   <FlowSimulator 
                     key={key}
                     nodes={nodes} 
@@ -144,7 +146,7 @@ export default function BotTest() {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-center">
+                <div className="h-full flex items-center justify-center">
                   <div className="text-center text-slate-400">
                     <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
                     <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
@@ -153,9 +155,9 @@ export default function BotTest() {
               )}
             </TabsContent>
 
-            <TabsContent value="twilio" className="flex-1 overflow-auto">
-              <div className="max-w-2xl mx-auto py-6">
-                <div className="mb-6 text-center">
+            <TabsContent value="twilio" className="flex-1 m-0 overflow-auto">
+              <div className="max-w-3xl mx-auto p-4">
+                <div className="mb-4 text-center">
                   <h3 className="text-xl font-bold text-white mb-2">
                     ⚡ Teste Grátis com Twilio Sandbox
                   </h3>
@@ -167,9 +169,9 @@ export default function BotTest() {
               </div>
             </TabsContent>
 
-            <TabsContent value="whatsapp" className="flex-1 overflow-auto">
-              <div className="max-w-2xl mx-auto py-6">
-                <div className="mb-6 text-center">
+            <TabsContent value="whatsapp" className="flex-1 m-0 overflow-auto">
+              <div className="max-w-3xl mx-auto p-4">
+                <div className="mb-4 text-center">
                   <h3 className="text-xl font-bold text-white mb-2">
                     📱 WhatsApp Business API Oficial
                   </h3>
