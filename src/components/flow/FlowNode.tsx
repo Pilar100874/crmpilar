@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { FlowNodeData } from "@/types/flow";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
@@ -13,11 +13,20 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight, Copy } from "lucide-react";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  
   if (!blockDef) return null;
 
   const IconComponent = Icons[blockDef.icon as keyof typeof Icons] as any;
@@ -172,9 +181,61 @@ export const FlowNode = memo((props: any) => {
             </div>
             <p className="text-xs text-slate-500 line-clamp-2">{data.label || blockDef.description}</p>
           </div>
-          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-            <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
-          </button>
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 hover:bg-slate-100 rounded transition-colors">
+                <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-lg">
+              <DropdownMenuItem
+                onClick={() => {
+                  data.onSetBreakpoint?.(id);
+                  setDropdownOpen(false);
+                }}
+                className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+              >
+                <Pause className="w-4 h-4 mr-2 text-orange-500" />
+                {data.isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem
+                onClick={() => {
+                  data.onSetSkip?.(id);
+                  setDropdownOpen(false);
+                }}
+                className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+              >
+                <SkipForward className="w-4 h-4 mr-2 text-slate-500" />
+                {data.isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem
+                onClick={() => {
+                  data.onDuplicate?.(id);
+                  setDropdownOpen(false);
+                }}
+                className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+              >
+                <Copy className="w-4 h-4 mr-2 text-blue-500" />
+                Duplicar Bloco
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator className="bg-slate-200" />
+              
+              <DropdownMenuItem
+                onClick={() => {
+                  data.onClearDebug?.(id);
+                  setDropdownOpen(false);
+                }}
+                disabled={!data.isBreakpoint && !data.isSkipped}
+                className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <X className="w-4 h-4 mr-2 text-red-500" />
+                Liberar Bloco
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         {/* Mostrar opções com handles à direita */}
@@ -309,32 +370,39 @@ export const FlowNode = memo((props: any) => {
     </Card>
       </ContextMenuTrigger>
       
-      <ContextMenuContent className="w-56 bg-slate-800 border-slate-700">
-        
+      <ContextMenuContent className="w-56 bg-white border-slate-200 shadow-lg">
         <ContextMenuItem
           onClick={() => data.onSetBreakpoint?.(id)}
-          className="text-slate-200 focus:bg-slate-700 focus:text-white cursor-pointer"
+          className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
         >
-          <Pause className="w-4 h-4 mr-2 text-orange-400" />
+          <Pause className="w-4 h-4 mr-2 text-orange-500" />
           {data.isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
         </ContextMenuItem>
         
         <ContextMenuItem
           onClick={() => data.onSetSkip?.(id)}
-          className="text-slate-200 focus:bg-slate-700 focus:text-white cursor-pointer"
+          className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
         >
-          <SkipForward className="w-4 h-4 mr-2 text-slate-400" />
+          <SkipForward className="w-4 h-4 mr-2 text-slate-500" />
           {data.isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
         </ContextMenuItem>
         
-        <ContextMenuSeparator className="bg-slate-700" />
+        <ContextMenuItem
+          onClick={() => data.onDuplicate?.(id)}
+          className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+        >
+          <Copy className="w-4 h-4 mr-2 text-blue-500" />
+          Duplicar Bloco
+        </ContextMenuItem>
+        
+        <ContextMenuSeparator className="bg-slate-200" />
         
         <ContextMenuItem
           onClick={() => data.onClearDebug?.(id)}
           disabled={!data.isBreakpoint && !data.isSkipped}
-          className="text-slate-200 focus:bg-slate-700 focus:text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <X className="w-4 h-4 mr-2 text-red-400" />
+          <X className="w-4 h-4 mr-2 text-red-500" />
           Liberar Bloco
         </ContextMenuItem>
       </ContextMenuContent>

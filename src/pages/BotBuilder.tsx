@@ -832,6 +832,25 @@ function BotBuilderContent() {
                       return newSet;
                     });
                   },
+                  onDuplicate: (nodeId: string) => {
+                    const nodeToDuplicate = nodes.find(n => n.id === nodeId);
+                    if (nodeToDuplicate) {
+                      const newId = getId();
+                      const newNode = {
+                        ...nodeToDuplicate,
+                        id: newId,
+                        position: {
+                          x: nodeToDuplicate.position.x + 50,
+                          y: nodeToDuplicate.position.y + 50,
+                        },
+                        data: {
+                          ...nodeToDuplicate.data,
+                        },
+                      };
+                      setNodes((nds) => [...nds, newNode]);
+                      toast.success("Bloco duplicado com sucesso!");
+                    }
+                  },
                 },
               }))}
               edges={edges.map((edge) => ({
