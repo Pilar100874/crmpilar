@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { VariableExplorer } from "./VariableExplorer";
+import { FlowVariable } from "./VariableManager";
 import { VariableInput, VariableTextarea } from "./VariableInput";
 import { VariablePickerDialog } from "./VariablePickerDialog";
 import * as BlockConfigs from "./block-configs";
@@ -24,6 +25,7 @@ interface PropertiesPanelProps {
   onDeleteNode: (nodeId: string) => void;
   nodes: Node[];
   edges: Edge[];
+  flowVariables?: FlowVariable[];
 }
 
 export const PropertiesPanel = ({ 
@@ -31,7 +33,8 @@ export const PropertiesPanel = ({
   onUpdateNode,
   onDeleteNode,
   nodes,
-  edges
+  edges,
+  flowVariables = []
 }: PropertiesPanelProps) => {
   const [hasChanges, setHasChanges] = useState(false);
   const [showVariablePicker, setShowVariablePicker] = useState(false);
@@ -935,6 +938,7 @@ export const PropertiesPanel = ({
             selectedNode={selectedNode}
             nodes={nodes}
             edges={edges}
+            flowVariables={flowVariables}
           />
         </div>
       </ScrollArea>

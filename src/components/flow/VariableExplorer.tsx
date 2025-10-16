@@ -1,9 +1,10 @@
 import { Node, Edge } from "@xyflow/react";
 import { FlowNodeData, NodeType } from "@/types/flow";
+import { FlowVariable } from "@/components/flow/VariableManager";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Database, Copy, CheckCircle2 } from "lucide-react";
+import { Database, Copy, CheckCircle2, Variable } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface VariableExplorerProps {
   selectedNode: Node | null;
   nodes: Node[];
   edges: Edge[];
+  flowVariables?: FlowVariable[];
 }
 
 // Define what variables each block type outputs
@@ -173,7 +175,7 @@ const getAncestorNodes = (nodeId: string, nodes: Node[], edges: Edge[]): Node[] 
   return ancestors;
 };
 
-export const VariableExplorer = ({ selectedNode, nodes, edges }: VariableExplorerProps) => {
+export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [] }: VariableExplorerProps) => {
   const [copiedVar, setCopiedVar] = useState<string | null>(null);
 
   if (!selectedNode) {
@@ -183,9 +185,22 @@ export const VariableExplorer = ({ selectedNode, nodes, edges }: VariableExplore
   const ancestorNodes = getAncestorNodes(selectedNode.id, nodes, edges);
   const availableVariables: { 
     blockName: string; 
-    blockType: NodeType;
+    blockType: NodeType | "custom";
     variables: { name: string; description: string; type: string }[] 
   }[] = [];
+
+  // Add manually created flow variables first
+  if (flowVariables.length > 0) {
+    availableVariables.push({
+      blockName: "Variáveis Personalizadas",
+      blockType: "custom" as const,
+      variables: flowVariables.map(v => ({
+        name: v.name,
+        description: v.description || `Variável ${v.name}`,
+        type: v.type
+      }))
+    });
+  }
 
   // Collect variables from all ancestor blocks
   ancestorNodes.forEach(node => {
@@ -218,7 +233,7 @@ export const VariableExplorer = ({ selectedNode, nodes, edges }: VariableExplore
         </CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground">
-            Nenhuma variável disponível. Adicione blocos anteriores que geram variáveis (Question, API, etc)
+            Nenhuma variável disponível. Crie variáveis ou adicione blocos anteriores que geram variáveis.
           </p>
         </CardContent>
       </Card>
@@ -239,10 +254,19 @@ export const VariableExplorer = ({ selectedNode, nodes, edges }: VariableExplore
             {availableVariables.map((block, blockIdx) => (
               <div key={blockIdx} className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {block.blockName}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">({block.blockType})</span>
+                  {block.blockType === "custom" ? (
+                    <Badge variant="default" className="text-xs bg-cyan-600 hover:bg-cyan-700">
+                      <Variable className="w-3 h-3 mr-1" />
+                      {block.blockName}
+                    </Badge>
+                  ) : (
+                    <>
+                      <Badge variant="outline" className="text-xs">
+                        {block.blockName}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">({block.blockType})</span>
+                    </>
+                  )}
                 </div>
                 <div className="space-y-1 pl-2 border-l-2 border-muted">
                   {block.variables.map((variable, varIdx) => (

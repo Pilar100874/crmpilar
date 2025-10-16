@@ -23,6 +23,7 @@ import { BlockLibrary } from "@/components/flow/BlockLibrary";
 import { PropertiesPanel } from "@/components/flow/PropertiesPanel";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { BotManager } from "@/components/flow/BotManager";
+import { VariableManager, FlowVariable } from "@/components/flow/VariableManager";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
 
@@ -61,6 +62,7 @@ function BotBuilderContent() {
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
+  const [flowVariables, setFlowVariables] = useState<FlowVariable[]>([]);
 
   // Load saved bots on mount
   useEffect(() => {
@@ -283,6 +285,7 @@ function BotBuilderContent() {
     setCurrentBotName("Novo Bot");
     setSelectedNode(null);
     setEdges([]);
+    setFlowVariables([]);
     
     // Criar bloco Start automaticamente
     const startNode: Node = {
@@ -317,6 +320,7 @@ function BotBuilderContent() {
       nodes,
       edges,
       viewport: reactFlowInstance?.getViewport(),
+      variables: flowVariables,
     };
 
     const botData = {
@@ -391,6 +395,7 @@ function BotBuilderContent() {
       
       setNodes(loadedNodes);
       setEdges(flowData.edges || []);
+      setFlowVariables(flowData.variables || []);
       setCurrentBotId(data.id);
       setCurrentBotName(data.name);
       setSelectedNode(null);
@@ -612,6 +617,10 @@ function BotBuilderContent() {
               >
                 {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
               </Button>
+              <VariableManager
+                variables={flowVariables}
+                onVariablesChange={setFlowVariables}
+              />
             </div>
           </div>
           
@@ -732,6 +741,7 @@ function BotBuilderContent() {
               onDeleteNode={handleDeleteNode}
               nodes={nodes}
               edges={edges}
+              flowVariables={flowVariables}
             />
           )}
         </div>
