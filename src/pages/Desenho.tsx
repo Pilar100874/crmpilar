@@ -13,6 +13,7 @@ import { saveProject } from "@/lib/projectStorage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import BottomTabBar from "@/components/editor/BottomTabBar";
 import Layout from "@/components/Layout";
+import EditorToolbar from "@/components/editor/EditorToolbar";
 import ProjectsPanel from "@/components/editor/panels/ProjectsPanel";
 import ImagesPanel from "@/components/editor/panels/ImagesPanel";
 import TextPanel from "@/components/editor/panels/TextPanel";
@@ -512,6 +513,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           {/* Canvas area - takes full available space */}
           <div className="flex-1 relative overflow-hidden bg-muted/30">
             <LoadingOverlay />
+            <EditorToolbar />
             <CanvasWorkspace selectedSize={selectedSize} />
             <FloatingObjectToolbar />
             <ObjectActionsMenu />
