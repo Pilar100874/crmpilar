@@ -14,6 +14,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -90,9 +91,9 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="border-r border-border bg-white">
-          <div className="p-6 border-b border-border bg-white">
-            <div className="flex items-center gap-3">
+        <Sidebar className="border-r border-border bg-card">
+          <div className="p-3 border-b border-border bg-muted">
+            <div className="flex items-center gap-2 mb-2">
               <img 
                 src={logo} 
                 alt="Pilar Logo" 
@@ -105,41 +106,61 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          <SidebarContent className="bg-white">
+          <SidebarContent className="bg-card">
             <SidebarGroup>
-              <SidebarGroupLabel className="text-muted-foreground bg-white uppercase text-xs">Menu Principal</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-muted-foreground uppercase text-xs px-4 py-2">Menu Principal</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <NavLink
-                          to={item.url}
-                          className={({ isActive }) =>
-                            isActive
-                              ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-foreground border-l-2 border-cyan-500 font-medium"
-                              : "text-foreground hover:bg-muted hover:text-cyan-600 transition-colors"
-                          }
-                        >
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
+                <ScrollArea className="flex-1">
+                  <SidebarMenu className="space-y-1 p-2">
+                    {menuItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild>
+                          <NavLink
+                            to={item.url}
+                            className={({ isActive }) =>
+                              `flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-150 group border ${
+                                isActive
+                                  ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-foreground font-semibold"
+                                  : "border-transparent hover:bg-muted hover:border-cyan-500/20 text-foreground"
+                              }`
+                            }
+                          >
+                            {({ isActive }) => (
+                              <>
+                                <div className={`p-1 rounded-md bg-gradient-to-br transition-all ${
+                                  isActive 
+                                    ? "from-cyan-500/20 to-blue-500/20 border border-cyan-500/40" 
+                                    : "from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 group-hover:border-cyan-500/40"
+                                }`}>
+                                  <item.icon className={`w-3.5 h-3.5 transition-colors ${
+                                    isActive ? "text-cyan-600" : "text-cyan-600 group-hover:text-cyan-700"
+                                  }`} />
+                                </div>
+                                <span className={`text-sm transition-colors ${
+                                  isActive ? "text-foreground" : "group-hover:text-cyan-700"
+                                }`}>{item.title}</span>
+                              </>
+                            )}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </ScrollArea>
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
 
-          <div className="p-4 border-t border-border mt-auto bg-white">
+          <div className="p-3 border-t border-border mt-auto bg-card">
             <Button
               variant="outline"
-              className="w-full justify-start"
+              className="w-full justify-start gap-2 hover:bg-muted hover:border-cyan-500/20 transition-all group"
               onClick={handleLogout}
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
+              <div className="p-1 rounded-md bg-gradient-to-br from-red-500/10 to-red-600/10 border border-red-500/20 group-hover:border-red-500/40 transition-all">
+                <LogOut className="w-3.5 h-3.5 text-red-600" />
+              </div>
+              <span className="text-sm">Sair</span>
             </Button>
           </div>
         </Sidebar>
