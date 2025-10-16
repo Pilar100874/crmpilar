@@ -130,6 +130,7 @@ serve(async (req) => {
     
     // Check if there's a pending node (waiting for button response)
     let startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
+    let isResuming = false;
     
     if (context.pendingNodeId) {
       // Resume from the pending node
@@ -137,6 +138,9 @@ serve(async (req) => {
       if (pendingNode) {
         console.log("Resuming from pending node:", pendingNode.id);
         startNode = pendingNode;
+        isResuming = true;
+        // Mark context as resuming so nodes know not to re-execute
+        context.isResuming = true;
       }
     }
     
@@ -163,6 +167,9 @@ serve(async (req) => {
         }
       }
     );
+    
+    // Clean up resuming flag
+    delete context.isResuming;
 
     // Save session
     await supabase.from("chat_sessions").upsert({
@@ -499,13 +506,50 @@ async function executeNode(
 
     case "reply_buttons": {
       console.log(`[REPLY_BUTTONS] Starting - Node ID: ${node.id}`);
-      console.log(`[REPLY_BUTTONS] Context pending: ${context.pendingNodeId}, Waiting: ${context.vars.waitingForButton}`);
-      console.log(`[REPLY_BUTTONS] User message: ${context.vars.userMessage}`);
+      console.log(`[REPLY_BUTTONS] Is resuming: ${context.isResuming}, Pending: ${context.pendingNodeId}`);
       
       const variable = config.variable || "button_response";
       
-      // If we don't have a pending response for THIS specific node, send the buttons
-      if (context.pendingNodeId !== node.id) {
+      // If we're resuming (user just responded), process the response
+      if (context.isResuming && context.pendingNodeId === node.id) {
+        console.log(`[REPLY_BUTTONS] Processing user response`);
+        
+        const userResponse = context.vars.userMessage?.trim() || "";
+        const buttonIndex = parseInt(userResponse) - 1;
+        
+        if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
+          context.vars[variable] = config.buttons[buttonIndex].value;
+          console.log(`[REPLY_BUTTONS] Selected: ${config.buttons[buttonIndex].value}`);
+        } else {
+          const matchedButton = config.buttons.find((btn: any) => 
+            btn.text.toLowerCase() === userResponse.toLowerCase()
+          );
+          context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
+        }
+        
+        // Clear pending state
+        delete context.pendingNodeId;
+        delete context.isResuming;
+        
+        // Find the matching edge and execute next node
+        const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === context.vars[variable]);
+        
+        if (selectedButtonIndex >= 0) {
+          const buttonHandle = `button_${selectedButtonIndex}`;
+          const matchingEdge = edges.find((e: any) => 
+            e.source === node.id && e.sourceHandle === buttonHandle
+          );
+          
+          if (matchingEdge) {
+            const nextNode = nodes.find((n: any) => n.id === matchingEdge.target);
+            if (nextNode) {
+              console.log(`[REPLY_BUTTONS] Next: ${nextNode.id}`);
+              await executeNode(nextNode, nodes, edges, context, onResponse);
+            }
+          }
+        }
+      } else {
+        // First time - send buttons and wait
         console.log(`[REPLY_BUTTONS] First visit - sending buttons`);
         
         let buttonText = interpolate(config.text || "");
@@ -520,53 +564,12 @@ async function executeNode(
           await onResponse(buttonText);
         }
         
-        // Mark that we're waiting for response at this node
+        // Mark as pending and stop
         context.pendingNodeId = node.id;
-        console.log(`[REPLY_BUTTONS] Set pending to ${node.id} - stopping execution`);
-        return; // Stop execution and wait for user response
+        console.log(`[REPLY_BUTTONS] Waiting for response`);
+        return;
       }
       
-      console.log(`[REPLY_BUTTONS] Resuming - processing user response`);
-      
-      // Process the user's response
-      const userResponse = context.vars.userMessage?.trim() || "";
-      const buttonIndex = parseInt(userResponse) - 1;
-      
-      if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
-        context.vars[variable] = config.buttons[buttonIndex].value;
-        console.log(`[REPLY_BUTTONS] Selected button ${buttonIndex}: ${config.buttons[buttonIndex].value}`);
-      } else {
-        const matchedButton = config.buttons.find((btn: any) => 
-          btn.text.toLowerCase() === userResponse.toLowerCase()
-        );
-        context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
-        console.log(`[REPLY_BUTTONS] Matched or default: ${context.vars[variable]}`);
-      }
-      
-      // Clear pending state
-      delete context.pendingNodeId;
-      
-      // Find the matching edge based on button selection
-      const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === context.vars[variable]);
-      
-      if (selectedButtonIndex >= 0) {
-        const buttonHandle = `button_${selectedButtonIndex}`;
-        const matchingEdge = edges.find((e: any) => 
-          e.source === node.id && e.sourceHandle === buttonHandle
-        );
-        
-        console.log(`[REPLY_BUTTONS] Looking for edge with handle: ${buttonHandle}, found: ${!!matchingEdge}`);
-        
-        if (matchingEdge) {
-          const nextNode = nodes.find((n: any) => n.id === matchingEdge.target);
-          if (nextNode) {
-            console.log(`[REPLY_BUTTONS] Executing next: ${nextNode.id} (${nextNode.data.type})`);
-            await executeNode(nextNode, nodes, edges, context, onResponse);
-          }
-        }
-      }
-      
-      console.log(`[REPLY_BUTTONS] Finished`);
       break;
     }
 
