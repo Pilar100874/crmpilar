@@ -91,19 +91,23 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
       
       // Load both template URLs from database
       const loadTemplates = async () => {
-        const { data } = await supabase
-          .from('products')
-          .select('gabarito_canvas_url, gabarito_canvas_retangular_url')
-          .eq('id', product.id)
-          .single();
-        
-        if (data) {
-          const hasTemplates = data.gabarito_canvas_url || data.gabarito_canvas_retangular_url;
-          if (hasTemplates) {
-            setProductData({ ...product, ...data });
-            setShowTemplateDialog(true);
-          }
+      // For now, skip template loading as products table doesn't exist
+      // This can be enabled later when the products table is created
+      /*
+      const { data } = await supabase
+        .from('products')
+        .select('gabarito_canvas_url, gabarito_canvas_retangular_url')
+        .eq('id', product.id)
+        .single();
+      
+      if (data) {
+        const hasTemplates = data.gabarito_canvas_url || data.gabarito_canvas_retangular_url;
+        if (hasTemplates) {
+          setProductData({ ...product, ...data });
+          setShowTemplateDialog(true);
         }
+      }
+      */
       };
       
       loadTemplates();
