@@ -1103,7 +1103,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     setIsActive(true);
     
     setMessages([]);
-    setContext({});
+    const emptyContext = {};
+    setContext(emptyContext);
+    onContextChange?.(emptyContext); // Notifica imediatamente o reset
     setIsWaitingInput(false);
     setPendingVariable(null);
     
