@@ -30,7 +30,7 @@ export default function Atendimento() {
 
   return (
     <Layout>
-      <div className="h-full flex">
+      <div className="h-full flex bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Conversation List */}
         <div className="w-96 border-r border-slate-800 bg-slate-800 flex flex-col">
           <div className="p-4 border-b border-slate-700">

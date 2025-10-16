@@ -204,7 +204,7 @@ export default function GlobalVariables() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-full">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-2">
             <Globe className="h-8 w-8 text-green-500" />

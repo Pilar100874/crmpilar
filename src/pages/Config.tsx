@@ -30,7 +30,7 @@ export default function Config() {
 
   return (
     <Layout>
-      <div className="p-8 space-y-8 animate-fade-in">
+      <div className="p-8 space-y-8 animate-fade-in bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-full">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-white">Configurações</h1>
           <p className="text-white/70">

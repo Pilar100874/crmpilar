@@ -14,7 +14,7 @@ export default function Clientes() {
 
   return (
     <Layout>
-      <div className="p-8 space-y-8 animate-fade-in">
+      <div className="p-8 space-y-8 animate-fade-in bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-full">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-white">Clientes</h1>
