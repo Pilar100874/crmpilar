@@ -102,21 +102,6 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <ConfigSection>
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 rounded-lg flex items-center justify-center">
-            <span className="text-xl">💬</span>
-          </div>
-          <div>
-            <h3 className="font-bold text-white text-sm">MENSAGENS</h3>
-            <a href="https://docs.lovable.dev" target="_blank" rel="noopener noreferrer" className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-medium">
-              Como usar <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-        </div>
-      </ConfigSection>
-
       {/* Messages */}
       {messages.map((message, index) => (
         <ConfigSection key={index} title={`Mensagem ${index + 1}`}>
