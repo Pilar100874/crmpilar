@@ -34,8 +34,14 @@ const nodeTypes = {
   custom: FlowNode,
 };
 
+
 let id = 0;
-const getId = () => `node_${id++}`;
+const getId = () => {
+  // Gerar IDs únicos baseados em timestamp + contador + random
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `node_${timestamp}_${id++}_${random}`;
+};
 
 function BotBuilderContent() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -903,6 +909,9 @@ function BotBuilderContent() {
               fitView
               className="bg-slate-900"
               deleteKeyCode={isLocked ? null : "Delete"}
+              connectOnClick={false}
+              autoPanOnConnect={false}
+              autoPanOnNodeDrag={true}
               defaultEdgeOptions={{
                 style: { stroke: '#06b6d4', strokeWidth: 1.33 },
                 markerEnd: {
