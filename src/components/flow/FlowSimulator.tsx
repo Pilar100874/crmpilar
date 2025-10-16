@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Node, Edge } from "@xyflow/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
   const [context, setContext] = useState<Record<string, any>>({});
   const [isWaitingInput, setIsWaitingInput] = useState(false);
   const [pendingVariable, setPendingVariable] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(true);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   useEffect(() => {
     handleReset();
@@ -43,6 +45,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
       onHighlightNode?.(currentNodeId);
     }
   }, [currentNodeId, onHighlightNode]);
+
+  useEffect(() => {
+    return () => {
+      setIsActive(false);
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current = [];
+    };
+  }, []);
+
+  const safeSetTimeout = (callback: () => void, delay: number) => {
+    const timeout = setTimeout(() => {
+      if (isActive) {
+        callback();
+      }
+    }, delay);
+    timeoutsRef.current.push(timeout);
+    return timeout;
+  };
 
   const interpolateVariables = (text: string, context: Record<string, any>): string => {
     if (!text) return "";
@@ -99,7 +119,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     switch (nodeData.type) {
       case "start":
         addSystemMessage("✅ Fluxo iniciado");
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -117,14 +137,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           console.log("Processing multiple messages:", messages.length);
           messages.forEach((msg: any, index: number) => {
             console.log("Scheduling message", index, ":", msg);
-            setTimeout(() => {
+            safeSetTimeout(() => {
               const messageText = interpolateVariables(msg.text || "", context);
               console.log("Adding message text:", messageText);
               addBotMessage(messageText, node.id);
             }, index * 500);
           });
           
-          setTimeout(() => {
+          safeSetTimeout(() => {
             const nextNode = getNextNode(node.id);
             if (nextNode) {
               setCurrentNodeId(nextNode.id);
@@ -137,7 +157,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           const messageText = interpolateVariables(config.text || "Mensagem não configurada", context);
           addBotMessage(messageText, node.id);
           
-          setTimeout(() => {
+          safeSetTimeout(() => {
             const nextNode = getNextNode(node.id);
             if (nextNode) {
               setCurrentNodeId(nextNode.id);
@@ -162,7 +182,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           addBotMediaMessage(mediaUrl, mediaType as any, caption, node.id);
         }
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -176,7 +196,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         addBotMessage(goodbyeText, node.id);
         
         if (config.showStartAgain !== false) {
-          setTimeout(() => {
+          safeSetTimeout(() => {
             addSystemMessage("💬 Conversa finalizada. Clique em 'Reiniciar' para começar novamente.");
           }, 1000);
         }
@@ -214,7 +234,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           }
         }
 
-        setTimeout(() => {
+        safeSetTimeout(() => {
           if (matchedIndex >= 0) {
             const nextNode = getNextNode(node.id, matchedIndex);
             if (nextNode) {
@@ -267,7 +287,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           addSystemMessage(`❌ Erro ao processar variáveis: ${error}`);
         }
 
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -281,7 +301,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         addSystemMessage(`🌐 Chamando API: ${config.method || "GET"} ${apiUrl}`);
         
         // Simula resposta da API
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const mockResponse = {
             status: 200,
             data: {
@@ -323,7 +343,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
             script_result: mockResult,
           }));
           
-          setTimeout(() => {
+          safeSetTimeout(() => {
             const nextNode = getNextNode(node.id);
             if (nextNode) {
               setCurrentNodeId(nextNode.id);
@@ -342,7 +362,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         
         // Simula com tempo reduzido para testes
         const simulatedDelay = Math.min(3000, duration * 100);
-        setTimeout(() => {
+        safeSetTimeout(() => {
           addSuccessMessage("Delay concluído");
           const nextNode = getNextNode(node.id);
           if (nextNode) {
@@ -365,7 +385,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const workflowId = config.workflowId || "não configurado";
         addSystemMessage(`🔗 Chamando workflow n8n: ${workflowId}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const mockN8nResponse = {
             workflowId,
             success: true,
@@ -393,7 +413,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const inputText = context[inputVar] || "";
         addSystemMessage(`🧠 Classificando intent: "${inputText}"`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const mockIntent = {
             intent: "greeting",
             confidence: 0.95,
@@ -423,13 +443,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         
         if (isWaitingInput) {
           // Se está esperando input, responde com IA
-          setTimeout(() => {
+          safeSetTimeout(() => {
             addBotMessage("Esta é uma resposta simulada do agente IA. Em produção, aqui seria processada uma resposta real.", node.id);
             setIsWaitingInput(true); // Continua aguardando input
           }, 1500);
         } else {
           // Senão, apenas passa para o próximo
-          setTimeout(() => {
+          safeSetTimeout(() => {
             const nextNode = getNextNode(node.id);
             if (nextNode) {
               setCurrentNodeId(nextNode.id);
@@ -449,7 +469,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         
         if (replyButtons.length > 0) {
           const buttonsList = replyButtons.map((btn: any) => `▶️ ${btn.title || btn.text}`).join("\n");
-          setTimeout(() => {
+          safeSetTimeout(() => {
             addSystemMessage(`Botões disponíveis:\n${buttonsList}`);
           }, 500);
         }
@@ -467,7 +487,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           addBotMessage(listText, node.id);
         }
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           addSystemMessage(`📋 ${buttonText}`);
           sections.forEach((section: any, idx: number) => {
             addSystemMessage(`\n${section.title || `Seção ${idx + 1}`}:`);
@@ -487,7 +507,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         
         if (keywords.length > 0) {
           const keywordsList = keywords.map((kw: any) => `"${kw.keyword}"`).join(", ");
-          setTimeout(() => {
+          safeSetTimeout(() => {
             addSystemMessage(`Palavras-chave disponíveis: ${keywordsList}`);
           }, 500);
         }
@@ -501,7 +521,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         addSystemMessage(`📧 Enviando template: ${templateName} (${language})`);
         addBotMessage("📧 [Template do WhatsApp enviado]", node.id);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           addSuccessMessage("Template enviado com sucesso");
           const nextNode = getNextNode(node.id);
           if (nextNode) {
@@ -516,7 +536,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const category = config.category || "marketing";
         addSystemMessage(`✅ ${optAction === "opt-in" ? "Registrando" : "Removendo"} consentimento (${category})`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           addSuccessMessage(`Consentimento ${optAction === "opt-in" ? "registrado" : "removido"} com sucesso`);
           const nextNode = getNextNode(node.id);
           if (nextNode) {
@@ -532,7 +552,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         
         // Simula que o usuário tem opt-in
         const hasOptIn = true;
-        setTimeout(() => {
+        safeSetTimeout(() => {
           if (hasOptIn) {
             addSuccessMessage("Usuário possui consentimento");
           } else {
@@ -552,7 +572,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const audienceAction = config.action || "add";
         addSystemMessage(`👥 ${audienceAction === "add" ? "Adicionando a" : "Removendo de"} segmentos: ${segments.join(", ")}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           addSuccessMessage("Segmentação atualizada");
           const nextNode = getNextNode(node.id);
           if (nextNode) {
@@ -575,7 +595,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           addSuccessMessage(`${op.field} = ${value}`);
         });
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -590,7 +610,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         
         if (jumpKeywords.length > 0) {
           const jumpList = jumpKeywords.map((kw: any) => `"${kw.keyword}" → ${kw.targetNode}`).join(", ");
-          setTimeout(() => {
+          safeSetTimeout(() => {
             addSystemMessage(`Pulos disponíveis: ${jumpList}`);
           }, 500);
         }
@@ -602,7 +622,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const globalKeywords = config.keywords || [];
         addSystemMessage(`🌐 Palavras-chave globais ativas: ${globalKeywords.length}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -626,7 +646,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
             [outputVariable]: result,
           }));
           
-          setTimeout(() => {
+          safeSetTimeout(() => {
             addSuccessMessage(`${outputVariable} = ${result}`);
             const nextNode = getNextNode(node.id);
             if (nextNode) {
@@ -636,7 +656,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
           }, 1000);
         } catch (error) {
           addSystemMessage(`❌ Erro ao calcular fórmula: ${error}`);
-          setTimeout(() => {
+          safeSetTimeout(() => {
             const nextNode = getNextNode(node.id);
             if (nextNode) {
               setCurrentNodeId(nextNode.id);
@@ -650,7 +670,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const targetNodeId = config.targetNodeId || "";
         addSystemMessage(`⏭️ Pulando para bloco: ${targetNodeId}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const targetNode = nodes.find((n) => n.id === targetNodeId);
           if (targetNode) {
             setCurrentNodeId(targetNode.id);
@@ -677,7 +697,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         addSystemMessage(`📊 ${scoringAction === "add" ? "+" : "-"}${points} pontos`);
         addSuccessMessage(`${scoreField} = ${newScore}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -692,7 +712,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         addSystemMessage(`🎯 Meta atingida: ${goalName}`);
         addSuccessMessage(`Valor: ${goalValue}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -706,7 +726,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const method = config.method || "POST";
         addSystemMessage(`🌐 Chamando webhook: ${method} ${webhookUrl}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const mockResponse = {
             status: 200,
             data: { success: true, message: "Webhook simulado" },
@@ -732,7 +752,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const automationId = config.automationId || "não configurado";
         addSystemMessage(`⚡ Disparando automação: ${automationId}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           addSuccessMessage("Automação disparada");
           const nextNode = getNextNode(node.id);
           if (nextNode) {
@@ -748,7 +768,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const dataOutputVariable = config.outputVariable || "data";
         addSystemMessage(`💾 Buscando dados: ${source}`);
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const mockData = { items: [], count: 0, timestamp: new Date().toISOString() };
           
           setContext((prev) => ({
@@ -773,7 +793,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
 
       default:
         addSystemMessage(`▶️ Executando: ${blockDef.label}`);
-        setTimeout(() => {
+        safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -803,7 +823,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
       if (currentNodeId) {
         const nextNode = getNextNode(currentNodeId);
         if (nextNode) {
-          setTimeout(() => {
+          safeSetTimeout(() => {
             setCurrentNodeId(nextNode.id);
             executeNode(nextNode);
           }, 500);
@@ -877,6 +897,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
   };
 
   const handleReset = () => {
+    // Limpar todos os timeouts pendentes
+    timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    timeoutsRef.current = [];
+    
+    // Reativar o simulador
+    setIsActive(true);
+    
     setMessages([]);
     setContext({});
     setIsWaitingInput(false);
