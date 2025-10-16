@@ -142,6 +142,9 @@ serve(async (req) => {
         // Mark context as resuming so nodes know not to re-execute
         context.isResuming = true;
       }
+    } else {
+      // Fresh start - clear executed nodes tracking
+      context.executedNodes = [];
     }
     
     await executeFlow(
@@ -381,6 +384,22 @@ async function executeNode(
   const data = node.data;
   const config = data.config || {};
   console.log(`Executing node: ${data.type}`, config);
+  
+  // Track executed nodes to prevent re-execution (except when resuming)
+  if (!context.executedNodes) {
+    context.executedNodes = [];
+  }
+  
+  // If this node was already executed and we're not resuming from it, skip
+  if (context.executedNodes.includes(node.id) && context.pendingNodeId !== node.id) {
+    console.log(`Skipping already executed node: ${node.id}`);
+    return;
+  }
+  
+  // Mark node as executed (except for reply_buttons which needs to run twice)
+  if (data.type !== 'reply_buttons') {
+    context.executedNodes.push(node.id);
+  }
 
   const interpolate = (text: string): string => {
     if (!text) return "";
