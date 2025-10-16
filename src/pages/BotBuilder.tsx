@@ -75,6 +75,7 @@ function BotBuilderContent() {
     title?: string;
     description: string;
   }>({ open: false, description: "" });
+  const [isDroppingNode, setIsDroppingNode] = useState(false);
 
   // Load saved bots on mount
   useEffect(() => {
@@ -153,8 +154,14 @@ function BotBuilderContent() {
   }, [highlightedNodeId, setNodes]);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    (params: Connection) => {
+      // Prevenir conexões automáticas durante o drop de um novo bloco
+      if (isDroppingNode) {
+        return;
+      }
+      setEdges((eds) => addEdge(params, eds));
+    },
+    [setEdges, isDroppingNode]
   );
 
   const onReconnect = useCallback(
@@ -183,6 +190,7 @@ function BotBuilderContent() {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
+      event.stopPropagation();
 
       if (!reactFlowWrapper.current || !reactFlowInstance) return;
 
@@ -191,6 +199,9 @@ function BotBuilderContent() {
 
       const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === type);
       if (!blockDef) return;
+
+      // Marcar que está adicionando um novo bloco
+      setIsDroppingNode(true);
 
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance.screenToFlowPosition({
@@ -210,10 +221,14 @@ function BotBuilderContent() {
       };
 
       setNodes((nds) => [...nds, newNode]);
+      
+      // Aguardar um pouco antes de permitir conexões novamente e abrir o painel
       setTimeout(() => {
+        setIsDroppingNode(false);
         setSelectedNode(newNode);
         setShowSimulator(false);
-      }, 0);
+      }, 100);
+      
       toast.success(`Bloco "${blockDef.label}" adicionado!`);
     },
     [reactFlowInstance, setNodes]
@@ -882,7 +897,7 @@ function BotBuilderContent() {
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
               nodesDraggable={!isLocked && !showSimulator}
-              nodesConnectable={!isLocked && !showSimulator}
+              nodesConnectable={!isLocked && !showSimulator && !isDroppingNode}
               nodesFocusable={!isLocked}
               edgesFocusable={!isLocked}
               fitView
