@@ -5,6 +5,7 @@ import { BLOCK_DEFINITIONS } from "@/types/flow";
 import * as Icons from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -12,7 +13,7 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { Pause, SkipForward, X, Database } from "lucide-react";
+import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight } from "lucide-react";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
@@ -125,24 +126,24 @@ export const FlowNode = memo((props: any) => {
 
   // Determinar cor do card baseado no estado de debug
   const getCardClassName = () => {
-    const baseClass = "min-w-[220px] max-w-[280px] transition-all duration-300 backdrop-blur-sm shadow-xl";
+    const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
     
     if (data.isBreakpoint) {
-      return `${baseClass} bg-orange-900/40 border-2 border-orange-500 ${
-        selected ? "ring-2 ring-cyan-500 shadow-2xl shadow-orange-500/30" : "hover:border-orange-400 hover:shadow-lg shadow-orange-500/20"
+      return `${baseClass} bg-white border-2 border-orange-500 ${
+        selected ? "ring-2 ring-blue-400" : ""
       }`;
     }
     
     if (data.isSkipped) {
-      return `${baseClass} bg-slate-700/30 border-2 border-slate-500 opacity-60 ${
-        selected ? "ring-2 ring-cyan-500 shadow-2xl shadow-slate-500/20" : "hover:border-slate-400 hover:shadow-lg"
+      return `${baseClass} bg-white/60 border-2 border-slate-400 opacity-60 ${
+        selected ? "ring-2 ring-blue-400" : ""
       }`;
     }
     
-    return `${baseClass} bg-slate-800/90 border-slate-700/50 ${
+    return `${baseClass} bg-white border border-slate-300 ${
       selected 
-        ? "ring-2 ring-cyan-500 shadow-2xl shadow-cyan-500/20 border-cyan-500/50" 
-        : "hover:border-slate-600/70 hover:shadow-lg"
+        ? "ring-2 ring-blue-400 border-blue-400" 
+        : "hover:border-slate-400"
     }`;
   };
 
@@ -153,100 +154,129 @@ export const FlowNode = memo((props: any) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="!bg-gradient-to-r !from-cyan-500 !to-blue-600 !w-3 !h-3 !border-2 !border-slate-800" 
+        className="!bg-cyan-400 !w-3 !h-3 !border-2 !border-white" 
       />
       
-      <div className="p-4">
-        <div className="flex items-center gap-2.5 mb-2">
-          {IconComponent && (
-            <div className="p-1.5 rounded-md bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
-              <IconComponent className="w-4 h-4 text-cyan-400" />
+      <div className="p-3">
+        {/* Cabeçalho com checkbox, ícone, título e menu */}
+        <div className="flex items-start gap-2 mb-3">
+          <Checkbox className="mt-0.5 h-4 w-4 border-slate-300" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              {IconComponent && (
+                <div className="p-1 rounded bg-blue-50 border border-blue-200">
+                  <IconComponent className="w-3.5 h-3.5 text-blue-600" />
+                </div>
+              )}
+              <span className="font-semibold text-sm text-slate-900 truncate">{blockDef.label}</span>
             </div>
-          )}
-          <span className="font-semibold text-sm text-white">{blockDef.label}</span>
+            <p className="text-xs text-slate-500 line-clamp-2">{data.label || blockDef.description}</p>
+          </div>
+          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
+            <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
+          </button>
         </div>
-        <p className="text-xs text-slate-400 line-clamp-2">{data.label || blockDef.description}</p>
         
         {/* Mostrar opções com handles à direita */}
         {dynamicHandles && (
-          <div className="mt-3 space-y-1.5">
+          <div className="space-y-1.5">
             {/* Condições */}
             {dynamicHandles.conditions?.map((cond: any, index: number) => (
-              <div key={cond.id} className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-green-500/10 border border-green-500/30 rounded-md group hover:bg-green-500/20 transition-colors">
-                <span className="text-xs font-medium truncate text-green-400">{cond.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={cond.id}
-                  className="!bg-gradient-to-r !from-green-500 !to-emerald-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+              <div key={cond.id} className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-pink-500 rounded-md group hover:bg-pink-600 transition-colors">
+                <span className="text-xs font-medium truncate text-white">{cond.label}</span>
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={cond.id}
+                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform !flex !items-center !justify-center"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             ))}
             
             {/* Fallback */}
             {dynamicHandles.fallback && (
-              <div className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-pink-500/10 border border-pink-500/30 rounded-md group hover:bg-pink-500/20 transition-colors">
-                <span className="text-xs font-medium truncate text-pink-400">{dynamicHandles.fallback.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={dynamicHandles.fallback.id}
-                  className="!bg-gradient-to-r !from-pink-500 !to-rose-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+              <div className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-blue-100 border border-blue-200 rounded-md group hover:bg-blue-200 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Icons.HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="text-xs font-medium truncate text-blue-800">{dynamicHandles.fallback.label}</span>
+                </div>
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={dynamicHandles.fallback.id}
+                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             )}
             
             {/* Keywords */}
             {dynamicHandles.keywords?.map((kw: any) => (
-              <div key={kw.id} className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-blue-500/10 border border-blue-500/30 rounded-md group hover:bg-blue-500/20 transition-colors">
-                <span className="text-xs font-medium truncate text-blue-400">{kw.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={kw.id}
-                  className="!bg-gradient-to-r !from-blue-500 !to-indigo-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+              <div key={kw.id} className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-pink-500 rounded-md group hover:bg-pink-600 transition-colors">
+                <span className="text-xs font-medium truncate text-white">{kw.label}</span>
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={kw.id}
+                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             ))}
             
             {/* Buttons/Options/Cards */}
             {dynamicHandles.buttons?.map((btn: any) => (
-              <div key={btn.id} className="relative flex items-center justify-between gap-2 py-2 px-2.5 bg-purple-500/10 border border-purple-500/30 rounded-md group hover:bg-purple-500/20 transition-colors">
-                <span className="text-xs font-medium truncate text-purple-400">{btn.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={btn.id}
-                  className="!bg-gradient-to-r !from-purple-500 !to-violet-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+              <div key={btn.id} className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-pink-500 rounded-md group hover:bg-pink-600 transition-colors">
+                <span className="text-xs font-medium truncate text-white">{btn.label}</span>
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={btn.id}
+                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             ))}
             
             {/* Paths (opt-in check, etc) */}
             {dynamicHandles.paths?.map((path: any) => (
-              <div key={path.id} className={`relative flex items-center justify-between gap-2 py-2 px-2.5 rounded-md group transition-colors ${
+              <div key={path.id} className={`relative flex items-center justify-between gap-2 py-2.5 px-3 rounded-md group transition-colors ${
                 path.color === 'bg-green-500' 
-                  ? 'bg-green-500/10 border border-green-500/30 hover:bg-green-500/20' 
-                  : 'bg-red-500/10 border border-red-500/30 hover:bg-red-500/20'
+                  ? 'bg-pink-500 hover:bg-pink-600' 
+                  : 'bg-blue-100 border border-blue-200 hover:bg-blue-200'
               }`}>
-                <span className={`text-xs font-medium truncate ${
-                  path.color === 'bg-green-500' ? 'text-green-400' : 'text-red-400'
-                }`}>{path.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={path.id}
-                  className={`!w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-slate-800 group-hover:!scale-125 !transition-transform ${
-                    path.color === 'bg-green-500' 
-                      ? '!bg-gradient-to-r !from-green-500 !to-emerald-500' 
-                      : '!bg-gradient-to-r !from-red-500 !to-rose-500'
-                  }`}
-                  style={{ position: 'relative' }}
-                />
+                {path.color === 'bg-red-500' && (
+                  <div className="flex items-center gap-2">
+                    <Icons.HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                    <span className="text-xs font-medium truncate text-blue-800">{path.label}</span>
+                  </div>
+                )}
+                {path.color === 'bg-green-500' && (
+                  <span className="text-xs font-medium truncate text-white">{path.label}</span>
+                )}
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={path.id}
+                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             ))}
           </div>
@@ -255,11 +285,14 @@ export const FlowNode = memo((props: any) => {
       
       {/* Handle padrão para blocos sem saídas dinâmicas */}
       {!dynamicHandles && (
-        <Handle 
-          type="source" 
-          position={Position.Bottom} 
-          className="!bg-gradient-to-r !from-cyan-500 !to-blue-600 !w-3 !h-3 !border-2 !border-slate-800" 
-        />
+        <div className="relative">
+          <Handle 
+            type="source" 
+            position={Position.Bottom} 
+            className="!bg-cyan-400 !w-5 !h-5 !border-2 !border-white !rounded-full" 
+          />
+          <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
       )}
       
       {/* Badge de estado de debug */}
