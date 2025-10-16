@@ -20,12 +20,23 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight, Copy } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight, Copy, Trash2 } from "lucide-react";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   if (!blockDef) return null;
 
@@ -157,6 +168,7 @@ export const FlowNode = memo((props: any) => {
   };
 
   return (
+    <>
     <ContextMenu>
       <ContextMenuTrigger>
         <Card className={getCardClassName()}>
@@ -233,6 +245,19 @@ export const FlowNode = memo((props: any) => {
               >
                 <X className="w-4 h-4 mr-2 text-red-500" />
                 Liberar Bloco
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator className="bg-slate-200" />
+              
+              <DropdownMenuItem
+                onClick={() => {
+                  setDeleteDialogOpen(true);
+                  setDropdownOpen(false);
+                }}
+                className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Bloco
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -405,8 +430,42 @@ export const FlowNode = memo((props: any) => {
           <X className="w-4 h-4 mr-2 text-red-500" />
           Liberar Bloco
         </ContextMenuItem>
+        
+        <ContextMenuSeparator className="bg-slate-200" />
+        
+        <ContextMenuItem
+          onClick={() => setDeleteDialogOpen(true)}
+          className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Excluir Bloco
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
+    
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja excluir este bloco? Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              data.onDelete?.(id);
+              setDeleteDialogOpen(false);
+            }}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 });
 

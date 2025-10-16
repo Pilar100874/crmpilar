@@ -851,6 +851,7 @@ function BotBuilderContent() {
                       toast.success("Bloco duplicado com sucesso!");
                     }
                   },
+                  onDelete: handleDeleteNode,
                 },
               }))}
               edges={edges.map((edge) => ({
