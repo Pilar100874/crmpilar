@@ -125,24 +125,24 @@ export const FlowNode = memo((props: any) => {
 
   // Determinar cor do card baseado no estado de debug
   const getCardClassName = () => {
-    const baseClass = "min-w-[280px] max-w-[340px] transition-all duration-300 shadow-lg";
+    const baseClass = "min-w-[240px] max-w-[280px] transition-all duration-200 shadow-md rounded-xl";
     
     if (data.isBreakpoint) {
       return `${baseClass} bg-white border-2 border-orange-500 ${
-        selected ? "ring-4 ring-cyan-400/40 shadow-2xl" : "hover:shadow-xl"
+        selected ? "ring-2 ring-cyan-400/50 shadow-xl" : "hover:shadow-lg"
       }`;
     }
     
     if (data.isSkipped) {
       return `${baseClass} bg-white/60 border-2 border-slate-300 opacity-70 ${
-        selected ? "ring-4 ring-cyan-400/40 shadow-2xl" : "hover:shadow-xl"
+        selected ? "ring-2 ring-cyan-400/50 shadow-xl" : "hover:shadow-lg"
       }`;
     }
     
     return `${baseClass} bg-white border border-slate-200 ${
       selected 
-        ? "ring-4 ring-cyan-400/40 shadow-2xl" 
-        : "hover:shadow-xl hover:border-slate-300"
+        ? "ring-2 ring-cyan-400/50 shadow-xl" 
+        : "hover:shadow-lg hover:border-slate-300"
     }`;
   };
 
@@ -178,47 +178,47 @@ export const FlowNode = memo((props: any) => {
       <Handle 
         type="target" 
         position={Position.Left} 
-        className="!bg-cyan-500 !w-3 !h-3 !border-2 !border-white !shadow-md" 
+        className="!bg-cyan-500 !w-2.5 !h-2.5 !border-2 !border-white !shadow-sm" 
       />
       
-      <div className="p-4">
-        {/* Header com ícone e menu */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
+      <div className="p-3">
+        {/* Header compacto */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
             {IconComponent && (
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400/20 to-blue-500/20 flex items-center justify-center">
-                <IconComponent className="w-5 h-5 text-cyan-600" strokeWidth={2.5} />
+              <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center flex-shrink-0">
+                <IconComponent className="w-4 h-4 text-slate-600" strokeWidth={2} />
               </div>
             )}
-            <div className="flex-1">
-              <h3 className="font-bold text-slate-800 text-base leading-tight">{blockDef.label}</h3>
-              <p className="text-xs text-slate-500 mt-0.5">{blockDef.description}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-slate-700 text-sm leading-tight truncate">{blockDef.label}</h3>
+              <p className="text-xs text-slate-400 truncate">{blockDef.description}</p>
             </div>
           </div>
-          <button className="text-slate-400 hover:text-slate-600 p-1">
-            <MoreVertical className="w-4 h-4" />
+          <button className="text-slate-400 hover:text-slate-600 p-0.5 flex-shrink-0">
+            <MoreVertical className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Preview de conteúdo se disponível */}
         {contentPreview && (
-          <div className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <p className="text-xs text-slate-700 line-clamp-3">{contentPreview}</p>
+          <div className="mb-2 p-2 bg-slate-50 rounded-md border border-slate-100">
+            <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{contentPreview}</p>
           </div>
         )}
         
         {/* Mostrar opções com handles à direita */}
         {dynamicHandles && (
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {/* Condições */}
             {dynamicHandles.conditions?.map((cond: any, index: number) => (
-              <div key={cond.id} className="relative flex items-center justify-between gap-2 py-2 px-3 bg-green-50 border border-green-200 rounded-lg group hover:bg-green-100 transition-colors">
+              <div key={cond.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-green-50 border border-green-200 rounded-md group hover:bg-green-100 transition-colors">
                 <span className="text-xs font-medium truncate text-green-700">{cond.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={cond.id}
-                  className="!bg-green-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-md group-hover:!scale-125 !transition-transform"
+                  className="!bg-green-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -226,13 +226,13 @@ export const FlowNode = memo((props: any) => {
             
             {/* Fallback */}
             {dynamicHandles.fallback && (
-              <div className="relative flex items-center justify-between gap-2 py-2 px-3 bg-pink-50 border border-pink-200 rounded-lg group hover:bg-pink-100 transition-colors">
+              <div className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-pink-50 border border-pink-200 rounded-md group hover:bg-pink-100 transition-colors">
                 <span className="text-xs font-medium truncate text-pink-700">{dynamicHandles.fallback.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={dynamicHandles.fallback.id}
-                  className="!bg-pink-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-md group-hover:!scale-125 !transition-transform"
+                  className="!bg-pink-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -240,13 +240,13 @@ export const FlowNode = memo((props: any) => {
             
             {/* Keywords */}
             {dynamicHandles.keywords?.map((kw: any) => (
-              <div key={kw.id} className="relative flex items-center justify-between gap-2 py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg group hover:bg-blue-100 transition-colors">
+              <div key={kw.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-blue-50 border border-blue-200 rounded-md group hover:bg-blue-100 transition-colors">
                 <span className="text-xs font-medium truncate text-blue-700">{kw.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={kw.id}
-                  className="!bg-blue-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-md group-hover:!scale-125 !transition-transform"
+                  className="!bg-blue-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -254,13 +254,13 @@ export const FlowNode = memo((props: any) => {
             
             {/* Buttons/Options/Cards */}
             {dynamicHandles.buttons?.map((btn: any) => (
-              <div key={btn.id} className="relative flex items-center justify-between gap-2 py-2 px-3 bg-purple-50 border border-purple-200 rounded-lg group hover:bg-purple-100 transition-colors">
+              <div key={btn.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-purple-50 border border-purple-200 rounded-md group hover:bg-purple-100 transition-colors">
                 <span className="text-xs font-medium truncate text-purple-700">{btn.label}</span>
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={btn.id}
-                  className="!bg-purple-500 !w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-md group-hover:!scale-125 !transition-transform"
+                  className="!bg-purple-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -268,7 +268,7 @@ export const FlowNode = memo((props: any) => {
             
             {/* Paths (opt-in check, etc) */}
             {dynamicHandles.paths?.map((path: any) => (
-              <div key={path.id} className={`relative flex items-center justify-between gap-2 py-2 px-3 rounded-lg group transition-colors ${
+              <div key={path.id} className={`relative flex items-center justify-between gap-2 py-1.5 px-2.5 rounded-md group transition-colors ${
                 path.color === 'bg-green-500' 
                   ? 'bg-green-50 border border-green-200 hover:bg-green-100' 
                   : 'bg-red-50 border border-red-200 hover:bg-red-100'
@@ -280,7 +280,7 @@ export const FlowNode = memo((props: any) => {
                   type="source"
                   position={Position.Right}
                   id={path.id}
-                  className={`!w-3 !h-3 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-md group-hover:!scale-125 !transition-transform ${
+                  className={`!w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform ${
                     path.color === 'bg-green-500' 
                       ? '!bg-green-500' 
                       : '!bg-red-500'
@@ -293,16 +293,16 @@ export const FlowNode = memo((props: any) => {
         )}
       </div>
       
-      {/* Handle padrão para blocos sem saídas dinâmicas - botão circular */}
+      {/* Handle padrão para blocos sem saídas dinâmicas - botão circular delicado */}
       {!dynamicHandles && (
-        <div className="absolute -right-3 top-1/2 -translate-y-1/2">
+        <div className="absolute -right-2.5 top-1/2 -translate-y-1/2">
           <Handle 
             type="source" 
             position={Position.Right} 
             className="!static !transform-none"
           >
-            <div className="w-8 h-8 rounded-full bg-cyan-500 border-2 border-white shadow-lg flex items-center justify-center hover:bg-cyan-600 transition-colors cursor-pointer">
-              <ArrowRight className="w-4 h-4 text-white" strokeWidth={3} />
+            <div className="w-7 h-7 rounded-full bg-cyan-500 border-2 border-white shadow-md flex items-center justify-center hover:bg-cyan-600 transition-all duration-200 cursor-pointer hover:scale-110">
+              <ArrowRight className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
             </div>
           </Handle>
         </div>
@@ -310,13 +310,13 @@ export const FlowNode = memo((props: any) => {
       
       {/* Badge de estado de debug */}
       {data.isBreakpoint && (
-        <div className="absolute -top-2 -left-2 bg-orange-500 text-white rounded-full p-1.5 shadow-lg z-10">
-          <Pause className="w-3.5 h-3.5" />
+        <div className="absolute -top-1.5 -left-1.5 bg-orange-500 text-white rounded-full p-1 shadow-md z-10">
+          <Pause className="w-3 h-3" />
         </div>
       )}
       {data.isSkipped && (
-        <div className="absolute -top-2 -left-2 bg-slate-400 text-white rounded-full p-1.5 shadow-lg z-10">
-          <SkipForward className="w-3.5 h-3.5" />
+        <div className="absolute -top-1.5 -left-1.5 bg-slate-400 text-white rounded-full p-1 shadow-md z-10">
+          <SkipForward className="w-3 h-3" />
         </div>
       )}
     </Card>
