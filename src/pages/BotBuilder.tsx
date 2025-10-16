@@ -205,13 +205,15 @@ function BotBuilderContent() {
         data: {
           label: blockDef.label,
           type: blockDef.type,
-          config: blockDef.defaultData,
+          config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
         },
       };
 
-      setNodes((nds) => nds.concat(newNode));
-      setSelectedNode(newNode); // Abre propriedades automaticamente
-      setShowSimulator(false); // Fecha simulador
+      setNodes((nds) => [...nds, newNode]);
+      setTimeout(() => {
+        setSelectedNode(newNode);
+        setShowSimulator(false);
+      }, 0);
       toast.success(`Bloco "${blockDef.label}" adicionado!`);
     },
     [reactFlowInstance, setNodes]
