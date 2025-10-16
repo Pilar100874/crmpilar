@@ -413,6 +413,12 @@ function BotBuilderContent() {
   }, [setNodes, setEdges, reactFlowInstance]);
 
   const handleTest = useCallback(() => {
+    if (showSimulator) {
+      setShowSimulator(false);
+      setHighlightedNodeId(null);
+      return;
+    }
+    
     if (nodes.length === 0) {
       toast.error("Adicione blocos ao fluxo antes de testar");
       return;
@@ -427,7 +433,7 @@ function BotBuilderContent() {
     }
     setShowSimulator(true);
     toast.success("Simulador aberto!");
-  }, [nodes]);
+  }, [nodes, showSimulator]);
 
   const handleNewFlow = useCallback(() => {
     setEdges([]);
