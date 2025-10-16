@@ -34,11 +34,11 @@ const variableTypeIcons = {
 };
 
 const variableTypeColors = {
-  text: "text-blue-400",
-  number: "text-green-400",
-  date: "text-purple-400",
-  array: "text-orange-400",
-  boolean: "text-pink-400",
+  text: "text-blue-600",
+  number: "text-green-600",
+  date: "text-purple-600",
+  array: "text-orange-600",
+  boolean: "text-pink-600",
 };
 
 export function VariableMonitor({ variables, context }: VariableMonitorProps) {
@@ -73,7 +73,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
 
   const getValueColor = (value: any): string => {
     if (value === undefined || value === null) return "text-slate-500";
-    return "text-white";
+    return "text-slate-900";
   };
 
   return (
@@ -82,39 +82,39 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
         <Button
           variant="outline"
           size="icon"
-          className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
+          className="h-9 w-9 bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
           title="Monitor de variáveis"
         >
           <Eye className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[600px] sm:w-[700px] bg-slate-900 border-slate-700">
+      <SheetContent className="w-[600px] sm:w-[700px] bg-white border-slate-200">
         <SheetHeader>
-          <SheetTitle className="text-white flex items-center gap-2">
-            <Eye className="h-5 w-5 text-cyan-500" />
+          <SheetTitle className="text-slate-900 flex items-center gap-2">
+            <Eye className="h-5 w-5 text-blue-600" />
             Monitor de Variáveis
           </SheetTitle>
-          <SheetDescription className="text-slate-400">
+          <SheetDescription className="text-slate-600">
             Acompanhe os valores das variáveis durante a simulação do fluxo em tempo real.
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">
           {variables.length === 0 ? (
-            <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-8 text-center">
-              <Eye className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">Nenhuma variável para monitorar</p>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+              <Eye className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-600">Nenhuma variável para monitorar</p>
               <p className="text-sm text-slate-500 mt-1">Crie variáveis no gerenciador de variáveis</p>
             </div>
           ) : (
             <ScrollArea className="h-[calc(100vh-200px)]">
-              <div className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
+              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-700 hover:bg-slate-800/70">
-                      <TableHead className="text-slate-300 font-semibold w-[40%]">Variável</TableHead>
-                      <TableHead className="text-slate-300 font-semibold w-[20%]">Tipo</TableHead>
-                      <TableHead className="text-slate-300 font-semibold w-[40%]">Valor Atual</TableHead>
+                    <TableRow className="border-slate-200 hover:bg-slate-50">
+                      <TableHead className="text-slate-700 font-semibold w-[40%]">Variável</TableHead>
+                      <TableHead className="text-slate-700 font-semibold w-[20%]">Tipo</TableHead>
+                      <TableHead className="text-slate-700 font-semibold w-[40%]">Valor Atual</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -129,22 +129,22 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                       return (
                         <TableRow 
                           key={variable.id} 
-                          className="border-slate-700 hover:bg-slate-800/70"
+                          className="border-slate-200 hover:bg-slate-50"
                         >
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Icon className={`h-4 w-4 ${typeColor}`} />
-                              <span className="font-mono text-sm text-white">
+                              <span className="font-mono text-sm text-slate-900">
                                 {variable.name}
                               </span>
                               {variable.scope === "global" && (
                                 <span title="Variável global">
-                                  <Globe className="h-3 w-3 text-green-500" />
+                                  <Globe className="h-3 w-3 text-green-600" />
                                 </span>
                               )}
                               {variable.isConstant && (
                                 <span title="Variável fixa">
-                                  <Lock className="h-3 w-3 text-amber-500" />
+                                  <Lock className="h-3 w-3 text-amber-600" />
                                 </span>
                               )}
                             </div>
@@ -154,7 +154,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                               </p>
                             )}
                             {variable.isConstant && variable.defaultValue !== undefined && (
-                              <p className="text-xs text-amber-400 ml-6 mt-0.5">
+                              <p className="text-xs text-amber-600 ml-6 mt-0.5">
                                 Padrão: {typeof variable.defaultValue === "object" 
                                   ? JSON.stringify(variable.defaultValue) 
                                   : String(variable.defaultValue)}
@@ -164,7 +164,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                           <TableCell>
                             <Badge 
                               variant="outline" 
-                              className={`${typeColor} border-slate-600 bg-slate-800/50`}
+                              className={`${typeColor} border-slate-300 bg-slate-50`}
                             >
                               {variable.type}
                             </Badge>
@@ -172,14 +172,14 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <code 
-                                className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-slate-800 px-2 py-1 rounded border border-slate-700`}
+                                className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-slate-50 px-2 py-1 rounded border border-slate-200`}
                               >
                                 {formatValue(currentValue, variable)}
                               </code>
                               {hasValue && (
                                 <Badge 
                                   variant="outline" 
-                                  className="text-green-400 border-green-600/50 bg-green-900/20"
+                                  className="text-green-700 border-green-300 bg-green-50"
                                 >
                                   ✓
                                 </Badge>
@@ -187,7 +187,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                               {!hasValue && variable.defaultValue !== undefined && (
                                 <Badge 
                                   variant="outline" 
-                                  className="text-amber-400 border-amber-600/50 bg-amber-900/20 text-xs"
+                                  className="text-amber-700 border-amber-300 bg-amber-50 text-xs"
                                 >
                                   padrão
                                 </Badge>
@@ -202,35 +202,35 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
               </div>
 
               {/* Legenda */}
-              <div className="mt-4 p-3 bg-slate-800/30 border border-slate-700 rounded-lg">
-                <p className="text-xs font-semibold text-slate-300 mb-2">Legenda:</p>
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+              <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <p className="text-xs font-semibold text-slate-700 mb-2">Legenda:</p>
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
                   <div className="flex items-center gap-2">
-                    <Type className="h-3 w-3 text-blue-400" />
+                    <Type className="h-3 w-3 text-blue-600" />
                     <span>Texto</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Hash className="h-3 w-3 text-green-400" />
+                    <Hash className="h-3 w-3 text-green-600" />
                     <span>Número</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-3 w-3 text-purple-400" />
+                    <Calendar className="h-3 w-3 text-purple-600" />
                     <span>Data</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <List className="h-3 w-3 text-orange-400" />
+                    <List className="h-3 w-3 text-orange-600" />
                     <span>Array</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <ToggleLeft className="h-3 w-3 text-pink-400" />
+                    <ToggleLeft className="h-3 w-3 text-pink-600" />
                     <span>Booleano</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Lock className="h-3 w-3 text-amber-500" />
+                    <Lock className="h-3 w-3 text-amber-600" />
                     <span>Fixa</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Globe className="h-3 w-3 text-green-500" />
+                    <Globe className="h-3 w-3 text-green-600" />
                     <span>Global</span>
                   </div>
                 </div>
