@@ -92,22 +92,8 @@ function BotBuilderContent() {
   }, [highlightedNodeId, setNodes]);
 
   const onConnect = useCallback(
-    (params: Connection) => {
-      // Verificar se já existe uma conexão entre esses blocos (em qualquer direção)
-      const existingEdge = edges.find(
-        (edge) => 
-          (edge.source === params.source && edge.target === params.target) ||
-          (edge.source === params.target && edge.target === params.source)
-      );
-      
-      if (existingEdge) {
-        toast.error("Já existe uma conexão entre esses blocos!");
-        return;
-      }
-      
-      setEdges((eds) => addEdge(params, eds));
-    },
-    [edges, setEdges]
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
   );
 
   const onReconnect = useCallback(
