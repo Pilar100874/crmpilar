@@ -650,23 +650,24 @@ function BotBuilderContent() {
                 animated: true,
                 type: 'smoothstep',
               }))}
-              onNodesChange={isLocked ? undefined : onNodesChange}
-              onEdgesChange={isLocked ? undefined : onEdgesChange}
-              onConnect={isLocked ? undefined : onConnect}
-              onReconnect={isLocked ? undefined : onReconnect}
-              onEdgesDelete={isLocked ? undefined : onEdgesDelete}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onReconnect={onReconnect}
+              onEdgesDelete={onEdgesDelete}
               onInit={setReactFlowInstance}
-              onDrop={isLocked ? undefined : onDrop}
-              onDragOver={isLocked ? undefined : onDragOver}
-              onNodeClick={isLocked ? undefined : onNodeClick}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onNodeClick={onNodeClick}
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
               nodesDraggable={!isLocked}
               nodesConnectable={!isLocked}
-              elementsSelectable={!isLocked}
+              nodesFocusable={!isLocked}
+              edgesFocusable={!isLocked}
               fitView
               className="bg-slate-900"
-              deleteKeyCode="Delete"
+              deleteKeyCode={isLocked ? null : "Delete"}
               defaultEdgeOptions={{
                 style: { stroke: '#06b6d4', strokeWidth: 2 },
                 animated: true,
