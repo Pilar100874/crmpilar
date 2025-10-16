@@ -838,9 +838,14 @@ function BotBuilderContent() {
                 ...edge,
                 style: {
                   stroke: edge.selected ? '#f59e0b' : '#06b6d4',
-                  strokeWidth: edge.selected ? 3 : 2,
+                  strokeWidth: edge.selected ? 2 : 1.33,
                 },
-                animated: true,
+                markerEnd: {
+                  type: 'arrowclosed',
+                  width: 20,
+                  height: 20,
+                  color: edge.selected ? '#f59e0b' : '#06b6d4',
+                },
                 type: 'smoothstep',
               }))}
               onNodesChange={onNodesChange}
@@ -862,8 +867,13 @@ function BotBuilderContent() {
               className="bg-slate-900"
               deleteKeyCode={isLocked ? null : "Delete"}
               defaultEdgeOptions={{
-                style: { stroke: '#06b6d4', strokeWidth: 2 },
-                animated: true,
+                style: { stroke: '#06b6d4', strokeWidth: 1.33 },
+                markerEnd: {
+                  type: 'arrowclosed',
+                  width: 20,
+                  height: 20,
+                  color: '#06b6d4',
+                },
                 type: 'smoothstep',
               }}
             >
