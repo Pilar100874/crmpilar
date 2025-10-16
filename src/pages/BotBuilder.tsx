@@ -96,6 +96,13 @@ function BotBuilderContent() {
     [setEdges]
   );
 
+  const onEdgesDelete = useCallback(
+    (deleted: Edge[]) => {
+      toast.success(`${deleted.length} conexão(ões) removida(s)`);
+    },
+    []
+  );
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
@@ -482,6 +489,7 @@ function BotBuilderContent() {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              onEdgesDelete={onEdgesDelete}
               onInit={setReactFlowInstance}
               onDrop={onDrop}
               onDragOver={onDragOver}
@@ -490,10 +498,15 @@ function BotBuilderContent() {
               nodeTypes={nodeTypes}
               fitView
               className="bg-slate-900"
+              edgesReconnectable={true}
+              reconnectRadius={20}
+              deleteKeyCode="Delete"
               defaultEdgeOptions={{
                 style: { stroke: '#06b6d4', strokeWidth: 2 },
                 animated: true,
+                type: 'smoothstep',
               }}
+              edgesFocusable={true}
             >
               <Background 
                 variant={BackgroundVariant.Dots} 
