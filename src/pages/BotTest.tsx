@@ -3,11 +3,12 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RotateCcw, MessageSquare, Smartphone } from "lucide-react";
+import { RotateCcw, MessageSquare, Smartphone, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { WhatsAppQRCode } from "@/components/WhatsAppQRCode";
+import { TwilioSandbox } from "@/components/TwilioSandbox";
 import { Node, Edge } from "@xyflow/react";
 
 export default function BotTest() {
@@ -123,9 +124,13 @@ export default function BotTest() {
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Simulador Web
               </TabsTrigger>
+              <TabsTrigger value="twilio" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
+                <Zap className="w-4 h-4 mr-2" />
+                Twilio Sandbox (Grátis)
+              </TabsTrigger>
               <TabsTrigger value="whatsapp" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">
                 <Smartphone className="w-4 h-4 mr-2" />
-                Testar no WhatsApp
+                WhatsApp API Oficial
               </TabsTrigger>
             </TabsList>
 
@@ -148,14 +153,28 @@ export default function BotTest() {
               )}
             </TabsContent>
 
+            <TabsContent value="twilio" className="flex-1 overflow-auto">
+              <div className="max-w-2xl mx-auto py-6">
+                <div className="mb-6 text-center">
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    ⚡ Teste Grátis com Twilio Sandbox
+                  </h3>
+                  <p className="text-slate-400 text-sm">
+                    Método RECOMENDADO - 100% gratuito e sem risco de ban
+                  </p>
+                </div>
+                <TwilioSandbox />
+              </div>
+            </TabsContent>
+
             <TabsContent value="whatsapp" className="flex-1 overflow-auto">
               <div className="max-w-2xl mx-auto py-6">
                 <div className="mb-6 text-center">
                   <h3 className="text-xl font-bold text-white mb-2">
-                    🚀 Teste seu Bot no WhatsApp Real
+                    📱 WhatsApp Business API Oficial
                   </h3>
                   <p className="text-slate-400 text-sm">
-                    Use seu celular com WhatsApp para testar o bot como seus clientes verão
+                    Para uso em produção com aprovação do Facebook
                   </p>
                 </div>
                 <WhatsAppQRCode />
