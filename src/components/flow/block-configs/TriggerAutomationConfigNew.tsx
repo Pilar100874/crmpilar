@@ -2,10 +2,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Info, Plus, ExternalLink } from "lucide-react";
+import { VariableInput } from "@/components/flow/VariableInput";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
+  inputRefs?: React.MutableRefObject<{ [key: string]: HTMLInputElement | HTMLTextAreaElement | null }>;
+  openVariablePicker?: (ref: HTMLInputElement | HTMLTextAreaElement) => void;
 }
 
 const IntegrationButton = ({ name, icon, url }: { name: string; icon: string; url: string }) => (
@@ -24,7 +27,7 @@ const IntegrationButton = ({ name, icon, url }: { name: string; icon: string; ur
   </Button>
 );
 
-export const TriggerAutomationConfigNew = ({ config, handleConfigChange }: ConfigProps) => {
+export const TriggerAutomationConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const testFields = config.testFields || [];
 
   const addTestField = () => {
@@ -76,9 +79,11 @@ export const TriggerAutomationConfigNew = ({ config, handleConfigChange }: Confi
             >
               POST
             </Button>
-            <Input
+            <VariableInput
+              ref={(el) => inputRefs && (inputRefs.current['webhookUrl'] = el)}
               value={config.webhookUrl || ""}
               onChange={(e) => handleConfigChange("webhookUrl", e.target.value)}
+              onVariableRequest={() => inputRefs?.current['webhookUrl'] && openVariablePicker?.(inputRefs.current['webhookUrl'])}
               placeholder="https://"
             />
           </div>

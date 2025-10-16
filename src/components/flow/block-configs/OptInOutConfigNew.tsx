@@ -1,17 +1,18 @@
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Info, Plus, GripVertical, CheckCircle2 } from "lucide-react";
 import { Bold, Italic } from "lucide-react";
+import { VariableTextarea } from "@/components/flow/VariableInput";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
+  inputRefs?: React.MutableRefObject<{ [key: string]: HTMLInputElement | HTMLTextAreaElement | null }>;
+  openVariablePicker?: (ref: HTMLInputElement | HTMLTextAreaElement) => void;
 }
 
-export const OptInOutConfigNew = ({ config, handleConfigChange }: ConfigProps) => {
+export const OptInOutConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   return (
     <div className="space-y-6">
       <div className="bg-muted/50 rounded-lg p-4">
@@ -23,9 +24,11 @@ export const OptInOutConfigNew = ({ config, handleConfigChange }: ConfigProps) =
 
       <div className="space-y-2">
         <Label>Header (optional)</Label>
-        <Textarea
+        <VariableTextarea
+          ref={(el) => inputRefs && (inputRefs.current['header'] = el)}
           value={config.header || "Subscribe!"}
           onChange={(e) => handleConfigChange("header", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['header'] && openVariablePicker?.(inputRefs.current['header'])}
           placeholder="Subscribe!"
           rows={3}
         />
@@ -33,9 +36,11 @@ export const OptInOutConfigNew = ({ config, handleConfigChange }: ConfigProps) =
 
       <div className="space-y-2">
         <Label>Text</Label>
-        <Textarea
+        <VariableTextarea
+          ref={(el) => inputRefs && (inputRefs.current['text'] = el)}
           value={config.text || "Would you like to receive news & updates from us?"}
           onChange={(e) => handleConfigChange("text", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
           placeholder="Would you like to receive news & updates from us?"
           rows={3}
         />
@@ -46,7 +51,12 @@ export const OptInOutConfigNew = ({ config, handleConfigChange }: ConfigProps) =
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <Italic className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" className="ml-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-auto"
+            onClick={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
+          >
             Use field
           </Button>
         </div>
@@ -54,9 +64,11 @@ export const OptInOutConfigNew = ({ config, handleConfigChange }: ConfigProps) =
 
       <div className="space-y-2">
         <Label>Footer (optional)</Label>
-        <Textarea
+        <VariableTextarea
+          ref={(el) => inputRefs && (inputRefs.current['footer'] = el)}
           value={config.footer || "Choose Yes to confirm"}
           onChange={(e) => handleConfigChange("footer", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['footer'] && openVariablePicker?.(inputRefs.current['footer'])}
           placeholder="Choose Yes to confirm"
           rows={3}
         />

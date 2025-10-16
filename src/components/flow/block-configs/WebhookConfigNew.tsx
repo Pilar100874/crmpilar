@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Info, Plus } from "lucide-react";
+import { VariableInput } from "@/components/flow/VariableInput";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
+  inputRefs?: React.MutableRefObject<{ [key: string]: HTMLInputElement | HTMLTextAreaElement | null }>;
+  openVariablePicker?: (ref: HTMLInputElement | HTMLTextAreaElement) => void;
 }
 
-export const WebhookConfigNew = ({ config, handleConfigChange }: ConfigProps) => {
+export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const testFields = config.testFields || [];
 
   const addTestField = () => {
@@ -52,9 +55,11 @@ export const WebhookConfigNew = ({ config, handleConfigChange }: ConfigProps) =>
               </SelectContent>
             </Select>
             
-            <Input
+            <VariableInput
+              ref={(el) => inputRefs && (inputRefs.current['url'] = el)}
               value={config.url || ""}
               onChange={(e) => handleConfigChange("url", e.target.value)}
+              onVariableRequest={() => inputRefs?.current['url'] && openVariablePicker?.(inputRefs.current['url'])}
               placeholder="https://"
               className="flex-1"
             />
@@ -64,7 +69,11 @@ export const WebhookConfigNew = ({ config, handleConfigChange }: ConfigProps) =>
             <Button variant="secondary" className="flex-1">
               DOMAIN FIELDS
             </Button>
-            <Button variant="outline" className="flex-1">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => inputRefs?.current['url'] && openVariablePicker?.(inputRefs.current['url'])}
+            >
               Use field
             </Button>
             <Button variant="ghost" size="icon">

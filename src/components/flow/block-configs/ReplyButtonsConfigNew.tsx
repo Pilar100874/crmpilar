@@ -1,16 +1,17 @@
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic } from "lucide-react";
+import { VariableInput, VariableTextarea } from "@/components/flow/VariableInput";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
+  inputRefs?: React.MutableRefObject<{ [key: string]: HTMLInputElement | HTMLTextAreaElement | null }>;
+  openVariablePicker?: (ref: HTMLInputElement | HTMLTextAreaElement) => void;
 }
 
-export const ReplyButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps) => {
+export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const buttons = config.buttons || [];
 
   const addButton = () => {
@@ -29,9 +30,11 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange }: ConfigProp
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Header (optional)</Label>
-        <Textarea
+        <VariableTextarea
+          ref={(el) => inputRefs && (inputRefs.current['header'] = el)}
           value={config.header || ""}
           onChange={(e) => handleConfigChange("header", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['header'] && openVariablePicker?.(inputRefs.current['header'])}
           placeholder="Max. 20 characters"
           rows={3}
           maxLength={20}
@@ -40,9 +43,11 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange }: ConfigProp
 
       <div className="space-y-2">
         <Label>Text (max. 1024 characters)</Label>
-        <Textarea
+        <VariableTextarea
+          ref={(el) => inputRefs && (inputRefs.current['text'] = el)}
           value={config.text || ""}
           onChange={(e) => handleConfigChange("text", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
           placeholder="Text body"
           rows={3}
           maxLength={1024}
@@ -54,7 +59,12 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange }: ConfigProp
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <Italic className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" className="ml-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-auto"
+            onClick={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
+          >
             Use field
           </Button>
         </div>
@@ -62,9 +72,11 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange }: ConfigProp
 
       <div className="space-y-2">
         <Label>Footer (optional)</Label>
-        <Textarea
+        <VariableTextarea
+          ref={(el) => inputRefs && (inputRefs.current['footer'] = el)}
           value={config.footer || ""}
           onChange={(e) => handleConfigChange("footer", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['footer'] && openVariablePicker?.(inputRefs.current['footer'])}
           placeholder="Max. 60 characters"
           rows={3}
           maxLength={60}
@@ -124,9 +136,11 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange }: ConfigProp
             <Info className="h-4 w-4 text-muted-foreground cursor-help" />
           </Label>
         </div>
-        <Input
+        <VariableInput
+          ref={(el) => inputRefs && (inputRefs.current['variable'] = el)}
           value={config.variable || ""}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['variable'] && openVariablePicker?.(inputRefs.current['variable'])}
           placeholder="Search or create"
           className="bg-accent/50"
         />
