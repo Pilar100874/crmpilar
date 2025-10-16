@@ -130,21 +130,15 @@ serve(async (req) => {
     
     // Check if there's a pending node (waiting for button response)
     let startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
-    let isResuming = false;
     
     if (context.pendingNodeId) {
-      // Resume from the pending node
+      // Resume from the pending node - only execute that node
       const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
       if (pendingNode) {
         console.log("Resuming from pending node:", pendingNode.id);
         startNode = pendingNode;
-        isResuming = true;
-        // Mark context as resuming so nodes know not to re-execute
         context.isResuming = true;
       }
-    } else {
-      // Fresh start - clear executed nodes tracking
-      context.executedNodes = [];
     }
     
     await executeFlow(
@@ -383,23 +377,7 @@ async function executeNode(
 ) {
   const data = node.data;
   const config = data.config || {};
-  console.log(`Executing node: ${data.type}`, config);
-  
-  // Track executed nodes to prevent re-execution (except when resuming)
-  if (!context.executedNodes) {
-    context.executedNodes = [];
-  }
-  
-  // If this node was already executed and we're not resuming from it, skip
-  if (context.executedNodes.includes(node.id) && context.pendingNodeId !== node.id) {
-    console.log(`Skipping already executed node: ${node.id}`);
-    return;
-  }
-  
-  // Mark node as executed (except for reply_buttons which needs to run twice)
-  if (data.type !== 'reply_buttons') {
-    context.executedNodes.push(node.id);
-  }
+  console.log(`Executing node: ${data.type}, Node ID: ${node.id}`);
 
   const interpolate = (text: string): string => {
     if (!text) return "";
@@ -451,41 +429,22 @@ async function executeNode(
     }
 
     case "media": {
-      console.log(`[MEDIA NODE] Starting execution - Node ID: ${node.id}`);
-      
-      // Skip if already executed (prevents duplication on button flow)
-      if (context.executedNodes && context.executedNodes.includes(node.id)) {
-        console.log(`[MEDIA NODE] Already executed, skipping`);
-        const nextNodes = getNextNodes(node.id);
-        for (const next of nextNodes) {
-          await executeNode(next, nodes, edges, context, onResponse);
-        }
-        break;
-      }
+      console.log(`[MEDIA NODE] Starting - Node ID: ${node.id}`);
       
       const mediaUrl = interpolate(config.url || "");
       const caption = interpolate(config.caption || "");
       const mediaType = config.mediaType || "image";
       
-      console.log(`[MEDIA NODE] URL: ${mediaUrl}, Caption: ${caption}, Type: ${mediaType}`);
+      console.log(`[MEDIA NODE] URL: ${mediaUrl}, Type: ${mediaType}`);
       
       if (mediaUrl) {
-        console.log(`[MEDIA NODE] Sending media via onResponse`);
         await onResponse(caption, mediaUrl, mediaType);
-        console.log(`[MEDIA NODE] Media sent successfully`);
       }
-      
-      // Mark as executed
-      if (!context.executedNodes) context.executedNodes = [];
-      context.executedNodes.push(node.id);
       
       const nextNodes = getNextNodes(node.id);
-      console.log(`[MEDIA NODE] Next nodes count: ${nextNodes.length}`);
       for (const next of nextNodes) {
-        console.log(`[MEDIA NODE] Executing next node: ${next.id} (${next.data.type})`);
         await executeNode(next, nodes, edges, context, onResponse);
       }
-      console.log(`[MEDIA NODE] Finished execution`);
       break;
     }
 
