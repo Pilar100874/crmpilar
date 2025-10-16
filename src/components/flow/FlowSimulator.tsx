@@ -18,6 +18,7 @@ interface Message {
   nodeId?: string;
   mediaUrl?: string;
   mediaType?: "image" | "video" | "audio" | "file";
+  buttons?: Array<{ text: string; value: string }>;
 }
 
 interface FlowSimulatorProps {
@@ -507,18 +508,47 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         break;
 
       case "reply_buttons":
+        const replyHeader = interpolateVariables(config.header || "", context);
         const replyText = interpolateVariables(config.text || "", context);
+        const replyFooter = interpolateVariables(config.footer || "", context);
         const replyButtons = config.buttons || [];
+        const replyImage = config.image || config.mediaUrl;
         
-        if (replyText) {
-          addBotMessage(replyText, node.id);
+        // Exibir imagem se houver
+        if (replyImage) {
+          addBotMediaMessage(replyImage, "image", "", node.id);
         }
         
-        if (replyButtons.length > 0) {
-          const buttonsList = replyButtons.map((btn: any) => `▶️ ${btn.title || btn.text}`).join("\n");
+        // Exibir header
+        if (replyHeader) {
           safeSetTimeout(() => {
-            addSystemMessage(`Botões disponíveis:\n${buttonsList}`);
-          }, 500);
+            addBotMessage(`*${replyHeader}*`, node.id);
+          }, replyImage ? 500 : 0);
+        }
+        
+        // Exibir texto com botões
+        const delay = (replyImage ? 500 : 0) + (replyHeader ? 500 : 0);
+        safeSetTimeout(() => {
+          const msgWithButtons: Message = {
+            id: Date.now().toString(),
+            sender: "bot",
+            text: replyText,
+            timestamp: new Date(),
+            nodeId: node.id,
+            buttons: replyButtons.map((btn: any, idx: number) => ({
+              text: btn.label || btn.text || `Botão ${idx + 1}`,
+              value: btn.value || btn.text || `button_${idx}`,
+              buttonId: `button_${idx}`
+            }))
+          };
+          setMessages((prev) => [...prev, msgWithButtons]);
+        }, delay);
+        
+        // Exibir footer
+        if (replyFooter) {
+          safeSetTimeout(() => {
+            addSystemMessage(`ℹ️ ${replyFooter}`);
+          }, delay + 500);
         }
         
         setIsWaitingInput(true);
@@ -881,6 +911,33 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     setInput("");
   };
 
+  const handleButtonClick = (button: { text: string; value: string; buttonId?: string }, nodeId?: string) => {
+    addUserMessage(button.text);
+    
+    if (pendingVariable) {
+      setContext((prev) => ({
+        ...prev,
+        [pendingVariable]: button.value,
+      }));
+      
+      addSuccessMessage(`Variável "${pendingVariable}" = "${button.value}"`);
+      setPendingVariable(null);
+      setIsWaitingInput(false);
+
+      if (nodeId) {
+        // Encontrar a edge correspondente ao botão clicado
+        const buttonIndex = parseInt(button.buttonId?.split('_')[1] || '0');
+        const nextNode = getNextNode(nodeId, buttonIndex);
+        if (nextNode) {
+          safeSetTimeout(() => {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }, 500);
+        }
+      }
+    }
+  };
+
   const addUserMessage = (text: string) => {
     const msg: Message = {
       id: Date.now().toString(),
@@ -1054,6 +1111,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
                       {msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
                       <div className="flex-1">
                         {msg.text && <p className="text-sm whitespace-pre-wrap">{formatText(msg.text)}</p>}
+                        
+                        {msg.buttons && msg.buttons.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {msg.buttons.map((button, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-start bg-pink-500 hover:bg-pink-600 text-white border-pink-500"
+                                onClick={() => handleButtonClick(button, msg.nodeId)}
+                                disabled={!isWaitingInput}
+                              >
+                                {button.text}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                        
                         <span className="text-xs opacity-70 mt-1 block">
                           {msg.timestamp.toLocaleTimeString()}
                         </span>

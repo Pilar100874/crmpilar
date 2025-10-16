@@ -17,7 +17,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
   const addButton = () => {
     handleConfigChange("buttons", [
       ...buttons,
-      { id: Date.now(), label: "Button" }
+      { id: Date.now(), label: "Botão", text: "Botão" }
     ]);
   };
 
@@ -26,8 +26,28 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
     handleConfigChange("buttons", newButtons);
   };
 
+  const updateButtonText = (index: number, text: string) => {
+    const newButtons = [...buttons];
+    newButtons[index] = { ...newButtons[index], label: text, text: text };
+    handleConfigChange("buttons", newButtons);
+  };
+
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <Label>Image (optional)</Label>
+        <VariableInput
+          ref={(el) => inputRefs && (inputRefs.current['image'] = el)}
+          value={config.image || ""}
+          onChange={(e) => handleConfigChange("image", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['image'] && openVariablePicker?.(inputRefs.current['image'])}
+          placeholder="https://..."
+        />
+        <p className="text-xs text-muted-foreground">
+          URL da imagem a ser exibida acima dos botões
+        </p>
+      </div>
+
       <div className="space-y-2">
         <Label>Header (optional)</Label>
         <VariableTextarea
@@ -87,23 +107,25 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
         <Label>Buttons (up to 3)</Label>
         
         {buttons.map((button: any, index: number) => (
-          <div key={button.id || index} className="flex items-center gap-2 bg-pink-500 text-white p-3 rounded">
-            <span>{button.label}</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="ml-auto h-6 w-6 text-white hover:bg-pink-600"
-            >
-              <GripVertical className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 text-white hover:bg-pink-600"
-              onClick={() => removeButton(index)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          <div key={button.id || index} className="space-y-2">
+            <div className="flex items-center gap-2">
+              <VariableInput
+                value={button.label || button.text || ""}
+                onChange={(e) => updateButtonText(index, e.target.value)}
+                onVariableRequest={() => {}}
+                placeholder={`Botão ${index + 1}`}
+                maxLength={20}
+                className="flex-1"
+              />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                onClick={() => removeButton(index)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ))}
 
