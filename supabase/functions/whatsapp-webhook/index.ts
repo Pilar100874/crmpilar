@@ -245,12 +245,14 @@ serve(async (req) => {
       );
     }
 
-    // Save session
-    await supabase.from("chat_sessions").upsert({
-      session_id: sessionId,
-      context: context,
-      updated_at: new Date().toISOString(),
-    });
+    // Save session only if not already saved by a node (e.g., reply_buttons)
+    if (!context.pendingNodeId) {
+      await supabase.from("chat_sessions").upsert({
+        session_id: sessionId,
+        context: context,
+        updated_at: new Date().toISOString(),
+      });
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
