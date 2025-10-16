@@ -26,6 +26,7 @@ import {
   TestTube,
   Smartphone,
   Globe,
+  Pencil,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Atendimento", url: "/atendimento", icon: MessageSquare },
   { title: "CRIAR BOT", url: "/bot-builder", icon: Workflow },
+  { title: "Desenho", url: "/desenho", icon: Pencil },
   { title: "Teste do Bot", url: "/bot-test", icon: TestTube },
   { title: "Config WhatsApp", url: "/whatsapp-config", icon: Smartphone },
   { title: "Campanhas", url: "/campanhas", icon: Megaphone },
