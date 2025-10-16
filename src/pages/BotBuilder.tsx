@@ -680,29 +680,49 @@ function BotBuilderContent() {
   const handleFitView = useCallback(() => {
     if (!reactFlowInstance) return;
     
-    // Calcular largura dos painéis laterais
-    const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0; // w-64 = 256px
-    const propertiesPanelWidth = selectedNode ? 384 : 0; // w-96 = 384px
-    const viewportWidth = window.innerWidth;
-    
-    // Área disponível para o ReactFlow
-    const availableWidth = viewportWidth - blockLibraryWidth - propertiesPanelWidth;
-    
-    // Calcular padding proporcional para compensar os painéis
-    const leftPaddingRatio = blockLibraryWidth / availableWidth;
-    const rightPaddingRatio = propertiesPanelWidth / availableWidth;
-    
-    reactFlowInstance.fitView({ 
-      padding: { 
-        top: 0.15, 
-        bottom: 0.15, 
-        left: 0.15 + leftPaddingRatio, 
-        right: 0.15 + rightPaddingRatio 
-      },
-      duration: 300,
-      maxZoom: 1.2 // Limitar zoom para garantir que todos os blocos fiquem visíveis
-    });
-  }, [reactFlowInstance, selectedNode, isBlockLibraryExpanded]);
+    // Se um bloco estiver selecionado (propriedades abertas), centralizar esse bloco
+    if (selectedNode) {
+      const node = nodes.find(n => n.id === selectedNode.id);
+      if (node) {
+        // Calcular largura dos painéis laterais
+        const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0; // w-64 = 256px
+        const propertiesPanelWidth = 384; // w-96 = 384px
+        const viewportWidth = window.innerWidth;
+        
+        // Calcular o centro da área visível (considerando os painéis)
+        const visibleAreaCenterX = blockLibraryWidth + (viewportWidth - blockLibraryWidth - propertiesPanelWidth) / 2;
+        const visibleAreaCenterY = window.innerHeight / 2;
+        
+        // Obter o centro do nó (considerando dimensões padrão)
+        const nodeWidth = node.width || 280;
+        const nodeHeight = node.height || 140;
+        const nodeCenterX = node.position.x + nodeWidth / 2;
+        const nodeCenterY = node.position.y + nodeHeight / 2;
+        
+        // Centralizar o nó na área visível
+        reactFlowInstance.setCenter(nodeCenterX, nodeCenterY, { zoom: 1, duration: 300 });
+      }
+    } else {
+      // Se nenhum bloco estiver selecionado, centralizar todos
+      const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0; // w-64 = 256px
+      const viewportWidth = window.innerWidth;
+      const availableWidth = viewportWidth - blockLibraryWidth;
+      
+      // Calcular padding proporcional para compensar os painéis
+      const leftPaddingRatio = blockLibraryWidth / availableWidth;
+      
+      reactFlowInstance.fitView({ 
+        padding: { 
+          top: 0.15, 
+          bottom: 0.15, 
+          left: 0.15 + leftPaddingRatio, 
+          right: 0.15 
+        },
+        duration: 300,
+        maxZoom: 1.2
+      });
+    }
+  }, [reactFlowInstance, selectedNode, isBlockLibraryExpanded, nodes]);
 
   const handleToggleLock = useCallback(() => {
     setIsLocked(prev => !prev);
