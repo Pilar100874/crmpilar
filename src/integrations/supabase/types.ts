@@ -315,6 +315,33 @@ export type Database = {
           },
         ]
       }
+      twilio_config: {
+        Row: {
+          account_sid: string | null
+          auth_token: string | null
+          created_at: string | null
+          id: number
+          sandbox_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_sid?: string | null
+          auth_token?: string | null
+          created_at?: string | null
+          id?: number
+          sandbox_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_sid?: string | null
+          auth_token?: string | null
+          created_at?: string | null
+          id?: number
+          sandbox_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
