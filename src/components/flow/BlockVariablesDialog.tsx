@@ -83,7 +83,11 @@ export function BlockVariablesDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent side="right" className="w-[600px] sm:w-[700px] bg-slate-900 border-slate-700 overflow-y-auto z-[100]">
+      <SheetContent 
+        side="right" 
+        className="w-[600px] sm:w-[700px] bg-slate-900 border-slate-700 overflow-y-auto z-[100]"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <SheetHeader>
           <SheetTitle className="text-white flex items-center gap-2">
             <Database className="h-5 w-5 text-cyan-500" />
