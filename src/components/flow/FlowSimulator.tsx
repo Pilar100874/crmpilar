@@ -64,6 +64,53 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     return timeout;
   };
 
+  const formatText = (text: string) => {
+    if (!text) return null;
+    
+    const parts: JSX.Element[] = [];
+    let lastIndex = 0;
+    let key = 0;
+
+    // Regex para detectar formatações: *negrito*, _itálico_, ~tachado~, ```código```
+    const regex = /(\*([^*]+)\*)|(_([^_]+)_)|(~([^~]+)~)|(```([^`]+)```)/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Adiciona texto antes da formatação
+      if (match.index > lastIndex) {
+        parts.push(<span key={`text-${key++}`}>{text.substring(lastIndex, match.index)}</span>);
+      }
+
+      // Identifica o tipo de formatação
+      if (match[1]) {
+        // Negrito: *texto*
+        parts.push(<strong key={`bold-${key++}`}>{match[2]}</strong>);
+      } else if (match[3]) {
+        // Itálico: _texto_
+        parts.push(<em key={`italic-${key++}`}>{match[4]}</em>);
+      } else if (match[5]) {
+        // Tachado: ~texto~
+        parts.push(<span key={`strike-${key++}`} className="line-through">{match[6]}</span>);
+      } else if (match[7]) {
+        // Código: ```texto```
+        parts.push(
+          <code key={`code-${key++}`} className="bg-muted px-1 py-0.5 rounded text-xs font-mono">
+            {match[8]}
+          </code>
+        );
+      }
+
+      lastIndex = regex.lastIndex;
+    }
+
+    // Adiciona texto restante
+    if (lastIndex < text.length) {
+      parts.push(<span key={`text-${key++}`}>{text.substring(lastIndex)}</span>);
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
+
   const interpolateVariables = (text: string, context: Record<string, any>): string => {
     if (!text) return "";
     return text.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
@@ -1006,7 +1053,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
                       {msg.sender === "bot" && <Bot className="w-4 h-4 mt-0.5" />}
                       {msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
                       <div className="flex-1">
-                        {msg.text && <p className="text-sm whitespace-pre-wrap">{msg.text}</p>}
+                        {msg.text && <p className="text-sm whitespace-pre-wrap">{formatText(msg.text)}</p>}
                         <span className="text-xs opacity-70 mt-1 block">
                           {msg.timestamp.toLocaleTimeString()}
                         </span>
