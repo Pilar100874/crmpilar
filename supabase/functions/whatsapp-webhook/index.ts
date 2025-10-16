@@ -141,45 +141,98 @@ serve(async (req) => {
     // Execute flow
     const responses: string[] = [];
     
-    // Check if there's a pending node (waiting for button response)
-    let startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
-    
     if (context.pendingNodeId) {
-      // Resume from the pending node - only execute that node
+      // Resuming from a pending button node - process only that node
+      console.log("Resuming from pending button node:", context.pendingNodeId);
+      
       const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
-      if (pendingNode) {
-        console.log("Resuming from pending node:", pendingNode.id);
-        startNode = pendingNode;
-        context.isResuming = true;
-      }
-    }
-    
-    await executeFlow(
-      { nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges },
-      context,
-      startNode,
-      async (message: string, mediaUrl?: string, mediaType?: string) => {
-        responses.push(message);
-        if (isTwilio) {
-          // Send via Twilio
-          if (mediaUrl) {
-            await sendTwilioMessage(from, message || "", mediaUrl);
-          } else if (message) {
-            await sendTwilioMessage(from, message);
-          }
+      if (pendingNode && pendingNode.data.type === "reply_buttons") {
+        const config = pendingNode.data.config || {};
+        const variable = config.variable || "button_response";
+        
+        // Process user's button selection
+        const userResponse = context.vars.userMessage?.trim() || "";
+        const buttonIndex = parseInt(userResponse) - 1;
+        
+        if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
+          context.vars[variable] = config.buttons[buttonIndex].value;
+          console.log(`Button selected: ${config.buttons[buttonIndex].value}`);
         } else {
-          // Send via WhatsApp Business API
-          if (mediaUrl && mediaType) {
-            await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
-          } else if (message) {
-            await sendWhatsAppMessage(phoneNumberId, from, message);
+          const matchedButton = config.buttons.find((btn: any) => 
+            btn.text.toLowerCase() === userResponse.toLowerCase()
+          );
+          context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
+        }
+        
+        // Clear pending state
+        delete context.pendingNodeId;
+        
+        // Find and execute ONLY the next node based on button selection
+        const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === context.vars[variable]);
+        
+        if (selectedButtonIndex >= 0) {
+          const buttonHandle = `button_${selectedButtonIndex}`;
+          const matchingEdge = flowData.flow_data.edges.find((e: any) => 
+            e.source === pendingNode.id && e.sourceHandle === buttonHandle
+          );
+          
+          if (matchingEdge) {
+            const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === matchingEdge.target);
+            if (nextNode) {
+              console.log(`Executing next node: ${nextNode.id} (${nextNode.data.type})`);
+              await executeNode(
+                nextNode, 
+                flowData.flow_data.nodes, 
+                flowData.flow_data.edges, 
+                context, 
+                async (message: string, mediaUrl?: string, mediaType?: string) => {
+                  responses.push(message);
+                  if (isTwilio) {
+                    if (mediaUrl) {
+                      await sendTwilioMessage(from, message || "", mediaUrl);
+                    } else if (message) {
+                      await sendTwilioMessage(from, message);
+                    }
+                  } else {
+                    if (mediaUrl && mediaType) {
+                      await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
+                    } else if (message) {
+                      await sendWhatsAppMessage(phoneNumberId, from, message);
+                    }
+                  }
+                }
+              );
+            }
           }
         }
       }
-    );
-    
-    // Clean up resuming flag
-    delete context.isResuming;
+    } else {
+      // Fresh start - execute full flow
+      console.log("Starting fresh flow");
+      const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
+      
+      await executeFlow(
+        { nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges },
+        context,
+        startNode,
+        async (message: string, mediaUrl?: string, mediaType?: string) => {
+          responses.push(message);
+          if (isTwilio) {
+            if (mediaUrl) {
+              await sendTwilioMessage(from, message || "", mediaUrl);
+            } else if (message) {
+              await sendTwilioMessage(from, message);
+            }
+          } else {
+            if (mediaUrl && mediaType) {
+              await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
+            } else if (message) {
+              await sendWhatsAppMessage(phoneNumberId, from, message);
+            }
+          }
+        }
+      );
+    }
 
     // Save session
     await supabase.from("chat_sessions").upsert({
@@ -410,12 +463,6 @@ async function executeNode(
 
   switch (data.type) {
     case "start": {
-      // Skip start if we're resuming
-      if (context.isResuming) {
-        console.log(`[START] Skipping - we're resuming from a pending node`);
-        break;
-      }
-      
       const nextNodes = getNextNodes(node.id);
       for (const next of nextNodes) {
         await executeNode(next, nodes, edges, context, onResponse);
@@ -424,19 +471,12 @@ async function executeNode(
     }
 
     case "send_message": {
-      // Skip if we're resuming (already sent)
-      if (context.isResuming) {
-        console.log(`[SEND_MESSAGE] Skipping - we're resuming`);
-        break;
-      }
-      
       const messages = config.messages || [];
       if (messages.length > 0) {
         for (const msg of messages) {
           const text = interpolate(msg.text || "");
           if (text) {
             await onResponse(text);
-            // Small delay between messages
             await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
@@ -455,19 +495,9 @@ async function executeNode(
     }
 
     case "media": {
-      console.log(`[MEDIA NODE] Node: ${node.id}, isResuming: ${context.isResuming}`);
-      
-      // Skip if we're resuming (already sent)
-      if (context.isResuming) {
-        console.log(`[MEDIA NODE] Skipping - we're resuming`);
-        break;
-      }
-      
       const mediaUrl = interpolate(config.url || "");
       const caption = interpolate(config.caption || "");
       const mediaType = config.mediaType || "image";
-      
-      console.log(`[MEDIA NODE] Sending - URL: ${mediaUrl}, Type: ${mediaType}`);
       
       if (mediaUrl) {
         await onResponse(caption, mediaUrl, mediaType);
@@ -530,73 +560,22 @@ async function executeNode(
     }
 
     case "reply_buttons": {
-      console.log(`[REPLY_BUTTONS] Node: ${node.id}, isResuming: ${context.isResuming}, pendingNodeId: ${context.pendingNodeId}`);
-      
       const variable = config.variable || "button_response";
       
-      // If we're resuming (user just responded), process the response
-      if (context.isResuming && context.pendingNodeId === node.id) {
-        console.log(`[REPLY_BUTTONS] Processing user response: ${context.vars.userMessage}`);
-        
-        const userResponse = context.vars.userMessage?.trim() || "";
-        const buttonIndex = parseInt(userResponse) - 1;
-        
-        if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
-          context.vars[variable] = config.buttons[buttonIndex].value;
-          console.log(`[REPLY_BUTTONS] Selected button ${buttonIndex}: ${config.buttons[buttonIndex].value}`);
-        } else {
-          const matchedButton = config.buttons.find((btn: any) => 
-            btn.text.toLowerCase() === userResponse.toLowerCase()
-          );
-          context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
-          console.log(`[REPLY_BUTTONS] Matched or default: ${context.vars[variable]}`);
-        }
-        
-        // Clear pending state
-        delete context.pendingNodeId;
-        delete context.isResuming;
-        console.log(`[REPLY_BUTTONS] Cleared pending state`);
-        
-        // Find the matching edge and execute ONLY the next node
-        const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === context.vars[variable]);
-        
-        if (selectedButtonIndex >= 0) {
-          const buttonHandle = `button_${selectedButtonIndex}`;
-          const matchingEdge = edges.find((e: any) => 
-            e.source === node.id && e.sourceHandle === buttonHandle
-          );
-          
-          console.log(`[REPLY_BUTTONS] Looking for edge with handle: ${buttonHandle}`);
-          
-          if (matchingEdge) {
-            const nextNode = nodes.find((n: any) => n.id === matchingEdge.target);
-            if (nextNode) {
-              console.log(`[REPLY_BUTTONS] Executing ONLY next node: ${nextNode.id} (${nextNode.data.type})`);
-              await executeNode(nextNode, nodes, edges, context, onResponse);
-              console.log(`[REPLY_BUTTONS] Finished executing next node`);
-            }
-          }
-        }
-      } else {
-        // First time - send buttons and wait
-        console.log(`[REPLY_BUTTONS] First visit - sending buttons`);
-        
-        let buttonText = "Escolha uma opção:";
-        if (config.buttons && config.buttons.length > 0) {
-          config.buttons.forEach((btn: any, idx: number) => {
-            buttonText += `\n${idx + 1}. ${btn.text}`;
-          });
-        }
-        
-        await onResponse(buttonText);
-        
-        // Mark as pending and stop
-        context.pendingNodeId = node.id;
-        console.log(`[REPLY_BUTTONS] Set pendingNodeId=${node.id}, stopping execution`);
-        return;
+      // Send buttons and wait for response
+      let buttonText = "Escolha uma opção:";
+      if (config.buttons && config.buttons.length > 0) {
+        config.buttons.forEach((btn: any, idx: number) => {
+          buttonText += `\n${idx + 1}. ${btn.text}`;
+        });
       }
       
-      break;
+      await onResponse(buttonText);
+      
+      // Mark as pending and stop execution
+      context.pendingNodeId = node.id;
+      console.log(`Waiting for button response at node: ${node.id}`);
+      return; // Stop here and wait for user response
     }
 
     case "list_buttons": {
