@@ -244,6 +244,39 @@ export type Database = {
         }
         Relationships: []
       }
+      global_variables: {
+        Row: {
+          created_at: string
+          default_value: Json | null
+          description: string | null
+          id: string
+          is_constant: boolean | null
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          is_constant?: boolean | null
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          is_constant?: boolean | null
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: string[] | null

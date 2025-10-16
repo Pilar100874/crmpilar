@@ -62,7 +62,6 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
   const [newVarDescription, setNewVarDescription] = useState("");
   const [newVarIsConstant, setNewVarIsConstant] = useState(false);
   const [newVarDefaultValue, setNewVarDefaultValue] = useState("");
-  const [newVarScope, setNewVarScope] = useState<"local" | "global">("local");
 
   const handleAddVariable = () => {
     if (!newVarName.trim()) {
@@ -127,7 +126,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
       description: newVarDescription.trim() || undefined,
       isConstant: newVarIsConstant,
       defaultValue: processedDefaultValue,
-      scope: newVarScope,
+      scope: "local", // Sempre local no gerenciador de bots
     };
 
     onVariablesChange([...variables, newVariable]);
@@ -136,8 +135,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
     setNewVarType("text");
     setNewVarIsConstant(false);
     setNewVarDefaultValue("");
-    setNewVarScope("local");
-    toast.success(`Variável "${newVarName}" criada!`);
+    toast.success(`Variável local "${newVarName}" criada!`);
   };
 
   const handleDeleteVariable = (id: string) => {
@@ -166,17 +164,18 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
         <SheetHeader>
           <SheetTitle className="text-white flex items-center gap-2">
             <Variable className="h-5 w-5 text-cyan-500" />
-            Gerenciar Variáveis
+            Gerenciar Variáveis Locais
           </SheetTitle>
           <SheetDescription className="text-slate-400">
-            Crie e gerencie as variáveis do seu fluxo. Elas podem ser usadas para armazenar dados coletados.
+            Crie e gerencie variáveis locais do seu bot. Para variáveis compartilhadas entre bots, use o menu "Variáveis Globais".
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
           {/* Adicionar nova variável */}
           <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 space-y-4">
-            <h3 className="text-sm font-semibold text-white">Adicionar Nova Variável</h3>
+            <h3 className="text-sm font-semibold text-white">Adicionar Nova Variável Local</h3>
+            <p className="text-xs text-slate-400 -mt-2">Disponível apenas neste bot</p>
             
             <div className="space-y-3">
               <div>
@@ -225,40 +224,6 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                   placeholder="ex: Nome completo do cliente"
                   className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="var-scope" className="text-slate-300">Escopo da Variável</Label>
-                <Select value={newVarScope} onValueChange={(value) => setNewVarScope(value as "local" | "global")}>
-                  <SelectTrigger id="var-scope" className="mt-1 bg-slate-800 border-slate-600 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="local" className="text-white">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-blue-400" />
-                        <div>
-                          <div>Local (apenas este bot)</div>
-                          <div className="text-xs text-slate-400">Disponível somente neste bot</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="global" className="text-white">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-green-400" />
-                        <div>
-                          <div>Global (todos os bots)</div>
-                          <div className="text-xs text-slate-400">Compartilhada entre todos os bots</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500 mt-1">
-                  {newVarScope === "local" 
-                    ? "Esta variável estará disponível apenas neste bot" 
-                    : "Esta variável poderá ser acessada por todos os bots"}
-                </p>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
@@ -327,7 +292,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
 
           {/* Lista de variáveis */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-white">Variáveis Existentes ({variables.length})</h3>
+            <h3 className="text-sm font-semibold text-white">Variáveis Locais Existentes ({variables.length})</h3>
             
             {variables.length === 0 ? (
               <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-8 text-center">

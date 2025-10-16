@@ -25,6 +25,7 @@ import {
   LogOut,
   TestTube,
   Smartphone,
+  Globe,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const menuItems = [
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Conteúdos", url: "/conteudos", icon: FileText },
   { title: "Configurações", url: "/config", icon: Settings },
+  { title: "Variáveis Globais", url: "/global-variables", icon: Globe },
 ];
 
 interface LayoutProps {

@@ -14,6 +14,7 @@ import Campanhas from "./pages/Campanhas";
 import Clientes from "./pages/Clientes";
 import Conteudos from "./pages/Conteudos";
 import Config from "./pages/Config";
+import GlobalVariables from "./pages/GlobalVariables";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/conteudos" element={<Conteudos />} />
           <Route path="/config" element={<Config />} />
+          <Route path="/global-variables" element={<GlobalVariables />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

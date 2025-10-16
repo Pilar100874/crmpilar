@@ -67,7 +67,12 @@ export default function GlobalVariables() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setVariables(data || []);
+      setVariables((data || []).map(v => ({
+        ...v,
+        type: v.type as VariableType,
+        isConstant: v.is_constant,
+        defaultValue: v.default_value,
+      })));
     } catch (error) {
       console.error("Error loading global variables:", error);
       toast.error("Erro ao carregar variáveis globais");
@@ -149,7 +154,18 @@ export default function GlobalVariables() {
 
       if (error) throw error;
 
-      setVariables([data, ...variables]);
+      const mappedData: GlobalVariable = {
+        id: data.id,
+        name: data.name,
+        type: data.type as VariableType,
+        description: data.description || undefined,
+        isConstant: data.is_constant || undefined,
+        defaultValue: data.default_value,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
+
+      setVariables([mappedData, ...variables]);
       setNewVarName("");
       setNewVarDescription("");
       setNewVarType("text");
