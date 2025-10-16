@@ -680,43 +680,24 @@ function BotBuilderContent() {
   const handleFitView = useCallback(() => {
     if (!reactFlowInstance) return;
     
-    // Primeiro centraliza normalmente
-    reactFlowInstance.fitView({ 
-      padding: 0.2,
-      duration: 300 
-    });
+    // Calcular área disponível considerando o painel de propriedades
+    const propertiesPanelWidth = selectedNode ? 384 : 0; // w-96 = 384px
+    const viewportWidth = window.innerWidth;
+    const availableWidth = viewportWidth - propertiesPanelWidth;
     
-    // Se o painel de propriedades estiver aberto, ajustar o centro
-    if (selectedNode) {
-      setTimeout(() => {
-        const propertiesPanelWidth = 384; // w-96 = 24rem = 384px
-        const viewportWidth = window.innerWidth;
-        const viewport = reactFlowInstance.getViewport();
-        
-        // Calcular deslocamento para centralizar na área visível (excluindo painel)
-        const visibleWidth = viewportWidth - propertiesPanelWidth;
-        const offsetX = (propertiesPanelWidth / 2) / viewport.zoom;
-        
-        // Obter bounds dos nós
-        const bounds = reactFlowInstance.getNodes().reduce((acc, node) => {
-          const x = node.position.x;
-          const y = node.position.y;
-          return {
-            minX: Math.min(acc.minX, x),
-            maxX: Math.max(acc.maxX, x + (node.width || 280)),
-            minY: Math.min(acc.minY, y),
-            maxY: Math.max(acc.maxY, y + (node.height || 140))
-          };
-        }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-        
-        // Centro dos nós
-        const centerX = (bounds.minX + bounds.maxX) / 2;
-        const centerY = (bounds.minY + bounds.maxY) / 2;
-        
-        // Deslocar centro para a esquerda
-        reactFlowInstance.setCenter(centerX - offsetX, centerY, { zoom: viewport.zoom, duration: 300 });
-      }, 350);
-    }
+    // Calcular padding proporcional para compensar o painel
+    const rightPaddingRatio = propertiesPanelWidth / availableWidth;
+    
+    reactFlowInstance.fitView({ 
+      padding: { 
+        top: 0.1, 
+        bottom: 0.1, 
+        left: 0.1, 
+        right: 0.1 + rightPaddingRatio 
+      },
+      duration: 300,
+      maxZoom: 1.5 // Limitar zoom máximo para garantir visibilidade
+    });
   }, [reactFlowInstance, selectedNode]);
 
   const handleToggleLock = useCallback(() => {
