@@ -680,21 +680,37 @@ function BotBuilderContent() {
   const handleFitView = useCallback(() => {
     if (!reactFlowInstance) return;
     
-    // Se o painel de propriedades estiver aberto, ajustar o padding para compensar
-    const propertiesPanelWidth = selectedNode ? 400 : 0; // Largura aproximada do painel
-    const viewportWidth = window.innerWidth;
-    
-    // Calcular offset proporcional ao tamanho da tela
-    const offsetRatio = propertiesPanelWidth / viewportWidth;
-    
-    // Ajustar padding considerando o painel
-    const paddingLeft = 0.2;
-    const paddingRight = 0.2 + (offsetRatio * 2); // Aumentar padding direito proporcionalmente
-    
-    reactFlowInstance.fitView({ 
-      padding: { top: 0.2, bottom: 0.2, left: paddingLeft, right: paddingRight },
-      duration: 300 
-    });
+    // PropertiesPanel tem w-96 = 384px
+    if (selectedNode) {
+      const propertiesPanelWidth = 384;
+      const viewportWidth = window.innerWidth;
+      
+      // Calcular o centro real da área disponível (sem o painel)
+      const availableWidth = viewportWidth - propertiesPanelWidth;
+      const centerOffset = (viewportWidth - availableWidth) / 2;
+      
+      // Aplicar fitView primeiro
+      reactFlowInstance.fitView({ 
+        padding: 0.2,
+        duration: 300 
+      });
+      
+      // Depois ajustar a posição para compensar o painel
+      setTimeout(() => {
+        const currentViewport = reactFlowInstance.getViewport();
+        reactFlowInstance.setViewport({
+          x: currentViewport.x - (centerOffset / 2),
+          y: currentViewport.y,
+          zoom: currentViewport.zoom
+        }, { duration: 200 });
+      }, 350);
+    } else {
+      // Se não há painel aberto, centralizar normalmente
+      reactFlowInstance.fitView({ 
+        padding: 0.2,
+        duration: 300 
+      });
+    }
   }, [reactFlowInstance, selectedNode]);
 
   const handleToggleLock = useCallback(() => {
