@@ -964,21 +964,6 @@ export const PropertiesPanel = ({
         </div>
       </ScrollArea>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-200 bg-white">
-        <Button
-          variant="destructive"
-          size="sm"
-          className="w-full"
-          onClick={() => onDeleteNode(selectedNode.id)}
-          disabled={nodeData.type === "start"}
-          title={nodeData.type === "start" ? "O bloco Start não pode ser excluído" : "Excluir bloco"}
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Excluir Bloco
-        </Button>
-      </div>
-
       <VariablePickerDialog
         open={showVariablePicker}
         onClose={() => setShowVariablePicker(false)}
