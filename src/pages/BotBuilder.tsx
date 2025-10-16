@@ -60,6 +60,7 @@ function BotBuilderContent() {
   const [currentBotName, setCurrentBotName] = useState("Novo Bot");
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
+  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
 
   // Load saved bots on mount
   useEffect(() => {
@@ -569,6 +570,15 @@ function BotBuilderContent() {
               <Button 
                 variant="outline" 
                 size="icon" 
+                onClick={() => setIsBlockLibraryExpanded(true)}
+                className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                title="Adicionar blocos"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
                 onClick={handleZoomIn}
                 className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
                 title="Aumentar zoom"
@@ -636,7 +646,11 @@ function BotBuilderContent() {
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          <BlockLibrary onDragStart={onDragStart} />
+          <BlockLibrary 
+            onDragStart={onDragStart} 
+            isExpanded={isBlockLibraryExpanded}
+            onToggleExpanded={setIsBlockLibraryExpanded}
+          />
 
           <div className={`${showSimulator ? "flex-1" : "flex-1"} relative`} ref={reactFlowWrapper}>
             <ReactFlow

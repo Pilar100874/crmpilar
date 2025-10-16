@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 
 interface BlockLibraryProps {
   onDragStart: (event: React.DragEvent, nodeType: string) => void;
+  isExpanded: boolean;
+  onToggleExpanded: (expanded: boolean) => void;
 }
 
 // Organizar blocos por categoria
@@ -46,8 +48,7 @@ const blockCategories = [
   },
 ];
 
-export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: BlockLibraryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openCategories, setOpenCategories] = useState<string[]>(["Mensagens", "Perguntas"]);
 
@@ -71,17 +72,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
   })).filter(category => category.blocks.length > 0);
 
   if (!isExpanded) {
-    return (
-      <div className="absolute">
-        <Button
-          onClick={() => setIsExpanded(true)}
-          size="icon"
-          className="fixed left-[264px] top-[160px] z-40 h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -102,7 +93,7 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsExpanded(false)}
+              onClick={() => onToggleExpanded(false)}
               className="h-9 w-9 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-all"
             >
               <X className="h-5 w-5" />
