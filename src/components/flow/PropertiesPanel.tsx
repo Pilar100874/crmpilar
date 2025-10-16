@@ -905,17 +905,17 @@ export const PropertiesPanel = ({
   return (
     <div className="w-96 bg-background border-l border-border flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-card">
+      <div className="p-4 border-b border-slate-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
               <span className="text-xl">⚙️</span>
             </div>
             <div>
-              <h3 className="font-semibold text-base text-foreground">Propriedades</h3>
+              <h3 className="font-semibold text-base text-slate-900">Propriedades</h3>
               {blockDef && (
-                <div className="text-xs text-primary flex items-center gap-1.5 font-medium mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary block"></span>
+                <div className="text-xs text-blue-600 flex items-center gap-1.5 font-medium mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 block"></span>
                   {blockDef.label}
                 </div>
               )}
@@ -933,7 +933,7 @@ export const PropertiesPanel = ({
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
           {/* Nome do Bloco */}
-          <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
+          <div className="space-y-2 p-3 rounded-lg bg-slate-50 border border-slate-200">
             <Label className="text-foreground text-sm font-medium flex items-center gap-2">
               <span className="w-1 h-4 bg-primary rounded-full"></span>
               Nome do Bloco
@@ -942,7 +942,7 @@ export const PropertiesPanel = ({
               value={nodeData.label || ""}
               onChange={(e) => handleLabelChange(e.target.value)}
               placeholder={blockDef?.label}
-              className="bg-background"
+              className="bg-white border-slate-200"
             />
           </div>
 
@@ -965,7 +965,7 @@ export const PropertiesPanel = ({
       </ScrollArea>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border bg-card">
+      <div className="p-4 border-t border-slate-200 bg-white">
         <Button
           variant="destructive"
           size="sm"
