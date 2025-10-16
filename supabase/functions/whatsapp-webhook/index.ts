@@ -452,6 +452,17 @@ async function executeNode(
 
     case "media": {
       console.log(`[MEDIA NODE] Starting execution - Node ID: ${node.id}`);
+      
+      // Skip if already executed (prevents duplication on button flow)
+      if (context.executedNodes && context.executedNodes.includes(node.id)) {
+        console.log(`[MEDIA NODE] Already executed, skipping`);
+        const nextNodes = getNextNodes(node.id);
+        for (const next of nextNodes) {
+          await executeNode(next, nodes, edges, context, onResponse);
+        }
+        break;
+      }
+      
       const mediaUrl = interpolate(config.url || "");
       const caption = interpolate(config.caption || "");
       const mediaType = config.mediaType || "image";
@@ -463,6 +474,10 @@ async function executeNode(
         await onResponse(caption, mediaUrl, mediaType);
         console.log(`[MEDIA NODE] Media sent successfully`);
       }
+      
+      // Mark as executed
+      if (!context.executedNodes) context.executedNodes = [];
+      context.executedNodes.push(node.id);
       
       const nextNodes = getNextNodes(node.id);
       console.log(`[MEDIA NODE] Next nodes count: ${nextNodes.length}`);
