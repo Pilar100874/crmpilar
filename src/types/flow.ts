@@ -31,8 +31,7 @@ export type NodeType =
   | "webhook"
   | "n8n"
   | "trigger_automation"
-  | "dynamic_data"
-  | "pause";
+  | "dynamic_data";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -321,14 +320,5 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "Database",
     color: "text-accent",
     defaultData: { source: "", query: "", outputVariable: "" },
-  },
-  // Diversos
-  {
-    type: "pause",
-    label: "Pausa",
-    description: "Pausar simulação neste ponto",
-    icon: "Pause",
-    color: "text-warning",
-    defaultData: { enabled: true },
   },
 ];

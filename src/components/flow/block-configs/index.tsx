@@ -70,4 +70,3 @@ export { GoodbyeConfigNew } from './GoodbyeConfigNew';
 export { KeywordJumpConfigNew } from './KeywordJumpConfigNew';
 export { LeadScoringConfigNew } from './LeadScoringConfigNew';
 export { MessageTemplateConfigNew } from './MessageTemplateConfigNew';
-export { PauseConfig } from './PauseConfig';
