@@ -24,19 +24,19 @@ export const WhatsAppQRCode = () => {
         .from("whatsapp_config")
         .select("*")
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
       if (data && data.phone_number_id) {
-        // Extract phone number from phone_number_id if it's in format +5511999999999
-        const phone = data.phone_number_id.replace(/\D/g, '');
-        setPhoneNumber(phone);
-        generateWhatsAppUrl(phone, message);
+        // Get the actual phone number from phone_number_id
+        // The phone_number_id from Meta is the ID, not the actual number
+        // User needs to input their actual WhatsApp number
+        setPhoneNumber("");
       }
     } catch (error) {
       console.error("Error loading WhatsApp config:", error);
-      toast.error("Configure o WhatsApp primeiro");
+      toast.error("Configure o WhatsApp primeiro na página de Configurações");
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +99,42 @@ export const WhatsAppQRCode = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="p-4 bg-blue-950/30 border border-blue-800/50 rounded-lg space-y-2">
+          <h3 className="text-sm font-semibold text-blue-200 flex items-center gap-2">
+            ℹ️ Como funciona
+          </h3>
+          <ol className="text-xs text-blue-300 space-y-1 list-decimal list-inside">
+            <li>Digite o número do WhatsApp Business que você configurou</li>
+            <li>O número deve estar no formato internacional (ex: 5511999999999)</li>
+            <li>Escaneie o QR code com seu celular</li>
+            <li>Envie uma mensagem e o bot ativo responderá automaticamente</li>
+          </ol>
+        </div>
+
+        <div className="p-4 bg-purple-950/30 border border-purple-800/50 rounded-lg space-y-2">
+          <h3 className="text-sm font-semibold text-purple-200 flex items-center gap-2">
+            🔗 Configure o Webhook
+          </h3>
+          <p className="text-xs text-purple-300">
+            Para receber mensagens do WhatsApp, configure o webhook no Facebook:
+          </p>
+          <div className="bg-slate-900/50 p-2 rounded text-xs text-slate-300 font-mono">
+            URL: https://kiuztueouxtyqiecgdxk.supabase.co/functions/v1/whatsapp-webhook
+          </div>
+          <div className="bg-slate-900/50 p-2 rounded text-xs text-slate-300 font-mono">
+            Token: conversa_botique_verify
+          </div>
+          <p className="text-xs text-purple-300 mt-2">
+            Ative a inscrição "messages" para receber as mensagens.
+          </p>
+        </div>
+
+        <div className="p-4 bg-amber-950/30 border border-amber-800/50 rounded-lg">
+          <p className="text-xs text-amber-300">
+            ⚠️ Certifique-se de que há um bot ativo na página "Criar Bot"
+          </p>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="phone" className="text-slate-200">
             Número do WhatsApp (com DDI)

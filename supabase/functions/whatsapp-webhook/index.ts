@@ -7,15 +7,50 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface WhatsAppMessage {
-  from: string;
-  body: string;
-  session: string;
+interface WhatsAppWebhookPayload {
+  object: string;
+  entry: Array<{
+    id: string;
+    changes: Array<{
+      value: {
+        messaging_product: string;
+        metadata: {
+          display_phone_number: string;
+          phone_number_id: string;
+        };
+        messages?: Array<{
+          from: string;
+          id: string;
+          timestamp: string;
+          text?: { body: string };
+          type: string;
+        }>;
+      };
+      field: string;
+    }>;
+  }>;
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Handle GET request for webhook verification
+  if (req.method === "GET") {
+    const url = new URL(req.url);
+    const mode = url.searchParams.get("hub.mode");
+    const token = url.searchParams.get("hub.verify_token");
+    const challenge = url.searchParams.get("hub.challenge");
+
+    const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "conversa_botique_verify";
+
+    if (mode === "subscribe" && token === verifyToken) {
+      console.log("Webhook verified");
+      return new Response(challenge, { status: 200 });
+    }
+
+    return new Response("Forbidden", { status: 403 });
   }
 
   try {
@@ -24,65 +59,74 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const payload = await req.json();
-    console.log("Received WhatsApp webhook:", payload);
+    const payload: WhatsAppWebhookPayload = await req.json();
+    console.log("Received WhatsApp webhook:", JSON.stringify(payload, null, 2));
 
-    // WAHA format
-    const message: WhatsAppMessage = {
-      from: payload.from || payload.chatId,
-      body: payload.body || payload.text,
-      session: payload.session || "default",
-    };
+    // Extract message from WhatsApp Business API format
+    if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
+      console.log("No message in webhook");
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    console.log("Processed message:", message);
+    const messageData = payload.entry[0].changes[0].value.messages[0];
+    const from = messageData.from;
+    const body = messageData.text?.body || "";
+    const phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
+
+    console.log("Processed message:", { from, body, phoneNumberId });
 
     // Load active bot flow from database
     const { data: flowData, error: flowError } = await supabase
       .from("bot_flows")
       .select("*")
       .eq("active", true)
-      .single();
+      .maybeSingle();
 
     if (flowError || !flowData) {
       console.log("No active flow found, using default response");
       
-      await sendWhatsAppMessage(message.session, message.from, {
-        type: "message",
-        content: "Olá! Nenhum fluxo ativo encontrado.",
-      });
+      await sendWhatsAppMessage(phoneNumberId, from, "Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.");
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log("Active bot found:", flowData.name);
+
     // Get or create session context
+    const sessionId = `whatsapp_${from}`;
     const { data: sessionData } = await supabase
       .from("chat_sessions")
       .select("*")
-      .eq("session_id", `${message.session}_${message.from}`)
-      .single();
+      .eq("session_id", sessionId)
+      .maybeSingle();
 
     const context = sessionData?.context || { vars: {} };
-    context.vars.userMessage = message.body;
-    context.vars.from = message.from;
+    context.vars.userMessage = body;
+    context.vars.from = from;
+    context.vars.phoneNumber = from;
 
     // Execute flow
+    const responses: string[] = [];
     await executeFlow(
       flowData.flow_data,
-      {
-        vars: context.vars,
-        userMessage: message.body,
-        sessionId: `${message.session}_${message.from}`,
-      },
-      async (response) => {
-        await sendWhatsAppMessage(message.session, message.from, response);
+      context,
+      async (message: string, mediaUrl?: string, mediaType?: string) => {
+        responses.push(message);
+        if (mediaUrl && mediaType) {
+          await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
+        } else if (message) {
+          await sendWhatsAppMessage(phoneNumberId, from, message);
+        }
       }
     );
 
     // Save session
     await supabase.from("chat_sessions").upsert({
-      session_id: `${message.session}_${message.from}`,
+      session_id: sessionId,
       context: context,
       updated_at: new Date().toISOString(),
     });
@@ -101,77 +145,127 @@ serve(async (req) => {
 });
 
 async function sendWhatsAppMessage(
-  session: string,
-  chatId: string,
-  response: any
+  phoneNumberId: string,
+  to: string,
+  text: string
 ) {
-  const wahaUrl = Deno.env.get("WAHA_URL");
-  const wahaToken = Deno.env.get("WAHA_TOKEN");
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
 
-  if (!wahaUrl) {
-    console.log("WAHA_URL not configured, skipping send");
+  // Get WhatsApp config
+  const { data: config } = await supabase
+    .from("whatsapp_config")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
+
+  if (!config || !config.business_token) {
+    console.log("WhatsApp not configured");
     return;
   }
 
   try {
-    let payload: any = {
-      session,
-      chatId,
-    };
+    const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.business_token}`,
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: to,
+        type: "text",
+        text: { body: text },
+      }),
+    });
 
-    if (response.type === "message") {
-      if (response.buttons && response.buttons.length > 0) {
-        // Send buttons
-        payload.text = response.content;
-        payload.buttons = response.buttons.map((btn: any) => ({
-          id: btn.id || btn.label,
-          text: btn.label,
-        }));
-
-        await fetch(`${wahaUrl}/api/sendButtons`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${wahaToken}`,
-          },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        // Send text
-        payload.text = response.content;
-
-        await fetch(`${wahaUrl}/api/sendText`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${wahaToken}`,
-          },
-          body: JSON.stringify(payload),
-        });
-      }
-    } else if (response.type === "question") {
-      payload.text = response.question;
-
-      await fetch(`${wahaUrl}/api/sendText`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${wahaToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
+    const result = await response.json();
+    console.log("WhatsApp message sent:", result);
+    
+    if (!response.ok) {
+      console.error("WhatsApp API error:", result);
     }
-
-    console.log("Message sent to WhatsApp:", payload);
   } catch (error) {
     console.error("Error sending WhatsApp message:", error);
+  }
+}
+
+async function sendWhatsAppMedia(
+  phoneNumberId: string,
+  to: string,
+  mediaUrl: string,
+  mediaType: string,
+  caption?: string
+) {
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
+  const { data: config } = await supabase
+    .from("whatsapp_config")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
+
+  if (!config || !config.business_token) {
+    console.log("WhatsApp not configured");
+    return;
+  }
+
+  try {
+    const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    
+    const typeMap: Record<string, string> = {
+      image: "image",
+      video: "video",
+      audio: "audio",
+      file: "document",
+    };
+
+    const whatsappType = typeMap[mediaType] || "document";
+    
+    const body: any = {
+      messaging_product: "whatsapp",
+      to: to,
+      type: whatsappType,
+      [whatsappType]: {
+        link: mediaUrl,
+      },
+    };
+
+    if (caption && (whatsappType === "image" || whatsappType === "video" || whatsappType === "document")) {
+      body[whatsappType].caption = caption;
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.business_token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const result = await response.json();
+    console.log("WhatsApp media sent:", result);
+    
+    if (!response.ok) {
+      console.error("WhatsApp API error:", result);
+    }
+  } catch (error) {
+    console.error("Error sending WhatsApp media:", error);
   }
 }
 
 async function executeFlow(
   flowData: any,
   context: any,
-  onResponse: (response: any) => Promise<void>
+  onResponse: (message: string, mediaUrl?: string, mediaType?: string) => Promise<void>
 ) {
   const { nodes, edges } = flowData;
 
@@ -188,14 +282,17 @@ async function executeNode(
   nodes: any[],
   edges: any[],
   context: any,
-  onResponse: (response: any) => Promise<void>
+  onResponse: (message: string, mediaUrl?: string, mediaType?: string) => Promise<void>
 ) {
   const data = node.data;
-  console.log(`Executing node: ${data.type}`);
+  const config = data.config || {};
+  console.log(`Executing node: ${data.type}`, config);
 
   const interpolate = (text: string): string => {
-    return text.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-      return context.vars[key] || "";
+    if (!text) return "";
+    return text.replace(/\{\{([^}]+)\}\}/g, (_, key) => {
+      const trimmedKey = key.trim();
+      return context.vars[trimmedKey] !== undefined ? String(context.vars[trimmedKey]) : "";
     });
   };
 
@@ -207,15 +304,30 @@ async function executeNode(
   };
 
   switch (data.type) {
-    case "start":
-    case "message": {
-      if (data.type === "message") {
-        const config = data.config || {};
-        await onResponse({
-          type: "message",
-          content: interpolate(config.content || ""),
-          buttons: config.buttons,
-        });
+    case "start": {
+      const nextNodes = getNextNodes(node.id);
+      for (const next of nextNodes) {
+        await executeNode(next, nodes, edges, context, onResponse);
+      }
+      break;
+    }
+
+    case "send_message": {
+      const messages = config.messages || [];
+      if (messages.length > 0) {
+        for (const msg of messages) {
+          const text = interpolate(msg.text || "");
+          if (text) {
+            await onResponse(text);
+            // Small delay between messages
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+      } else if (config.text) {
+        const text = interpolate(config.text);
+        if (text) {
+          await onResponse(text);
+        }
       }
       
       const nextNodes = getNextNodes(node.id);
@@ -225,21 +337,73 @@ async function executeNode(
       break;
     }
 
-    case "question": {
-      const config = data.config || {};
-      await onResponse({
-        type: "question",
-        question: interpolate(config.question || ""),
-      });
+    case "media": {
+      const mediaUrl = interpolate(config.url || "");
+      const caption = interpolate(config.caption || "");
+      const mediaType = config.mediaType || "image";
       
-      if (config.outputVariable) {
-        context.vars[config.outputVariable] = context.userMessage;
+      if (mediaUrl) {
+        await onResponse(caption, mediaUrl, mediaType);
+      }
+      
+      const nextNodes = getNextNodes(node.id);
+      for (const next of nextNodes) {
+        await executeNode(next, nodes, edges, context, onResponse);
+      }
+      break;
+    }
+
+    case "goodbye": {
+      const text = interpolate(config.text || "Até logo!");
+      await onResponse(text);
+      // Don't continue to next nodes - end conversation
+      break;
+    }
+
+    case "ask_name":
+    case "ask_question":
+    case "ask_email":
+    case "ask_number":
+    case "ask_phone":
+    case "ask_date":
+    case "ask_file":
+    case "ask_address":
+    case "ask_url": {
+      const question = interpolate(config.question || "Por favor, responda:");
+      const variable = config.variable || "resposta";
+      
+      await onResponse(question);
+      
+      // Save user message to variable
+      if (context.vars.userMessage) {
+        context.vars[variable] = context.vars.userMessage;
+      }
+      
+      const nextNodes = getNextNodes(node.id);
+      for (const next of nextNodes) {
+        await executeNode(next, nodes, edges, context, onResponse);
+      }
+      break;
+    }
+
+    case "set_field": {
+      const fieldName = config.fieldName || "";
+      const value = interpolate(config.value || "");
+      
+      if (fieldName) {
+        context.vars[fieldName] = value;
+        console.log(`Set variable: ${fieldName} = ${value}`);
+      }
+      
+      const nextNodes = getNextNodes(node.id);
+      for (const next of nextNodes) {
+        await executeNode(next, nodes, edges, context, onResponse);
       }
       break;
     }
 
     default:
-      console.log(`Node type ${data.type} not fully implemented in webhook`);
+      console.log(`Node type ${data.type} - passing through`);
       const nextNodes = getNextNodes(node.id);
       for (const next of nextNodes) {
         await executeNode(next, nodes, edges, context, onResponse);
