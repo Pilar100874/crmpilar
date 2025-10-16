@@ -154,6 +154,10 @@ All colors MUST be HSL.
     @apply text-slate-300;
   }
   
+  .flow-editor-dark label.text-white-force {
+    @apply text-white !important;
+  }
+  
   /* Scrollbar para tema escuro */
   .dark-scrollbar::-webkit-scrollbar {
     width: 8px;
