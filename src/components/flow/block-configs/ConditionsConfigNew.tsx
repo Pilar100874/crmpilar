@@ -2,8 +2,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Info, Plus } from "lucide-react";
+import { Info, Plus, X } from "lucide-react";
 import { useState } from "react";
+import { ConfigSection, ConfigInput, ConfigSelect, ConfigInfo } from "./ConfigField";
 
 interface ConfigProps {
   config: any;
@@ -26,79 +27,111 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
     handleConfigChange("conditions", newConditions);
   };
 
+  const removeCondition = (index: number) => {
+    const newConditions = conditions.filter((_: any, i: number) => i !== index);
+    handleConfigChange("conditions", newConditions);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <Label>Set the condition(s)</Label>
+    <div className="space-y-4">
+      <ConfigSection title="Definir Condições">
+        {conditions.length === 0 && (
+          <ConfigInfo variant="info">
+            Clique em "Adicionar Condição" para começar a criar suas regras lógicas.
+          </ConfigInfo>
+        )}
         
-        {conditions.map((condition: any, index: number) => (
-          <div key={index} className="space-y-3 p-4 border rounded-lg bg-muted/30">
-            <div className="space-y-2">
-              <Input
-                value={condition.field || ""}
-                onChange={(e) => updateCondition(index, "field", e.target.value)}
-                placeholder="Type or select the field"
-                className="border-2"
-              />
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="text-red-500 font-bold">IF</span>
-                <span>@</span>
-              </div>
-            </div>
+        <div className="space-y-3">
+          {conditions.map((condition: any, index: number) => (
+            <div key={index} className="space-y-3 p-3 border border-cyan-500/30 rounded-lg bg-slate-900/50 relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => removeCondition(index)}
+                className="absolute top-2 right-2 h-6 w-6 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              >
+                <X className="h-3 w-3" />
+              </Button>
 
-            <Select
-              value={condition.operator || "EQUAL TO"}
-              onValueChange={(v) => updateCondition(index, "operator", v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="EQUAL TO">EQUAL TO</SelectItem>
-                <SelectItem value="NOT EQUAL TO">NOT EQUAL TO</SelectItem>
-                <SelectItem value="CONTAINS">CONTAINS</SelectItem>
-                <SelectItem value="NOT CONTAINS">NOT CONTAINS</SelectItem>
-                <SelectItem value="GREATER THAN">GREATER THAN</SelectItem>
-                <SelectItem value="LESS THAN">LESS THAN</SelectItem>
-                <SelectItem value="IS SET">IS SET</SelectItem>
-                <SelectItem value="IS NOT SET">IS NOT SET</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {condition.operator !== "IS SET" && condition.operator !== "IS NOT SET" && (
               <div className="space-y-2">
+                <Label className="text-white text-sm font-semibold flex items-center gap-2">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 font-bold">IF</span>
+                  Campo
+                </Label>
                 <Input
-                  value={condition.value || ""}
-                  onChange={(e) => updateCondition(index, "value", e.target.value)}
-                  placeholder="Type a value or select a field"
+                  value={condition.field || ""}
+                  onChange={(e) => updateCondition(index, "field", e.target.value)}
+                  placeholder="@nome_do_campo"
+                  className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
                 />
-                <Button variant="outline" size="sm" className="w-full">
-                  Use field
-                </Button>
               </div>
-            )}
-          </div>
-        ))}
+
+              <div className="space-y-2">
+                <Label className="text-white text-sm font-semibold flex items-center gap-2">
+                  <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+                  Operador
+                </Label>
+                <Select
+                  value={condition.operator || "EQUAL TO"}
+                  onValueChange={(v) => updateCondition(index, "operator", v)}
+                >
+                  <SelectTrigger className="bg-slate-900/80 border-slate-700/50 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-700 text-white">
+                    <SelectItem value="EQUAL TO" className="focus:bg-slate-800 focus:text-white">É IGUAL A</SelectItem>
+                    <SelectItem value="NOT EQUAL TO" className="focus:bg-slate-800 focus:text-white">NÃO É IGUAL A</SelectItem>
+                    <SelectItem value="CONTAINS" className="focus:bg-slate-800 focus:text-white">CONTÉM</SelectItem>
+                    <SelectItem value="NOT CONTAINS" className="focus:bg-slate-800 focus:text-white">NÃO CONTÉM</SelectItem>
+                    <SelectItem value="GREATER THAN" className="focus:bg-slate-800 focus:text-white">MAIOR QUE</SelectItem>
+                    <SelectItem value="LESS THAN" className="focus:bg-slate-800 focus:text-white">MENOR QUE</SelectItem>
+                    <SelectItem value="IS SET" className="focus:bg-slate-800 focus:text-white">ESTÁ DEFINIDO</SelectItem>
+                    <SelectItem value="IS NOT SET" className="focus:bg-slate-800 focus:text-white">NÃO ESTÁ DEFINIDO</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {condition.operator !== "IS SET" && condition.operator !== "IS NOT SET" && (
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-semibold flex items-center gap-2">
+                    <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+                    Valor
+                  </Label>
+                  <Input
+                    value={condition.value || ""}
+                    onChange={(e) => updateCondition(index, "value", e.target.value)}
+                    placeholder="Digite um valor ou @campo"
+                    className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full border-cyan-500/40 hover:border-cyan-500 hover:bg-cyan-500/10"
+                  >
+                    Usar Campo
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
         <Button 
-          variant="default" 
-          size="lg" 
           onClick={addCondition}
-          className="w-full bg-pink-500 hover:bg-pink-600 text-white"
+          variant="outline"
+          className="w-full border-cyan-500/40 hover:border-cyan-500 hover:bg-cyan-500/10"
         >
           <Plus className="w-4 h-4 mr-2" />
+          Adicionar Condição
         </Button>
-      </div>
+      </ConfigSection>
 
-      <div className="bg-muted/50 rounded-lg p-4 flex gap-3">
-        <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-muted-foreground space-y-2">
-          <p>Conditional allows you to split the flow based on conditions.</p>
-          <p>Example: if the answer of an email question (saved in the field @email) 'CONTAINS' the text 'gmail'.</p>
-          <p>Each Conditional block has two outputs, one green and one red.</p>
-          <p>The green represents that the condition 'is true' (in the example above, the @email contains 'gmail'), and the red that condition 'is false'.</p>
-        </div>
-      </div>
+      <ConfigInfo variant="info">
+        <p className="font-semibold mb-1">ℹ️ Como funcionam as condições:</p>
+        <p>• As condições permitem dividir o fluxo com base em regras</p>
+        <p>• Exemplo: se o campo @email 'CONTÉM' o texto 'gmail'</p>
+        <p>• Cada bloco tem duas saídas: verde (verdadeiro) e vermelha (falso)</p>
+      </ConfigInfo>
     </div>
   );
 };

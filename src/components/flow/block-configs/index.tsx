@@ -1,5 +1,8 @@
 // Exportar todos os componentes de configuração de blocos
 
+// Componentes reutilizáveis
+export * from './ConfigField';
+
 // Message Blocks
 export { SendMessageConfig, MediaConfig, GoodbyeConfig } from './MessageBlocks';
 
