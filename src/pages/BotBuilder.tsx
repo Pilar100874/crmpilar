@@ -93,9 +93,11 @@ function BotBuilderContent() {
 
   const onConnect = useCallback(
     (params: Connection) => {
-      // Verificar se já existe uma conexão entre esses blocos
+      // Verificar se já existe uma conexão entre esses blocos (em qualquer direção)
       const existingEdge = edges.find(
-        (edge) => edge.source === params.source && edge.target === params.target
+        (edge) => 
+          (edge.source === params.source && edge.target === params.target) ||
+          (edge.source === params.target && edge.target === params.source)
       );
       
       if (existingEdge) {
@@ -105,7 +107,7 @@ function BotBuilderContent() {
       
       setEdges((eds) => addEdge(params, eds));
     },
-    [setEdges, edges]
+    [edges, setEdges]
   );
 
   const onReconnect = useCallback(
