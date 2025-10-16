@@ -59,23 +59,39 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const payload: WhatsAppWebhookPayload = await req.json();
-    console.log("Received WhatsApp webhook:", JSON.stringify(payload, null, 2));
+    const contentType = req.headers.get("content-type") || "";
+    let from = "";
+    let body = "";
+    let isTwilio = false;
+    let phoneNumberId = "";
 
-    // Extract message from WhatsApp Business API format
-    if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
-      console.log("No message in webhook");
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Check if it's Twilio (form data) or WhatsApp Business API (JSON)
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      // Twilio Sandbox format
+      isTwilio = true;
+      const formData = await req.formData();
+      from = (formData.get("From") as string || "").replace("whatsapp:", "");
+      body = formData.get("Body") as string || "";
+      console.log("Received Twilio webhook:", { from, body });
+    } else {
+      // WhatsApp Business API format
+      const payload: WhatsAppWebhookPayload = await req.json();
+      console.log("Received WhatsApp webhook:", JSON.stringify(payload, null, 2));
+
+      if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
+        console.log("No message in webhook");
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const messageData = payload.entry[0].changes[0].value.messages[0];
+      from = messageData.from;
+      body = messageData.text?.body || "";
+      phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
     }
 
-    const messageData = payload.entry[0].changes[0].value.messages[0];
-    const from = messageData.from;
-    const body = messageData.text?.body || "";
-    const phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
-
-    console.log("Processed message:", { from, body, phoneNumberId });
+    console.log("Processed message:", { from, body, phoneNumberId, isTwilio });
 
     // Load active bot flow from database
     const { data: flowData, error: flowError } = await supabase
@@ -116,10 +132,18 @@ serve(async (req) => {
       context,
       async (message: string, mediaUrl?: string, mediaType?: string) => {
         responses.push(message);
-        if (mediaUrl && mediaType) {
-          await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
-        } else if (message) {
-          await sendWhatsAppMessage(phoneNumberId, from, message);
+        if (isTwilio) {
+          // Send via Twilio
+          if (message) {
+            await sendTwilioMessage(from, message);
+          }
+        } else {
+          // Send via WhatsApp Business API
+          if (mediaUrl && mediaType) {
+            await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
+          } else if (message) {
+            await sendWhatsAppMessage(phoneNumberId, from, message);
+          }
         }
       }
     );
@@ -143,6 +167,44 @@ serve(async (req) => {
     });
   }
 });
+
+async function sendTwilioMessage(to: string, text: string) {
+  const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+  const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+  const twilioNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "+14155238886";
+
+  if (!accountSid || !authToken) {
+    console.log("Twilio not configured");
+    return;
+  }
+
+  try {
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+    
+    const formData = new URLSearchParams();
+    formData.append("From", `whatsapp:${twilioNumber}`);
+    formData.append("To", `whatsapp:${to}`);
+    formData.append("Body", text);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${btoa(`${accountSid}:${authToken}`)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+    console.log("Twilio message sent:", result);
+    
+    if (!response.ok) {
+      console.error("Twilio API error:", result);
+    }
+  } catch (error) {
+    console.error("Error sending Twilio message:", error);
+  }
+}
 
 async function sendWhatsAppMessage(
   phoneNumberId: string,
