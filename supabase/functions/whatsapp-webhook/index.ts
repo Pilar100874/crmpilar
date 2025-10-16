@@ -378,6 +378,7 @@ async function executeFlow(
     }
   }
 
+  console.log(`[FLOW] Starting from node: ${startNode.id} (${startNode.data.type}), isResuming: ${context.isResuming}`);
   await executeNode(startNode, nodes, edges, context, onResponse);
 }
 
@@ -409,6 +410,12 @@ async function executeNode(
 
   switch (data.type) {
     case "start": {
+      // Skip start if we're resuming
+      if (context.isResuming) {
+        console.log(`[START] Skipping - we're resuming from a pending node`);
+        break;
+      }
+      
       const nextNodes = getNextNodes(node.id);
       for (const next of nextNodes) {
         await executeNode(next, nodes, edges, context, onResponse);
@@ -417,6 +424,12 @@ async function executeNode(
     }
 
     case "send_message": {
+      // Skip if we're resuming (already sent)
+      if (context.isResuming) {
+        console.log(`[SEND_MESSAGE] Skipping - we're resuming`);
+        break;
+      }
+      
       const messages = config.messages || [];
       if (messages.length > 0) {
         for (const msg of messages) {
@@ -442,13 +455,19 @@ async function executeNode(
     }
 
     case "media": {
-      console.log(`[MEDIA NODE] Starting - Node ID: ${node.id}`);
+      console.log(`[MEDIA NODE] Node: ${node.id}, isResuming: ${context.isResuming}`);
+      
+      // Skip if we're resuming (already sent)
+      if (context.isResuming) {
+        console.log(`[MEDIA NODE] Skipping - we're resuming`);
+        break;
+      }
       
       const mediaUrl = interpolate(config.url || "");
       const caption = interpolate(config.caption || "");
       const mediaType = config.mediaType || "image";
       
-      console.log(`[MEDIA NODE] URL: ${mediaUrl}, Type: ${mediaType}`);
+      console.log(`[MEDIA NODE] Sending - URL: ${mediaUrl}, Type: ${mediaType}`);
       
       if (mediaUrl) {
         await onResponse(caption, mediaUrl, mediaType);
