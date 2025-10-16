@@ -917,10 +917,10 @@ export const PropertiesPanel = ({
               <div>
                 <h3 className="font-bold text-base text-white">Propriedades</h3>
                 {blockDef && (
-                  <p className="text-xs text-cyan-400 flex items-center gap-1.5 font-medium">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50"></div>
+                  <div className="text-xs text-cyan-400 flex items-center gap-1.5 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50 block"></span>
                     {blockDef.label}
-                  </p>
+                  </div>
                 )}
               </div>
             </div>
