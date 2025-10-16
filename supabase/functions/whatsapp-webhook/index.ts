@@ -585,9 +585,24 @@ async function executeNode(
       
       await onResponse(buttonText);
       
-      // Mark as pending and stop execution
+      // Mark as pending and SAVE IMMEDIATELY before stopping execution
       context.pendingNodeId = node.id;
-      console.log(`Waiting for button response at node: ${node.id}`);
+      console.log(`[BUTTON] Setting pendingNodeId to: ${node.id}`);
+      
+      // Save session immediately with pending state
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+      
+      const sessionId = `whatsapp_${context.vars.from}`;
+      await supabase.from("chat_sessions").upsert({
+        session_id: sessionId,
+        context: context,
+        updated_at: new Date().toISOString(),
+      });
+      
+      console.log(`[BUTTON] Session saved with pendingNodeId: ${node.id}`);
       return; // Stop here and wait for user response
     }
 
