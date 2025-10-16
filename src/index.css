@@ -141,21 +141,41 @@ All colors MUST be HSL.
   .flow-editor-dark input,
   .flow-editor-dark textarea,
   .flow-editor-dark select {
-    @apply bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500;
+    @apply bg-slate-900/70 border-slate-700/60 text-white placeholder:text-slate-500 shadow-inner;
   }
   
   .flow-editor-dark input:focus,
   .flow-editor-dark textarea:focus,
   .flow-editor-dark select:focus {
-    @apply border-cyan-500 ring-cyan-500/20;
+    @apply border-cyan-500/70 ring-2 ring-cyan-500/30 bg-slate-900/90;
   }
   
   .flow-editor-dark label {
-    @apply text-slate-300;
+    @apply text-slate-200 font-medium;
   }
   
   .flow-editor-dark label.text-white-force {
     @apply text-white !important;
+  }
+
+  /* Cards e containers melhorados */
+  .flow-editor-dark .space-y-2 > label {
+    @apply text-white text-sm font-semibold;
+  }
+
+  /* Badges melhorados */
+  .flow-editor-dark .badge {
+    @apply shadow-sm;
+  }
+
+  /* Botões melhorados */
+  .flow-editor-dark button {
+    @apply transition-all duration-200;
+  }
+
+  /* Separadores melhorados */
+  .flow-editor-dark .separator {
+    @apply bg-gradient-to-r from-transparent via-slate-700/50 to-transparent;
   }
   
   /* Scrollbar para tema escuro */
@@ -168,10 +188,28 @@ All colors MUST be HSL.
   }
   
   .dark-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
+    @apply bg-slate-700 rounded-full hover:bg-slate-600;
   }
   
   .dark-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-600;
+    @apply bg-cyan-600/50;
+  }
+
+  /* Inputs e selects com melhor contraste */
+  .flow-editor-dark input[type="text"],
+  .flow-editor-dark input[type="number"],
+  .flow-editor-dark input[type="email"],
+  .flow-editor-dark input[type="url"] {
+    @apply font-medium;
+  }
+
+  /* Texto de ajuda melhorado */
+  .flow-editor-dark .text-muted-foreground {
+    @apply text-slate-400;
+  }
+
+  /* Cards de configuração */
+  .flow-editor-dark .config-card {
+    @apply bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 shadow-md;
   }
 }
