@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "@/components/Layout";
 import { CanvasProvider, useCanvas } from "@/contexts/CanvasContext";
 import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
 import DesktopSidebar from "@/components/editor/DesktopSidebar";
@@ -493,7 +492,17 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
         setIsPanelOpen(true);
       }
     }}>
-      <div className="h-full flex flex-col bg-background">
+      <div className="h-screen flex flex-col bg-background">
+        <EditorHeaderV2 onBack={() => {
+          if (onBack) {
+            if (hasCanvasContent()) {
+              handleNavigateAway(onBack);
+            } else {
+              onBack();
+            }
+          }
+        }} />
+
         {/* Main content area */}
         <div className="flex-1 flex overflow-hidden relative pb-14 lg:pb-0">
           {/* Desktop Sidebar with tool icons - only on large screens */}
@@ -612,12 +621,4 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   );
 };
 
-export default function Desenho() {
-  return (
-    <Layout>
-      <div className="h-[calc(100vh-3.5rem)] overflow-hidden">
-        <CanvasStudioV2 />
-      </div>
-    </Layout>
-  );
-}
+export default CanvasStudioV2;
