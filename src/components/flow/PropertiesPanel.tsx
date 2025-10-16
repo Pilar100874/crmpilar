@@ -74,9 +74,9 @@ export const PropertiesPanel = ({
 
   if (!selectedNode) {
     return (
-      <div className="w-96 bg-card backdrop-blur-sm border-l border-border p-6 shadow-lg">
+      <div className="w-96 bg-background border-l border-border p-6">
         <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/20 border-2 border-cyan-500/40 flex items-center justify-center shadow-lg">
+          <div className="w-20 h-20 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
             <span className="text-3xl">👆</span>
           </div>
           <div className="space-y-2">
@@ -903,49 +903,46 @@ export const PropertiesPanel = ({
   };
 
   return (
-    <div className="w-96 bg-card backdrop-blur-sm border-l border-border flex flex-col h-full shadow-lg">
-      {/* Header aprimorado */}
-      <div className="p-4 border-b border-border bg-muted relative overflow-hidden">
-        
-        <div className="relative z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/20 border border-cyan-500/40 flex items-center justify-center shadow-lg">
-                <span className="text-xl">⚙️</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-foreground">Propriedades</h3>
-                {blockDef && (
-                  <div className="text-xs text-cyan-600 flex items-center gap-1.5 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-600 shadow-sm block"></span>
-                    {blockDef.label}
-                  </div>
-                )}
-              </div>
+    <div className="w-96 bg-background border-l border-border flex flex-col h-full">
+      {/* Header */}
+      <div className="p-4 border-b border-border bg-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <span className="text-xl">⚙️</span>
             </div>
-            {hasChanges && (
-              <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-600 border border-emerald-500/40 animate-in fade-in shadow-sm">
-                <Check className="w-3 h-3 mr-1" />
-                Salvo
-              </Badge>
-            )}
+            <div>
+              <h3 className="font-semibold text-base text-foreground">Propriedades</h3>
+              {blockDef && (
+                <div className="text-xs text-primary flex items-center gap-1.5 font-medium mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary block"></span>
+                  {blockDef.label}
+                </div>
+              )}
+            </div>
           </div>
+          {hasChanges && (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <Check className="w-3 h-3 mr-1" />
+              Salvo
+            </Badge>
+          )}
         </div>
       </div>
 
-      <ScrollArea className="flex-1 bg-background">
+      <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          {/* Nome do Bloco - Card destacado */}
-          <div className="space-y-2 p-3 rounded-lg bg-muted border border-border shadow-sm">
-            <Label className="text-foreground text-sm font-semibold flex items-center gap-2">
-              <span className="w-1 h-4 bg-gradient-to-b from-cyan-600 to-blue-600 rounded-full"></span>
+          {/* Nome do Bloco */}
+          <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <Label className="text-foreground text-sm font-medium flex items-center gap-2">
+              <span className="w-1 h-4 bg-primary rounded-full"></span>
               Nome do Bloco
             </Label>
             <Input
               value={nodeData.label || ""}
               onChange={(e) => handleLabelChange(e.target.value)}
               placeholder={blockDef?.label}
-              className="bg-background shadow-sm"
+              className="bg-background"
             />
           </div>
 
@@ -967,12 +964,12 @@ export const PropertiesPanel = ({
         </div>
       </ScrollArea>
 
-      {/* Footer aprimorado */}
-      <div className="p-4 border-t border-border bg-muted">
+      {/* Footer */}
+      <div className="p-4 border-t border-border bg-card">
         <Button
           variant="destructive"
           size="sm"
-          className="w-full disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="w-full"
           onClick={() => onDeleteNode(selectedNode.id)}
           disabled={nodeData.type === "start"}
           title={nodeData.type === "start" ? "O bloco Start não pode ser excluído" : "Excluir bloco"}
