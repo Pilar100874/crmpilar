@@ -189,7 +189,7 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
                 onClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
                 className="h-7 text-xs bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
               >
-                Usar campo
+                Usar variável
               </Button>
             </div>
           </div>
