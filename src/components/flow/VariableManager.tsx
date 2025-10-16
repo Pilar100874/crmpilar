@@ -18,7 +18,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Variable, Type, Hash, Calendar, List, ToggleLeft } from "lucide-react";
+import { Plus, Trash2, Variable, Type, Hash, Calendar, List, ToggleLeft, Lock, Unlock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 export type VariableType = "text" | "number" | "date" | "array" | "boolean";
@@ -28,6 +29,7 @@ export interface FlowVariable {
   name: string;
   type: VariableType;
   description?: string;
+  isConstant?: boolean; // Se true, o valor não deve mudar após ser definido
 }
 
 interface VariableManagerProps {
@@ -56,6 +58,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
   const [newVarName, setNewVarName] = useState("");
   const [newVarType, setNewVarType] = useState<VariableType>("text");
   const [newVarDescription, setNewVarDescription] = useState("");
+  const [newVarIsConstant, setNewVarIsConstant] = useState(false);
 
   const handleAddVariable = () => {
     if (!newVarName.trim()) {
@@ -81,12 +84,14 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
       name: newVarName,
       type: newVarType,
       description: newVarDescription.trim() || undefined,
+      isConstant: newVarIsConstant,
     };
 
     onVariablesChange([...variables, newVariable]);
     setNewVarName("");
     setNewVarDescription("");
     setNewVarType("text");
+    setNewVarIsConstant(false);
     toast.success(`Variável "${newVarName}" criada!`);
   };
 
@@ -177,6 +182,31 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                 />
               </div>
 
+              <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  {newVarIsConstant ? (
+                    <Lock className="h-4 w-4 text-amber-500" />
+                  ) : (
+                    <Unlock className="h-4 w-4 text-slate-400" />
+                  )}
+                  <div>
+                    <Label htmlFor="var-constant" className="text-slate-300 cursor-pointer">
+                      Variável Fixa (Constante)
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      {newVarIsConstant 
+                        ? "Valor não pode ser alterado após definido"
+                        : "Valor pode ser alterado durante o fluxo"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="var-constant"
+                  checked={newVarIsConstant}
+                  onCheckedChange={setNewVarIsConstant}
+                />
+              </div>
+
               <Button
                 onClick={handleAddVariable}
                 className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
@@ -207,9 +237,9 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                         key={variable.id}
                         className="bg-slate-800/70 border border-slate-700 rounded-lg p-3 hover:border-slate-600 transition-colors"
                       >
-                        <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <Icon className="h-4 w-4 text-cyan-500" />
                               <span className="font-mono text-sm font-semibold text-white">
                                 {`{{${variable.name}}}`}
@@ -217,6 +247,12 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                               <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-0.5 rounded">
                                 {variableTypeLabels[variable.type]}
                               </span>
+                              {variable.isConstant && (
+                                <span className="text-xs text-amber-500 bg-amber-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <Lock className="h-3 w-3" />
+                                  Fixa
+                                </span>
+                              )}
                             </div>
                             {variable.description && (
                               <p className="text-xs text-slate-400 mt-1 ml-6">{variable.description}</p>

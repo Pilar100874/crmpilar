@@ -24,6 +24,7 @@ import { PropertiesPanel } from "@/components/flow/PropertiesPanel";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { BotManager } from "@/components/flow/BotManager";
 import { VariableManager, FlowVariable } from "@/components/flow/VariableManager";
+import { VariableMonitor } from "@/components/flow/VariableMonitor";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
 
@@ -65,6 +66,7 @@ function BotBuilderContent() {
   const [flowVariables, setFlowVariables] = useState<FlowVariable[]>([]);
   const [breakpointNodes, setBreakpointNodes] = useState<Set<string>>(new Set());
   const [skipNodes, setSkipNodes] = useState<Set<string>>(new Set());
+  const [simulatorContext, setSimulatorContext] = useState<Record<string, any>>({});
 
   // Load saved bots on mount
   useEffect(() => {
@@ -623,6 +625,10 @@ function BotBuilderContent() {
                 variables={flowVariables}
                 onVariablesChange={setFlowVariables}
               />
+              <VariableMonitor
+                variables={flowVariables}
+                context={simulatorContext}
+              />
             </div>
           </div>
           
@@ -787,6 +793,7 @@ function BotBuilderContent() {
                 onHighlightNode={setHighlightedNodeId}
                 breakpointNodes={breakpointNodes}
                 skipNodes={skipNodes}
+                onContextChange={setSimulatorContext}
               />
             </div>
           )}

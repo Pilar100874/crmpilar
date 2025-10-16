@@ -27,9 +27,10 @@ interface FlowSimulatorProps {
   onHighlightNode?: (nodeId: string | null) => void;
   breakpointNodes?: Set<string>;
   skipNodes?: Set<string>;
+  onContextChange?: (context: Record<string, any>) => void;
 }
 
-export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set() }: FlowSimulatorProps) => {
+export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange }: FlowSimulatorProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
@@ -48,6 +49,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       onHighlightNode?.(currentNodeId);
     }
   }, [currentNodeId, onHighlightNode]);
+
+  useEffect(() => {
+    onContextChange?.(context);
+  }, [context, onContextChange]);
 
   useEffect(() => {
     return () => {
