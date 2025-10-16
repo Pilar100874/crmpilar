@@ -94,6 +94,18 @@ export const TwilioSandbox = () => {
         </AlertDescription>
       </Alert>
 
+      {/* Daily Limit Warning */}
+      <Alert className="bg-yellow-950/30 border-yellow-800/50">
+        <AlertCircle className="h-4 w-4 text-yellow-400" />
+        <AlertDescription className="text-yellow-200 text-xs">
+          <strong className="block mb-1.5">⚠️ Limite Diário do Sandbox:</strong>
+          <p className="text-xs">
+            A conta atingiu o limite de 9 mensagens diárias. O sandbox gratuito possui essa restrição.
+            Para enviar mais mensagens, aguarde 24 horas ou faça upgrade para uma conta Twilio paga.
+          </p>
+        </AlertDescription>
+      </Alert>
+
       {/* Create Account Card */}
       <Card className="bg-slate-800 border-slate-700">
         <CardHeader className="pb-3">
