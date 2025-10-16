@@ -230,7 +230,7 @@ export const PropertiesPanel = ({
       case "media":
         return <BlockConfigs.MediaConfig {...configProps} />;
       case "goodbye":
-        return <BlockConfigs.GoodbyeConfig {...configProps} />;
+        return <BlockConfigs.GoodbyeConfigNew {...configProps} />;
 
       // Question Blocks
       case "ask_name":
