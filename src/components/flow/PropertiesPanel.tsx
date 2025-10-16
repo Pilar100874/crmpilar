@@ -48,6 +48,30 @@ export const PropertiesPanel = ({
     }
   }, [hasChanges]);
 
+  // Determine expected type based on node type and config field
+  const getExpectedType = (): "text" | "number" | "date" | "array" | "boolean" | "any" => {
+    if (!selectedNode) return "any";
+    
+    const nodeData = selectedNode.data as FlowNodeData;
+    
+    switch (nodeData.type) {
+      case "ask_number":
+        return "number";
+      case "ask_date":
+        return "date";
+      case "formulas":
+        return "any"; // Formulas can work with any type
+      case "condition":
+        return "any"; // Conditions need to evaluate any type
+      case "set_field":
+        return "any"; // Set field can work with any type
+      case "lead_scoring":
+        return "number"; // Lead scoring works with numbers
+      default:
+        return "text"; // Most blocks work with text/string
+    }
+  };
+
   if (!selectedNode) {
     return (
       <div className="w-96 bg-gradient-to-b from-slate-900 via-slate-900/98 to-slate-800/95 backdrop-blur-sm border-l border-cyan-500/30 p-6 shadow-2xl">
@@ -939,6 +963,7 @@ export const PropertiesPanel = ({
             nodes={nodes}
             edges={edges}
             flowVariables={flowVariables}
+            expectedType={getExpectedType()}
           />
         </div>
       </ScrollArea>
