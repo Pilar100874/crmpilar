@@ -487,19 +487,19 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
 
   return (
     <Layout>
-      <div className="h-screen flex flex-col overflow-hidden bg-background">
-        {/* Toolbar */}
-        <EditorToolbarV2 
-          onBack={onBack || (() => handleNavigateAway(() => navigate(-1)))}
-        />
-        
-        <CanvasProvider onSelectionChange={(objType) => {
-          setSelectedObjectType(objType);
-          if (objType && !userSelectedPanel) {
-            // Só abre automaticamente se usuário não selecionou manualmente um painel
-            setIsPanelOpen(true);
-          }
-        }}>
+      <CanvasProvider onSelectionChange={(objType) => {
+        setSelectedObjectType(objType);
+        if (objType && !userSelectedPanel) {
+          // Só abre automaticamente se usuário não selecionou manualmente um painel
+          setIsPanelOpen(true);
+        }
+      }}>
+        <div className="h-screen flex flex-col overflow-hidden bg-background">
+          {/* Toolbar */}
+          <EditorToolbarV2 
+            onBack={onBack || (() => handleNavigateAway(() => navigate(-1)))}
+          />
+          
           <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
             {/* Desktop Sidebar with tool icons - only on large screens */}
             <div className="hidden lg:block">
@@ -612,8 +612,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           gabaritoCanvasRetangularUrl={productData?.gabarito_canvas_retangular_url || null}
         />
           </div>
-        </CanvasProvider>
-      </div>
+        </div>
+      </CanvasProvider>
     </Layout>
   );
 };
