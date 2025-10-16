@@ -134,7 +134,9 @@ serve(async (req) => {
         responses.push(message);
         if (isTwilio) {
           // Send via Twilio
-          if (message) {
+          if (mediaUrl) {
+            await sendTwilioMessage(from, message || "", mediaUrl);
+          } else if (message) {
             await sendTwilioMessage(from, message);
           }
         } else {
@@ -168,7 +170,7 @@ serve(async (req) => {
   }
 });
 
-async function sendTwilioMessage(to: string, text: string) {
+async function sendTwilioMessage(to: string, text: string, mediaUrl?: string) {
   const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
   const twilioNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "+14155238886";
@@ -184,7 +186,13 @@ async function sendTwilioMessage(to: string, text: string) {
     const formData = new URLSearchParams();
     formData.append("From", `whatsapp:${twilioNumber}`);
     formData.append("To", `whatsapp:${to}`);
-    formData.append("Body", text);
+    formData.append("Body", text || " ");
+    
+    // Add media if provided
+    if (mediaUrl) {
+      formData.append("MediaUrl", mediaUrl);
+      console.log("Sending media:", mediaUrl);
+    }
 
     const response = await fetch(url, {
       method: "POST",
