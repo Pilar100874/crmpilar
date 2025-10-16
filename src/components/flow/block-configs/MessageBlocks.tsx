@@ -102,183 +102,218 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-2">
+      {/* Header */}
+      <ConfigSection>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-            <span className="text-lg">💬</span>
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 rounded-lg flex items-center justify-center">
+            <span className="text-xl">💬</span>
           </div>
           <div>
-            <h3 className="font-semibold text-sm">MESSAGES</h3>
-            <a href="https://docs.lovable.dev" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
-              How to use <ExternalLink className="w-3 h-3" />
+            <h3 className="font-bold text-white text-sm">MENSAGENS</h3>
+            <a href="https://docs.lovable.dev" target="_blank" rel="noopener noreferrer" className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-medium">
+              Como usar <ExternalLink className="w-3 h-3" />
             </a>
           </div>
         </div>
-      </div>
+      </ConfigSection>
 
+      {/* Messages */}
       {messages.map((message, index) => (
-        <Card key={index} className="p-4 space-y-3 bg-slate-900/50 border-slate-700">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-slate-300">Escrever uma mensagem</Label>
+        <ConfigSection key={index} title={`Mensagem ${index + 1}`}>
+          <div className="space-y-3">
             {messages.length > 1 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeMessage(index)}
-                className="h-6 w-6 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <VariableTextarea
-              name={`text_${index}`}
-              ref={(el) => (inputRefs.current[`text_${index}`] = el)}
-              value={message.text || ""}
-              onChange={(e) => updateMessage(index, e.target.value)}
-              onVariableRequest={() => openVariablePicker(inputRefs.current[`text_${index}`])}
-              placeholder="Clique para editar..."
-              rows={4}
-              className="resize-none bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
-            />
-
-            {/* Barra de ferramentas de formatação */}
-            <div className="flex items-center justify-between border-t border-slate-700 pt-2">
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" 
-                  title="Negrito (*texto*)"
-                  onClick={() => insertFormatting(index, "*", "*")}
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeMessage(index)}
+                  className="h-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                 >
-                  <Bold className="w-3.5 h-3.5" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" 
-                  title="Itálico (_texto_)"
-                  onClick={() => insertFormatting(index, "_", "_")}
-                >
-                  <Italic className="w-3.5 h-3.5" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" 
-                  title="Tachado (~texto~)"
-                  onClick={() => insertFormatting(index, "~", "~")}
-                >
-                  <Code className="w-3.5 h-3.5" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50" 
-                  title="Código (```texto```)"
-                  onClick={() => insertFormatting(index, "```", "```")}
-                >
-                  <Heading className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4 mr-1" />
+                  Remover
                 </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
-                className="h-7 text-xs bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
-              >
-                Usar variável
-              </Button>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-white text-sm font-semibold flex items-center gap-2">
+                <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+                Texto da Mensagem
+              </Label>
+              <VariableTextarea
+                name={`text_${index}`}
+                ref={(el) => (inputRefs.current[`text_${index}`] = el)}
+                value={message.text || ""}
+                onChange={(e) => updateMessage(index, e.target.value)}
+                onVariableRequest={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+                placeholder="Clique para editar..."
+                rows={4}
+                className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+              />
+
+              {/* Formatting Toolbar */}
+              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50 border border-slate-700/50">
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
+                    title="Negrito (*texto*)"
+                    onClick={() => insertFormatting(index, "*", "*")}
+                  >
+                    <Bold className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
+                    title="Itálico (_texto_)"
+                    onClick={() => insertFormatting(index, "_", "_")}
+                  >
+                    <Italic className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
+                    title="Tachado (~texto~)"
+                    onClick={() => insertFormatting(index, "~", "~")}
+                  >
+                    <Code className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
+                    title="Código (```texto```)"
+                    onClick={() => insertFormatting(index, "```", "```")}
+                  >
+                    <Heading className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+                  className="h-8 text-xs bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 hover:text-white hover:border-cyan-500"
+                >
+                  Usar variável
+                </Button>
+              </div>
+
+              <ConfigInfo variant="info">
+                <p className="font-semibold mb-1">📝 Formatação WhatsApp:</p>
+                <p className="text-xs space-y-0.5">
+                  <span className="block">• *negrito* = <strong>negrito</strong></span>
+                  <span className="block">• _itálico_ = <em>itálico</em></span>
+                  <span className="block">• ~tachado~ = <s>tachado</s></span>
+                  <span className="block">• ```código``` = <code className="bg-white/10 px-1 rounded">código</code></span>
+                </p>
+              </ConfigInfo>
             </div>
           </div>
-        </Card>
+        </ConfigSection>
       ))}
 
+      {/* Action Buttons */}
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={addMessage} className="flex-1 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={addMessage} 
+          className="flex-1 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 hover:text-white hover:border-cyan-500"
+        >
           <Plus className="w-4 h-4 mr-1" />
           Adicionar mensagem
         </Button>
-        <Button variant="outline" size="sm" onClick={addMedia} className="flex-1 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={addMedia} 
+          className="flex-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/40 text-purple-300 hover:bg-purple-500/20 hover:text-white hover:border-purple-500"
+        >
           <Plus className="w-4 h-4 mr-1" />
           Adicionar mídia
         </Button>
       </div>
 
+      {/* Media Section */}
       {config.media && (
-        <Card className="p-4 space-y-3 bg-slate-900/50 border-slate-700">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-slate-300">Mídia</Label>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleConfigChange("media", null)}
-              className="h-6 w-6 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-          <Select
-            value={config.media.type || "image"}
-            onValueChange={(v) => handleConfigChange("media", { ...config.media, type: v })}
-          >
-            <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white [&>span]:text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-800 border-slate-700">
-              <SelectItem value="image" className="text-white">Imagem</SelectItem>
-              <SelectItem value="video" className="text-white">Vídeo</SelectItem>
-              <SelectItem value="audio" className="text-white">Áudio</SelectItem>
-              <SelectItem value="file" className="text-white">Arquivo</SelectItem>
-              <SelectItem value="gif" className="text-white">GIF</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          {config.media.type === "file" ? (
-            <div className="space-y-2">
-              <div className="flex gap-2 items-center">
-                <Input
-                  type="file"
-                  onChange={handleMediaFileUpload}
-                  disabled={uploadingMedia}
-                  className="bg-slate-900/50 border-slate-700 text-white file:text-white file:bg-slate-800 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:bg-slate-700"
-                />
-                {uploadingMedia && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
-              </div>
-              
-              {config.media.url && (
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className="truncate">{config.media.url}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleConfigChange("media", { ...config.media, url: "" })}
-                    className="h-6 px-2 text-slate-400 hover:text-white"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              )}
+        <ConfigSection title="Mídia Anexada">
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleConfigChange("media", null)}
+                className="h-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              >
+                <X className="w-4 h-4 mr-1" />
+                Remover mídia
+              </Button>
             </div>
-          ) : (
-            <Input
-              value={config.media.url || ""}
-              onChange={(e) => handleConfigChange("media", { ...config.media, url: e.target.value })}
-              placeholder="URL da mídia"
-              className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+
+            <ConfigSelect
+              label="Tipo de Mídia"
+              value={config.media.type || "image"}
+              onChange={(v) => handleConfigChange("media", { ...config.media, type: v })}
+              options={[
+                { value: "image", label: "Imagem" },
+                { value: "video", label: "Vídeo" },
+                { value: "audio", label: "Áudio" },
+                { value: "file", label: "Arquivo" },
+                { value: "gif", label: "GIF" }
+              ]}
             />
-          )}
-          
-          <Input
-            value={config.media.caption || ""}
-            onChange={(e) => handleConfigChange("media", { ...config.media, caption: e.target.value })}
-            placeholder="Legenda (opcional)"
-            className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
-          />
-        </Card>
+            
+            {config.media.type === "file" ? (
+              <div className="space-y-2">
+                <Label className="text-white text-sm font-semibold flex items-center gap-2">
+                  <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+                  Upload de Arquivo
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="file"
+                    onChange={handleMediaFileUpload}
+                    disabled={uploadingMedia}
+                    className="bg-slate-900/80 border-slate-700/50 text-white file:text-white file:bg-gradient-to-r file:from-cyan-500/20 file:to-blue-500/20 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:from-cyan-500/30 hover:file:to-blue-500/30 file:rounded"
+                  />
+                  {uploadingMedia && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
+                </div>
+                
+                {config.media.url && (
+                  <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded border border-slate-700/50">
+                    <span className="text-xs text-slate-400 truncate flex-1">{config.media.url}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleConfigChange("media", { ...config.media, url: "" })}
+                      className="h-6 px-2 text-slate-400 hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <ConfigInput
+                label="URL da Mídia"
+                value={config.media.url || ""}
+                onChange={(url) => handleConfigChange("media", { ...config.media, url })}
+                placeholder="https://exemplo.com/imagem.jpg"
+                required
+              />
+            )}
+            
+            <ConfigInput
+              label="Legenda"
+              value={config.media.caption || ""}
+              onChange={(caption) => handleConfigChange("media", { ...config.media, caption })}
+              placeholder="Adicione uma legenda (opcional)"
+            />
+          </div>
+        </ConfigSection>
       )}
     </div>
   );
@@ -296,12 +331,10 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
     try {
       setUploading(true);
       
-      // Gerar nome único para o arquivo
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Upload para o Supabase Storage
       const { data, error } = await supabase.storage
         .from('bot-media')
         .upload(filePath, file, {
@@ -311,7 +344,6 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
 
       if (error) throw error;
 
-      // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('bot-media')
         .getPublicUrl(data.path);
@@ -328,45 +360,40 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label className="text-slate-300">Tipo de Mídia</Label>
-        <Select
+      <ConfigSection title="Configurar Mídia" icon={<Upload className="w-4 h-4" />}>
+        <ConfigSelect
+          label="Tipo de Mídia"
           value={mediaType}
-          onValueChange={(v) => handleConfigChange("mediaType", v)}
-        >
-          <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white [&>span]:text-white">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="image" className="text-white">Imagem</SelectItem>
-            <SelectItem value="video" className="text-white">Vídeo</SelectItem>
-            <SelectItem value="audio" className="text-white">Áudio</SelectItem>
-            <SelectItem value="file" className="text-white">Arquivo</SelectItem>
-            <SelectItem value="gif" className="text-white">GIF</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          onChange={(v) => handleConfigChange("mediaType", v)}
+          options={[
+            { value: "image", label: "Imagem" },
+            { value: "video", label: "Vídeo" },
+            { value: "audio", label: "Áudio" },
+            { value: "file", label: "Arquivo" },
+            { value: "gif", label: "GIF" }
+          ]}
+          required
+        />
 
-      <div className="space-y-2">
-        <Label className="text-slate-300">
-          {mediaType === "file" ? "Arquivo *" : "URL da Mídia *"}
-        </Label>
-        
         {mediaType === "file" ? (
           <div className="space-y-2">
+            <Label className="text-white text-sm font-semibold flex items-center gap-2">
+              <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+              Upload de Arquivo
+            </Label>
             <div className="flex gap-2">
               <Input
                 type="file"
                 onChange={handleFileUpload}
                 disabled={uploading}
-                className="bg-slate-900/50 border-slate-700 text-white file:text-white file:bg-slate-800 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:bg-slate-700"
+                className="bg-slate-900/80 border-slate-700/50 text-white file:text-white file:bg-gradient-to-r file:from-cyan-500/20 file:to-blue-500/20 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:from-cyan-500/30 hover:file:to-blue-500/30 file:rounded"
               />
               {uploading && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
             </div>
             
             {url && (
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span className="truncate">{url}</span>
+              <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded border border-slate-700/50">
+                <span className="text-xs text-slate-400 truncate flex-1">{url}</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -379,31 +406,29 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
             )}
             
             {!url && (
-              <p className="text-xs text-amber-400">
+              <ConfigInfo variant="warning">
                 ⚠️ Faça upload de um arquivo
-              </p>
+              </ConfigInfo>
             )}
           </div>
         ) : (
-          <Input
+          <ConfigInput
+            label="URL da Mídia"
             value={url}
-            onChange={(e) => handleConfigChange("url", e.target.value)}
+            onChange={(v) => handleConfigChange("url", v)}
             placeholder="https://exemplo.com/imagem.jpg"
-            className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+            required
           />
         )}
-      </div>
 
-      <div className="space-y-2">
-        <Label className="text-slate-300">Legenda (opcional)</Label>
-        <Textarea
+        <ConfigTextarea
+          label="Legenda"
           value={config.caption || ""}
-          onChange={(e) => handleConfigChange("caption", e.target.value)}
+          onChange={(v) => handleConfigChange("caption", v)}
           placeholder="Descrição da mídia..."
           rows={3}
-          className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
         />
-      </div>
+      </ConfigSection>
     </div>
   );
 };
