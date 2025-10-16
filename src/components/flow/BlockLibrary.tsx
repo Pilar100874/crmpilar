@@ -46,6 +46,11 @@ const blockCategories = [
     icon: "Code",
     blocks: ["webhook", "n8n", "trigger_automation", "dynamic_data"] as NodeType[],
   },
+  {
+    name: "Diversos",
+    icon: "MoreHorizontal",
+    blocks: ["pause"] as NodeType[],
+  },
 ];
 
 export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: BlockLibraryProps) => {

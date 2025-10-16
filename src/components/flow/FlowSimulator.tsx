@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle } from "lucide-react";
+import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle, Play, Pause } from "lucide-react";
 import { toast } from "sonner";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 
@@ -35,6 +35,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
   const [isWaitingInput, setIsWaitingInput] = useState(false);
   const [pendingVariable, setPendingVariable] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [pausedNodeId, setPausedNodeId] = useState<string | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   useEffect(() => {
@@ -921,6 +923,22 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         }, 1500);
         break;
 
+      case "pause":
+        if (config.enabled !== false) {
+          setIsPaused(true);
+          setPausedNodeId(node.id);
+          addSystemMessage("⏸️ Simulação pausada. Clique em Play para continuar.");
+          toast.info("Breakpoint atingido");
+        } else {
+          // Se pausar não está habilitado, continuar normalmente
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }
+        break;
+
       case "fallback":
         addBotMessage("Desculpe, não entendi. Pode reformular?", node.id);
         addSystemMessage("⚠️ Fallback acionado");
@@ -1068,6 +1086,23 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     setMessages((prev) => [...prev, msg]);
   };
 
+  const handleResume = () => {
+    if (pausedNodeId) {
+      setIsPaused(false);
+      addSystemMessage("▶️ Simulação retomada");
+      
+      const nextNode = getNextNode(pausedNodeId);
+      if (nextNode) {
+        setCurrentNodeId(nextNode.id);
+        executeNode(nextNode);
+      } else {
+        addSuccessMessage("Fluxo concluído!");
+      }
+      
+      setPausedNodeId(null);
+    }
+  };
+
   const handleReset = () => {
     // Limpar todos os timeouts pendentes
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
@@ -1080,6 +1115,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
     setContext({});
     setIsWaitingInput(false);
     setPendingVariable(null);
+    setIsPaused(false);
+    setPausedNodeId(null);
     
     const startNode = findStartNode();
     if (startNode) {
@@ -1097,11 +1134,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
       <CardHeader className="border-b">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">🧪 Simulador de Teste</CardTitle>
-          <Button size="sm" variant="outline" onClick={handleReset}>
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Reiniciar
-          </Button>
+          <div className="flex gap-2">
+            {isPaused && (
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={handleResume}
+                className="bg-success hover:bg-success/90"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Continuar
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={handleReset}>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reiniciar
+            </Button>
+          </div>
         </div>
+        {isPaused && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-warning">
+            <Pause className="w-3 h-3" />
+            <span>Pausado em breakpoint</span>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0">

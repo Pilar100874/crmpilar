@@ -67,6 +67,8 @@ export const PropertiesPanel = ({
         return "any"; // Set field can work with any type
       case "lead_scoring":
         return "number"; // Lead scoring works with numbers
+      case "pause":
+        return "any"; // Pause doesn't produce output
       default:
         return "text"; // Most blocks work with text/string
     }
@@ -331,6 +333,10 @@ export const PropertiesPanel = ({
         return <BlockConfigs.DynamicDataConfig {...configProps} />;
       case "ai_agent":
         return <BlockConfigs.AIAgentConfig {...configProps} />;
+
+      // Diversos
+      case "pause":
+        return <BlockConfigs.PauseConfig data={nodeData} onChange={(newData) => onUpdateNode(selectedNode.id, newData)} />;
 
       case "start":
         return (

@@ -110,6 +110,14 @@ export class FlowEngine {
       case "dynamic_data":
         await this.handleExternal(node);
         break;
+      case "pause":
+        // Pause block - in production this would pause execution
+        // For now, just continue to next node
+        const pauseNextNodes = this.getNextNodes(node.id);
+        for (const next of pauseNextNodes) {
+          await this.executeNode(next);
+        }
+        break;
       default:
         console.log(`Node type ${data.type} not implemented yet`);
         const nextNodes = this.getNextNodes(node.id);
