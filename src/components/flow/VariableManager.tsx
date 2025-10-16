@@ -18,7 +18,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Variable, Type, Hash, Calendar, List, ToggleLeft, Lock, Unlock } from "lucide-react";
+import { Plus, Trash2, Variable, Type, Hash, Calendar, List, ToggleLeft, Lock, Unlock, Globe, User } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
@@ -31,6 +31,7 @@ export interface FlowVariable {
   description?: string;
   isConstant?: boolean; // Se true, o valor não deve mudar após ser definido
   defaultValue?: any; // Valor inicial (obrigatório se isConstant for true)
+  scope?: "local" | "global"; // local = apenas neste bot, global = todos os bots
 }
 
 interface VariableManagerProps {
@@ -61,6 +62,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
   const [newVarDescription, setNewVarDescription] = useState("");
   const [newVarIsConstant, setNewVarIsConstant] = useState(false);
   const [newVarDefaultValue, setNewVarDefaultValue] = useState("");
+  const [newVarScope, setNewVarScope] = useState<"local" | "global">("local");
 
   const handleAddVariable = () => {
     if (!newVarName.trim()) {
@@ -125,6 +127,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
       description: newVarDescription.trim() || undefined,
       isConstant: newVarIsConstant,
       defaultValue: processedDefaultValue,
+      scope: newVarScope,
     };
 
     onVariablesChange([...variables, newVariable]);
@@ -133,6 +136,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
     setNewVarType("text");
     setNewVarIsConstant(false);
     setNewVarDefaultValue("");
+    setNewVarScope("local");
     toast.success(`Variável "${newVarName}" criada!`);
   };
 
@@ -221,6 +225,40 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                   placeholder="ex: Nome completo do cliente"
                   className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="var-scope" className="text-slate-300">Escopo da Variável</Label>
+                <Select value={newVarScope} onValueChange={(value) => setNewVarScope(value as "local" | "global")}>
+                  <SelectTrigger id="var-scope" className="mt-1 bg-slate-800 border-slate-600 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="local" className="text-white">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-blue-400" />
+                        <div>
+                          <div>Local (apenas este bot)</div>
+                          <div className="text-xs text-slate-400">Disponível somente neste bot</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="global" className="text-white">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-green-400" />
+                        <div>
+                          <div>Global (todos os bots)</div>
+                          <div className="text-xs text-slate-400">Compartilhada entre todos os bots</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  {newVarScope === "local" 
+                    ? "Esta variável estará disponível apenas neste bot" 
+                    : "Esta variável poderá ser acessada por todos os bots"}
+                </p>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
@@ -317,6 +355,18 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                               <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-0.5 rounded">
                                 {variableTypeLabels[variable.type]}
                               </span>
+                              {variable.scope === "global" && (
+                                <span className="text-xs text-green-500 bg-green-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <Globe className="h-3 w-3" />
+                                  Global
+                                </span>
+                              )}
+                              {variable.scope === "local" && (
+                                <span className="text-xs text-blue-500 bg-blue-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  Local
+                                </span>
+                              )}
                               {variable.isConstant && (
                                 <span className="text-xs text-amber-500 bg-amber-900/20 px-2 py-0.5 rounded flex items-center gap-1">
                                   <Lock className="h-3 w-3" />

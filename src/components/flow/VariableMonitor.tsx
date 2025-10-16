@@ -8,7 +8,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Eye, Type, Hash, Calendar, List, ToggleLeft, Lock } from "lucide-react";
+import { Eye, Type, Hash, Calendar, List, ToggleLeft, Lock, Globe, User } from "lucide-react";
 import { FlowVariable } from "./VariableManager";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -137,6 +137,11 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                               <span className="font-mono text-sm text-white">
                                 {variable.name}
                               </span>
+                              {variable.scope === "global" && (
+                                <span title="Variável global">
+                                  <Globe className="h-3 w-3 text-green-500" />
+                                </span>
+                              )}
                               {variable.isConstant && (
                                 <span title="Variável fixa">
                                   <Lock className="h-3 w-3 text-amber-500" />
@@ -223,6 +228,10 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                   <div className="flex items-center gap-2">
                     <Lock className="h-3 w-3 text-amber-500" />
                     <span>Fixa</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-3 w-3 text-green-500" />
+                    <span>Global</span>
                   </div>
                 </div>
               </div>
