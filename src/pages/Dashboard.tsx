@@ -36,26 +36,26 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="p-8 space-y-8 animate-fade-in bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-full">
+      <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-white">Dashboard</h1>
-          <p className="text-white/70">
+          <h1 className="text-3xl font-bold mb-2 text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">
             Visão geral do seu atendimento omnicanal
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
-            <Card key={stat.title} className="hover:shadow-md transition-shadow bg-slate-800 border-slate-700">
+            <Card key={stat.title} className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">
+                <CardTitle className="text-sm font-medium">
                   {stat.title}
                 </CardTitle>
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <p className="text-xs text-white/70 mt-1">
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">
                   {stat.description}
                 </p>
               </CardContent>
@@ -64,21 +64,21 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-slate-800 border-slate-700">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-white">Atividade Recente</CardTitle>
-              <CardDescription className="text-white/70">
+              <CardTitle>Atividade Recente</CardTitle>
+              <CardDescription>
                 Últimas interações da plataforma
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-700/50 transition-colors">
+                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-white">Nova conversa iniciada</p>
-                      <p className="text-xs text-white/70">
+                      <p className="text-sm font-medium text-foreground">Nova conversa iniciada</p>
+                      <p className="text-xs text-muted-foreground">
                         Há {i * 5} minutos
                       </p>
                     </div>
@@ -88,10 +88,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800 border-slate-700">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-white">Canais Ativos</CardTitle>
-              <CardDescription className="text-white/70">
+              <CardTitle>Canais Ativos</CardTitle>
+              <CardDescription>
                 Distribuição de atendimentos por canal
               </CardDescription>
             </CardHeader>
@@ -104,12 +104,12 @@ export default function Dashboard() {
                 ].map((channel) => (
                   <div key={channel.name}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-white">{channel.name}</span>
-                      <span className="text-sm text-white/70">
+                      <span className="text-sm font-medium text-foreground">{channel.name}</span>
+                      <span className="text-sm text-muted-foreground">
                         {channel.percentage}%
                       </span>
                     </div>
-                    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full ${channel.color} transition-all duration-500`}
                         style={{ width: `${channel.percentage}%` }}

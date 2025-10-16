@@ -30,15 +30,15 @@ export default function Atendimento() {
 
   return (
     <Layout>
-      <div className="h-full flex bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="h-full flex bg-white">
         {/* Conversation List */}
-        <div className="w-96 border-r border-slate-800 bg-slate-800 flex flex-col">
-          <div className="p-4 border-b border-slate-700">
+        <div className="w-96 border-r border-border bg-card flex flex-col">
+          <div className="p-4 border-b">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar conversas..."
-                className="pl-10 bg-slate-900 border-slate-700 text-white"
+                className="pl-10"
               />
             </div>
           </div>
@@ -48,8 +48,8 @@ export default function Atendimento() {
               <div
                 key={conv.id}
                 onClick={() => setSelectedConversation(conv.id)}
-                className={`p-4 border-b border-slate-700 cursor-pointer hover:bg-slate-700/50 transition-colors ${
-                  selectedConversation === conv.id ? "bg-slate-700" : ""
+                className={`p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
+                  selectedConversation === conv.id ? "bg-muted" : ""
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -58,15 +58,15 @@ export default function Atendimento() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium truncate text-white">{conv.customer}</span>
+                      <span className="font-medium truncate text-foreground">{conv.customer}</span>
                       <Badge variant={conv.status === "open" ? "default" : "secondary"} className="text-xs">
                         {conv.canal}
                       </Badge>
                     </div>
-                    <p className="text-sm text-white/70 truncate">
+                    <p className="text-sm text-muted-foreground truncate">
                       {conv.lastMessage}
                     </p>
-                    <div className="flex items-center gap-1 mt-1 text-xs text-white/70">
+                    <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span>{conv.time}</span>
                     </div>
@@ -81,16 +81,16 @@ export default function Atendimento() {
         <div className="flex-1 flex flex-col">
           {selectedConversation ? (
             <>
-              <div className="p-4 border-b border-slate-800 bg-slate-800">
+              <div className="p-4 border-b bg-card">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground">
                     <User className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-white">
+                    <h3 className="font-medium text-foreground">
                       {conversations.find(c => c.id === selectedConversation)?.customer}
                     </h3>
-                    <p className="text-sm text-white/70">Online</p>
+                    <p className="text-sm text-muted-foreground">Online</p>
                   </div>
                 </div>
               </div>
@@ -104,8 +104,8 @@ export default function Atendimento() {
                     <div
                       className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                         msg.sender === "agent"
-                          ? "bg-gradient-primary text-primary-foreground"
-                          : "bg-slate-700 text-white"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-foreground"
                       }`}
                     >
                       <p className="text-sm">{msg.text}</p>
@@ -115,14 +115,13 @@ export default function Atendimento() {
                 ))}
               </div>
 
-              <div className="p-4 border-t border-slate-800 bg-slate-800">
+              <div className="p-4 border-t bg-card">
                 <div className="flex gap-2">
                   <Input
                     placeholder="Digite sua mensagem..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    className="bg-slate-900 border-slate-700 text-white"
                   />
                   <Button onClick={handleSendMessage} size="icon">
                     <Send className="w-4 h-4" />
@@ -131,9 +130,9 @@ export default function Atendimento() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-white/70">
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
-                <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
                 <p>Selecione uma conversa para começar</p>
               </div>
             </div>

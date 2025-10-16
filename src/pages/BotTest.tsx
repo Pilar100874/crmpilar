@@ -109,23 +109,23 @@ export default function BotTest() {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm shadow-lg">
+      <div className="h-full flex flex-col bg-white">
+        <div className="p-4 border-b border-border bg-white shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold text-white">TESTE DO BOT</h2>
-              <p className="text-sm text-slate-400">
+              <h2 className="text-2xl font-bold text-foreground">TESTE DO BOT</h2>
+              <p className="text-sm text-muted-foreground">
                 {selectedBotName ? `Testando: ${selectedBotName}` : "Selecione um bot para testar"}
               </p>
             </div>
             <div className="flex gap-2 items-center">
               <Select value={selectedBotId} onValueChange={handleBotChange}>
-                <SelectTrigger className="w-[200px] bg-slate-800 border-slate-700 text-slate-200">
+                <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Selecione um bot" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectContent>
                   {savedBots.map((bot) => (
-                    <SelectItem key={bot.id} value={bot.id} className="text-white">
+                    <SelectItem key={bot.id} value={bot.id}>
                       {bot.name} {bot.active && "⭐"}
                     </SelectItem>
                   ))}
@@ -146,7 +146,6 @@ export default function BotTest() {
                 size="sm" 
                 onClick={handleReload}
                 disabled={!selectedBotId}
-                className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Recarregar
@@ -155,18 +154,18 @@ export default function BotTest() {
           </div>
           
           {!activeBotId && savedBots.length > 0 && (
-            <Alert className="bg-orange-950/30 border-orange-800/50">
-              <AlertCircle className="h-4 w-4 text-orange-400" />
-              <AlertDescription className="text-orange-200 text-sm">
+            <Alert className="bg-orange-50 border-orange-200">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-900 text-sm">
                 <strong>⚠️ Nenhum bot ativo!</strong> Selecione um bot acima e clique em "Ativar Bot" para que ele responda no WhatsApp.
               </AlertDescription>
             </Alert>
           )}
           
           {activeBotId && selectedBotId === activeBotId && (
-            <Alert className="bg-green-950/30 border-green-800/50">
-              <Power className="h-4 w-4 text-green-400" />
-              <AlertDescription className="text-green-200 text-sm">
+            <Alert className="bg-green-50 border-green-200">
+              <Power className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-900 text-sm">
                 <strong>✅ Bot Ativo!</strong> Este bot está respondendo mensagens no WhatsApp.
               </AlertDescription>
             </Alert>
@@ -176,16 +175,16 @@ export default function BotTest() {
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="simulator" className="h-full flex flex-col">
             <div className="px-4 pt-4">
-              <TabsList className="bg-slate-800 border-slate-700">
-                <TabsTrigger value="simulator" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
+              <TabsList>
+                <TabsTrigger value="simulator">
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Simulador Web
                 </TabsTrigger>
-                <TabsTrigger value="twilio" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
+                <TabsTrigger value="twilio">
                   <Zap className="w-4 h-4 mr-2" />
                   Twilio Sandbox
                 </TabsTrigger>
-                <TabsTrigger value="whatsapp" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">
+                <TabsTrigger value="whatsapp">
                   <Smartphone className="w-4 h-4 mr-2" />
                   WhatsApp Oficial
                 </TabsTrigger>
@@ -194,7 +193,7 @@ export default function BotTest() {
 
             <TabsContent value="simulator" className="flex-1 m-0 p-4">
               {nodes.length > 0 ? (
-                <div className="h-full bg-slate-900 rounded-lg overflow-hidden">
+                <div className="h-full bg-muted rounded-lg overflow-hidden">
                   <FlowSimulator 
                     key={key}
                     nodes={nodes} 
@@ -203,7 +202,7 @@ export default function BotTest() {
                 </div>
               ) : (
                 <div className="h-full flex items-center justify-center">
-                  <div className="text-center text-slate-400">
+                  <div className="text-center text-muted-foreground">
                     <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
                     <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
                   </div>
@@ -214,10 +213,10 @@ export default function BotTest() {
             <TabsContent value="twilio" className="flex-1 m-0 overflow-auto">
               <div className="max-w-3xl mx-auto p-4">
                 <div className="mb-4 text-center">
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     ⚡ Teste Grátis com Twilio Sandbox
                   </h3>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     Método RECOMENDADO - 100% gratuito e sem risco de ban
                   </p>
                 </div>
@@ -228,10 +227,10 @@ export default function BotTest() {
             <TabsContent value="whatsapp" className="flex-1 m-0 overflow-auto">
               <div className="max-w-3xl mx-auto p-4">
                 <div className="mb-4 text-center">
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     📱 WhatsApp Business API Oficial
                   </h3>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     Para uso em produção com aprovação do Facebook
                   </p>
                 </div>

@@ -204,53 +204,53 @@ export default function GlobalVariables() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-full">
+      <div className="p-6 space-y-6 bg-white min-h-full">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Globe className="h-8 w-8 text-green-500" />
             Variáveis Globais
           </h1>
-          <p className="text-slate-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             Variáveis compartilhadas entre todos os bots. Use para dados que precisam ser acessados por múltiplos fluxos.
           </p>
         </div>
 
         {/* Formulário para adicionar nova variável */}
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Adicionar Nova Variável Global</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardTitle>Adicionar Nova Variável Global</CardTitle>
+            <CardDescription>
               Variáveis globais estarão disponíveis em todos os bots do sistema
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="var-name" className="text-slate-300">Nome da Variável</Label>
+                <Label htmlFor="var-name">Nome da Variável</Label>
                 <Input
                   id="var-name"
                   value={newVarName}
                   onChange={(e) => setNewVarName(e.target.value)}
                   placeholder="ex: empresa_nome"
-                  className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-1"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAddVariable();
                   }}
                 />
-                <p className="text-xs text-slate-500 mt-1">Use apenas letras, números e underscore (_)</p>
+                <p className="text-xs text-muted-foreground mt-1">Use apenas letras, números e underscore (_)</p>
               </div>
 
               <div>
-                <Label htmlFor="var-type" className="text-slate-300">Tipo</Label>
+                <Label htmlFor="var-type">Tipo</Label>
                 <Select value={newVarType} onValueChange={(value) => setNewVarType(value as VariableType)}>
-                  <SelectTrigger id="var-type" className="mt-1 bg-slate-800 border-slate-600 text-white">
+                  <SelectTrigger id="var-type" className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectContent>
                     {Object.entries(variableTypeLabels).map(([value, label]) => {
                       const Icon = variableTypeIcons[value as VariableType];
                       return (
-                        <SelectItem key={value} value={value} className="text-white">
+                        <SelectItem key={value} value={value}>
                           <div className="flex items-center gap-2">
                             <Icon className="h-4 w-4" />
                             {label}
@@ -264,28 +264,28 @@ export default function GlobalVariables() {
             </div>
 
             <div>
-              <Label htmlFor="var-description" className="text-slate-300">Descrição (opcional)</Label>
+              <Label htmlFor="var-description">Descrição (opcional)</Label>
               <Input
                 id="var-description"
                 value={newVarDescription}
                 onChange={(e) => setNewVarDescription(e.target.value)}
                 placeholder="ex: Nome da empresa para usar em mensagens"
-                className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                className="mt-1"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div className="flex items-center gap-2">
                 {newVarIsConstant ? (
                   <Lock className="h-4 w-4 text-amber-500" />
                 ) : (
-                  <Unlock className="h-4 w-4 text-slate-400" />
+                  <Unlock className="h-4 w-4 text-muted-foreground" />
                 )}
                 <div>
-                  <Label htmlFor="var-constant" className="text-slate-300 cursor-pointer">
+                  <Label htmlFor="var-constant" className="cursor-pointer">
                     Variável Fixa (Constante)
                   </Label>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {newVarIsConstant 
                       ? "Valor não pode ser alterado após definido"
                       : "Valor pode ser alterado durante o fluxo"}
@@ -300,9 +300,9 @@ export default function GlobalVariables() {
             </div>
 
             {newVarIsConstant && (
-              <div className="bg-amber-900/10 border border-amber-600/30 rounded-lg p-3">
-                <Label htmlFor="var-default" className="text-slate-300 flex items-center gap-2">
-                  <span className="text-amber-500">*</span> Valor Inicial (obrigatório)
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <Label htmlFor="var-default" className="flex items-center gap-2">
+                  <span className="text-amber-600">*</span> Valor Inicial (obrigatório)
                 </Label>
                 <Input
                   id="var-default"
@@ -315,7 +315,7 @@ export default function GlobalVariables() {
                     newVarType === "array" ? 'ex: ["item1", "item2"]' :
                     "ex: 2024-01-01"
                   }
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-2"
                 />
               </div>
             )}
@@ -331,23 +331,23 @@ export default function GlobalVariables() {
         </Card>
 
         {/* Lista de variáveis globais */}
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">
+            <CardTitle>
               Variáveis Globais Existentes ({variables.length})
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               Estas variáveis estão disponíveis em todos os bots
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-slate-400">Carregando...</div>
+              <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : variables.length === 0 ? (
-              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-8 text-center">
-                <Globe className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400">Nenhuma variável global criada ainda</p>
-                <p className="text-sm text-slate-500 mt-1">Crie variáveis para compartilhar dados entre bots</p>
+              <div className="bg-muted/50 border rounded-lg p-8 text-center">
+                <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">Nenhuma variável global criada ainda</p>
+                <p className="text-sm text-muted-foreground mt-1">Crie variáveis para compartilhar dados entre bots</p>
               </div>
             ) : (
               <ScrollArea className="h-[500px] pr-4">
@@ -357,36 +357,36 @@ export default function GlobalVariables() {
                     return (
                       <div
                         key={variable.id}
-                        className="bg-slate-800/70 border border-slate-700 rounded-lg p-4 hover:border-slate-600 transition-colors"
+                        className="bg-card border rounded-lg p-4 hover:border-primary/50 transition-colors"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Icon className="h-4 w-4 text-green-500" />
-                              <span className="font-mono text-sm font-semibold text-white">
+                              <Icon className="h-4 w-4 text-green-600" />
+                              <span className="font-mono text-sm font-semibold text-foreground">
                                 {`{{${variable.name}}}`}
                               </span>
-                              <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-0.5 rounded">
+                              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                                 {variableTypeLabels[variable.type]}
                               </span>
-                              <span className="text-xs text-green-500 bg-green-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                              <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded flex items-center gap-1">
                                 <Globe className="h-3 w-3" />
                                 Global
                               </span>
                               {variable.isConstant && (
-                                <span className="text-xs text-amber-500 bg-amber-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded flex items-center gap-1">
                                   <Lock className="h-3 w-3" />
                                   Fixa
                                 </span>
                               )}
                             </div>
                             {variable.description && (
-                              <p className="text-xs text-slate-400 mt-1 ml-6">{variable.description}</p>
+                              <p className="text-xs text-muted-foreground mt-1 ml-6">{variable.description}</p>
                             )}
                             {variable.isConstant && variable.defaultValue !== undefined && (
-                              <div className="text-xs text-amber-400 mt-1 ml-6 flex items-center gap-1">
+                              <div className="text-xs text-amber-700 mt-1 ml-6 flex items-center gap-1">
                                 <span className="font-semibold">Valor:</span>
-                                <code className="bg-amber-900/20 px-1 py-0.5 rounded">
+                                <code className="bg-amber-50 px-1 py-0.5 rounded">
                                   {typeof variable.defaultValue === "object" 
                                     ? JSON.stringify(variable.defaultValue) 
                                     : String(variable.defaultValue)}
@@ -398,7 +398,7 @@ export default function GlobalVariables() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteVariable(variable.id)}
-                            className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-900/20"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
