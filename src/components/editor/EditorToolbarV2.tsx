@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { saveProject } from "@/lib/projectStorage";
 import { useNavigate } from "react-router-dom";
-import logo from "@/assets/logo_preto.png";
 import {
   Dialog,
   DialogContent,
@@ -166,13 +165,10 @@ const EditorToolbarV2 = ({ onBack }: EditorToolbarV2Props) => {
   return (
     <>
       <div className="h-16 border-b bg-white flex items-center justify-between px-6 gap-6 shrink-0">
-        {/* Left section - Logo and Title */}
-        <div className="flex items-center gap-4">
-          <img src={logo} alt="Pilar" className="h-14 object-contain" />
-          <div className="flex flex-col">
-            <h1 className="text-lg font-bold text-slate-900">EDITOR DE DESIGN</h1>
-            <p className="text-xs text-slate-500">Crie e edite seus designs personalizados</p>
-          </div>
+        {/* Left section - Title */}
+        <div className="flex flex-col">
+          <h1 className="text-lg font-bold text-slate-900">EDITOR DE DESIGN</h1>
+          <p className="text-xs text-slate-500">Crie e edite seus designs personalizados</p>
         </div>
 
         {/* Center section - Icon buttons */}
