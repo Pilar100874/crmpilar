@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,14 +6,40 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Smartphone, Copy, CheckCircle, AlertCircle, Info, ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const TwilioSandbox = () => {
   const [accountSid, setAccountSid] = useState("");
   const [authToken, setAuthToken] = useState("");
   const [sandboxNumber, setSandboxNumber] = useState("");
   const [copied, setCopied] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const webhookUrl = "https://kiuztueouxtyqiecgdxk.supabase.co/functions/v1/whatsapp-webhook";
+
+  useEffect(() => {
+    loadConfig();
+  }, []);
+
+  const loadConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("twilio_config")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setAccountSid(data.account_sid || "");
+        setAuthToken(data.auth_token || "");
+        setSandboxNumber(data.sandbox_number || "");
+      }
+    } catch (error) {
+      console.error("Error loading config:", error);
+    }
+  };
 
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
@@ -22,12 +48,33 @@ export const TwilioSandbox = () => {
     setTimeout(() => setCopied(""), 2000);
   };
 
-  const handleSaveConfig = () => {
+  const handleSaveConfig = async () => {
     if (!accountSid || !authToken) {
       toast.error("Preencha Account SID e Auth Token");
       return;
     }
-    toast.success("Configuração salva! Configure o webhook no Twilio agora.");
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("twilio_config")
+        .upsert({
+          id: 1,
+          account_sid: accountSid,
+          auth_token: authToken,
+          sandbox_number: sandboxNumber,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      toast.success("Credenciais salvas com sucesso!");
+    } catch (error) {
+      console.error("Error saving config:", error);
+      toast.error("Erro ao salvar credenciais");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -127,9 +174,10 @@ export const TwilioSandbox = () => {
 
           <Button
             onClick={handleSaveConfig}
+            disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm h-8"
           >
-            Salvar
+            {loading ? "Salvando..." : "Salvar"}
           </Button>
         </CardContent>
       </Card>
