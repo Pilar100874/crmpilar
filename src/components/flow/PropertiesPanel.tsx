@@ -254,17 +254,17 @@ export const PropertiesPanel = ({
 
       // Button Blocks
       case "reply_buttons":
-        return <BlockConfigs.ReplyButtonsConfig {...configProps} />;
+        return <BlockConfigs.ReplyButtonsConfigNew {...configProps} />;
       case "list_buttons":
-        return <BlockConfigs.ListButtonsConfig {...configProps} />;
+        return <BlockConfigs.ListButtonsConfigNew {...configProps} />;
 
       // WhatsApp Blocks
       case "keyword_options":
         return <BlockConfigs.KeywordOptionsConfig {...configProps} />;
       case "message_template":
-        return <BlockConfigs.MessageTemplateConfig {...configProps} />;
+        return <BlockConfigs.MessageTemplateConfigNew {...configProps} />;
       case "opt_in_out":
-        return <BlockConfigs.OptInOutConfig {...configProps} />;
+        return <BlockConfigs.OptInOutConfigNew {...configProps} />;
       case "opt_in_check":
         return <BlockConfigs.OptInCheckConfig {...configProps} />;
       case "audience":
@@ -272,29 +272,29 @@ export const PropertiesPanel = ({
 
       // Logic Blocks
       case "condition":
-        return <BlockConfigs.ConditionConfig {...configProps} />;
+        return <BlockConfigs.ConditionsConfigNew {...configProps} />;
       case "set_field":
-        return <BlockConfigs.SetFieldConfig {...configProps} />;
+        return <BlockConfigs.SetFieldConfigNew {...configProps} />;
       case "keyword_jump":
-        return <BlockConfigs.KeywordJumpConfig {...configProps} />;
+        return <BlockConfigs.KeywordJumpConfigNew {...configProps} />;
       case "global_keywords":
-        return <BlockConfigs.GlobalKeywordsConfig {...configProps} />;
+        return <BlockConfigs.GlobalKeywordsConfigNew {...configProps} />;
       case "formulas":
         return <BlockConfigs.FormulasConfigNew {...configProps} />;
       case "jump_to":
         return <BlockConfigs.JumpToConfig {...configProps} />;
       case "lead_scoring":
-        return <BlockConfigs.LeadScoringConfig {...configProps} />;
+        return <BlockConfigs.LeadScoringConfigNew {...configProps} />;
       case "goal":
-        return <BlockConfigs.GoalConfig {...configProps} />;
+        return <BlockConfigs.GoalConfigNew {...configProps} />;
 
       // Low Code Blocks
       case "webhook":
-        return <BlockConfigs.WebhookConfig {...configProps} />;
+        return <BlockConfigs.WebhookConfigNew {...configProps} />;
       case "n8n":
         return <BlockConfigs.N8nConfig {...configProps} />;
       case "trigger_automation":
-        return <BlockConfigs.TriggerAutomationConfig {...configProps} />;
+        return <BlockConfigs.TriggerAutomationConfigNew {...configProps} />;
       case "dynamic_data":
         return <BlockConfigs.DynamicDataConfig {...configProps} />;
       case "ai_agent":

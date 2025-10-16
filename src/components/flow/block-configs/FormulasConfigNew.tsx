@@ -4,7 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Info, ChevronRight, ChevronDown, Lock, Calendar, Hash, Type, AtSign, Globe } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Info, ChevronRight, ChevronDown, Lock, Calendar, Hash, Type, Globe, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -90,56 +91,80 @@ export const FormulasConfigNew = ({ config, handleConfigChange }: ConfigProps) =
   };
 
   return (
-    <div className="space-y-4">
-      {/* Output Section */}
-      <div className="space-y-3 pb-4 border-b">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold">1. Output</h3>
-          <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
-            ✓
-          </div>
+    <div className="space-y-4 p-1">
+      {/* Header */}
+      <div className="flex items-center gap-2 pb-3">
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+          <Sparkles className="w-5 h-5 text-white" />
         </div>
-
-        <p className="text-sm text-muted-foreground">
-          Pick the field where the result of the formula will be saved
-        </p>
-
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
-            <Input
-              value={config.outputField || "result"}
-              onChange={(e) => handleConfigChange("outputField", e.target.value)}
-              placeholder="result"
-              className="pl-7"
-            />
-          </div>
-          <Button variant="default" size="sm" className="bg-pink-500 hover:bg-pink-600">
-            CREATE
-          </Button>
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Block outputs</Label>
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="default" className="bg-blue-600">SUCCESS / ERROR</Badge>
-            <Badge variant="outline">TRUE / FALSE</Badge>
-            <Badge variant="outline">CUSTOM</Badge>
-          </div>
+        <div>
+          <h2 className="font-bold text-lg">Fórmulas Avançadas</h2>
+          <p className="text-xs text-muted-foreground">Configure operações matemáticas e lógicas</p>
         </div>
       </div>
 
+      <Separator />
+
+      {/* Output Section */}
+      <div className="space-y-3 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white flex items-center justify-center text-xs font-bold">
+            1
+          </div>
+          <h3 className="font-semibold text-base">Campo de Saída</h3>
+        </div>
+
+        <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border">
+          📝 Escolha o campo onde o resultado da fórmula será salvo
+        </p>
+
+        <div className="space-y-2 bg-gradient-to-br from-muted/50 to-muted/30 p-3 rounded-lg border">
+          <Label className="text-xs font-semibold">Nome do Campo</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">@</span>
+              <Input
+                value={config.outputField || "result"}
+                onChange={(e) => handleConfigChange("outputField", e.target.value)}
+                placeholder="result"
+                className="pl-7 bg-background"
+              />
+            </div>
+            <Button variant="default" size="sm" className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-md">
+              CRIAR
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold">Saídas do Bloco</Label>
+          <div className="flex gap-2 flex-wrap">
+            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 border-0">SUCCESS / ERROR</Badge>
+            <Badge variant="outline" className="border-blue-500/50 text-blue-600 dark:text-blue-400">TRUE / FALSE</Badge>
+            <Badge variant="outline" className="border-purple-500/50 text-purple-600 dark:text-purple-400">CUSTOM</Badge>
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+
       {/* Formula Section */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold">2. Formula</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center text-xs font-bold">
+            2
+          </div>
+          <h3 className="font-semibold text-base">Editor de Fórmulas</h3>
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-5 gap-3 min-h-[400px]">
+        <div className="grid grid-cols-5 gap-3 min-h-[450px]">
           {/* Left Sidebar - Fields */}
-          <div className="col-span-2 border rounded-lg overflow-hidden bg-muted/20">
-            <ScrollArea className="h-[400px]">
+          <div className="col-span-2 border rounded-lg overflow-hidden bg-gradient-to-b from-muted/30 to-muted/10 shadow-sm">
+            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 px-3 py-2 border-b">
+              <p className="text-xs font-semibold">📚 Biblioteca de Funções</p>
+            </div>
+            <ScrollArea className="h-[410px]">
               <CategorySection title="Fields" defaultOpen={true}>
                 <div className="space-y-0.5">
                   <div className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted/30">
@@ -236,37 +261,48 @@ export const FormulasConfigNew = ({ config, handleConfigChange }: ConfigProps) =
           {/* Right Side - Formula Editor */}
           <div className="col-span-3 space-y-3">
             <div className="space-y-2">
-              <Label>Type a formula or field</Label>
-              <Textarea
-                value={config.formula || ""}
-                onChange={(e) => handleConfigChange("formula", e.target.value)}
-                placeholder="Type a formula or field"
-                rows={8}
-                className="bg-slate-800 text-white font-mono resize-none"
-              />
               <div className="flex items-center justify-between">
-                <span className="text-sm text-red-500">= Error</span>
-                <Button variant="ghost" size="sm" className="text-xs">
-                  Test values ↓
+                <Label className="font-semibold">💻 Editor de Código</Label>
+                <Button variant="ghost" size="sm" className="h-7 text-xs">
+                  Testar fórmula ↓
                 </Button>
+              </div>
+              <div className="relative">
+                <Textarea
+                  value={config.formula || ""}
+                  onChange={(e) => handleConfigChange("formula", e.target.value)}
+                  placeholder="Digite uma fórmula ou clique nos campos à esquerda para inserir..."
+                  rows={10}
+                  className="bg-gradient-to-br from-slate-900 to-slate-800 text-white font-mono resize-none border-slate-700 shadow-inner placeholder:text-slate-500"
+                />
+                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2 py-1 bg-slate-950/50 rounded border border-slate-700/50 backdrop-blur-sm">
+                  <span className="text-xs text-red-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                    Aguardando validação
+                  </span>
+                  <span className="text-xs text-slate-400">Ln 1, Col 1</span>
+                </div>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4 bg-muted/20 text-center text-muted-foreground">
-              <Globe className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">
-                Browse methods and operations in the left column
+            <div className="border rounded-lg p-4 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20 text-center border-dashed">
+              <Globe className="w-10 h-10 mx-auto mb-2 text-blue-500/50 dark:text-blue-400/50" />
+              <p className="text-sm text-muted-foreground font-medium">
+                ✨ Explore funções e operações na coluna esquerda
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Clique em qualquer item para inserir no editor
               </p>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 shadow-sm">
               <div className="flex items-start gap-2">
                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                <div className="text-xs space-y-1">
-                  <p className="font-semibold">Tips:</p>
-                  <p>- Formulas are case sensitive → Sum(...) ✓ SUM(...) ✗</p>
-                  <p>- System fields and static text need quotes → "@today" ✓</p>
-                  <p>- You can combine different functions → Sum(2, Sum(4, 2)) ✓</p>
+                <div className="text-xs space-y-1.5">
+                  <p className="font-bold text-blue-900 dark:text-blue-100">💡 Dicas Importantes:</p>
+                  <p className="text-blue-800 dark:text-blue-200">• Fórmulas são sensíveis a maiúsculas → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">Sum(...)</code> ✓ <code className="bg-white/50 dark:bg-black/20 px-1 rounded">SUM(...)</code> ✗</p>
+                  <p className="text-blue-800 dark:text-blue-200">• Campos do sistema precisam de aspas → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">"@today"</code> ✓</p>
+                  <p className="text-blue-800 dark:text-blue-200">• Você pode combinar funções → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">Sum(2, Sum(4, 2))</code> ✓</p>
                 </div>
               </div>
             </div>
