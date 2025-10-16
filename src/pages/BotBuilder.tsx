@@ -146,7 +146,7 @@ function BotBuilderContent() {
   }, [allVariables]);
 
   // Handler para mostrar variáveis disponíveis em um bloco
-  const handleShowVariables = useCallback((nodeId: string) => {
+  const handleShowVariables = (nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
     
@@ -158,7 +158,7 @@ function BotBuilderContent() {
       nodeId,
       blockLabel,
     });
-  }, [nodes]);
+  };
 
   // Highlight node during simulation
   useEffect(() => {
