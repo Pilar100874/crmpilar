@@ -243,6 +243,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const goodbyeText = interpolateVariables(config.message || config.text || "Até logo!", context);
         addBotMessage(goodbyeText, node.id);
         
+        let finalDelay = 500;
+        
         // Exibir botões sociais se configurado
         if (config.showSocialButtons) {
           safeSetTimeout(() => {
@@ -277,12 +279,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
               ]);
             }
           }, 500);
+          finalDelay = 1500; // Aumentar o delay final se mostrou botões sociais
         }
         
         if (config.showStartAgainButton !== false) {
           safeSetTimeout(() => {
             addSystemMessage("💬 Conversa finalizada. Clique em 'Reiniciar' para começar novamente.");
-          }, 1000);
+          }, finalDelay);
         }
         
         setIsWaitingInput(false);
