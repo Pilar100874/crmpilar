@@ -153,11 +153,11 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-200 hover:bg-slate-50">
-                      <TableHead className="text-slate-700 font-semibold w-[35%]">Variável</TableHead>
-                      <TableHead className="text-slate-700 font-semibold w-[15%]">Tipo</TableHead>
-                      <TableHead className="text-slate-700 font-semibold w-[35%]">Valor Atual</TableHead>
-                      <TableHead className="text-slate-700 font-semibold w-[15%]">Status</TableHead>
+                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-blue-50">
+                      <TableHead className="text-slate-900 font-bold">Variável</TableHead>
+                      <TableHead className="text-slate-900 font-bold w-[100px]">Tipo</TableHead>
+                      <TableHead className="text-slate-900 font-bold">Valor</TableHead>
+                      <TableHead className="text-slate-900 font-bold w-[100px]">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -171,65 +171,65 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
                       return (
                         <TableRow 
                           key={variable.id} 
-                          className="border-slate-200 hover:bg-slate-50"
+                          className="border-slate-200 hover:bg-blue-50/30"
                         >
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Icon className={`h-4 w-4 ${typeColor}`} />
-                              <span className="font-mono text-sm text-slate-900">
+                          <TableCell className="align-top">
+                            <div className="flex items-center gap-2 flex-wrap min-w-0">
+                              <Icon className={`h-4 w-4 ${typeColor} flex-shrink-0`} />
+                              <span className="font-mono text-sm text-slate-900 break-all">
                                 {variable.name}
                               </span>
                               {variable.scope === "global" && (
-                                <span title="Variável global">
+                                <span title="Variável global" className="flex-shrink-0">
                                   <Globe className="h-3 w-3 text-green-600" />
                                 </span>
                               )}
                               {variable.isConstant && (
-                                <span title="Variável fixa">
+                                <span title="Variável fixa" className="flex-shrink-0">
                                   <Lock className="h-3 w-3 text-amber-600" />
                                 </span>
                               )}
                             </div>
                             {variable.description && (
-                              <p className="text-xs text-slate-500 ml-6 mt-0.5">
+                              <p className="text-xs text-slate-500 ml-6 mt-0.5 break-words">
                                 {variable.description}
                               </p>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             <Badge 
                               variant="outline" 
-                              className={`${typeColor} border-slate-300 bg-slate-50`}
+                              className={`${typeColor} border-slate-300 bg-slate-50 whitespace-nowrap`}
                             >
                               {variable.type}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             <code 
-                              className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-slate-50 px-2 py-1 rounded border border-slate-200`}
+                              className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-slate-50 px-2 py-1 rounded border border-slate-200 break-all max-w-full inline-block`}
                             >
                               {formatValue(currentValue, variable)}
                             </code>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             {hasValue ? (
                               <Badge 
                                 variant="outline" 
-                                className="text-green-700 border-green-300 bg-green-50"
+                                className="text-green-700 border-green-300 bg-green-50 whitespace-nowrap"
                               >
-                                ✓ Definido
+                                ✓ Def.
                               </Badge>
                             ) : variable.defaultValue !== undefined ? (
                               <Badge 
                                 variant="outline" 
-                                className="text-amber-700 border-amber-300 bg-amber-50 text-xs"
+                                className="text-amber-700 border-amber-300 bg-amber-50 text-xs whitespace-nowrap"
                               >
                                 Padrão
                               </Badge>
                             ) : (
                               <Badge 
                                 variant="outline" 
-                                className="text-slate-500 border-slate-300 bg-slate-50 text-xs"
+                                className="text-slate-500 border-slate-300 bg-slate-50 text-xs whitespace-nowrap"
                               >
                                 Vazio
                               </Badge>
