@@ -678,8 +678,24 @@ function BotBuilderContent() {
   }, [reactFlowInstance]);
 
   const handleFitView = useCallback(() => {
-    reactFlowInstance?.fitView({ padding: 0.2, duration: 300 });
-  }, [reactFlowInstance]);
+    if (!reactFlowInstance) return;
+    
+    // Se o painel de propriedades estiver aberto, ajustar o padding para compensar
+    const propertiesPanelWidth = selectedNode ? 400 : 0; // Largura aproximada do painel
+    const viewportWidth = window.innerWidth;
+    
+    // Calcular offset proporcional ao tamanho da tela
+    const offsetRatio = propertiesPanelWidth / viewportWidth;
+    
+    // Ajustar padding considerando o painel
+    const paddingLeft = 0.2;
+    const paddingRight = 0.2 + (offsetRatio * 2); // Aumentar padding direito proporcionalmente
+    
+    reactFlowInstance.fitView({ 
+      padding: { top: 0.2, bottom: 0.2, left: paddingLeft, right: paddingRight },
+      duration: 300 
+    });
+  }, [reactFlowInstance, selectedNode]);
 
   const handleToggleLock = useCallback(() => {
     setIsLocked(prev => !prev);
