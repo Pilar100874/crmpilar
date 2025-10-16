@@ -213,6 +213,61 @@ function BotBuilderContent() {
     [setNodes, setEdges, nodes]
   );
 
+  // Validar se existem blocos desconectados
+  const validateConnections = useCallback(() => {
+    if (nodes.length === 0) return { isValid: true, disconnectedNodes: [] };
+
+    // Encontrar todos os nós que têm conexões (como fonte ou destino)
+    const connectedNodeIds = new Set<string>();
+    
+    edges.forEach(edge => {
+      connectedNodeIds.add(edge.source);
+      connectedNodeIds.add(edge.target);
+    });
+
+    // Verificar blocos desconectados (exceto o start que pode não ter entrada)
+    const disconnectedNodes = nodes.filter(node => {
+      const nodeData = node.data as any;
+      // O bloco start não precisa de entrada, mas precisa de saída se não for o único bloco
+      if (nodeData.type === "start") {
+        return nodes.length > 1 && !edges.some(e => e.source === node.id);
+      }
+      // Outros blocos precisam ter pelo menos uma conexão (entrada ou saída)
+      return !connectedNodeIds.has(node.id);
+    });
+
+    return {
+      isValid: disconnectedNodes.length === 0,
+      disconnectedNodes
+    };
+  }, [nodes, edges]);
+
+  const highlightDisconnectedNodes = useCallback((disconnectedNodes: Node[]) => {
+    if (disconnectedNodes.length === 0) return;
+
+    // Destacar o primeiro bloco desconectado
+    const firstDisconnected = disconnectedNodes[0];
+    
+    // Centralizar visualização no bloco
+    if (reactFlowInstance) {
+      reactFlowInstance.setCenter(
+        firstDisconnected.position.x + 140,
+        firstDisconnected.position.y + 70,
+        { zoom: 1.5, duration: 800 }
+      );
+    }
+
+    // Selecionar o bloco
+    setSelectedNode(firstDisconnected);
+    
+    // Mostrar mensagem de erro
+    const nodeData = firstDisconnected.data as any;
+    const blockLabel = nodeData.label || "Bloco";
+    toast.error(
+      `${blockLabel} está desconectado! ${disconnectedNodes.length > 1 ? `Mais ${disconnectedNodes.length - 1} bloco(s) também estão desconectados.` : ''}`
+    );
+  }, [reactFlowInstance]);
+
   const handleNewBot = useCallback(() => {
     setCurrentBotId(null);
     setCurrentBotName("Novo Bot");
@@ -238,6 +293,13 @@ function BotBuilderContent() {
   const handleSave = useCallback(async () => {
     if (!currentBotName.trim()) {
       toast.error("Por favor, dê um nome ao bot");
+      return;
+    }
+
+    // Validar conexões antes de salvar
+    const validation = validateConnections();
+    if (!validation.isValid) {
+      highlightDisconnectedNodes(validation.disconnectedNodes);
       return;
     }
 
@@ -282,7 +344,7 @@ function BotBuilderContent() {
       toast.success("Bot salvo com sucesso!");
       loadSavedBots();
     }
-  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId]);
+  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, validateConnections, highlightDisconnectedNodes]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
@@ -423,6 +485,7 @@ function BotBuilderContent() {
       toast.error("Adicione blocos ao fluxo antes de testar");
       return;
     }
+    
     const hasStart = nodes.some((node) => {
       const nodeData = node.data as any;
       return nodeData.type === "start";
@@ -431,9 +494,17 @@ function BotBuilderContent() {
       toast.error("Adicione um bloco 'Start' para iniciar o teste");
       return;
     }
+
+    // Validar conexões antes de testar
+    const validation = validateConnections();
+    if (!validation.isValid) {
+      highlightDisconnectedNodes(validation.disconnectedNodes);
+      return;
+    }
+    
     setShowSimulator(true);
     toast.success("Simulador aberto!");
-  }, [nodes, showSimulator]);
+  }, [nodes, showSimulator, validateConnections, highlightDisconnectedNodes]);
 
   const handleNewFlow = useCallback(() => {
     setEdges([]);
