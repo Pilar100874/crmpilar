@@ -251,6 +251,8 @@ serve(async (req) => {
         session_id: sessionId,
         context: context,
         updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'session_id'
       });
     }
 
@@ -602,6 +604,8 @@ async function executeNode(
         session_id: sessionId,
         context: context,
         updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'session_id'
       });
       
       console.log(`[BUTTON] Session saved with pendingNodeId: ${node.id}`);

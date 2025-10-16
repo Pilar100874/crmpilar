@@ -481,7 +481,18 @@ function BotBuilderContent() {
 
     if (data && data.flow_data) {
       const flowData = data.flow_data as any;
-      const loadedNodes = flowData.nodes || [];
+      let loadedNodes = flowData.nodes || [];
+      
+      // Remover nós duplicados (com mesmo ID)
+      const seenIds = new Set<string>();
+      loadedNodes = loadedNodes.filter((node: any) => {
+        if (seenIds.has(node.id)) {
+          console.warn(`Nó duplicado removido: ${node.id}`);
+          return false;
+        }
+        seenIds.add(node.id);
+        return true;
+      });
       
       // Garantir que tem um bloco Start
       const hasStart = loadedNodes.some((node: any) => node.data.type === "start");
