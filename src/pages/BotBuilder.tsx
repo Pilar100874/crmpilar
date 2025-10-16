@@ -248,7 +248,15 @@ function BotBuilderContent() {
     // Destacar o primeiro bloco desconectado
     const firstDisconnected = disconnectedNodes[0];
     
-    // Centralizar visualização no bloco
+    // Marcar visualmente todos os blocos desconectados e selecionar o primeiro
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        selected: node.id === firstDisconnected.id,
+      }))
+    );
+    
+    // Centralizar visualização no primeiro bloco desconectado
     if (reactFlowInstance) {
       reactFlowInstance.setCenter(
         firstDisconnected.position.x + 140,
@@ -257,7 +265,7 @@ function BotBuilderContent() {
       );
     }
 
-    // Selecionar o bloco
+    // Selecionar o bloco no painel de propriedades
     setSelectedNode(firstDisconnected);
     
     // Mostrar mensagem de erro
@@ -266,7 +274,7 @@ function BotBuilderContent() {
     toast.error(
       `${blockLabel} está desconectado! ${disconnectedNodes.length > 1 ? `Mais ${disconnectedNodes.length - 1} bloco(s) também estão desconectados.` : ''}`
     );
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, setNodes]);
 
   const handleNewBot = useCallback(() => {
     setCurrentBotId(null);
