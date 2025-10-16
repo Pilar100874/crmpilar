@@ -94,15 +94,30 @@ export const PropertiesPanel = ({
       
       const newValue = currentValue.substring(0, start) + formattedVar + currentValue.substring(end);
       
-      // Update the value based on which field is active
-      if (input.name) {
-        handleConfigChange(input.name, newValue);
+      // Update the input value directly
+      input.value = newValue;
+      
+      // Create and dispatch a synthetic change event
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value'
+      )?.set || Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      )?.set;
+      
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(input, newValue);
       }
+      
+      const changeEvent = new Event('input', { bubbles: true });
+      input.dispatchEvent(changeEvent);
       
       // Set cursor position after inserted variable
       setTimeout(() => {
         input.focus();
-        input.setSelectionRange(start + formattedVar.length, start + formattedVar.length);
+        const newPos = start + formattedVar.length;
+        input.setSelectionRange(newPos, newPos);
       }, 0);
     }
   };
