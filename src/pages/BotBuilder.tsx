@@ -2,7 +2,7 @@ import { useCallback, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Save, Download, Upload } from "lucide-react";
+import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
 import {
   ReactFlow,
   Background,
@@ -59,6 +59,7 @@ function BotBuilderContent() {
   const [currentBotId, setCurrentBotId] = useState<string | null>(null);
   const [currentBotName, setCurrentBotName] = useState("Novo Bot");
   const [savedBots, setSavedBots] = useState<any[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
 
   // Load saved bots on mount
   useEffect(() => {
@@ -535,16 +536,75 @@ function BotBuilderContent() {
     toast.success("Novo fluxo criado!");
   }, [setNodes, setEdges]);
 
+  const handleZoomIn = useCallback(() => {
+    reactFlowInstance?.zoomIn({ duration: 300 });
+  }, [reactFlowInstance]);
+
+  const handleZoomOut = useCallback(() => {
+    reactFlowInstance?.zoomOut({ duration: 300 });
+  }, [reactFlowInstance]);
+
+  const handleFitView = useCallback(() => {
+    reactFlowInstance?.fitView({ padding: 0.2, duration: 300 });
+  }, [reactFlowInstance]);
+
+  const handleToggleLock = useCallback(() => {
+    setIsLocked(prev => !prev);
+    toast.info(isLocked ? "Canvas desbloqueado" : "Canvas bloqueado");
+  }, [isLocked]);
+
   return (
     <Layout>
       <div className="h-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-between shadow-lg">
-          <div>
-            <h2 className="text-2xl font-bold text-white">CRIAR BOT</h2>
-            <p className="text-sm text-slate-400">
-              Arraste blocos para criar seu fluxo
-            </p>
+          <div className="flex items-center gap-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white">CRIAR BOT</h2>
+              <p className="text-sm text-slate-400">
+                Arraste blocos para criar seu fluxo
+              </p>
+            </div>
+            
+            <div className="flex gap-1 border-l border-slate-700 pl-6">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleZoomIn}
+                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
+                title="Aumentar zoom"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleZoomOut}
+                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
+                title="Diminuir zoom"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleFitView}
+                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
+                title="Centralizar"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleToggleLock}
+                className={`h-9 w-9 border-slate-700 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : 'bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white'}`}
+                title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
+              >
+                {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
+          
           <div className="flex gap-2">
             <BotManager
               savedBots={savedBots}
@@ -590,17 +650,20 @@ function BotBuilderContent() {
                 animated: true,
                 type: 'smoothstep',
               }))}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onReconnect={onReconnect}
-              onEdgesDelete={onEdgesDelete}
+              onNodesChange={isLocked ? undefined : onNodesChange}
+              onEdgesChange={isLocked ? undefined : onEdgesChange}
+              onConnect={isLocked ? undefined : onConnect}
+              onReconnect={isLocked ? undefined : onReconnect}
+              onEdgesDelete={isLocked ? undefined : onEdgesDelete}
               onInit={setReactFlowInstance}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeClick={onNodeClick}
+              onDrop={isLocked ? undefined : onDrop}
+              onDragOver={isLocked ? undefined : onDragOver}
+              onNodeClick={isLocked ? undefined : onNodeClick}
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
+              nodesDraggable={!isLocked}
+              nodesConnectable={!isLocked}
+              elementsSelectable={!isLocked}
               fitView
               className="bg-slate-900"
               deleteKeyCode="Delete"
@@ -617,7 +680,6 @@ function BotBuilderContent() {
                 color="#334155"
                 className="opacity-40"
               />
-              <Controls className="bg-slate-800/90 border-slate-700/50 text-white [&>button]:bg-slate-700/50 [&>button]:border-slate-600 [&>button:hover]:bg-slate-600 [&>button]:text-white" />
               <MiniMap
                 nodeColor={(node) => {
                   const nodeData = node.data as any;
