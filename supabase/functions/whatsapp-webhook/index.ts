@@ -127,9 +127,23 @@ serve(async (req) => {
 
     // Execute flow
     const responses: string[] = [];
+    
+    // Check if there's a pending node (waiting for button response)
+    let startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
+    
+    if (context.pendingNodeId) {
+      // Resume from the pending node
+      const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
+      if (pendingNode) {
+        console.log("Resuming from pending node:", pendingNode.id);
+        startNode = pendingNode;
+      }
+    }
+    
     await executeFlow(
-      flowData.flow_data,
+      { nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges },
       context,
+      startNode,
       async (message: string, mediaUrl?: string, mediaType?: string) => {
         responses.push(message);
         if (isTwilio) {
@@ -335,13 +349,16 @@ async function sendWhatsAppMedia(
 async function executeFlow(
   flowData: any,
   context: any,
+  startNode: any,
   onResponse: (message: string, mediaUrl?: string, mediaType?: string) => Promise<void>
 ) {
   const { nodes, edges } = flowData;
 
-  const startNode = nodes.find((n: any) => n.data.type === "start");
   if (!startNode) {
-    throw new Error("No start node found");
+    startNode = nodes.find((n: any) => n.data.type === "start");
+    if (!startNode) {
+      throw new Error("No start node found");
+    }
   }
 
   await executeNode(startNode, nodes, edges, context, onResponse);
@@ -473,23 +490,31 @@ async function executeNode(
     }
 
     case "reply_buttons": {
-      // Send text message with buttons as simple text list
-      let buttonText = interpolate(config.text || "");
-      if (config.buttons && config.buttons.length > 0) {
-        buttonText += "\n\nEscolha uma opção:";
-        config.buttons.forEach((btn: any, idx: number) => {
-          buttonText += `\n${idx + 1}. ${btn.text}`;
-        });
-      }
-      
-      if (buttonText) {
-        await onResponse(buttonText);
-      }
-      
-      // Wait for user response - store the button value in variable
       const variable = config.variable || "button_response";
-      if (context.vars.userMessage) {
-        // Try to match the response to a button value
+      
+      // Check if we're waiting for a response
+      if (!context.vars[variable] && context.vars.waitingForButton !== node.id) {
+        // First time - send buttons and wait
+        let buttonText = interpolate(config.text || "");
+        if (config.buttons && config.buttons.length > 0) {
+          buttonText += "\n\nEscolha uma opção:";
+          config.buttons.forEach((btn: any, idx: number) => {
+            buttonText += `\n${idx + 1}. ${btn.text}`;
+          });
+        }
+        
+        if (buttonText) {
+          await onResponse(buttonText);
+        }
+        
+        // Mark that we're waiting for response at this node
+        context.vars.waitingForButton = node.id;
+        context.vars.pendingNodeId = node.id;
+        break; // Stop execution here
+      }
+      
+      // We have a response - process it
+      if (context.vars.userMessage && context.vars.waitingForButton === node.id) {
         const userResponse = context.vars.userMessage.trim();
         const buttonIndex = parseInt(userResponse) - 1;
         
@@ -502,11 +527,30 @@ async function executeNode(
           );
           context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
         }
+        
+        // Clear waiting state
+        delete context.vars.waitingForButton;
+        delete context.vars.pendingNodeId;
       }
       
-      const nextNodes = getNextNodes(node.id);
-      for (const next of nextNodes) {
-        await executeNode(next, nodes, edges, context, onResponse);
+      // Find the edge that matches the button value
+      const outgoingEdges = edges.filter((e: any) => e.source === node.id);
+      const selectedValue = context.vars[variable];
+      
+      // Find which button was selected
+      const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === selectedValue);
+      
+      if (selectedButtonIndex >= 0) {
+        // Find the edge with the matching sourceHandle
+        const buttonHandle = `button_${selectedButtonIndex}`;
+        const matchingEdge = outgoingEdges.find((e: any) => e.sourceHandle === buttonHandle);
+        
+        if (matchingEdge) {
+          const nextNode = nodes.find((n: any) => n.id === matchingEdge.target);
+          if (nextNode) {
+            await executeNode(nextNode, nodes, edges, context, onResponse);
+          }
+        }
       }
       break;
     }
