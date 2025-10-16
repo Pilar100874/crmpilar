@@ -903,29 +903,28 @@ export const PropertiesPanel = ({
   };
 
   return (
-    <div className="w-96 bg-gradient-to-b from-slate-900 via-slate-900/98 to-slate-800/95 backdrop-blur-sm border-l border-cyan-500/30 flex flex-col h-full shadow-2xl flow-editor-dark">
+    <div className="w-96 bg-card backdrop-blur-sm border-l border-border flex flex-col h-full shadow-lg">
       {/* Header aprimorado */}
-      <div className="p-4 border-b border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5"></div>
+      <div className="p-4 border-b border-border bg-muted relative overflow-hidden">
         
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/20 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/10">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/20 border border-cyan-500/40 flex items-center justify-center shadow-lg">
                 <span className="text-xl">⚙️</span>
               </div>
               <div>
-                <h3 className="font-bold text-base text-white">Propriedades</h3>
+                <h3 className="font-bold text-base text-foreground">Propriedades</h3>
                 {blockDef && (
-                  <div className="text-xs text-cyan-400 flex items-center gap-1.5 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50 block"></span>
+                  <div className="text-xs text-cyan-600 flex items-center gap-1.5 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-600 shadow-sm block"></span>
                     {blockDef.label}
                   </div>
                 )}
               </div>
             </div>
             {hasChanges && (
-              <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-400 border border-emerald-500/40 animate-in fade-in shadow-sm shadow-emerald-500/20">
+              <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-600 border border-emerald-500/40 animate-in fade-in shadow-sm">
                 <Check className="w-3 h-3 mr-1" />
                 Salvo
               </Badge>
@@ -934,29 +933,29 @@ export const PropertiesPanel = ({
         </div>
       </div>
 
-      <ScrollArea className="flex-1 bg-gradient-to-b from-slate-900/50 to-slate-900/30">
+      <ScrollArea className="flex-1 bg-background">
         <div className="p-4 space-y-4">
           {/* Nome do Bloco - Card destacado */}
-          <div className="space-y-2 p-3 rounded-lg bg-gradient-to-br from-slate-800/60 to-slate-800/40 border border-cyan-500/20 shadow-md">
-            <Label className="text-white text-sm font-semibold flex items-center gap-2">
-              <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          <div className="space-y-2 p-3 rounded-lg bg-muted border border-border shadow-sm">
+            <Label className="text-foreground text-sm font-semibold flex items-center gap-2">
+              <span className="w-1 h-4 bg-gradient-to-b from-cyan-600 to-blue-600 rounded-full"></span>
               Nome do Bloco
             </Label>
             <Input
               value={nodeData.label || ""}
               onChange={(e) => handleLabelChange(e.target.value)}
               placeholder={blockDef?.label}
-              className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+              className="bg-background shadow-sm"
             />
           </div>
 
-          <Separator className="bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+          <Separator />
 
           <div className="space-y-4">
             {renderConfigFields()}
           </div>
 
-          <Separator className="bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent my-4" />
+          <Separator className="my-4" />
 
           <VariableExplorer 
             selectedNode={selectedNode}
@@ -969,11 +968,11 @@ export const PropertiesPanel = ({
       </ScrollArea>
 
       {/* Footer aprimorado */}
-      <div className="p-4 border-t border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">
+      <div className="p-4 border-t border-border bg-muted">
         <Button
           variant="destructive"
           size="sm"
-          className="w-full bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/40 text-red-400 hover:from-red-500/20 hover:to-red-600/20 hover:text-red-300 hover:border-red-500/60 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-red-500/10 transition-all"
+          className="w-full disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           onClick={() => onDeleteNode(selectedNode.id)}
           disabled={nodeData.type === "start"}
           title={nodeData.type === "start" ? "O bloco Start não pode ser excluído" : "Excluir bloco"}
