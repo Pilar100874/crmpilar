@@ -13,7 +13,7 @@ import { saveProject } from "@/lib/projectStorage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import BottomTabBar from "@/components/editor/BottomTabBar";
 import Layout from "@/components/Layout";
-import EditorToolbar from "@/components/editor/EditorToolbar";
+import EditorToolbarV2 from "@/components/editor/EditorToolbarV2";
 import ProjectsPanel from "@/components/editor/panels/ProjectsPanel";
 import ImagesPanel from "@/components/editor/panels/ImagesPanel";
 import TextPanel from "@/components/editor/panels/TextPanel";
@@ -487,16 +487,22 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
 
   return (
     <Layout>
-      <CanvasProvider onSelectionChange={(objType) => {
-        setSelectedObjectType(objType);
-        if (objType && !userSelectedPanel) {
-          // Só abre automaticamente se usuário não selecionou manualmente um painel
-          setIsPanelOpen(true);
-        }
-      }}>
-        <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
-          {/* Desktop Sidebar with tool icons - only on large screens */}
-          <div className="hidden lg:block">
+      <div className="h-screen flex flex-col overflow-hidden bg-background">
+        {/* Toolbar */}
+        <EditorToolbarV2 
+          onBack={onBack || (() => handleNavigateAway(() => navigate(-1)))}
+        />
+        
+        <CanvasProvider onSelectionChange={(objType) => {
+          setSelectedObjectType(objType);
+          if (objType && !userSelectedPanel) {
+            // Só abre automaticamente se usuário não selecionou manualmente um painel
+            setIsPanelOpen(true);
+          }
+        }}>
+          <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
+            {/* Desktop Sidebar with tool icons - only on large screens */}
+            <div className="hidden lg:block">
             <DesktopSidebar 
               activePanel={activePanel} 
               onPanelChange={handlePanelChange}
@@ -513,7 +519,6 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           {/* Canvas area - takes full available space */}
           <div className="flex-1 relative overflow-hidden bg-muted/30">
             <LoadingOverlay />
-            <EditorToolbar />
             <CanvasWorkspace selectedSize={selectedSize} />
             <FloatingObjectToolbar />
             <ObjectActionsMenu />
@@ -606,8 +611,9 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           gabaritoCanvasUrl={productData?.gabarito_canvas_url || null}
           gabaritoCanvasRetangularUrl={productData?.gabarito_canvas_retangular_url || null}
         />
-        </div>
-      </CanvasProvider>
+          </div>
+        </CanvasProvider>
+      </div>
     </Layout>
   );
 };
