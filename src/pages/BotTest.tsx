@@ -119,13 +119,13 @@ export default function BotTest() {
         <div className="flex-1 flex overflow-hidden p-4">
           <Tabs defaultValue="simulator" className="flex-1 flex flex-col">
             <TabsList className="bg-slate-800 border-slate-700 mb-4">
-              <TabsTrigger value="simulator" className="data-[state=active]:bg-slate-700">
+              <TabsTrigger value="simulator" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
                 <MessageSquare className="w-4 h-4 mr-2" />
-                Simulador
+                Simulador Web
               </TabsTrigger>
-              <TabsTrigger value="whatsapp" className="data-[state=active]:bg-slate-700">
+              <TabsTrigger value="whatsapp" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">
                 <Smartphone className="w-4 h-4 mr-2" />
-                WhatsApp QR Code
+                Testar no WhatsApp
               </TabsTrigger>
             </TabsList>
 
@@ -148,8 +148,16 @@ export default function BotTest() {
               )}
             </TabsContent>
 
-            <TabsContent value="whatsapp" className="flex-1 flex items-center justify-center">
-              <div className="w-full max-w-md">
+            <TabsContent value="whatsapp" className="flex-1 overflow-auto">
+              <div className="max-w-2xl mx-auto py-6">
+                <div className="mb-6 text-center">
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    🚀 Teste seu Bot no WhatsApp Real
+                  </h3>
+                  <p className="text-slate-400 text-sm">
+                    Use seu celular com WhatsApp para testar o bot como seus clientes verão
+                  </p>
+                </div>
                 <WhatsAppQRCode />
               </div>
             </TabsContent>
