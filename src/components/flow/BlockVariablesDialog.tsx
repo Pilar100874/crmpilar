@@ -1,10 +1,10 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Table,
   TableBody,
@@ -14,8 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Type, Hash, Calendar, List, ToggleLeft, Lock, Database, Globe, User } from "lucide-react";
+import { Type, Hash, Calendar, List, ToggleLeft, Lock, Database, Globe } from "lucide-react";
 import { FlowVariable } from "./VariableManager";
 
 interface BlockVariablesDialogProps {
@@ -83,19 +82,19 @@ export function BlockVariablesDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl bg-slate-900 border-slate-700">
-        <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-[600px] sm:w-[700px] bg-slate-900 border-slate-700 overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-white flex items-center gap-2">
             <Database className="h-5 w-5 text-cyan-500" />
             Variáveis Disponíveis
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          </SheetTitle>
+          <SheetDescription className="text-slate-400">
             Variáveis acessíveis no bloco: <span className="font-semibold text-white">{blockLabel}</span>
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <ScrollArea className="h-[500px] pr-4">
+        <div className="mt-6 space-y-4">
           {availableVariables.length === 0 ? (
             <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-8 text-center">
               <Database className="h-12 w-12 text-slate-600 mx-auto mb-3" />
@@ -199,7 +198,7 @@ export function BlockVariablesDialog({
           )}
 
           {/* Legenda */}
-          <div className="mt-4 p-3 bg-slate-800/30 border border-slate-700 rounded-lg">
+          <div className="p-3 bg-slate-800/30 border border-slate-700 rounded-lg">
             <p className="text-xs font-semibold text-slate-300 mb-2">Legenda:</p>
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
               <div className="flex items-center gap-2">
@@ -232,8 +231,8 @@ export function BlockVariablesDialog({
               </div>
             </div>
           </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
