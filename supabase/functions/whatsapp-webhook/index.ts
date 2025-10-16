@@ -120,10 +120,23 @@ serve(async (req) => {
       .eq("session_id", sessionId)
       .maybeSingle();
 
-    const context = sessionData?.context || { vars: {} };
+    let context = sessionData?.context || { vars: {} };
+    
+    // If no pending node, this is a fresh start - reset context
+    if (!context.pendingNodeId) {
+      console.log("Fresh conversation start - resetting context");
+      context = { vars: {} };
+    }
+    
     context.vars.userMessage = body;
     context.vars.from = from;
     context.vars.phoneNumber = from;
+    
+    console.log("Context state:", { 
+      pendingNodeId: context.pendingNodeId, 
+      isResuming: context.isResuming,
+      hasVars: !!context.vars 
+    });
 
     // Execute flow
     const responses: string[] = [];
@@ -498,33 +511,34 @@ async function executeNode(
     }
 
     case "reply_buttons": {
-      console.log(`[REPLY_BUTTONS] Starting - Node ID: ${node.id}`);
-      console.log(`[REPLY_BUTTONS] Is resuming: ${context.isResuming}, Pending: ${context.pendingNodeId}`);
+      console.log(`[REPLY_BUTTONS] Node: ${node.id}, isResuming: ${context.isResuming}, pendingNodeId: ${context.pendingNodeId}`);
       
       const variable = config.variable || "button_response";
       
       // If we're resuming (user just responded), process the response
       if (context.isResuming && context.pendingNodeId === node.id) {
-        console.log(`[REPLY_BUTTONS] Processing user response`);
+        console.log(`[REPLY_BUTTONS] Processing user response: ${context.vars.userMessage}`);
         
         const userResponse = context.vars.userMessage?.trim() || "";
         const buttonIndex = parseInt(userResponse) - 1;
         
         if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
           context.vars[variable] = config.buttons[buttonIndex].value;
-          console.log(`[REPLY_BUTTONS] Selected: ${config.buttons[buttonIndex].value}`);
+          console.log(`[REPLY_BUTTONS] Selected button ${buttonIndex}: ${config.buttons[buttonIndex].value}`);
         } else {
           const matchedButton = config.buttons.find((btn: any) => 
             btn.text.toLowerCase() === userResponse.toLowerCase()
           );
           context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
+          console.log(`[REPLY_BUTTONS] Matched or default: ${context.vars[variable]}`);
         }
         
         // Clear pending state
         delete context.pendingNodeId;
         delete context.isResuming;
+        console.log(`[REPLY_BUTTONS] Cleared pending state`);
         
-        // Find the matching edge and execute next node
+        // Find the matching edge and execute ONLY the next node
         const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === context.vars[variable]);
         
         if (selectedButtonIndex >= 0) {
@@ -533,11 +547,14 @@ async function executeNode(
             e.source === node.id && e.sourceHandle === buttonHandle
           );
           
+          console.log(`[REPLY_BUTTONS] Looking for edge with handle: ${buttonHandle}`);
+          
           if (matchingEdge) {
             const nextNode = nodes.find((n: any) => n.id === matchingEdge.target);
             if (nextNode) {
-              console.log(`[REPLY_BUTTONS] Next: ${nextNode.id}`);
+              console.log(`[REPLY_BUTTONS] Executing ONLY next node: ${nextNode.id} (${nextNode.data.type})`);
               await executeNode(nextNode, nodes, edges, context, onResponse);
+              console.log(`[REPLY_BUTTONS] Finished executing next node`);
             }
           }
         }
@@ -545,7 +562,6 @@ async function executeNode(
         // First time - send buttons and wait
         console.log(`[REPLY_BUTTONS] First visit - sending buttons`);
         
-        // Only send the button options, not config.text (to avoid duplication)
         let buttonText = "Escolha uma opção:";
         if (config.buttons && config.buttons.length > 0) {
           config.buttons.forEach((btn: any, idx: number) => {
@@ -557,7 +573,7 @@ async function executeNode(
         
         // Mark as pending and stop
         context.pendingNodeId = node.id;
-        console.log(`[REPLY_BUTTONS] Waiting for response`);
+        console.log(`[REPLY_BUTTONS] Set pendingNodeId=${node.id}, stopping execution`);
         return;
       }
       
