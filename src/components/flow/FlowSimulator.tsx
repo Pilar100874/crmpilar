@@ -243,26 +243,37 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const goodbyeText = interpolateVariables(config.message || config.text || "Até logo!", context);
         addBotMessage(goodbyeText, node.id);
         
+        console.log("Goodbye config:", config);
+        console.log("showSocialButtons:", config.showSocialButtons);
+        
         let finalDelay = 500;
         
         // Exibir botões sociais se configurado
         if (config.showSocialButtons) {
+          console.log("Social buttons enabled");
           safeSetTimeout(() => {
             const socialLinks = JSON.parse(localStorage.getItem("socialLinks") || "{}");
+            console.log("Social links from localStorage:", socialLinks);
             const buttons = [];
             
             if (config.socialWhatsApp && socialLinks.whatsapp) {
+              console.log("Adding WhatsApp button");
               buttons.push({ text: "📱 WhatsApp", value: socialLinks.whatsapp });
             }
             if (config.socialInstagram && socialLinks.instagram) {
+              console.log("Adding Instagram button");
               buttons.push({ text: "📷 Instagram", value: socialLinks.instagram });
             }
             if (config.socialFacebook && socialLinks.facebook) {
+              console.log("Adding Facebook button");
               buttons.push({ text: "👥 Facebook", value: socialLinks.facebook });
             }
             if (config.socialWebsite && socialLinks.website) {
+              console.log("Adding Website button");
               buttons.push({ text: "🌐 Website", value: socialLinks.website });
             }
+            
+            console.log("Total buttons:", buttons.length);
             
             if (buttons.length > 0) {
               const messageId = `msg-${Date.now()}-social`;
@@ -277,9 +288,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
                   buttons,
                 },
               ]);
+              console.log("Social buttons message added");
+            } else {
+              console.log("No buttons to show - check if links are configured in Config page");
             }
           }, 500);
           finalDelay = 1500; // Aumentar o delay final se mostrou botões sociais
+        } else {
+          console.log("Social buttons NOT enabled");
         }
         
         if (config.showStartAgainButton !== false) {
