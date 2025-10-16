@@ -473,14 +473,6 @@ async function executeNode(
     }
 
     case "reply_buttons": {
-      // Send media if configured
-      if (config.hasMedia && config.mediaUrl) {
-        const mediaUrl = interpolate(config.mediaUrl);
-        const mediaType = "image";
-        await onResponse("", mediaUrl, mediaType);
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
       // Send text message with buttons as simple text list
       let buttonText = interpolate(config.text || "");
       if (config.buttons && config.buttons.length > 0) {
@@ -492,6 +484,24 @@ async function executeNode(
       
       if (buttonText) {
         await onResponse(buttonText);
+      }
+      
+      // Wait for user response - store the button value in variable
+      const variable = config.variable || "button_response";
+      if (context.vars.userMessage) {
+        // Try to match the response to a button value
+        const userResponse = context.vars.userMessage.trim();
+        const buttonIndex = parseInt(userResponse) - 1;
+        
+        if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
+          context.vars[variable] = config.buttons[buttonIndex].value;
+        } else {
+          // Try to match by text
+          const matchedButton = config.buttons.find((btn: any) => 
+            btn.text.toLowerCase() === userResponse.toLowerCase()
+          );
+          context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
+        }
       }
       
       const nextNodes = getNextNodes(node.id);
