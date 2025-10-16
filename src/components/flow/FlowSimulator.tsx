@@ -514,6 +514,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         const replyButtons = config.buttons || [];
         const replyImage = config.image || config.mediaUrl;
         
+        console.log("reply_buttons config:", { replyButtons, variable: config.variable, context });
+        
         // Exibir imagem se houver
         if (replyImage) {
           addBotMediaMessage(replyImage, "image", "", node.id);
@@ -541,6 +543,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
               buttonId: `button_${idx}`
             }))
           };
+          console.log("Created message with buttons:", msgWithButtons);
           setMessages((prev) => [...prev, msgWithButtons]);
         }, delay);
         
@@ -553,6 +556,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         
         setIsWaitingInput(true);
         setPendingVariable(config.variable || "button_response");
+        console.log("Waiting for button input, pendingVariable:", config.variable || "button_response");
         break;
 
       case "list_buttons":
@@ -912,13 +916,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
   };
 
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string }, nodeId?: string) => {
+    console.log("Button clicked:", { button, nodeId, pendingVariable });
     addUserMessage(button.text);
     
     if (pendingVariable) {
-      setContext((prev) => ({
-        ...prev,
-        [pendingVariable]: button.value,
-      }));
+      console.log("Saving variable:", pendingVariable, "with value:", button.value);
+      setContext((prev) => {
+        const newContext = { ...prev, [pendingVariable]: button.value };
+        console.log("Context updated:", newContext);
+        return newContext;
+      });
       
       addSuccessMessage(`Variável "${pendingVariable}" = "${button.value}"`);
       setPendingVariable(null);
@@ -927,14 +934,20 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
       if (nodeId) {
         // Encontrar a edge correspondente ao botão clicado
         const buttonIndex = parseInt(button.buttonId?.split('_')[1] || '0');
+        console.log("Finding next node with index:", buttonIndex);
         const nextNode = getNextNode(nodeId, buttonIndex);
         if (nextNode) {
+          console.log("Executing next node:", nextNode.id);
           safeSetTimeout(() => {
             setCurrentNodeId(nextNode.id);
             executeNode(nextNode);
           }, 500);
+        } else {
+          console.log("No next node found");
         }
       }
+    } else {
+      console.log("No pending variable to save");
     }
   };
 

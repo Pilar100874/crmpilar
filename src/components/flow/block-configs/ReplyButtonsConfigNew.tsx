@@ -17,7 +17,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
   const addButton = () => {
     handleConfigChange("buttons", [
       ...buttons,
-      { id: Date.now(), label: "Botão", text: "Botão" }
+      { id: Date.now(), label: "Botão", text: "Botão", value: "Botão" }
     ]);
   };
 
@@ -28,7 +28,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
 
   const updateButtonText = (index: number, text: string) => {
     const newButtons = [...buttons];
-    newButtons[index] = { ...newButtons[index], label: text, text: text };
+    newButtons[index] = { ...newButtons[index], label: text, text: text, value: text };
     handleConfigChange("buttons", newButtons);
   };
 
