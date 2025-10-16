@@ -82,7 +82,7 @@ export function BlockVariablesDialog({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
       <SheetContent 
         side="right" 
         className="w-[600px] sm:w-[700px] bg-slate-900 border-slate-700 overflow-y-auto"
