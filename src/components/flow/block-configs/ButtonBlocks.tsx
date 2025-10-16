@@ -63,8 +63,8 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, inputRefs, open
     <div className="space-y-4">
       <ConfigSection title="Mensagem">
         <div className="space-y-2">
-          <Label className="text-white text-sm font-semibold flex items-center gap-2">
-            <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+            <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
             Texto da Mensagem
           </Label>
           <VariableTextarea
@@ -75,7 +75,7 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, inputRefs, open
             onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
             placeholder="Digite a mensagem antes dos botões..."
             rows={4}
-            className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
           <FormattingToolbar
             onFormat={(prefix, suffix) => insertFormatting(
@@ -259,8 +259,8 @@ export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openV
     <div className="space-y-4">
       <ConfigSection title="Mensagem">
         <div className="space-y-2">
-          <Label className="text-white text-sm font-semibold flex items-center gap-2">
-            <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+          <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+            <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
             Texto da Mensagem
           </Label>
           <VariableTextarea
@@ -271,7 +271,7 @@ export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openV
             onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
             placeholder="Mensagem antes do menu..."
             rows={3}
-            className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
           <FormattingToolbar
             onFormat={(prefix, suffix) => insertFormatting(

@@ -54,7 +54,7 @@ export const AskNameConfig = ({ config, handleConfigChange, inputRefs, openVaria
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Qual é o seu nome?"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(
@@ -105,7 +105,7 @@ export const AskQuestionConfig = ({ config, handleConfigChange, inputRefs, openV
             onChange={(e) => handleConfigChange("question", e.target.value)}
             placeholder="Faça sua pergunta"
             rows={3}
-            className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
           <FormattingToolbar
             onFormat={(prefix, suffix) => insertFormatting(
@@ -192,7 +192,7 @@ export const AskEmailConfig = ({ config, handleConfigChange, inputRefs, openVari
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Qual é o seu e-mail?"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(
@@ -251,7 +251,7 @@ export const AskNumberConfig = ({ config, handleConfigChange, inputRefs, openVar
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Digite um número"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(
@@ -326,7 +326,7 @@ export const AskPhoneConfig = ({ config, handleConfigChange, inputRefs, openVari
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Qual é o seu telefone?"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(
@@ -395,7 +395,7 @@ export const AskDateConfig = ({ config, handleConfigChange, inputRefs, openVaria
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Qual é a data?"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(
@@ -464,7 +464,7 @@ export const AskFileConfig = ({ config, handleConfigChange, inputRefs, openVaria
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Envie um arquivo"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(
@@ -529,7 +529,7 @@ export const AskAddressConfig = ({ config, handleConfigChange, inputRefs, openVa
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Qual é o seu endereço?"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(
@@ -576,7 +576,7 @@ export const AskUrlConfig = ({ config, handleConfigChange, inputRefs, openVariab
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Digite uma URL"
           rows={3}
-          className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
         <FormattingToolbar
           onFormat={(prefix, suffix) => insertFormatting(

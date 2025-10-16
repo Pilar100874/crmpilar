@@ -5,12 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { VariableTextarea } from "../VariableInput";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Bold, Italic, Code, Heading, ExternalLink, Upload, Loader2 } from "lucide-react";
+import { Plus, X, Upload, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
+import { FormattingToolbar } from "./FormattingToolbar";
 
 interface ConfigProps {
   config: any;
@@ -120,82 +121,26 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label className="text-white text-sm font-semibold flex items-center gap-2">
-                <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
-                Texto da Mensagem
-              </Label>
-              <VariableTextarea
-                name={`text_${index}`}
-                ref={(el) => (inputRefs.current[`text_${index}`] = el)}
-                value={message.text || ""}
-                onChange={(e) => updateMessage(index, e.target.value)}
-                onVariableRequest={() => openVariablePicker(inputRefs.current[`text_${index}`])}
-                placeholder="Clique para editar..."
-                rows={4}
-                className="resize-none bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
-              />
-
-              {/* Formatting Toolbar */}
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50 border border-slate-700/50">
-                <div className="flex items-center gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
-                    title="Negrito (*texto*)"
-                    onClick={() => insertFormatting(index, "*", "*")}
-                  >
-                    <Bold className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
-                    title="Itálico (_texto_)"
-                    onClick={() => insertFormatting(index, "_", "_")}
-                  >
-                    <Italic className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
-                    title="Tachado (~texto~)"
-                    onClick={() => insertFormatting(index, "~", "~")}
-                  >
-                    <Code className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-transparent transition-all" 
-                    title="Código (```texto```)"
-                    onClick={() => insertFormatting(index, "```", "```")}
-                  >
-                    <Heading className="w-4 h-4" />
-                  </Button>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
-                  className="h-8 text-xs bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 hover:text-white hover:border-cyan-500"
-                >
-                  Usar variável
-                </Button>
-              </div>
-
-              <ConfigInfo variant="info">
-                <p className="font-semibold mb-1">📝 Formatação WhatsApp:</p>
-                <p className="text-xs space-y-0.5">
-                  <span className="block">• *negrito* = <strong>negrito</strong></span>
-                  <span className="block">• _itálico_ = <em>itálico</em></span>
-                  <span className="block">• ~tachado~ = <s>tachado</s></span>
-                  <span className="block">• ```código``` = <code className="bg-white/10 px-1 rounded">código</code></span>
-                </p>
-              </ConfigInfo>
-            </div>
+          <div className="space-y-2">
+            <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+              <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+              Texto da Mensagem
+            </Label>
+            <VariableTextarea
+              name={`text_${index}`}
+              ref={(el) => (inputRefs.current[`text_${index}`] = el)}
+              value={message.text || ""}
+              onChange={(e) => updateMessage(index, e.target.value)}
+              onVariableRequest={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+              placeholder="Clique para editar..."
+              rows={4}
+              className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            />
+            <FormattingToolbar
+              onFormat={(prefix, suffix) => insertFormatting(index, prefix, suffix)}
+              onVariableClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+            />
+          </div>
           </div>
         </ConfigSection>
       ))}
