@@ -680,25 +680,29 @@ function BotBuilderContent() {
   const handleFitView = useCallback(() => {
     if (!reactFlowInstance) return;
     
-    // Calcular área disponível considerando o painel de propriedades
+    // Calcular largura dos painéis laterais
+    const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0; // w-64 = 256px
     const propertiesPanelWidth = selectedNode ? 384 : 0; // w-96 = 384px
     const viewportWidth = window.innerWidth;
-    const availableWidth = viewportWidth - propertiesPanelWidth;
     
-    // Calcular padding proporcional para compensar o painel
+    // Área disponível para o ReactFlow
+    const availableWidth = viewportWidth - blockLibraryWidth - propertiesPanelWidth;
+    
+    // Calcular padding proporcional para compensar os painéis
+    const leftPaddingRatio = blockLibraryWidth / availableWidth;
     const rightPaddingRatio = propertiesPanelWidth / availableWidth;
     
     reactFlowInstance.fitView({ 
       padding: { 
-        top: 0.1, 
-        bottom: 0.1, 
-        left: 0.1, 
-        right: 0.1 + rightPaddingRatio 
+        top: 0.15, 
+        bottom: 0.15, 
+        left: 0.15 + leftPaddingRatio, 
+        right: 0.15 + rightPaddingRatio 
       },
       duration: 300,
-      maxZoom: 1.5 // Limitar zoom máximo para garantir visibilidade
+      maxZoom: 1.2 // Limitar zoom para garantir que todos os blocos fiquem visíveis
     });
-  }, [reactFlowInstance, selectedNode]);
+  }, [reactFlowInstance, selectedNode, isBlockLibraryExpanded]);
 
   const handleToggleLock = useCallback(() => {
     setIsLocked(prev => !prev);
