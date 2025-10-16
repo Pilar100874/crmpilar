@@ -5,6 +5,7 @@ interface Preview3DDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   designDataUrl: string;
+  cupSize?: string;
 }
 
 const Preview3DDialog = ({ open, onOpenChange, designDataUrl }: Preview3DDialogProps) => {

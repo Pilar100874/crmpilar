@@ -1,3 +1,4 @@
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -7,11 +8,21 @@ interface CutLineDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   imageUrl: string;
-  onConfirm: (position: number) => void;
+  onConfirm?: (position: number) => void;
+  onApply?: (position: number) => Promise<void>;
 }
 
-export const CutLineDialog = ({ open, onOpenChange, imageUrl, onConfirm }: CutLineDialogProps) => {
+export const CutLineDialog = ({ open, onOpenChange, imageUrl, onConfirm, onApply }: CutLineDialogProps) => {
   const [position, setPosition] = React.useState(50);
+
+  const handleConfirm = () => {
+    if (onConfirm) {
+      onConfirm(position);
+    }
+    if (onApply) {
+      onApply(position);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -35,7 +46,7 @@ export const CutLineDialog = ({ open, onOpenChange, imageUrl, onConfirm }: CutLi
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => onConfirm(position)}>
+            <Button onClick={handleConfirm}>
               Aplicar
             </Button>
           </div>
@@ -44,5 +55,3 @@ export const CutLineDialog = ({ open, onOpenChange, imageUrl, onConfirm }: CutLi
     </Dialog>
   );
 };
-
-import React from "react";
