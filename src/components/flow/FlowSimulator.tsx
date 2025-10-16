@@ -41,7 +41,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   useEffect(() => {
+    // Garantir que isActive está true quando o componente monta
+    setIsActive(true);
     handleReset();
+    
+    return () => {
+      // Cleanup quando desmonta
+      setIsActive(false);
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current = [];
+      onHighlightNode?.(null);
+    };
   }, []);
 
   useEffect(() => {
@@ -53,14 +63,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   useEffect(() => {
     onContextChange?.(context);
   }, [context, onContextChange]);
-
-  useEffect(() => {
-    return () => {
-      setIsActive(false);
-      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
-      timeoutsRef.current = [];
-    };
-  }, []);
 
   const safeSetTimeout = (callback: () => void, delay: number) => {
     const timeout = setTimeout(() => {

@@ -611,6 +611,7 @@ function BotBuilderContent() {
     if (showSimulator) {
       setShowSimulator(false);
       setHighlightedNodeId(null);
+      setSelectedNode(null); // Limpar seleção ao fechar
       return;
     }
     
@@ -871,9 +872,8 @@ function BotBuilderContent() {
               nodeTypes={nodeTypes}
               nodesDraggable={!isLocked && !showSimulator}
               nodesConnectable={!isLocked && !showSimulator}
-              nodesFocusable={!isLocked && !showSimulator}
-              edgesFocusable={!isLocked && !showSimulator}
-              elementsSelectable={!showSimulator}
+              nodesFocusable={!isLocked}
+              edgesFocusable={!isLocked}
               fitView
               className="bg-slate-900"
               deleteKeyCode={isLocked ? null : "Delete"}
