@@ -552,17 +552,15 @@ async function executeNode(
         // First time - send buttons and wait
         console.log(`[REPLY_BUTTONS] First visit - sending buttons`);
         
-        let buttonText = interpolate(config.text || "");
+        // Only send the button options, not config.text (to avoid duplication)
+        let buttonText = "Escolha uma opção:";
         if (config.buttons && config.buttons.length > 0) {
-          buttonText += "\n\nEscolha uma opção:";
           config.buttons.forEach((btn: any, idx: number) => {
             buttonText += `\n${idx + 1}. ${btn.text}`;
           });
         }
         
-        if (buttonText) {
-          await onResponse(buttonText);
-        }
+        await onResponse(buttonText);
         
         // Mark as pending and stop
         context.pendingNodeId = node.id;
