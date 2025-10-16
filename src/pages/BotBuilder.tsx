@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -122,8 +122,8 @@ function BotBuilderContent() {
     }
   };
 
-  // Combinar variáveis locais e globais
-  const allVariables = [...globalVariables, ...flowVariables];
+  // Combinar variáveis locais e globais (memorizado para evitar re-renders)
+  const allVariables = useMemo(() => [...globalVariables, ...flowVariables], [globalVariables, flowVariables]);
 
   // Determina quais variáveis estão disponíveis até um bloco específico
   const getAvailableVariablesForNode = useCallback((nodeId: string): FlowVariable[] => {
