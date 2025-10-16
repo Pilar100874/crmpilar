@@ -85,22 +85,22 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-slate-900">
-        <Sidebar className="border-r border-slate-800 bg-black">
-          <div className="p-6 border-b border-slate-800 bg-black">
+        <Sidebar className="border-r border-slate-700/50 bg-slate-900">
+          <div className="p-6 border-b border-slate-700/50 bg-slate-900">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600">
+              <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg">
                 <MessageSquare className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="font-bold text-lg text-white">Pilar BOT</h2>
-                <p className="text-xs text-white/70">Atendimento IA</p>
+                <p className="text-xs text-slate-400">Atendimento IA</p>
               </div>
             </div>
           </div>
 
-          <SidebarContent className="bg-black">
+          <SidebarContent className="bg-slate-900">
             <SidebarGroup>
-              <SidebarGroupLabel className="text-white/70 bg-black">Menu Principal</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-slate-400 bg-slate-900 uppercase text-xs">Menu Principal</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
@@ -110,8 +110,8 @@ export default function Layout({ children }: LayoutProps) {
                           to={item.url}
                           className={({ isActive }) =>
                             isActive
-                              ? "bg-cyan-600/20 text-cyan-400 border-l-2 border-cyan-500"
-                              : "text-white hover:bg-slate-900/50"
+                              ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white border-l-2 border-cyan-500 font-medium"
+                              : "text-white hover:bg-slate-800/50 hover:text-cyan-400 transition-colors"
                           }
                         >
                           <item.icon className="w-4 h-4" />
@@ -125,10 +125,10 @@ export default function Layout({ children }: LayoutProps) {
             </SidebarGroup>
           </SidebarContent>
 
-          <div className="p-4 border-t border-slate-800 mt-auto bg-black">
+          <div className="p-4 border-t border-slate-700/50 mt-auto bg-slate-900">
             <Button
               variant="outline"
-              className="w-full justify-start bg-white border-white text-black hover:bg-slate-200 hover:text-black"
+              className="w-full justify-start bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white"
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-2" />
@@ -138,7 +138,7 @@ export default function Layout({ children }: LayoutProps) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col bg-slate-900">
-          <header className="h-14 border-b border-slate-800 flex items-center px-4 bg-slate-950">
+          <header className="h-14 border-b border-slate-700/50 flex items-center px-4 bg-slate-800/50 backdrop-blur-sm">
             <SidebarTrigger className="text-white" />
           </header>
           <div className="flex-1 overflow-auto bg-slate-900">
