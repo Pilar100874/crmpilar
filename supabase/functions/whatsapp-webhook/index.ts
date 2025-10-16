@@ -501,6 +501,8 @@ async function executeNode(
       
       if (mediaUrl) {
         await onResponse(caption, mediaUrl, mediaType);
+        // Aguardar 1 segundo para garantir que a mídia seja enviada antes dos próximos nós
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
       const nextNodes = getNextNodes(node.id);
