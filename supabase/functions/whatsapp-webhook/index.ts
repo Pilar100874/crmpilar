@@ -114,11 +114,20 @@ serve(async (req) => {
 
     // Get or create session context
     const sessionId = `whatsapp_${from}`;
+    console.log("[SESSION] Looking for session:", sessionId);
+    
     const { data: sessionData } = await supabase
       .from("chat_sessions")
       .select("*")
       .eq("session_id", sessionId)
       .maybeSingle();
+
+    console.log("[SESSION] Session data found:", {
+      exists: !!sessionData,
+      hasPendingNode: !!sessionData?.context?.pendingNodeId,
+      pendingNodeId: sessionData?.context?.pendingNodeId,
+      fullContext: JSON.stringify(sessionData?.context)
+    });
 
     let context = sessionData?.context || { vars: {} };
     
@@ -126,6 +135,8 @@ serve(async (req) => {
     if (!context.pendingNodeId) {
       console.log("Fresh conversation start - resetting context");
       context = { vars: {} };
+    } else {
+      console.log("[SESSION] Resuming from pending node:", context.pendingNodeId);
     }
     
     context.vars.userMessage = body;
