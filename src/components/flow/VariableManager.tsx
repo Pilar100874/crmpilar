@@ -30,6 +30,7 @@ export interface FlowVariable {
   type: VariableType;
   description?: string;
   isConstant?: boolean; // Se true, o valor não deve mudar após ser definido
+  defaultValue?: any; // Valor inicial (obrigatório se isConstant for true)
 }
 
 interface VariableManagerProps {
@@ -59,6 +60,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
   const [newVarType, setNewVarType] = useState<VariableType>("text");
   const [newVarDescription, setNewVarDescription] = useState("");
   const [newVarIsConstant, setNewVarIsConstant] = useState(false);
+  const [newVarDefaultValue, setNewVarDefaultValue] = useState("");
 
   const handleAddVariable = () => {
     if (!newVarName.trim()) {
@@ -79,12 +81,50 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
       return;
     }
 
+    // Se for constante, o valor inicial é obrigatório
+    if (newVarIsConstant && !newVarDefaultValue.trim()) {
+      toast.error("Variáveis fixas precisam de um valor inicial");
+      return;
+    }
+
+    // Processar o valor padrão de acordo com o tipo
+    let processedDefaultValue: any = undefined;
+    if (newVarIsConstant && newVarDefaultValue.trim()) {
+      switch (newVarType) {
+        case "number":
+          processedDefaultValue = Number(newVarDefaultValue);
+          if (isNaN(processedDefaultValue)) {
+            toast.error("Valor inválido para tipo número");
+            return;
+          }
+          break;
+        case "boolean":
+          processedDefaultValue = newVarDefaultValue.toLowerCase() === "true";
+          break;
+        case "array":
+          try {
+            processedDefaultValue = JSON.parse(newVarDefaultValue);
+            if (!Array.isArray(processedDefaultValue)) {
+              toast.error("Valor deve ser um array válido (ex: [1, 2, 3])");
+              return;
+            }
+          } catch {
+            toast.error("Valor inválido para array. Use formato JSON (ex: [1, 2, 3])");
+            return;
+          }
+          break;
+        default:
+          processedDefaultValue = newVarDefaultValue.trim();
+      }
+    }
+
     const newVariable: FlowVariable = {
       id: `var_${Date.now()}`,
       name: newVarName,
       type: newVarType,
       description: newVarDescription.trim() || undefined,
       isConstant: newVarIsConstant,
+      defaultValue: processedDefaultValue,
     };
 
     onVariablesChange([...variables, newVariable]);
@@ -92,6 +132,7 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
     setNewVarDescription("");
     setNewVarType("text");
     setNewVarIsConstant(false);
+    setNewVarDefaultValue("");
     toast.success(`Variável "${newVarName}" criada!`);
   };
 
@@ -207,6 +248,35 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                 />
               </div>
 
+              {/* Campo de valor inicial (obrigatório se for constante) */}
+              {newVarIsConstant && (
+                <div className="bg-amber-900/10 border border-amber-600/30 rounded-lg p-3">
+                  <Label htmlFor="var-default" className="text-slate-300 flex items-center gap-2">
+                    <span className="text-amber-500">*</span> Valor Inicial (obrigatório)
+                  </Label>
+                  <Input
+                    id="var-default"
+                    value={newVarDefaultValue}
+                    onChange={(e) => setNewVarDefaultValue(e.target.value)}
+                    placeholder={
+                      newVarType === "text" ? "ex: João Silva" :
+                      newVarType === "number" ? "ex: 42" :
+                      newVarType === "boolean" ? "true ou false" :
+                      newVarType === "array" ? 'ex: ["item1", "item2"]' :
+                      "ex: 2024-01-01"
+                    }
+                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    {newVarType === "number" && "Digite um número válido"}
+                    {newVarType === "boolean" && "Digite 'true' ou 'false'"}
+                    {newVarType === "array" && "Digite um array JSON válido"}
+                    {newVarType === "date" && "Digite uma data válida"}
+                    {newVarType === "text" && "Digite o valor inicial do texto"}
+                  </p>
+                </div>
+              )}
+
               <Button
                 onClick={handleAddVariable}
                 className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white"
@@ -256,6 +326,16 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
                             </div>
                             {variable.description && (
                               <p className="text-xs text-slate-400 mt-1 ml-6">{variable.description}</p>
+                            )}
+                            {variable.isConstant && variable.defaultValue !== undefined && (
+                              <div className="text-xs text-amber-400 mt-1 ml-6 flex items-center gap-1">
+                                <span className="font-semibold">Valor:</span>
+                                <code className="bg-amber-900/20 px-1 py-0.5 rounded">
+                                  {typeof variable.defaultValue === "object" 
+                                    ? JSON.stringify(variable.defaultValue) 
+                                    : String(variable.defaultValue)}
+                                </code>
+                              </div>
                             )}
                           </div>
                           <Button

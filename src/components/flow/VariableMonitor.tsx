@@ -42,30 +42,33 @@ const variableTypeColors = {
 };
 
 export function VariableMonitor({ variables, context }: VariableMonitorProps) {
-  const formatValue = (value: any, type: string): string => {
-    if (value === undefined || value === null) return "-";
+  const formatValue = (value: any, variable: FlowVariable): string => {
+    // Se não houver valor no contexto e a variável tiver valor padrão, usa o padrão
+    const displayValue = value !== undefined && value !== null ? value : variable.defaultValue;
     
-    if (type === "array") {
+    if (displayValue === undefined || displayValue === null) return "-";
+    
+    if (variable.type === "array") {
       try {
-        return Array.isArray(value) ? `[${value.length} itens]` : JSON.stringify(value);
+        return Array.isArray(displayValue) ? `[${displayValue.length} itens]` : JSON.stringify(displayValue);
       } catch {
-        return String(value);
+        return String(displayValue);
       }
     }
     
-    if (type === "boolean") {
-      return value ? "Verdadeiro" : "Falso";
+    if (variable.type === "boolean") {
+      return displayValue ? "Verdadeiro" : "Falso";
     }
     
-    if (type === "date") {
+    if (variable.type === "date") {
       try {
-        return new Date(value).toLocaleString("pt-BR");
+        return new Date(displayValue).toLocaleString("pt-BR");
       } catch {
-        return String(value);
+        return String(displayValue);
       }
     }
     
-    return String(value);
+    return String(displayValue);
   };
 
   const getValueColor = (value: any): string => {
@@ -143,6 +146,13 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                                 {variable.description}
                               </p>
                             )}
+                            {variable.isConstant && variable.defaultValue !== undefined && (
+                              <p className="text-xs text-amber-400 ml-6 mt-0.5">
+                                Padrão: {typeof variable.defaultValue === "object" 
+                                  ? JSON.stringify(variable.defaultValue) 
+                                  : String(variable.defaultValue)}
+                              </p>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge 
@@ -155,9 +165,9 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <code 
-                                className={`text-sm font-mono ${getValueColor(currentValue)} bg-slate-800 px-2 py-1 rounded border border-slate-700`}
+                                className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-slate-800 px-2 py-1 rounded border border-slate-700`}
                               >
-                                {formatValue(currentValue, variable.type)}
+                                {formatValue(currentValue, variable)}
                               </code>
                               {hasValue && (
                                 <Badge 
@@ -165,6 +175,14 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                                   className="text-green-400 border-green-600/50 bg-green-900/20"
                                 >
                                   ✓
+                                </Badge>
+                              )}
+                              {!hasValue && variable.defaultValue !== undefined && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-amber-400 border-amber-600/50 bg-amber-900/20 text-xs"
+                                >
+                                  padrão
                                 </Badge>
                               )}
                             </div>
