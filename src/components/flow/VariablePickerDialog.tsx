@@ -227,79 +227,110 @@ export const VariablePickerDialog = ({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] bg-background">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Database className="w-5 h-5" />
-            Selecionar Variável
-          </DialogTitle>
-          <DialogDescription>
-            Escolha uma variável para inserir no campo
-          </DialogDescription>
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent className="max-w-3xl max-h-[85vh] bg-slate-900 border-slate-700">
+        <DialogHeader className="border-b border-slate-700 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center">
+                <Database className="w-5 h-5 text-cyan-500" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-semibold text-white">
+                  Selecionar Variável
+                </DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Clique para inserir variáveis no campo
+                </DialogDescription>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              Fechar
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <Input
               placeholder="Buscar variável..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
               autoFocus
             />
           </div>
 
           {filteredVariables.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              <Database className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">
+            <div className="py-16 text-center">
+              <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Database className="w-8 h-8 text-slate-600" />
+              </div>
+              <p className="text-sm text-slate-400 mb-1">
                 {searchQuery 
                   ? "Nenhuma variável encontrada"
-                  : "Nenhuma variável disponível. Adicione blocos anteriores que geram variáveis."}
+                  : "Nenhuma variável disponível"}
+              </p>
+              <p className="text-xs text-slate-500">
+                {!searchQuery && "Adicione blocos anteriores que geram variáveis"}
               </p>
             </div>
           ) : (
             <ScrollArea className="h-[400px] pr-4">
               <div className="space-y-2">
                 {filteredVariables.map((item, idx) => (
-                  <Button
+                  <button
                     key={idx}
-                    variant="outline"
-                    className="w-full h-auto p-4 flex flex-col items-start gap-2 hover:bg-accent"
-                    onClick={() => {
-                      onSelectVariable(item.variable.name);
-                      onClose();
-                    }}
+                    className="w-full p-4 rounded-lg border border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all text-left group"
+                    onClick={() => onSelectVariable(item.variable.name)}
                   >
-                    <div className="flex items-center gap-2 w-full">
-                      <code className="text-sm font-mono bg-muted px-2 py-1 rounded flex-1 text-left">
-                        {item.variable.name}
+                    <div className="flex items-center gap-3 mb-2">
+                      <code className="text-sm font-mono text-cyan-400 bg-slate-950/50 px-3 py-1.5 rounded flex-1 group-hover:text-cyan-300">
+                        {"{{"}{item.variable.name}{"}}"}
                       </code>
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs bg-slate-800 text-slate-300 border-slate-700"
+                      >
                         {item.variable.type}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 w-full text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
+                    <div className="flex items-center gap-2 text-xs">
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs border-slate-700 text-slate-400"
+                      >
                         {item.blockName}
                       </Badge>
-                      <span className="flex-1 text-left">
+                      <span className="flex-1 text-slate-500 group-hover:text-slate-400">
                         {item.variable.description}
                       </span>
                     </div>
-                  </Button>
+                  </button>
                 ))}
               </div>
             </ScrollArea>
           )}
         </div>
 
-        <div className="pt-4 border-t">
-          <p className="text-xs text-muted-foreground">
-            💡 A variável será inserida no formato <code className="bg-muted px-1 py-0.5 rounded">{"{{"} variavel {"}"}</code>
-          </p>
+        <div className="pt-4 border-t border-slate-700">
+          <div className="flex items-start gap-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
+            <div className="text-cyan-500 mt-0.5">💡</div>
+            <div className="flex-1">
+              <p className="text-xs text-slate-300 mb-1 font-medium">
+                Modo de inserção múltipla ativo
+              </p>
+              <p className="text-xs text-slate-400">
+                Clique em quantas variáveis quiser. Use o botão "Fechar" quando terminar.
+              </p>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
