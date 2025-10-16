@@ -82,7 +82,7 @@ export const GoodbyeConfigNew = ({ config, handleConfigChange, inputRefs, openVa
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Mostrar Botões Sociais</Label>
+          <Label className="text-white">Mostrar Botões Sociais</Label>
           <Switch 
             checked={config.showSocialButtons === true}
             onCheckedChange={(checked) => handleConfigChange("showSocialButtons", checked)}
@@ -95,28 +95,28 @@ export const GoodbyeConfigNew = ({ config, handleConfigChange, inputRefs, openVa
         {config.showSocialButtons && (
           <div className="ml-4 mt-3 space-y-2 border-l-2 border-muted pl-4">
             <div className="flex items-center justify-between">
-              <Label className="text-sm">WhatsApp</Label>
+              <Label className="text-sm text-white">WhatsApp</Label>
               <Switch 
                 checked={config.socialWhatsApp === true}
                 onCheckedChange={(checked) => handleConfigChange("socialWhatsApp", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-sm">Instagram</Label>
+              <Label className="text-sm text-white">Instagram</Label>
               <Switch 
                 checked={config.socialInstagram === true}
                 onCheckedChange={(checked) => handleConfigChange("socialInstagram", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-sm">Facebook</Label>
+              <Label className="text-sm text-white">Facebook</Label>
               <Switch 
                 checked={config.socialFacebook === true}
                 onCheckedChange={(checked) => handleConfigChange("socialFacebook", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-sm">Website</Label>
+              <Label className="text-sm text-white">Website</Label>
               <Switch 
                 checked={config.socialWebsite === true}
                 onCheckedChange={(checked) => handleConfigChange("socialWebsite", checked)}
