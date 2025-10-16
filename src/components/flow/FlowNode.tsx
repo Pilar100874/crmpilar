@@ -277,15 +277,6 @@ export const FlowNode = memo((props: any) => {
       </ContextMenuTrigger>
       
       <ContextMenuContent className="w-56 bg-slate-800 border-slate-700">
-        <ContextMenuItem
-          onClick={() => data.onShowVariables?.(id)}
-          className="text-slate-200 focus:bg-slate-700 focus:text-white cursor-pointer"
-        >
-          <Database className="w-4 h-4 mr-2 text-cyan-400" />
-          Variáveis Disponíveis
-        </ContextMenuItem>
-        
-        <ContextMenuSeparator className="bg-slate-700" />
         
         <ContextMenuItem
           onClick={() => data.onSetBreakpoint?.(id)}
