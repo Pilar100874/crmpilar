@@ -680,67 +680,24 @@ function BotBuilderContent() {
   const handleFitView = useCallback(() => {
     if (!reactFlowInstance) return;
     
-    // Se um bloco estiver selecionado (propriedades abertas), centralizar esse bloco
-    if (selectedNode) {
-      const node = nodes.find(n => n.id === selectedNode.id);
-      if (node) {
-        // Calcular o offset necessário para compensar o painel de propriedades
-        const propertiesPanelWidth = 384; // w-96 = 384px
-        const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0;
-        
-        // Obter dimensões do nó (usar dimensões padrão se não definidas)
-        const nodeWidth = node.width || 280;
-        const nodeHeight = node.height || 140;
-        
-        // Calcular bounds do nó com margem
-        const padding = 50;
-        const bounds = {
-          x: node.position.x - padding,
-          y: node.position.y - padding,
-          width: nodeWidth + padding * 2,
-          height: nodeHeight + padding * 2,
-        };
-        
-        // Primeiro centralizar o nó
-        reactFlowInstance.fitBounds(bounds, { duration: 300 });
-        
-        // Depois ajustar a posição para compensar o painel de propriedades
-        setTimeout(() => {
-          const viewport = reactFlowInstance.getViewport();
-          const viewportWidth = window.innerWidth;
-          const availableWidth = viewportWidth - blockLibraryWidth - propertiesPanelWidth;
-          
-          // Calcular deslocamento necessário (metade da largura do painel)
-          const offsetX = propertiesPanelWidth / 2 / viewport.zoom;
-          
-          // Mover o viewport para a esquerda
-          reactFlowInstance.setViewport({
-            x: viewport.x + offsetX,
-            y: viewport.y,
-            zoom: viewport.zoom,
-          }, { duration: 200 });
-        }, 320);
-      }
-    } else {
-      // Se nenhum bloco estiver selecionado, centralizar todos
-      const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0;
-      const viewportWidth = window.innerWidth;
-      const availableWidth = viewportWidth - blockLibraryWidth;
-      
-      const leftPaddingRatio = blockLibraryWidth / availableWidth;
-      
-      reactFlowInstance.fitView({ 
-        padding: { 
-          top: 0.15, 
-          bottom: 0.15, 
-          left: 0.15 + leftPaddingRatio, 
-          right: 0.15 
-        },
-        duration: 300,
-        maxZoom: 1.2
-      });
-    }
-  }, [reactFlowInstance, selectedNode, isBlockLibraryExpanded, nodes]);
+    // Centralizar todos os blocos
+    const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0;
+    const viewportWidth = window.innerWidth;
+    const availableWidth = viewportWidth - blockLibraryWidth;
+    
+    const leftPaddingRatio = blockLibraryWidth / availableWidth;
+    
+    reactFlowInstance.fitView({ 
+      padding: { 
+        top: 0.15, 
+        bottom: 0.15, 
+        left: 0.15 + leftPaddingRatio, 
+        right: 0.15 
+      },
+      duration: 300,
+      maxZoom: 1.2
+    });
+  }, [reactFlowInstance, isBlockLibraryExpanded]);
 
   const handleToggleLock = useCallback(() => {
     setIsLocked(prev => !prev);
@@ -791,8 +748,9 @@ function BotBuilderContent() {
                 variant="outline" 
                 size="icon" 
                 onClick={handleFitView}
-                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
-                title="Centralizar"
+                disabled={!!selectedNode}
+                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                title={selectedNode ? "Feche as propriedades para centralizar" : "Centralizar"}
               >
                 <Maximize2 className="h-4 w-4" />
               </Button>
