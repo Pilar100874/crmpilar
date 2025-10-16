@@ -98,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
                 alt="Pilar Logo" 
                 className="h-[73px] w-auto -ml-[1cm]"
               />
-              <div>
+              <div className="-ml-[1cm]">
                 <h2 className="font-bold text-lg text-foreground">Bot</h2>
                 <p className="text-xs text-muted-foreground">Atendimento IA</p>
               </div>
