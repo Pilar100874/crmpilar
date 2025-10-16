@@ -973,12 +973,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     addUserMessage(input);
 
     if (pendingVariable) {
+      // Remove as chaves duplas do nome da variável para normalizar
+      const cleanVarName = pendingVariable.replace(/^\{\{|\}\}$/g, '');
       setContext((prev) => ({
         ...prev,
-        [pendingVariable]: input,
+        [cleanVarName]: input,
       }));
       
-      addSuccessMessage(`Variável "${pendingVariable}" = "${input}"`);
+      addSuccessMessage(`Variável "${cleanVarName}" = "${input}"`);
       setPendingVariable(null);
       setIsWaitingInput(false);
 
@@ -1001,14 +1003,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     addUserMessage(button.text);
     
     if (pendingVariable) {
-      console.log("Saving variable:", pendingVariable, "with value:", button.value);
+      // Remove as chaves duplas do nome da variável para normalizar
+      const cleanVarName = pendingVariable.replace(/^\{\{|\}\}$/g, '');
+      console.log("Saving variable:", cleanVarName, "with value:", button.value);
       setContext((prev) => {
-        const newContext = { ...prev, [pendingVariable]: button.value };
+        const newContext = { ...prev, [cleanVarName]: button.value };
         console.log("Context updated:", newContext);
         return newContext;
       });
       
-      addSuccessMessage(`Variável "${pendingVariable}" = "${button.value}"`);
+      addSuccessMessage(`Variável "${cleanVarName}" = "${button.value}"`);
       setPendingVariable(null);
       setIsWaitingInput(false);
 

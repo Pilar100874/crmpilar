@@ -121,7 +121,9 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                     {variables.map((variable) => {
                       const Icon = variableTypeIcons[variable.type];
                       const typeColor = variableTypeColors[variable.type];
-                      const currentValue = context[variable.name];
+                      // Normaliza o nome da variável removendo chaves duplas para buscar no contexto
+                      const cleanVarName = variable.name.replace(/^\{\{|\}\}$/g, '');
+                      const currentValue = context[cleanVarName];
                       const hasValue = currentValue !== undefined && currentValue !== null;
                       
                       return (
