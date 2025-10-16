@@ -499,16 +499,15 @@ async function executeNode(
 
     case "reply_buttons": {
       console.log(`[REPLY_BUTTONS] Starting - Node ID: ${node.id}`);
-      console.log(`[REPLY_BUTTONS] Config:`, JSON.stringify(config, null, 2));
+      console.log(`[REPLY_BUTTONS] Context pending: ${context.pendingNodeId}, Waiting: ${context.vars.waitingForButton}`);
+      console.log(`[REPLY_BUTTONS] User message: ${context.vars.userMessage}`);
       
       const variable = config.variable || "button_response";
-      console.log(`[REPLY_BUTTONS] Variable: ${variable}, Current value: ${context.vars[variable]}`);
-      console.log(`[REPLY_BUTTONS] Waiting for button: ${context.vars.waitingForButton}`);
       
-      // Check if we're waiting for a response
-      if (!context.vars[variable] && context.vars.waitingForButton !== node.id) {
-        console.log(`[REPLY_BUTTONS] First time - sending buttons`);
-        // First time - send buttons and wait
+      // If we don't have a pending response for THIS specific node, send the buttons
+      if (context.pendingNodeId !== node.id) {
+        console.log(`[REPLY_BUTTONS] First visit - sending buttons`);
+        
         let buttonText = interpolate(config.text || "");
         if (config.buttons && config.buttons.length > 0) {
           buttonText += "\n\nEscolha uma opção:";
@@ -518,70 +517,56 @@ async function executeNode(
         }
         
         if (buttonText) {
-          console.log(`[REPLY_BUTTONS] Sending button text: ${buttonText}`);
           await onResponse(buttonText);
         }
         
         // Mark that we're waiting for response at this node
-        context.vars.waitingForButton = node.id;
-        context.vars.pendingNodeId = node.id;
-        console.log(`[REPLY_BUTTONS] Marked as waiting - stopping execution`);
-        break; // Stop execution here
+        context.pendingNodeId = node.id;
+        console.log(`[REPLY_BUTTONS] Set pending to ${node.id} - stopping execution`);
+        return; // Stop execution and wait for user response
       }
       
-      console.log(`[REPLY_BUTTONS] Processing response`);
-      // We have a response - process it
-      if (context.vars.userMessage && context.vars.waitingForButton === node.id) {
-        const userResponse = context.vars.userMessage.trim();
-        const buttonIndex = parseInt(userResponse) - 1;
-        
-        console.log(`[REPLY_BUTTONS] User response: ${userResponse}, Button index: ${buttonIndex}`);
-        
-        if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
-          context.vars[variable] = config.buttons[buttonIndex].value;
-          console.log(`[REPLY_BUTTONS] Set variable to: ${config.buttons[buttonIndex].value}`);
-        } else {
-          // Try to match by text
-          const matchedButton = config.buttons.find((btn: any) => 
-            btn.text.toLowerCase() === userResponse.toLowerCase()
-          );
-          context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
-          console.log(`[REPLY_BUTTONS] Matched button or set to raw response: ${context.vars[variable]}`);
-        }
-        
-        // Clear waiting state
-        delete context.vars.waitingForButton;
-        delete context.vars.pendingNodeId;
-        console.log(`[REPLY_BUTTONS] Cleared waiting state`);
+      console.log(`[REPLY_BUTTONS] Resuming - processing user response`);
+      
+      // Process the user's response
+      const userResponse = context.vars.userMessage?.trim() || "";
+      const buttonIndex = parseInt(userResponse) - 1;
+      
+      if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
+        context.vars[variable] = config.buttons[buttonIndex].value;
+        console.log(`[REPLY_BUTTONS] Selected button ${buttonIndex}: ${config.buttons[buttonIndex].value}`);
+      } else {
+        const matchedButton = config.buttons.find((btn: any) => 
+          btn.text.toLowerCase() === userResponse.toLowerCase()
+        );
+        context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
+        console.log(`[REPLY_BUTTONS] Matched or default: ${context.vars[variable]}`);
       }
       
-      // Find the edge that matches the button value
-      const outgoingEdges = edges.filter((e: any) => e.source === node.id);
-      const selectedValue = context.vars[variable];
+      // Clear pending state
+      delete context.pendingNodeId;
       
-      console.log(`[REPLY_BUTTONS] Outgoing edges: ${outgoingEdges.length}, Selected value: ${selectedValue}`);
-      
-      // Find which button was selected
-      const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === selectedValue);
-      
-      console.log(`[REPLY_BUTTONS] Selected button index: ${selectedButtonIndex}`);
+      // Find the matching edge based on button selection
+      const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === context.vars[variable]);
       
       if (selectedButtonIndex >= 0) {
-        // Find the edge with the matching sourceHandle
         const buttonHandle = `button_${selectedButtonIndex}`;
-        const matchingEdge = outgoingEdges.find((e: any) => e.sourceHandle === buttonHandle);
+        const matchingEdge = edges.find((e: any) => 
+          e.source === node.id && e.sourceHandle === buttonHandle
+        );
         
-        console.log(`[REPLY_BUTTONS] Button handle: ${buttonHandle}, Found edge: ${!!matchingEdge}`);
+        console.log(`[REPLY_BUTTONS] Looking for edge with handle: ${buttonHandle}, found: ${!!matchingEdge}`);
         
         if (matchingEdge) {
           const nextNode = nodes.find((n: any) => n.id === matchingEdge.target);
           if (nextNode) {
-            console.log(`[REPLY_BUTTONS] Executing next node: ${nextNode.id} (${nextNode.data.type})`);
+            console.log(`[REPLY_BUTTONS] Executing next: ${nextNode.id} (${nextNode.data.type})`);
             await executeNode(nextNode, nodes, edges, context, onResponse);
           }
         }
       }
-      console.log(`[REPLY_BUTTONS] Finished execution`);
+      
+      console.log(`[REPLY_BUTTONS] Finished`);
       break;
     }
 
