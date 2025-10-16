@@ -25,6 +25,7 @@ import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { BotManager } from "@/components/flow/BotManager";
 import { VariableManager, FlowVariable } from "@/components/flow/VariableManager";
 import { VariableMonitor } from "@/components/flow/VariableMonitor";
+import { BlockVariablesDialog } from "@/components/flow/BlockVariablesDialog";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
 
@@ -67,6 +68,11 @@ function BotBuilderContent() {
   const [breakpointNodes, setBreakpointNodes] = useState<Set<string>>(new Set());
   const [skipNodes, setSkipNodes] = useState<Set<string>>(new Set());
   const [simulatorContext, setSimulatorContext] = useState<Record<string, any>>({});
+  const [blockVariablesDialog, setBlockVariablesDialog] = useState<{
+    open: boolean;
+    nodeId: string | null;
+    blockLabel: string;
+  }>({ open: false, nodeId: null, blockLabel: "" });
 
   // Load saved bots on mount
   useEffect(() => {
@@ -86,6 +92,29 @@ function BotBuilderContent() {
       setSavedBots(data || []);
     }
   };
+
+  // Determina quais variáveis estão disponíveis até um bloco específico
+  const getAvailableVariablesForNode = useCallback((nodeId: string): FlowVariable[] => {
+    // Retorna todas as variáveis criadas até este ponto
+    // Em uma implementação mais sofisticada, poderia analisar o fluxo para determinar
+    // quais variáveis foram realmente criadas antes deste bloco
+    return flowVariables;
+  }, [flowVariables]);
+
+  // Handler para mostrar variáveis disponíveis em um bloco
+  const handleShowVariables = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    
+    const blockDef = BLOCK_DEFINITIONS.find(b => b.type === node.data.type);
+    const blockLabel = String(blockDef?.label || node.data.label || "Bloco");
+    
+    setBlockVariablesDialog({
+      open: true,
+      nodeId,
+      blockLabel,
+    });
+  }, [nodes]);
 
   // Highlight node during simulation
   useEffect(() => {
@@ -723,6 +752,7 @@ function BotBuilderContent() {
                       return newSet;
                     });
                   },
+                  onShowVariables: handleShowVariables,
                 },
               }))}
               edges={edges.map((edge) => ({
@@ -809,6 +839,17 @@ function BotBuilderContent() {
             />
           )}
         </div>
+
+        {/* Dialog de variáveis disponíveis no bloco */}
+        <BlockVariablesDialog
+          open={blockVariablesDialog.open}
+          onOpenChange={(open) => setBlockVariablesDialog(prev => ({ ...prev, open }))}
+          blockLabel={blockVariablesDialog.blockLabel}
+          availableVariables={blockVariablesDialog.nodeId 
+            ? getAvailableVariablesForNode(blockVariablesDialog.nodeId) 
+            : []}
+          currentContext={simulatorContext}
+        />
       </div>
     </Layout>
   );
