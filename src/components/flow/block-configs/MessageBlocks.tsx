@@ -5,8 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { VariableTextarea } from "../VariableInput";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Bold, Italic, Code, Heading, ExternalLink } from "lucide-react";
+import { Plus, X, Bold, Italic, Code, Heading, ExternalLink, Upload, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ConfigProps {
   config: any;
@@ -17,6 +20,7 @@ interface ConfigProps {
 
 export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const messages = Array.isArray(config.messages) ? config.messages : [{ text: config.text || "" }];
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const addMessage = () => {
     handleConfigChange("messages", [...messages, { text: "" }]);
@@ -59,6 +63,40 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
       url: config.media?.url || "",
       caption: config.media?.caption || ""
     });
+  };
+
+  const handleMediaFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingMedia(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('bot-media')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('bot-media')
+        .getPublicUrl(data.path);
+
+      handleConfigChange("media", { ...config.media, url: publicUrl });
+      toast.success("Arquivo enviado com sucesso!");
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      toast.error("Erro ao enviar arquivo. Tente novamente.");
+    } finally {
+      setUploadingMedia(false);
+    }
   };
 
   return (
@@ -186,21 +224,53 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
             value={config.media.type || "image"}
             onValueChange={(v) => handleConfigChange("media", { ...config.media, type: v })}
           >
-            <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white">
+            <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white [&>span]:text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
-              <SelectItem value="image">Imagem</SelectItem>
-              <SelectItem value="video">Vídeo</SelectItem>
-              <SelectItem value="gif">GIF</SelectItem>
+              <SelectItem value="image" className="text-white">Imagem</SelectItem>
+              <SelectItem value="video" className="text-white">Vídeo</SelectItem>
+              <SelectItem value="audio" className="text-white">Áudio</SelectItem>
+              <SelectItem value="file" className="text-white">Arquivo</SelectItem>
+              <SelectItem value="gif" className="text-white">GIF</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            value={config.media.url || ""}
-            onChange={(e) => handleConfigChange("media", { ...config.media, url: e.target.value })}
-            placeholder="URL da mídia"
-            className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
-          />
+          
+          {config.media.type === "file" ? (
+            <div className="space-y-2">
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="file"
+                  onChange={handleMediaFileUpload}
+                  disabled={uploadingMedia}
+                  className="bg-slate-900/50 border-slate-700 text-white file:text-white file:bg-slate-800 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:bg-slate-700"
+                />
+                {uploadingMedia && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
+              </div>
+              
+              {config.media.url && (
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className="truncate">{config.media.url}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleConfigChange("media", { ...config.media, url: "" })}
+                    className="h-6 px-2 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Input
+              value={config.media.url || ""}
+              onChange={(e) => handleConfigChange("media", { ...config.media, url: e.target.value })}
+              placeholder="URL da mídia"
+              className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+            />
+          )}
+          
           <Input
             value={config.media.caption || ""}
             onChange={(e) => handleConfigChange("media", { ...config.media, caption: e.target.value })}
@@ -216,6 +286,44 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
 export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
   const mediaType = config.mediaType || "image";
   const url = config.url || "";
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Upload para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('bot-media')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Obter URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('bot-media')
+        .getPublicUrl(data.path);
+
+      handleConfigChange("url", publicUrl);
+      toast.success("Arquivo enviado com sucesso!");
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      toast.error("Erro ao enviar arquivo. Tente novamente.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -239,21 +347,49 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-slate-300">URL da Mídia *</Label>
-        <Input
-          value={url}
-          onChange={(e) => handleConfigChange("url", e.target.value)}
-          placeholder={
-            mediaType === "file" 
-              ? "https://exemplo.com/documento.pdf" 
-              : "https://exemplo.com/imagem.jpg"
-          }
-          className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
-        />
-        {mediaType === "file" && !url && (
-          <p className="text-xs text-amber-400">
-            ⚠️ Arquivo é obrigatório quando o tipo é "Arquivo"
-          </p>
+        <Label className="text-slate-300">
+          {mediaType === "file" ? "Arquivo *" : "URL da Mídia *"}
+        </Label>
+        
+        {mediaType === "file" ? (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Input
+                type="file"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="bg-slate-900/50 border-slate-700 text-white file:text-white file:bg-slate-800 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:bg-slate-700"
+              />
+              {uploading && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
+            </div>
+            
+            {url && (
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span className="truncate">{url}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleConfigChange("url", "")}
+                  className="h-6 px-2 text-slate-400 hover:text-white"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+            
+            {!url && (
+              <p className="text-xs text-amber-400">
+                ⚠️ Faça upload de um arquivo
+              </p>
+            )}
+          </div>
+        ) : (
+          <Input
+            value={url}
+            onChange={(e) => handleConfigChange("url", e.target.value)}
+            placeholder="https://exemplo.com/imagem.jpg"
+            className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+          />
         )}
       </div>
 
