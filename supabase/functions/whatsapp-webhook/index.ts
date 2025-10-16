@@ -464,6 +464,59 @@ async function executeNode(
       break;
     }
 
+    case "reply_buttons": {
+      // Send media if configured
+      if (config.hasMedia && config.mediaUrl) {
+        const mediaUrl = interpolate(config.mediaUrl);
+        const mediaType = "image";
+        await onResponse("", mediaUrl, mediaType);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Send text message with buttons as simple text list
+      let buttonText = interpolate(config.text || "");
+      if (config.buttons && config.buttons.length > 0) {
+        buttonText += "\n\nEscolha uma opção:";
+        config.buttons.forEach((btn: any, idx: number) => {
+          buttonText += `\n${idx + 1}. ${btn.text}`;
+        });
+      }
+      
+      if (buttonText) {
+        await onResponse(buttonText);
+      }
+      
+      const nextNodes = getNextNodes(node.id);
+      for (const next of nextNodes) {
+        await executeNode(next, nodes, edges, context, onResponse);
+      }
+      break;
+    }
+
+    case "list_buttons": {
+      // Send text message with list items as simple text
+      let listText = interpolate(config.text || config.headerText || "");
+      if (config.items && config.items.length > 0) {
+        listText += "\n\nEscolha uma opção:";
+        config.items.forEach((item: any, idx: number) => {
+          listText += `\n${idx + 1}. ${item.title}`;
+          if (item.description) {
+            listText += ` - ${item.description}`;
+          }
+        });
+      }
+      
+      if (listText) {
+        await onResponse(listText);
+      }
+      
+      const nextNodes = getNextNodes(node.id);
+      for (const next of nextNodes) {
+        await executeNode(next, nodes, edges, context, onResponse);
+      }
+      break;
+    }
+
     default:
       console.log(`Node type ${data.type} - passing through`);
       const nextNodes = getNextNodes(node.id);
