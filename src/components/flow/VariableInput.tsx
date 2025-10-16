@@ -32,12 +32,10 @@ VariableInput.displayName = "VariableInput";
 
 export const VariableTextarea = forwardRef<HTMLTextAreaElement, VariableTextareaProps>(
   ({ onVariableRequest, className, rows = 3, ...props }, ref) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
     return (
       <div className="relative">
         <Textarea
-          ref={textareaRef}
+          ref={ref}
           className={cn("pr-10", className)}
           rows={rows}
           {...props}
