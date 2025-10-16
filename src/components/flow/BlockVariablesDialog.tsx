@@ -86,7 +86,6 @@ export function BlockVariablesDialog({
       <SheetContent 
         side="right" 
         className="w-[600px] sm:w-[700px] bg-slate-900 border-slate-700 overflow-y-auto z-[100]"
-        onInteractOutside={(e) => e.preventDefault()}
       >
         <SheetHeader>
           <SheetTitle className="text-white flex items-center gap-2">
