@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { saveProject, getProjects } from "@/lib/projectStorage";
 import Preview3DDialog from "./Preview3DDialog";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo_branco.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
