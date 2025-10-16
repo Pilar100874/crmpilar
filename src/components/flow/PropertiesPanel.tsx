@@ -74,16 +74,16 @@ export const PropertiesPanel = ({
 
   if (!selectedNode) {
     return (
-      <div className="w-96 bg-gradient-to-b from-slate-900 via-slate-900/98 to-slate-800/95 backdrop-blur-sm border-l border-cyan-500/30 p-6 shadow-2xl">
+      <div className="w-96 bg-card backdrop-blur-sm border-l border-border p-6 shadow-lg">
         <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/20 border-2 border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/20 border-2 border-cyan-500/40 flex items-center justify-center shadow-lg">
             <span className="text-3xl">👆</span>
           </div>
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-foreground">
               Selecione um Bloco
             </p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               Clique em qualquer bloco no canvas para editar suas propriedades
             </p>
           </div>

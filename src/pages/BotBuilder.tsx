@@ -717,17 +717,17 @@ function BotBuilderContent() {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-between shadow-lg">
+      <div className="h-full flex flex-col bg-white">
+        <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-6">
             <div>
-              <h2 className="text-2xl font-bold text-white">CRIAR BOT</h2>
-              <p className="text-sm text-slate-400">
+              <h2 className="text-2xl font-bold text-foreground">CRIAR BOT</h2>
+              <p className="text-sm text-muted-foreground">
                 Arraste blocos para criar seu fluxo
               </p>
             </div>
             
-            <div className="flex gap-1 border-l border-slate-700 pl-6">
+            <div className="flex gap-1 border-l border-border pl-6">
               <Button 
                 variant="outline" 
                 size="icon" 
@@ -741,7 +741,7 @@ function BotBuilderContent() {
                 variant="outline" 
                 size="icon" 
                 onClick={handleZoomIn}
-                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
+                className="h-9 w-9"
                 title="Aumentar zoom"
               >
                 <ZoomIn className="h-4 w-4" />
@@ -750,7 +750,7 @@ function BotBuilderContent() {
                 variant="outline" 
                 size="icon" 
                 onClick={handleZoomOut}
-                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
+                className="h-9 w-9"
                 title="Diminuir zoom"
               >
                 <ZoomOut className="h-4 w-4" />
@@ -760,7 +760,7 @@ function BotBuilderContent() {
                 size="icon" 
                 onClick={handleFitView}
                 disabled={!!selectedNode}
-                className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-9 w-9 disabled:opacity-50 disabled:cursor-not-allowed"
                 title={selectedNode ? "Feche as propriedades para centralizar" : "Centralizar"}
               >
                 <Maximize2 className="h-4 w-4" />
@@ -769,7 +769,7 @@ function BotBuilderContent() {
                 variant="outline" 
                 size="icon" 
                 onClick={handleToggleLock}
-                className={`h-9 w-9 border-slate-700 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : 'bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white'}`}
+                className={`h-9 w-9 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
                 title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
               >
                 {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
@@ -804,15 +804,15 @@ function BotBuilderContent() {
               onDeleteBot={handleDeleteBot}
               onNameChange={setCurrentBotName}
             />
-            <Button variant="outline" size="sm" onClick={handleImport} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
+            <Button variant="outline" size="sm" onClick={handleImport}>
               <Upload className="w-4 h-4 mr-2" />
               Importar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
+            <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSave} className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white">
+            <Button variant="outline" size="sm" onClick={handleSave}>
               <Save className="w-4 h-4 mr-2" />
               Salvar
             </Button>
@@ -937,7 +937,7 @@ function BotBuilderContent() {
               nodesFocusable={!isLocked}
               edgesFocusable={!isLocked}
               fitView
-              className="bg-slate-900"
+              className="bg-background"
               deleteKeyCode={isLocked ? null : "Delete"}
               connectOnClick={false}
               autoPanOnConnect={false}
@@ -957,7 +957,7 @@ function BotBuilderContent() {
                 variant={BackgroundVariant.Dots} 
                 gap={20} 
                 size={1.5}
-                color="#334155"
+                color="#cbd5e1"
                 className="opacity-40"
               />
               <MiniMap
@@ -974,14 +974,14 @@ function BotBuilderContent() {
                     ? "#f59e0b"
                     : "#475569";
                 }}
-                className="bg-slate-800/90 border border-slate-700/50 rounded-lg shadow-xl"
-                maskColor="rgba(15, 23, 42, 0.8)"
+                className="bg-card border border-border rounded-lg shadow-lg"
+                maskColor="rgba(255, 255, 255, 0.8)"
               />
             </ReactFlow>
           </div>
 
           {showSimulator && (
-            <div className="w-96 flex flex-col bg-slate-800/95 backdrop-blur-sm border-l border-slate-700/50">
+            <div className="w-96 flex flex-col bg-card backdrop-blur-sm border-l border-border">
               <FlowSimulator
                 nodes={nodes}
                 edges={edges}
