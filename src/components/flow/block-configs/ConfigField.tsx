@@ -20,11 +20,11 @@ export const ConfigSection = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <div className={cn("space-y-3 p-3 rounded-lg bg-gradient-to-br from-slate-800/60 to-slate-800/40 border border-cyan-500/20 shadow-md", className)}>
+  <div className={cn("space-y-3 p-3 rounded-lg bg-slate-50 border border-slate-200", className)}>
     {title && (
-      <div className="flex items-center gap-2 pb-2 border-b border-cyan-500/20">
-        {icon && <div className="text-cyan-400">{icon}</div>}
-        <h4 className="text-sm font-bold text-white">{title}</h4>
+      <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+        {icon && <div className="text-slate-700">{icon}</div>}
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
       </div>
     )}
     {children}
@@ -54,14 +54,14 @@ export const ConfigInput = ({
   className?: string;
 }) => (
   <div className="space-y-2">
-    <Label className="text-white text-sm font-semibold flex items-center gap-2">
-      <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+    <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+      <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
       {label}
-      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-cyan-500/40 text-cyan-400">obrigatório</Badge>}
+      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-blue-200 text-blue-700">obrigatório</Badge>}
     </Label>
     <div className="relative">
       {prefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400 font-bold">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
           {prefix}
         </span>
       )}
@@ -71,15 +71,15 @@ export const ConfigInput = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          "bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium",
+          "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20",
           prefix && "pl-7",
           className
         )}
       />
     </div>
     {info && (
-      <p className="text-xs text-slate-400 flex items-start gap-1.5 bg-blue-500/5 p-2 rounded border border-blue-500/20">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-400" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
         {info}
       </p>
     )}
@@ -109,10 +109,10 @@ export const ConfigTextarea = ({
   monospace?: boolean;
 }) => (
   <div className="space-y-2">
-    <Label className="text-white text-sm font-semibold flex items-center gap-2">
-      <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+    <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+      <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
       {label}
-      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-cyan-500/40 text-cyan-400">obrigatório</Badge>}
+      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-blue-200 text-blue-700">obrigatório</Badge>}
     </Label>
     <Textarea
       value={value}
@@ -120,14 +120,14 @@ export const ConfigTextarea = ({
       placeholder={placeholder}
       rows={rows}
       className={cn(
-        "bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner resize-none",
+        "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none",
         monospace && "font-mono text-xs",
         className
       )}
     />
     {info && (
-      <p className="text-xs text-slate-400 flex items-start gap-1.5 bg-blue-500/5 p-2 rounded border border-blue-500/20">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-400" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
         {info}
       </p>
     )}
@@ -153,26 +153,26 @@ export const ConfigSelect = ({
   placeholder?: string;
 }) => (
   <div className="space-y-2">
-    <Label className="text-white text-sm font-semibold flex items-center gap-2">
-      <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+    <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+      <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
       {label}
-      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-cyan-500/40 text-cyan-400">obrigatório</Badge>}
+      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-blue-200 text-blue-700">obrigatório</Badge>}
     </Label>
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="bg-slate-900/80 border-slate-700/50 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner">
+      <SelectTrigger className="bg-white border-slate-200 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-slate-900 border-slate-700 text-white">
+      <SelectContent className="bg-white border-slate-200 text-slate-900">
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value} className="focus:bg-slate-800 focus:text-white">
+          <SelectItem key={option.value} value={option.value} className="focus:bg-slate-100 focus:text-slate-900">
             {option.label}
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
     {info && (
-      <p className="text-xs text-slate-400 flex items-start gap-1.5 bg-blue-500/5 p-2 rounded border border-blue-500/20">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-400" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
         {info}
       </p>
     )}
@@ -192,20 +192,20 @@ export const ConfigSwitch = ({
   info?: string;
 }) => (
   <div className="space-y-2">
-    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-cyan-500/30 transition-colors">
-      <Label className="text-white text-sm font-semibold flex items-center gap-2 cursor-pointer">
-        <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+    <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-slate-200 hover:border-blue-300 transition-colors">
+      <Label className="text-slate-900 text-sm font-medium flex items-center gap-2 cursor-pointer">
+        <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
         {label}
       </Label>
       <Switch 
         checked={checked} 
         onCheckedChange={onChange}
-        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
+        className="data-[state=checked]:bg-blue-600"
       />
     </div>
     {info && (
-      <p className="text-xs text-slate-400 flex items-start gap-1.5 bg-blue-500/5 p-2 rounded border border-blue-500/20">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-400" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
         {info}
       </p>
     )}
@@ -221,9 +221,9 @@ export const ConfigInfo = ({
   variant?: "info" | "warning" | "success";
 }) => {
   const variants = {
-    info: "bg-blue-500/5 border-blue-500/30 text-blue-300",
-    warning: "bg-yellow-500/5 border-yellow-500/30 text-yellow-300",
-    success: "bg-green-500/5 border-green-500/30 text-green-300"
+    info: "bg-blue-50 border-blue-200 text-blue-700",
+    warning: "bg-yellow-50 border-yellow-200 text-yellow-700",
+    success: "bg-green-50 border-green-200 text-green-700"
   };
 
   return (
