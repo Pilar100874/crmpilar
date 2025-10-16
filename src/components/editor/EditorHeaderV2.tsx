@@ -207,7 +207,7 @@ const EditorHeaderV2 = ({ onBack }: EditorHeaderV2Props) => {
 
         {/* Logo/Title */}
         <div className="flex items-center gap-2 shrink-0">
-          <img src={logo} alt="PilarCup" className="h-8 object-contain" />
+          <img src={logo} alt="PilarCup" className="h-10 object-contain" />
         </div>
 
         {/* Project name */}
