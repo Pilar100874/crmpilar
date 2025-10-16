@@ -240,10 +240,46 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode }: FlowSimulatorPr
         break;
 
       case "goodbye":
-        const goodbyeText = interpolateVariables(config.text || "Até logo!", context);
+        const goodbyeText = interpolateVariables(config.message || config.text || "Até logo!", context);
         addBotMessage(goodbyeText, node.id);
         
-        if (config.showStartAgain !== false) {
+        // Exibir botões sociais se configurado
+        if (config.showSocialButtons) {
+          safeSetTimeout(() => {
+            const socialLinks = JSON.parse(localStorage.getItem("socialLinks") || "{}");
+            const buttons = [];
+            
+            if (config.socialWhatsApp && socialLinks.whatsapp) {
+              buttons.push({ text: "📱 WhatsApp", value: socialLinks.whatsapp });
+            }
+            if (config.socialInstagram && socialLinks.instagram) {
+              buttons.push({ text: "📷 Instagram", value: socialLinks.instagram });
+            }
+            if (config.socialFacebook && socialLinks.facebook) {
+              buttons.push({ text: "👥 Facebook", value: socialLinks.facebook });
+            }
+            if (config.socialWebsite && socialLinks.website) {
+              buttons.push({ text: "🌐 Website", value: socialLinks.website });
+            }
+            
+            if (buttons.length > 0) {
+              const messageId = `msg-${Date.now()}-social`;
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: messageId,
+                  sender: "bot",
+                  text: "Nos acompanhe em nossas redes sociais:",
+                  timestamp: new Date(),
+                  nodeId: node.id,
+                  buttons,
+                },
+              ]);
+            }
+          }, 500);
+        }
+        
+        if (config.showStartAgainButton !== false) {
           safeSetTimeout(() => {
             addSystemMessage("💬 Conversa finalizada. Clique em 'Reiniciar' para começar novamente.");
           }, 1000);

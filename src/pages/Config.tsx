@@ -1,12 +1,33 @@
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Webhook, Key, Bell, Shield } from "lucide-react";
+import { Webhook, Key, Bell, Shield, Share2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Config() {
+  const [socialLinks, setSocialLinks] = useState({
+    whatsapp: "",
+    instagram: "",
+    facebook: "",
+    website: ""
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("socialLinks");
+    if (saved) {
+      setSocialLinks(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleSaveSocialLinks = () => {
+    localStorage.setItem("socialLinks", JSON.stringify(socialLinks));
+    toast.success("Links das redes sociais salvos!");
+  };
+
   return (
     <Layout>
       <div className="p-8 space-y-8 animate-fade-in">
@@ -153,6 +174,61 @@ export default function Config() {
               <Button variant="outline" className="w-full bg-slate-900 border-slate-700 text-white hover:bg-slate-700">
                 Exportar Dados
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-primary" />
+                <CardTitle className="text-white">Redes Sociais</CardTitle>
+              </div>
+              <CardDescription className="text-white/70">
+                Configure os links das suas redes sociais para o bloco de despedida
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp" className="text-white">WhatsApp</Label>
+                <Input
+                  id="whatsapp"
+                  placeholder="https://wa.me/5511999999999"
+                  value={socialLinks.whatsapp}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, whatsapp: e.target.value })}
+                  className="bg-slate-900 border-slate-700 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="instagram" className="text-white">Instagram</Label>
+                <Input
+                  id="instagram"
+                  placeholder="https://instagram.com/seu_perfil"
+                  value={socialLinks.instagram}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
+                  className="bg-slate-900 border-slate-700 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="facebook" className="text-white">Facebook</Label>
+                <Input
+                  id="facebook"
+                  placeholder="https://facebook.com/sua_pagina"
+                  value={socialLinks.facebook}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
+                  className="bg-slate-900 border-slate-700 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="website" className="text-white">Website</Label>
+                <Input
+                  id="website"
+                  placeholder="https://seusite.com"
+                  value={socialLinks.website}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                  className="bg-slate-900 border-slate-700 text-white"
+                />
+              </div>
+              <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
             </CardContent>
           </Card>
         </div>
