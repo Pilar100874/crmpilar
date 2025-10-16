@@ -96,9 +96,9 @@ export default function Layout({ children }: LayoutProps) {
               <img 
                 src={logo} 
                 alt="Pilar Logo" 
-                className="h-[73px] w-auto -ml-[1cm]"
+                className="h-[73px] w-auto -ml-[1.5cm]"
               />
-              <div className="-ml-[1cm]">
+              <div className="-ml-[1.5cm]">
                 <h2 className="font-bold text-lg text-foreground">Bot</h2>
                 <p className="text-xs text-muted-foreground">Atendimento IA</p>
               </div>
