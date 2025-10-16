@@ -178,7 +178,8 @@ export const FlowNode = memo((props: any) => {
       <Handle 
         type="target" 
         position={Position.Left} 
-        className="!bg-cyan-500 !w-2.5 !h-2.5 !border-2 !border-white !shadow-sm" 
+        className="!bg-cyan-500 !w-[5px] !h-[5px] !border !border-white !shadow-sm !top-3" 
+        style={{ top: '12px' }}
       />
       
       <div className="p-3">
@@ -218,7 +219,7 @@ export const FlowNode = memo((props: any) => {
                   type="source"
                   position={Position.Right}
                   id={cond.id}
-                  className="!bg-green-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                  className="!bg-green-500 !w-[5px] !h-[5px] !relative !transform-none !top-auto !right-0 !border !border-white !shadow-sm group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -232,7 +233,7 @@ export const FlowNode = memo((props: any) => {
                   type="source"
                   position={Position.Right}
                   id={dynamicHandles.fallback.id}
-                  className="!bg-pink-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                  className="!bg-pink-500 !w-[5px] !h-[5px] !relative !transform-none !top-auto !right-0 !border !border-white !shadow-sm group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -246,7 +247,7 @@ export const FlowNode = memo((props: any) => {
                   type="source"
                   position={Position.Right}
                   id={kw.id}
-                  className="!bg-blue-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                  className="!bg-blue-500 !w-[5px] !h-[5px] !relative !transform-none !top-auto !right-0 !border !border-white !shadow-sm group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -260,7 +261,7 @@ export const FlowNode = memo((props: any) => {
                   type="source"
                   position={Position.Right}
                   id={btn.id}
-                  className="!bg-purple-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                  className="!bg-purple-500 !w-[5px] !h-[5px] !relative !transform-none !top-auto !right-0 !border !border-white !shadow-sm group-hover:!scale-125 !transition-transform"
                   style={{ position: 'relative' }}
                 />
               </div>
@@ -280,7 +281,7 @@ export const FlowNode = memo((props: any) => {
                   type="source"
                   position={Position.Right}
                   id={path.id}
-                  className={`!w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform ${
+                  className={`!w-[5px] !h-[5px] !relative !transform-none !top-auto !right-0 !border !border-white !shadow-sm group-hover:!scale-125 !transition-transform ${
                     path.color === 'bg-green-500' 
                       ? '!bg-green-500' 
                       : '!bg-red-500'
@@ -293,16 +294,16 @@ export const FlowNode = memo((props: any) => {
         )}
       </div>
       
-      {/* Handle padrão para blocos sem saídas dinâmicas - botão circular delicado */}
+      {/* Handle padrão para blocos sem saídas dinâmicas - botão circular menor e alinhado */}
       {!dynamicHandles && (
-        <div className="absolute -right-2.5 top-1/2 -translate-y-1/2">
+        <div className="absolute -right-2 top-3">
           <Handle 
             type="source" 
             position={Position.Right} 
             className="!static !transform-none"
           >
-            <div className="w-7 h-7 rounded-full bg-cyan-500 border-2 border-white shadow-md flex items-center justify-center hover:bg-cyan-600 transition-all duration-200 cursor-pointer hover:scale-110">
-              <ArrowRight className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+            <div className="w-6 h-6 rounded-full bg-cyan-500 border-2 border-white shadow-sm flex items-center justify-center hover:bg-cyan-600 transition-all duration-200 cursor-pointer hover:scale-110">
+              <ArrowRight className="w-3 h-3 text-white" strokeWidth={2.5} />
             </div>
           </Handle>
         </div>
