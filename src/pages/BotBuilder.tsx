@@ -26,6 +26,7 @@ import { BotManager } from "@/components/flow/BotManager";
 import { VariableManager, FlowVariable } from "@/components/flow/VariableManager";
 import { VariableMonitor } from "@/components/flow/VariableMonitor";
 import { BlockVariablesDialog } from "@/components/flow/BlockVariablesDialog";
+import { ErrorDialog } from "@/components/flow/ErrorDialog";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
 
@@ -74,6 +75,11 @@ function BotBuilderContent() {
     nodeId: string | null;
     blockLabel: string;
   }>({ open: false, nodeId: null, blockLabel: "" });
+  const [errorDialog, setErrorDialog] = useState<{
+    open: boolean;
+    title?: string;
+    description: string;
+  }>({ open: false, description: "" });
 
   // Load saved bots on mount
   useEffect(() => {
@@ -89,7 +95,11 @@ function BotBuilderContent() {
 
     if (error) {
       console.error("Error loading bots:", error);
-      toast.error("Erro ao carregar bots");
+      setErrorDialog({
+        open: true,
+        title: "Erro ao Carregar Bots",
+        description: "Não foi possível carregar a lista de bots. Por favor, tente novamente.",
+      });
     } else {
       setSavedBots(data || []);
     }
@@ -118,7 +128,11 @@ function BotBuilderContent() {
       setGlobalVariables(convertedVariables);
     } catch (error) {
       console.error("Error loading global variables:", error);
-      toast.error("Erro ao carregar variáveis globais");
+      setErrorDialog({
+        open: true,
+        title: "Erro ao Carregar Variáveis",
+        description: "Não foi possível carregar as variáveis globais. Por favor, tente novamente.",
+      });
     }
   };
 
@@ -229,14 +243,25 @@ function BotBuilderContent() {
   };
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    if (showSimulator) {
+      setErrorDialog({
+        open: true,
+        title: "Simulação em Andamento",
+        description: "Por favor, feche o simulador antes de editar o fluxo.",
+      });
+      return;
+    }
     // Um clique já abre o painel de propriedades
     setSelectedNode(node);
     setShowSimulator(false); // Fecha o simulador se estiver aberto
-  }, []);
+  }, [showSimulator]);
 
   const onPaneClick = useCallback(() => {
+    if (showSimulator) {
+      return;
+    }
     setSelectedNode(null);
-  }, []);
+  }, [showSimulator]);
 
   const handleUpdateNode = useCallback(
     (nodeId: string, data: Partial<FlowNodeData>) => {
@@ -268,7 +293,11 @@ function BotBuilderContent() {
       // Não permitir deletar o bloco Start
       const nodeToDelete = nodes.find(n => n.id === nodeId);
       if (nodeToDelete && (nodeToDelete.data as any).type === "start") {
-        toast.error("O bloco Start não pode ser excluído!");
+        setErrorDialog({
+          open: true,
+          title: "Ação não Permitida",
+          description: "O bloco Start não pode ser excluído!",
+        });
         return;
       }
       
@@ -338,9 +367,11 @@ function BotBuilderContent() {
     // Mostrar mensagem de erro
     const nodeData = firstDisconnected.data as any;
     const blockLabel = nodeData.label || "Bloco";
-    toast.error(
-      `${blockLabel} está desconectado! ${disconnectedNodes.length > 1 ? `Mais ${disconnectedNodes.length - 1} bloco(s) também estão desconectados.` : ''}`
-    );
+    setErrorDialog({
+      open: true,
+      title: "Blocos Desconectados",
+      description: `${blockLabel} está desconectado! ${disconnectedNodes.length > 1 ? `Mais ${disconnectedNodes.length - 1} bloco(s) também estão desconectados.` : ''}`,
+    });
   }, [reactFlowInstance, setNodes]);
 
   const handleNewBot = useCallback(() => {
@@ -368,7 +399,11 @@ function BotBuilderContent() {
 
   const handleSave = useCallback(async () => {
     if (!currentBotName.trim()) {
-      toast.error("Por favor, dê um nome ao bot");
+      setErrorDialog({
+        open: true,
+        title: "Nome Obrigatório",
+        description: "Por favor, dê um nome ao bot antes de salvar.",
+      });
       return;
     }
 
@@ -416,7 +451,11 @@ function BotBuilderContent() {
 
     if (error) {
       console.error("Error saving bot:", error);
-      toast.error("Erro ao salvar bot");
+      setErrorDialog({
+        open: true,
+        title: "Erro ao Salvar",
+        description: "Não foi possível salvar o bot. Por favor, tente novamente.",
+      });
     } else {
       toast.success("Bot salvo com sucesso!");
       loadSavedBots();
@@ -432,7 +471,11 @@ function BotBuilderContent() {
 
     if (error) {
       console.error("Error loading bot:", error);
-      toast.error("Erro ao carregar bot");
+      setErrorDialog({
+        open: true,
+        title: "Erro ao Carregar Bot",
+        description: "Não foi possível carregar o bot. Por favor, tente novamente.",
+      });
       return;
     }
 
@@ -482,7 +525,11 @@ function BotBuilderContent() {
 
     if (error) {
       console.error("Error toggling active:", error);
-      toast.error("Erro ao ativar/desativar bot");
+      setErrorDialog({
+        open: true,
+        title: "Erro ao Atualizar Status",
+        description: "Não foi possível ativar/desativar o bot. Por favor, tente novamente.",
+      });
     } else {
       toast.success(!currentActive ? "Bot ativado!" : "Bot desativado!");
       loadSavedBots();
@@ -499,7 +546,11 @@ function BotBuilderContent() {
 
     if (error) {
       console.error("Error deleting bot:", error);
-      toast.error("Erro ao excluir bot");
+      setErrorDialog({
+        open: true,
+        title: "Erro ao Excluir",
+        description: "Não foi possível excluir o bot. Por favor, tente novamente.",
+      });
     } else {
       toast.success("Bot excluído!");
       loadSavedBots();
@@ -544,7 +595,11 @@ function BotBuilderContent() {
           }
           toast.success("Fluxo importado!");
         } catch (error) {
-          toast.error("Erro ao importar fluxo");
+          setErrorDialog({
+            open: true,
+            title: "Erro ao Importar",
+            description: "Não foi possível importar o fluxo. Verifique se o arquivo está correto.",
+          });
         }
       };
       reader.readAsText(file);
@@ -560,7 +615,11 @@ function BotBuilderContent() {
     }
     
     if (nodes.length === 0) {
-      toast.error("Adicione blocos ao fluxo antes de testar");
+      setErrorDialog({
+        open: true,
+        title: "Fluxo Vazio",
+        description: "Adicione blocos ao fluxo antes de testar.",
+      });
       return;
     }
     
@@ -569,7 +628,11 @@ function BotBuilderContent() {
       return nodeData.type === "start";
     });
     if (!hasStart) {
-      toast.error("Adicione um bloco 'Start' para iniciar o teste");
+      setErrorDialog({
+        open: true,
+        title: "Bloco Start Ausente",
+        description: "Adicione um bloco 'Start' para iniciar o teste.",
+      });
       return;
     }
 
@@ -806,10 +869,11 @@ function BotBuilderContent() {
               onNodeClick={onNodeClick}
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
-              nodesDraggable={!isLocked}
-              nodesConnectable={!isLocked}
-              nodesFocusable={!isLocked}
-              edgesFocusable={!isLocked}
+              nodesDraggable={!isLocked && !showSimulator}
+              nodesConnectable={!isLocked && !showSimulator}
+              nodesFocusable={!isLocked && !showSimulator}
+              edgesFocusable={!isLocked && !showSimulator}
+              elementsSelectable={!showSimulator}
               fitView
               className="bg-slate-900"
               deleteKeyCode={isLocked ? null : "Delete"}
@@ -880,6 +944,14 @@ function BotBuilderContent() {
             ? getAvailableVariablesForNode(blockVariablesDialog.nodeId) 
             : []}
           currentContext={simulatorContext}
+        />
+
+        {/* Dialog de erro */}
+        <ErrorDialog
+          open={errorDialog.open}
+          onClose={() => setErrorDialog({ open: false, description: "" })}
+          title={errorDialog.title}
+          description={errorDialog.description}
         />
       </div>
     </Layout>
