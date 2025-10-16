@@ -280,7 +280,7 @@ export const PropertiesPanel = ({
       case "global_keywords":
         return <BlockConfigs.GlobalKeywordsConfig {...configProps} />;
       case "formulas":
-        return <BlockConfigs.FormulasConfig {...configProps} />;
+        return <BlockConfigs.FormulasConfigNew {...configProps} />;
       case "jump_to":
         return <BlockConfigs.JumpToConfig {...configProps} />;
       case "lead_scoring":
