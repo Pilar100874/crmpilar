@@ -161,38 +161,38 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
         <Button
           variant="outline"
           size="icon"
-          className="h-9 w-9 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white"
+          className="h-9 w-9 bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
           title="Gerenciar variáveis"
         >
           <Variable className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[500px] sm:w-[600px] bg-slate-900 border-slate-700">
+      <SheetContent className="w-[500px] sm:w-[600px] bg-white border-slate-200">
         <SheetHeader>
-          <SheetTitle className="text-white flex items-center gap-2">
-            <Variable className="h-5 w-5 text-cyan-500" />
+          <SheetTitle className="text-slate-900 flex items-center gap-2">
+            <Variable className="h-5 w-5 text-blue-600" />
             Gerenciar Variáveis Locais
           </SheetTitle>
-          <SheetDescription className="text-slate-400">
+          <SheetDescription className="text-slate-600">
             Crie e gerencie variáveis locais do seu bot. Para variáveis compartilhadas entre bots, use o menu "Variáveis Globais".
           </SheetDescription>
         </SheetHeader>
 
         {/* Aviso sobre variáveis globais disponíveis */}
         {globalVariables.length > 0 && (
-          <div className="mt-4 p-3 bg-green-900/20 border border-green-600/30 rounded-lg">
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <Globe className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-semibold text-green-400">
+              <Globe className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-700">
                 {globalVariables.length} variável{globalVariables.length > 1 ? 'is' : ''} global{globalVariables.length > 1 ? 'is' : ''} disponível{globalVariables.length > 1 ? 'is' : ''}
               </span>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-600">
               Variáveis globais estão automaticamente disponíveis em todos os bots:
             </p>
             <div className="mt-2 flex flex-wrap gap-1">
               {globalVariables.map(gv => (
-                <span key={gv.id} className="text-xs bg-green-900/30 text-green-400 px-2 py-0.5 rounded border border-green-600/30">
+                <span key={gv.id} className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded border border-green-200">
                   {`{{${gv.name}}}`}
                 </span>
               ))}
@@ -202,9 +202,9 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
 
         <div className="mt-6 space-y-6">
           {/* Adicionar nova variável */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 space-y-4">
-            <h3 className="text-sm font-semibold text-white">Adicionar Nova Variável Local</h3>
-            <p className="text-xs text-slate-400 -mt-2">Disponível apenas neste bot</p>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-slate-900">Adicionar Nova Variável Local</h3>
+            <p className="text-xs text-slate-600 -mt-2">Disponível apenas neste bot</p>
             
             <div className="space-y-3">
               <div>
@@ -321,12 +321,12 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
 
           {/* Lista de variáveis */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-white">Variáveis Locais Existentes ({variables.length})</h3>
+            <h3 className="text-sm font-semibold text-slate-900">Variáveis Locais Existentes ({variables.length})</h3>
             
             {variables.length === 0 ? (
-              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-8 text-center">
-                <Variable className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400">Nenhuma variável criada ainda</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+                <Variable className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600">Nenhuma variável criada ainda</p>
                 <p className="text-sm text-slate-500 mt-1">Adicione variáveis para armazenar dados</p>
               </div>
             ) : (
@@ -337,44 +337,44 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                     return (
                       <div
                         key={variable.id}
-                        className="bg-slate-800/70 border border-slate-700 rounded-lg p-3 hover:border-slate-600 transition-colors"
+                        className="bg-white border border-slate-200 rounded-lg p-3 hover:border-slate-300 transition-colors"
                       >
                       <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Icon className="h-4 w-4 text-cyan-500" />
-                              <span className="font-mono text-sm font-semibold text-white">
+                              <Icon className="h-4 w-4 text-blue-600" />
+                              <span className="font-mono text-sm font-semibold text-slate-900">
                                 {`{{${variable.name}}}`}
                               </span>
-                              <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-0.5 rounded">
+                              <span className="text-xs text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
                                 {variableTypeLabels[variable.type]}
                               </span>
                               {variable.scope === "global" && (
-                                <span className="text-xs text-green-500 bg-green-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded flex items-center gap-1">
                                   <Globe className="h-3 w-3" />
                                   Global
                                 </span>
                               )}
                               {variable.scope === "local" && (
-                                <span className="text-xs text-blue-500 bg-blue-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded flex items-center gap-1">
                                   <User className="h-3 w-3" />
                                   Local
                                 </span>
                               )}
                               {variable.isConstant && (
-                                <span className="text-xs text-amber-500 bg-amber-900/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded flex items-center gap-1">
                                   <Lock className="h-3 w-3" />
                                   Fixa
                                 </span>
                               )}
                             </div>
                             {variable.description && (
-                              <p className="text-xs text-slate-400 mt-1 ml-6">{variable.description}</p>
+                              <p className="text-xs text-slate-600 mt-1 ml-6">{variable.description}</p>
                             )}
                             {variable.isConstant && variable.defaultValue !== undefined && (
-                              <div className="text-xs text-amber-400 mt-1 ml-6 flex items-center gap-1">
+                              <div className="text-xs text-amber-700 mt-1 ml-6 flex items-center gap-1">
                                 <span className="font-semibold">Valor:</span>
-                                <code className="bg-amber-900/20 px-1 py-0.5 rounded">
+                                <code className="bg-amber-100 px-1 py-0.5 rounded">
                                   {typeof variable.defaultValue === "object" 
                                     ? JSON.stringify(variable.defaultValue) 
                                     : String(variable.defaultValue)}
@@ -386,7 +386,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteVariable(variable.id)}
-                            className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-900/20"
+                            className="h-8 w-8 text-slate-600 hover:text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

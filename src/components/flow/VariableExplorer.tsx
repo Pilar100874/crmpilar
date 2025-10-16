@@ -19,16 +19,16 @@ interface VariableExplorerProps {
 
 // Type icons and colors mapping
 const typeConfig = {
-  text: { icon: Type, color: "text-blue-400", bgColor: "bg-blue-500/20", borderColor: "border-blue-500/50" },
-  string: { icon: Type, color: "text-blue-400", bgColor: "bg-blue-500/20", borderColor: "border-blue-500/50" },
-  number: { icon: Hash, color: "text-green-400", bgColor: "bg-green-500/20", borderColor: "border-green-500/50" },
-  date: { icon: Calendar, color: "text-purple-400", bgColor: "bg-purple-500/20", borderColor: "border-purple-500/50" },
-  datetime: { icon: Calendar, color: "text-purple-400", bgColor: "bg-purple-500/20", borderColor: "border-purple-500/50" },
-  array: { icon: List, color: "text-orange-400", bgColor: "bg-orange-500/20", borderColor: "border-orange-500/50" },
-  boolean: { icon: ToggleLeft, color: "text-cyan-400", bgColor: "bg-cyan-500/20", borderColor: "border-cyan-500/50" },
-  object: { icon: Database, color: "text-pink-400", bgColor: "bg-pink-500/20", borderColor: "border-pink-500/50" },
-  file: { icon: FileText, color: "text-yellow-400", bgColor: "bg-yellow-500/20", borderColor: "border-yellow-500/50" },
-  any: { icon: Variable, color: "text-slate-400", bgColor: "bg-slate-500/20", borderColor: "border-slate-500/50" },
+  text: { icon: Type, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
+  string: { icon: Type, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
+  number: { icon: Hash, color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" },
+  date: { icon: Calendar, color: "text-purple-600", bgColor: "bg-purple-50", borderColor: "border-purple-200" },
+  datetime: { icon: Calendar, color: "text-purple-600", bgColor: "bg-purple-50", borderColor: "border-purple-200" },
+  array: { icon: List, color: "text-orange-600", bgColor: "bg-orange-50", borderColor: "border-orange-200" },
+  boolean: { icon: ToggleLeft, color: "text-cyan-600", bgColor: "bg-cyan-50", borderColor: "border-cyan-200" },
+  object: { icon: Database, color: "text-pink-600", bgColor: "bg-pink-50", borderColor: "border-pink-200" },
+  file: { icon: FileText, color: "text-yellow-600", bgColor: "bg-yellow-50", borderColor: "border-yellow-200" },
+  any: { icon: Variable, color: "text-slate-600", bgColor: "bg-slate-50", borderColor: "border-slate-200" },
 };
 
 // Check if variable type is compatible with expected type
@@ -270,20 +270,20 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
 
   if (availableVariables.length === 0) {
     return (
-      <Card className="mt-4 bg-slate-800/50 border-slate-700">
+      <Card className="mt-4 bg-slate-50 border-slate-200">
         <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2 text-white">
-            <Database className="w-4 h-4 text-cyan-400" />
+          <CardTitle className="text-sm flex items-center gap-2 text-slate-900">
+            <Database className="w-4 h-4 text-blue-600" />
             Variáveis Disponíveis
             {expectedType && expectedType !== "any" && (
-              <Badge variant="outline" className="text-xs ml-auto">
+              <Badge variant="outline" className="text-xs ml-auto border-slate-200 text-slate-700">
                 Tipo: {expectedType}
               </Badge>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600">
             {expectedType && expectedType !== "any" 
               ? `Nenhuma variável do tipo "${expectedType}" disponível.`
               : "Nenhuma variável disponível. Crie variáveis ou adicione blocos anteriores."}
@@ -294,13 +294,13 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
   }
 
   return (
-    <Card className="mt-4 bg-slate-800/50 border-slate-700">
+    <Card className="mt-4 bg-slate-50 border-slate-200">
       <CardHeader>
-        <CardTitle className="text-sm flex items-center gap-2 text-white">
-          <Database className="w-4 h-4 text-cyan-400" />
+        <CardTitle className="text-sm flex items-center gap-2 text-slate-900">
+          <Database className="w-4 h-4 text-blue-600" />
           Variáveis Disponíveis
           {expectedType && expectedType !== "any" && (
-            <Badge variant="outline" className="text-xs ml-auto border-cyan-500/50 text-cyan-400">
+            <Badge variant="outline" className="text-xs ml-auto border-blue-200 text-blue-700">
               Filtro: {expectedType}
             </Badge>
           )}
@@ -313,20 +313,20 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
               <div key={blockIdx} className="space-y-2">
                 <div className="flex items-center gap-2">
                   {block.blockType === "custom" ? (
-                    <Badge variant="default" className="text-xs bg-cyan-600 hover:bg-cyan-700">
+                    <Badge variant="default" className="text-xs bg-blue-600 hover:bg-blue-700 text-white">
                       <Variable className="w-3 h-3 mr-1" />
                       {block.blockName}
                     </Badge>
                   ) : (
                     <>
-                      <Badge variant="outline" className="text-xs border-slate-600 text-slate-300">
+                      <Badge variant="outline" className="text-xs border-slate-300 text-slate-700">
                         {block.blockName}
                       </Badge>
                       <span className="text-xs text-slate-500">({block.blockType})</span>
                     </>
                   )}
                 </div>
-                <div className="space-y-1 pl-2 border-l-2 border-slate-700">
+                <div className="space-y-1 pl-2 border-l-2 border-slate-200">
                   {block.variables.map((variable, varIdx) => {
                     const config = typeConfig[variable.type as keyof typeof typeConfig] || typeConfig.any;
                     const Icon = config.icon;
@@ -349,20 +349,20 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
                               {variable.type}
                             </Badge>
                           </div>
-                          <p className="text-xs text-slate-400 mt-1 truncate ml-5">
+                          <p className="text-xs text-slate-600 mt-1 truncate ml-5">
                             {variable.description}
                           </p>
                         </div>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-700"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
                           onClick={() => copyToClipboard(variable.name)}
                         >
                           {copiedVar === variable.name ? (
-                            <CheckCircle2 className="w-3 h-3 text-green-400" />
+                            <CheckCircle2 className="w-3 h-3 text-green-600" />
                           ) : (
-                            <Copy className="w-3 h-3 text-slate-400" />
+                            <Copy className="w-3 h-3 text-slate-600" />
                           )}
                         </Button>
                       </div>
@@ -373,31 +373,31 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
             ))}
           </div>
         </ScrollArea>
-        <div className="mt-3 pt-3 border-t border-slate-700">
+        <div className="mt-3 pt-3 border-t border-slate-200">
           <div className="flex flex-wrap gap-2 mb-2">
             <div className="flex items-center gap-1 text-xs">
-              <Type className="w-3 h-3 text-blue-400" />
-              <span className="text-slate-400">Texto</span>
+              <Type className="w-3 h-3 text-blue-600" />
+              <span className="text-slate-600">Texto</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
-              <Hash className="w-3 h-3 text-green-400" />
-              <span className="text-slate-400">Número</span>
+              <Hash className="w-3 h-3 text-green-600" />
+              <span className="text-slate-600">Número</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
-              <Calendar className="w-3 h-3 text-purple-400" />
-              <span className="text-slate-400">Data</span>
+              <Calendar className="w-3 h-3 text-purple-600" />
+              <span className="text-slate-600">Data</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
-              <List className="w-3 h-3 text-orange-400" />
-              <span className="text-slate-400">Array</span>
+              <List className="w-3 h-3 text-orange-600" />
+              <span className="text-slate-600">Array</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
-              <ToggleLeft className="w-3 h-3 text-cyan-400" />
-              <span className="text-slate-400">Booleano</span>
+              <ToggleLeft className="w-3 h-3 text-cyan-600" />
+              <span className="text-slate-600">Booleano</span>
             </div>
           </div>
-          <p className="text-xs text-slate-500">
-            💡 Use <code className="bg-slate-700 px-1 py-0.5 rounded text-slate-300">{"{{"} variavel {"}"}</code> para inserir valores
+          <p className="text-xs text-slate-600">
+            💡 Use <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">{"{{"} variavel {"}"}</code> para inserir valores
           </p>
         </div>
       </CardContent>
