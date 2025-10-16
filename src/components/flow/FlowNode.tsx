@@ -214,13 +214,16 @@ export const FlowNode = memo((props: any) => {
             {dynamicHandles.conditions?.map((cond: any, index: number) => (
               <div key={cond.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-green-50 border border-green-200 rounded-md group hover:bg-green-100 transition-colors">
                 <span className="text-xs font-medium truncate text-green-700">{cond.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={cond.id}
-                  className="!bg-green-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={cond.id}
+                    className="!bg-green-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-[7px] h-[7px] text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={3} />
+                </div>
               </div>
             ))}
             
@@ -228,13 +231,16 @@ export const FlowNode = memo((props: any) => {
             {dynamicHandles.fallback && (
               <div className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-pink-50 border border-pink-200 rounded-md group hover:bg-pink-100 transition-colors">
                 <span className="text-xs font-medium truncate text-pink-700">{dynamicHandles.fallback.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={dynamicHandles.fallback.id}
-                  className="!bg-pink-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={dynamicHandles.fallback.id}
+                    className="!bg-pink-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-[7px] h-[7px] text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={3} />
+                </div>
               </div>
             )}
             
@@ -242,13 +248,16 @@ export const FlowNode = memo((props: any) => {
             {dynamicHandles.keywords?.map((kw: any) => (
               <div key={kw.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-blue-50 border border-blue-200 rounded-md group hover:bg-blue-100 transition-colors">
                 <span className="text-xs font-medium truncate text-blue-700">{kw.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={kw.id}
-                  className="!bg-blue-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={kw.id}
+                    className="!bg-blue-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-[7px] h-[7px] text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={3} />
+                </div>
               </div>
             ))}
             
@@ -256,13 +265,16 @@ export const FlowNode = memo((props: any) => {
             {dynamicHandles.buttons?.map((btn: any) => (
               <div key={btn.id} className="relative flex items-center justify-between gap-2 py-1.5 px-2.5 bg-purple-50 border border-purple-200 rounded-md group hover:bg-purple-100 transition-colors">
                 <span className="text-xs font-medium truncate text-purple-700">{btn.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={btn.id}
-                  className="!bg-purple-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
-                  style={{ position: 'relative' }}
-                />
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={btn.id}
+                    className="!bg-purple-500 !w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform"
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-[7px] h-[7px] text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={3} />
+                </div>
               </div>
             ))}
             
@@ -276,17 +288,20 @@ export const FlowNode = memo((props: any) => {
                 <span className={`text-xs font-medium truncate ${
                   path.color === 'bg-green-500' ? 'text-green-700' : 'text-red-700'
                 }`}>{path.label}</span>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={path.id}
-                  className={`!w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform ${
-                    path.color === 'bg-green-500' 
-                      ? '!bg-green-500' 
-                      : '!bg-red-500'
-                  }`}
-                  style={{ position: 'relative' }}
-                />
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={path.id}
+                    className={`!w-2.5 !h-2.5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !shadow-sm group-hover:!scale-110 !transition-transform ${
+                      path.color === 'bg-green-500' 
+                        ? '!bg-green-500' 
+                        : '!bg-red-500'
+                    }`}
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className="w-[7px] h-[7px] text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={3} />
+                </div>
               </div>
             ))}
           </div>
@@ -302,7 +317,7 @@ export const FlowNode = memo((props: any) => {
             className="!static !transform-none"
           >
             <div className="w-7 h-7 rounded-full bg-cyan-500 border-2 border-white shadow-md flex items-center justify-center hover:bg-cyan-600 transition-all duration-200 cursor-pointer hover:scale-110">
-              <ArrowRight className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+              <ArrowRight className="w-[7px] h-[7px] text-white" strokeWidth={3} />
             </div>
           </Handle>
         </div>
