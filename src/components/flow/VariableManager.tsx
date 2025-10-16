@@ -37,6 +37,7 @@ export interface FlowVariable {
 interface VariableManagerProps {
   variables: FlowVariable[];
   onVariablesChange: (variables: FlowVariable[]) => void;
+  globalVariables?: FlowVariable[];
 }
 
 const variableTypeIcons = {
@@ -55,7 +56,7 @@ const variableTypeLabels = {
   boolean: "Booleano",
 };
 
-export function VariableManager({ variables, onVariablesChange }: VariableManagerProps) {
+export function VariableManager({ variables, onVariablesChange, globalVariables = [] }: VariableManagerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newVarName, setNewVarName] = useState("");
   const [newVarType, setNewVarType] = useState<VariableType>("text");
@@ -76,9 +77,15 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
       return;
     }
 
-    // Verificar se já existe
+    // Verificar se já existe uma variável local com este nome
     if (variables.some(v => v.name === newVarName)) {
-      toast.error("Já existe uma variável com este nome");
+      toast.error("Já existe uma variável local com este nome");
+      return;
+    }
+
+    // Verificar se já existe uma variável global com este nome
+    if (globalVariables.some(v => v.name === newVarName)) {
+      toast.error("Já existe uma variável global com este nome. Use outro nome para a variável local.");
       return;
     }
 
@@ -170,6 +177,28 @@ export function VariableManager({ variables, onVariablesChange }: VariableManage
             Crie e gerencie variáveis locais do seu bot. Para variáveis compartilhadas entre bots, use o menu "Variáveis Globais".
           </SheetDescription>
         </SheetHeader>
+
+        {/* Aviso sobre variáveis globais disponíveis */}
+        {globalVariables.length > 0 && (
+          <div className="mt-4 p-3 bg-green-900/20 border border-green-600/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="h-4 w-4 text-green-500" />
+              <span className="text-sm font-semibold text-green-400">
+                {globalVariables.length} variável{globalVariables.length > 1 ? 'is' : ''} global{globalVariables.length > 1 ? 'is' : ''} disponível{globalVariables.length > 1 ? 'is' : ''}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400">
+              Variáveis globais estão automaticamente disponíveis em todos os bots:
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {globalVariables.map(gv => (
+                <span key={gv.id} className="text-xs bg-green-900/30 text-green-400 px-2 py-0.5 rounded border border-green-600/30">
+                  {`{{${gv.name}}}`}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 space-y-6">
           {/* Adicionar nova variável */}

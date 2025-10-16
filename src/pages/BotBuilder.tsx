@@ -65,6 +65,7 @@ function BotBuilderContent() {
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
   const [flowVariables, setFlowVariables] = useState<FlowVariable[]>([]);
+  const [globalVariables, setGlobalVariables] = useState<FlowVariable[]>([]);
   const [breakpointNodes, setBreakpointNodes] = useState<Set<string>>(new Set());
   const [skipNodes, setSkipNodes] = useState<Set<string>>(new Set());
   const [simulatorContext, setSimulatorContext] = useState<Record<string, any>>({});
@@ -77,6 +78,7 @@ function BotBuilderContent() {
   // Load saved bots on mount
   useEffect(() => {
     loadSavedBots();
+    loadGlobalVariables();
   }, []);
 
   const loadSavedBots = async () => {
@@ -93,13 +95,41 @@ function BotBuilderContent() {
     }
   };
 
+  const loadGlobalVariables = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("global_variables")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Converter variáveis globais para o formato FlowVariable
+      const convertedVariables: FlowVariable[] = (data || []).map((gv: any) => ({
+        id: gv.id,
+        name: gv.name,
+        type: gv.type as "text" | "number" | "date" | "array" | "boolean",
+        description: gv.description,
+        isConstant: gv.is_constant,
+        defaultValue: gv.default_value,
+        scope: "global" as const,
+      }));
+
+      setGlobalVariables(convertedVariables);
+    } catch (error) {
+      console.error("Error loading global variables:", error);
+      toast.error("Erro ao carregar variáveis globais");
+    }
+  };
+
+  // Combinar variáveis locais e globais
+  const allVariables = [...globalVariables, ...flowVariables];
+
   // Determina quais variáveis estão disponíveis até um bloco específico
   const getAvailableVariablesForNode = useCallback((nodeId: string): FlowVariable[] => {
-    // Retorna todas as variáveis criadas até este ponto
-    // Em uma implementação mais sofisticada, poderia analisar o fluxo para determinar
-    // quais variáveis foram realmente criadas antes deste bloco
-    return flowVariables;
-  }, [flowVariables]);
+    // Retorna todas as variáveis (globais + locais)
+    return allVariables;
+  }, [allVariables]);
 
   // Handler para mostrar variáveis disponíveis em um bloco
   const handleShowVariables = useCallback((nodeId: string) => {
@@ -653,9 +683,10 @@ function BotBuilderContent() {
               <VariableManager
                 variables={flowVariables}
                 onVariablesChange={setFlowVariables}
+                globalVariables={globalVariables}
               />
               <VariableMonitor
-                variables={flowVariables}
+                variables={allVariables}
                 context={simulatorContext}
               />
             </div>
@@ -835,7 +866,7 @@ function BotBuilderContent() {
               onDeleteNode={handleDeleteNode}
               nodes={nodes}
               edges={edges}
-              flowVariables={flowVariables}
+              flowVariables={allVariables}
             />
           )}
         </div>
