@@ -684,31 +684,49 @@ function BotBuilderContent() {
     if (selectedNode) {
       const node = nodes.find(n => n.id === selectedNode.id);
       if (node) {
-        // Calcular largura dos painéis laterais
-        const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0; // w-64 = 256px
+        // Calcular o offset necessário para compensar o painel de propriedades
         const propertiesPanelWidth = 384; // w-96 = 384px
-        const viewportWidth = window.innerWidth;
+        const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0;
         
-        // Calcular o centro da área visível (considerando os painéis)
-        const visibleAreaCenterX = blockLibraryWidth + (viewportWidth - blockLibraryWidth - propertiesPanelWidth) / 2;
-        const visibleAreaCenterY = window.innerHeight / 2;
-        
-        // Obter o centro do nó (considerando dimensões padrão)
+        // Obter dimensões do nó (usar dimensões padrão se não definidas)
         const nodeWidth = node.width || 280;
         const nodeHeight = node.height || 140;
-        const nodeCenterX = node.position.x + nodeWidth / 2;
-        const nodeCenterY = node.position.y + nodeHeight / 2;
         
-        // Centralizar o nó na área visível
-        reactFlowInstance.setCenter(nodeCenterX, nodeCenterY, { zoom: 1, duration: 300 });
+        // Calcular bounds do nó com margem
+        const padding = 50;
+        const bounds = {
+          x: node.position.x - padding,
+          y: node.position.y - padding,
+          width: nodeWidth + padding * 2,
+          height: nodeHeight + padding * 2,
+        };
+        
+        // Primeiro centralizar o nó
+        reactFlowInstance.fitBounds(bounds, { duration: 300 });
+        
+        // Depois ajustar a posição para compensar o painel de propriedades
+        setTimeout(() => {
+          const viewport = reactFlowInstance.getViewport();
+          const viewportWidth = window.innerWidth;
+          const availableWidth = viewportWidth - blockLibraryWidth - propertiesPanelWidth;
+          
+          // Calcular deslocamento necessário (metade da largura do painel)
+          const offsetX = propertiesPanelWidth / 2 / viewport.zoom;
+          
+          // Mover o viewport para a esquerda
+          reactFlowInstance.setViewport({
+            x: viewport.x + offsetX,
+            y: viewport.y,
+            zoom: viewport.zoom,
+          }, { duration: 200 });
+        }, 320);
       }
     } else {
       // Se nenhum bloco estiver selecionado, centralizar todos
-      const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0; // w-64 = 256px
+      const blockLibraryWidth = isBlockLibraryExpanded ? 256 : 0;
       const viewportWidth = window.innerWidth;
       const availableWidth = viewportWidth - blockLibraryWidth;
       
-      // Calcular padding proporcional para compensar os painéis
       const leftPaddingRatio = blockLibraryWidth / availableWidth;
       
       reactFlowInstance.fitView({ 
