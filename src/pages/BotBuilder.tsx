@@ -680,21 +680,43 @@ function BotBuilderContent() {
   const handleFitView = useCallback(() => {
     if (!reactFlowInstance) return;
     
-    // Se o painel de propriedades estiver aberto, ajustar o padding para compensar
-    const propertiesPanelWidth = selectedNode ? 400 : 0; // Largura aproximada do painel
-    const viewportWidth = window.innerWidth;
-    
-    // Calcular offset proporcional ao tamanho da tela
-    const offsetRatio = propertiesPanelWidth / viewportWidth;
-    
-    // Ajustar padding considerando o painel
-    const paddingLeft = 0.2;
-    const paddingRight = 0.2 + (offsetRatio * 2); // Aumentar padding direito proporcionalmente
-    
+    // Primeiro centraliza normalmente
     reactFlowInstance.fitView({ 
-      padding: { top: 0.2, bottom: 0.2, left: paddingLeft, right: paddingRight },
+      padding: 0.2,
       duration: 300 
     });
+    
+    // Se o painel de propriedades estiver aberto, ajustar o centro
+    if (selectedNode) {
+      setTimeout(() => {
+        const propertiesPanelWidth = 384; // w-96 = 24rem = 384px
+        const viewportWidth = window.innerWidth;
+        const viewport = reactFlowInstance.getViewport();
+        
+        // Calcular deslocamento para centralizar na área visível (excluindo painel)
+        const visibleWidth = viewportWidth - propertiesPanelWidth;
+        const offsetX = (propertiesPanelWidth / 2) / viewport.zoom;
+        
+        // Obter bounds dos nós
+        const bounds = reactFlowInstance.getNodes().reduce((acc, node) => {
+          const x = node.position.x;
+          const y = node.position.y;
+          return {
+            minX: Math.min(acc.minX, x),
+            maxX: Math.max(acc.maxX, x + (node.width || 280)),
+            minY: Math.min(acc.minY, y),
+            maxY: Math.max(acc.maxY, y + (node.height || 140))
+          };
+        }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+        
+        // Centro dos nós
+        const centerX = (bounds.minX + bounds.maxX) / 2;
+        const centerY = (bounds.minY + bounds.maxY) / 2;
+        
+        // Deslocar centro para a esquerda
+        reactFlowInstance.setCenter(centerX - offsetX, centerY, { zoom: viewport.zoom, duration: 300 });
+      }, 350);
+    }
   }, [reactFlowInstance, selectedNode]);
 
   const handleToggleLock = useCallback(() => {
