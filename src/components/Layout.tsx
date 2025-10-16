@@ -29,6 +29,7 @@ import {
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import logo from "@/assets/logo_branco.png";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -87,13 +88,20 @@ export default function Layout({ children }: LayoutProps) {
       <div className="min-h-screen flex w-full bg-slate-900">
         <Sidebar className="border-r border-slate-700/50 bg-slate-900">
           <div className="p-6 border-b border-slate-700/50 bg-slate-900">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg">
                 <MessageSquare className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h2 className="font-bold text-lg text-white">Pilar BOT</h2>
-                <p className="text-xs text-slate-400">Atendimento IA</p>
+              <div className="flex items-center gap-2">
+                <img 
+                  src={logo} 
+                  alt="Pilar Logo" 
+                  className="h-8 w-auto"
+                />
+                <div>
+                  <h2 className="font-bold text-lg text-white">Bot</h2>
+                  <p className="text-xs text-slate-400">Atendimento IA</p>
+                </div>
               </div>
             </div>
           </div>
