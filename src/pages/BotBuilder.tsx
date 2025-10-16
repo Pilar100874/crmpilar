@@ -96,6 +96,17 @@ function BotBuilderContent() {
     [setEdges]
   );
 
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      setEdges((els) => {
+        const filtered = els.filter((e) => e.id !== oldEdge.id);
+        return addEdge(newConnection, filtered);
+      });
+      toast.success("Conexão movida!");
+    },
+    [setEdges]
+  );
+
   const onEdgesDelete = useCallback(
     (deleted: Edge[]) => {
       toast.success(`${deleted.length} conexão(ões) removida(s)`);
@@ -489,6 +500,7 @@ function BotBuilderContent() {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              onReconnect={onReconnect}
               onEdgesDelete={onEdgesDelete}
               onInit={setReactFlowInstance}
               onDrop={onDrop}
@@ -498,15 +510,12 @@ function BotBuilderContent() {
               nodeTypes={nodeTypes}
               fitView
               className="bg-slate-900"
-              edgesReconnectable={true}
-              reconnectRadius={20}
               deleteKeyCode="Delete"
               defaultEdgeOptions={{
                 style: { stroke: '#06b6d4', strokeWidth: 2 },
                 animated: true,
                 type: 'smoothstep',
               }}
-              edgesFocusable={true}
             >
               <Background 
                 variant={BackgroundVariant.Dots} 
