@@ -496,7 +496,15 @@ function BotBuilderContent() {
           <div className={`${showSimulator ? "flex-1" : "flex-1"} relative`} ref={reactFlowWrapper}>
             <ReactFlow
               nodes={nodes}
-              edges={edges}
+              edges={edges.map((edge) => ({
+                ...edge,
+                style: {
+                  stroke: edge.selected ? '#f59e0b' : '#06b6d4',
+                  strokeWidth: edge.selected ? 3 : 2,
+                },
+                animated: true,
+                type: 'smoothstep',
+              }))}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
