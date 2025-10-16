@@ -11,8 +11,8 @@ import { ShoppingCart } from "lucide-react";
 import { addToCart } from "@/lib/cart";
 import { saveProject } from "@/lib/projectStorage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import EditorHeaderV2 from "@/components/editor/EditorHeaderV2";
 import BottomTabBar from "@/components/editor/BottomTabBar";
+import Layout from "@/components/Layout";
 import ProjectsPanel from "@/components/editor/panels/ProjectsPanel";
 import ImagesPanel from "@/components/editor/panels/ImagesPanel";
 import TextPanel from "@/components/editor/panels/TextPanel";
@@ -485,25 +485,15 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   };
 
   return (
-    <CanvasProvider onSelectionChange={(objType) => {
-      setSelectedObjectType(objType);
-      if (objType && !userSelectedPanel) {
-        // Só abre automaticamente se usuário não selecionou manualmente um painel
-        setIsPanelOpen(true);
-      }
-    }}>
-      <div className="h-screen flex flex-col bg-background">
-        <EditorHeaderV2 onBack={() => {
-          const backAction = onBack || (() => navigate('/'));
-          if (hasCanvasContent()) {
-            handleNavigateAway(backAction);
-          } else {
-            backAction();
-          }
-        }} />
-
-        {/* Main content area */}
-        <div className="flex-1 flex overflow-hidden relative pb-14 lg:pb-0">
+    <Layout>
+      <CanvasProvider onSelectionChange={(objType) => {
+        setSelectedObjectType(objType);
+        if (objType && !userSelectedPanel) {
+          // Só abre automaticamente se usuário não selecionou manualmente um painel
+          setIsPanelOpen(true);
+        }
+      }}>
+        <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
           {/* Desktop Sidebar with tool icons - only on large screens */}
           <div className="hidden lg:block">
             <DesktopSidebar 
@@ -539,9 +529,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
               </Button>
             </div>
           </div>
-        </div>
 
-        {/* Bottom Tab Bar (mobile and tablet) */}
+          {/* Bottom Tab Bar (mobile and tablet) */}
         <div className="lg:hidden">
           <BottomTabBar 
             activePanel={activePanel} 
@@ -615,8 +604,9 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           gabaritoCanvasUrl={productData?.gabarito_canvas_url || null}
           gabaritoCanvasRetangularUrl={productData?.gabarito_canvas_retangular_url || null}
         />
-      </div>
-    </CanvasProvider>
+        </div>
+      </CanvasProvider>
+    </Layout>
   );
 };
 
