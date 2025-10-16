@@ -98,9 +98,9 @@ export const WhatsAppQRCode = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardContent className="flex items-center justify-center p-8">
-          <div className="text-slate-400">Carregando...</div>
+          <div className="text-muted-foreground">Carregando...</div>
         </CardContent>
       </Card>
     );
@@ -110,93 +110,93 @@ export const WhatsAppQRCode = () => {
     <div className="space-y-3 pb-4">
       {/* Status Alert */}
       {!hasActiveBot && (
-        <Alert className="bg-amber-950/50 border-amber-800/50">
-          <AlertCircle className="h-4 w-4 text-amber-400" />
-          <AlertDescription className="text-amber-200">
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-900">
             <strong>Atenção:</strong> Nenhum bot ativo encontrado. Ative um bot na página "Criar Bot" primeiro.
           </AlertDescription>
         </Alert>
       )}
 
       {hasActiveBot && (
-        <Alert className="bg-green-950/50 border-green-800/50">
-          <CheckCircle className="h-4 w-4 text-green-400" />
-          <AlertDescription className="text-green-200">
+        <Alert className="bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-900">
             Bot ativo detectado! Você pode testar no WhatsApp.
           </AlertDescription>
         </Alert>
       )}
 
       {/* Webhook Configuration */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white text-base">
-            <Info className="w-5 h-5 text-blue-400" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Info className="w-5 h-5 text-blue-600" />
             1. Configure o Webhook no Facebook
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription>
             Primeiro, configure estas informações no Facebook Developer Console
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2">
-            <Label className="text-slate-300 text-xs">URL do Webhook</Label>
+            <Label className="text-xs">URL do Webhook</Label>
             <div className="flex gap-2">
               <Input
                 readOnly
                 value="https://kiuztueouxtyqiecgdxk.supabase.co/functions/v1/whatsapp-webhook"
-                className="bg-slate-900 border-slate-700 text-slate-300 font-mono text-xs"
+                className="font-mono text-xs"
               />
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleCopyWebhook}
-                className="flex-shrink-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+                className="flex-shrink-0"
               >
-                {copied ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                {copied ? <CheckCircle className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-300 text-xs">Token de Verificação</Label>
+            <Label className="text-xs">Token de Verificação</Label>
             <div className="flex gap-2">
               <Input
                 readOnly
                 value="conversa_botique_verify"
-                className="bg-slate-900 border-slate-700 text-slate-300 font-mono text-xs"
+                className="font-mono text-xs"
               />
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleCopyToken}
-                className="flex-shrink-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+                className="flex-shrink-0"
               >
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs text-muted-foreground mt-3">
             💡 Após configurar, ative a inscrição para "messages" no painel do Facebook
           </p>
         </CardContent>
       </Card>
 
       {/* QR Code Generator */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white text-base">
-            <Smartphone className="w-5 h-5 text-green-400" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Smartphone className="w-5 h-5 text-green-600" />
             2. Gere o QR Code para Teste
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription>
             Use seu número do WhatsApp Business para testar
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="phone" className="text-slate-200 text-sm">
+            <Label htmlFor="phone" className="text-sm">
               Número do WhatsApp Business
             </Label>
             <Input
@@ -205,15 +205,14 @@ export const WhatsAppQRCode = () => {
               placeholder="5511999999999"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-white"
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Formato: código do país + DDD + número (sem espaços ou caracteres especiais)
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message" className="text-slate-200 text-sm">
+            <Label htmlFor="message" className="text-sm">
               Mensagem inicial
             </Label>
             <Input
@@ -222,7 +221,6 @@ export const WhatsAppQRCode = () => {
               placeholder="Olá! Gostaria de testar o bot"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-white"
             />
           </div>
 
@@ -263,7 +261,7 @@ export const WhatsAppQRCode = () => {
           )}
 
           {!whatsappUrl && phoneNumber && (
-            <div className="text-center text-slate-400 text-sm py-4 bg-slate-900/50 rounded-lg">
+            <div className="text-center text-muted-foreground text-sm py-4 bg-muted/50 rounded-lg">
               Clique em "Gerar QR Code" para criar o código
             </div>
           )}
@@ -271,9 +269,9 @@ export const WhatsAppQRCode = () => {
       </Card>
 
       {/* Instructions */}
-      <Alert className="bg-blue-950/30 border-blue-800/50">
-        <Info className="h-4 w-4 text-blue-400" />
-        <AlertDescription className="text-blue-200 text-sm">
+      <Alert className="bg-blue-50 border-blue-200">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-900 text-sm">
           <strong className="block mb-2">Como testar:</strong>
           <ol className="list-decimal list-inside space-y-1 text-xs">
             <li>Configure o webhook no Facebook Developer (Passo 1)</li>

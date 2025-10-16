@@ -80,9 +80,9 @@ export const TwilioSandbox = () => {
   return (
     <div className="space-y-3 pb-4">
       {/* Instructions */}
-      <Alert className="bg-blue-950/30 border-blue-800/50">
-        <Info className="h-4 w-4 text-blue-400" />
-        <AlertDescription className="text-blue-200 text-xs">
+      <Alert className="bg-blue-50 border-blue-200">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-900 text-xs">
           <strong className="block mb-1.5">🚀 Passos para usar (100% Gratuito):</strong>
           <ol className="list-decimal list-inside space-y-0.5 text-xs">
             <li>Crie conta no Twilio (sem cartão)</li>
@@ -95,9 +95,9 @@ export const TwilioSandbox = () => {
       </Alert>
 
       {/* Daily Limit Warning */}
-      <Alert className="bg-yellow-950/30 border-yellow-800/50">
-        <AlertCircle className="h-4 w-4 text-yellow-400" />
-        <AlertDescription className="text-yellow-200 text-xs">
+      <Alert className="bg-yellow-50 border-yellow-200">
+        <AlertCircle className="h-4 w-4 text-yellow-600" />
+        <AlertDescription className="text-yellow-900 text-xs">
           <strong className="block mb-1.5">⚠️ Limite Diário do Sandbox:</strong>
           <p className="text-xs">
             A conta atingiu o limite de 9 mensagens diárias. O sandbox gratuito possui essa restrição.
@@ -107,10 +107,10 @@ export const TwilioSandbox = () => {
       </Alert>
 
       {/* Create Account Card */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-white text-sm">
-            <ExternalLink className="w-4 h-4 text-green-400" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <ExternalLink className="w-4 h-4 text-green-600" />
             1. Criar Conta Gratuita no Twilio
           </CardTitle>
         </CardHeader>
@@ -126,24 +126,24 @@ export const TwilioSandbox = () => {
               Criar Conta no Twilio
             </Button>
           </a>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             💡 Acesse: <strong>Messaging → Try it out → Send WhatsApp</strong>
           </p>
         </CardContent>
       </Card>
 
       {/* Activation Card */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-white text-sm">
-            <Smartphone className="w-4 h-4 text-green-400" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Smartphone className="w-4 h-4 text-green-600" />
             2. Ativar Sandbox no WhatsApp
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert className="bg-green-950/30 border-green-800/50">
-            <CheckCircle className="h-3 h-3 text-green-400" />
-            <AlertDescription className="text-green-200 text-xs">
+          <Alert className="bg-green-50 border-green-200">
+            <CheckCircle className="h-3 h-3 text-green-600" />
+            <AlertDescription className="text-green-900 text-xs">
               Escaneie o QR code no Twilio e envie a mensagem. Você receberá confirmação!
             </AlertDescription>
           </Alert>
@@ -151,36 +151,36 @@ export const TwilioSandbox = () => {
       </Card>
 
       {/* Credentials Card */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-white text-sm">
-            <Info className="w-4 h-4 text-blue-400" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Info className="w-4 h-4 text-blue-600" />
             3. Credenciais (Opcional)
           </CardTitle>
-          <CardDescription className="text-xs text-slate-400">
+          <CardDescription className="text-xs">
             Para automação avançada - não obrigatório
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Account SID</Label>
+            <Label className="text-xs">Account SID</Label>
             <Input
               type="text"
               placeholder="ACxxxxxxxx..."
               value={accountSid}
               onChange={(e) => setAccountSid(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-white font-mono text-xs h-8"
+              className="font-mono text-xs h-8"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Auth Token</Label>
+            <Label className="text-xs">Auth Token</Label>
             <Input
               type="password"
               placeholder="••••••••••"
               value={authToken}
               onChange={(e) => setAuthToken(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-white font-mono text-xs h-8"
+              className="font-mono text-xs h-8"
             />
           </div>
 
@@ -195,30 +195,30 @@ export const TwilioSandbox = () => {
       </Card>
 
       {/* Webhook Configuration Card */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-white text-sm">
-            <AlertCircle className="w-4 h-4 text-orange-400" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <AlertCircle className="w-4 h-4 text-orange-600" />
             4. Configurar Webhook
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">URL do Webhook</Label>
+            <Label className="text-xs">URL do Webhook</Label>
             <div className="flex gap-2">
               <Input
                 readOnly
                 value={webhookUrl}
-                className="bg-slate-900 border-slate-700 text-slate-300 font-mono text-xs h-8"
+                className="font-mono text-xs h-8"
               />
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => handleCopy(webhookUrl, "webhook")}
-                className="flex-shrink-0 h-8 w-8 bg-slate-700 border-slate-600 hover:bg-slate-600"
+                className="flex-shrink-0 h-8 w-8"
               >
                 {copied === "webhook" ? (
-                  <CheckCircle className="w-3 h-3 text-green-400" />
+                  <CheckCircle className="w-3 h-3 text-green-600" />
                 ) : (
                   <Copy className="w-3 h-3" />
                 )}
@@ -226,9 +226,9 @@ export const TwilioSandbox = () => {
             </div>
           </div>
 
-          <Alert className="bg-orange-950/30 border-orange-800/50">
-            <AlertCircle className="h-3 w-3 text-orange-400" />
-            <AlertDescription className="text-orange-200 text-xs">
+          <Alert className="bg-orange-50 border-orange-200">
+            <AlertCircle className="h-3 w-3 text-orange-600" />
+            <AlertDescription className="text-orange-900 text-xs">
               Cole em: <strong>Messaging → Sandbox settings → "When a message comes in"</strong>
             </AlertDescription>
           </Alert>
@@ -236,30 +236,30 @@ export const TwilioSandbox = () => {
       </Card>
 
       {/* Testing Card */}
-      <Card className="bg-slate-800 border-slate-700">
+      <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-white text-sm">
-            <CheckCircle className="w-4 h-4 text-green-400" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <CheckCircle className="w-4 h-4 text-green-600" />
             5. Testar o Bot!
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Alert className="bg-green-950/30 border-green-800/50">
-            <CheckCircle className="h-3 w-3 text-green-400" />
-            <AlertDescription className="text-green-200 text-xs">
+          <Alert className="bg-green-50 border-green-200">
+            <CheckCircle className="h-3 w-3 text-green-600" />
+            <AlertDescription className="text-green-900 text-xs">
               <strong className="block mb-1">✅ Pronto!</strong>
               Envie mensagens para o sandbox e veja o bot respondendo!
             </AlertDescription>
           </Alert>
 
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Número Sandbox (lembrete)</Label>
+            <Label className="text-xs">Número Sandbox (lembrete)</Label>
             <Input
               type="text"
               placeholder="+1 415 523 8886"
               value={sandboxNumber}
               onChange={(e) => setSandboxNumber(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-white text-xs h-8"
+              className="text-xs h-8"
             />
           </div>
         </CardContent>
