@@ -5,12 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus } from "lucide-react";
+import { Trash2, Edit, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+interface MenuPermissions {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  delete: boolean;
+}
 
 interface GrupoAcesso {
   id: string;
   nome: string;
-  menus_permitidos: string[];
+  menus_permitidos: Record<string, MenuPermissions>;
 }
 
 const MENUS_DISPONIVEIS = [
@@ -21,13 +29,22 @@ const MENUS_DISPONIVEIS = [
   "Conteúdos",
   "Desenho",
   "Bot Builder",
+  "Variáveis Globais",
   "Configurações",
 ];
+
+const PERMISSIONS_LABELS = {
+  view: "Visualizar",
+  create: "Criar",
+  edit: "Modificar",
+  delete: "Excluir",
+};
 
 export const GruposAcessoCRUD = () => {
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [nome, setNome] = useState("");
-  const [menusPermitidos, setMenusPermitidos] = useState<string[]>([]);
+  const [menusPermitidos, setMenusPermitidos] = useState<Record<string, MenuPermissions>>({});
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -51,9 +68,9 @@ export const GruposAcessoCRUD = () => {
       setGrupos((data || []).map(grupo => ({
         id: grupo.id,
         nome: grupo.nome,
-        menus_permitidos: Array.isArray(grupo.menus_permitidos) 
-          ? (grupo.menus_permitidos as string[])
-          : []
+        menus_permitidos: typeof grupo.menus_permitidos === 'object' && grupo.menus_permitidos !== null && !Array.isArray(grupo.menus_permitidos)
+          ? (grupo.menus_permitidos as unknown as Record<string, MenuPermissions>)
+          : {}
       })));
     }
   };
@@ -72,7 +89,7 @@ export const GruposAcessoCRUD = () => {
 
     const grupoData = {
       nome,
-      menus_permitidos: menusPermitidos,
+      menus_permitidos: menusPermitidos as any,
     };
 
     if (editingId) {
@@ -116,13 +133,20 @@ export const GruposAcessoCRUD = () => {
 
   const resetForm = () => {
     setNome("");
-    setMenusPermitidos([]);
+    setMenusPermitidos({});
+    setOpenMenus({});
     setEditingId(null);
   };
 
   const handleEdit = (grupo: GrupoAcesso) => {
     setNome(grupo.nome);
-    setMenusPermitidos(grupo.menus_permitidos || []);
+    setMenusPermitidos(grupo.menus_permitidos || {});
+    // Open all menus that have at least one permission
+    const openedMenus: Record<string, boolean> = {};
+    Object.keys(grupo.menus_permitidos || {}).forEach(menu => {
+      openedMenus[menu] = true;
+    });
+    setOpenMenus(openedMenus);
     setEditingId(grupo.id);
   };
 
@@ -146,45 +170,146 @@ export const GruposAcessoCRUD = () => {
     }
   };
 
-  const toggleMenu = (menu: string) => {
-    setMenusPermitidos((prev) =>
-      prev.includes(menu)
-        ? prev.filter((m) => m !== menu)
-        : [...prev, menu]
-    );
+  const toggleMenuOpen = (menu: string) => {
+    setOpenMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
+  };
+
+  const togglePermission = (menu: string, permission: keyof MenuPermissions) => {
+    setMenusPermitidos(prev => {
+      const menuPerms = prev[menu] || { view: false, create: false, edit: false, delete: false };
+      const newPerms = { ...menuPerms, [permission]: !menuPerms[permission] };
+      
+      // If view is being disabled, disable all other permissions
+      if (permission === 'view' && !newPerms.view) {
+        newPerms.create = false;
+        newPerms.edit = false;
+        newPerms.delete = false;
+      }
+      
+      // If any other permission is enabled, enable view
+      if (permission !== 'view' && newPerms[permission]) {
+        newPerms.view = true;
+      }
+      
+      // If all permissions are false, remove the menu
+      if (!newPerms.view && !newPerms.create && !newPerms.edit && !newPerms.delete) {
+        const { [menu]: _, ...rest } = prev;
+        return rest;
+      }
+      
+      return { ...prev, [menu]: newPerms };
+    });
+  };
+
+  const getPermissionsSummary = (permissions: Record<string, MenuPermissions>) => {
+    const menus = Object.keys(permissions);
+    if (menus.length === 0) return "Nenhum menu";
+    
+    return menus.map(menu => {
+      const perms = permissions[menu];
+      const activePerms = Object.entries(perms)
+        .filter(([_, value]) => value)
+        .map(([key]) => PERMISSIONS_LABELS[key as keyof MenuPermissions])
+        .join(", ");
+      return `${menu} (${activePerms})`;
+    }).join(" • ");
   };
 
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="grupo-nome">Nome do Grupo</Label>
+          <Label htmlFor="grupo-nome">Nome do Grupo *</Label>
           <Input
             id="grupo-nome"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             placeholder="Digite o nome do grupo"
+            required
           />
         </div>
 
         <div>
-          <Label>Menus Permitidos</Label>
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            {MENUS_DISPONIVEIS.map((menu) => (
-              <div key={menu} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`menu-${menu}`}
-                  checked={menusPermitidos.includes(menu)}
-                  onCheckedChange={() => toggleMenu(menu)}
-                />
-                <label
-                  htmlFor={`menu-${menu}`}
-                  className="text-sm cursor-pointer"
-                >
-                  {menu}
-                </label>
-              </div>
-            ))}
+          <Label>Menus e Permissões</Label>
+          <div className="space-y-2 mt-2 border rounded-md p-3">
+            {MENUS_DISPONIVEIS.map((menu) => {
+              const menuPerms = menusPermitidos[menu] || { view: false, create: false, edit: false, delete: false };
+              const isOpen = openMenus[menu];
+              
+              return (
+                <Collapsible key={menu} open={isOpen} onOpenChange={() => toggleMenuOpen(menu)}>
+                  <div className="flex items-center justify-between py-2 px-3 hover:bg-accent rounded-md">
+                    <div className="flex items-center space-x-2 flex-1">
+                      <Checkbox
+                        id={`menu-${menu}-view`}
+                        checked={menuPerms.view}
+                        onCheckedChange={() => togglePermission(menu, 'view')}
+                      />
+                      <label
+                        htmlFor={`menu-${menu}-view`}
+                        className="text-sm font-medium cursor-pointer flex-1"
+                      >
+                        {menu}
+                      </label>
+                    </div>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="p-1 h-auto">
+                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                  
+                  <CollapsibleContent className="pl-8 pr-3 pb-2">
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`menu-${menu}-create`}
+                          checked={menuPerms.create}
+                          onCheckedChange={() => togglePermission(menu, 'create')}
+                          disabled={!menuPerms.view}
+                        />
+                        <label
+                          htmlFor={`menu-${menu}-create`}
+                          className="text-sm cursor-pointer text-muted-foreground"
+                        >
+                          Criar
+                        </label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`menu-${menu}-edit`}
+                          checked={menuPerms.edit}
+                          onCheckedChange={() => togglePermission(menu, 'edit')}
+                          disabled={!menuPerms.view}
+                        />
+                        <label
+                          htmlFor={`menu-${menu}-edit`}
+                          className="text-sm cursor-pointer text-muted-foreground"
+                        >
+                          Modificar
+                        </label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`menu-${menu}-delete`}
+                          checked={menuPerms.delete}
+                          onCheckedChange={() => togglePermission(menu, 'delete')}
+                          disabled={!menuPerms.view}
+                        />
+                        <label
+                          htmlFor={`menu-${menu}-delete`}
+                          className="text-sm cursor-pointer text-muted-foreground"
+                        >
+                          Excluir
+                        </label>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </div>
         </div>
 
@@ -209,13 +334,13 @@ export const GruposAcessoCRUD = () => {
             key={grupo.id}
             className="flex items-start justify-between p-3 border rounded-md"
           >
-            <div>
+            <div className="flex-1 pr-4">
               <div className="font-semibold">{grupo.nome}</div>
-              <div className="text-sm text-muted-foreground mt-1">
-                Menus: {grupo.menus_permitidos?.join(", ") || "Nenhum"}
+              <div className="text-sm text-muted-foreground mt-1 break-words">
+                {getPermissionsSummary(grupo.menus_permitidos)}
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
