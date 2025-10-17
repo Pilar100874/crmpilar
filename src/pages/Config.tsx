@@ -38,9 +38,9 @@ export default function Config() {
           </p>
         </div>
 
-        <Accordion type="single" collapsible className="space-y-4">
-          <AccordionItem value="n8n" className="border rounded-lg bg-white">
-            <AccordionTrigger className="px-6 hover:no-underline">
+        <Accordion type="single" collapsible className="space-y-4 max-w-4xl">
+          <AccordionItem value="n8n" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
                 <Webhook className="w-5 h-5 text-primary" />
                 <div className="text-left">
@@ -73,8 +73,8 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="canais" className="border rounded-lg bg-white">
-            <AccordionTrigger className="px-6 hover:no-underline">
+          <AccordionItem value="canais" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
                 <Key className="w-5 h-5 text-primary" />
                 <div className="text-left">
@@ -113,8 +113,8 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="notificacoes" className="border rounded-lg bg-white">
-            <AccordionTrigger className="px-6 hover:no-underline">
+          <AccordionItem value="notificacoes" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-primary" />
                 <div className="text-left">
@@ -150,8 +150,8 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="seguranca" className="border rounded-lg bg-white">
-            <AccordionTrigger className="px-6 hover:no-underline">
+          <AccordionItem value="seguranca" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 <div className="text-left">
@@ -183,8 +183,8 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="redes-sociais" className="border rounded-lg bg-white">
-            <AccordionTrigger className="px-6 hover:no-underline">
+          <AccordionItem value="redes-sociais" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
                 <Share2 className="w-5 h-5 text-primary" />
                 <div className="text-left">
