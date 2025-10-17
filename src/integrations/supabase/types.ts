@@ -185,32 +185,29 @@ export type Database = {
         Row: {
           created_at: string | null
           custom_fields: Json | null
-          email: string | null
+          email: string
           id: string
           nome: string
           tags: string[] | null
-          telefone: string | null
-          tipo_operador: boolean | null
+          telefone: string
         }
         Insert: {
           created_at?: string | null
           custom_fields?: Json | null
-          email?: string | null
+          email: string
           id?: string
           nome: string
           tags?: string[] | null
-          telefone?: string | null
-          tipo_operador?: boolean | null
+          telefone: string
         }
         Update: {
           created_at?: string | null
           custom_fields?: Json | null
-          email?: string | null
+          email?: string
           id?: string
           nome?: string
           tags?: string[] | null
-          telefone?: string | null
-          tipo_operador?: boolean | null
+          telefone?: string
         }
         Relationships: []
       }
@@ -471,6 +468,7 @@ export type Database = {
           email: string
           grupo_acesso_id: string | null
           id: string
+          is_agente: boolean | null
           nome: string
           senha_hash: string
           telefone: string | null
@@ -482,6 +480,7 @@ export type Database = {
           email: string
           grupo_acesso_id?: string | null
           id?: string
+          is_agente?: boolean | null
           nome: string
           senha_hash: string
           telefone?: string | null
@@ -493,6 +492,7 @@ export type Database = {
           email?: string
           grupo_acesso_id?: string | null
           id?: string
+          is_agente?: boolean | null
           nome?: string
           senha_hash?: string
           telefone?: string | null

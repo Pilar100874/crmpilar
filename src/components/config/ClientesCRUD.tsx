@@ -9,8 +9,8 @@ import { Trash2, Edit, Plus } from "lucide-react";
 interface Cliente {
   id: string;
   nome: string;
-  email: string | null;
-  telefone: string | null;
+  email: string;
+  telefone: string;
 }
 
 export const ClientesCRUD = () => {
@@ -45,19 +45,19 @@ export const ClientesCRUD = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome.trim()) {
+    if (!nome.trim() || !email.trim() || !telefone.trim()) {
       toast({
-        title: "Nome obrigatório",
-        description: "Por favor, preencha o nome do cliente",
+        title: "Campos obrigatórios",
+        description: "Todos os campos são obrigatórios: nome, email e telefone",
         variant: "destructive",
       });
       return;
     }
 
     const clienteData = {
-      nome,
-      email: email.trim() || null,
-      telefone: telefone.trim() || null,
+      nome: nome.trim(),
+      email: email.trim(),
+      telefone: telefone.trim(),
     };
 
     if (editingId) {
@@ -67,9 +67,21 @@ export const ClientesCRUD = () => {
         .eq("id", editingId);
 
       if (error) {
+        let errorMessage = error.message;
+        
+        if (error.code === '23505') {
+          if (error.message.includes('customers_nome_unique')) {
+            errorMessage = "Já existe um cliente com este nome";
+          } else if (error.message.includes('customers_email_unique')) {
+            errorMessage = "Já existe um cliente com este email";
+          } else if (error.message.includes('customers_telefone_unique')) {
+            errorMessage = "Já existe um cliente com este telefone";
+          }
+        }
+        
         toast({
           title: "Erro ao atualizar",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
@@ -83,9 +95,21 @@ export const ClientesCRUD = () => {
         .insert([clienteData]);
 
       if (error) {
+        let errorMessage = error.message;
+        
+        if (error.code === '23505') {
+          if (error.message.includes('customers_nome_unique')) {
+            errorMessage = "Já existe um cliente com este nome";
+          } else if (error.message.includes('customers_email_unique')) {
+            errorMessage = "Já existe um cliente com este email";
+          } else if (error.message.includes('customers_telefone_unique')) {
+            errorMessage = "Já existe um cliente com este telefone";
+          }
+        }
+        
         toast({
           title: "Erro ao criar",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
@@ -105,8 +129,8 @@ export const ClientesCRUD = () => {
 
   const handleEdit = (cliente: Cliente) => {
     setNome(cliente.nome);
-    setEmail(cliente.email || "");
-    setTelefone(cliente.telefone || "");
+    setEmail(cliente.email);
+    setTelefone(cliente.telefone);
     setEditingId(cliente.id);
   };
 
@@ -134,33 +158,36 @@ export const ClientesCRUD = () => {
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="cliente-nome">Nome</Label>
+          <Label htmlFor="cliente-nome">Nome *</Label>
           <Input
             id="cliente-nome"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             placeholder="Digite o nome do cliente"
+            required
           />
         </div>
 
         <div>
-          <Label htmlFor="cliente-email">E-mail</Label>
+          <Label htmlFor="cliente-email">E-mail *</Label>
           <Input
             id="cliente-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Digite o e-mail"
+            required
           />
         </div>
 
         <div>
-          <Label htmlFor="cliente-telefone">Telefone</Label>
+          <Label htmlFor="cliente-telefone">Telefone *</Label>
           <Input
             id="cliente-telefone"
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
             placeholder="Digite o telefone"
+            required
           />
         </div>
 
@@ -188,8 +215,8 @@ export const ClientesCRUD = () => {
             <div>
               <div className="font-semibold">{cliente.nome}</div>
               <div className="text-sm text-muted-foreground mt-1">
-                {cliente.email && <div>E-mail: {cliente.email}</div>}
-                {cliente.telefone && <div>Tel: {cliente.telefone}</div>}
+                <div>E-mail: {cliente.email}</div>
+                <div>Tel: {cliente.telefone}</div>
               </div>
             </div>
             <div className="flex gap-2">
