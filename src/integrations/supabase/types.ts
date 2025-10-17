@@ -277,6 +277,30 @@ export type Database = {
         }
         Relationships: []
       }
+      grupos_acesso: {
+        Row: {
+          created_at: string | null
+          id: string
+          menus_permitidos: Json | null
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          menus_permitidos?: Json | null
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          menus_permitidos?: Json | null
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: string[] | null
@@ -315,6 +339,27 @@ export type Database = {
           },
         ]
       }
+      segmentos: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       twilio_config: {
         Row: {
           account_sid: string | null
@@ -342,6 +387,27 @@ export type Database = {
         }
         Relationships: []
       }
+      unidades: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -362,6 +428,90 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      usuario_segmentos: {
+        Row: {
+          id: string
+          segmento_id: string
+          usuario_id: string
+        }
+        Insert: {
+          id?: string
+          segmento_id: string
+          usuario_id: string
+        }
+        Update: {
+          id?: string
+          segmento_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_segmentos_segmento_id_fkey"
+            columns: ["segmento_id"]
+            isOneToOne: false
+            referencedRelation: "segmentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_segmentos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios: {
+        Row: {
+          created_at: string | null
+          email: string
+          grupo_acesso_id: string | null
+          id: string
+          nome: string
+          senha_hash: string
+          telefone: string | null
+          unidade_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          grupo_acesso_id?: string | null
+          id?: string
+          nome: string
+          senha_hash: string
+          telefone?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          grupo_acesso_id?: string | null
+          id?: string
+          nome?: string
+          senha_hash?: string
+          telefone?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_grupo_acesso_id_fkey"
+            columns: ["grupo_acesso_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_acesso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_config: {
         Row: {

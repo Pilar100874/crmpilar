@@ -5,8 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2 } from "lucide-react";
+import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2, Tag, FolderTree } from "lucide-react";
 import { toast } from "sonner";
+import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
+import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
+import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 
 export default function Config() {
   const [socialLinks, setSocialLinks] = useState({
@@ -275,6 +279,57 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="cadastro-unidades" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Cadastro de Unidades</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Gerencie as unidades/filiais da empresa
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <UnidadesCRUD />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="cadastro-segmentos" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Tag className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Cadastro de Segmentos</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Gerencie os segmentos de atuação
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <SegmentosCRUD />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="grupos-acesso" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <FolderTree className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Grupos de Acesso</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configure grupos e permissões de menu
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <GruposAcessoCRUD />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="cadastro-usuarios" className="border rounded-lg bg-white shadow-sm">
             <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
@@ -282,86 +337,13 @@ export default function Config() {
                 <div className="text-left">
                   <div className="font-semibold">Cadastro de Usuários</div>
                   <div className="text-sm text-muted-foreground font-normal">
-                    Gerencie usuários e permissões do sistema
+                    Gerencie usuários e suas informações
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label>Perfis de Acesso</Label>
-                <div className="space-y-2 pl-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm">Administrador</p>
-                    <span className="text-xs text-muted-foreground">Acesso total</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm">Gestor</p>
-                    <span className="text-xs text-muted-foreground">Gerenciar fluxos e campanhas</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm">Agente</p>
-                    <span className="text-xs text-muted-foreground">Atendimento e conversas</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Autenticação 2FA</p>
-                  <p className="text-sm text-muted-foreground">Exigir autenticação em dois fatores</p>
-                </div>
-                <Switch />
-              </div>
-              <Button className="w-full">Gerenciar Usuários</Button>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="cadastro-empresa" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Cadastro de Empresa</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Informações e dados da sua empresa
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="empresa-nome">Nome da Empresa</Label>
-                <Input
-                  id="empresa-nome"
-                  placeholder="Digite o nome da empresa"
-                  defaultValue=""
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="empresa-cnpj">CNPJ</Label>
-                <Input
-                  id="empresa-cnpj"
-                  placeholder="00.000.000/0000-00"
-                  defaultValue=""
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="empresa-endereco">Endereço</Label>
-                <Input
-                  id="empresa-endereco"
-                  placeholder="Rua, número, bairro, cidade"
-                  defaultValue=""
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="empresa-telefone">Telefone</Label>
-                <Input
-                  id="empresa-telefone"
-                  placeholder="(00) 0000-0000"
-                  defaultValue=""
-                />
-              </div>
-              <Button className="w-full">Salvar Dados da Empresa</Button>
+            <AccordionContent className="px-6 pb-6">
+              <UsuariosCRUD />
             </AccordionContent>
           </AccordionItem>
         </Accordion>
