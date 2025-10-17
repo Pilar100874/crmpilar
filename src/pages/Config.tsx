@@ -11,6 +11,7 @@ import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
 import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
+import { ClientesCRUD } from "@/components/config/ClientesCRUD";
 
 export default function Config() {
   const [socialLinks, setSocialLinks] = useState({
@@ -252,30 +253,8 @@ export default function Config() {
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="customer-fields">Campos Personalizados</Label>
-                <Input
-                  id="customer-fields"
-                  placeholder="Ex: CPF, Data de nascimento, Endereço"
-                  defaultValue=""
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Validação de CPF</p>
-                  <p className="text-sm text-muted-foreground">Validar CPF no cadastro</p>
-                </div>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Cadastro duplicado</p>
-                  <p className="text-sm text-muted-foreground">Impedir cadastros com mesmo telefone/email</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Button className="w-full">Salvar Configurações</Button>
+            <AccordionContent className="px-6 pb-6">
+              <ClientesCRUD />
             </AccordionContent>
           </AccordionItem>
 

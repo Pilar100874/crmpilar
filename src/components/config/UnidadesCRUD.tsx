@@ -74,9 +74,12 @@ export const UnidadesCRUD = () => {
         .insert([{ nome }]);
 
       if (error) {
+        const errorMsg = error.message.includes('unidades_nome_unique') 
+          ? 'Já existe uma unidade com este nome'
+          : error.message;
         toast({
           title: "Erro ao criar",
-          description: error.message,
+          description: errorMsg,
           variant: "destructive",
         });
       } else {

@@ -74,9 +74,12 @@ export const SegmentosCRUD = () => {
         .insert([{ nome }]);
 
       if (error) {
+        const errorMsg = error.message.includes('segmentos_nome_unique') 
+          ? 'Já existe um segmento com este nome'
+          : error.message;
         toast({
           title: "Erro ao criar",
-          description: error.message,
+          description: errorMsg,
           variant: "destructive",
         });
       } else {

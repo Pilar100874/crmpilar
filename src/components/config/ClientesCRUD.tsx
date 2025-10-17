@@ -3,58 +3,45 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
 
-interface GrupoAcesso {
+interface Cliente {
   id: string;
   nome: string;
-  menus_permitidos: string[];
+  email: string | null;
+  telefone: string | null;
+  tipo_operador: boolean;
 }
 
-const MENUS_DISPONIVEIS = [
-  "Dashboard",
-  "Atendimento",
-  "Clientes",
-  "Campanhas",
-  "Conteúdos",
-  "Desenho",
-  "Bot Builder",
-  "Configurações",
-];
-
-export const GruposAcessoCRUD = () => {
-  const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
+export const ClientesCRUD = () => {
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [nome, setNome] = useState("");
-  const [menusPermitidos, setMenusPermitidos] = useState<string[]>([]);
+  const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [tipoOperador, setTipoOperador] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchGrupos();
+    fetchClientes();
   }, []);
 
-  const fetchGrupos = async () => {
+  const fetchClientes = async () => {
     const { data, error } = await supabase
-      .from("grupos_acesso")
-      .select("*")
+      .from("customers")
+      .select("id, nome, email, telefone, tipo_operador")
       .order("nome");
 
     if (error) {
       toast({
-        title: "Erro ao carregar grupos",
+        title: "Erro ao carregar clientes",
         description: error.message,
         variant: "destructive",
       });
     } else {
-      setGrupos((data || []).map(grupo => ({
-        id: grupo.id,
-        nome: grupo.nome,
-        menus_permitidos: Array.isArray(grupo.menus_permitidos) 
-          ? (grupo.menus_permitidos as string[])
-          : []
-      })));
+      setClientes(data || []);
     }
   };
 
@@ -64,21 +51,23 @@ export const GruposAcessoCRUD = () => {
     if (!nome.trim()) {
       toast({
         title: "Nome obrigatório",
-        description: "Por favor, preencha o nome do grupo",
+        description: "Por favor, preencha o nome do cliente",
         variant: "destructive",
       });
       return;
     }
 
-    const grupoData = {
+    const clienteData = {
       nome,
-      menus_permitidos: menusPermitidos,
+      email: email.trim() || null,
+      telefone: telefone.trim() || null,
+      tipo_operador: tipoOperador,
     };
 
     if (editingId) {
       const { error } = await supabase
-        .from("grupos_acesso")
-        .update(grupoData)
+        .from("customers")
+        .update(clienteData)
         .eq("id", editingId);
 
       if (error) {
@@ -88,49 +77,50 @@ export const GruposAcessoCRUD = () => {
           variant: "destructive",
         });
       } else {
-        toast({ title: "Grupo atualizado com sucesso!" });
+        toast({ title: "Cliente atualizado com sucesso!" });
         resetForm();
-        fetchGrupos();
+        fetchClientes();
       }
     } else {
       const { error } = await supabase
-        .from("grupos_acesso")
-        .insert([grupoData]);
+        .from("customers")
+        .insert([clienteData]);
 
       if (error) {
-        const errorMsg = error.message.includes('grupos_acesso_nome_unique') 
-          ? 'Já existe um grupo de acesso com este nome'
-          : error.message;
         toast({
           title: "Erro ao criar",
-          description: errorMsg,
+          description: error.message,
           variant: "destructive",
         });
       } else {
-        toast({ title: "Grupo criado com sucesso!" });
+        toast({ title: "Cliente criado com sucesso!" });
         resetForm();
-        fetchGrupos();
+        fetchClientes();
       }
     }
   };
 
   const resetForm = () => {
     setNome("");
-    setMenusPermitidos([]);
+    setEmail("");
+    setTelefone("");
+    setTipoOperador(false);
     setEditingId(null);
   };
 
-  const handleEdit = (grupo: GrupoAcesso) => {
-    setNome(grupo.nome);
-    setMenusPermitidos(grupo.menus_permitidos || []);
-    setEditingId(grupo.id);
+  const handleEdit = (cliente: Cliente) => {
+    setNome(cliente.nome);
+    setEmail(cliente.email || "");
+    setTelefone(cliente.telefone || "");
+    setTipoOperador(cliente.tipo_operador || false);
+    setEditingId(cliente.id);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este grupo?")) return;
+    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
 
     const { error } = await supabase
-      .from("grupos_acesso")
+      .from("customers")
       .delete()
       .eq("id", id);
 
@@ -141,51 +131,54 @@ export const GruposAcessoCRUD = () => {
         variant: "destructive",
       });
     } else {
-      toast({ title: "Grupo excluído com sucesso!" });
-      fetchGrupos();
+      toast({ title: "Cliente excluído com sucesso!" });
+      fetchClientes();
     }
-  };
-
-  const toggleMenu = (menu: string) => {
-    setMenusPermitidos((prev) =>
-      prev.includes(menu)
-        ? prev.filter((m) => m !== menu)
-        : [...prev, menu]
-    );
   };
 
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="grupo-nome">Nome do Grupo</Label>
+          <Label htmlFor="cliente-nome">Nome</Label>
           <Input
-            id="grupo-nome"
+            id="cliente-nome"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            placeholder="Digite o nome do grupo"
+            placeholder="Digite o nome do cliente"
           />
         </div>
 
         <div>
-          <Label>Menus Permitidos</Label>
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            {MENUS_DISPONIVEIS.map((menu) => (
-              <div key={menu} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`menu-${menu}`}
-                  checked={menusPermitidos.includes(menu)}
-                  onCheckedChange={() => toggleMenu(menu)}
-                />
-                <label
-                  htmlFor={`menu-${menu}`}
-                  className="text-sm cursor-pointer"
-                >
-                  {menu}
-                </label>
-              </div>
-            ))}
-          </div>
+          <Label htmlFor="cliente-email">E-mail</Label>
+          <Input
+            id="cliente-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Digite o e-mail"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="cliente-telefone">Telefone</Label>
+          <Input
+            id="cliente-telefone"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+            placeholder="Digite o telefone"
+          />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="tipo-operador"
+            checked={tipoOperador}
+            onCheckedChange={setTipoOperador}
+          />
+          <Label htmlFor="tipo-operador" className="cursor-pointer">
+            Tipo de Operador
+          </Label>
         </div>
 
         <Button type="submit">
@@ -204,29 +197,31 @@ export const GruposAcessoCRUD = () => {
       </form>
 
       <div className="space-y-2">
-        {grupos.map((grupo) => (
+        {clientes.map((cliente) => (
           <div
-            key={grupo.id}
+            key={cliente.id}
             className="flex items-start justify-between p-3 border rounded-md"
           >
             <div>
-              <div className="font-semibold">{grupo.nome}</div>
+              <div className="font-semibold">{cliente.nome}</div>
               <div className="text-sm text-muted-foreground mt-1">
-                Menus: {grupo.menus_permitidos?.join(", ") || "Nenhum"}
+                {cliente.email && <div>E-mail: {cliente.email}</div>}
+                {cliente.telefone && <div>Tel: {cliente.telefone}</div>}
+                <div>Tipo de Operador: {cliente.tipo_operador ? "Sim" : "Não"}</div>
               </div>
             </div>
             <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleEdit(grupo)}
+                onClick={() => handleEdit(cliente)}
               >
                 <Edit className="w-4 h-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleDelete(grupo.id)}
+                onClick={() => handleDelete(cliente.id)}
               >
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>

@@ -190,6 +190,7 @@ export type Database = {
           nome: string
           tags: string[] | null
           telefone: string | null
+          tipo_operador: boolean | null
         }
         Insert: {
           created_at?: string | null
@@ -199,6 +200,7 @@ export type Database = {
           nome: string
           tags?: string[] | null
           telefone?: string | null
+          tipo_operador?: boolean | null
         }
         Update: {
           created_at?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           nome?: string
           tags?: string[] | null
           telefone?: string | null
+          tipo_operador?: boolean | null
         }
         Relationships: []
       }
