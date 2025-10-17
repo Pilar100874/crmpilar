@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
 
@@ -12,7 +11,6 @@ interface Cliente {
   nome: string;
   email: string | null;
   telefone: string | null;
-  tipo_operador: boolean;
 }
 
 export const ClientesCRUD = () => {
@@ -20,7 +18,6 @@ export const ClientesCRUD = () => {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [tipoOperador, setTipoOperador] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -31,7 +28,7 @@ export const ClientesCRUD = () => {
   const fetchClientes = async () => {
     const { data, error } = await supabase
       .from("customers")
-      .select("id, nome, email, telefone, tipo_operador")
+      .select("id, nome, email, telefone")
       .order("nome");
 
     if (error) {
@@ -61,7 +58,6 @@ export const ClientesCRUD = () => {
       nome,
       email: email.trim() || null,
       telefone: telefone.trim() || null,
-      tipo_operador: tipoOperador,
     };
 
     if (editingId) {
@@ -104,7 +100,6 @@ export const ClientesCRUD = () => {
     setNome("");
     setEmail("");
     setTelefone("");
-    setTipoOperador(false);
     setEditingId(null);
   };
 
@@ -112,7 +107,6 @@ export const ClientesCRUD = () => {
     setNome(cliente.nome);
     setEmail(cliente.email || "");
     setTelefone(cliente.telefone || "");
-    setTipoOperador(cliente.tipo_operador || false);
     setEditingId(cliente.id);
   };
 
@@ -170,17 +164,6 @@ export const ClientesCRUD = () => {
           />
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="tipo-operador"
-            checked={tipoOperador}
-            onCheckedChange={setTipoOperador}
-          />
-          <Label htmlFor="tipo-operador" className="cursor-pointer">
-            Tipo de Operador
-          </Label>
-        </div>
-
         <Button type="submit">
           {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
         </Button>
@@ -207,7 +190,6 @@ export const ClientesCRUD = () => {
               <div className="text-sm text-muted-foreground mt-1">
                 {cliente.email && <div>E-mail: {cliente.email}</div>}
                 {cliente.telefone && <div>Tel: {cliente.telefone}</div>}
-                <div>Tipo de Operador: {cliente.tipo_operador ? "Sim" : "Não"}</div>
               </div>
             </div>
             <div className="flex gap-2">

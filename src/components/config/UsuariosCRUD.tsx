@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
 
@@ -15,6 +16,7 @@ interface Usuario {
   telefone: string | null;
   unidade_id: string | null;
   grupo_acesso_id: string | null;
+  is_agente?: boolean | null;
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
 }
@@ -47,6 +49,7 @@ export const UsuariosCRUD = () => {
   const [unidadeId, setUnidadeId] = useState("");
   const [grupoAcessoId, setGrupoAcessoId] = useState("");
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
+  const [isAgente, setIsAgente] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   const { toast } = useToast();
@@ -127,6 +130,7 @@ export const UsuariosCRUD = () => {
       telefone: telefone || null,
       unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
+      is_agente: isAgente,
       senha_hash: senha || undefined,
     };
 
@@ -207,6 +211,7 @@ export const UsuariosCRUD = () => {
     setUnidadeId("");
     setGrupoAcessoId("");
     setSegmentosSelecionados([]);
+    setIsAgente(false);
     setEditingId(null);
   };
 
@@ -216,6 +221,7 @@ export const UsuariosCRUD = () => {
     setTelefone(usuario.telefone || "");
     setUnidadeId(usuario.unidade_id || "");
     setGrupoAcessoId(usuario.grupo_acesso_id || "");
+    setIsAgente(usuario.is_agente || false);
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
@@ -334,6 +340,17 @@ export const UsuariosCRUD = () => {
           </div>
         </div>
 
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="is-agente"
+            checked={isAgente}
+            onCheckedChange={setIsAgente}
+          />
+          <Label htmlFor="is-agente" className="cursor-pointer">
+            É Agente
+          </Label>
+        </div>
+
         <div>
           <Label>Segmentos</Label>
           <div className="grid grid-cols-3 gap-3 mt-2">
@@ -380,6 +397,7 @@ export const UsuariosCRUD = () => {
               <div className="font-semibold">{usuario.nome}</div>
               <div className="text-sm text-muted-foreground">
                 {usuario.email} {usuario.telefone && `• ${usuario.telefone}`}
+                {usuario.is_agente && <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Agente</span>}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {usuario.unidades?.nome && `Unidade: ${usuario.unidades.nome}`}
