@@ -241,7 +241,7 @@ export default function Config() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
                 <div className="text-left">
-                  <div className="font-semibold">Cadastro de Clientes</div>
+                  <div className="font-semibold">Campos do Cadastro de Cliente</div>
                   <div className="text-sm text-muted-foreground font-normal">
                     Configure campos e informações dos clientes
                   </div>
