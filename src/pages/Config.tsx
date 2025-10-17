@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Webhook, Key, Bell, Shield, Share2 } from "lucide-react";
+import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Config() {
@@ -233,6 +233,135 @@ export default function Config() {
                 />
               </div>
               <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="cadastro-clientes" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Cadastro de Clientes</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configure campos e informações dos clientes
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="customer-fields">Campos Personalizados</Label>
+                <Input
+                  id="customer-fields"
+                  placeholder="Ex: CPF, Data de nascimento, Endereço"
+                  defaultValue=""
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Validação de CPF</p>
+                  <p className="text-sm text-muted-foreground">Validar CPF no cadastro</p>
+                </div>
+                <Switch />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Cadastro duplicado</p>
+                  <p className="text-sm text-muted-foreground">Impedir cadastros com mesmo telefone/email</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <Button className="w-full">Salvar Configurações</Button>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="cadastro-usuarios" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <UserCog className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Cadastro de Usuários</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Gerencie usuários e permissões do sistema
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
+              <div className="space-y-2">
+                <Label>Perfis de Acesso</Label>
+                <div className="space-y-2 pl-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm">Administrador</p>
+                    <span className="text-xs text-muted-foreground">Acesso total</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm">Gestor</p>
+                    <span className="text-xs text-muted-foreground">Gerenciar fluxos e campanhas</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm">Agente</p>
+                    <span className="text-xs text-muted-foreground">Atendimento e conversas</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Autenticação 2FA</p>
+                  <p className="text-sm text-muted-foreground">Exigir autenticação em dois fatores</p>
+                </div>
+                <Switch />
+              </div>
+              <Button className="w-full">Gerenciar Usuários</Button>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="cadastro-empresa" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Cadastro de Empresa</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Informações e dados da sua empresa
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="empresa-nome">Nome da Empresa</Label>
+                <Input
+                  id="empresa-nome"
+                  placeholder="Digite o nome da empresa"
+                  defaultValue=""
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="empresa-cnpj">CNPJ</Label>
+                <Input
+                  id="empresa-cnpj"
+                  placeholder="00.000.000/0000-00"
+                  defaultValue=""
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="empresa-endereco">Endereço</Label>
+                <Input
+                  id="empresa-endereco"
+                  placeholder="Rua, número, bairro, cidade"
+                  defaultValue=""
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="empresa-telefone">Telefone</Label>
+                <Input
+                  id="empresa-telefone"
+                  placeholder="(00) 0000-0000"
+                  defaultValue=""
+                />
+              </div>
+              <Button className="w-full">Salvar Dados da Empresa</Button>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
