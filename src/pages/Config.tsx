@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Webhook, Key, Bell, Shield, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,18 +38,20 @@ export default function Config() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
+        <Accordion type="single" collapsible className="space-y-4">
+          <AccordionItem value="n8n" className="border rounded-lg bg-white">
+            <AccordionTrigger className="px-6 hover:no-underline">
               <div className="flex items-center gap-2">
                 <Webhook className="w-5 h-5 text-primary" />
-                <CardTitle>Integração n8n</CardTitle>
+                <div className="text-left">
+                  <div className="font-semibold">Integração n8n</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configure a conexão com seu workflow n8n
+                  </div>
+                </div>
               </div>
-              <CardDescription>
-                Configure a conexão com seu workflow n8n
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="n8n-url">URL Base n8n</Label>
                 <Input
@@ -68,20 +70,22 @@ export default function Config() {
                 />
               </div>
               <Button className="w-full">Salvar Integração</Button>
-            </CardContent>
-          </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-          <Card>
-            <CardHeader>
+          <AccordionItem value="canais" className="border rounded-lg bg-white">
+            <AccordionTrigger className="px-6 hover:no-underline">
               <div className="flex items-center gap-2">
                 <Key className="w-5 h-5 text-primary" />
-                <CardTitle>Canais de Atendimento</CardTitle>
+                <div className="text-left">
+                  <div className="font-semibold">Canais de Atendimento</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Gerencie os canais disponíveis
+                  </div>
+                </div>
               </div>
-              <CardDescription>
-                Gerencie os canais disponíveis
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">WhatsApp</p>
@@ -106,20 +110,22 @@ export default function Config() {
               <Button variant="outline" className="w-full">
                 Configurar Canais
               </Button>
-            </CardContent>
-          </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-          <Card>
-            <CardHeader>
+          <AccordionItem value="notificacoes" className="border rounded-lg bg-white">
+            <AccordionTrigger className="px-6 hover:no-underline">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-primary" />
-                <CardTitle>Notificações</CardTitle>
+                <div className="text-left">
+                  <div className="font-semibold">Notificações</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configure alertas e notificações
+                  </div>
+                </div>
               </div>
-              <CardDescription>
-                Configure alertas e notificações
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Nova conversa</p>
@@ -141,20 +147,22 @@ export default function Config() {
                 </div>
                 <Switch defaultChecked />
               </div>
-            </CardContent>
-          </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-          <Card>
-            <CardHeader>
+          <AccordionItem value="seguranca" className="border rounded-lg bg-white">
+            <AccordionTrigger className="px-6 hover:no-underline">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
-                <CardTitle>Segurança e LGPD</CardTitle>
+                <div className="text-left">
+                  <div className="font-semibold">Segurança e LGPD</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configurações de privacidade e dados
+                  </div>
+                </div>
               </div>
-              <CardDescription>
-                Configurações de privacidade e dados
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Retenção de dados</p>
@@ -172,20 +180,22 @@ export default function Config() {
               <Button variant="outline" className="w-full">
                 Exportar Dados
               </Button>
-            </CardContent>
-          </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-          <Card>
-            <CardHeader>
+          <AccordionItem value="redes-sociais" className="border rounded-lg bg-white">
+            <AccordionTrigger className="px-6 hover:no-underline">
               <div className="flex items-center gap-2">
                 <Share2 className="w-5 h-5 text-primary" />
-                <CardTitle>Redes Sociais</CardTitle>
+                <div className="text-left">
+                  <div className="font-semibold">Redes Sociais</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configure os links das suas redes sociais para o bloco de despedida
+                  </div>
+                </div>
               </div>
-              <CardDescription>
-                Configure os links das suas redes sociais para o bloco de despedida
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="whatsapp">WhatsApp</Label>
                 <Input
@@ -223,9 +233,9 @@ export default function Config() {
                 />
               </div>
               <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
-            </CardContent>
-          </Card>
-        </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </Layout>
   );
