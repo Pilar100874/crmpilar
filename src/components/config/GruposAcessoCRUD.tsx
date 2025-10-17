@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, ChevronDown, ChevronRight } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Trash2, Edit, Plus } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface MenuPermissions {
   view: boolean;
@@ -29,22 +29,15 @@ const MENUS_DISPONIVEIS = [
   "Conteúdos",
   "Desenho",
   "Bot Builder",
+  "WhatsApp Config",
   "Variáveis Globais",
   "Configurações",
 ];
-
-const PERMISSIONS_LABELS = {
-  view: "Visualizar",
-  create: "Criar",
-  edit: "Modificar",
-  delete: "Excluir",
-};
 
 export const GruposAcessoCRUD = () => {
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [nome, setNome] = useState("");
   const [menusPermitidos, setMenusPermitidos] = useState<Record<string, MenuPermissions>>({});
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -68,7 +61,9 @@ export const GruposAcessoCRUD = () => {
       setGrupos((data || []).map(grupo => ({
         id: grupo.id,
         nome: grupo.nome,
-        menus_permitidos: typeof grupo.menus_permitidos === 'object' && grupo.menus_permitidos !== null && !Array.isArray(grupo.menus_permitidos)
+        menus_permitidos: typeof grupo.menus_permitidos === 'object' && 
+          grupo.menus_permitidos !== null && 
+          !Array.isArray(grupo.menus_permitidos)
           ? (grupo.menus_permitidos as unknown as Record<string, MenuPermissions>)
           : {}
       })));
@@ -134,19 +129,12 @@ export const GruposAcessoCRUD = () => {
   const resetForm = () => {
     setNome("");
     setMenusPermitidos({});
-    setOpenMenus({});
     setEditingId(null);
   };
 
   const handleEdit = (grupo: GrupoAcesso) => {
     setNome(grupo.nome);
     setMenusPermitidos(grupo.menus_permitidos || {});
-    // Open all menus that have at least one permission
-    const openedMenus: Record<string, boolean> = {};
-    Object.keys(grupo.menus_permitidos || {}).forEach(menu => {
-      openedMenus[menu] = true;
-    });
-    setOpenMenus(openedMenus);
     setEditingId(grupo.id);
   };
 
@@ -170,49 +158,54 @@ export const GruposAcessoCRUD = () => {
     }
   };
 
-  const toggleMenuOpen = (menu: string) => {
-    setOpenMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
-  };
-
   const togglePermission = (menu: string, permission: keyof MenuPermissions) => {
-    setMenusPermitidos(prev => {
-      const menuPerms = prev[menu] || { view: false, create: false, edit: false, delete: false };
-      const newPerms = { ...menuPerms, [permission]: !menuPerms[permission] };
+    setMenusPermitidos((prev) => {
+      const current = prev[menu] || { view: false, create: false, edit: false, delete: false };
       
-      // If view is being disabled, disable all other permissions
-      if (permission === 'view' && !newPerms.view) {
-        newPerms.create = false;
-        newPerms.edit = false;
-        newPerms.delete = false;
+      // If unchecking view, uncheck all permissions
+      if (permission === 'view' && current.view) {
+        const newPerms = { ...prev };
+        delete newPerms[menu];
+        return newPerms;
       }
       
-      // If any other permission is enabled, enable view
-      if (permission !== 'view' && newPerms[permission]) {
-        newPerms.view = true;
+      // If checking any permission, ensure view is also checked
+      const newPermissions = {
+        ...current,
+        [permission]: !current[permission],
+      };
+      
+      if (permission !== 'view' && !current[permission]) {
+        newPermissions.view = true;
       }
       
-      // If all permissions are false, remove the menu
-      if (!newPerms.view && !newPerms.create && !newPerms.edit && !newPerms.delete) {
-        const { [menu]: _, ...rest } = prev;
-        return rest;
-      }
-      
-      return { ...prev, [menu]: newPerms };
+      return {
+        ...prev,
+        [menu]: newPermissions,
+      };
     });
   };
 
-  const getPermissionsSummary = (permissions: Record<string, MenuPermissions>) => {
-    const menus = Object.keys(permissions);
-    if (menus.length === 0) return "Nenhum menu";
-    
-    return menus.map(menu => {
-      const perms = permissions[menu];
-      const activePerms = Object.entries(perms)
-        .filter(([_, value]) => value)
-        .map(([key]) => PERMISSIONS_LABELS[key as keyof MenuPermissions])
-        .join(", ");
-      return `${menu} (${activePerms})`;
-    }).join(" • ");
+  const getPermissionLabel = (key: keyof MenuPermissions) => {
+    const labels = {
+      view: 'Visualizar',
+      create: 'Criar',
+      edit: 'Modificar',
+      delete: 'Excluir',
+    };
+    return labels[key];
+  };
+
+  const formatPermissions = (permissions: Record<string, MenuPermissions>) => {
+    return Object.entries(permissions)
+      .map(([menu, perms]) => {
+        const actions = Object.entries(perms)
+          .filter(([, value]) => value)
+          .map(([key]) => getPermissionLabel(key as keyof MenuPermissions))
+          .join(', ');
+        return `${menu} (${actions})`;
+      })
+      .join(' | ');
   };
 
   return (
@@ -230,117 +223,68 @@ export const GruposAcessoCRUD = () => {
         </div>
 
         <div>
-          <Label>Menus e Permissões</Label>
-          <div className="space-y-2 mt-2 border rounded-md p-3">
+          <Label className="text-base mb-3 block">Permissões por Menu</Label>
+          <div className="space-y-3">
             {MENUS_DISPONIVEIS.map((menu) => {
-              const menuPerms = menusPermitidos[menu] || { view: false, create: false, edit: false, delete: false };
-              const isOpen = openMenus[menu];
+              const permissions = menusPermitidos[menu] || { view: false, create: false, edit: false, delete: false };
               
               return (
-                <Collapsible key={menu} open={isOpen} onOpenChange={() => toggleMenuOpen(menu)}>
-                  <div className="flex items-center justify-between py-2 px-3 hover:bg-accent rounded-md">
-                    <div className="flex items-center space-x-2 flex-1">
-                      <Checkbox
-                        id={`menu-${menu}-view`}
-                        checked={menuPerms.view}
-                        onCheckedChange={() => togglePermission(menu, 'view')}
-                      />
-                      <label
-                        htmlFor={`menu-${menu}-view`}
-                        className="text-sm font-medium cursor-pointer flex-1"
-                      >
-                        {menu}
-                      </label>
-                    </div>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="p-1 h-auto">
-                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
+                <Card key={menu} className="p-4">
+                  <div className="font-medium mb-3">{menu}</div>
+                  <div className="grid grid-cols-4 gap-4">
+                    {(['view', 'create', 'edit', 'delete'] as const).map((perm) => (
+                      <div key={perm} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${menu}-${perm}`}
+                          checked={permissions[perm]}
+                          onCheckedChange={() => togglePermission(menu, perm)}
+                        />
+                        <label
+                          htmlFor={`${menu}-${perm}`}
+                          className="text-sm cursor-pointer"
+                        >
+                          {getPermissionLabel(perm)}
+                        </label>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <CollapsibleContent className="pl-8 pr-3 pb-2">
-                    <div className="grid grid-cols-3 gap-2 pt-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`menu-${menu}-create`}
-                          checked={menuPerms.create}
-                          onCheckedChange={() => togglePermission(menu, 'create')}
-                          disabled={!menuPerms.view}
-                        />
-                        <label
-                          htmlFor={`menu-${menu}-create`}
-                          className="text-sm cursor-pointer text-muted-foreground"
-                        >
-                          Criar
-                        </label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`menu-${menu}-edit`}
-                          checked={menuPerms.edit}
-                          onCheckedChange={() => togglePermission(menu, 'edit')}
-                          disabled={!menuPerms.view}
-                        />
-                        <label
-                          htmlFor={`menu-${menu}-edit`}
-                          className="text-sm cursor-pointer text-muted-foreground"
-                        >
-                          Modificar
-                        </label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`menu-${menu}-delete`}
-                          checked={menuPerms.delete}
-                          onCheckedChange={() => togglePermission(menu, 'delete')}
-                          disabled={!menuPerms.view}
-                        />
-                        <label
-                          htmlFor={`menu-${menu}-delete`}
-                          className="text-sm cursor-pointer text-muted-foreground"
-                        >
-                          Excluir
-                        </label>
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                </Card>
               );
             })}
           </div>
         </div>
 
-        <Button type="submit">
-          {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
-        </Button>
-        {editingId && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={resetForm}
-            className="ml-2"
-          >
-            Cancelar
+        <div className="flex gap-2">
+          <Button type="submit">
+            {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
           </Button>
-        )}
+          {editingId && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetForm}
+            >
+              Cancelar
+            </Button>
+          )}
+        </div>
       </form>
 
       <div className="space-y-2">
         {grupos.map((grupo) => (
           <div
             key={grupo.id}
-            className="flex items-start justify-between p-3 border rounded-md"
+            className="flex items-start justify-between p-4 border rounded-md"
           >
-            <div className="flex-1 pr-4">
-              <div className="font-semibold">{grupo.nome}</div>
-              <div className="text-sm text-muted-foreground mt-1 break-words">
-                {getPermissionsSummary(grupo.menus_permitidos)}
+            <div className="flex-1">
+              <div className="font-semibold mb-2">{grupo.nome}</div>
+              <div className="text-sm text-muted-foreground">
+                {Object.keys(grupo.menus_permitidos || {}).length > 0 
+                  ? formatPermissions(grupo.menus_permitidos)
+                  : "Nenhuma permissão definida"}
               </div>
             </div>
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="icon"
