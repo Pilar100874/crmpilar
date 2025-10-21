@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import sql from 'npm:mssql@10';
+import sql from 'https://esm.sh/mssql@10';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -126,6 +126,8 @@ serve(async (req) => {
       params = await req.json();
     }
 
+    console.log('Request parameters:', params);
+
     // Get database connection details if connection_id is specified
     let connectionConfig: any = apiConfig;
     if (apiConfig.connection_id) {
@@ -146,6 +148,34 @@ serve(async (req) => {
         };
       }
     }
+
+    // Replace {{VARIABLE}} placeholders with actual parameter names for SQL Server
+    let finalQuery = apiConfig.query;
+    const replacedParams: Record<string, any> = {};
+    
+    // Replace {{PARAM}} with @PARAM for SQL Server and collect parameters
+    if (apiConfig.parameters && Array.isArray(apiConfig.parameters)) {
+      apiConfig.parameters.forEach((param: any) => {
+        const paramName = param.name;
+        const paramValue = params[paramName];
+        
+        console.log(`Processing parameter: ${paramName} = ${paramValue}`);
+        
+        // Replace {{PARAM}} with @PARAM in the query
+        const regex = new RegExp(`\\{\\{${paramName}\\}\\}`, 'g');
+        finalQuery = finalQuery.replace(regex, `@${paramName}`);
+        
+        // Store the parameter value
+        if (paramValue !== undefined && paramValue !== null) {
+          replacedParams[paramName] = paramValue;
+        } else if (param.required) {
+          throw new Error(`Required parameter ${paramName} is missing`);
+        }
+      });
+    }
+    
+    console.log('Final query:', finalQuery);
+    console.log('Parameters to bind:', replacedParams);
 
     // Execute query based on database type
     if (apiConfig.database_type === 'supabase') {
@@ -176,10 +206,10 @@ serve(async (req) => {
         database: connectionConfig.sql_database,
         username: connectionConfig.sql_username,
         password: connectionConfig.sql_password,
-        query: apiConfig.query,
+        query: finalQuery,
       };
 
-      const result = await executeSqlServerQuery(sqlConfig, params);
+      const result = await executeSqlServerQuery(sqlConfig, replacedParams);
 
       return new Response(
         JSON.stringify({
