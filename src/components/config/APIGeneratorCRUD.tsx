@@ -296,35 +296,31 @@ export function APIGeneratorCRUD() {
     }
   };
 
-  const getFullUrl = (endpoint: APIEndpoint) => {
+  const getFullUrl = (endpoint: APIEndpoint, includeParams: boolean = false) => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    return `https://${projectId}.supabase.co/functions/v1/execute-dynamic-query/${endpoint.endpoint_path}`;
+    let url = `https://${projectId}.supabase.co/functions/v1/execute-dynamic-query/${endpoint.endpoint_path}`;
+    
+    if (includeParams && endpoint.parameters && endpoint.parameters.length > 0) {
+      const params = endpoint.parameters.map(p => `${p.name}=XXXX`).join('&');
+      url += `?${params}`;
+    }
+    
+    return url;
   };
 
   const copyToClipboard = (endpoint: APIEndpoint) => {
-    const url = getFullUrl(endpoint);
+    const url = getFullUrl(endpoint, true);
     navigator.clipboard.writeText(url);
     toast.success("URL copiada para a área de transferência!");
   };
 
-  const renderUrlWithParams = (url: string, params: QueryParameter[]) => {
+  const renderUrlWithParams = (endpoint: APIEndpoint) => {
+    const hasParams = endpoint.parameters && endpoint.parameters.length > 0;
+    const fullUrl = getFullUrl(endpoint, hasParams);
+    
     return (
-      <div className="space-y-2">
-        <div className="p-2 bg-muted/50 rounded font-mono text-xs break-all">
-          {url}
-        </div>
-        {params && params.length > 0 && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Parâmetros:</p>
-            <div className="flex flex-wrap gap-1">
-              {params.map((param, idx) => (
-                <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary text-xs">
-                  {param.name}=<span className="text-muted-foreground">XXXX</span>
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="p-2 bg-muted/50 rounded font-mono text-xs break-all">
+        {fullUrl}
       </div>
     );
   };
@@ -658,7 +654,7 @@ export function APIGeneratorCRUD() {
 
                       <div className="space-y-2">
                         <Label className="text-xs font-semibold">Endpoint:</Label>
-                        {renderUrlWithParams(getFullUrl(endpoint), endpoint.parameters)}
+                        {renderUrlWithParams(endpoint)}
                       </div>
 
                       <div className="flex flex-wrap gap-1 pt-2 border-t">
@@ -723,7 +719,7 @@ export function APIGeneratorCRUD() {
                 <div>
                   <Label>URL do Endpoint</Label>
                   <div className="p-3 bg-muted rounded-md font-mono text-xs mt-2 break-all">
-                    {getFullUrl(selectedEndpoint)}
+                    {getFullUrl(selectedEndpoint, selectedEndpoint.parameters?.length > 0)}
                   </div>
                 </div>
                 <div>
