@@ -203,7 +203,22 @@ export function DatabaseConnectionsCRUD() {
                   <Label htmlFor="database_type">Tipo de Banco</Label>
                   <Select
                     value={formData.database_type}
-                    onValueChange={(value) => setFormData({ ...formData, database_type: value })}
+                    onValueChange={(value) => {
+                      const defaultPorts: Record<string, string> = {
+                        sqlserver: '1433',
+                        postgresql: '5432',
+                        mysql: '3306',
+                        oracle: '1521',
+                        mariadb: '3306',
+                        firebird: '3050',
+                        sqlite: ''
+                      };
+                      setFormData({ 
+                        ...formData, 
+                        database_type: value,
+                        sql_port: defaultPorts[value] || '1433'
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -212,6 +227,10 @@ export function DatabaseConnectionsCRUD() {
                       <SelectItem value="sqlserver">SQL Server</SelectItem>
                       <SelectItem value="postgresql">PostgreSQL</SelectItem>
                       <SelectItem value="mysql">MySQL</SelectItem>
+                      <SelectItem value="oracle">Oracle</SelectItem>
+                      <SelectItem value="mariadb">MariaDB</SelectItem>
+                      <SelectItem value="firebird">Firebird</SelectItem>
+                      <SelectItem value="sqlite">SQLite</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -244,10 +263,19 @@ export function DatabaseConnectionsCRUD() {
                   <Label htmlFor="sql_port">Porta</Label>
                   <Input
                     id="sql_port"
-                    required
+                    required={formData.database_type !== 'sqlite'}
+                    disabled={formData.database_type === 'sqlite'}
                     value={formData.sql_port}
                     onChange={(e) => setFormData({ ...formData, sql_port: e.target.value })}
-                    placeholder="1433"
+                    placeholder={
+                      formData.database_type === 'sqlserver' ? '1433' :
+                      formData.database_type === 'postgresql' ? '5432' :
+                      formData.database_type === 'mysql' ? '3306' :
+                      formData.database_type === 'oracle' ? '1521' :
+                      formData.database_type === 'mariadb' ? '3306' :
+                      formData.database_type === 'firebird' ? '3050' :
+                      'N/A'
+                    }
                   />
                 </div>
               </div>
