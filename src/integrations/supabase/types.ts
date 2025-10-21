@@ -14,7 +14,639 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      api_endpoints: {
+        Row: {
+          active: boolean | null
+          connection_id: string | null
+          created_at: string | null
+          database_type: string
+          description: string | null
+          endpoint_path: string
+          http_method: string
+          id: string
+          name: string
+          parameters: Json | null
+          query: string
+          sql_database: string | null
+          sql_password: string | null
+          sql_server: string | null
+          sql_username: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          connection_id?: string | null
+          created_at?: string | null
+          database_type: string
+          description?: string | null
+          endpoint_path: string
+          http_method: string
+          id?: string
+          name: string
+          parameters?: Json | null
+          query: string
+          sql_database?: string | null
+          sql_password?: string | null
+          sql_server?: string | null
+          sql_username?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          connection_id?: string | null
+          created_at?: string | null
+          database_type?: string
+          description?: string | null
+          endpoint_path?: string
+          http_method?: string
+          id?: string
+          name?: string
+          parameters?: Json | null
+          query?: string
+          sql_database?: string | null
+          sql_password?: string | null
+          sql_server?: string | null
+          sql_username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_endpoints_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "database_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_flows: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          flow_data: Json
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          flow_data: Json
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          flow_data?: Json
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          created_at: string | null
+          id: string
+          n8n_workflow_id: string | null
+          nome: string
+          schedule_at: string | null
+          segment: Json | null
+          stats: Json | null
+          status: string | null
+          template: string
+          variables: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          n8n_workflow_id?: string | null
+          nome: string
+          schedule_at?: string | null
+          segment?: Json | null
+          stats?: Json | null
+          status?: string | null
+          template: string
+          variables?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          n8n_workflow_id?: string | null
+          nome?: string
+          schedule_at?: string | null
+          segment?: Json | null
+          stats?: Json | null
+          status?: string | null
+          template?: string
+          variables?: string[] | null
+        }
+        Relationships: []
+      }
+      chat_sessions: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          id: string
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      contents: {
+        Row: {
+          blob_ref: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          tags: string[] | null
+          tipo: string
+          titulo: string
+          url: string | null
+        }
+        Insert: {
+          blob_ref?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          tags?: string[] | null
+          tipo: string
+          titulo: string
+          url?: string | null
+        }
+        Update: {
+          blob_ref?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          tags?: string[] | null
+          tipo?: string
+          titulo?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          assignee_id: string | null
+          bot_id: string | null
+          canal: string
+          created_at: string | null
+          customer_id: string
+          id: string
+          metadata: Json | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assignee_id?: string | null
+          bot_id?: string | null
+          canal: string
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assignee_id?: string | null
+          bot_id?: string | null
+          canal?: string
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          created_at: string | null
+          custom_fields: Json | null
+          email: string
+          id: string
+          nome: string
+          tags: string[] | null
+          telefone: string
+          tipo_operador: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_fields?: Json | null
+          email: string
+          id?: string
+          nome: string
+          tags?: string[] | null
+          telefone: string
+          tipo_operador?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_fields?: Json | null
+          email?: string
+          id?: string
+          nome?: string
+          tags?: string[] | null
+          telefone?: string
+          tipo_operador?: boolean | null
+        }
+        Relationships: []
+      }
+      database_connections: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          database_type: string
+          description: string | null
+          id: string
+          name: string
+          sql_database: string
+          sql_password: string
+          sql_port: string | null
+          sql_server: string
+          sql_username: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          database_type: string
+          description?: string | null
+          id?: string
+          name: string
+          sql_database: string
+          sql_password: string
+          sql_port?: string | null
+          sql_server: string
+          sql_username: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          database_type?: string
+          description?: string | null
+          id?: string
+          name?: string
+          sql_database?: string
+          sql_password?: string
+          sql_port?: string | null
+          sql_server?: string
+          sql_username?: string
+        }
+        Relationships: []
+      }
+      flows: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          graph: Json
+          id: string
+          nome: string
+          published: boolean | null
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          graph: Json
+          id?: string
+          nome: string
+          published?: boolean | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          graph?: Json
+          id?: string
+          nome?: string
+          published?: boolean | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
+      global_variables: {
+        Row: {
+          created_at: string
+          default_value: Json | null
+          description: string | null
+          id: string
+          is_constant: boolean | null
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          is_constant?: boolean | null
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          is_constant?: boolean | null
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      grupos_acesso: {
+        Row: {
+          created_at: string | null
+          id: string
+          menus_permitidos: Json | null
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          menus_permitidos?: Json | null
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          menus_permitidos?: Json | null
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          attachments: string[] | null
+          conversation_id: string
+          created_at: string | null
+          id: string
+          payload: Json | null
+          sender: string
+          text: string | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          payload?: Json | null
+          sender: string
+          text?: string | null
+        }
+        Update: {
+          attachments?: string[] | null
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          payload?: Json | null
+          sender?: string
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      segmentos: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      twilio_config: {
+        Row: {
+          account_sid: string | null
+          auth_token: string | null
+          created_at: string | null
+          id: number
+          sandbox_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_sid?: string | null
+          auth_token?: string | null
+          created_at?: string | null
+          id?: number
+          sandbox_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_sid?: string | null
+          auth_token?: string | null
+          created_at?: string | null
+          id?: number
+          sandbox_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      unidades: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usuario_segmentos: {
+        Row: {
+          id: string
+          segmento_id: string
+          usuario_id: string
+        }
+        Insert: {
+          id?: string
+          segmento_id: string
+          usuario_id: string
+        }
+        Update: {
+          id?: string
+          segmento_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_segmentos_segmento_id_fkey"
+            columns: ["segmento_id"]
+            isOneToOne: false
+            referencedRelation: "segmentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_segmentos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios: {
+        Row: {
+          created_at: string | null
+          email: string
+          grupo_acesso_id: string | null
+          id: string
+          nome: string
+          senha_hash: string
+          telefone: string | null
+          unidade_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          grupo_acesso_id?: string | null
+          id?: string
+          nome: string
+          senha_hash: string
+          telefone?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          grupo_acesso_id?: string | null
+          id?: string
+          nome?: string
+          senha_hash?: string
+          telefone?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_grupo_acesso_id_fkey"
+            columns: ["grupo_acesso_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_acesso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_config: {
+        Row: {
+          business_account_id: string | null
+          business_token: string
+          created_at: string | null
+          id: string
+          phone_number_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_account_id?: string | null
+          business_token: string
+          created_at?: string | null
+          id?: string
+          phone_number_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_account_id?: string | null
+          business_token?: string
+          created_at?: string | null
+          id?: string
+          phone_number_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +655,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "gestor" | "agente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +782,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "gestor", "agente"],
+    },
   },
 } as const

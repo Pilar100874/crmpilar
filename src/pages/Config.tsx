@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2, Tag, FolderTree } from "lucide-react";
+import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2, Tag, FolderTree, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
 import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { ClientesCRUD } from "@/components/config/ClientesCRUD";
+import { APIGeneratorCRUD } from "@/components/config/APIGeneratorCRUD";
 
 export default function Config() {
   const [socialLinks, setSocialLinks] = useState({
@@ -201,43 +202,25 @@ export default function Config() {
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input
-                  id="whatsapp"
-                  placeholder="https://wa.me/5511999999999"
-                  value={socialLinks.whatsapp}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, whatsapp: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="instagram">Instagram</Label>
-                <Input
-                  id="instagram"
-                  placeholder="https://instagram.com/seu_perfil"
-                  value={socialLinks.instagram}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="facebook">Facebook</Label>
-                <Input
-                  id="facebook"
-                  placeholder="https://facebook.com/sua_pagina"
-                  value={socialLinks.facebook}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
-                <Input
-                  id="website"
-                  placeholder="https://seusite.com"
-                  value={socialLinks.website}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
-                />
-              </div>
+...
               <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="gerador-api" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Globe className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Gerador de APIs</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Crie endpoints de API dinâmicos conectados a bancos de dados
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <APIGeneratorCRUD />
             </AccordionContent>
           </AccordionItem>
 
