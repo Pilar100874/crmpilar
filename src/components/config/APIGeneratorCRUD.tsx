@@ -440,12 +440,18 @@ export function APIGeneratorCRUD() {
                       <SelectContent>
                         <SelectItem value="supabase">Supabase (Atual)</SelectItem>
                         <SelectItem value="sqlserver">SQL Server</SelectItem>
+                        <SelectItem value="postgresql">PostgreSQL</SelectItem>
+                        <SelectItem value="mysql">MySQL</SelectItem>
+                        <SelectItem value="oracle">Oracle</SelectItem>
+                        <SelectItem value="mariadb">MariaDB</SelectItem>
+                        <SelectItem value="sqlite">SQLite</SelectItem>
+                        <SelectItem value="firebird">Firebird</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                {formData.database_type === 'sqlserver' && (
+                {formData.database_type !== 'supabase' && (
                   <div className="space-y-2">
                     <Label htmlFor="connection_id">Usar Conexão Salva (Opcional)</Label>
                     <Select
@@ -479,7 +485,7 @@ export function APIGeneratorCRUD() {
                   />
                 </div>
 
-                {formData.database_type === 'sqlserver' && !formData.connection_id && (
+                {formData.database_type !== 'supabase' && !formData.connection_id && (
                   <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
                     <div className="space-y-2">
                       <Label htmlFor="sql_server">Servidor SQL</Label>
@@ -546,12 +552,23 @@ export function APIGeneratorCRUD() {
                     required
                     value={formData.query}
                     onChange={(e) => setFormData({ ...formData, query: e.target.value })}
-                    placeholder="SELECT * FROM tabela WHERE campo = {{parametro}}"
+                    placeholder={
+                      formData.database_type === 'sqlserver' ? "SELECT * FROM tabela WHERE campo = @parametro" :
+                      formData.database_type === 'oracle' ? "SELECT * FROM tabela WHERE campo = :parametro" :
+                      formData.database_type === 'postgresql' || formData.database_type === 'mysql' || formData.database_type === 'mariadb' ? "SELECT * FROM tabela WHERE campo = $1" :
+                      "SELECT * FROM tabela WHERE campo = ?"
+                    }
                     rows={5}
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Use {`{{nome_parametro}}`} para adicionar variáveis na query
+                    {formData.database_type === 'sqlserver' && `Use @nome_parametro para adicionar variáveis na query (SQL Server)`}
+                    {formData.database_type === 'oracle' && `Use :nome_parametro para adicionar variáveis na query (Oracle)`}
+                    {(formData.database_type === 'postgresql' || formData.database_type === 'mysql' || formData.database_type === 'mariadb') && 
+                      `Use $1, $2, $3... para adicionar variáveis na query (${formData.database_type === 'postgresql' ? 'PostgreSQL' : formData.database_type === 'mysql' ? 'MySQL' : 'MariaDB'})`}
+                    {formData.database_type === 'sqlite' && `Use ? para adicionar variáveis na query (SQLite)`}
+                    {formData.database_type === 'firebird' && `Use ? ou :nome_parametro para adicionar variáveis na query (Firebird)`}
+                    {formData.database_type === 'supabase' && `Use {{nome_parametro}} para adicionar variáveis na query (Supabase)`}
                   </p>
                 </div>
 

@@ -212,6 +212,10 @@ export function DatabaseConnectionsCRUD() {
                       <SelectItem value="sqlserver">SQL Server</SelectItem>
                       <SelectItem value="postgresql">PostgreSQL</SelectItem>
                       <SelectItem value="mysql">MySQL</SelectItem>
+                      <SelectItem value="oracle">Oracle</SelectItem>
+                      <SelectItem value="mariadb">MariaDB</SelectItem>
+                      <SelectItem value="sqlite">SQLite</SelectItem>
+                      <SelectItem value="firebird">Firebird</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -301,19 +305,20 @@ export function DatabaseConnectionsCRUD() {
 
               <div className="space-y-2">
                 <Label htmlFor="proxy_url">
-                  URL da API Proxy (Opcional)
+                  URL da API Proxy (Obrigatório)
                   <span className="text-xs text-muted-foreground ml-2">
-                    Edge Functions não conseguem conectar direto a SQL Servers privados
+                    Edge Functions precisam de uma API intermediária para conectar a bancos de dados externos
                   </span>
                 </Label>
                 <Input
                   id="proxy_url"
+                  required
                   value={formData.proxy_url}
                   onChange={(e) => setFormData({ ...formData, proxy_url: e.target.value })}
                   placeholder="https://seu-servidor.com/api/query"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Configure uma API intermediária no seu servidor que recebe e executa as queries
+                  Configure uma API intermediária no seu servidor que recebe e executa as queries no banco de dados
                 </p>
               </div>
 
