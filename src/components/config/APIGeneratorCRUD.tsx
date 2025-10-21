@@ -308,20 +308,23 @@ export function APIGeneratorCRUD() {
   };
 
   const renderUrlWithParams = (url: string, params: QueryParameter[]) => {
-    if (!params || params.length === 0) {
-      return <span className="font-mono text-xs break-all max-w-[200px] inline-block">{url}</span>;
-    }
-
     return (
-      <div className="font-mono text-xs max-w-[250px]">
-        <div className="text-muted-foreground mb-1 break-all">{url}</div>
-        <div className="flex flex-wrap gap-1">
-          {params.map((param, idx) => (
-            <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary text-xs">
-              {param.name}=<span className="text-muted-foreground">XXXX</span>
-            </Badge>
-          ))}
+      <div className="space-y-2">
+        <div className="p-2 bg-muted/50 rounded font-mono text-xs break-all">
+          {url}
         </div>
+        {params && params.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Parâmetros:</p>
+            <div className="flex flex-wrap gap-1">
+              {params.map((param, idx) => (
+                <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary text-xs">
+                  {param.name}=<span className="text-muted-foreground">XXXX</span>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -653,8 +656,8 @@ export function APIGeneratorCRUD() {
                         </Badge>
                       </div>
 
-                      <div className="space-y-1">
-                        <Label className="text-xs">URL & Parâmetros:</Label>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold">Endpoint:</Label>
                         {renderUrlWithParams(getFullUrl(endpoint), endpoint.parameters)}
                       </div>
 
