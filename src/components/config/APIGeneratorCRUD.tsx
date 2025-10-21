@@ -337,14 +337,14 @@ export function APIGeneratorCRUD() {
                 <div className="space-y-2">
                   <Label htmlFor="connection_id">Usar Conexão Salva (Opcional)</Label>
                   <Select
-                    value={formData.connection_id}
-                    onValueChange={(value) => setFormData({ ...formData, connection_id: value })}
+                    value={formData.connection_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, connection_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma conexão ou preencha manualmente" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nova conexão (preencher abaixo)</SelectItem>
+                      <SelectItem value="none">Nova conexão (preencher abaixo)</SelectItem>
                       {connections
                         .filter(c => c.database_type === formData.database_type)
                         .map(conn => (
