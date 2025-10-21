@@ -1,69 +1,72 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import sql from 'npm:mssql@10';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface SqlServerConnectionConfig {
-  sql_server: string;
-  sql_database: string;
-  sql_username: string;
-  sql_password: string;
-  sql_port?: string;
-  proxy_url?: string;
+interface SqlConfig {
+  server: string;
+  database: string;
+  username: string;
+  password: string;
+  query: string;
 }
 
-async function executeSqlServerQuery(
-  connectionConfig: SqlServerConnectionConfig, 
-  query: string, 
-  params: Record<string, any> = {}
-): Promise<any[]> {
-  console.log('Attempting to execute SQL Server query...');
-  console.log('Has proxy_url:', !!connectionConfig.proxy_url);
+async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
+  console.log('Executing SQL Server query...');
+  console.log('Query parameters:', params);
+  console.log('Connecting to SQL Server:', config.server);
   
-  // IMPORTANTE: Edge Functions não podem conectar diretamente a SQL Servers
-  // Eles precisam de uma API proxy intermediária
-  if (!connectionConfig.proxy_url) {
-    throw new Error(
-      'Esta API requer uma URL de proxy configurada. ' +
-      'Edge Functions não conseguem conectar diretamente a SQL Servers em redes privadas. ' +
-      'Por favor, configure o campo "URL da API Proxy" na conexão do banco de dados.'
-    );
-  }
-  
-  console.log('Using proxy URL:', connectionConfig.proxy_url);
-  
+  const sqlConfig = {
+    server: config.server,
+    port: 1433,
+    user: config.username,
+    password: config.password,
+    database: config.database,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true,
+      enableArithAbort: true,
+    },
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
+    },
+    connectionTimeout: 60000,
+    requestTimeout: 60000,
+  };
+
   try {
-    const response = await fetch(connectionConfig.proxy_url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        server: connectionConfig.sql_server,
-        database: connectionConfig.sql_database,
-        username: connectionConfig.sql_username,
-        password: connectionConfig.sql_password,
-        port: connectionConfig.sql_port || '1433',
-        query: query,
-        params: params,
-      }),
-    });
+    const pool = await sql.connect(sqlConfig);
+    console.log('Connected successfully. Executing query...');
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erro na API Proxy (${response.status}): ${errorText}`);
+    const request = pool.request();
+    
+    // Add parameters to the request
+    for (const [key, value] of Object.entries(params)) {
+      console.log(`Adding parameter @${key} = ${value}`);
+      request.input(key, value);
     }
     
-    const result = await response.json();
-    console.log('Query executada com sucesso via proxy');
-    return result.data || result.recordset || result;
-  } catch (error: any) {
-    console.error('Erro ao executar query via proxy:', error);
-    throw new Error(`Erro ao conectar à API Proxy: ${error.message}`);
+    const result = await request.query(config.query);
+    console.log('Query executed successfully. Rows:', result.recordset?.length || 0);
+    
+    await pool.close();
+    
+    return result.recordset || [];
+  } catch (error) {
+    console.error('SQL Server query error:', error);
+    try {
+      await sql.close();
+    } catch (closeError) {
+      console.error('Error closing connection:', closeError);
+    }
+    throw error;
   }
 }
 
@@ -140,8 +143,6 @@ serve(async (req) => {
           sql_database: connData.sql_database,
           sql_username: connData.sql_username,
           sql_password: connData.sql_password,
-          sql_port: connData.sql_port,
-          proxy_url: connData.proxy_url,
         };
       }
     }
@@ -169,12 +170,16 @@ serve(async (req) => {
         }
       );
     } else if (apiConfig.database_type === 'sqlserver') {
-      // Execute SQL Server query via proxy
-      if (!connectionConfig.sql_server) {
-        throw new Error('Configuração do SQL Server não encontrada');
-      }
+      // Execute SQL Server query
+      const sqlConfig: SqlConfig = {
+        server: connectionConfig.sql_server,
+        database: connectionConfig.sql_database,
+        username: connectionConfig.sql_username,
+        password: connectionConfig.sql_password,
+        query: apiConfig.query,
+      };
 
-      const result = await executeSqlServerQuery(connectionConfig, apiConfig.query, params);
+      const result = await executeSqlServerQuery(sqlConfig, params);
 
       return new Response(
         JSON.stringify({
@@ -188,16 +193,20 @@ serve(async (req) => {
         }
       );
     } else {
-      throw new Error(`Tipo de banco de dados não suportado: ${apiConfig.database_type}`);
+      return new Response(
+        JSON.stringify({ error: `Database type ${apiConfig.database_type} not supported` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
   } catch (error: any) {
-    console.error('Erro na função execute-dynamic-query:', error);
-    
+    console.error('Error in execute-dynamic-query function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Erro desconhecido',
+        error: error.message,
         success: false,
-        details: error.stack,
       }),
       {
         status: 500,
