@@ -1,48 +1,74 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import sql from 'https://esm.sh/mssql@10';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function executeSqlServerQuery(connectionConfig: any, query: string): Promise<any[]> {
-  console.log('Executing SQL Server query via HTTP proxy...');
+interface SqlConfig {
+  server: string;
+  database: string;
+  username: string;
+  password: string;
+  query: string;
+}
+
+async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
+  console.log('Executing SQL Server query...');
+  console.log('Query parameters:', params);
   
-  // Se houver uma API proxy configurada, use-a
-  if (connectionConfig.proxy_url) {
-    console.log('Using proxy URL:', connectionConfig.proxy_url);
+  console.log('Connecting to SQL Server:', config.server);
+  
+  const sqlConfig = {
+    server: config.server,
+    port: 1433,
+    user: config.username,
+    password: config.password,
+    database: config.database,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true,
+      enableArithAbort: true,
+    },
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
+    },
+    connectionTimeout: 60000,
+    requestTimeout: 60000,
+  };
+
+  try {
+    const pool = await sql.connect(sqlConfig);
+    console.log('Connected successfully. Executing query...');
     
-    const response = await fetch(connectionConfig.proxy_url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        server: connectionConfig.sql_server,
-        database: connectionConfig.sql_database,
-        username: connectionConfig.sql_username,
-        password: connectionConfig.sql_password,
-        query: query,
-      }),
-    });
+    const request = pool.request();
     
-    if (!response.ok) {
-      throw new Error(`Proxy API error: ${response.statusText}`);
+    // Add parameters to the request
+    for (const [key, value] of Object.entries(params)) {
+      console.log(`Adding parameter @${key} = ${value}`);
+      request.input(key, value);
     }
     
-    const result = await response.json();
-    return result.data || result;
+    const result = await request.query(config.query);
+    console.log('Query executed successfully. Rows:', result.recordset?.length || 0);
+    
+    await pool.close();
+    
+    return result.recordset || [];
+  } catch (error) {
+    console.error('SQL Server query error:', error);
+    try {
+      await sql.close();
+    } catch (closeError) {
+      console.error('Error closing connection:', closeError);
+    }
+    throw error;
   }
-  
-  // Caso contrário, retorne erro explicativo
-  throw new Error(
-    'ATENÇÃO: Edge Functions não conseguem conectar diretamente a SQL Servers em redes privadas. ' +
-    'Você precisa criar uma API intermediária no seu servidor que execute as queries. ' +
-    'Configure o campo "proxy_url" na conexão com a URL da sua API. ' +
-    'Exemplo: https://seu-servidor.com/api/query'
-  );
 }
 
 serve(async (req) => {
@@ -101,8 +127,8 @@ serve(async (req) => {
       params = await req.json();
     }
 
-    // Get database connection details
-    let connectionConfig: any = null;
+    // Get database connection details if connection_id is specified
+    let connectionConfig: any = apiConfig;
     if (apiConfig.connection_id) {
       const { data: connData, error: connError } = await supabase
         .from('database_connections')
@@ -112,84 +138,68 @@ serve(async (req) => {
         .single();
       
       if (!connError && connData) {
-        connectionConfig = connData;
+        connectionConfig = {
+          ...apiConfig,
+          sql_server: connData.sql_server,
+          sql_database: connData.sql_database,
+          sql_username: connData.sql_username,
+          sql_password: connData.sql_password,
+        };
       }
     }
 
-    // Replace parameters in query
-    let finalQuery = apiConfig.query;
-    if (apiConfig.parameters && apiConfig.parameters.length > 0) {
-      apiConfig.parameters.forEach((param: any) => {
-        const paramValue = params[param.name];
-        if (param.required && !paramValue) {
-          throw new Error(`Required parameter ${param.name} is missing`);
-        }
-        if (paramValue) {
-          finalQuery = finalQuery.replace(new RegExp(`{{${param.name}}}`, 'g'), paramValue);
-        }
-      });
-    }
-
     // Execute query based on database type
-    let queryResult: any;
-    
     if (apiConfig.database_type === 'supabase') {
       // Execute Supabase query
-      const { data, error: queryError } = await supabase.rpc('execute_sql', {
-        sql_query: finalQuery
+      const { data: queryResult, error: queryError } = await supabase.rpc('execute_sql', {
+        sql_query: apiConfig.query
       });
 
       if (queryError) {
         throw queryError;
       }
-      
-      queryResult = data;
-    } else if (apiConfig.database_type === 'sqlserver') {
-      if (!connectionConfig) {
-        throw new Error('SQL Server connection not configured');
-      }
 
-      // Execute SQL Server query
-      queryResult = await executeSqlServerQuery(
-        connectionConfig,
-        finalQuery
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: queryResult,
+          endpoint: endpointPath,
+          method: apiConfig.http_method,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     } else {
+      // Execute SQL Server query
+      const sqlConfig: SqlConfig = {
+        server: connectionConfig.sql_server,
+        database: connectionConfig.sql_database,
+        username: connectionConfig.sql_username,
+        password: connectionConfig.sql_password,
+        query: apiConfig.query,
+      };
+
+      const result = await executeSqlServerQuery(sqlConfig, params);
+
       return new Response(
-        JSON.stringify({ error: `Database type ${apiConfig.database_type} not supported` }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        JSON.stringify({
+          success: true,
+          data: result,
+          endpoint: endpointPath,
+          method: apiConfig.http_method,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: queryResult,
-        endpoint: endpointPath,
-        method: apiConfig.http_method,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-    } catch (error: any) {
+  } catch (error: any) {
     console.error('Error in execute-dynamic-query function:', error);
-    
-    const errorMessage = error.message || 'Erro desconhecido';
-    const isSqlServerConnectionError = errorMessage.includes('SQL Server') || 
-                                       errorMessage.includes('acessível') ||
-                                       error.code === 'ETIMEOUT';
-    
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
+        error: error.message,
         success: false,
-        details: isSqlServerConnectionError ? 
-          'Edge Functions do Supabase não podem conectar a SQL Servers em redes privadas. Considere: 1) Liberar acesso público ao SQL Server, 2) Criar uma API intermediária, ou 3) Usar Supabase como banco principal.' : 
-          'Erro ao executar query',
       }),
       {
         status: 500,
