@@ -1,11 +1,77 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { Connection, Request as SqlRequest } from "npm:tedious@18.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+function executeSqlServerQuery(connectionConfig: any, query: string): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const config = {
+      server: connectionConfig.sql_server,
+      authentication: {
+        type: 'default',
+        options: {
+          userName: connectionConfig.sql_username,
+          password: connectionConfig.sql_password,
+        }
+      },
+      options: {
+        database: connectionConfig.sql_database,
+        port: parseInt(connectionConfig.sql_port || '1433'),
+        encrypt: true,
+        trustServerCertificate: true,
+        connectTimeout: 30000,
+        requestTimeout: 30000,
+      }
+    };
+
+    const connection = new Connection(config);
+    const results: any[] = [];
+
+    connection.on('connect', (err) => {
+      if (err) {
+        console.error('Connection failed:', err);
+        reject(err);
+        return;
+      }
+
+      console.log('Connected to SQL Server');
+      const request = new SqlRequest(query, (err) => {
+        if (err) {
+          console.error('Query failed:', err);
+          connection.close();
+          reject(err);
+          return;
+        }
+
+        console.log('Query executed successfully');
+        connection.close();
+        resolve(results);
+      });
+
+      request.on('row', (columns) => {
+        const row: any = {};
+        columns.forEach((column) => {
+          row[column.metadata.colName] = column.value;
+        });
+        results.push(row);
+      });
+
+      connection.execSql(request);
+    });
+
+    connection.on('error', (err) => {
+      console.error('Connection error:', err);
+      reject(err);
+    });
+
+    connection.connect();
+  });
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -63,13 +129,42 @@ serve(async (req) => {
       params = await req.json();
     }
 
+    // Get database connection details
+    let connectionConfig: any = null;
+    if (apiConfig.connection_id) {
+      const { data: connData, error: connError } = await supabase
+        .from('database_connections')
+        .select('*')
+        .eq('id', apiConfig.connection_id)
+        .eq('active', true)
+        .single();
+      
+      if (!connError && connData) {
+        connectionConfig = connData;
+      }
+    }
+
+    // Replace parameters in query
+    let finalQuery = apiConfig.query;
+    if (apiConfig.parameters && apiConfig.parameters.length > 0) {
+      apiConfig.parameters.forEach((param: any) => {
+        const paramValue = params[param.name];
+        if (param.required && !paramValue) {
+          throw new Error(`Required parameter ${param.name} is missing`);
+        }
+        if (paramValue) {
+          finalQuery = finalQuery.replace(new RegExp(`{{${param.name}}}`, 'g'), paramValue);
+        }
+      });
+    }
+
     // Execute query based on database type
     let queryResult: any;
     
     if (apiConfig.database_type === 'supabase') {
       // Execute Supabase query
       const { data, error: queryError } = await supabase.rpc('execute_sql', {
-        sql_query: apiConfig.query
+        sql_query: finalQuery
       });
 
       if (queryError) {
@@ -78,12 +173,15 @@ serve(async (req) => {
       
       queryResult = data;
     } else if (apiConfig.database_type === 'sqlserver') {
-      // For SQL Server queries, just acknowledge for now
-      // In production, you would connect to SQL Server here
-      queryResult = {
-        message: 'SQL Server query execution - implementation needed',
-        query: apiConfig.query
-      };
+      if (!connectionConfig) {
+        throw new Error('SQL Server connection not configured');
+      }
+
+      // Execute SQL Server query
+      queryResult = await executeSqlServerQuery(
+        connectionConfig,
+        finalQuery
+      );
     } else {
       return new Response(
         JSON.stringify({ error: `Database type ${apiConfig.database_type} not supported` }),

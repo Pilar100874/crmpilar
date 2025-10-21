@@ -64,6 +64,10 @@ export function APIGeneratorCRUD() {
   const [selectedEndpoint, setSelectedEndpoint] = useState<APIEndpoint | null>(null);
   const [parameters, setParameters] = useState<QueryParameter[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [testEndpoint, setTestEndpoint] = useState<APIEndpoint | null>(null);
+  const [testParams, setTestParams] = useState<Record<string, string>>({});
+  const [testViewMode, setTestViewMode] = useState<'table' | 'json'>('table');
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -312,6 +316,57 @@ export function APIGeneratorCRUD() {
     const url = getFullUrl(endpoint, true);
     navigator.clipboard.writeText(url);
     toast.success("URL copiada para a área de transferência!");
+  };
+
+  const openTestDialog = (endpoint: APIEndpoint) => {
+    setTestEndpoint(endpoint);
+    setTestResult(null);
+    const initialParams: Record<string, string> = {};
+    endpoint.parameters?.forEach(p => {
+      initialParams[p.name] = '';
+    });
+    setTestParams(initialParams);
+    setTestDialogOpen(true);
+  };
+
+  const executeTest = async () => {
+    if (!testEndpoint) return;
+    
+    setTestLoading(true);
+    try {
+      let url = getFullUrl(testEndpoint, false);
+      
+      if (testEndpoint.http_method === 'GET' && testEndpoint.parameters?.length > 0) {
+        const params = new URLSearchParams(testParams).toString();
+        url += `?${params}`;
+      }
+
+      const options: RequestInit = {
+        method: testEndpoint.http_method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      if (testEndpoint.http_method === 'POST') {
+        options.body = JSON.stringify(testParams);
+      }
+
+      const response = await fetch(url, options);
+      const result = await response.json();
+      setTestResult(result);
+      
+      if (result.success) {
+        toast.success("API executada com sucesso!");
+      } else {
+        toast.error("Erro ao executar API");
+      }
+    } catch (error: any) {
+      toast.error("Erro ao executar API: " + error.message);
+      setTestResult({ error: error.message });
+    } finally {
+      setTestLoading(false);
+    }
   };
 
   const renderUrlWithParams = (endpoint: APIEndpoint) => {
@@ -661,6 +716,15 @@ export function APIGeneratorCRUD() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => openTestDialog(endpoint)}
+                          className="gap-1"
+                        >
+                          <Play className="h-3 w-3" />
+                          Testar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => editEndpoint(endpoint)}
                           className="gap-1"
                         >
@@ -756,6 +820,107 @@ export function APIGeneratorCRUD() {
                     rows={5}
                   />
                 </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Test API Dialog */}
+        <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Testar API - {testEndpoint?.name}</DialogTitle>
+            </DialogHeader>
+            
+            {testEndpoint && (
+              <div className="space-y-4">
+                <div className="p-3 bg-muted rounded-md font-mono text-xs break-all">
+                  {getFullUrl(testEndpoint, testEndpoint.parameters?.length > 0)}
+                </div>
+
+                {testEndpoint.parameters && testEndpoint.parameters.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="font-semibold">Parâmetros</Label>
+                    {testEndpoint.parameters.map((param) => (
+                      <div key={param.name} className="space-y-1">
+                        <Label className="text-sm">
+                          {param.name}
+                          {param.required && <span className="text-destructive ml-1">*</span>}
+                        </Label>
+                        <Input
+                          value={testParams[param.name] || ''}
+                          onChange={(e) => setTestParams(prev => ({
+                            ...prev,
+                            [param.name]: e.target.value
+                          }))}
+                          placeholder={param.description || param.name}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button onClick={executeTest} disabled={testLoading}>
+                    {testLoading ? "Executando..." : "Executar"}
+                  </Button>
+                  {testResult && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant={testViewMode === 'table' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setTestViewMode('table')}
+                      >
+                        Tabela
+                      </Button>
+                      <Button
+                        variant={testViewMode === 'json' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setTestViewMode('json')}
+                      >
+                        JSON
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {testResult && (
+                  <div className="space-y-2">
+                    <Label className="font-semibold">Resultado</Label>
+                    {testViewMode === 'json' ? (
+                      <pre className="p-4 bg-muted rounded-md text-xs overflow-auto max-h-96">
+                        {JSON.stringify(testResult, null, 2)}
+                      </pre>
+                    ) : (
+                      <div className="border rounded-md overflow-auto max-h-96">
+                        {testResult.success && Array.isArray(testResult.data) && testResult.data.length > 0 ? (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                {Object.keys(testResult.data[0]).map((key) => (
+                                  <TableHead key={key}>{key}</TableHead>
+                                ))}
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {testResult.data.map((row: any, idx: number) => (
+                                <TableRow key={idx}>
+                                  {Object.values(row).map((value: any, vidx: number) => (
+                                    <TableCell key={vidx}>{String(value)}</TableCell>
+                                  ))}
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        ) : (
+                          <div className="p-4 text-sm text-muted-foreground">
+                            {testResult.error ? `Erro: ${testResult.error}` : 'Nenhum dado retornado'}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>
