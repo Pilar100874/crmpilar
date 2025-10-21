@@ -13,7 +13,6 @@ import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
 import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { ClientesCRUD } from "@/components/config/ClientesCRUD";
 import { APIGeneratorCRUD } from "@/components/config/APIGeneratorCRUD";
-import { DatabaseConnectionsCRUD } from "@/components/config/DatabaseConnectionsCRUD";
 
 export default function Config() {
   const [socialLinks, setSocialLinks] = useState({
@@ -205,23 +204,6 @@ export default function Config() {
             <AccordionContent className="px-6 pb-6 space-y-4">
 ...
               <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="database-connections" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Conexões de Banco de Dados</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Gerencie conexões reutilizáveis para seus endpoints
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <DatabaseConnectionsCRUD />
             </AccordionContent>
           </AccordionItem>
 
