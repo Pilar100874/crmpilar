@@ -551,7 +551,14 @@ export function APIGeneratorCRUD() {
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Use {`{{nome_parametro}}`} para adicionar variáveis na query
+                    {formData.database_type === 'supabase' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para $1, $2, etc.)'}
+                    {formData.database_type === 'sqlserver' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para @nome_parametro)'}
+                    {formData.database_type === 'postgresql' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para $1, $2, etc.)'}
+                    {formData.database_type === 'mysql' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para ?)'}
+                    {formData.database_type === 'oracle' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para :nome_parametro)'}
+                    {formData.database_type === 'mariadb' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para ?)'}
+                    {formData.database_type === 'sqlite' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para ?)'}
+                    {formData.database_type === 'firebird' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para :nome_parametro)'}
                   </p>
                 </div>
 
