@@ -309,15 +309,15 @@ export function APIGeneratorCRUD() {
 
   const renderUrlWithParams = (url: string, params: QueryParameter[]) => {
     if (!params || params.length === 0) {
-      return <span className="font-mono text-sm">{url}</span>;
+      return <span className="font-mono text-xs break-all">{url}</span>;
     }
 
     return (
-      <div className="font-mono text-sm">
-        <div className="text-muted-foreground mb-1">{url}</div>
+      <div className="font-mono text-xs max-w-md">
+        <div className="text-muted-foreground mb-1 break-all">{url}</div>
         <div className="flex flex-wrap gap-1">
           {params.map((param, idx) => (
-            <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary">
+            <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary text-xs">
               {param.name}=<span className="text-muted-foreground">XXXX</span>
             </Badge>
           ))}
@@ -512,15 +512,15 @@ export function APIGeneratorCRUD() {
                   {parameters.length > 0 && (
                     <div className="space-y-2 border rounded-lg p-3">
                       {parameters.map((param, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                          <div className="col-span-3">
+                        <div key={index} className="flex flex-col sm:grid sm:grid-cols-12 gap-2">
+                          <div className="sm:col-span-3">
                             <Input
                               placeholder="Nome"
                               value={param.name}
                               onChange={(e) => updateParameter(index, "name", e.target.value)}
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div className="sm:col-span-2">
                             <Select
                               value={param.type}
                               onValueChange={(value) => updateParameter(index, "type", value)}
@@ -535,22 +535,22 @@ export function APIGeneratorCRUD() {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="col-span-4">
+                          <div className="sm:col-span-4">
                             <Input
                               placeholder="Descrição"
                               value={param.description}
                               onChange={(e) => updateParameter(index, "description", e.target.value)}
                             />
                           </div>
-                          <div className="col-span-2 flex items-center gap-2">
-                            <Label className="text-xs">Obrigatório</Label>
+                          <div className="sm:col-span-2 flex items-center gap-2">
+                            <Label className="text-xs whitespace-nowrap">Obrigatório</Label>
                             <input
                               type="checkbox"
                               checked={param.required}
                               onChange={(e) => updateParameter(index, "required", e.target.checked)}
                             />
                           </div>
-                          <div className="col-span-1">
+                          <div className="sm:col-span-1">
                             <Button
                               type="button"
                               variant="ghost"
@@ -626,99 +626,101 @@ export function APIGeneratorCRUD() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Método</TableHead>
-                      <TableHead>URL & Parâmetros</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {endpoints.map((endpoint) => (
-                      <TableRow key={endpoint.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            <div>{endpoint.name}</div>
-                            {endpoint.description && (
-                              <div className="text-sm text-muted-foreground">{endpoint.description}</div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="gap-1">
-                            <Database className="h-3 w-3" />
-                            {endpoint.database_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
-                            {endpoint.http_method}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {renderUrlWithParams(getFullUrl(endpoint), endpoint.parameters)}
-                        </TableCell>
-                        <TableCell>
-                          <Switch
-                            checked={endpoint.active}
-                            onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => editEndpoint(endpoint)}
-                              title="Editar"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => copyToClipboard(endpoint)}
-                              title="Copiar URL"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            {endpoint.parameters?.length > 0 && (
+              <div className="overflow-x-auto">
+                <Card>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[150px]">Nome</TableHead>
+                        <TableHead className="min-w-[100px]">Tipo</TableHead>
+                        <TableHead className="min-w-[80px]">Método</TableHead>
+                        <TableHead className="min-w-[250px]">URL & Parâmetros</TableHead>
+                        <TableHead className="min-w-[80px]">Status</TableHead>
+                        <TableHead className="text-right min-w-[150px]">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {endpoints.map((endpoint) => (
+                        <TableRow key={endpoint.id}>
+                          <TableCell className="font-medium">
+                            <div className="max-w-[200px]">
+                              <div className="truncate">{endpoint.name}</div>
+                              {endpoint.description && (
+                                <div className="text-sm text-muted-foreground truncate">{endpoint.description}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="gap-1 whitespace-nowrap">
+                              <Database className="h-3 w-3" />
+                              {endpoint.database_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
+                              {endpoint.http_method}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {renderUrlWithParams(getFullUrl(endpoint), endpoint.parameters)}
+                          </TableCell>
+                          <TableCell>
+                            <Switch
+                              checked={endpoint.active}
+                              onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => showDocumentation(endpoint)}
-                                title="Ver Documentação"
+                                onClick={() => editEndpoint(endpoint)}
+                                title="Editar"
                               >
-                                <Eye className="h-4 w-4" />
+                                <Edit className="h-4 w-4" />
                               </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteEndpoint(endpoint.id)}
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => copyToClipboard(endpoint)}
+                                title="Copiar URL"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              {endpoint.parameters?.length > 0 && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => showDocumentation(endpoint)}
+                                  title="Ver Documentação"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteEndpoint(endpoint.id)}
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
             )}
           </div>
         )}
 
         {/* Documentation Dialog */}
         <Dialog open={showDocDialog} onOpenChange={setShowDocDialog}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Documentação da API</DialogTitle>
               <DialogDescription>
@@ -729,7 +731,7 @@ export function APIGeneratorCRUD() {
               <div className="space-y-4">
                 <div>
                   <Label>URL do Endpoint</Label>
-                  <div className="p-3 bg-muted rounded-md font-mono text-sm mt-2">
+                  <div className="p-3 bg-muted rounded-md font-mono text-xs mt-2 break-all">
                     {getFullUrl(selectedEndpoint)}
                   </div>
                 </div>
@@ -745,13 +747,13 @@ export function APIGeneratorCRUD() {
                     <div className="mt-2 space-y-2">
                       {selectedEndpoint.parameters.map((param: QueryParameter, idx: number) => (
                         <div key={idx} className="p-3 border rounded-md">
-                          <div className="flex items-center gap-2 mb-1">
-                            <code className="text-sm font-mono">{param.name}</code>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <code className="text-sm font-mono break-all">{param.name}</code>
                             <Badge variant="secondary">{param.type}</Badge>
                             {param.required && <Badge variant="destructive">Obrigatório</Badge>}
                           </div>
                           {param.description && (
-                            <p className="text-sm text-muted-foreground">{param.description}</p>
+                            <p className="text-sm text-muted-foreground break-words">{param.description}</p>
                           )}
                         </div>
                       ))}
