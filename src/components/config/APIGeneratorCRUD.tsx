@@ -27,20 +27,45 @@ interface APIEndpoint {
   endpoint_path: string;
   active: boolean;
   connection_id?: string;
+  parameters: any[];
+}
+
+interface DatabaseConnection {
+  id: string;
+  name: string;
+  database_type: string;
+  sql_server: string;
+  sql_database: string;
+  sql_username: string;
+  sql_password: string;
+  sql_port: string;
+  active: boolean;
+}
+
+interface QueryParameter {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string;
 }
 
 export function APIGeneratorCRUD() {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
+  const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
   const [testLoading, setTestLoading] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false);
+  const [showDocDialog, setShowDocDialog] = useState(false);
+  const [selectedEndpoint, setSelectedEndpoint] = useState<APIEndpoint | null>(null);
+  const [parameters, setParameters] = useState<QueryParameter[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     database_type: "supabase",
+    connection_id: "",
     sql_server: "",
     sql_database: "",
     sql_username: "",
@@ -52,7 +77,23 @@ export function APIGeneratorCRUD() {
 
   useEffect(() => {
     loadEndpoints();
+    loadConnections();
   }, []);
+
+  const loadConnections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("database_connections")
+        .select("*")
+        .eq("active", true)
+        .order("name");
+
+      if (error) throw error;
+      setConnections(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar conexões:", error);
+    }
+  };
 
   const loadEndpoints = async () => {
     try {
@@ -62,7 +103,14 @@ export function APIGeneratorCRUD() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setEndpoints(data || []);
+      
+      // Cast parameters from Json to any[]
+      const endpoints = (data || []).map(endpoint => ({
+        ...endpoint,
+        parameters: Array.isArray(endpoint.parameters) ? endpoint.parameters : []
+      }));
+      
+      setEndpoints(endpoints);
     } catch (error: any) {
       toast.error("Erro ao carregar endpoints: " + error.message);
     } finally {
@@ -119,25 +167,47 @@ export function APIGeneratorCRUD() {
     }
   };
 
+  const addParameter = () => {
+    setParameters([...parameters, { name: "", type: "string", required: true, description: "" }]);
+  };
+
+  const removeParameter = (index: number) => {
+    setParameters(parameters.filter((_, i) => i !== index));
+  };
+
+  const updateParameter = (index: number, field: keyof QueryParameter, value: any) => {
+    const newParams = [...parameters];
+    newParams[index] = { ...newParams[index], [field]: value };
+    setParameters(newParams);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       const endpointPath = formData.endpoint_path || generateEndpointPath();
       
-      const { error } = await supabase.from("api_endpoints").insert([{
+      // Se usar conexão salva, pegar os dados dela
+      let endpointData: any = {
         name: formData.name,
         description: formData.description,
         database_type: formData.database_type,
-        sql_server: formData.sql_server,
-        sql_database: formData.sql_database,
-        sql_username: formData.sql_username,
-        sql_password: formData.sql_password,
         query: formData.query,
         http_method: formData.http_method,
         endpoint_path: endpointPath,
-        parameters: [],
-      }]);
+        parameters: parameters,
+      };
+
+      if (formData.connection_id) {
+        endpointData.connection_id = formData.connection_id;
+      } else if (formData.database_type === 'sqlserver') {
+        endpointData.sql_server = formData.sql_server;
+        endpointData.sql_database = formData.sql_database;
+        endpointData.sql_username = formData.sql_username;
+        endpointData.sql_password = formData.sql_password;
+      }
+
+      const { error } = await supabase.from("api_endpoints").insert([endpointData]);
 
       if (error) throw error;
 
@@ -147,6 +217,7 @@ export function APIGeneratorCRUD() {
         name: "",
         description: "",
         database_type: "supabase",
+        connection_id: "",
         sql_server: "",
         sql_database: "",
         sql_username: "",
@@ -155,6 +226,7 @@ export function APIGeneratorCRUD() {
         http_method: "GET",
         endpoint_path: "",
       });
+      setParameters([]);
       setTestResult(null);
       loadEndpoints();
     } catch (error: any) {
@@ -202,6 +274,11 @@ export function APIGeneratorCRUD() {
     toast.success("URL copiada para a área de transferência!");
   };
 
+  const showDocumentation = (endpoint: APIEndpoint) => {
+    setSelectedEndpoint(endpoint);
+    setShowDocDialog(true);
+  };
+
   if (loading) {
     return <div className="p-4">Carregando...</div>;
   }
@@ -243,7 +320,7 @@ export function APIGeneratorCRUD() {
                   <Label htmlFor="database_type">Tipo de Banco</Label>
                   <Select
                     value={formData.database_type}
-                    onValueChange={(value) => setFormData({ ...formData, database_type: value })}
+                    onValueChange={(value) => setFormData({ ...formData, database_type: value, connection_id: "" })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -256,6 +333,30 @@ export function APIGeneratorCRUD() {
                 </div>
               </div>
 
+              {formData.database_type === 'sqlserver' && (
+                <div className="space-y-2">
+                  <Label htmlFor="connection_id">Usar Conexão Salva (Opcional)</Label>
+                  <Select
+                    value={formData.connection_id}
+                    onValueChange={(value) => setFormData({ ...formData, connection_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma conexão ou preencha manualmente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nova conexão (preencher abaixo)</SelectItem>
+                      {connections
+                        .filter(c => c.database_type === formData.database_type)
+                        .map(conn => (
+                          <SelectItem key={conn.id} value={conn.id}>
+                            {conn.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Input
@@ -266,7 +367,7 @@ export function APIGeneratorCRUD() {
                 />
               </div>
 
-              {formData.database_type === 'sqlserver' && (
+              {formData.database_type === 'sqlserver' && !formData.connection_id && (
                 <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
                   <div className="space-y-2">
                     <Label htmlFor="sql_server">Servidor SQL</Label>
@@ -333,10 +434,78 @@ export function APIGeneratorCRUD() {
                   required
                   value={formData.query}
                   onChange={(e) => setFormData({ ...formData, query: e.target.value })}
-                  placeholder="SELECT * FROM tabela WHERE ..."
+                  placeholder="SELECT * FROM tabela WHERE campo = {{parametro}}"
                   rows={5}
                   className="font-mono text-sm"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Use {`{{nome_parametro}}`} para adicionar variáveis na query
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Parâmetros da Query</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addParameter}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adicionar Parâmetro
+                  </Button>
+                </div>
+                {parameters.length > 0 && (
+                  <div className="space-y-2 border rounded-lg p-3">
+                    {parameters.map((param, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-end">
+                        <div className="col-span-3">
+                          <Input
+                            placeholder="Nome"
+                            value={param.name}
+                            onChange={(e) => updateParameter(index, "name", e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Select
+                            value={param.type}
+                            onValueChange={(value) => updateParameter(index, "type", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="string">String</SelectItem>
+                              <SelectItem value="number">Number</SelectItem>
+                              <SelectItem value="boolean">Boolean</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-4">
+                          <Input
+                            placeholder="Descrição"
+                            value={param.description}
+                            onChange={(e) => updateParameter(index, "description", e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2">
+                          <Label className="text-xs">Obrigatório</Label>
+                          <input
+                            type="checkbox"
+                            checked={param.required}
+                            onChange={(e) => updateParameter(index, "required", e.target.checked)}
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeParameter(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -404,6 +573,7 @@ export function APIGeneratorCRUD() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Método</TableHead>
                     <TableHead>Endpoint</TableHead>
+                    <TableHead>Parâmetros</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -434,6 +604,13 @@ export function APIGeneratorCRUD() {
                         {endpoint.endpoint_path}
                       </TableCell>
                       <TableCell>
+                        {endpoint.parameters?.length > 0 ? (
+                          <Badge variant="secondary">{endpoint.parameters.length}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Switch
                           checked={endpoint.active}
                           onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
@@ -441,6 +618,16 @@ export function APIGeneratorCRUD() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {endpoint.parameters?.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => showDocumentation(endpoint)}
+                              title="Ver Documentação"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -479,6 +666,82 @@ export function APIGeneratorCRUD() {
                 {JSON.stringify(testResult, null, 2)}
               </pre>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDocDialog} onOpenChange={setShowDocDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Documentação da API - {selectedEndpoint?.name}</DialogTitle>
+            <DialogDescription>{selectedEndpoint?.description}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-semibold">URL do Endpoint</Label>
+              <code className="block mt-2 p-3 bg-secondary rounded text-sm">
+                {`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/execute-dynamic-query/${selectedEndpoint?.endpoint_path}`}
+              </code>
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold">Método HTTP</Label>
+              <Badge className="ml-2">{selectedEndpoint?.http_method}</Badge>
+            </div>
+
+            {selectedEndpoint?.parameters && selectedEndpoint.parameters.length > 0 && (
+              <div>
+                <Label className="text-base font-semibold">Parâmetros</Label>
+                <Table className="mt-2">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Obrigatório</TableHead>
+                      <TableHead>Descrição</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedEndpoint.parameters.map((param: any, idx: number) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-mono">{param.name}</TableCell>
+                        <TableCell>{param.type}</TableCell>
+                        <TableCell>
+                          {param.required ? (
+                            <Badge variant="destructive">Sim</Badge>
+                          ) : (
+                            <Badge variant="secondary">Não</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {param.description || "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            <div>
+              <Label className="text-base font-semibold">Exemplo de Uso</Label>
+              <div className="mt-2 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {selectedEndpoint?.http_method === "GET" ? "GET" : "POST"} Request:
+                </p>
+                <pre className="p-3 bg-secondary rounded text-xs overflow-x-auto">
+{selectedEndpoint?.http_method === "GET" 
+  ? `curl -X GET '${`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/execute-dynamic-query/${selectedEndpoint?.endpoint_path}`}${selectedEndpoint?.parameters?.length > 0 ? '?' + selectedEndpoint.parameters.map((p: any) => `${p.name}=valor`).join('&') : ''}'`
+  : `curl -X POST '${`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/execute-dynamic-query/${selectedEndpoint?.endpoint_path}`}' \\
+  -H 'Content-Type: application/json' \\
+  -d '${JSON.stringify(
+    selectedEndpoint?.parameters?.reduce((acc: any, p: any) => ({ ...acc, [p.name]: `valor_${p.type}` }), {}) || {},
+    null,
+    2
+  )}'`}
+                </pre>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
