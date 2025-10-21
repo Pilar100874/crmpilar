@@ -329,24 +329,20 @@ export function DatabaseConnectionsCRUD() {
 
               <div className="space-y-2">
                 <Label htmlFor="proxy_url">
-                  URL da API Proxy (Opcional)
+                  URL da API Proxy (Obrigatório para bancos externos)
                   <span className="text-xs text-muted-foreground ml-2">
-                    {formData.database_type === 'sqlserver' 
-                      ? 'Opcional para SQL Server - conecta direto se não informado'
-                      : 'Obrigatório para outros bancos de dados'}
+                    Necessário para SQL Server, PostgreSQL, MySQL, Oracle, MariaDB, SQLite e Firebird
                   </span>
                 </Label>
                 <Input
                   id="proxy_url"
-                  required={formData.database_type !== 'sqlserver'}
+                  required={formData.database_type !== 'supabase'}
                   value={formData.proxy_url}
                   onChange={(e) => setFormData({ ...formData, proxy_url: e.target.value })}
                   placeholder="https://seu-servidor.com/api/query"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {formData.database_type === 'sqlserver' 
-                    ? 'SQL Server pode conectar diretamente. Use proxy apenas se necessário (ex: firewall)'
-                    : 'Configure uma API intermediária no seu servidor que recebe e executa as queries'}
+                  A API intermediária deve receber server, database, username, password, port, query e parameters (JSON) e retornar {`{ data: [] }`}
                 </p>
               </div>
 
