@@ -203,7 +203,22 @@ export function DatabaseConnectionsCRUD() {
                   <Label htmlFor="database_type">Tipo de Banco</Label>
                   <Select
                     value={formData.database_type}
-                    onValueChange={(value) => setFormData({ ...formData, database_type: value })}
+                    onValueChange={(value) => {
+                      const portMap: Record<string, string> = {
+                        sqlserver: '1433',
+                        postgresql: '5432',
+                        mysql: '3306',
+                        oracle: '1521',
+                        mariadb: '3306',
+                        sqlite: '',
+                        firebird: '3050',
+                      };
+                      setFormData({ 
+                        ...formData, 
+                        database_type: value,
+                        sql_port: portMap[value] || ''
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -248,10 +263,19 @@ export function DatabaseConnectionsCRUD() {
                   <Label htmlFor="sql_port">Porta</Label>
                   <Input
                     id="sql_port"
-                    required
+                    required={formData.database_type !== 'sqlite'}
+                    disabled={formData.database_type === 'sqlite'}
                     value={formData.sql_port}
                     onChange={(e) => setFormData({ ...formData, sql_port: e.target.value })}
-                    placeholder="1433"
+                    placeholder={
+                      formData.database_type === 'sqlserver' ? '1433' :
+                      formData.database_type === 'postgresql' ? '5432' :
+                      formData.database_type === 'mysql' ? '3306' :
+                      formData.database_type === 'oracle' ? '1521' :
+                      formData.database_type === 'mariadb' ? '3306' :
+                      formData.database_type === 'firebird' ? '3050' :
+                      'N/A'
+                    }
                   />
                 </div>
               </div>
