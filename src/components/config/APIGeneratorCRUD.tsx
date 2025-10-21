@@ -146,7 +146,7 @@ export function APIGeneratorCRUD() {
         throw new Error('Queries de modificação não são permitidas');
       }
 
-      if (formData.database_type === 'sqlserver') {
+      if (formData.database_type === 'sqlserver' && !formData.connection_id) {
         if (!formData.sql_server || !formData.sql_database || 
             !formData.sql_username || !formData.sql_password) {
           throw new Error('Preencha todos os campos de conexão SQL Server');
