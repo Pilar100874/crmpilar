@@ -203,22 +203,7 @@ export function DatabaseConnectionsCRUD() {
                   <Label htmlFor="database_type">Tipo de Banco</Label>
                   <Select
                     value={formData.database_type}
-                    onValueChange={(value) => {
-                      const portMap: Record<string, string> = {
-                        sqlserver: '1433',
-                        postgresql: '5432',
-                        mysql: '3306',
-                        oracle: '1521',
-                        mariadb: '3306',
-                        sqlite: '',
-                        firebird: '3050',
-                      };
-                      setFormData({ 
-                        ...formData, 
-                        database_type: value,
-                        sql_port: portMap[value] || ''
-                      });
-                    }}
+                    onValueChange={(value) => setFormData({ ...formData, database_type: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -227,10 +212,6 @@ export function DatabaseConnectionsCRUD() {
                       <SelectItem value="sqlserver">SQL Server</SelectItem>
                       <SelectItem value="postgresql">PostgreSQL</SelectItem>
                       <SelectItem value="mysql">MySQL</SelectItem>
-                      <SelectItem value="oracle">Oracle</SelectItem>
-                      <SelectItem value="mariadb">MariaDB</SelectItem>
-                      <SelectItem value="sqlite">SQLite</SelectItem>
-                      <SelectItem value="firebird">Firebird</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -263,19 +244,10 @@ export function DatabaseConnectionsCRUD() {
                   <Label htmlFor="sql_port">Porta</Label>
                   <Input
                     id="sql_port"
-                    required={formData.database_type !== 'sqlite'}
-                    disabled={formData.database_type === 'sqlite'}
+                    required
                     value={formData.sql_port}
                     onChange={(e) => setFormData({ ...formData, sql_port: e.target.value })}
-                    placeholder={
-                      formData.database_type === 'sqlserver' ? '1433' :
-                      formData.database_type === 'postgresql' ? '5432' :
-                      formData.database_type === 'mysql' ? '3306' :
-                      formData.database_type === 'oracle' ? '1521' :
-                      formData.database_type === 'mariadb' ? '3306' :
-                      formData.database_type === 'firebird' ? '3050' :
-                      'N/A'
-                    }
+                    placeholder="1433"
                   />
                 </div>
               </div>
@@ -329,20 +301,19 @@ export function DatabaseConnectionsCRUD() {
 
               <div className="space-y-2">
                 <Label htmlFor="proxy_url">
-                  URL da API Proxy (Obrigatório para bancos externos)
+                  URL da API Proxy (Opcional)
                   <span className="text-xs text-muted-foreground ml-2">
-                    Necessário para SQL Server, PostgreSQL, MySQL, Oracle, MariaDB, SQLite e Firebird
+                    Edge Functions não conseguem conectar direto a SQL Servers privados
                   </span>
                 </Label>
                 <Input
                   id="proxy_url"
-                  required={formData.database_type !== 'supabase'}
                   value={formData.proxy_url}
                   onChange={(e) => setFormData({ ...formData, proxy_url: e.target.value })}
                   placeholder="https://seu-servidor.com/api/query"
                 />
                 <p className="text-xs text-muted-foreground">
-                  A API intermediária deve receber server, database, username, password, port, query e parameters (JSON) e retornar {`{ data: [] }`}
+                  Configure uma API intermediária no seu servidor que recebe e executa as queries
                 </p>
               </div>
 

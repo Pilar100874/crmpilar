@@ -7,48 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function executeExternalDatabaseQuery(
-  proxyUrl: string,
-  connectionConfig: any,
-  query: string,
-  params: Record<string, any> = {}
-) {
-  console.log('Executing query via proxy API:', proxyUrl);
-  console.log('Query parameters:', params);
-  
-  const payload = {
-    server: connectionConfig.sql_server,
-    database: connectionConfig.sql_database,
-    username: connectionConfig.sql_username,
-    password: connectionConfig.sql_password,
-    port: connectionConfig.sql_port || '1433',
-    query,
-    parameters: params,
-    database_type: connectionConfig.database_type,
-  };
-
-  try {
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Proxy API error: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('Query executed successfully via proxy');
-    // Support different response formats from proxy
-    return result.data || result.recordset || result;
-  } catch (error) {
-    console.error('Proxy API query error:', error);
-    throw error;
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -62,7 +20,7 @@ serve(async (req) => {
 
     console.log('Received request for endpoint:', endpointPath);
 
-    // Initialize client
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -73,13 +31,16 @@ serve(async (req) => {
       .select('*')
       .eq('endpoint_path', endpointPath)
       .eq('active', true)
-      .maybeSingle();
+      .single();
 
     if (configError || !apiConfig) {
       console.error('Endpoint not found:', configError);
       return new Response(
         JSON.stringify({ error: 'Endpoint not found or inactive' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -87,7 +48,10 @@ serve(async (req) => {
     if (req.method !== apiConfig.http_method) {
       return new Response(
         JSON.stringify({ error: `Method ${req.method} not allowed. Use ${apiConfig.http_method}` }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 405,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -96,73 +60,127 @@ serve(async (req) => {
     if (req.method === 'GET') {
       params = Object.fromEntries(url.searchParams.entries());
     } else if (req.method === 'POST') {
-      try {
-        params = await req.json();
-      } catch {
-        params = {};
-      }
+      params = await req.json();
     }
 
+    console.log('Request parameters:', params);
+
     // Get database connection details if connection_id is specified
-    let connectionConfig: any = apiConfig;
+    let connectionConfig: any = null;
     if (apiConfig.connection_id) {
-      const { data: connData } = await supabase
+      const { data: connData, error: connError } = await supabase
         .from('database_connections')
         .select('*')
         .eq('id', apiConfig.connection_id)
         .eq('active', true)
-        .maybeSingle();
-
-      if (connData) {
-        connectionConfig = {
-          ...apiConfig,
-          ...connData,
-        };
+        .single();
+      
+      if (connError || !connData) {
+        throw new Error('Database connection not found');
       }
+      
+      connectionConfig = connData;
     }
 
     // Execute query based on database type
     if (apiConfig.database_type === 'supabase') {
       // Execute Supabase query
       const { data: queryResult, error: queryError } = await supabase.rpc('execute_sql', {
-        sql_query: apiConfig.query,
+        sql_query: apiConfig.query
       });
 
-      if (queryError) throw queryError;
+      if (queryError) {
+        throw queryError;
+      }
 
       return new Response(
-        JSON.stringify({ success: true, data: queryResult, endpoint: endpointPath, method: apiConfig.http_method }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // For ALL external databases (sqlserver, postgresql, mysql, oracle, mariadb, sqlite, firebird) require proxy
-    if (!connectionConfig.proxy_url) {
-      return new Response(
-        JSON.stringify({ 
-          error: `Database type ${apiConfig.database_type} requires a proxy URL configured in the database connection. Please add a proxy API URL in your database connection settings.`,
-          success: false,
+        JSON.stringify({
+          success: true,
+          data: queryResult,
+          endpoint: endpointPath,
+          method: apiConfig.http_method,
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    } else if (apiConfig.database_type === 'sqlserver') {
+      // Para SQL Server, DEVE usar uma API proxy
+      if (!connectionConfig || !connectionConfig.proxy_url) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Esta API requer configuração de Proxy URL',
+            success: false,
+            details: 'Edge Functions não conseguem conectar diretamente a SQL Servers. Configure uma API intermediária no campo "URL da API Proxy" da conexão do banco de dados.'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      console.log('Calling proxy URL:', connectionConfig.proxy_url);
+      console.log('Query:', apiConfig.query);
+      console.log('Parameters:', params);
+
+      // Call the proxy API
+      const proxyResponse = await fetch(connectionConfig.proxy_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          server: connectionConfig.sql_server,
+          database: connectionConfig.sql_database,
+          username: connectionConfig.sql_username,
+          password: connectionConfig.sql_password,
+          port: connectionConfig.sql_port || '1433',
+          query: apiConfig.query,
+          parameters: params,
+        }),
+      });
+
+      if (!proxyResponse.ok) {
+        const errorText = await proxyResponse.text();
+        throw new Error(`Proxy API error (${proxyResponse.status}): ${errorText}`);
+      }
+
+      const proxyResult = await proxyResponse.json();
+      console.log('Proxy response:', proxyResult);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: proxyResult.data || proxyResult.recordset || proxyResult,
+          endpoint: endpointPath,
+          method: apiConfig.http_method,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    } else {
+      return new Response(
+        JSON.stringify({ error: `Database type ${apiConfig.database_type} not supported` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       );
     }
-
-    const result = await executeExternalDatabaseQuery(
-      connectionConfig.proxy_url,
-      connectionConfig,
-      apiConfig.query,
-      params
-    );
-
-    return new Response(
-      JSON.stringify({ success: true, data: result, endpoint: endpointPath, method: apiConfig.http_method }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   } catch (error: any) {
     console.error('Error in execute-dynamic-query function:', error);
     return new Response(
-      JSON.stringify({ error: error.message, success: false }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: error.message || 'Unknown error',
+        success: false,
+        details: error.stack,
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
   }
 });
