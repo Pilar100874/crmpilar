@@ -659,6 +659,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      roles_present: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "gestor" | "agente"
