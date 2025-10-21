@@ -551,14 +551,14 @@ export function APIGeneratorCRUD() {
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    {formData.database_type === 'supabase' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para $1, $2, etc.)'}
-                    {formData.database_type === 'sqlserver' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para @nome_parametro)'}
-                    {formData.database_type === 'postgresql' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para $1, $2, etc.)'}
-                    {formData.database_type === 'mysql' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para ?)'}
-                    {formData.database_type === 'oracle' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para :nome_parametro)'}
-                    {formData.database_type === 'mariadb' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para ?)'}
-                    {formData.database_type === 'sqlite' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para ?)'}
-                    {formData.database_type === 'firebird' && 'Use {{nome_parametro}} para adicionar variáveis na query (serão convertidos para :nome_parametro)'}
+                    {formData.database_type === 'supabase' && 'Use $1, $2, $3, etc. na query para adicionar parâmetros (Ex: WHERE id = $1)'}
+                    {formData.database_type === 'sqlserver' && 'Use @nome_parametro na query (Ex: WHERE id = @id)'}
+                    {formData.database_type === 'postgresql' && 'Use $1, $2, $3, etc. na query para adicionar parâmetros (Ex: WHERE id = $1)'}
+                    {formData.database_type === 'mysql' && 'Use ? na query para adicionar parâmetros (Ex: WHERE id = ?)'}
+                    {formData.database_type === 'oracle' && 'Use :nome_parametro na query (Ex: WHERE id = :id)'}
+                    {formData.database_type === 'mariadb' && 'Use ? na query para adicionar parâmetros (Ex: WHERE id = ?)'}
+                    {formData.database_type === 'sqlite' && 'Use ? na query para adicionar parâmetros (Ex: WHERE id = ?)'}
+                    {formData.database_type === 'firebird' && 'Use :nome_parametro na query (Ex: WHERE id = :id)'}
                   </p>
                 </div>
 
