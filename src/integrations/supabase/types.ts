@@ -284,6 +284,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          proxy_url: string | null
           sql_database: string
           sql_password: string
           sql_port: string | null
@@ -297,6 +298,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          proxy_url?: string | null
           sql_database: string
           sql_password: string
           sql_port?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          proxy_url?: string | null
           sql_database?: string
           sql_password?: string
           sql_port?: string | null
