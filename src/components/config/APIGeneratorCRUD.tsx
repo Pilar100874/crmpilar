@@ -371,11 +371,29 @@ export function APIGeneratorCRUD() {
 
   const renderUrlWithParams = (endpoint: APIEndpoint) => {
     const hasParams = endpoint.parameters && endpoint.parameters.length > 0;
-    const fullUrl = getFullUrl(endpoint, hasParams);
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const baseUrl = `https://${projectId}.supabase.co/functions/v1/execute-dynamic-query/${endpoint.endpoint_path}`;
+    
+    if (!hasParams) {
+      return (
+        <div className="p-2 bg-muted/50 rounded font-mono text-xs break-all">
+          {baseUrl}
+        </div>
+      );
+    }
     
     return (
       <div className="p-2 bg-muted/50 rounded font-mono text-xs break-all">
-        {fullUrl}
+        {baseUrl}
+        <span className="text-muted-foreground">?</span>
+        {endpoint.parameters.map((p, index) => (
+          <span key={index}>
+            {index > 0 && <span className="text-muted-foreground">&</span>}
+            <span className="text-blue-600 dark:text-blue-400 font-semibold">{p.name}</span>
+            <span className="text-muted-foreground">=</span>
+            <span className="text-orange-600 dark:text-orange-400 font-semibold">XXXX</span>
+          </span>
+        ))}
       </div>
     );
   };
