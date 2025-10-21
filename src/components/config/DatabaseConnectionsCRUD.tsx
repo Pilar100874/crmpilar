@@ -41,7 +41,6 @@ export function DatabaseConnectionsCRUD() {
     sql_username: "",
     sql_password: "",
     sql_port: "1433",
-    proxy_url: "",
   });
 
   useEffect(() => {
@@ -93,7 +92,6 @@ export function DatabaseConnectionsCRUD() {
         sql_username: "",
         sql_password: "",
         sql_port: "1433",
-        proxy_url: "",
       });
       loadConnections();
     } catch (error: any) {
@@ -111,7 +109,6 @@ export function DatabaseConnectionsCRUD() {
       sql_username: conn.sql_username,
       sql_password: conn.sql_password,
       sql_port: conn.sql_port,
-      proxy_url: conn.proxy_url || "",
     });
     setEditingId(conn.id);
     setShowForm(true);
@@ -325,24 +322,6 @@ export function DatabaseConnectionsCRUD() {
                     </Button>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="proxy_url">
-                  URL da API Proxy (Opcional)
-                  <span className="text-xs text-muted-foreground ml-2">
-                    Edge Functions não conseguem conectar direto a SQL Servers privados
-                  </span>
-                </Label>
-                <Input
-                  id="proxy_url"
-                  value={formData.proxy_url}
-                  onChange={(e) => setFormData({ ...formData, proxy_url: e.target.value })}
-                  placeholder="https://seu-servidor.com/api/query"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Configure uma API intermediária no seu servidor que recebe e executa as queries
-                </p>
               </div>
 
               <Button type="submit" className="w-full">
