@@ -329,20 +329,24 @@ export function DatabaseConnectionsCRUD() {
 
               <div className="space-y-2">
                 <Label htmlFor="proxy_url">
-                  URL da API Proxy (Obrigatório)
+                  URL da API Proxy (Opcional)
                   <span className="text-xs text-muted-foreground ml-2">
-                    Edge Functions precisam de uma API intermediária para conectar a bancos de dados externos
+                    {formData.database_type === 'sqlserver' 
+                      ? 'Opcional para SQL Server - conecta direto se não informado'
+                      : 'Obrigatório para outros bancos de dados'}
                   </span>
                 </Label>
                 <Input
                   id="proxy_url"
-                  required
+                  required={formData.database_type !== 'sqlserver'}
                   value={formData.proxy_url}
                   onChange={(e) => setFormData({ ...formData, proxy_url: e.target.value })}
                   placeholder="https://seu-servidor.com/api/query"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Configure uma API intermediária no seu servidor que recebe e executa as queries no banco de dados
+                  {formData.database_type === 'sqlserver' 
+                    ? 'SQL Server pode conectar diretamente. Use proxy apenas se necessário (ex: firewall)'
+                    : 'Configure uma API intermediária no seu servidor que recebe e executa as queries'}
                 </p>
               </div>
 

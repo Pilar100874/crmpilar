@@ -1,11 +1,74 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import sql from 'https://esm.sh/mssql@10';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface SqlConfig {
+  server: string;
+  database: string;
+  username: string;
+  password: string;
+  query: string;
+}
+
+async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
+  console.log('Executing SQL Server query...');
+  console.log('Query parameters:', params);
+  console.log('Connecting to SQL Server:', config.server);
+  
+  const sqlConfig = {
+    server: config.server,
+    port: 1433,
+    user: config.username,
+    password: config.password,
+    database: config.database,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true,
+      enableArithAbort: true,
+    },
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
+    },
+    connectionTimeout: 60000,
+    requestTimeout: 60000,
+  };
+
+  try {
+    const pool = await sql.connect(sqlConfig);
+    console.log('Connected successfully. Executing query...');
+    
+    const request = pool.request();
+    
+    // Add parameters to the request
+    for (const [key, value] of Object.entries(params)) {
+      console.log(`Adding parameter @${key} = ${value}`);
+      request.input(key, value);
+    }
+    
+    const result = await request.query(config.query);
+    console.log('Query executed successfully. Rows:', result.recordset?.length || 0);
+    
+    await pool.close();
+    
+    return result.recordset || [];
+  } catch (error) {
+    console.error('SQL Server query error:', error);
+    try {
+      await sql.close();
+    } catch (closeError) {
+      console.error('Error closing connection:', closeError);
+    }
+    throw error;
+  }
+}
 
 async function executeExternalDatabaseQuery(
   proxyUrl: string,
@@ -149,8 +212,54 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
+    } else if (apiConfig.database_type === 'sqlserver') {
+      // Try direct SQL Server connection first, fallback to proxy
+      if (connectionConfig.proxy_url) {
+        // Use proxy if configured
+        const result = await executeExternalDatabaseQuery(
+          connectionConfig.proxy_url,
+          connectionConfig,
+          apiConfig.query,
+          params
+        );
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: result,
+            endpoint: endpointPath,
+            method: apiConfig.http_method,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      } else {
+        // Direct SQL Server connection
+        const sqlConfig: SqlConfig = {
+          server: connectionConfig.sql_server,
+          database: connectionConfig.sql_database,
+          username: connectionConfig.sql_username,
+          password: connectionConfig.sql_password,
+          query: apiConfig.query,
+        };
+
+        const result = await executeSqlServerQuery(sqlConfig, params);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: result,
+            endpoint: endpointPath,
+            method: apiConfig.http_method,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
     } else {
-      // Execute external database query via proxy
+      // For other database types, require proxy
       if (!connectionConfig.proxy_url) {
         return new Response(
           JSON.stringify({ 
