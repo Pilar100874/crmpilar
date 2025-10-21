@@ -309,11 +309,11 @@ export function APIGeneratorCRUD() {
 
   const renderUrlWithParams = (url: string, params: QueryParameter[]) => {
     if (!params || params.length === 0) {
-      return <span className="font-mono text-xs break-all">{url}</span>;
+      return <span className="font-mono text-xs break-all max-w-[200px] inline-block">{url}</span>;
     }
 
     return (
-      <div className="font-mono text-xs max-w-md">
+      <div className="font-mono text-xs max-w-[250px]">
         <div className="text-muted-foreground mb-1 break-all">{url}</div>
         <div className="flex flex-wrap gap-1">
           {params.map((param, idx) => (
@@ -626,93 +626,81 @@ export function APIGeneratorCRUD() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="overflow-x-auto">
-                <Card>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[150px]">Nome</TableHead>
-                        <TableHead className="min-w-[100px]">Tipo</TableHead>
-                        <TableHead className="min-w-[80px]">Método</TableHead>
-                        <TableHead className="min-w-[250px]">URL & Parâmetros</TableHead>
-                        <TableHead className="min-w-[80px]">Status</TableHead>
-                        <TableHead className="text-right min-w-[150px]">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {endpoints.map((endpoint) => (
-                        <TableRow key={endpoint.id}>
-                          <TableCell className="font-medium">
-                            <div className="max-w-[200px]">
-                              <div className="truncate">{endpoint.name}</div>
-                              {endpoint.description && (
-                                <div className="text-sm text-muted-foreground truncate">{endpoint.description}</div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="gap-1 whitespace-nowrap">
-                              <Database className="h-3 w-3" />
-                              {endpoint.database_type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
-                              {endpoint.http_method}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {renderUrlWithParams(getFullUrl(endpoint), endpoint.parameters)}
-                          </TableCell>
-                          <TableCell>
-                            <Switch
-                              checked={endpoint.active}
-                              onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
-                            />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => editEndpoint(endpoint)}
-                                title="Editar"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => copyToClipboard(endpoint)}
-                                title="Copiar URL"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                              {endpoint.parameters?.length > 0 && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => showDocumentation(endpoint)}
-                                  title="Ver Documentação"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => deleteEndpoint(endpoint.id)}
-                                title="Excluir"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
+              <div className="space-y-4">
+                {endpoints.map((endpoint) => (
+                  <Card key={endpoint.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold break-words">{endpoint.name}</h3>
+                          {endpoint.description && (
+                            <p className="text-sm text-muted-foreground break-words">{endpoint.description}</p>
+                          )}
+                        </div>
+                        <Switch
+                          checked={endpoint.active}
+                          onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
+                        />
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="gap-1">
+                          <Database className="h-3 w-3" />
+                          {endpoint.database_type}
+                        </Badge>
+                        <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
+                          {endpoint.http_method}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs">URL & Parâmetros:</Label>
+                        {renderUrlWithParams(getFullUrl(endpoint), endpoint.parameters)}
+                      </div>
+
+                      <div className="flex flex-wrap gap-1 pt-2 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => editEndpoint(endpoint)}
+                          className="gap-1"
+                        >
+                          <Edit className="h-3 w-3" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(endpoint)}
+                          className="gap-1"
+                        >
+                          <Copy className="h-3 w-3" />
+                          Copiar
+                        </Button>
+                        {endpoint.parameters?.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => showDocumentation(endpoint)}
+                            className="gap-1"
+                          >
+                            <Eye className="h-3 w-3" />
+                            Docs
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deleteEndpoint(endpoint.id)}
+                          className="gap-1 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
             )}
           </div>
