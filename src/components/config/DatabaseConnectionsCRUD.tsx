@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, Plus, Eye, EyeOff, Database } from "lucide-react";
+import { Trash2, Plus, Eye, EyeOff, Database, Edit } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ export function DatabaseConnectionsCRUD() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -65,12 +66,22 @@ export function DatabaseConnectionsCRUD() {
     e.preventDefault();
     
     try {
-      const { error } = await supabase.from("database_connections").insert([formData]);
+      if (editingId) {
+        const { error } = await supabase
+          .from("database_connections")
+          .update(formData)
+          .eq("id", editingId);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Conexão atualizada com sucesso!");
+      } else {
+        const { error } = await supabase.from("database_connections").insert([formData]);
+        if (error) throw error;
+        toast.success("Conexão criada com sucesso!");
+      }
 
-      toast.success("Conexão criada com sucesso!");
       setShowForm(false);
+      setEditingId(null);
       setFormData({
         name: "",
         description: "",
@@ -83,11 +94,39 @@ export function DatabaseConnectionsCRUD() {
       });
       loadConnections();
     } catch (error: any) {
-      toast.error("Erro ao criar conexão: " + error.message);
+      toast.error("Erro ao salvar conexão: " + error.message);
     }
   };
 
+  const editConnection = (conn: DatabaseConnection) => {
+    setFormData({
+      name: conn.name,
+      description: conn.description || "",
+      database_type: conn.database_type,
+      sql_server: conn.sql_server,
+      sql_database: conn.sql_database,
+      sql_username: conn.sql_username,
+      sql_password: conn.sql_password,
+      sql_port: conn.sql_port,
+    });
+    setEditingId(conn.id);
+    setShowForm(true);
+  };
+
   const deleteConnection = async (id: string) => {
+    // Check if connection is being used
+    const { data: apisUsingConnection } = await supabase
+      .from("api_endpoints")
+      .select("id, name")
+      .eq("connection_id", id);
+
+    if (apisUsingConnection && apisUsingConnection.length > 0) {
+      toast.error(
+        `Esta conexão está sendo usada por ${apisUsingConnection.length} API(s). Modifique as APIs primeiro.`
+      );
+      return;
+    }
+
     if (!confirm("Deseja realmente excluir esta conexão?")) return;
 
     try {
@@ -139,7 +178,7 @@ export function DatabaseConnectionsCRUD() {
       {showForm ? (
         <Card>
           <CardHeader>
-            <CardTitle>Nova Conexão</CardTitle>
+            <CardTitle>{editingId ? "Editar Conexão" : "Nova Conexão"}</CardTitle>
             <CardDescription>Configure os dados de acesso ao banco de dados</CardDescription>
           </CardHeader>
           <CardContent>
@@ -256,7 +295,9 @@ export function DatabaseConnectionsCRUD() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full">Criar Conexão</Button>
+              <Button type="submit" className="w-full">
+                {editingId ? "Atualizar Conexão" : "Criar Conexão"}
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -305,14 +346,24 @@ export function DatabaseConnectionsCRUD() {
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteConnection(conn.id)}
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => editConnection(conn)}
+                            title="Editar"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteConnection(conn.id)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

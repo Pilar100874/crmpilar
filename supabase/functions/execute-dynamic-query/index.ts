@@ -63,24 +63,35 @@ serve(async (req) => {
       params = await req.json();
     }
 
-    // Execute Supabase query (SQL Server support removed for now)
-    if (apiConfig.database_type !== 'supabase') {
+    // Execute query based on database type
+    let queryResult: any;
+    
+    if (apiConfig.database_type === 'supabase') {
+      // Execute Supabase query
+      const { data, error: queryError } = await supabase.rpc('execute_sql', {
+        sql_query: apiConfig.query
+      });
+
+      if (queryError) {
+        throw queryError;
+      }
+      
+      queryResult = data;
+    } else if (apiConfig.database_type === 'sqlserver') {
+      // For SQL Server queries, just acknowledge for now
+      // In production, you would connect to SQL Server here
+      queryResult = {
+        message: 'SQL Server query execution - implementation needed',
+        query: apiConfig.query
+      };
+    } else {
       return new Response(
-        JSON.stringify({ error: 'Apenas Supabase é suportado no momento' }),
+        JSON.stringify({ error: `Database type ${apiConfig.database_type} not supported` }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
-    }
-
-    // Execute query directly
-    const { data: queryResult, error: queryError } = await supabase.rpc('execute_sql', {
-      sql_query: apiConfig.query
-    });
-
-    if (queryError) {
-      throw queryError;
     }
 
     return new Response(
