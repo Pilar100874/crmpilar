@@ -499,13 +499,33 @@ export function WebhooksCRUD() {
                         <SelectItem value="form-data">Form Data</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      {newVariableType === "json" && "Variável no corpo JSON da requisição"}
-                      {newVariableType === "query" && "Parâmetro na URL (?param=valor)"}
-                      {newVariableType === "header" && "Cabeçalho HTTP da requisição"}
-                      {newVariableType === "path" && "Parâmetro na rota (/api/:id)"}
-                      {newVariableType === "form-data" && "Campo de formulário multipart"}
-                    </p>
+                    <div className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded">
+                      {newVariableType === "json" && (
+                        <>
+                          <strong>Exemplo:</strong> {`{ "user_id": "12345" }`}
+                        </>
+                      )}
+                      {newVariableType === "query" && (
+                        <>
+                          <strong>Exemplo:</strong> https://api.com/users?page=1&limit=10
+                        </>
+                      )}
+                      {newVariableType === "header" && (
+                        <>
+                          <strong>Exemplo:</strong> Authorization: Bearer token123
+                        </>
+                      )}
+                      {newVariableType === "path" && (
+                        <>
+                          <strong>Exemplo:</strong> https://api.com/users/:id/profile
+                        </>
+                      )}
+                      {newVariableType === "form-data" && (
+                        <>
+                          <strong>Exemplo:</strong> Content-Type: multipart/form-data
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Nome da variável */}
@@ -515,13 +535,20 @@ export function WebhooksCRUD() {
                       value={newVariableName}
                       onChange={(e) => setNewVariableName(e.target.value)}
                       placeholder={
-                        newVariableType === "header" ? "Ex: Authorization" :
-                        newVariableType === "query" ? "Ex: page" :
-                        newVariableType === "path" ? "Ex: id" :
-                        newVariableType === "form-data" ? "Ex: file" :
-                        "Ex: user_id"
+                        newVariableType === "header" ? "Authorization, Content-Type, X-API-Key..." :
+                        newVariableType === "query" ? "page, limit, search, filter..." :
+                        newVariableType === "path" ? "id, userId, productId..." :
+                        newVariableType === "form-data" ? "file, image, document..." :
+                        "user_id, email, name, phone..."
                       }
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {newVariableType === "header" && "Nome do cabeçalho HTTP que será enviado"}
+                      {newVariableType === "query" && "Nome do parâmetro que aparece na URL após '?'"}
+                      {newVariableType === "path" && "Nome do parâmetro dinâmico na rota (use sem ':')"}
+                      {newVariableType === "form-data" && "Nome do campo no formulário"}
+                      {newVariableType === "json" && "Chave do objeto JSON que será enviado"}
+                    </p>
                   </div>
 
                   {/* Formato - apenas para JSON */}
@@ -540,6 +567,23 @@ export function WebhooksCRUD() {
                           <SelectItem value="array">Array (lista)</SelectItem>
                         </SelectContent>
                       </Select>
+                      <div className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded">
+                        {newVariableFormat === "string" && (
+                          <><strong>Exemplo:</strong> "João Silva", "user@email.com"</>
+                        )}
+                        {newVariableFormat === "number" && (
+                          <><strong>Exemplo:</strong> 123, 45.67, -10</>
+                        )}
+                        {newVariableFormat === "boolean" && (
+                          <><strong>Exemplo:</strong> true, false</>
+                        )}
+                        {newVariableFormat === "object" && (
+                          <><strong>Exemplo:</strong> {`{ "name": "João", "age": 30 }`}</>
+                        )}
+                        {newVariableFormat === "array" && (
+                          <><strong>Exemplo:</strong> ["item1", "item2", "item3"]</>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -549,7 +593,13 @@ export function WebhooksCRUD() {
                     <Textarea
                       value={newVariableDescription}
                       onChange={(e) => setNewVariableDescription(e.target.value)}
-                      placeholder="Descreva o propósito desta variável..."
+                      placeholder={
+                        newVariableType === "header" ? "Ex: Token de autenticação do usuário" :
+                        newVariableType === "query" ? "Ex: Número da página para paginação" :
+                        newVariableType === "path" ? "Ex: ID único do usuário no sistema" :
+                        newVariableType === "form-data" ? "Ex: Arquivo de imagem do perfil" :
+                        "Ex: Identificador único do usuário no sistema"
+                      }
                       rows={2}
                     />
                   </div>
@@ -562,11 +612,18 @@ export function WebhooksCRUD() {
                         value={newVariableDefaultValue}
                         onChange={(e) => setNewVariableDefaultValue(e.target.value)}
                         placeholder={
+                          newVariableType === "header" ? "Bearer token123, application/json..." :
+                          newVariableType === "query" ? "1, 10, active..." :
+                          newVariableType === "form-data" ? "default.jpg, sem_arquivo.pdf..." :
                           newVariableType === "json" && newVariableFormat === "boolean" ? "true ou false" :
-                          newVariableType === "json" && newVariableFormat === "number" ? "Ex: 0" :
-                          "Valor padrão"
+                          newVariableType === "json" && newVariableFormat === "number" ? "0, 1, 100..." :
+                          newVariableType === "json" && newVariableFormat === "string" ? "Não informado, N/A, Vazio..." :
+                          "Valor que será usado se nenhum for fornecido"
                         }
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Valor usado quando a variável não for fornecida na requisição
+                      </p>
                     </div>
                   )}
 
