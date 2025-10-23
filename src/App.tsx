@@ -16,6 +16,7 @@ import Conteudos from "./pages/Conteudos";
 import Config from "./pages/Config";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
+import ChatWebhook from "./pages/ChatWebhook";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/config" element={<Config />} />
           <Route path="/global-variables" element={<GlobalVariables />} />
           <Route path="/desenho" element={<Desenho />} />
+          <Route path="/chat-webhook" element={<ChatWebhook />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
