@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Trash2, Plus, X } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Webhook } from "lucide-react";
 import { toast } from "sonner";
 
 export interface WebhookVariable {
@@ -385,200 +385,232 @@ export function WebhooksCRUD() {
 
   return (
     <div className="space-y-6">
-      {/* Formulário de Webhook */}
-      <Card className="p-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="webhook-name">Nome do Webhook *</Label>
-            <Input
-              id="webhook-name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Ex: Webhook Principal"
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Formulário de Webhook */}
+        <Card className="p-6 h-fit">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-1">
+              {editingWebhook ? "Editar Webhook" : "Novo Webhook"}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Configure as informações do webhook
+            </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="webhook-url">URL do Webhook *</Label>
-            <Input
-              id="webhook-url"
-              value={formData.url}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-              placeholder="https://..."
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Informações Básicas */}
+            <div className="space-y-4 pb-4 border-b">
+              <div className="space-y-2">
+                <Label htmlFor="webhook-name" className="text-xs font-medium uppercase text-muted-foreground">
+                  Nome do Webhook *
+                </Label>
+                <Input
+                  id="webhook-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Webhook Principal"
+                  className="h-10"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="webhook-method">Método HTTP *</Label>
-            <Select value={formData.method} onValueChange={(value) => setFormData({ ...formData, method: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o método" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="GET">GET</SelectItem>
-                <SelectItem value="POST">POST</SelectItem>
-                <SelectItem value="PUT">PUT</SelectItem>
-                <SelectItem value="PATCH">PATCH</SelectItem>
-                <SelectItem value="DELETE">DELETE</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="webhook-url" className="text-xs font-medium uppercase text-muted-foreground">
+                  URL *
+                </Label>
+                <Input
+                  id="webhook-url"
+                  value={formData.url}
+                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                  placeholder="https://api.exemplo.com/webhook"
+                  className="h-10"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="webhook-type">Local do Webhook *</Label>
-              <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button type="button" variant="ghost" size="sm">
-                    Gerenciar Locais
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Gerenciar Locais do Webhook</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        value={newTypeName}
-                        onChange={(e) => setNewTypeName(e.target.value)}
-                        placeholder="Nome do novo tipo"
-                      />
-                      <Button type="button" onClick={handleAddType}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <ScrollArea className="h-[200px]">
-                      <div className="space-y-2">
-                        {webhookTypes.map((type) => (
-                          <div key={type.id} className="flex items-center justify-between p-2 border rounded">
-                            <span>{type.name}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteType(type.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                {webhookTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.id}>
-                    {type.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Local de Uso *</Label>
-              <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button type="button" variant="ghost" size="sm">
-                    Gerenciar Locais
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Gerenciar Locais de Uso</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        value={newLocationName}
-                        onChange={(e) => setNewLocationName(e.target.value)}
-                        placeholder="Nome do novo local"
-                      />
-                      <Button type="button" onClick={handleAddLocation}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <ScrollArea className="h-[200px]">
-                      <div className="space-y-2">
-                        {usageLocations.map((location) => (
-                          <div key={location.id} className="flex items-center justify-between p-2 border rounded">
-                            <span>{location.name}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteLocation(location.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {usageLocations.map((location) => (
-                <div key={location.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`location-${location.id}`}
-                    checked={formData.usageLocations.includes(location.id)}
-                    onCheckedChange={() => toggleLocation(location.id)}
-                  />
-                  <label
-                    htmlFor={`location-${location.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {location.name}
-                  </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="webhook-method" className="text-xs font-medium uppercase text-muted-foreground">
+                    Método *
+                  </Label>
+                  <Select value={formData.method} onValueChange={(value) => setFormData({ ...formData, method: value })}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Método" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GET">GET</SelectItem>
+                      <SelectItem value="POST">POST</SelectItem>
+                      <SelectItem value="PUT">PUT</SelectItem>
+                      <SelectItem value="PATCH">PATCH</SelectItem>
+                      <SelectItem value="DELETE">DELETE</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="webhook-type" className="text-xs font-medium uppercase text-muted-foreground">
+                      Local *
+                    </Label>
+                    <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 text-xs">
+                          Gerenciar
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Gerenciar Locais do Webhook</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <Input
+                              value={newTypeName}
+                              onChange={(e) => setNewTypeName(e.target.value)}
+                              placeholder="Nome do novo tipo"
+                            />
+                            <Button type="button" onClick={handleAddType}>
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <ScrollArea className="h-[200px]">
+                            <div className="space-y-2">
+                              {webhookTypes.map((type) => (
+                                <div key={type.id} className="flex items-center justify-between p-2 border rounded">
+                                  <span>{type.name}</span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteType(type.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {webhookTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="webhook-description">Descrição *</Label>
-            <Textarea
-              id="webhook-description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Descreva o propósito deste webhook..."
-              rows={3}
-            />
-          </div>
+            {/* Local de Uso */}
+            <div className="space-y-3 pb-4 border-b">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium uppercase text-muted-foreground">
+                  Local de Uso *
+                </Label>
+                <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs">
+                      Gerenciar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Gerenciar Locais de Uso</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newLocationName}
+                          onChange={(e) => setNewLocationName(e.target.value)}
+                          placeholder="Nome do novo local"
+                        />
+                        <Button type="button" onClick={handleAddLocation}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-2">
+                          {usageLocations.map((location) => (
+                            <div key={location.id} className="flex items-center justify-between p-2 border rounded">
+                              <span>{location.name}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteLocation(location.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {usageLocations.map((location) => (
+                  <label
+                    key={location.id}
+                    className="flex items-center space-x-2 p-2 rounded border cursor-pointer hover:bg-secondary/50 transition-colors"
+                  >
+                    <Checkbox
+                      id={`location-${location.id}`}
+                      checked={formData.usageLocations.includes(location.id)}
+                      onCheckedChange={() => toggleLocation(location.id)}
+                    />
+                    <span className="text-sm">{location.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="webhook-has-variables">Possuir Variáveis *</Label>
-            <Select 
-              value={formData.hasVariables ? "sim" : "nao"} 
-              onValueChange={(value) => setFormData({ ...formData, hasVariables: value === "sim" })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nao">Não</SelectItem>
-                <SelectItem value="sim">Sim</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Descrição */}
+            <div className="space-y-2 pb-4 border-b">
+              <Label htmlFor="webhook-description" className="text-xs font-medium uppercase text-muted-foreground">
+                Descrição *
+              </Label>
+              <Textarea
+                id="webhook-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Descreva o propósito deste webhook..."
+                rows={3}
+                className="resize-none"
+              />
+            </div>
 
-          {formData.hasVariables && (
-            <div className="space-y-2">
-              <Label>Variáveis do Webhook</Label>
-              <Card className="p-3 space-y-3">
-                <div className="space-y-3">
+            {/* Variáveis */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="webhook-has-variables" className="text-xs font-medium uppercase text-muted-foreground">
+                  Possuir Variáveis *
+                </Label>
+                <Select 
+                  value={formData.hasVariables ? "sim" : "nao"} 
+                  onValueChange={(value) => setFormData({ ...formData, hasVariables: value === "sim" })}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nao">Não</SelectItem>
+                    <SelectItem value="sim">Sim</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.hasVariables && (
+                <Card className="p-4 bg-secondary/30">
+                  <div className="space-y-4">
                   {/* Tipo - Primeira opção */}
                   <div className="space-y-2">
                     <Label>Tipo de Variável *</Label>
@@ -789,142 +821,153 @@ export function WebhooksCRUD() {
                 </div>
                 
                 {formData.variables.length > 0 && (
-                  <ScrollArea className="h-[150px]">
-                    <div className="space-y-2">
-                      {formData.variables.map((variable) => (
-                        <div key={variable.id} className="flex items-start justify-between p-3 border rounded">
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium">{variable.name}</span>
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                {variable.type === "json" ? "JSON" :
-                                 variable.type === "query" ? "Query" :
-                                 variable.type === "header" ? "Header" :
-                                 variable.type === "path" ? "Path" :
-                                 "Form Data"}
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {formData.variables.map((variable) => (
+                      <div key={variable.id} className="flex items-start justify-between p-2 border rounded bg-background">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{variable.name}</span>
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                              {variable.type === "json" ? "JSON" :
+                               variable.type === "query" ? "Query" :
+                               variable.type === "header" ? "Header" :
+                               variable.type === "path" ? "Path" :
+                               "Form Data"}
+                            </span>
+                            {variable.required && (
+                              <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
+                                Obrigatório
                               </span>
-                              {variable.required && (
-                                <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
-                                  Obrigatório
-                                </span>
-                              )}
-                              {variable.format && (
-                                <span className="text-xs bg-secondary px-2 py-0.5 rounded">
-                                  {variable.format}
-                                </span>
-                              )}
-                            </div>
-                            {variable.description && (
-                              <p className="text-sm text-muted-foreground">{variable.description}</p>
                             )}
-                            {variable.defaultValue && (
-                              <p className="text-xs text-muted-foreground">
-                                Padrão: <span className="font-mono">{variable.defaultValue}</span>
-                              </p>
+                            {variable.format && (
+                              <span className="text-xs bg-secondary px-2 py-0.5 rounded">
+                                {variable.format}
+                              </span>
                             )}
                           </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteVariable(variable.id)}
-                          >
-                            <X className="h-4 w-4 text-destructive" />
-                          </Button>
+                          {variable.description && (
+                            <p className="text-xs text-muted-foreground">{variable.description}</p>
+                          )}
+                          {variable.defaultValue && (
+                            <p className="text-xs text-muted-foreground">
+                              Padrão: <span className="font-mono">{variable.defaultValue}</span>
+                            </p>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteVariable(variable.id)}
+                        >
+                          <X className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </Card>
-            </div>
-          )}
+            )}
+          </div>
 
-          <div className="flex gap-2">
-            <Button type="submit" className="flex-1">
-              {editingWebhook ? "Atualizar" : "Adicionar"} Webhook
-            </Button>
-            {editingWebhook && (
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancelar
+            <div className="flex gap-2 pt-4">
+              <Button type="submit" className="flex-1 h-10">
+                {editingWebhook ? "Atualizar" : "Adicionar"} Webhook
               </Button>
-            )}
-          </div>
-        </form>
-      </Card>
+              {editingWebhook && (
+                <Button type="button" variant="outline" onClick={resetForm} className="h-10">
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </form>
+        </Card>
 
-      {/* Lista de Webhooks */}
-      <div className="space-y-2">
-        <h3 className="font-semibold">Webhooks Cadastrados</h3>
-        <ScrollArea className="h-[400px]">
-          <div className="space-y-2">
-            {webhooks.map((webhook) => (
-              <Card key={webhook.id} className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold">{webhook.name}</h4>
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                        {webhookTypes.find((t) => t.id === webhook.type)?.name}
-                      </span>
-                      <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded font-mono">
-                        {webhook.method || "POST"}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground break-all">{webhook.url}</p>
-                    {webhook.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{webhook.description}</p>
-                    )}
-                    {webhook.usageLocations && webhook.usageLocations.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {webhook.usageLocations.map((locId) => {
-                          const location = usageLocations.find((l) => l.id === locId);
-                          return location ? (
-                            <span key={locId} className="text-xs bg-secondary px-2 py-0.5 rounded">
-                              {location.name}
-                            </span>
-                          ) : null;
-                        })}
-                      </div>
-                    )}
-                    {webhook.hasVariables && webhook.variables && webhook.variables.length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-xs font-semibold mb-1">Variáveis:</div>
-                        <div className="flex flex-wrap gap-1">
-                          {webhook.variables.map((variable) => (
-                            <span 
-                              key={variable.id} 
-                              className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded"
-                              title={`${variable.description} (${variable.type.toUpperCase()})`}
-                            >
-                              {variable.name} <span className="font-mono text-[10px] opacity-70">({variable.type})</span>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Criado em: {new Date(webhook.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(webhook)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(webhook.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-            {webhooks.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum webhook cadastrado
-              </div>
-            )}
+        {/* Lista de Webhooks */}
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold mb-1">Webhooks Cadastrados</h3>
+            <p className="text-sm text-muted-foreground">
+              {webhooks.length} webhook{webhooks.length !== 1 ? 's' : ''} configurado{webhooks.length !== 1 ? 's' : ''}
+            </p>
           </div>
-        </ScrollArea>
+          <ScrollArea className="h-[600px]">
+            <div className="space-y-3">
+              {webhooks.map((webhook) => (
+                <Card key={webhook.id} className="p-4 hover:bg-secondary/50 transition-colors">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-semibold text-base">{webhook.name}</h4>
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-medium">
+                          {webhookTypes.find((t) => t.id === webhook.type)?.name}
+                        </span>
+                        <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded font-mono font-medium">
+                          {webhook.method || "POST"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground break-all font-mono bg-secondary/30 px-2 py-1 rounded">
+                        {webhook.url}
+                      </p>
+                      {webhook.description && (
+                        <p className="text-sm text-muted-foreground">{webhook.description}</p>
+                      )}
+                      {webhook.usageLocations && webhook.usageLocations.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {webhook.usageLocations.map((locId) => {
+                            const location = usageLocations.find((l) => l.id === locId);
+                            return location ? (
+                              <span key={locId} className="text-xs bg-accent/50 text-accent-foreground px-2 py-0.5 rounded">
+                                {location.name}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
+                      {webhook.hasVariables && webhook.variables && webhook.variables.length > 0 && (
+                        <div className="pt-2 border-t">
+                          <div className="text-xs font-semibold mb-1 text-muted-foreground">Variáveis configuradas:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {webhook.variables.map((variable) => (
+                              <span 
+                                key={variable.id} 
+                                className="text-xs bg-primary/5 border border-primary/20 text-foreground px-2 py-1 rounded"
+                                title={`${variable.description || ''} (${variable.type.toUpperCase()})`}
+                              >
+                                {variable.name}
+                                {variable.required && <span className="text-destructive ml-1">*</span>}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground pt-1">
+                        Criado em {new Date(webhook.createdAt).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(webhook)} className="h-8 w-8 p-0">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(webhook.id)} className="h-8 w-8 p-0">
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              {webhooks.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
+                    <Webhook className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">Nenhum webhook cadastrado</p>
+                  <p className="text-sm text-muted-foreground mt-1">Crie seu primeiro webhook usando o formulário ao lado</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </Card>
       </div>
     </div>
   );
