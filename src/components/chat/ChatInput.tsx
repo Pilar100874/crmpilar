@@ -65,23 +65,40 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
 
   const loadAutoResponseWebhooks = async () => {
     const estabId = await getEstabelecimentoId();
-    if (!estabId) return;
+    if (!estabId) {
+      console.log("❌ Estabelecimento ID não encontrado");
+      return;
+    }
+
+    console.log("🔍 Buscando webhooks de resposta automática para estabelecimento:", estabId);
 
     const { data, error } = await supabase
       .from("webhooks")
       .select("*")
       .eq("estabelecimento_id", estabId)
-      .eq("active", true)
-      .contains("usage_locations", ["resposta-automatica-chat"]);
+      .eq("active", true);
 
     if (error) {
-      console.error("Erro ao carregar webhooks de resposta automática:", error);
+      console.error("❌ Erro ao carregar webhooks de resposta automática:", error);
       return;
     }
 
-    if (data && data.length > 0) {
-      setAutoResponseWebhooks(data);
-      setSelectedAutoWebhook(data[0].id);
+    console.log("📋 Webhooks encontrados:", data);
+
+    // Filtrar webhooks que contêm "resposta-automatica-chat" no array usage_locations
+    const filtered = data?.filter(webhook => 
+      Array.isArray(webhook.usage_locations) && 
+      webhook.usage_locations.includes("resposta-automatica-chat")
+    ) || [];
+
+    console.log("✅ Webhooks filtrados para resposta automática:", filtered);
+
+    if (filtered.length > 0) {
+      setAutoResponseWebhooks(filtered);
+      setSelectedAutoWebhook(filtered[0].id);
+      console.log("✅ Webhook selecionado:", filtered[0].name);
+    } else {
+      console.log("⚠️ Nenhum webhook de resposta automática encontrado");
     }
   };
 
