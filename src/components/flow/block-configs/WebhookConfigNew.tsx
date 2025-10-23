@@ -263,11 +263,26 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
       {selectedWebhook && (
         <div className="space-y-2 p-3 bg-secondary/30 rounded-lg border">
           <Label className="text-xs font-medium uppercase text-muted-foreground">Configuração do Webhook</Label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-2">
             <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded font-mono">
               {selectedWebhook.method}
             </span>
             <span className="text-sm font-mono break-all">{selectedWebhook.url}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Locais de uso:</Label>
+            <div className="flex gap-1 flex-wrap">
+              {selectedWebhook.usageLocations?.map((location) => (
+                <span 
+                  key={location} 
+                  className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded"
+                >
+                  {location === "bot" ? "Bot" : 
+                   location === "campaigns" ? "Campanhas" : 
+                   location === "chat" ? "Chat" : location}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       )}
