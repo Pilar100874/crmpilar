@@ -83,7 +83,10 @@ export function WebhooksCRUD() {
   const resetVariableForm = () => {
     setNewVariableName("");
     setNewVariableDescription("");
-    setNewVariableType("json");
+    // Manter o tipo se já existirem variáveis
+    if (formData.variables.length === 0) {
+      setNewVariableType("json");
+    }
     setNewVariableDefaultValue("");
     setNewVariableRequired(false);
     setNewVariableFormat("string");
@@ -258,6 +261,15 @@ export function WebhooksCRUD() {
       return;
     }
 
+    // Verificar se já existe variável e se o tipo é diferente
+    if (formData.variables.length > 0) {
+      const existingType = formData.variables[0].type;
+      if (newVariableType !== existingType) {
+        toast.error(`Você já tem variáveis do tipo "${existingType}". Todas as variáveis devem ser do mesmo tipo.`);
+        return;
+      }
+    }
+
     // Validações específicas por tipo
     
     // 1. Validar nome da variável (sem caracteres especiais problemáticos)
@@ -371,6 +383,12 @@ export function WebhooksCRUD() {
       ...prev,
       variables: prev.variables.filter(v => v.id !== variableId)
     }));
+    
+    // Se remover a última variável, resetar o tipo
+    if (formData.variables.length === 1) {
+      setNewVariableType("json");
+    }
+    
     toast.success("Variável removida!");
   };
 
@@ -611,54 +629,73 @@ export function WebhooksCRUD() {
               {formData.hasVariables && (
                 <Card className="p-4 bg-secondary/30">
                   <div className="space-y-4">
-                  {/* Tipo - Primeira opção */}
-                  <div className="space-y-2">
-                    <Label>Tipo de Variável *</Label>
-                    <Select value={newVariableType} onValueChange={(value) => {
-                      setNewVariableType(value);
-                      // Resetar campos ao mudar tipo
-                      setNewVariableFormat("string");
-                      setNewVariableDefaultValue("");
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="json">JSON Body</SelectItem>
-                        <SelectItem value="query">Query Params</SelectItem>
-                        <SelectItem value="header">Headers</SelectItem>
-                        <SelectItem value="path">Path Params</SelectItem>
-                        <SelectItem value="form-data">Form Data</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded">
-                      {newVariableType === "json" && (
-                        <>
-                          <strong>Exemplo:</strong> {`{ "user_id": "12345" }`}
-                        </>
-                      )}
-                      {newVariableType === "query" && (
-                        <>
-                          <strong>Exemplo:</strong> https://api.com/users?page=1&limit=10
-                        </>
-                      )}
-                      {newVariableType === "header" && (
-                        <>
-                          <strong>Exemplo:</strong> Authorization: Bearer token123
-                        </>
-                      )}
-                      {newVariableType === "path" && (
-                        <>
-                          <strong>Exemplo:</strong> https://api.com/users/:id/profile
-                        </>
-                      )}
-                      {newVariableType === "form-data" && (
-                        <>
-                          <strong>Exemplo:</strong> Content-Type: multipart/form-data
-                        </>
+                    {/* Mensagem de tipo único */}
+                    {formData.variables.length > 0 && (
+                      <div className="bg-primary/10 text-primary text-xs p-2 rounded border border-primary/20">
+                        <strong>Tipo selecionado:</strong> {
+                          formData.variables[0].type === "json" ? "JSON Body" :
+                          formData.variables[0].type === "query" ? "Query Params" :
+                          formData.variables[0].type === "header" ? "Headers" :
+                          formData.variables[0].type === "path" ? "Path Params" :
+                          "Form Data"
+                        }. Todas as variáveis devem ser deste tipo.
+                      </div>
+                    )}
+
+                    {/* Tipo - Primeira opção */}
+                    <div className="space-y-2">
+                      <Label>Tipo de Variável *</Label>
+                      <Select 
+                        value={newVariableType} 
+                        onValueChange={(value) => {
+                          setNewVariableType(value);
+                          // Resetar campos ao mudar tipo
+                          setNewVariableFormat("string");
+                          setNewVariableDefaultValue("");
+                        }}
+                        disabled={formData.variables.length > 0}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="json">JSON Body</SelectItem>
+                          <SelectItem value="query">Query Params</SelectItem>
+                          <SelectItem value="header">Headers</SelectItem>
+                          <SelectItem value="path">Path Params</SelectItem>
+                          <SelectItem value="form-data">Form Data</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {formData.variables.length === 0 && (
+                        <div className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded">
+                          {newVariableType === "json" && (
+                            <>
+                              <strong>Exemplo:</strong> {`{ "user_id": "12345" }`}
+                            </>
+                          )}
+                          {newVariableType === "query" && (
+                            <>
+                              <strong>Exemplo:</strong> https://api.com/users?page=1&limit=10
+                            </>
+                          )}
+                          {newVariableType === "header" && (
+                            <>
+                              <strong>Exemplo:</strong> Authorization: Bearer token123
+                            </>
+                          )}
+                          {newVariableType === "path" && (
+                            <>
+                              <strong>Exemplo:</strong> https://api.com/users/:id/profile
+                            </>
+                          )}
+                          {newVariableType === "form-data" && (
+                            <>
+                              <strong>Exemplo:</strong> Content-Type: multipart/form-data
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
 
                   {/* Nome da variável */}
                   <div className="space-y-2">
