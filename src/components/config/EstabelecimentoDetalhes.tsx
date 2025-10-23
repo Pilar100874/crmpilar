@@ -51,30 +51,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="cadastro-unidades" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span className="font-medium">Cadastro de Unidades</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <UnidadesCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="cadastro-segmentos" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-primary" />
-              <span className="font-medium">Cadastro de Segmentos</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <SegmentosCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
         <AccordionItem value="grupos-acesso" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">
@@ -94,8 +70,36 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
               <span className="font-medium">Cadastro de Usuários</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
+          <AccordionContent className="px-4 pb-4 space-y-4">
             <UsuariosCRUD estabelecimentoId={estabelecimentoId} />
+            
+            <div className="border-t pt-4 mt-4">
+              <Accordion type="single" collapsible className="space-y-2">
+                <AccordionItem value="unidades" className="border rounded-md">
+                  <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-sm">Cadastro de Unidades</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <UnidadesCRUD estabelecimentoId={estabelecimentoId} />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="segmentos" className="border rounded-md">
+                  <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-sm">Cadastro de Segmentos</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <SegmentosCRUD estabelecimentoId={estabelecimentoId} />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </AccordionContent>
         </AccordionItem>
 
