@@ -12,7 +12,11 @@ interface RedesSociais {
   website: string;
 }
 
-export const RedesSociaisCRUD = () => {
+interface RedesSociaisCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export const RedesSociaisCRUD = ({ estabelecimentoId }: RedesSociaisCRUDProps) => {
   const [socialLinks, setSocialLinks] = useState<RedesSociais>({
     whatsapp: "",
     instagram: "",
@@ -27,22 +31,28 @@ export const RedesSociaisCRUD = () => {
   }, []);
 
   const fetchRedesSociais = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    let targetEstabelecimentoId = estabelecimentoId;
 
-    const { data: userData } = await supabase
-      .from('usuarios')
-      .select('estabelecimento_id')
-      .eq('email', user.email)
-      .single();
+    if (!targetEstabelecimentoId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    if (!userData?.estabelecimento_id) return;
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      targetEstabelecimentoId = userData?.estabelecimento_id;
+    }
+
+    if (!targetEstabelecimentoId) return;
 
     const { data, error } = await supabase
       .from("redes_sociais")
       .select("*")
-      .eq("estabelecimento_id", userData.estabelecimento_id)
-      .single();
+      .eq("estabelecimento_id", targetEstabelecimentoId)
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
       toast({
@@ -63,22 +73,28 @@ export const RedesSociaisCRUD = () => {
   const handleSave = async () => {
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setLoading(false);
-      return;
+    let targetEstabelecimentoId = estabelecimentoId;
+
+    if (!targetEstabelecimentoId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      targetEstabelecimentoId = userData?.estabelecimento_id;
     }
 
-    const { data: userData } = await supabase
-      .from('usuarios')
-      .select('estabelecimento_id')
-      .eq('email', user.email)
-      .single();
-
-    if (!userData?.estabelecimento_id) {
+    if (!targetEstabelecimentoId) {
       toast({
         title: "Erro",
-        description: "Usuário não vinculado a um estabelecimento",
+        description: "Estabelecimento não identificado",
         variant: "destructive",
       });
       setLoading(false);
@@ -89,11 +105,11 @@ export const RedesSociaisCRUD = () => {
     const { data: existing } = await supabase
       .from("redes_sociais")
       .select("id")
-      .eq("estabelecimento_id", userData.estabelecimento_id)
-      .single();
+      .eq("estabelecimento_id", targetEstabelecimentoId)
+      .maybeSingle();
 
     const dataToSave = {
-      estabelecimento_id: userData.estabelecimento_id,
+      estabelecimento_id: targetEstabelecimentoId,
       ...socialLinks
     };
 
@@ -102,7 +118,7 @@ export const RedesSociaisCRUD = () => {
       ({ error } = await supabase
         .from("redes_sociais")
         .update(socialLinks)
-        .eq("estabelecimento_id", userData.estabelecimento_id));
+        .eq("estabelecimento_id", targetEstabelecimentoId));
     } else {
       ({ error } = await supabase
         .from("redes_sociais")

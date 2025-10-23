@@ -11,7 +11,11 @@ interface Segmento {
   nome: string;
 }
 
-export const SegmentosCRUD = () => {
+interface SegmentosCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [nome, setNome] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -22,20 +26,28 @@ export const SegmentosCRUD = () => {
   }, []);
 
   const fetchSegmentos = async () => {
-    // Get current user's estabelecimento_id
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    let targetEstabelecimentoId = estabelecimentoId;
 
-    const { data: userData } = await supabase
-      .from('usuarios')
-      .select('estabelecimento_id')
-      .eq('email', user.email)
-      .single();
+    if (!targetEstabelecimentoId) {
+      // Get current user's estabelecimento_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      targetEstabelecimentoId = userData?.estabelecimento_id;
+    }
+
+    if (!targetEstabelecimentoId) return;
 
     const { data, error } = await supabase
       .from("segmentos")
       .select("*")
-      .eq('estabelecimento_id', userData?.estabelecimento_id)
+      .eq('estabelecimento_id', targetEstabelecimentoId)
       .order("nome");
 
     if (error) {
@@ -80,19 +92,34 @@ export const SegmentosCRUD = () => {
         fetchSegmentos();
       }
     } else {
-      // Get current user's estabelecimento_id
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      let targetEstabelecimentoId = estabelecimentoId;
 
-      const { data: userData } = await supabase
-        .from('usuarios')
-        .select('estabelecimento_id')
-        .eq('email', user.email)
-        .single();
+      if (!targetEstabelecimentoId) {
+        // Get current user's estabelecimento_id
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: userData } = await supabase
+          .from('usuarios')
+          .select('estabelecimento_id')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        targetEstabelecimentoId = userData?.estabelecimento_id;
+      }
+
+      if (!targetEstabelecimentoId) {
+        toast({
+          title: "Erro",
+          description: "Estabelecimento não identificado",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from("segmentos")
-        .insert([{ nome, estabelecimento_id: userData?.estabelecimento_id }]);
+        .insert([{ nome, estabelecimento_id: targetEstabelecimentoId }]);
 
       if (error) {
         const errorMsg = error.message.includes('segmentos_nome_unique') 

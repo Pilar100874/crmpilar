@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { EstabelecimentoDetalhes } from "./EstabelecimentoDetalhes";
 
 interface Estabelecimento {
   id: string;
@@ -17,6 +18,7 @@ interface Estabelecimento {
 export function EstabelecimentosCRUD() {
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     cnpj: "",
     nome: "",
@@ -208,35 +210,60 @@ export function EstabelecimentosCRUD() {
 
       <div className="space-y-2">
         <h3 className="font-semibold text-lg">Estabelecimentos Cadastrados</h3>
-        <div className="space-y-2">
+        <div className="space-y-4">
           {estabelecimentos.map((estabelecimento) => (
             <div
               key={estabelecimento.id}
-              className="flex items-center justify-between p-4 border rounded-lg"
+              className="border rounded-lg overflow-hidden"
             >
-              <div>
-                <p className="font-medium">{estabelecimento.nome}</p>
-                <p className="text-sm text-muted-foreground">
-                  CNPJ: {formatCNPJ(estabelecimento.cnpj)} | Usuários permitidos:{" "}
-                  {estabelecimento.numero_usuarios_permitidos}
-                </p>
+              <div className="flex items-center justify-between p-4 bg-muted/30">
+                <div className="flex-1">
+                  <p className="font-medium">{estabelecimento.nome}</p>
+                  <p className="text-sm text-muted-foreground">
+                    CNPJ: {formatCNPJ(estabelecimento.cnpj)} | Usuários permitidos:{" "}
+                    {estabelecimento.numero_usuarios_permitidos}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setExpandedId(expandedId === estabelecimento.id ? null : estabelecimento.id)}
+                    title={expandedId === estabelecimento.id ? "Ocultar detalhes" : "Gerenciar dados"}
+                  >
+                    {expandedId === estabelecimento.id ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(estabelecimento)}
+                    title="Editar"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(estabelecimento.id)}
+                    title="Excluir"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(estabelecimento)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(estabelecimento.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              
+              {expandedId === estabelecimento.id && (
+                <div className="p-4 bg-background">
+                  <EstabelecimentoDetalhes 
+                    estabelecimentoId={estabelecimento.id}
+                    estabelecimentoNome={estabelecimento.nome}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

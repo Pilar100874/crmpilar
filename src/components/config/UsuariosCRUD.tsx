@@ -44,7 +44,11 @@ interface Estabelecimento {
   numero_usuarios_permitidos: number;
 }
 
-export const UsuariosCRUD = () => {
+interface UsuariosCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
@@ -57,7 +61,7 @@ export const UsuariosCRUD = () => {
   const [senha, setSenha] = useState("");
   const [unidadeId, setUnidadeId] = useState("");
   const [grupoAcessoId, setGrupoAcessoId] = useState("");
-  const [estabelecimentoId, setEstabelecimentoId] = useState("");
+  const [selectedEstabelecimentoId, setSelectedEstabelecimentoId] = useState("");
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -79,15 +83,21 @@ export const UsuariosCRUD = () => {
   };
 
   const fetchUsuarios = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("usuarios")
       .select(`
         *,
         unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
-      `)
-      .order("nome");
+      `);
+
+    // Filter by estabelecimento if prop is provided
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+
+    const { data, error } = await query.order("nome");
 
     if (error) {
       toast({
@@ -106,7 +116,7 @@ export const UsuariosCRUD = () => {
           .select("role")
           .eq("user_id", usuario.id)
           .eq("role", "admin")
-          .single();
+          .maybeSingle();
         
         return {
           ...usuario,
@@ -119,17 +129,29 @@ export const UsuariosCRUD = () => {
   };
 
   const fetchUnidades = async () => {
-    const { data } = await supabase.from("unidades").select("*").order("nome");
+    let query = supabase.from("unidades").select("*");
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+    const { data } = await query.order("nome");
     setUnidades(data || []);
   };
 
   const fetchGrupos = async () => {
-    const { data } = await supabase.from("grupos_acesso").select("*").order("nome");
+    let query = supabase.from("grupos_acesso").select("*");
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+    const { data } = await query.order("nome");
     setGrupos(data || []);
   };
 
   const fetchSegmentos = async () => {
-    const { data } = await supabase.from("segmentos").select("*").order("nome");
+    let query = supabase.from("segmentos").select("*");
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+    const { data } = await query.order("nome");
     setSegmentos(data || []);
   };
 
@@ -183,7 +205,7 @@ export const UsuariosCRUD = () => {
       telefone: telefone || null,
       unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
-      estabelecimento_id: estabelecimentoId,
+      estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
       senha_hash: senha || undefined,
     };
 
@@ -289,7 +311,7 @@ export const UsuariosCRUD = () => {
     setSenha("");
     setUnidadeId("");
     setGrupoAcessoId("");
-    setEstabelecimentoId("");
+    setSelectedEstabelecimentoId("");
     setSegmentosSelecionados([]);
     setIsAdmin(false);
     setEditingId(null);
@@ -301,7 +323,7 @@ export const UsuariosCRUD = () => {
     setTelefone(usuario.telefone || "");
     setUnidadeId(usuario.unidade_id || "");
     setGrupoAcessoId(usuario.grupo_acesso_id || "");
-    setEstabelecimentoId(usuario.estabelecimento_id || "");
+    setSelectedEstabelecimentoId(usuario.estabelecimento_id || "");
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
@@ -435,21 +457,23 @@ export const UsuariosCRUD = () => {
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="usuario-estabelecimento">Estabelecimento *</Label>
-            <Select value={estabelecimentoId} onValueChange={setEstabelecimentoId}>
-              <SelectTrigger id="usuario-estabelecimento">
-                <SelectValue placeholder="Selecione o estabelecimento" />
-              </SelectTrigger>
-              <SelectContent>
-                {estabelecimentos.map((est) => (
-                  <SelectItem key={est.id} value={est.id}>
-                    {est.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!estabelecimentoId && (
+            <div>
+              <Label htmlFor="usuario-estabelecimento">Estabelecimento *</Label>
+              <Select value={selectedEstabelecimentoId} onValueChange={setSelectedEstabelecimentoId}>
+                <SelectTrigger id="usuario-estabelecimento">
+                  <SelectValue placeholder="Selecione o estabelecimento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {estabelecimentos.map((est) => (
+                    <SelectItem key={est.id} value={est.id}>
+                      {est.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-6">
