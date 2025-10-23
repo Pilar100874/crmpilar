@@ -473,25 +473,13 @@ export default function ChatWebhook() {
 
             {/* Input Area */}
             <div className="border-t border-border bg-card/80 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Button
-                  variant={showAIChat ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowAIChat(!showAIChat)}
-                  className="gap-2"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
-                </Button>
-              </div>
-
-              {/* AI Webhooks List */}
-              {showAIChat && aiWebhooks.length > 0 && (
-                <div className="mb-2">
+              <div className="flex items-center gap-3 mb-3">
+                {/* AI Webhook Selector */}
+                {aiWebhooks.length > 0 && (
                   <select
                     value={selectedAIWebhook || ""}
                     onChange={(e) => setSelectedAIWebhook(e.target.value)}
-                    className="w-full text-sm border rounded-lg px-3 py-2.5 bg-card hover:bg-secondary/50 transition-colors shadow-sm"
+                    className="flex-1 text-sm border rounded-lg px-3 py-2.5 bg-card hover:bg-secondary/50 transition-colors shadow-sm font-medium"
                   >
                     {aiWebhooks.map((webhook) => (
                       <option key={webhook.id} value={webhook.id}>
@@ -499,39 +487,79 @@ export default function ChatWebhook() {
                       </option>
                     ))}
                   </select>
-                </div>
-              )}
+                )}
+                
+                {/* AI Button */}
+                <Button
+                  variant={showAIChat ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowAIChat(!showAIChat)}
+                  className="gap-2 px-4"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
+                </Button>
+              </div>
 
               {/* AI Chat Box */}
               {showAIChat && (
-                <Card className="mb-3 bg-gradient-to-br from-card to-secondary/20 border-primary/30 shadow-lg">
+                <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 shadow-lg overflow-hidden">
+                  <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-2.5 border-b border-primary/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                      <span className="text-sm font-semibold text-foreground">
+                        Chat com IA - {currentAIWebhook?.name}
+                      </span>
+                    </div>
+                  </div>
+                  
                   <div className="p-4">
                     {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
-                      className="max-h-80 overflow-y-auto mb-3 space-y-3 bg-background/80 backdrop-blur-sm rounded-lg p-4 border border-border/50"
+                      className="max-h-96 overflow-y-auto mb-4 space-y-3 rounded-lg"
                     >
-                      {aiMessages.length > 0 && (
+                      {aiMessages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-4">
+                            <Sparkles className="h-8 w-8 text-primary" />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Comece uma conversa com a IA
+                          </p>
+                        </div>
+                      ) : (
                         aiMessages.map((msg, idx) => (
                           <div
                             key={idx}
-                            className={`group relative p-3 rounded-lg transition-all ${
-                              msg.role === "user"
-                                ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground ml-12 shadow-md"
-                                : "bg-card border border-border mr-12 hover:border-primary/30 shadow-sm"
+                            className={`group relative flex gap-3 ${
+                              msg.role === "user" ? "justify-end" : "justify-start"
                             }`}
                           >
-                            <div className="flex items-start gap-2">
-                              <p className="whitespace-pre-wrap break-words flex-1 text-sm leading-relaxed">
+                            {msg.role === "assistant" && (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0 mt-1">
+                                <Sparkles className="h-4 w-4 text-primary-foreground" />
+                              </div>
+                            )}
+                            
+                            <div
+                              className={`relative max-w-[75%] p-3 rounded-2xl transition-all ${
+                                msg.role === "user"
+                                  ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
+                                  : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30"
+                              }`}
+                            >
+                              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                                 {msg.content}
                               </p>
+                              
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className={`shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${
+                                className={`absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all ${
                                   msg.role === "user" 
-                                    ? "hover:bg-white/20 text-primary-foreground" 
-                                    : "hover:bg-primary/10"
+                                    ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90" 
+                                    : "bg-primary text-primary-foreground hover:bg-primary/90"
                                 }`}
                                 onClick={() => sendAIResponseToMainChat(msg.content)}
                                 title="Enviar para o chat principal"
@@ -539,13 +567,19 @@ export default function ChatWebhook() {
                                 <ArrowUp className="h-3.5 w-3.5" />
                               </Button>
                             </div>
+                            
+                            {msg.role === "user" && (
+                              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-1">
+                                <span className="text-xs font-semibold">Você</span>
+                              </div>
+                            )}
                           </div>
                         ))
                       )}
                     </div>
 
                     {/* AI Input */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 bg-background/50 p-3 rounded-lg border border-border">
                       <Textarea
                         value={aiInput}
                         onChange={(e) => setAiInput(e.target.value)}
@@ -556,16 +590,19 @@ export default function ChatWebhook() {
                           }
                         }}
                         placeholder="Digite sua mensagem..."
-                        className="min-h-[60px] text-sm resize-none bg-background"
+                        className="min-h-[60px] text-sm resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                         disabled={isAILoading}
                       />
                       <Button
                         onClick={sendAIMessage}
                         disabled={!aiInput.trim() || isAILoading}
-                        size="sm"
-                        className="shrink-0 h-auto px-4"
+                        className="shrink-0 h-auto px-4 bg-gradient-to-r from-primary to-primary-glow hover:opacity-90"
                       >
-                        <Send className="h-4 w-4" />
+                        {isAILoading ? (
+                          <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
