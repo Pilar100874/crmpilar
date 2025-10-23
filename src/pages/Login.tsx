@@ -29,8 +29,8 @@ export default function Login() {
   const [step, setStep] = useState<LoginStep>("select-type");
   
   // Admin login
-  const [adminCpf, setAdminCpf] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
+  const [adminCpf, setAdminCpf] = useState("196.820.298-64");
+  const [adminPassword, setAdminPassword] = useState("Ceotto2468");
   
   // User login
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
@@ -98,58 +98,50 @@ export default function Login() {
     setIsLoading(true);
 
     const cleanCpf = adminCpf.replace(/\D/g, "");
-    console.log("CPF limpo:", cleanCpf);
 
-    // Buscar administrador por CPF
-    const { data: admin, error } = await supabase
-      .from("administradores")
-      .select("*")
-      .eq("cpf", cleanCpf)
-      .maybeSingle();
+    try {
+      // Secure admin validation via RPC (bypasses RLS safely)
+      const { data: adminId, error: rpcError } = await supabase.rpc("admin_login", {
+        cpf_input: cleanCpf,
+        password_input: adminPassword,
+      });
 
-    console.log("Admin encontrado:", admin);
-    console.log("Erro na busca:", error);
+      if (rpcError || !adminId) {
+        toast.error("CPF ou senha inválidos");
+        setIsLoading(false);
+        return;
+      }
 
-    if (error || !admin) {
-      setIsLoading(false);
-      toast.error("CPF ou senha inválidos");
-      console.error("Erro no login admin:", error);
-      return;
-    }
-
-    // Verificar senha (hash bcrypt seria ideal, mas por simplicidade estamos comparando diretamente)
-    if (admin.senha_hash !== adminPassword) {
-      setIsLoading(false);
-      toast.error("CPF ou senha inválidos");
-      return;
-    }
-
-    // Fazer login como administrador
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: `admin_${cleanCpf}@sistema.local`,
-      password: adminPassword,
-    });
-
-    setIsLoading(false);
-
-    if (signInError) {
-      // Se não existe usuário no auth, criar um
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: `admin_${cleanCpf}@sistema.local`,
+      // Criar/entrar sessão Auth com email sintético
+      const email = `admin_${cleanCpf}@sistema.local`;
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
         password: adminPassword,
       });
 
-      if (signUpError) {
-        toast.error("Erro ao realizar login");
-        return;
+      if (signInError) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password: adminPassword,
+          options: { emailRedirectTo: `${window.location.origin}/` },
+        });
+        if (signUpError) {
+          toast.error("Erro ao realizar login");
+          setIsLoading(false);
+          return;
+        }
       }
-    }
 
-    // Salvar tipo de login no localStorage
-    localStorage.setItem("userType", "admin");
-    localStorage.setItem("userId", admin.id);
-    toast.success("Login realizado com sucesso!");
-    navigate("/dashboard");
+      localStorage.setItem("userType", "admin");
+      localStorage.setItem("userId", adminId as string);
+      toast.success("Login realizado com sucesso!");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Erro no login admin:", err);
+      toast.error("Erro inesperado no login");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUserPasswordSubmit = async (e: React.FormEvent) => {
