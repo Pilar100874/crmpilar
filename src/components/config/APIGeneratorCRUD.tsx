@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatabaseConnectionsCRUD } from "./DatabaseConnectionsCRUD";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface APIEndpoint {
   id: string;
@@ -93,13 +94,15 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
 
   const loadConnections = async () => {
     try {
+      const estabId = await getEstabelecimentoId(estabelecimentoId);
+      
       let query = supabase
         .from("database_connections")
         .select("*")
         .eq("active", true);
 
-      if (estabelecimentoId) {
-        query = query.eq("estabelecimento_id", estabelecimentoId);
+      if (estabId) {
+        query = query.eq("estabelecimento_id", estabId);
       }
 
       const { data, error } = await query.order("name");
@@ -239,6 +242,13 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
         if (error) throw error;
         toast.success("Endpoint atualizado com sucesso!");
       } else {
+        const estabId = await getEstabelecimentoId(estabelecimentoId);
+        if (!estabId) {
+          toast.error("Estabelecimento não identificado");
+          return;
+        }
+        endpointData.estabelecimento_id = estabId;
+
         const { error } = await supabase.from("api_endpoints").insert([endpointData]);
         if (error) throw error;
         toast.success("Endpoint criado com sucesso!");
