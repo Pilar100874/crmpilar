@@ -263,7 +263,7 @@ export function WebhooksCRUD() {
     // 1. Validar nome da variável (sem caracteres especiais problemáticos)
     const namePattern = /^[a-zA-Z0-9_-]+$/;
     if (!namePattern.test(newVariableName)) {
-      toast.error("O nome da variável deve conter apenas letras, números, underscore (_) ou hífen (-)");
+      toast.error("Nome inválido. Use apenas letras, números, underscore (_) ou hífen (-). Exemplo: user_id, user-name");
       return;
     }
 
@@ -271,7 +271,7 @@ export function WebhooksCRUD() {
     if (newVariableType === "header") {
       const headerPattern = /^[a-zA-Z0-9-]+$/;
       if (!headerPattern.test(newVariableName)) {
-        toast.error("Nome de header inválido. Use apenas letras, números e hífen");
+        toast.error("Nome de header inválido. Correto: Authorization, X-API-Key, Content-Type");
         return;
       }
     }
@@ -280,7 +280,7 @@ export function WebhooksCRUD() {
     if (newVariableType === "query") {
       const queryPattern = /^[a-zA-Z0-9_]+$/;
       if (!queryPattern.test(newVariableName)) {
-        toast.error("Nome de query param inválido. Use apenas letras, números e underscore");
+        toast.error("Nome de query param inválido. Correto: page, user_id, filter_status");
         return;
       }
     }
@@ -288,12 +288,12 @@ export function WebhooksCRUD() {
     // 4. Validar Path Params (não pode começar com :)
     if (newVariableType === "path") {
       if (newVariableName.startsWith(":")) {
-        toast.error("Não use ':' no início do nome do path param");
+        toast.error("Remova o ':' do início. Correto: id, userId, productId (sem ':'");
         return;
       }
       const pathPattern = /^[a-zA-Z0-9_]+$/;
       if (!pathPattern.test(newVariableName)) {
-        toast.error("Nome de path param inválido. Use apenas letras, números e underscore");
+        toast.error("Nome de path param inválido. Correto: id, userId, product_id");
         return;
       }
     }
@@ -302,34 +302,34 @@ export function WebhooksCRUD() {
     if (newVariableType === "json" && newVariableDefaultValue) {
       if (newVariableFormat === "number") {
         if (isNaN(Number(newVariableDefaultValue))) {
-          toast.error("Valor padrão deve ser um número válido");
+          toast.error(`Valor padrão deve ser um número. Você digitou: "${newVariableDefaultValue}". Correto: 123, 45.67, -10`);
           return;
         }
       } else if (newVariableFormat === "boolean") {
         if (newVariableDefaultValue !== "true" && newVariableDefaultValue !== "false") {
-          toast.error("Valor padrão deve ser 'true' ou 'false'");
+          toast.error(`Valor inválido: "${newVariableDefaultValue}". Para boolean use exatamente: true ou false`);
           return;
         }
       } else if (newVariableFormat === "object") {
         try {
           const parsed = JSON.parse(newVariableDefaultValue);
           if (typeof parsed !== "object" || Array.isArray(parsed)) {
-            toast.error("Valor padrão deve ser um objeto JSON válido");
+            toast.error('Deve ser um objeto JSON. Correto: {"name": "João", "age": 30}');
             return;
           }
         } catch (e) {
-          toast.error("Valor padrão deve ser um JSON válido de objeto. Ex: {\"key\": \"value\"}");
+          toast.error(`JSON inválido: "${newVariableDefaultValue}". Correto: {"chave": "valor", "numero": 123}`);
           return;
         }
       } else if (newVariableFormat === "array") {
         try {
           const parsed = JSON.parse(newVariableDefaultValue);
           if (!Array.isArray(parsed)) {
-            toast.error("Valor padrão deve ser um array JSON válido");
+            toast.error('Deve ser um array JSON. Correto: ["item1", "item2", "item3"] ou [1, 2, 3]');
             return;
           }
         } catch (e) {
-          toast.error("Valor padrão deve ser um JSON válido de array. Ex: [\"item1\", \"item2\"]");
+          toast.error(`JSON inválido: "${newVariableDefaultValue}". Correto: ["item1", "item2"] ou [1, 2, 3]`);
           return;
         }
       }
@@ -338,7 +338,7 @@ export function WebhooksCRUD() {
     // 6. Validar Query Params - valor padrão não pode ter espaços
     if (newVariableType === "query" && newVariableDefaultValue) {
       if (newVariableDefaultValue.includes(" ")) {
-        toast.error("Valor padrão de query param não pode conter espaços");
+        toast.error(`Query param não pode ter espaços. Você digitou: "${newVariableDefaultValue}". Use: active, pendente, usuario-ativo`);
         return;
       }
     }
