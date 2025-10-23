@@ -485,11 +485,11 @@ export default function ChatWebhook() {
                   <select
                     value={selectedAIWebhook || ""}
                     onChange={(e) => setSelectedAIWebhook(e.target.value)}
-                    className="w-full text-sm border rounded-lg px-3 py-2 bg-background hover:bg-secondary/50 transition-colors"
+                    className="w-full text-sm border rounded-lg px-3 py-2.5 bg-card hover:bg-secondary/50 transition-colors shadow-sm"
                   >
                     {aiWebhooks.map((webhook) => (
                       <option key={webhook.id} value={webhook.id}>
-                        {webhook.name} • {webhook.method}
+                        {webhook.name}
                       </option>
                     ))}
                   </select>
@@ -498,36 +498,40 @@ export default function ChatWebhook() {
 
               {/* AI Chat Box */}
               {showAIChat && (
-                <Card className="mb-3 bg-secondary/30 border-primary/20">
-                  <div className="p-3">
+                <Card className="mb-3 bg-gradient-to-br from-card to-secondary/20 border-primary/30 shadow-lg">
+                  <div className="p-4">
                     {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
-                      className="max-h-64 overflow-y-auto mb-3 space-y-2 bg-background/50 rounded-lg p-3 border border-border"
+                      className="max-h-80 overflow-y-auto mb-3 space-y-3 bg-background/80 backdrop-blur-sm rounded-lg p-4 border border-border/50"
                     >
                       {aiMessages.length > 0 && (
                         aiMessages.map((msg, idx) => (
                           <div
                             key={idx}
-                            className={`text-sm p-2 rounded ${
+                            className={`group relative p-3 rounded-lg transition-all ${
                               msg.role === "user"
-                                ? "bg-primary text-primary-foreground ml-8"
-                                : "bg-card mr-8"
+                                ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground ml-12 shadow-md"
+                                : "bg-card border border-border mr-12 hover:border-primary/30 shadow-sm"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="whitespace-pre-wrap break-words flex-1">{msg.content}</p>
-                              {msg.role === "assistant" && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0 shrink-0"
-                                  onClick={() => sendAIResponseToMainChat(msg.content)}
-                                  title="Enviar para o chat principal"
-                                >
-                                  <ArrowUp className="h-3 w-3" />
-                                </Button>
-                              )}
+                            <div className="flex items-start gap-2">
+                              <p className="whitespace-pre-wrap break-words flex-1 text-sm leading-relaxed">
+                                {msg.content}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className={`shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${
+                                  msg.role === "user" 
+                                    ? "hover:bg-white/20 text-primary-foreground" 
+                                    : "hover:bg-primary/10"
+                                }`}
+                                onClick={() => sendAIResponseToMainChat(msg.content)}
+                                title="Enviar para o chat principal"
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </Button>
                             </div>
                           </div>
                         ))
@@ -545,15 +549,15 @@ export default function ChatWebhook() {
                             sendAIMessage();
                           }
                         }}
-                        placeholder="Digite sua mensagem para a IA..."
-                        className="min-h-[60px] text-sm"
+                        placeholder="Digite sua mensagem..."
+                        className="min-h-[60px] text-sm resize-none bg-background"
                         disabled={isAILoading}
                       />
                       <Button
                         onClick={sendAIMessage}
                         disabled={!aiInput.trim() || isAILoading}
                         size="sm"
-                        className="shrink-0"
+                        className="shrink-0 h-auto px-4"
                       >
                         <Send className="h-4 w-4" />
                       </Button>
