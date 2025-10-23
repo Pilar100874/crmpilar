@@ -67,6 +67,7 @@ export default function WebhookManager({
         id: Date.now().toString(),
         name: formData.name,
         url: formData.url,
+        method: "POST",
         type: formData.type,
         description: "",
         usageLocations: [],

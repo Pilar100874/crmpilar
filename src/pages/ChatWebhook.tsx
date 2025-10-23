@@ -23,6 +23,7 @@ export interface WebhookConfig {
   id: string;
   name: string;
   url: string;
+  method: string;
   type: string;
   description: string;
   usageLocations: string[];
@@ -119,7 +120,7 @@ export default function ChatWebhook() {
       };
 
       const response = await fetch(webhook.url, {
-        method: "POST",
+        method: webhook.method || "POST",
         headers: {
           "Content-Type": "application/json",
         },

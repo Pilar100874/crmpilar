@@ -15,6 +15,7 @@ export interface WebhookConfig {
   id: string;
   name: string;
   url: string;
+  method: string;
   type: string;
   description: string;
   usageLocations: string[];
@@ -48,6 +49,7 @@ export function WebhooksCRUD() {
   const [formData, setFormData] = useState({
     name: "",
     url: "",
+    method: "POST",
     type: "",
     description: "",
     usageLocations: [] as string[],
@@ -88,7 +90,7 @@ export function WebhooksCRUD() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.url || !formData.type) {
+    if (!formData.name || !formData.url || !formData.method || !formData.type) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -120,6 +122,7 @@ export function WebhooksCRUD() {
     setFormData({
       name: webhook.name,
       url: webhook.url,
+      method: webhook.method || "POST",
       type: webhook.type,
       description: webhook.description,
       usageLocations: webhook.usageLocations || [],
@@ -184,7 +187,7 @@ export function WebhooksCRUD() {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", url: "", type: "", description: "", usageLocations: [] });
+    setFormData({ name: "", url: "", method: "POST", type: "", description: "", usageLocations: [] });
     setEditingWebhook(null);
   };
 
@@ -220,6 +223,22 @@ export function WebhooksCRUD() {
               onChange={(e) => setFormData({ ...formData, url: e.target.value })}
               placeholder="https://..."
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="webhook-method">Método HTTP *</Label>
+            <Select value={formData.method} onValueChange={(value) => setFormData({ ...formData, method: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o método" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="GET">GET</SelectItem>
+                <SelectItem value="POST">POST</SelectItem>
+                <SelectItem value="PUT">PUT</SelectItem>
+                <SelectItem value="PATCH">PATCH</SelectItem>
+                <SelectItem value="DELETE">DELETE</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -382,6 +401,9 @@ export function WebhooksCRUD() {
                       <h4 className="font-semibold">{webhook.name}</h4>
                       <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
                         {webhookTypes.find((t) => t.id === webhook.type)?.name}
+                      </span>
+                      <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded font-mono">
+                        {webhook.method || "POST"}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground break-all">{webhook.url}</p>
