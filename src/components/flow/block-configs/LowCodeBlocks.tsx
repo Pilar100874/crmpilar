@@ -155,67 +155,6 @@ export const WebhookConfig = ({ config, handleConfigChange, inputRefs, openVaria
   );
 };
 
-// N8n - Workflow Automation
-export const N8nConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
-  <div className="space-y-4">
-    <div className="bg-info/10 border border-info/20 rounded-lg p-3">
-      <p className="text-xs text-info-foreground">
-        ℹ️ Conecte-se ao n8n para executar workflows de automação complexos
-      </p>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Webhook URL do N8n *</Label>
-      <Input
-        value={config.webhookUrl || ""}
-        onChange={(e) => handleConfigChange("webhookUrl", e.target.value)}
-        placeholder="https://n8n.exemplo.com/webhook/..."
-        required
-      />
-      <p className="text-xs text-muted-foreground">
-        Configure um webhook trigger no seu workflow n8n
-      </p>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Dados de Entrada (JSON)</Label>
-      <VariableTextarea
-        name="inputData"
-        ref={(el) => (inputRefs.current['inputData'] = el)}
-        value={config.inputData || '{\n  "message": "{{user_message}}",\n  "user": "{{name}}"\n}'}
-        onChange={(e) => handleConfigChange("inputData", e.target.value)}
-        onVariableRequest={() => openVariablePicker(inputRefs.current['inputData'])}
-        placeholder='{"key": "{{variavel}}"}'
-        rows={8}
-        className="font-mono text-xs"
-      />
-    </div>
-
-    <div className="space-y-2">
-      <Label>Variável de Saída</Label>
-      <Input
-        value={config.outputVariable || ""}
-        onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
-        placeholder="n8n_result"
-      />
-      <p className="text-xs text-muted-foreground">
-        Resposta do n8n será salva nesta variável
-      </p>
-    </div>
-
-    <div className="space-y-2">
-      <Label>Timeout (ms)</Label>
-      <Input
-        type="number"
-        value={config.timeout || 30000}
-        onChange={(e) => handleConfigChange("timeout", parseInt(e.target.value))}
-        min={5000}
-        max={120000}
-      />
-    </div>
-  </div>
-);
-
 // Trigger Automation - Zapier/Make/etc
 export const TriggerAutomationConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
   <div className="space-y-4">

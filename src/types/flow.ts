@@ -29,7 +29,6 @@ export type NodeType =
   | "lead_scoring"
   | "goal"
   | "webhook"
-  | "n8n"
   | "trigger_automation"
   | "dynamic_data";
 
@@ -296,14 +295,6 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "Webhook",
     color: "text-primary",
     defaultData: { method: "POST", url: "", headers: {}, body: "" },
-  },
-  {
-    type: "n8n",
-    label: "Workflow N8n",
-    description: "Executar workflow n8n",
-    icon: "Workflow",
-    color: "text-accent",
-    defaultData: { webhookUrl: "", inputData: "{}", outputVariable: "" },
   },
   {
     type: "trigger_automation",

@@ -323,8 +323,6 @@ export const PropertiesPanel = ({
       // Low Code Blocks
       case "webhook":
         return <BlockConfigs.WebhookConfigNew {...configProps} />;
-      case "n8n":
-        return <BlockConfigs.N8nConfig {...configProps} />;
       case "trigger_automation":
         return <BlockConfigs.TriggerAutomationConfigNew {...configProps} />;
       case "dynamic_data":

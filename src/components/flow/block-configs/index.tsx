@@ -45,7 +45,6 @@ export {
 // Low Code Blocks
 export {
   WebhookConfig,
-  N8nConfig,
   TriggerAutomationConfig,
   AIAgentConfig,
 } from './LowCodeBlocks';

@@ -512,25 +512,27 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         setIsWaitingInput(false);
         break;
 
-      case "n8n":
-        const workflowId = config.workflowId || "não configurado";
-        addSystemMessage(`🔗 Chamando workflow n8n: ${workflowId}`);
+      case "trigger_automation":
+        const platform = config.platform || "zapier";
+        const automationId = config.automationId || "não configurado";
+        addSystemMessage(`⚡ Disparando automação em ${platform}: ${automationId}`);
         
         safeSetTimeout(() => {
-          const mockN8nResponse = {
-            workflowId,
+          const mockAutomationResponse = {
+            platform,
+            automationId,
             success: true,
-            data: { processed: true },
+            data: { triggered: true },
           };
           
           if (config.outputVariable) {
             setContext((prev) => ({
               ...prev,
-              [config.outputVariable]: mockN8nResponse,
+              [config.outputVariable]: mockAutomationResponse,
             }));
           }
           
-          addSuccessMessage("Workflow n8n executado");
+          addSuccessMessage("Automação disparada com sucesso");
           const nextNode = getNextNode(node.id);
           if (nextNode) {
             setCurrentNodeId(nextNode.id);
@@ -910,20 +912,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             executeNode(nextNode);
           }
         }, 2000);
-        break;
-
-      case "trigger_automation":
-        const automationId = config.automationId || "não configurado";
-        addSystemMessage(`⚡ Disparando automação: ${automationId}`);
-        
-        safeSetTimeout(() => {
-          addSuccessMessage("Automação disparada");
-          const nextNode = getNextNode(node.id);
-          if (nextNode) {
-            setCurrentNodeId(nextNode.id);
-            executeNode(nextNode);
-          }
-        }, 1500);
         break;
 
       case "dynamic_data":

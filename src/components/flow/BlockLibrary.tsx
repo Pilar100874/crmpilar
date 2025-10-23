@@ -44,7 +44,7 @@ const blockCategories = [
   {
     name: "Código",
     icon: "Code",
-    blocks: ["webhook", "n8n", "trigger_automation", "dynamic_data"] as NodeType[],
+    blocks: ["webhook", "trigger_automation", "dynamic_data"] as NodeType[],
   },
 ];
 
