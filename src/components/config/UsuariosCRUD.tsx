@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
@@ -13,14 +14,26 @@ interface Usuario {
   nome: string;
   email: string;
   telefone: string | null;
+  unidade_id: string | null;
   grupo_acesso_id: string | null;
   estabelecimento_id: string | null;
   is_admin?: boolean;
+  unidades?: { nome: string };
   grupos_acesso?: { nome: string };
   estabelecimentos?: { nome: string };
 }
 
+interface Unidade {
+  id: string;
+  nome: string;
+}
+
 interface GrupoAcesso {
+  id: string;
+  nome: string;
+}
+
+interface Segmento {
   id: string;
   nome: string;
 }
@@ -37,15 +50,19 @@ interface UsuariosCRUDProps {
 
 export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
+  const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [senha, setSenha] = useState("");
+  const [unidadeId, setUnidadeId] = useState("");
   const [grupoAcessoId, setGrupoAcessoId] = useState("");
   const [selectedEstabelecimentoId, setSelectedEstabelecimentoId] = useState("");
+  const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
@@ -58,7 +75,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const fetchData = async () => {
     await Promise.all([
       fetchUsuarios(),
+      fetchUnidades(),
       fetchGrupos(),
+      fetchSegmentos(),
       fetchEstabelecimentos(),
     ]);
   };
@@ -68,6 +87,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       .from("usuarios")
       .select(`
         *,
+        unidades(nome),
         grupos_acesso(nome),
         estabelecimentos(nome)
       `);
@@ -108,6 +128,15 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setUsuarios(usuariosComRoles);
   };
 
+  const fetchUnidades = async () => {
+    let query = supabase.from("unidades").select("*");
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+    const { data } = await query.order("nome");
+    setUnidades(data || []);
+  };
+
   const fetchGrupos = async () => {
     let query = supabase.from("grupos_acesso").select("*");
     if (estabelecimentoId) {
@@ -115,6 +144,15 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     }
     const { data } = await query.order("nome");
     setGrupos(data || []);
+  };
+
+  const fetchSegmentos = async () => {
+    let query = supabase.from("segmentos").select("*");
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+    const { data } = await query.order("nome");
+    setSegmentos(data || []);
   };
 
   const fetchEstabelecimentos = async () => {
@@ -165,6 +203,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       nome,
       email,
       telefone: telefone || null,
+      unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
       estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
       senha_hash: senha || undefined,
@@ -183,6 +222,23 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           variant: "destructive",
         });
         return;
+      }
+
+      // Atualizar segmentos
+      await supabase
+        .from("usuario_segmentos")
+        .delete()
+        .eq("usuario_id", editingId);
+
+      if (segmentosSelecionados.length > 0) {
+        await supabase
+          .from("usuario_segmentos")
+          .insert(
+            segmentosSelecionados.map((sid) => ({
+              usuario_id: editingId,
+              segmento_id: sid,
+            }))
+          );
       }
 
       // Atualizar role de admin
@@ -220,6 +276,18 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         return;
       }
 
+      // Adicionar segmentos
+      if (data && segmentosSelecionados.length > 0) {
+        await supabase
+          .from("usuario_segmentos")
+          .insert(
+            segmentosSelecionados.map((sid) => ({
+              usuario_id: data.id,
+              segmento_id: sid,
+            }))
+          );
+      }
+
       // Adicionar role de admin
       if (data && isAdmin) {
         await supabase
@@ -241,8 +309,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setEmail("");
     setTelefone("");
     setSenha("");
+    setUnidadeId("");
     setGrupoAcessoId("");
     setSelectedEstabelecimentoId("");
+    setSegmentosSelecionados([]);
     setIsAdmin(false);
     setEditingId(null);
   };
@@ -251,9 +321,18 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setNome(usuario.nome);
     setEmail(usuario.email);
     setTelefone(usuario.telefone || "");
+    setUnidadeId(usuario.unidade_id || "");
     setGrupoAcessoId(usuario.grupo_acesso_id || "");
     setSelectedEstabelecimentoId(usuario.estabelecimento_id || "");
     setEditingId(usuario.id);
+
+    // Buscar segmentos do usuário
+    const { data: segmentosData } = await supabase
+      .from("usuario_segmentos")
+      .select("segmento_id")
+      .eq("usuario_id", usuario.id);
+
+    setSegmentosSelecionados(segmentosData?.map((s) => s.segmento_id) || []);
 
     // Buscar se o usuário é admin
     const { data: roleData } = await supabase
@@ -284,6 +363,14 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       toast({ title: "Usuário excluído com sucesso!" });
       fetchUsuarios();
     }
+  };
+
+  const toggleSegmento = (segmentoId: string) => {
+    setSegmentosSelecionados((prev) =>
+      prev.includes(segmentoId)
+        ? prev.filter((id) => id !== segmentoId)
+        : [...prev, segmentoId]
+    );
   };
 
   return (
@@ -339,6 +426,22 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           </div>
 
           <div>
+            <Label htmlFor="usuario-unidade">Unidade</Label>
+            <Select value={unidadeId} onValueChange={setUnidadeId}>
+              <SelectTrigger id="usuario-unidade">
+                <SelectValue placeholder="Selecione a unidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {unidades.map((unidade) => (
+                  <SelectItem key={unidade.id} value={unidade.id}>
+                    {unidade.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label htmlFor="usuario-grupo">Grupo de Acesso</Label>
             <Select value={grupoAcessoId} onValueChange={setGrupoAcessoId}>
               <SelectTrigger id="usuario-grupo">
@@ -386,6 +489,27 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           </div>
         </div>
 
+        <div>
+          <Label>Segmentos</Label>
+          <div className="grid grid-cols-3 gap-3 mt-2">
+            {segmentos.map((segmento) => (
+              <div key={segmento.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`segmento-${segmento.id}`}
+                  checked={segmentosSelecionados.includes(segmento.id)}
+                  onCheckedChange={() => toggleSegmento(segmento.id)}
+                />
+                <label
+                  htmlFor={`segmento-${segmento.id}`}
+                  className="text-sm cursor-pointer"
+                >
+                  {segmento.nome}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <Button type="submit">
           {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
         </Button>
@@ -416,6 +540,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {usuario.estabelecimentos?.nome && `Estabelecimento: ${usuario.estabelecimentos.nome}`}
+                {usuario.unidades?.nome && ` • Unidade: ${usuario.unidades.nome}`}
                 {usuario.grupos_acesso?.nome && ` • Grupo: ${usuario.grupos_acesso.nome}`}
               </div>
             </div>
