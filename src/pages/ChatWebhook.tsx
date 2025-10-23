@@ -9,6 +9,8 @@ import { Webhook, Sparkles, Send, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 export interface Message {
   id: string;
@@ -52,11 +54,7 @@ export interface WebhookType {
 export default function ChatWebhook() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
-  const [webhookTypes, setWebhookTypes] = useState<WebhookType[]>([
-    { id: "n8n", name: "N8N" },
-    { id: "waha", name: "WAHA" },
-    { id: "whatsapp", name: "WhatsApp Oficial" },
-  ]);
+  const [webhookTypes, setWebhookTypes] = useState<WebhookType[]>([]);
   const [selectedWebhook, setSelectedWebhook] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,46 +71,79 @@ export default function ChatWebhook() {
   const [isAILoading, setIsAILoading] = useState(false);
   const aiScrollRef = useRef<HTMLDivElement>(null);
 
+  // Carrega webhooks e tipos do estabelecimento
   useEffect(() => {
-    const savedWebhooks = localStorage.getItem("webhooks");
-    const savedTypes = localStorage.getItem("webhookTypes");
-    if (savedWebhooks) {
-      const parsed = JSON.parse(savedWebhooks);
-      const loadedWebhooks = parsed.map((w: any) => ({ ...w, createdAt: new Date(w.createdAt) }));
-      setWebhooks(loadedWebhooks);
-      
-      console.log("Total webhooks loaded:", loadedWebhooks.length);
-      console.log("All webhooks:", loadedWebhooks.map((w: WebhookConfig) => ({
-        name: w.name,
-        usageLocations: w.usageLocations
-      })));
-      
-      // Filter AI webhooks
-      const aiWebhooksList = loadedWebhooks.filter((w: WebhookConfig) => {
-        const locs = (w.usageLocations || []).map((l: string) => l.toLowerCase().replace(/[\s_]+/g, "-"));
-        return locs.includes("menu-do-chat");
-      });
-      
-      console.log("AI webhooks found:", aiWebhooksList.length);
-      console.log("AI webhooks:", aiWebhooksList.map((w: WebhookConfig) => w.name));
-      
-      setAiWebhooks(aiWebhooksList);
-      if (aiWebhooksList.length > 0) {
-        setSelectedAIWebhook(aiWebhooksList[0].id);
-      }
-    }
-    if (savedTypes) {
-      setWebhookTypes(JSON.parse(savedTypes));
-    }
+    loadWebhooksAndTypes();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("webhooks", JSON.stringify(webhooks));
-  }, [webhooks]);
+  const loadWebhooksAndTypes = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) {
+      toast.error("Estabelecimento não identificado");
+      return;
+    }
 
-  useEffect(() => {
-    localStorage.setItem("webhookTypes", JSON.stringify(webhookTypes));
-  }, [webhookTypes]);
+    // Carrega tipos de webhook do estabelecimento
+    const { data: types, error: typesError } = await supabase
+      .from('webhook_types')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .order('name');
+
+    if (typesError) {
+      console.error("Erro ao carregar tipos:", typesError);
+    } else {
+      setWebhookTypes((types || []).map(t => ({ id: t.id, name: t.name })));
+    }
+
+    // Carrega webhooks ativos do estabelecimento
+    const { data: webhooksData, error: webhooksError } = await supabase
+      .from('webhooks')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .eq('active', true)
+      .order('created_at', { ascending: false });
+
+    if (webhooksError) {
+      toast.error("Erro ao carregar webhooks");
+      console.error("Erro ao carregar webhooks:", webhooksError);
+      return;
+    }
+
+    const parsedWebhooks = (webhooksData || []).map((w: any) => ({
+      id: w.id,
+      name: w.name,
+      url: w.url,
+      method: w.method,
+      type: w.type,
+      description: w.description || "",
+      usageLocations: w.usage_locations || [],
+      hasVariables: w.has_variables || false,
+      variables: w.variables || [],
+      createdAt: new Date(w.created_at),
+    }));
+
+    setWebhooks(parsedWebhooks);
+    
+    console.log("Total webhooks loaded:", parsedWebhooks.length);
+    console.log("All webhooks:", parsedWebhooks.map((w: WebhookConfig) => ({
+      name: w.name,
+      usageLocations: w.usageLocations
+    })));
+    
+    // Filter AI webhooks (ia-chat)
+    const aiWebhooksList = parsedWebhooks.filter((w: WebhookConfig) => 
+      w.usageLocations?.includes("ia-chat")
+    );
+    
+    console.log("AI webhooks found:", aiWebhooksList.length);
+    console.log("AI webhooks:", aiWebhooksList.map((w: WebhookConfig) => w.name));
+    
+    setAiWebhooks(aiWebhooksList);
+    if (aiWebhooksList.length > 0) {
+      setSelectedAIWebhook(aiWebhooksList[0].id);
+    }
+  };
 
   useEffect(() => {
     if (scrollAreaRef.current) {
