@@ -13,7 +13,11 @@ interface Cliente {
   telefone: string;
 }
 
-export const ClientesCRUD = () => {
+interface ClientesCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export const ClientesCRUD = ({ estabelecimentoId }: ClientesCRUDProps = {}) => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -23,13 +27,18 @@ export const ClientesCRUD = () => {
 
   useEffect(() => {
     fetchClientes();
-  }, []);
+  }, [estabelecimentoId]);
 
   const fetchClientes = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("customers")
-      .select("id, nome, email, telefone")
-      .order("nome");
+      .select("id, nome, email, telefone");
+
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+
+    const { data, error } = await query.order("nome");
 
     if (error) {
       toast({
@@ -58,6 +67,7 @@ export const ClientesCRUD = () => {
       nome: nome.trim(),
       email: email.trim(),
       telefone: telefone.trim(),
+      estabelecimento_id: estabelecimentoId || null,
     };
 
     if (editingId) {

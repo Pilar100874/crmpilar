@@ -28,7 +28,7 @@ export const RedesSociaisCRUD = ({ estabelecimentoId }: RedesSociaisCRUDProps) =
 
   useEffect(() => {
     fetchRedesSociais();
-  }, []);
+  }, [estabelecimentoId]);
 
   const fetchRedesSociais = async () => {
     let targetEstabelecimentoId = estabelecimentoId;

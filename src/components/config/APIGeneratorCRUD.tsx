@@ -89,7 +89,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
   useEffect(() => {
     loadEndpoints();
     loadConnections();
-  }, []);
+  }, [estabelecimentoId]);
 
   const loadConnections = async () => {
     try {

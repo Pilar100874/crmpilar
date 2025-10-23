@@ -70,7 +70,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [estabelecimentoId]);
 
   const fetchData = async () => {
     await Promise.all([

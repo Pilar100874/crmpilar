@@ -48,7 +48,7 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
   useEffect(() => {
     loadQuickReplies();
     loadGrupos();
-  }, []);
+  }, [estabelecimentoId]);
 
   const loadQuickReplies = async () => {
     let query = supabase

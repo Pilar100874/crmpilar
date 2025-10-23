@@ -47,7 +47,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <ClientesCRUD />
+            <ClientesCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 

@@ -35,7 +35,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
 
   useEffect(() => {
     fetchGrupos();
-  }, []);
+  }, [estabelecimentoId]);
 
   const fetchGrupos = async () => {
     let targetEstabelecimentoId = estabelecimentoId;

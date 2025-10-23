@@ -57,7 +57,7 @@ export default function QuickAttachmentsCRUD({ estabelecimentoId }: QuickAttachm
   useEffect(() => {
     loadQuickAttachments();
     loadGrupos();
-  }, []);
+  }, [estabelecimentoId]);
 
   const loadQuickAttachments = async () => {
     let query = supabase
