@@ -62,6 +62,7 @@ export default function ChatWebhook() {
   const [showVariableForm, setShowVariableForm] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   
   // AI Chat states
   const [showAIChat, setShowAIChat] = useState(false);
@@ -121,6 +122,12 @@ export default function ChatWebhook() {
           setMessages(prev => {
             // Evitar duplicatas
             if (prev.some(m => m.id === message.id)) return prev;
+            
+            // Capturar última mensagem do usuário
+            if (message.role === "user") {
+              setLastUserMessage(message.content);
+            }
+            
             return [...prev, message];
           });
         }
@@ -837,7 +844,14 @@ export default function ChatWebhook() {
                 </Card>
               )}
 
-              <ChatInput onSendMessage={sendMessage} disabled={!selectedWebhook || isLoading} />
+              <ChatInput 
+                onSendMessage={sendMessage} 
+                disabled={!selectedWebhook || isLoading}
+                lastUserMessage={lastUserMessage}
+                onSuggestionGenerated={(suggestion) => {
+                  console.log("Sugestão gerada:", suggestion);
+                }}
+              />
             </div>
           </Card>
         </div>
