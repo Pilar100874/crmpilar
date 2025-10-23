@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File, Search } from "lucide-react";
 import { getFileTypeIcon } from "@/lib/imageUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -33,6 +34,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
   const [open, setOpen] = useState(false);
   const [quickAttachments, setQuickAttachments] = useState<QuickAttachment[]>([]);
   const [previewImage, setPreviewImage] = useState<QuickAttachment | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -69,8 +71,13 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     }
   };
 
-  const links = quickAttachments.filter((a) => a.type === "link");
-  const files = quickAttachments.filter((a) => a.type === "file");
+  // Filter by search query
+  const filteredAttachments = quickAttachments.filter((attachment) =>
+    attachment.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const links = filteredAttachments.filter((a) => a.type === "link");
+  const files = filteredAttachments.filter((a) => a.type === "file");
   
   // Separate files by type
   const images = files.filter((f) => f.file_type === "image");
@@ -93,11 +100,23 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[500px] p-0" align="end">
-          <div className="p-4 border-b bg-muted/30">
-            <h4 className="font-semibold text-lg">📎 Anexos Rápidos</h4>
-            <p className="text-xs text-muted-foreground mt-1">
-              Selecione um anexo para inserir na conversa
-            </p>
+          <div className="p-4 border-b bg-muted/30 space-y-3">
+            <div>
+              <h4 className="font-semibold text-lg">📎 Anexos Rápidos</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecione um anexo para inserir na conversa
+              </p>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Pesquisar anexos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
           <Tabs defaultValue="links" className="w-full">
             <TabsList className="w-full grid grid-cols-2 rounded-none border-b">
