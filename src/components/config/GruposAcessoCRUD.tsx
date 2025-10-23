@@ -104,7 +104,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
       } else {
         toast({ title: "Grupo atualizado com sucesso!" });
         resetForm();
-        fetchGrupos();
+        await fetchGrupos();
       }
     } else {
       const targetEstabelecimentoId = await getEstabelecimentoId(estabelecimentoId);
@@ -139,7 +139,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
       } else {
         toast({ title: "Grupo criado com sucesso!" });
         resetForm();
-        fetchGrupos();
+        await fetchGrupos();
       }
     }
   };
