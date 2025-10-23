@@ -68,6 +68,8 @@ export default function WebhookManager({
         name: formData.name,
         url: formData.url,
         type: formData.type,
+        description: "",
+        usageLocations: [],
         createdAt: new Date(),
       };
       onWebhooksChange([...webhooks, newWebhook]);

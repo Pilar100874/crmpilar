@@ -4,10 +4,8 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatInput from "@/components/chat/ChatInput";
-import WebhookManager from "@/components/chat/WebhookManager";
 import WebhookSelector from "@/components/chat/WebhookSelector";
-import { Button } from "@/components/ui/button";
-import { Settings, Webhook } from "lucide-react";
+import { Webhook } from "lucide-react";
 import { toast } from "sonner";
 
 export interface Message {
@@ -26,6 +24,8 @@ export interface WebhookConfig {
   name: string;
   url: string;
   type: string;
+  description: string;
+  usageLocations: string[];
   createdAt: Date;
 }
 
@@ -44,7 +44,6 @@ export default function ChatWebhook() {
   ]);
   const [selectedWebhook, setSelectedWebhook] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -162,7 +161,7 @@ export default function ChatWebhook() {
   };
 
   const filteredWebhooks = selectedType
-    ? webhooks.filter((w) => w.type === selectedType)
+    ? webhooks.filter((w) => w.type === selectedType && w.usageLocations?.includes("teste"))
     : [];
 
   return (
@@ -177,24 +176,14 @@ export default function ChatWebhook() {
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
-            <WebhookSelector
-              webhooks={filteredWebhooks}
-              webhookTypes={webhookTypes}
-              selectedWebhook={selectedWebhook}
-              selectedType={selectedType}
-              onSelectWebhook={setSelectedWebhook}
-              onSelectType={setSelectedType}
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setIsManagerOpen(true)}
-              className="hover:bg-primary/10"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-          </div>
+          <WebhookSelector
+            webhooks={filteredWebhooks}
+            webhookTypes={webhookTypes}
+            selectedWebhook={selectedWebhook}
+            selectedType={selectedType}
+            onSelectWebhook={setSelectedWebhook}
+            onSelectType={setSelectedType}
+          />
         </div>
 
         {/* Chat Area */}
@@ -238,16 +227,6 @@ export default function ChatWebhook() {
             </div>
           </Card>
         </div>
-
-        {/* Webhook Manager Modal */}
-        <WebhookManager
-          open={isManagerOpen}
-          onOpenChange={setIsManagerOpen}
-          webhooks={webhooks}
-          webhookTypes={webhookTypes}
-          onWebhooksChange={setWebhooks}
-          onWebhookTypesChange={setWebhookTypes}
-        />
       </div>
     </Layout>
   );
