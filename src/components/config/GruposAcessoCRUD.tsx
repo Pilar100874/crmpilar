@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { MENUS_DISPONIVEIS } from "@/lib/menus";
 
 interface MenuPermissions {
   view: boolean;
@@ -20,19 +21,6 @@ interface GrupoAcesso {
   nome: string;
   menus_permitidos: Record<string, MenuPermissions>;
 }
-
-const MENUS_DISPONIVEIS = [
-  "Dashboard",
-  "Atendimento",
-  "Clientes",
-  "Campanhas",
-  "Conteúdos",
-  "Desenho",
-  "Bot Builder",
-  "WhatsApp Config",
-  "Variáveis Globais",
-  "Configurações",
-];
 
 export const GruposAcessoCRUD = () => {
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
