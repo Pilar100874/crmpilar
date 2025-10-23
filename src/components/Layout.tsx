@@ -115,7 +115,7 @@ export default function Layout({ children }: LayoutProps) {
         const { data: usuario, error: userError } = await supabase
           .from("usuarios")
           .select("grupo_acesso_id")
-          .eq("email", user.email)
+          .ilike("email", user.email || "")
           .maybeSingle();
 
         // Se não encontrou usuário, bloqueia tudo
