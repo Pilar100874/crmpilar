@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet } from "lucide-react";
+import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File } from "lucide-react";
 import { getFileTypeIcon } from "@/lib/imageUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -31,6 +32,7 @@ interface QuickAttachmentsSelectorProps {
 export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAttachmentsSelectorProps) {
   const [open, setOpen] = useState(false);
   const [quickAttachments, setQuickAttachments] = useState<QuickAttachment[]>([]);
+  const [previewImage, setPreviewImage] = useState<QuickAttachment | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -55,7 +57,16 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
   const handleSelect = (attachment: QuickAttachment) => {
     onSelect(attachment);
     setOpen(false);
+    setPreviewImage(null);
     toast.success(`${attachment.title} selecionado`);
+  };
+
+  const handleImageClick = (attachment: QuickAttachment) => {
+    if (attachment.file_type === "image") {
+      setPreviewImage(attachment);
+    } else {
+      handleSelect(attachment);
+    }
   };
 
   const links = quickAttachments.filter((a) => a.type === "link");
@@ -69,50 +80,68 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
   const others = files.filter((f) => !f.file_type);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          disabled={disabled}
-          title="Anexos rápidos"
-        >
-          <LinkIcon className="h-5 w-5" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end">
-        <div className="p-3 border-b">
-          <h4 className="font-semibold">Anexos Rápidos</h4>
-        </div>
-        <Tabs defaultValue="links" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 rounded-none">
-            <TabsTrigger value="links">Links ({links.length})</TabsTrigger>
-            <TabsTrigger value="files">Arquivos ({files.length})</TabsTrigger>
-          </TabsList>
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={disabled}
+            title="Anexos rápidos"
+          >
+            <LinkIcon className="h-5 w-5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[500px] p-0" align="end">
+          <div className="p-4 border-b bg-muted/30">
+            <h4 className="font-semibold text-lg">📎 Anexos Rápidos</h4>
+            <p className="text-xs text-muted-foreground mt-1">
+              Selecione um anexo para inserir na conversa
+            </p>
+          </div>
+          <Tabs defaultValue="links" className="w-full">
+            <TabsList className="w-full grid grid-cols-2 rounded-none border-b">
+              <TabsTrigger value="links" className="gap-2">
+                <LinkIcon className="h-4 w-4" />
+                Links ({links.length})
+              </TabsTrigger>
+              <TabsTrigger value="files" className="gap-2">
+                <FileUp className="h-4 w-4" />
+                Arquivos ({files.length})
+              </TabsTrigger>
+            </TabsList>
 
           <TabsContent value="links" className="mt-0">
-            <ScrollArea className="h-[300px]">
-              <div className="p-2 space-y-2">
+            <ScrollArea className="h-[400px]">
+              <div className="p-3 space-y-2">
                 {links.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Nenhum link cadastrado
-                  </p>
+                  <div className="text-center py-12">
+                    <LinkIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum link cadastrado
+                    </p>
+                  </div>
                 ) : (
                   links.map((attachment) => (
                     <Card
                       key={attachment.id}
-                      className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary"
                       onClick={() => handleSelect(attachment)}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-medium text-sm">{attachment.title}</h5>
-                          <p className="text-xs text-muted-foreground mt-1 truncate">
-                            {attachment.url}
-                          </p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex gap-3 flex-1 min-w-0">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <LinkIcon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {attachment.url}
+                            </p>
+                          </div>
                         </div>
                         {attachment.is_global && (
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
                             Global
                           </span>
                         )}
@@ -125,183 +154,320 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
           </TabsContent>
 
           <TabsContent value="files" className="mt-0">
-            <ScrollArea className="h-[400px]">
-              <div className="p-2 space-y-4">
-                {files.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Nenhum arquivo cadastrado
-                  </p>
-                ) : (
-                  <>
-                    {images.length > 0 && (
-                      <div>
-                        <h5 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          🖼️ IMAGENS ({images.length})
-                        </h5>
-                        <div className="space-y-2">
-                          {images.map((attachment) => (
-                            <Card
-                              key={attachment.id}
-                              className="p-2 cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => handleSelect(attachment)}
-                            >
-                              <div className="flex items-center gap-3">
-                                {attachment.thumbnail_url ? (
-                                  <img 
-                                    src={attachment.thumbnail_url} 
-                                    alt={attachment.title}
-                                    className="h-12 w-12 object-cover rounded border flex-shrink-0"
-                                  />
-                                ) : (
-                                  <div className="h-12 w-12 flex items-center justify-center bg-muted rounded border flex-shrink-0">
-                                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-medium text-sm truncate">{attachment.title}</h5>
-                                  {attachment.is_global && (
-                                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                      Global
-                                    </span>
+            <Tabs defaultValue={images.length > 0 ? "images" : pdfs.length > 0 ? "pdfs" : "all"} className="w-full">
+              <TabsList className="w-full grid grid-cols-5 rounded-none border-b h-auto p-1">
+                <TabsTrigger value="images" className="text-xs gap-1 py-2" disabled={images.length === 0}>
+                  <ImageIcon className="h-3 w-3" />
+                  {images.length}
+                </TabsTrigger>
+                <TabsTrigger value="pdfs" className="text-xs gap-1 py-2" disabled={pdfs.length === 0}>
+                  <FileText className="h-3 w-3" />
+                  {pdfs.length}
+                </TabsTrigger>
+                <TabsTrigger value="excel" className="text-xs gap-1 py-2" disabled={excels.length === 0}>
+                  <FileSpreadsheet className="h-3 w-3" />
+                  {excels.length}
+                </TabsTrigger>
+                <TabsTrigger value="word" className="text-xs gap-1 py-2" disabled={words.length === 0}>
+                  <File className="h-3 w-3" />
+                  {words.length}
+                </TabsTrigger>
+                <TabsTrigger value="all" className="text-xs gap-1 py-2">
+                  Todos
+                </TabsTrigger>
+              </TabsList>
+
+              <ScrollArea className="h-[350px]">
+                <TabsContent value="images" className="mt-0 p-3">
+                  {images.length === 0 ? (
+                    <div className="text-center py-12">
+                      <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-sm text-muted-foreground">Nenhuma imagem</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {images.map((attachment) => (
+                        <Card
+                          key={attachment.id}
+                          className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200"
+                          onClick={() => handleImageClick(attachment)}
+                        >
+                          <div className="aspect-square relative">
+                            {attachment.thumbnail_url ? (
+                              <img 
+                                src={attachment.thumbnail_url} 
+                                alt={attachment.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-muted">
+                                <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <ZoomIn className="h-8 w-8 text-white" />
+                            </div>
+                            {attachment.is_global && (
+                              <span className="absolute top-2 right-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full font-medium">
+                                Global
+                              </span>
+                            )}
+                          </div>
+                          <div className="p-2 border-t bg-background">
+                            <p className="text-xs font-medium truncate">{attachment.title}</p>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="pdfs" className="mt-0 p-3 space-y-2">
+                  {pdfs.map((attachment) => (
+                    <Card
+                      key={attachment.id}
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500/20 hover:border-l-red-500"
+                      onClick={() => handleSelect(attachment)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                          <FileText className="h-5 w-5 text-red-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
+                          <p className="text-xs text-muted-foreground truncate">{attachment.url}</p>
+                          {attachment.is_global && (
+                            <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                              Global
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="excel" className="mt-0 p-3 space-y-2">
+                  {excels.map((attachment) => (
+                    <Card
+                      key={attachment.id}
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500/20 hover:border-l-green-500"
+                      onClick={() => handleSelect(attachment)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                          <FileSpreadsheet className="h-5 w-5 text-green-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
+                          <p className="text-xs text-muted-foreground truncate">{attachment.url}</p>
+                          {attachment.is_global && (
+                            <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                              Global
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="word" className="mt-0 p-3 space-y-2">
+                  {words.map((attachment) => (
+                    <Card
+                      key={attachment.id}
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500/20 hover:border-l-blue-500"
+                      onClick={() => handleSelect(attachment)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                          <File className="h-5 w-5 text-blue-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
+                          <p className="text-xs text-muted-foreground truncate">{attachment.url}</p>
+                          {attachment.is_global && (
+                            <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                              Global
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="all" className="mt-0 p-3 space-y-3">
+                  {files.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileUp className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-sm text-muted-foreground">Nenhum arquivo cadastrado</p>
+                    </div>
+                  ) : (
+                    <>
+                      {images.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <ImageIcon className="h-4 w-4" />
+                            IMAGENS ({images.length})
+                          </h5>
+                          <div className="grid grid-cols-2 gap-2">
+                            {images.map((attachment) => (
+                              <Card
+                                key={attachment.id}
+                                className="group relative overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
+                                onClick={() => handleImageClick(attachment)}
+                              >
+                                <div className="aspect-square relative">
+                                  {attachment.thumbnail_url ? (
+                                    <img 
+                                      src={attachment.thumbnail_url} 
+                                      alt={attachment.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-muted">
+                                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                                    </div>
                                   )}
+                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <ZoomIn className="h-6 w-6 text-white" />
+                                  </div>
                                 </div>
-                              </div>
-                            </Card>
-                          ))}
+                                <div className="p-2 border-t bg-background">
+                                  <p className="text-xs font-medium truncate">{attachment.title}</p>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {pdfs.length > 0 && (
-                      <div>
-                        <h5 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          📄 PDFs ({pdfs.length})
-                        </h5>
-                        <div className="space-y-2">
-                          {pdfs.map((attachment) => (
-                            <Card
-                              key={attachment.id}
-                              className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => handleSelect(attachment)}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-medium text-sm">{attachment.title}</h5>
-                                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                                    {attachment.url}
-                                  </p>
+                      {pdfs.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            PDFs ({pdfs.length})
+                          </h5>
+                          <div className="space-y-2">
+                            {pdfs.map((attachment) => (
+                              <Card
+                                key={attachment.id}
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-red-500/20"
+                                onClick={() => handleSelect(attachment)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="h-8 w-8 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                                    <FileText className="h-4 w-4 text-red-500" />
+                                  </div>
+                                  <p className="text-xs font-medium truncate flex-1">{attachment.title}</p>
                                 </div>
-                                {attachment.is_global && (
-                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                    Global
-                                  </span>
-                                )}
-                              </div>
-                            </Card>
-                          ))}
+                              </Card>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {excels.length > 0 && (
-                      <div>
-                        <h5 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          📊 EXCEL ({excels.length})
-                        </h5>
-                        <div className="space-y-2">
-                          {excels.map((attachment) => (
-                            <Card
-                              key={attachment.id}
-                              className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => handleSelect(attachment)}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-medium text-sm">{attachment.title}</h5>
-                                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                                    {attachment.url}
-                                  </p>
+                      {excels.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <FileSpreadsheet className="h-4 w-4" />
+                            EXCEL ({excels.length})
+                          </h5>
+                          <div className="space-y-2">
+                            {excels.map((attachment) => (
+                              <Card
+                                key={attachment.id}
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-green-500/20"
+                                onClick={() => handleSelect(attachment)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="h-8 w-8 rounded bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                    <FileSpreadsheet className="h-4 w-4 text-green-500" />
+                                  </div>
+                                  <p className="text-xs font-medium truncate flex-1">{attachment.title}</p>
                                 </div>
-                                {attachment.is_global && (
-                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                    Global
-                                  </span>
-                                )}
-                              </div>
-                            </Card>
-                          ))}
+                              </Card>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {words.length > 0 && (
-                      <div>
-                        <h5 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          📝 WORD ({words.length})
-                        </h5>
-                        <div className="space-y-2">
-                          {words.map((attachment) => (
-                            <Card
-                              key={attachment.id}
-                              className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => handleSelect(attachment)}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-medium text-sm">{attachment.title}</h5>
-                                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                                    {attachment.url}
-                                  </p>
+                      {words.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <File className="h-4 w-4" />
+                            WORD ({words.length})
+                          </h5>
+                          <div className="space-y-2">
+                            {words.map((attachment) => (
+                              <Card
+                                key={attachment.id}
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-blue-500/20"
+                                onClick={() => handleSelect(attachment)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="h-8 w-8 rounded bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                                    <File className="h-4 w-4 text-blue-500" />
+                                  </div>
+                                  <p className="text-xs font-medium truncate flex-1">{attachment.title}</p>
                                 </div>
-                                {attachment.is_global && (
-                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                    Global
-                                  </span>
-                                )}
-                              </div>
-                            </Card>
-                          ))}
+                              </Card>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {others.length > 0 && (
-                      <div>
-                        <h5 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          📎 OUTROS ({others.length})
-                        </h5>
-                        <div className="space-y-2">
-                          {others.map((attachment) => (
-                            <Card
-                              key={attachment.id}
-                              className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => handleSelect(attachment)}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-medium text-sm">{attachment.title}</h5>
-                                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                                    {attachment.url}
-                                  </p>
-                                </div>
-                                {attachment.is_global && (
-                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                    Global
-                                  </span>
-                                )}
-                              </div>
-                            </Card>
-                          ))}
+                      {others.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2">OUTROS ({others.length})</h5>
+                          <div className="space-y-2">
+                            {others.map((attachment) => (
+                              <Card
+                                key={attachment.id}
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => handleSelect(attachment)}
+                              >
+                                <p className="text-xs font-medium truncate">{attachment.title}</p>
+                              </Card>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </ScrollArea>
+                      )}
+                    </>
+                  )}
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </PopoverContent>
     </Popover>
+
+    <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>{previewImage?.title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="relative rounded-lg overflow-hidden bg-muted">
+            <img
+              src={previewImage?.url}
+              alt={previewImage?.title}
+              className="w-full h-auto max-h-[60vh] object-contain"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setPreviewImage(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={() => previewImage && handleSelect(previewImage)}>
+              Inserir Imagem
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
