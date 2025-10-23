@@ -706,6 +706,8 @@ export default function ChatWebhook() {
                   size="sm"
                   onClick={() => setShowAIChat(!showAIChat)}
                   className="gap-2 px-4"
+                  disabled={aiWebhooks.length === 0}
+                  title={aiWebhooks.length === 0 ? "Nenhum webhook de IA disponível" : undefined}
                 >
                   <Sparkles className="h-4 w-4" />
                   IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
