@@ -61,7 +61,6 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
       .from('webhooks')
       .select('*')
       .eq('estabelecimento_id', estabId)
-      .eq('type', 'bot')
       .eq('active', true)
       .order('created_at', { ascending: false });
 
@@ -71,8 +70,12 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
       return;
     }
 
+    // Filtrar webhooks que possuem "bot" nos locais de uso
     const botWebhooks = (data || [])
-      .filter((w: any) => w.usage_locations?.includes("bot"))
+      .filter((w: any) => {
+        const usageLocations = w.usage_locations || [];
+        return usageLocations.includes("bot");
+      })
       .map((w: any) => ({
         id: w.id,
         name: w.name,
