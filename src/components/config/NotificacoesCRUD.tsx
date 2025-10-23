@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface NotificacoesCRUDProps {
-  estabelecimentoId: string;
+  estabelecimentoId?: string;
 }
 
 export const NotificacoesCRUD = ({ estabelecimentoId }: NotificacoesCRUDProps) => {
@@ -22,10 +23,13 @@ export const NotificacoesCRUD = ({ estabelecimentoId }: NotificacoesCRUDProps) =
   }, [estabelecimentoId]);
 
   const fetchConfig = async () => {
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) return;
+
     const { data, error } = await supabase
       .from("notificacoes_config")
       .select("*")
-      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("estabelecimento_id", estabId)
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
@@ -46,10 +50,21 @@ export const NotificacoesCRUD = ({ estabelecimentoId }: NotificacoesCRUDProps) =
   const handleSave = async () => {
     setLoading(true);
 
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) {
+      toast({
+        title: "Erro",
+        description: "Estabelecimento não identificado",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     const { data: existing } = await supabase
       .from("notificacoes_config")
       .select("id")
-      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("estabelecimento_id", estabId)
       .maybeSingle();
 
     let error;
@@ -57,11 +72,11 @@ export const NotificacoesCRUD = ({ estabelecimentoId }: NotificacoesCRUDProps) =
       ({ error } = await supabase
         .from("notificacoes_config")
         .update(config)
-        .eq("estabelecimento_id", estabelecimentoId));
+        .eq("estabelecimento_id", estabId));
     } else {
       ({ error } = await supabase
         .from("notificacoes_config")
-        .insert([{ estabelecimento_id: estabelecimentoId, ...config }]));
+        .insert([{ estabelecimento_id: estabId, ...config }]));
     }
 
     if (error) {
