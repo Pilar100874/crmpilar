@@ -208,16 +208,16 @@ export default function QuickAttachmentsCRUD() {
           <div>
             <Label htmlFor="grupo">Grupo de Acesso</Label>
             <Select
-              value={formData.grupo_acesso_id}
+              value={formData.grupo_acesso_id || "todos"}
               onValueChange={(value) =>
-                setFormData({ ...formData, grupo_acesso_id: value })
+                setFormData({ ...formData, grupo_acesso_id: value === "todos" ? "" : value })
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os grupos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os grupos</SelectItem>
+                <SelectItem value="todos">Todos os grupos</SelectItem>
                 {grupos.map((grupo) => (
                   <SelectItem key={grupo.id} value={grupo.id}>
                     {grupo.nome}
