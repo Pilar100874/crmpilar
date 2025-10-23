@@ -200,62 +200,10 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
 
       {/* URL & Method - Somente se não houver webhook selecionado */}
       {!selectedWebhook && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label>URL & Method</Label>
-            <Button variant="default" size="sm" className="bg-pink-500 hover:bg-pink-600">
-              Set Domain Fields
-            </Button>
-          </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label className="flex items-center gap-2">
-              Select the method and type the url
-              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-            </Label>
-          </div>
-          
-          <div className="flex gap-2">
-            <Select value={config.method || "POST"} onValueChange={(v) => handleConfigChange("method", v)}>
-              <SelectTrigger className="w-32 bg-blue-600 text-white border-blue-600">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="GET">GET</SelectItem>
-                <SelectItem value="POST">POST</SelectItem>
-                <SelectItem value="PUT">PUT</SelectItem>
-                <SelectItem value="DELETE">DELETE</SelectItem>
-                <SelectItem value="PATCH">PATCH</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <VariableInput
-              ref={(el) => inputRefs && (inputRefs.current['url'] = el)}
-              value={config.url || ""}
-              onChange={(e) => handleConfigChange("url", e.target.value)}
-              onVariableRequest={() => inputRefs?.current['url'] && openVariablePicker?.(inputRefs.current['url'])}
-              placeholder="https://"
-              className="flex-1"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1">
-              DOMAIN FIELDS
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => inputRefs?.current['url'] && openVariablePicker?.(inputRefs.current['url'])}
-            >
-              Use field
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Info className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <div className="p-4 border rounded-lg bg-secondary/20 text-center">
+          <p className="text-sm text-muted-foreground">
+            Selecione um webhook cadastrado acima para continuar
+          </p>
         </div>
       )}
 
