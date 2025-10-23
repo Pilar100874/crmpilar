@@ -30,12 +30,14 @@ import {
   Pencil,
   Webhook,
   Building2,
+  User as UserIcon,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import logo from "@/assets/logo_preto.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface MenuPermissions {
   view: boolean;
@@ -72,6 +74,8 @@ export default function Layout({ children }: LayoutProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -161,6 +165,49 @@ export default function Layout({ children }: LayoutProps) {
 
     fetchUserPermissions();
   }, [user]);
+
+  useEffect(() => {
+    const fetchUserAndEstabelecimento = async () => {
+      if (!user) return;
+
+      try {
+        // Buscar nome do usuário
+        if (isAdmin) {
+          const { data: adminData } = await supabase
+            .from("administradores")
+            .select("nome")
+            .eq("id", user.id)
+            .maybeSingle();
+          
+          setUserName(adminData?.nome || "Administrador");
+        } else {
+          const { data: userData } = await supabase
+            .from("usuarios")
+            .select("nome")
+            .ilike("email", user.email || "")
+            .maybeSingle();
+          
+          setUserName(userData?.nome || user.email?.split("@")[0] || "Usuário");
+        }
+
+        // Buscar nome do estabelecimento
+        const estabId = await getEstabelecimentoId();
+        if (estabId) {
+          const { data: estabData } = await supabase
+            .from("estabelecimentos")
+            .select("nome")
+            .eq("id", estabId)
+            .maybeSingle();
+          
+          setEstabelecimentoName(estabData?.nome || "");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário/estabelecimento:", error);
+      }
+    };
+
+    fetchUserAndEstabelecimento();
+  }, [user, isAdmin]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -257,7 +304,23 @@ export default function Layout({ children }: LayoutProps) {
 
         <main className="flex-1 flex flex-col bg-background">
           <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm">
-            <SidebarTrigger />
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <div className="flex items-center gap-6 text-sm">
+                {estabelecimentoName && (
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium text-foreground">{estabelecimentoName}</span>
+                  </div>
+                )}
+                {userName && (
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{userName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
             {isAdmin && (
               <Button
                 variant="outline"
