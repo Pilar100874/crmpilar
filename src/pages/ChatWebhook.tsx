@@ -481,34 +481,51 @@ export default function ChatWebhook() {
 
               {/* AI Webhooks List */}
               {showAIChat && (
-                <div className="mb-3 p-2 bg-secondary/20 rounded-lg">
-                  <p className="text-xs font-medium mb-2 text-muted-foreground">
-                    Webhooks de IA disponíveis:
-                  </p>
+                <div className="mb-3">
+                  <div className="text-xs font-semibold mb-2 text-primary flex items-center gap-2">
+                    <Sparkles className="h-3 w-3" />
+                    Assistentes IA Disponíveis
+                  </div>
                   {aiWebhooks.length > 0 ? (
-                    <div className="space-y-1">
+                    <div className="grid gap-2">
                       {aiWebhooks.map((webhook) => (
                         <button
                           key={webhook.id}
                           onClick={() => setSelectedAIWebhook(webhook.id)}
-                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                          className={`group relative p-3 rounded-lg text-left transition-all ${
                             selectedAIWebhook === webhook.id
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-background hover:bg-secondary"
+                              ? "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground shadow-lg"
+                              : "bg-card hover:bg-secondary/50 border border-border hover:border-primary/30"
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{webhook.name}</span>
-                            <span className="text-xs opacity-70">{webhook.method}</span>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-sm mb-1 truncate">{webhook.name}</div>
+                              {webhook.description && (
+                                <p className={`text-xs leading-relaxed ${
+                                  selectedAIWebhook === webhook.id ? "opacity-90" : "text-muted-foreground"
+                                }`}>
+                                  {webhook.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className={`flex items-center gap-1 text-xs font-mono px-2 py-1 rounded ${
+                              selectedAIWebhook === webhook.id 
+                                ? "bg-white/20" 
+                                : "bg-secondary text-secondary-foreground"
+                            }`}>
+                              {webhook.method}
+                            </div>
                           </div>
-                          {webhook.description && (
-                            <p className="text-xs opacity-70 mt-1">{webhook.description}</p>
-                          )}
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">Nenhum webhook com local de uso "Menu do Chat" encontrado.</p>
+                    <div className="p-4 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
+                      <p className="text-xs text-muted-foreground text-center">
+                        Nenhum webhook com local de uso "Menu do Chat" encontrado
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -527,13 +544,9 @@ export default function ChatWebhook() {
                     {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
-                      className="max-h-64 overflow-y-auto mb-3 space-y-2 bg-background/50 rounded p-2"
+                      className="max-h-64 overflow-y-auto mb-3 space-y-2 bg-background/50 rounded-lg p-3 border border-border"
                     >
-                      {aiMessages.length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-4">
-                          Faça uma pergunta para a IA...
-                        </p>
-                      ) : (
+                      {aiMessages.length > 0 && (
                         aiMessages.map((msg, idx) => (
                           <div
                             key={idx}
