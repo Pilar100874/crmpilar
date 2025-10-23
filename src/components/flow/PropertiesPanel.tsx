@@ -629,54 +629,6 @@ export const PropertiesPanel = ({
           </div>
         );
 
-      case "condition":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Condições</Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Avalia condições em ordem. Use variáveis com {"{{"} variavel {"}}"} 
-              </p>
-              <div className="space-y-3">
-                {(config.conditions || []).map((condition: any, index: number) => (
-                  <Card key={index} className="p-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline">Condição {index + 1}</Badge>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeCondition(index)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <Input
-                        value={condition.expression || ""}
-                        onChange={(e) =>
-                          updateCondition(index, "expression", e.target.value)
-                        }
-                        placeholder="{{variable}} == 'valor' ou {{age}} > 18"
-                      />
-                      <Input
-                        value={condition.label || ""}
-                        onChange={(e) =>
-                          updateCondition(index, "label", e.target.value)
-                        }
-                        placeholder="Label da saída (opcional)"
-                      />
-                    </div>
-                  </Card>
-                ))}
-                <Button variant="outline" onClick={addCondition} className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Condição
-                </Button>
-              </div>
-            </div>
-          </div>
-        );
-
       case "variables":
         return (
           <div className="space-y-4">
@@ -805,45 +757,6 @@ export const PropertiesPanel = ({
                 onChange={(e) => handleConfigChange("note", e.target.value)}
                 placeholder="Informações de contexto para o agente..."
                 rows={4}
-              />
-            </div>
-          </div>
-        );
-
-      case "n8n":
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Workflow ID</Label>
-              <Input
-                value={config.workflowId || ""}
-                onChange={(e) => handleConfigChange("workflowId", e.target.value)}
-                placeholder="1234"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Webhook URL</Label>
-              <Input
-                value={config.webhookUrl || ""}
-                onChange={(e) => handleConfigChange("webhookUrl", e.target.value)}
-                placeholder="https://n8n.example.com/webhook/..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Dados de Entrada (JSON)</Label>
-              <Textarea
-                value={config.inputData || '{\n  "message": "{{user_message}}"\n}'}
-                onChange={(e) => handleConfigChange("inputData", e.target.value)}
-                rows={6}
-                className="font-mono text-xs"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Variável de Saída</Label>
-              <Input
-                value={config.outputVariable || ""}
-                onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
-                placeholder="n8n_result"
               />
             </div>
           </div>
