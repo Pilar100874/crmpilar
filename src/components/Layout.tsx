@@ -97,15 +97,11 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       try {
-        // Primeiro verifica se é um administrador
-        const { data: admin, error: adminError } = await supabase
-          .from("administradores")
-          .select("id")
-          .eq("id", user.id)
-          .maybeSingle();
+        // Verifica se é administrador pelo padrão de email (admin_*@sistema.local)
+        const isAdmin = user.email?.startsWith("admin_") && user.email?.endsWith("@sistema.local");
 
         // Se for administrador, dá acesso total a todos os menus
-        if (admin) {
+        if (isAdmin) {
           const allMenus: Record<string, MenuPermissions> = {};
           menuItems.forEach(item => {
             allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
@@ -119,10 +115,10 @@ export default function Layout({ children }: LayoutProps) {
         const { data: usuario, error: userError } = await supabase
           .from("usuarios")
           .select("grupo_acesso_id")
-          .eq("id", user.id)
+          .eq("email", user.email)
           .maybeSingle();
 
-        // Se não encontrou nem admin nem usuário, bloqueia tudo
+        // Se não encontrou usuário, bloqueia tudo
         if (!usuario) {
           setAllowedMenus({});
           setIsLoading(false);
