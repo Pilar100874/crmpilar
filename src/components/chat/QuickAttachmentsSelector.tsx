@@ -212,9 +212,9 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                           onClick={() => handleImageClick(attachment)}
                         >
                           <div className="aspect-square relative">
-                            {attachment.thumbnail_url ? (
+                            {attachment.thumbnail_url || attachment.url ? (
                               <img 
-                                src={attachment.thumbnail_url} 
+                                src={attachment.thumbnail_url || attachment.url} 
                                 alt={attachment.title}
                                 className="w-full h-full object-cover"
                               />
@@ -338,9 +338,9 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                                 onClick={() => handleImageClick(attachment)}
                               >
                                 <div className="aspect-square relative">
-                                  {attachment.thumbnail_url ? (
+                                  {attachment.thumbnail_url || attachment.url ? (
                                     <img 
-                                      src={attachment.thumbnail_url} 
+                                      src={attachment.thumbnail_url || attachment.url} 
                                       alt={attachment.title}
                                       className="w-full h-full object-cover"
                                     />
