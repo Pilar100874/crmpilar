@@ -784,13 +784,6 @@ export type Database = {
             referencedRelation: "grupos_acesso"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "quick_replies_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
-          },
         ]
       }
       redes_sociais: {
