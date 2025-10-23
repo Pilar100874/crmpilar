@@ -58,12 +58,13 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     { id: "waha", name: "WAHA" },
     { id: "whatsapp", name: "WhatsApp Oficial" },
   ]);
-  const [usageLocations, setUsageLocations] = useState<UsageLocation[]>([
-    { id: "bot", name: "Bot" },
-    { id: "chat", name: "Chat" },
-    { id: "campanha", name: "Campanha" },
-    { id: "teste", name: "Teste de Webhook" },
-  ]);
+  // Locais de uso fixos para todos os estabelecimentos
+  const usageLocations: UsageLocation[] = [
+    { id: "bot", name: "BOT" },
+    { id: "teste", name: "TESTE DE WEBHOOK" },
+    { id: "ia-chat", name: "IA CHAT" },
+    { id: "campanha", name: "CAMPANHA" },
+  ];
   const [editingWebhook, setEditingWebhook] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -76,9 +77,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     variables: [] as WebhookVariable[],
   });
   const [newTypeName, setNewTypeName] = useState("");
-  const [newLocationName, setNewLocationName] = useState("");
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
-  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
   const [newVariableName, setNewVariableName] = useState("");
   const [newVariableDescription, setNewVariableDescription] = useState("");
   const [newVariableType, setNewVariableType] = useState("json");
@@ -94,7 +93,6 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
   const [showAffectedBotsDialog, setShowAffectedBotsDialog] = useState(false);
   const [webhookToDelete, setWebhookToDelete] = useState<string | null>(null);
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
-  const [editingLocationId, setEditingLocationId] = useState<string | null>(null);
 
   const resetVariableForm = () => {
     setNewVariableName("");
@@ -169,19 +167,6 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
       console.error("Erro ao carregar tipos:", typesError);
     } else {
       setWebhookTypes((types || []).map(t => ({ id: t.id, name: t.name })));
-    }
-
-    // Load usage locations
-    const { data: locations, error: locationsError } = await supabase
-      .from('webhook_usage_locations')
-      .select('*')
-      .eq('estabelecimento_id', estabId)
-      .order('name');
-
-    if (locationsError) {
-      console.error("Erro ao carregar locais:", locationsError);
-    } else {
-      setUsageLocations((locations || []).map(l => ({ id: l.id, name: l.name })));
     }
   };
 
@@ -373,52 +358,6 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     await loadTypesAndLocations();
   };
 
-  const handleAddLocation = async () => {
-    if (!newLocationName.trim()) {
-      toast.error("Digite um nome para o local de uso");
-      return;
-    }
-
-    const estabId = await getEstabelecimentoId(estabelecimentoId);
-    if (!estabId) {
-      toast.error("Estabelecimento não identificado");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('webhook_usage_locations')
-      .insert([{ name: newLocationName, estabelecimento_id: estabId }]);
-
-    if (error) {
-      toast.error("Erro ao adicionar local de uso");
-      return;
-    }
-
-    setNewLocationName("");
-    toast.success("Local de uso adicionado!");
-    await loadTypesAndLocations();
-  };
-
-  const handleDeleteLocation = async (id: string) => {
-    const isInUse = webhooks.some((w) => w.usageLocations?.includes(id));
-    if (isInUse) {
-      toast.error("Este local está em uso e não pode ser removido");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('webhook_usage_locations')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      toast.error("Erro ao remover local de uso");
-      return;
-    }
-
-    toast.success("Local de uso removido!");
-    await loadTypesAndLocations();
-  };
 
   const resetForm = () => {
     setFormData({ name: "", url: "", method: "POST", type: "", description: "", usageLocations: [], hasVariables: false, variables: [] });
@@ -632,26 +571,6 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     await loadTypesAndLocations();
   };
 
-  const handleUpdateLocation = async (locationId: string, newName: string) => {
-    if (!newName.trim()) {
-      toast.error("Digite um nome válido");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('webhook_usage_locations')
-      .update({ name: newName })
-      .eq('id', locationId);
-
-    if (error) {
-      toast.error("Erro ao atualizar local");
-      return;
-    }
-
-    setEditingLocationId(null);
-    toast.success("Local de uso atualizado!");
-    await loadTypesAndLocations();
-  };
 
   const filteredWebhooks = webhooks.filter((webhook) => {
     const matchesType = selectedTypeFilter === "all" || webhook.type === selectedTypeFilter;
@@ -1050,72 +969,6 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">Locais de Uso</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Gerenciar Locais de Uso</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Nome do novo local"
-                  value={newLocationName}
-                  onChange={(e) => setNewLocationName(e.target.value)}
-                />
-                <Button onClick={handleAddLocation}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <ScrollArea className="h-64">
-                <div className="space-y-2">
-                  {usageLocations.map((location) => (
-                    <div key={location.id} className="flex items-center justify-between p-2 border rounded">
-                      {editingLocationId === location.id ? (
-                        <Input
-                          value={location.name}
-                          onChange={(e) => {
-                            const newLocations = usageLocations.map(l =>
-                              l.id === location.id ? { ...l, name: e.target.value } : l
-                            );
-                            setUsageLocations(newLocations);
-                          }}
-                          onBlur={() => handleUpdateLocation(location.id, location.name)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleUpdateLocation(location.id, location.name);
-                            }
-                          }}
-                          autoFocus
-                        />
-                      ) : (
-                        <span>{location.name}</span>
-                      )}
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingLocationId(location.id)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteLocation(location.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <div className="flex gap-4">
