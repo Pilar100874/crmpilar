@@ -29,11 +29,13 @@ import {
   Globe,
   Pencil,
   Webhook,
+  Building2,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import logo from "@/assets/logo_preto.png";
+import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 
 interface MenuPermissions {
   view: boolean;
@@ -68,6 +70,8 @@ export default function Layout({ children }: LayoutProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -98,10 +102,11 @@ export default function Layout({ children }: LayoutProps) {
 
       try {
         // Verifica se é administrador pelo padrão de email (admin_*@sistema.local)
-        const isAdmin = user.email?.startsWith("admin_") && user.email?.endsWith("@sistema.local");
+        const adminCheck = user.email?.startsWith("admin_") && user.email?.endsWith("@sistema.local");
+        setIsAdmin(adminCheck);
 
         // Se for administrador, dá acesso total a todos os menus
-        if (isAdmin) {
+        if (adminCheck) {
           const allMenus: Record<string, MenuPermissions> = {};
           menuItems.forEach(item => {
             allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
@@ -251,14 +256,33 @@ export default function Layout({ children }: LayoutProps) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col bg-background">
-          <header className="h-14 border-b border-border flex items-center px-4 bg-card/50 backdrop-blur-sm">
+          <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm">
             <SidebarTrigger />
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEstabelecimentoSelector(true)}
+                className="gap-2"
+              >
+                <Building2 className="w-4 h-4" />
+                Trocar Estabelecimento
+              </Button>
+            )}
           </header>
           <div className="flex-1 overflow-auto bg-background">
             {children}
           </div>
         </main>
       </div>
+
+      <EstabelecimentoSelector
+        open={showEstabelecimentoSelector}
+        onSelectEstabelecimento={(estabelecimentoId) => {
+          setShowEstabelecimentoSelector(false);
+          window.location.reload(); // Recarrega a página para aplicar o novo estabelecimento
+        }}
+      />
     </SidebarProvider>
   );
 }

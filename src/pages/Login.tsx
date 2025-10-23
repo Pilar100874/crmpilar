@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageSquare, Building2, ShieldCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 
 type LoginStep = "select-type" | "admin-login" | "select-company" | "select-user" | "user-password";
 
@@ -27,6 +28,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<LoginStep>("select-type");
+  const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
   
   // Admin login
   const [adminCpf, setAdminCpf] = useState("196.820.298-64");
@@ -147,7 +149,9 @@ export default function Login() {
       localStorage.setItem("userType", "admin");
       localStorage.setItem("userId", adminId as string);
       toast.success("Login realizado com sucesso!");
-      navigate("/dashboard");
+      
+      // Mostrar seletor de estabelecimento para admins
+      setShowEstabelecimentoSelector(true);
     } catch (err) {
       console.error("Erro no login admin:", err);
       toast.error("Erro inesperado no login");
@@ -217,6 +221,11 @@ export default function Login() {
     localStorage.setItem("estabelecimentoId", selectedEstabelecimento);
     toast.success("Login realizado com sucesso!");
     setIsLoading(false);
+    navigate("/dashboard");
+  };
+
+  const handleEstabelecimentoSelected = (estabelecimentoId: string) => {
+    setShowEstabelecimentoSelector(false);
     navigate("/dashboard");
   };
 
@@ -463,6 +472,11 @@ export default function Login() {
         {step === "select-user" && renderSelectUser()}
         {step === "user-password" && renderUserPassword()}
       </div>
+
+      <EstabelecimentoSelector
+        open={showEstabelecimentoSelector}
+        onSelectEstabelecimento={handleEstabelecimentoSelected}
+      />
     </div>
   );
 }
