@@ -445,7 +445,7 @@ export const UsuariosCRUD = () => {
               onCheckedChange={setIsAdmin}
             />
             <Label htmlFor="is-admin" className="cursor-pointer">
-              Admin
+              Agente
             </Label>
           </div>
         </div>
@@ -497,7 +497,7 @@ export const UsuariosCRUD = () => {
               <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                 <span>{usuario.email}</span>
                 {usuario.telefone && <span>• {usuario.telefone}</span>}
-                {usuario.is_admin && <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">Admin</span>}
+                {usuario.is_admin && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Agente</span>}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {usuario.estabelecimentos?.nome && `Estabelecimento: ${usuario.estabelecimentos.nome}`}
