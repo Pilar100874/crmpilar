@@ -90,8 +90,28 @@ export function WebhooksCRUD() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.url || !formData.method || !formData.type) {
+    
+    // Validar campos obrigatórios
+    if (!formData.name || !formData.url || !formData.method || !formData.type || !formData.description || formData.usageLocations.length === 0) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    // Verificar se nome já existe (excluindo o próprio webhook se estiver editando)
+    const nameExists = webhooks.some((w) => 
+      w.name === formData.name && w.id !== editingWebhook
+    );
+    if (nameExists) {
+      toast.error("Já existe um webhook com este nome");
+      return;
+    }
+
+    // Verificar se a combinação método + URL já existe (excluindo o próprio webhook se estiver editando)
+    const methodUrlExists = webhooks.some((w) => 
+      w.method === formData.method && w.url === formData.url && w.id !== editingWebhook
+    );
+    if (methodUrlExists) {
+      toast.error("Já existe um webhook com este método e URL");
       return;
     }
 
@@ -302,7 +322,7 @@ export function WebhooksCRUD() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Local de Uso</Label>
+              <Label>Local de Uso *</Label>
               <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
                 <DialogTrigger asChild>
                   <Button type="button" variant="ghost" size="sm">
@@ -365,7 +385,7 @@ export function WebhooksCRUD() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="webhook-description">Descrição</Label>
+            <Label htmlFor="webhook-description">Descrição *</Label>
             <Textarea
               id="webhook-description"
               value={formData.description}
