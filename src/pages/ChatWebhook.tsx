@@ -88,9 +88,10 @@ export default function ChatWebhook() {
       })));
       
       // Filter AI webhooks
-      const aiWebhooksList = loadedWebhooks.filter((w: WebhookConfig) => 
-        w.usageLocations?.includes("Menu do Chat")
-      );
+      const aiWebhooksList = loadedWebhooks.filter((w: WebhookConfig) => {
+        const locs = (w.usageLocations || []).map((l: string) => l.toLowerCase().replace(/[\s_]+/g, "-"));
+        return locs.includes("menu-do-chat");
+      });
       
       console.log("AI webhooks found:", aiWebhooksList.length);
       console.log("AI webhooks:", aiWebhooksList.map((w: WebhookConfig) => w.name));
@@ -472,7 +473,6 @@ export default function ChatWebhook() {
                   size="sm"
                   onClick={() => setShowAIChat(!showAIChat)}
                   className="gap-2"
-                  disabled={aiWebhooks.length === 0}
                 >
                   <Sparkles className="h-4 w-4" />
                   IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
@@ -480,32 +480,36 @@ export default function ChatWebhook() {
               </div>
 
               {/* AI Webhooks List */}
-              {showAIChat && aiWebhooks.length > 0 && (
+              {showAIChat && (
                 <div className="mb-3 p-2 bg-secondary/20 rounded-lg">
                   <p className="text-xs font-medium mb-2 text-muted-foreground">
                     Webhooks de IA disponíveis:
                   </p>
-                  <div className="space-y-1">
-                    {aiWebhooks.map((webhook) => (
-                      <button
-                        key={webhook.id}
-                        onClick={() => setSelectedAIWebhook(webhook.id)}
-                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
-                          selectedAIWebhook === webhook.id
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background hover:bg-secondary"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{webhook.name}</span>
-                          <span className="text-xs opacity-70">{webhook.method}</span>
-                        </div>
-                        {webhook.description && (
-                          <p className="text-xs opacity-70 mt-1">{webhook.description}</p>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                  {aiWebhooks.length > 0 ? (
+                    <div className="space-y-1">
+                      {aiWebhooks.map((webhook) => (
+                        <button
+                          key={webhook.id}
+                          onClick={() => setSelectedAIWebhook(webhook.id)}
+                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                            selectedAIWebhook === webhook.id
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background hover:bg-secondary"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{webhook.name}</span>
+                            <span className="text-xs opacity-70">{webhook.method}</span>
+                          </div>
+                          {webhook.description && (
+                            <p className="text-xs opacity-70 mt-1">{webhook.description}</p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Nenhum webhook com local de uso "Menu do Chat" encontrado.</p>
+                  )}
                 </div>
               )}
 
