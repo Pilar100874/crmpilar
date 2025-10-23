@@ -235,137 +235,33 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
         </div>
       )}
 
-      {/* Send Params, Customize Headers e Customize Body - apenas se não houver webhook selecionado */}
-      {!selectedWebhook && (
+      {/* Opções avançadas - apenas se houver webhook selecionado */}
+      {selectedWebhook && (
         <>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Send Params</Label>
+              <Label>Save Responses as Fields</Label>
               <Switch 
-                checked={config.sendParams || false}
-                onCheckedChange={(checked) => handleConfigChange("sendParams", checked)}
+                checked={config.saveResponses || false}
+                onCheckedChange={(checked) => handleConfigChange("saveResponses", checked)}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Attach parameters to the end of request URL (example: ?email=elon@tesla.com)
-            </p>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Customize Headers</Label>
+              <Label>Response Routing</Label>
               <Switch 
-                checked={config.customHeaders || false}
-                onCheckedChange={(checked) => handleConfigChange("customHeaders", checked)}
+                checked={config.responseRouting || false}
+                onCheckedChange={(checked) => handleConfigChange("responseRouting", checked)}
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Add headers to your request (example: Content-Type: application/json)
+              Split your flow based on response status codes (200, 400, 500, etc)
             </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Customize Body</Label>
-              <Switch 
-                checked={config.customBody || false}
-                onCheckedChange={(checked) => handleConfigChange("customBody", checked)}
-              />
-            </div>
           </div>
         </>
       )}
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label>Test Your Request</Label>
-          <Switch 
-            checked={config.enableTest || false}
-            onCheckedChange={(checked) => handleConfigChange("enableTest", checked)}
-          />
-        </div>
-
-        {config.enableTest && (
-          <div className="space-y-3">
-            <Label className="text-sm">Manually set values for test fields</Label>
-            <p className="text-xs text-muted-foreground">
-              If your request contains fields, you can manually set their values for testing purpose.
-            </p>
-
-            <div className="grid grid-cols-2 gap-2">
-              <Label className="text-xs">Field Name</Label>
-              <Label className="text-xs">Test Value</Label>
-            </div>
-
-            {testFields.map((field: any, index: number) => (
-              <div key={index} className="grid grid-cols-2 gap-2">
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
-                  <Input
-                    value={field.name}
-                    onChange={(e) => {
-                      const newFields = [...testFields];
-                      newFields[index].name = e.target.value;
-                      handleConfigChange("testFields", newFields);
-                    }}
-                    placeholder="Search fields"
-                    className="pl-7"
-                  />
-                </div>
-                <Input
-                  value={field.value}
-                  onChange={(e) => {
-                    const newFields = [...testFields];
-                    newFields[index].value = e.target.value;
-                    handleConfigChange("testFields", newFields);
-                  }}
-                />
-              </div>
-            ))}
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={addTestField}
-              className="w-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add
-            </Button>
-
-            <Button 
-              variant="default" 
-              size="lg" 
-              className="w-full bg-pink-500 hover:bg-pink-600"
-            >
-              Test the request
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Save Responses as Fields</Label>
-          <Switch 
-            checked={config.saveResponses || false}
-            onCheckedChange={(checked) => handleConfigChange("saveResponses", checked)}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Response Routing</Label>
-          <Switch 
-            checked={config.responseRouting || false}
-            onCheckedChange={(checked) => handleConfigChange("responseRouting", checked)}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Split your flow based on response status codes (200, 400, 500, etc)
-        </p>
-      </div>
     </div>
   );
 };
