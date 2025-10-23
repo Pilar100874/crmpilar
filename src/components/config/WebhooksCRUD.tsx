@@ -46,7 +46,11 @@ export interface UsageLocation {
   name: string;
 }
 
-export function WebhooksCRUD() {
+interface WebhooksCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
   const [webhookTypes, setWebhookTypes] = useState<WebhookType[]>([
     { id: "n8n", name: "N8N" },
@@ -115,9 +119,13 @@ export function WebhooksCRUD() {
   };
 
   useEffect(() => {
-    const savedWebhooks = localStorage.getItem("webhooks");
-    const savedTypes = localStorage.getItem("webhookTypes");
-    const savedLocations = localStorage.getItem("usageLocations");
+    const storageKey = estabelecimentoId ? `webhooks_${estabelecimentoId}` : "webhooks";
+    const typesKey = estabelecimentoId ? `webhookTypes_${estabelecimentoId}` : "webhookTypes";
+    const locationsKey = estabelecimentoId ? `usageLocations_${estabelecimentoId}` : "usageLocations";
+    
+    const savedWebhooks = localStorage.getItem(storageKey);
+    const savedTypes = localStorage.getItem(typesKey);
+    const savedLocations = localStorage.getItem(locationsKey);
     
     if (savedWebhooks) {
       const parsed = JSON.parse(savedWebhooks);
@@ -129,19 +137,22 @@ export function WebhooksCRUD() {
     if (savedLocations) {
       setUsageLocations(JSON.parse(savedLocations));
     }
-  }, []);
+  }, [estabelecimentoId]);
 
   useEffect(() => {
-    localStorage.setItem("webhooks", JSON.stringify(webhooks));
-  }, [webhooks]);
+    const storageKey = estabelecimentoId ? `webhooks_${estabelecimentoId}` : "webhooks";
+    localStorage.setItem(storageKey, JSON.stringify(webhooks));
+  }, [webhooks, estabelecimentoId]);
 
   useEffect(() => {
-    localStorage.setItem("webhookTypes", JSON.stringify(webhookTypes));
-  }, [webhookTypes]);
+    const typesKey = estabelecimentoId ? `webhookTypes_${estabelecimentoId}` : "webhookTypes";
+    localStorage.setItem(typesKey, JSON.stringify(webhookTypes));
+  }, [webhookTypes, estabelecimentoId]);
 
   useEffect(() => {
-    localStorage.setItem("usageLocations", JSON.stringify(usageLocations));
-  }, [usageLocations]);
+    const locationsKey = estabelecimentoId ? `usageLocations_${estabelecimentoId}` : "usageLocations";
+    localStorage.setItem(locationsKey, JSON.stringify(usageLocations));
+  }, [usageLocations, estabelecimentoId]);
 
   // Função para buscar bots que usam um webhook específico
   const findBotsUsingWebhook = async (webhookId: string) => {

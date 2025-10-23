@@ -5,7 +5,14 @@ import { GruposAcessoCRUD } from "./GruposAcessoCRUD";
 import { UsuariosCRUD } from "./UsuariosCRUD";
 import { ClientesCRUD } from "./ClientesCRUD";
 import { RedesSociaisCRUD } from "./RedesSociaisCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2 } from "lucide-react";
+import QuickRepliesCRUD from "./QuickRepliesCRUD";
+import QuickAttachmentsCRUD from "./QuickAttachmentsCRUD";
+import { APIGeneratorCRUD } from "./APIGeneratorCRUD";
+import { WebhooksCRUD } from "./WebhooksCRUD";
+import { CanaisAtendimentoCRUD } from "./CanaisAtendimentoCRUD";
+import { NotificacoesCRUD } from "./NotificacoesCRUD";
+import { SegurancaCRUD } from "./SegurancaCRUD";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield } from "lucide-react";
 
 interface EstabelecimentoDetalhesProps {
   estabelecimentoId: string;
@@ -89,6 +96,90 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <UsuariosCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="textos-prontos" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-primary" />
+              <span className="font-medium">Textos Prontos Globais</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <QuickRepliesCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="anexos-rapidos" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <LinkIcon className="w-4 h-4 text-primary" />
+              <span className="font-medium">Anexos Rápidos Globais</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <QuickAttachmentsCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="gerador-api" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-primary" />
+              <span className="font-medium">Gerador de APIs</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <APIGeneratorCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="cadastro-webhooks" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Webhook className="w-4 h-4 text-primary" />
+              <span className="font-medium">Cadastro de Webhooks</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <WebhooksCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="canais" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-primary" />
+              <span className="font-medium">Canais de Atendimento</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <CanaisAtendimentoCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="notificacoes" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-primary" />
+              <span className="font-medium">Notificações</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <NotificacoesCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="seguranca" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" />
+              <span className="font-medium">Segurança e LGPD</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <SegurancaCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

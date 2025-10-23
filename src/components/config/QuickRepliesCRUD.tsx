@@ -29,7 +29,11 @@ interface GrupoAcesso {
   nome: string;
 }
 
-export default function QuickRepliesCRUD() {
+interface QuickRepliesCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUDProps = {}) {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -47,11 +51,26 @@ export default function QuickRepliesCRUD() {
   }, []);
 
   const loadQuickReplies = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("quick_replies")
       .select("*")
-      .eq("is_global", true)
-      .order("created_at", { ascending: false });
+      .eq("is_global", true);
+
+    // Note: quick_replies não tem estabelecimento_id no schema atual
+    // Filtra por grupo_acesso_id se estabelecimento foi fornecido
+    if (estabelecimentoId) {
+      const { data: grupos } = await supabase
+        .from("grupos_acesso")
+        .select("id")
+        .eq("estabelecimento_id", estabelecimentoId);
+      
+      if (grupos && grupos.length > 0) {
+        const grupoIds = grupos.map(g => g.id);
+        query = query.in("grupo_acesso_id", grupoIds);
+      }
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       toast.error("Erro ao carregar textos prontos");
@@ -61,10 +80,15 @@ export default function QuickRepliesCRUD() {
   };
 
   const loadGrupos = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("grupos_acesso")
-      .select("id, nome")
-      .order("nome");
+      .select("id, nome");
+
+    if (estabelecimentoId) {
+      query = query.eq("estabelecimento_id", estabelecimentoId);
+    }
+
+    const { data, error } = await query.order("nome");
 
     if (error) {
       toast.error("Erro ao carregar grupos de acesso");

@@ -49,6 +49,7 @@ export type Database = {
           database_type: string
           description: string | null
           endpoint_path: string
+          estabelecimento_id: string | null
           http_method: string
           id: string
           name: string
@@ -66,6 +67,7 @@ export type Database = {
           database_type: string
           description?: string | null
           endpoint_path: string
+          estabelecimento_id?: string | null
           http_method: string
           id?: string
           name: string
@@ -83,6 +85,7 @@ export type Database = {
           database_type?: string
           description?: string | null
           endpoint_path?: string
+          estabelecimento_id?: string | null
           http_method?: string
           id?: string
           name?: string
@@ -99,6 +102,13 @@ export type Database = {
             columns: ["connection_id"]
             isOneToOne: false
             referencedRelation: "database_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_endpoints_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]
@@ -186,6 +196,44 @@ export type Database = {
             foreignKeyName: "campaigns_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
             isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canais_atendimento: {
+        Row: {
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          telegram_enabled: boolean | null
+          updated_at: string | null
+          webchat_enabled: boolean | null
+          whatsapp_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          telegram_enabled?: boolean | null
+          updated_at?: string | null
+          webchat_enabled?: boolean | null
+          whatsapp_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          telegram_enabled?: boolean | null
+          updated_at?: string | null
+          webchat_enabled?: boolean | null
+          whatsapp_enabled?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canais_atendimento_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
             referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
@@ -579,6 +627,44 @@ export type Database = {
           },
         ]
       }
+      notificacoes_config: {
+        Row: {
+          campanha_concluida_enabled: boolean | null
+          created_at: string | null
+          erros_sistema_enabled: boolean | null
+          estabelecimento_id: string
+          id: string
+          nova_conversa_enabled: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          campanha_concluida_enabled?: boolean | null
+          created_at?: string | null
+          erros_sistema_enabled?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          nova_conversa_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          campanha_concluida_enabled?: boolean | null
+          created_at?: string | null
+          erros_sistema_enabled?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          nova_conversa_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quick_attachments: {
         Row: {
           created_at: string | null
@@ -741,6 +827,41 @@ export type Database = {
             foreignKeyName: "segmentos_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
             isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seguranca_config: {
+        Row: {
+          consentimento_obrigatorio: boolean | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          retencao_dados_dias: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          consentimento_obrigatorio?: boolean | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          retencao_dados_dias?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          consentimento_obrigatorio?: boolean | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          retencao_dados_dias?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seguranca_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
             referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },

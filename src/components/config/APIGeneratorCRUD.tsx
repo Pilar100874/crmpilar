@@ -51,7 +51,11 @@ interface QueryParameter {
   description: string;
 }
 
-export function APIGeneratorCRUD() {
+interface APIGeneratorCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = {}) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,10 +108,15 @@ export function APIGeneratorCRUD() {
 
   const loadEndpoints = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("api_endpoints")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
+
+      if (estabelecimentoId) {
+        query = query.eq("estabelecimento_id", estabelecimentoId);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       
@@ -210,6 +219,10 @@ export function APIGeneratorCRUD() {
         endpointData.sql_database = formData.sql_database;
         endpointData.sql_username = formData.sql_username;
         endpointData.sql_password = formData.sql_password;
+      }
+
+      if (estabelecimentoId) {
+        endpointData.estabelecimento_id = estabelecimentoId;
       }
 
       if (editingId) {
