@@ -17,6 +17,7 @@ interface Usuario {
   unidade_id: string | null;
   grupo_acesso_id: string | null;
   is_agente?: boolean | null;
+  is_admin?: boolean;
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
 }
@@ -50,6 +51,7 @@ export const UsuariosCRUD = () => {
   const [grupoAcessoId, setGrupoAcessoId] = useState("");
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
   const [isAgente, setIsAgente] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   const { toast } = useToast();
@@ -83,9 +85,27 @@ export const UsuariosCRUD = () => {
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      setUsuarios(data || []);
+      return;
     }
+
+    // Buscar roles de admin para cada usuário
+    const usuariosComRoles = await Promise.all(
+      (data || []).map(async (usuario) => {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", usuario.id)
+          .eq("role", "admin")
+          .single();
+        
+        return {
+          ...usuario,
+          is_admin: !!roleData,
+        };
+      })
+    );
+
+    setUsuarios(usuariosComRoles);
   };
 
   const fetchUnidades = async () => {
@@ -166,6 +186,22 @@ export const UsuariosCRUD = () => {
           );
       }
 
+      // Atualizar role de admin
+      await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", editingId)
+        .eq("role", "admin");
+
+      if (isAdmin) {
+        await supabase
+          .from("user_roles")
+          .insert({
+            user_id: editingId,
+            role: "admin",
+          });
+      }
+
       toast({ title: "Usuário atualizado com sucesso!" });
       resetForm();
       fetchUsuarios();
@@ -197,6 +233,16 @@ export const UsuariosCRUD = () => {
           );
       }
 
+      // Adicionar role de admin
+      if (data && isAdmin) {
+        await supabase
+          .from("user_roles")
+          .insert({
+            user_id: data.id,
+            role: "admin",
+          });
+      }
+
       toast({ title: "Usuário criado com sucesso!" });
       resetForm();
       fetchUsuarios();
@@ -212,6 +258,7 @@ export const UsuariosCRUD = () => {
     setGrupoAcessoId("");
     setSegmentosSelecionados([]);
     setIsAgente(false);
+    setIsAdmin(false);
     setEditingId(null);
   };
 
@@ -225,12 +272,22 @@ export const UsuariosCRUD = () => {
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
-    const { data } = await supabase
+    const { data: segmentosData } = await supabase
       .from("usuario_segmentos")
       .select("segmento_id")
       .eq("usuario_id", usuario.id);
 
-    setSegmentosSelecionados(data?.map((s) => s.segmento_id) || []);
+    setSegmentosSelecionados(segmentosData?.map((s) => s.segmento_id) || []);
+
+    // Buscar se o usuário é admin
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", usuario.id)
+      .eq("role", "admin")
+      .single();
+
+    setIsAdmin(!!roleData);
   };
 
   const handleDelete = async (id: string) => {
@@ -340,15 +397,28 @@ export const UsuariosCRUD = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="is-agente"
-            checked={isAgente}
-            onCheckedChange={setIsAgente}
-          />
-          <Label htmlFor="is-agente" className="cursor-pointer">
-            É Agente
-          </Label>
+        <div className="flex gap-6">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is-agente"
+              checked={isAgente}
+              onCheckedChange={setIsAgente}
+            />
+            <Label htmlFor="is-agente" className="cursor-pointer">
+              É Agente
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is-admin"
+              checked={isAdmin}
+              onCheckedChange={setIsAdmin}
+            />
+            <Label htmlFor="is-admin" className="cursor-pointer">
+              Admin
+            </Label>
+          </div>
         </div>
 
         <div>
@@ -395,9 +465,11 @@ export const UsuariosCRUD = () => {
           >
             <div>
               <div className="font-semibold">{usuario.nome}</div>
-              <div className="text-sm text-muted-foreground">
-                {usuario.email} {usuario.telefone && `• ${usuario.telefone}`}
-                {usuario.is_agente && <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Agente</span>}
+              <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+                <span>{usuario.email}</span>
+                {usuario.telefone && <span>• {usuario.telefone}</span>}
+                {usuario.is_agente && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Agente</span>}
+                {usuario.is_admin && <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">Admin</span>}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {usuario.unidades?.nome && `Unidade: ${usuario.unidades.nome}`}
