@@ -243,16 +243,16 @@ export function WebhooksCRUD() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="webhook-type">Tipo *</Label>
+              <Label htmlFor="webhook-type">Local do Webhook *</Label>
               <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
                 <DialogTrigger asChild>
                   <Button type="button" variant="ghost" size="sm">
-                    Gerenciar Tipos
+                    Gerenciar Locais
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Gerenciar Tipos de Webhook</DialogTitle>
+                    <DialogTitle>Gerenciar Locais do Webhook</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="flex gap-2">
