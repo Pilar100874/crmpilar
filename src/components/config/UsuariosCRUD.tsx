@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Usuario {
   id: string;
@@ -65,6 +66,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const { toast } = useToast();
 
@@ -345,13 +349,51 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAdmin(!!roleData);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+  const handleDeleteClick = (usuario: Usuario) => {
+    setUsuarioToDelete(usuario);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!usuarioToDelete) return;
+
+    setIsDeleting(true);
+
+    // Verificar vínculos com conversations (como assignee)
+    const { data: conversations, error: checkError } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("assignee_id", usuarioToDelete.id)
+      .limit(1);
+
+    if (checkError) {
+      toast({
+        title: "Erro ao verificar vínculos",
+        description: checkError.message,
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      return;
+    }
+
+    if (conversations && conversations.length > 0) {
+      toast({
+        title: "Não é possível excluir",
+        description: "Este usuário possui conversas vinculadas. Remova os vínculos primeiro.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setUsuarioToDelete(null);
+      return;
+    }
 
     const { error } = await supabase
       .from("usuarios")
       .delete()
-      .eq("id", id);
+      .eq("id", usuarioToDelete.id);
+
+    setIsDeleting(false);
 
     if (error) {
       toast({
@@ -363,6 +405,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       toast({ title: "Usuário excluído com sucesso!" });
       fetchUsuarios();
     }
+
+    setDeleteDialogOpen(false);
+    setUsuarioToDelete(null);
   };
 
   const toggleSegmento = (segmentoId: string) => {
@@ -555,7 +600,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleDelete(usuario.id)}
+                onClick={() => handleDeleteClick(usuario)}
               >
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>
@@ -563,6 +608,14 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           </div>
         ))}
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={usuarioToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

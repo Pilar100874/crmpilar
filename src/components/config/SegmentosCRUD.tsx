@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Segmento {
   id: string;
@@ -19,6 +20,9 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [nome, setNome] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [segmentoToDelete, setSegmentoToDelete] = useState<Segmento | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -158,13 +162,51 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
     setEditingId(segmento.id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este segmento?")) return;
+  const handleDeleteClick = (segmento: Segmento) => {
+    setSegmentoToDelete(segmento);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!segmentoToDelete) return;
+
+    setIsDeleting(true);
+
+    // Verificar vínculos com usuario_segmentos
+    const { data: usuarioSegmentos, error: checkError } = await supabase
+      .from("usuario_segmentos")
+      .select("id")
+      .eq("segmento_id", segmentoToDelete.id)
+      .limit(1);
+
+    if (checkError) {
+      toast({
+        title: "Erro ao verificar vínculos",
+        description: checkError.message,
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      return;
+    }
+
+    if (usuarioSegmentos && usuarioSegmentos.length > 0) {
+      toast({
+        title: "Não é possível excluir",
+        description: "Este segmento possui usuários vinculados. Remova os vínculos primeiro.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setSegmentoToDelete(null);
+      return;
+    }
 
     const { error } = await supabase
       .from("segmentos")
       .delete()
-      .eq("id", id);
+      .eq("id", segmentoToDelete.id);
+
+    setIsDeleting(false);
 
     if (error) {
       toast({
@@ -176,6 +218,9 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
       toast({ title: "Segmento excluído com sucesso!" });
       fetchSegmentos();
     }
+
+    setDeleteDialogOpen(false);
+    setSegmentoToDelete(null);
   };
 
   return (
@@ -226,7 +271,7 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleDelete(segmento.id)}
+                onClick={() => handleDeleteClick(segmento)}
               >
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>
@@ -234,6 +279,14 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
           </div>
         ))}
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={segmentoToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

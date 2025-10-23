@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface MenuPermissions {
   view: boolean;
@@ -31,6 +32,9 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   const [nome, setNome] = useState("");
   const [menusPermitidos, setMenusPermitidos] = useState<Record<string, MenuPermissions>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [grupoToDelete, setGrupoToDelete] = useState<GrupoAcesso | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -174,13 +178,51 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     setEditingId(grupo.id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este grupo?")) return;
+  const handleDeleteClick = (grupo: GrupoAcesso) => {
+    setGrupoToDelete(grupo);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!grupoToDelete) return;
+
+    setIsDeleting(true);
+
+    // Verificar vínculos com usuarios
+    const { data: usuarios, error: checkError } = await supabase
+      .from("usuarios")
+      .select("id")
+      .eq("grupo_acesso_id", grupoToDelete.id)
+      .limit(1);
+
+    if (checkError) {
+      toast({
+        title: "Erro ao verificar vínculos",
+        description: checkError.message,
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      return;
+    }
+
+    if (usuarios && usuarios.length > 0) {
+      toast({
+        title: "Não é possível excluir",
+        description: "Este grupo possui usuários vinculados. Remova os vínculos primeiro.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setGrupoToDelete(null);
+      return;
+    }
 
     const { error } = await supabase
       .from("grupos_acesso")
       .delete()
-      .eq("id", id);
+      .eq("id", grupoToDelete.id);
+
+    setIsDeleting(false);
 
     if (error) {
       toast({
@@ -192,6 +234,9 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
       toast({ title: "Grupo excluído com sucesso!" });
       fetchGrupos();
     }
+
+    setDeleteDialogOpen(false);
+    setGrupoToDelete(null);
   };
 
   const togglePermission = (menu: string, permission: keyof MenuPermissions) => {
@@ -386,7 +431,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(grupo.id)}
+                      onClick={() => handleDeleteClick(grupo)}
                       title="Excluir"
                     >
                       <Trash2 className="w-4 h-4 text-destructive" />
@@ -398,6 +443,14 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           )}
         </div>
       </Card>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={grupoToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

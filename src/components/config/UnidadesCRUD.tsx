@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Unidade {
   id: string;
@@ -19,6 +20,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [nome, setNome] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [unidadeToDelete, setUnidadeToDelete] = useState<Unidade | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -158,13 +162,51 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     setEditingId(unidade.id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta unidade?")) return;
+  const handleDeleteClick = (unidade: Unidade) => {
+    setUnidadeToDelete(unidade);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!unidadeToDelete) return;
+
+    setIsDeleting(true);
+
+    // Verificar vínculos com usuarios
+    const { data: usuarios, error: checkError } = await supabase
+      .from("usuarios")
+      .select("id")
+      .eq("unidade_id", unidadeToDelete.id)
+      .limit(1);
+
+    if (checkError) {
+      toast({
+        title: "Erro ao verificar vínculos",
+        description: checkError.message,
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      return;
+    }
+
+    if (usuarios && usuarios.length > 0) {
+      toast({
+        title: "Não é possível excluir",
+        description: "Esta unidade possui usuários vinculados. Remova os vínculos primeiro.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setUnidadeToDelete(null);
+      return;
+    }
 
     const { error } = await supabase
       .from("unidades")
       .delete()
-      .eq("id", id);
+      .eq("id", unidadeToDelete.id);
+
+    setIsDeleting(false);
 
     if (error) {
       toast({
@@ -176,6 +218,9 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       toast({ title: "Unidade excluída com sucesso!" });
       fetchUnidades();
     }
+
+    setDeleteDialogOpen(false);
+    setUnidadeToDelete(null);
   };
 
   return (
@@ -226,7 +271,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleDelete(unidade.id)}
+                onClick={() => handleDeleteClick(unidade)}
               >
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>
@@ -234,6 +279,14 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
           </div>
         ))}
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={unidadeToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

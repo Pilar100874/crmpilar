@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Cliente {
   id: string;
@@ -23,6 +24,9 @@ export const ClientesCRUD = ({ estabelecimentoId }: ClientesCRUDProps = {}) => {
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -144,13 +148,51 @@ export const ClientesCRUD = ({ estabelecimentoId }: ClientesCRUDProps = {}) => {
     setEditingId(cliente.id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+  const handleDeleteClick = (cliente: Cliente) => {
+    setClienteToDelete(cliente);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!clienteToDelete) return;
+
+    setIsDeleting(true);
+
+    // Verificar vínculos com conversations
+    const { data: conversations, error: checkError } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("customer_id", clienteToDelete.id)
+      .limit(1);
+
+    if (checkError) {
+      toast({
+        title: "Erro ao verificar vínculos",
+        description: checkError.message,
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      return;
+    }
+
+    if (conversations && conversations.length > 0) {
+      toast({
+        title: "Não é possível excluir",
+        description: "Este cliente possui conversas vinculadas. Exclua as conversas primeiro.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setClienteToDelete(null);
+      return;
+    }
 
     const { error } = await supabase
       .from("customers")
       .delete()
-      .eq("id", id);
+      .eq("id", clienteToDelete.id);
+
+    setIsDeleting(false);
 
     if (error) {
       toast({
@@ -162,6 +204,9 @@ export const ClientesCRUD = ({ estabelecimentoId }: ClientesCRUDProps = {}) => {
       toast({ title: "Cliente excluído com sucesso!" });
       fetchClientes();
     }
+
+    setDeleteDialogOpen(false);
+    setClienteToDelete(null);
   };
 
   return (
@@ -240,7 +285,7 @@ export const ClientesCRUD = ({ estabelecimentoId }: ClientesCRUDProps = {}) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleDelete(cliente.id)}
+                onClick={() => handleDeleteClick(cliente)}
               >
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>
@@ -248,6 +293,14 @@ export const ClientesCRUD = ({ estabelecimentoId }: ClientesCRUDProps = {}) => {
           </div>
         ))}
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={clienteToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { EstabelecimentoDetalhes } from "./EstabelecimentoDetalhes";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Estabelecimento {
   id: string;
@@ -19,6 +20,9 @@ export function EstabelecimentosCRUD() {
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [estabelecimentoToDelete, setEstabelecimentoToDelete] = useState<Estabelecimento | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     cnpj: "",
     nome: "",
@@ -125,24 +129,55 @@ export function EstabelecimentosCRUD() {
     setEditingId(estabelecimento.id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este estabelecimento?")) {
+  const handleDeleteClick = (estabelecimento: Estabelecimento) => {
+    setEstabelecimentoToDelete(estabelecimento);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!estabelecimentoToDelete) return;
+
+    setIsDeleting(true);
+
+    // Verificar vínculos com usuarios
+    const { data: usuarios, error: checkError } = await supabase
+      .from("usuarios")
+      .select("id")
+      .eq("estabelecimento_id", estabelecimentoToDelete.id)
+      .limit(1);
+
+    if (checkError) {
+      toast.error("Erro ao verificar vínculos");
+      console.error(checkError);
+      setIsDeleting(false);
+      return;
+    }
+
+    if (usuarios && usuarios.length > 0) {
+      toast.error("Este estabelecimento possui usuários vinculados. Remova os vínculos primeiro.");
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setEstabelecimentoToDelete(null);
       return;
     }
 
     const { error } = await supabase
       .from("estabelecimentos")
       .delete()
-      .eq("id", id);
+      .eq("id", estabelecimentoToDelete.id);
+
+    setIsDeleting(false);
 
     if (error) {
       toast.error("Erro ao excluir estabelecimento");
       console.error(error);
-      return;
+    } else {
+      toast.success("Estabelecimento excluído com sucesso!");
+      fetchEstabelecimentos();
     }
 
-    toast.success("Estabelecimento excluído com sucesso!");
-    fetchEstabelecimentos();
+    setDeleteDialogOpen(false);
+    setEstabelecimentoToDelete(null);
   };
 
   return (
@@ -248,7 +283,7 @@ export function EstabelecimentosCRUD() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(estabelecimento.id)}
+                    onClick={() => handleDeleteClick(estabelecimento)}
                     title="Excluir"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -268,6 +303,14 @@ export function EstabelecimentosCRUD() {
           ))}
         </div>
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={estabelecimentoToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

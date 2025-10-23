@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Administrador {
   id: string;
@@ -20,6 +21,9 @@ export const AdministradoresCRUD = () => {
   const [cpf, setCpf] = useState("");
   const [senha, setSenha] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState<Administrador | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const { toast } = useToast();
 
@@ -121,13 +125,22 @@ export const AdministradoresCRUD = () => {
     setEditingId(admin.id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este administrador?")) return;
+  const handleDeleteClick = (admin: Administrador) => {
+    setAdminToDelete(admin);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!adminToDelete) return;
+
+    setIsDeleting(true);
 
     const { error } = await supabase
       .from("administradores")
       .delete()
-      .eq("id", id);
+      .eq("id", adminToDelete.id);
+
+    setIsDeleting(false);
 
     if (error) {
       toast({
@@ -139,6 +152,9 @@ export const AdministradoresCRUD = () => {
       toast({ title: "Administrador excluído com sucesso!" });
       fetchAdministradores();
     }
+
+    setDeleteDialogOpen(false);
+    setAdminToDelete(null);
   };
 
   const formatCPF = (value: string) => {
@@ -243,7 +259,7 @@ export const AdministradoresCRUD = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(admin.id)}
+                    onClick={() => handleDeleteClick(admin)}
                     title="Excluir"
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
@@ -254,6 +270,14 @@ export const AdministradoresCRUD = () => {
           </div>
         )}
       </Card>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={adminToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
