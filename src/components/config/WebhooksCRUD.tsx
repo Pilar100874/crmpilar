@@ -15,6 +15,7 @@ export interface WebhookVariable {
   id: string;
   name: string;
   description: string;
+  type: string;
 }
 
 export interface WebhookConfig {
@@ -70,6 +71,7 @@ export function WebhooksCRUD() {
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
   const [newVariableName, setNewVariableName] = useState("");
   const [newVariableDescription, setNewVariableDescription] = useState("");
+  const [newVariableType, setNewVariableType] = useState("json");
 
   useEffect(() => {
     const savedWebhooks = localStorage.getItem("webhooks");
@@ -235,6 +237,7 @@ export function WebhooksCRUD() {
       id: Date.now().toString(),
       name: newVariableName,
       description: newVariableDescription,
+      type: newVariableType,
     };
 
     setFormData(prev => ({
@@ -243,6 +246,7 @@ export function WebhooksCRUD() {
     }));
     setNewVariableName("");
     setNewVariableDescription("");
+    setNewVariableType("json");
     toast.success("Variável adicionada!");
   };
 
@@ -469,6 +473,19 @@ export function WebhooksCRUD() {
                     onChange={(e) => setNewVariableDescription(e.target.value)}
                     placeholder="Descrição da variável"
                   />
+                  <Select value={newVariableType} onValueChange={setNewVariableType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo/Formato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="json">JSON</SelectItem>
+                      <SelectItem value="body">Body</SelectItem>
+                      <SelectItem value="query">Query Params</SelectItem>
+                      <SelectItem value="header">Headers</SelectItem>
+                      <SelectItem value="path">Path Params</SelectItem>
+                      <SelectItem value="form-data">Form Data</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button type="button" onClick={handleAddVariable} size="sm" className="w-full">
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar Variável
@@ -481,9 +498,14 @@ export function WebhooksCRUD() {
                       {formData.variables.map((variable) => (
                         <div key={variable.id} className="flex items-start justify-between p-2 border rounded">
                           <div className="flex-1">
-                            <div className="font-medium text-sm">{variable.name}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{variable.name}</span>
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                {variable.type.toUpperCase()}
+                              </span>
+                            </div>
                             {variable.description && (
-                              <div className="text-xs text-muted-foreground">{variable.description}</div>
+                              <div className="text-xs text-muted-foreground mt-1">{variable.description}</div>
                             )}
                           </div>
                           <Button
@@ -557,10 +579,10 @@ export function WebhooksCRUD() {
                           {webhook.variables.map((variable) => (
                             <span 
                               key={variable.id} 
-                              className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded font-mono"
-                              title={variable.description}
+                              className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded"
+                              title={`${variable.description} (${variable.type.toUpperCase()})`}
                             >
-                              {variable.name}
+                              {variable.name} <span className="font-mono text-[10px] opacity-70">({variable.type})</span>
                             </span>
                           ))}
                         </div>
