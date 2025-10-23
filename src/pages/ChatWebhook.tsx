@@ -341,6 +341,12 @@ export default function ChatWebhook() {
     toast.success("Mensagem enviada para o chat principal!");
   };
 
+  const copyMessageToAI = (content: string) => {
+    setAiInput(content);
+    setShowAIChat(true);
+    toast.success("Mensagem copiada para o chat da IA!");
+  };
+
   const filteredWebhooks = selectedType
     ? webhooks.filter((w) => w.type === selectedType && w.usageLocations?.includes("teste"))
     : [];
@@ -402,7 +408,14 @@ export default function ChatWebhook() {
               ) : (
                 <div className="space-y-4">
                   {messages.map((message) => (
-                    <ChatMessage key={message.id} message={message} />
+                    <div 
+                      key={message.id}
+                      onClick={() => copyMessageToAI(message.content)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      title="Clique para copiar ao chat da IA"
+                    >
+                      <ChatMessage message={message} />
+                    </div>
                   ))}
                   {isLoading && (
                     <div className="flex gap-3 animate-fade-in">
