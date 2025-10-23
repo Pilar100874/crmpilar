@@ -98,17 +98,22 @@ export default function Login() {
     setIsLoading(true);
 
     const cleanCpf = adminCpf.replace(/\D/g, "");
+    console.log("CPF limpo:", cleanCpf);
 
     // Buscar administrador por CPF
     const { data: admin, error } = await supabase
       .from("administradores")
       .select("*")
       .eq("cpf", cleanCpf)
-      .single();
+      .maybeSingle();
+
+    console.log("Admin encontrado:", admin);
+    console.log("Erro na busca:", error);
 
     if (error || !admin) {
       setIsLoading(false);
       toast.error("CPF ou senha inválidos");
+      console.error("Erro no login admin:", error);
       return;
     }
 
