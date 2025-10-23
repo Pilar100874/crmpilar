@@ -1080,6 +1080,88 @@ export type Database = {
           },
         ]
       }
+      webhook_chat_messages: {
+        Row: {
+          content: string
+          content_type: string
+          created_at: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          role: string
+          session_id: string
+          variables: Json | null
+        }
+        Insert: {
+          content: string
+          content_type?: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          role: string
+          session_id: string
+          variables?: Json | null
+        }
+        Update: {
+          content?: string
+          content_type?: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          role?: string
+          session_id?: string
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_chat_sessions: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          session_type: string
+          updated_at: string
+          user_id: string
+          webhook_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          session_type: string
+          updated_at?: string
+          user_id: string
+          webhook_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          session_type?: string
+          updated_at?: string
+          user_id?: string
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_chat_sessions_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_types: {
         Row: {
           created_at: string | null

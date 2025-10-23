@@ -61,6 +61,7 @@ export default function ChatWebhook() {
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showVariableForm, setShowVariableForm] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
   // AI Chat states
   const [showAIChat, setShowAIChat] = useState(false);
@@ -70,11 +71,183 @@ export default function ChatWebhook() {
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [isAILoading, setIsAILoading] = useState(false);
   const aiScrollRef = useRef<HTMLDivElement>(null);
+  const [currentAISessionId, setCurrentAISessionId] = useState<string | null>(null);
 
   // Carrega webhooks e tipos do estabelecimento
   useEffect(() => {
     loadWebhooksAndTypes();
   }, []);
+
+  // Criar ou carregar sessão quando webhook mudar
+  useEffect(() => {
+    if (selectedWebhook) {
+      loadOrCreateSession('webhook', selectedWebhook);
+    }
+  }, [selectedWebhook]);
+
+  // Criar ou carregar sessão AI quando webhook AI mudar
+  useEffect(() => {
+    if (selectedAIWebhook) {
+      loadOrCreateSession('ai', selectedAIWebhook);
+    }
+  }, [selectedAIWebhook]);
+
+  // Realtime subscription para mensagens webhook
+  useEffect(() => {
+    if (!currentSessionId) return;
+
+    const channel = supabase
+      .channel(`webhook_chat_${currentSessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'webhook_chat_messages',
+          filter: `session_id=eq.${currentSessionId}`
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          const message: Message = {
+            id: newMsg.id,
+            role: newMsg.role,
+            content: newMsg.content,
+            contentType: newMsg.content_type,
+            timestamp: new Date(newMsg.created_at),
+            fileUrl: newMsg.file_url,
+            fileName: newMsg.file_name,
+            variables: newMsg.variables
+          };
+          setMessages(prev => {
+            // Evitar duplicatas
+            if (prev.some(m => m.id === message.id)) return prev;
+            return [...prev, message];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentSessionId]);
+
+  // Realtime subscription para mensagens AI
+  useEffect(() => {
+    if (!currentAISessionId) return;
+
+    const channel = supabase
+      .channel(`ai_chat_${currentAISessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'webhook_chat_messages',
+          filter: `session_id=eq.${currentAISessionId}`
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          setAiMessages(prev => {
+            // Evitar duplicatas
+            if (prev.some(m => m.content === newMsg.content)) return prev;
+            return [...prev, { role: newMsg.role as "user" | "assistant", content: newMsg.content }];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentAISessionId]);
+
+  const loadOrCreateSession = async (type: 'webhook' | 'ai', webhookId: string) => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
+    // Buscar sessão existente
+    const { data: existingSession } = await supabase
+      .from('webhook_chat_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('webhook_id', webhookId)
+      .eq('session_type', type)
+      .maybeSingle();
+
+    let sessionId: string;
+
+    if (existingSession) {
+      sessionId = existingSession.id;
+    } else {
+      // Criar nova sessão
+      const { data: newSession, error } = await supabase
+        .from('webhook_chat_sessions')
+        .insert({
+          user_id: user.id,
+          estabelecimento_id: estabId,
+          webhook_id: webhookId,
+          session_type: type
+        })
+        .select()
+        .single();
+
+      if (error || !newSession) {
+        console.error("Erro ao criar sessão:", error);
+        toast.error("Erro ao criar sessão de chat");
+        return;
+      }
+      sessionId = newSession.id;
+    }
+
+    // Atualizar estado da sessão
+    if (type === 'webhook') {
+      setCurrentSessionId(sessionId);
+      loadMessages(sessionId, 'webhook');
+    } else {
+      setCurrentAISessionId(sessionId);
+      loadMessages(sessionId, 'ai');
+    }
+  };
+
+  const loadMessages = async (sessionId: string, type: 'webhook' | 'ai') => {
+    const { data, error } = await supabase
+      .from('webhook_chat_messages')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error("Erro ao carregar mensagens:", error);
+      return;
+    }
+
+    if (type === 'webhook') {
+      const msgs: Message[] = (data || []).map((m: any) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        contentType: m.content_type,
+        timestamp: new Date(m.created_at),
+        fileUrl: m.file_url,
+        fileName: m.file_name,
+        variables: m.variables
+      }));
+      setMessages(msgs);
+    } else {
+      const msgs = (data || []).map((m: any) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content
+      }));
+      setAiMessages(msgs);
+    }
+  };
 
   const loadWebhooksAndTypes = async () => {
     const estabId = await getEstabelecimentoId();
@@ -125,19 +298,10 @@ export default function ChatWebhook() {
 
     setWebhooks(parsedWebhooks);
     
-    console.log("Total webhooks loaded:", parsedWebhooks.length);
-    console.log("All webhooks:", parsedWebhooks.map((w: WebhookConfig) => ({
-      name: w.name,
-      usageLocations: w.usageLocations
-    })));
-    
     // Filter AI webhooks (ia-chat)
     const aiWebhooksList = parsedWebhooks.filter((w: WebhookConfig) => 
       w.usageLocations?.includes("ia-chat")
     );
-    
-    console.log("AI webhooks found:", aiWebhooksList.length);
-    console.log("AI webhooks:", aiWebhooksList.map((w: WebhookConfig) => w.name));
     
     setAiWebhooks(aiWebhooksList);
     if (aiWebhooksList.length > 0) {
@@ -194,7 +358,7 @@ export default function ChatWebhook() {
     fileName?: string,
     variables?: Record<string, string>
   ) => {
-    if (!selectedWebhook) {
+    if (!selectedWebhook || !currentSessionId) {
       toast.error("Selecione um webhook antes de enviar mensagens");
       return;
     }
@@ -216,19 +380,20 @@ export default function ChatWebhook() {
       }
     }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content,
-      contentType,
-      timestamp: new Date(),
-      fileUrl,
-      fileName,
-      variables: webhook.hasVariables ? variableValues : variables,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
+
+    // Salvar mensagem do usuário no banco
+    const { error: userMsgError } = await supabase
+      .from('webhook_chat_messages')
+      .insert({
+        session_id: currentSessionId,
+        role: 'user',
+        content,
+        content_type: contentType,
+        file_url: fileUrl,
+        file_name: fileName,
+        variables: webhook.hasVariables ? variableValues : variables
+      });
 
     try {
       // Preparar payload baseado nas variáveis
@@ -282,15 +447,17 @@ export default function ChatWebhook() {
         throw new Error(`Webhook retornou status ${response.status}`);
       }
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: typeof responseData === "string" ? responseData : JSON.stringify(responseData, null, 2),
-        contentType: "text",
-        timestamp: new Date(),
-      };
+      const assistantContent = typeof responseData === "string" ? responseData : JSON.stringify(responseData, null, 2);
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Salvar resposta do assistente no banco
+      await supabase
+        .from('webhook_chat_messages')
+        .insert({
+          session_id: currentSessionId,
+          role: 'assistant',
+          content: assistantContent,
+          content_type: 'text'
+        });
       
       if (!responseData || (typeof responseData === "string" && !responseData.trim())) {
         toast.warning("Webhook retornou resposta vazia");
@@ -306,7 +473,7 @@ export default function ChatWebhook() {
   };
 
   const sendAIMessage = async () => {
-    if (!aiInput.trim() || !selectedAIWebhook) {
+    if (!aiInput.trim() || !selectedAIWebhook || !currentAISessionId) {
       toast.error("Digite uma mensagem e selecione um webhook de IA");
       return;
     }
@@ -317,10 +484,19 @@ export default function ChatWebhook() {
       return;
     }
 
-    const userMessage = { role: "user" as const, content: aiInput };
-    setAiMessages((prev) => [...prev, userMessage]);
+    const messageContent = aiInput;
     setAiInput("");
     setIsAILoading(true);
+
+    // Salvar mensagem do usuário no banco
+    await supabase
+      .from('webhook_chat_messages')
+      .insert({
+        session_id: currentAISessionId,
+        role: 'user',
+        content: messageContent,
+        content_type: 'text'
+      });
 
     try {
       const response = await fetch(webhook.url, {
@@ -331,7 +507,7 @@ export default function ChatWebhook() {
         body: JSON.stringify({
           timestamp: new Date().toISOString(),
           contentType: "text",
-          content: aiInput,
+          content: messageContent,
         }),
       });
 
@@ -348,12 +524,18 @@ export default function ChatWebhook() {
         throw new Error(`Webhook retornou status ${response.status}`);
       }
 
-      const assistantMessage = {
-        role: "assistant" as const,
-        content: typeof responseData === "string" ? responseData : JSON.stringify(responseData, null, 2),
-      };
+      const assistantContent = typeof responseData === "string" ? responseData : JSON.stringify(responseData, null, 2);
 
-      setAiMessages((prev) => [...prev, assistantMessage]);
+      // Salvar resposta do assistente no banco
+      await supabase
+        .from('webhook_chat_messages')
+        .insert({
+          session_id: currentAISessionId,
+          role: 'assistant',
+          content: assistantContent,
+          content_type: 'text'
+        });
+
       toast.success("Resposta recebida!");
     } catch (error: any) {
       toast.error(`Erro ao enviar mensagem: ${error.message}`);
