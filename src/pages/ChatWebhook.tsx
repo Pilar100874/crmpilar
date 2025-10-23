@@ -474,8 +474,19 @@ export default function ChatWebhook() {
             {/* Input Area */}
             <div className="border-t border-border bg-card/80 backdrop-blur-sm p-4">
               <div className="flex items-center gap-3 mb-3">
-                {/* AI Webhook Selector */}
-                {aiWebhooks.length > 0 && (
+                {/* AI Button */}
+                <Button
+                  variant={showAIChat ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowAIChat(!showAIChat)}
+                  className="gap-2 px-4"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
+                </Button>
+                
+                {/* AI Webhook Selector - Only shown when AI chat is open */}
+                {showAIChat && aiWebhooks.length > 0 && (
                   <select
                     value={selectedAIWebhook || ""}
                     onChange={(e) => setSelectedAIWebhook(e.target.value)}
@@ -488,17 +499,6 @@ export default function ChatWebhook() {
                     ))}
                   </select>
                 )}
-                
-                {/* AI Button */}
-                <Button
-                  variant={showAIChat ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowAIChat(!showAIChat)}
-                  className="gap-2 px-4"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
-                </Button>
               </div>
 
               {/* AI Chat Box */}
