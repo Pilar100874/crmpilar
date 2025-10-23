@@ -154,30 +154,41 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     setWebhooks(parsedWebhooks);
   };
 
-  const loadTypesAndLocations = () => {
-    const typesKey = estabelecimentoId ? `webhookTypes_${estabelecimentoId}` : "webhookTypes";
-    const locationsKey = estabelecimentoId ? `usageLocations_${estabelecimentoId}` : "usageLocations";
-    
-    const savedTypes = localStorage.getItem(typesKey);
-    const savedLocations = localStorage.getItem(locationsKey);
-    
-    if (savedTypes) {
-      setWebhookTypes(JSON.parse(savedTypes));
+  const loadTypesAndLocations = async () => {
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) return;
+
+    // Load webhook types
+    const { data: types, error: typesError } = await supabase
+      .from('webhook_types')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .order('name');
+
+    if (typesError) {
+      console.error("Erro ao carregar tipos:", typesError);
+    } else {
+      setWebhookTypes((types || []).map(t => ({ id: t.id, name: t.name })));
     }
-    if (savedLocations) {
-      setUsageLocations(JSON.parse(savedLocations));
+
+    // Load usage locations
+    const { data: locations, error: locationsError } = await supabase
+      .from('webhook_usage_locations')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .order('name');
+
+    if (locationsError) {
+      console.error("Erro ao carregar locais:", locationsError);
+    } else {
+      setUsageLocations((locations || []).map(l => ({ id: l.id, name: l.name })));
     }
   };
 
   useEffect(() => {
-    const typesKey = estabelecimentoId ? `webhookTypes_${estabelecimentoId}` : "webhookTypes";
-    localStorage.setItem(typesKey, JSON.stringify(webhookTypes));
-  }, [webhookTypes, estabelecimentoId]);
-
-  useEffect(() => {
-    const locationsKey = estabelecimentoId ? `usageLocations_${estabelecimentoId}` : "usageLocations";
-    localStorage.setItem(locationsKey, JSON.stringify(usageLocations));
-  }, [usageLocations, estabelecimentoId]);
+    loadWebhooks();
+    loadTypesAndLocations();
+  }, [estabelecimentoId]);
 
   const findBotsUsingWebhook = async (webhookId: string) => {
     try {
@@ -320,56 +331,98 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     }
   };
 
-  const handleAddType = () => {
+  const handleAddType = async () => {
     if (!newTypeName.trim()) {
       toast.error("Digite um nome para o tipo");
       return;
     }
 
-    const newType: WebhookType = {
-      id: newTypeName.toLowerCase().replace(/\s+/g, "-"),
-      name: newTypeName,
-    };
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) {
+      toast.error("Estabelecimento não identificado");
+      return;
+    }
 
-    setWebhookTypes([...webhookTypes, newType]);
+    const { error } = await supabase
+      .from('webhook_types')
+      .insert([{ name: newTypeName, estabelecimento_id: estabId }]);
+
+    if (error) {
+      toast.error("Erro ao adicionar tipo");
+      return;
+    }
+
     setNewTypeName("");
     toast.success("Tipo adicionado!");
+    await loadTypesAndLocations();
   };
 
-  const handleDeleteType = (id: string) => {
+  const handleDeleteType = async (id: string) => {
     const isInUse = webhooks.some((w) => w.type === id);
     if (isInUse) {
       toast.error("Este tipo está em uso e não pode ser removido");
       return;
     }
-    setWebhookTypes(webhookTypes.filter((t) => t.id !== id));
+
+    const { error } = await supabase
+      .from('webhook_types')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error("Erro ao remover tipo");
+      return;
+    }
+
     toast.success("Tipo removido!");
+    await loadTypesAndLocations();
   };
 
-  const handleAddLocation = () => {
+  const handleAddLocation = async () => {
     if (!newLocationName.trim()) {
       toast.error("Digite um nome para o local de uso");
       return;
     }
 
-    const newLocation: UsageLocation = {
-      id: newLocationName.toLowerCase().replace(/\s+/g, "-"),
-      name: newLocationName,
-    };
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) {
+      toast.error("Estabelecimento não identificado");
+      return;
+    }
 
-    setUsageLocations([...usageLocations, newLocation]);
+    const { error } = await supabase
+      .from('webhook_usage_locations')
+      .insert([{ name: newLocationName, estabelecimento_id: estabId }]);
+
+    if (error) {
+      toast.error("Erro ao adicionar local de uso");
+      return;
+    }
+
     setNewLocationName("");
     toast.success("Local de uso adicionado!");
+    await loadTypesAndLocations();
   };
 
-  const handleDeleteLocation = (id: string) => {
+  const handleDeleteLocation = async (id: string) => {
     const isInUse = webhooks.some((w) => w.usageLocations?.includes(id));
     if (isInUse) {
       toast.error("Este local está em uso e não pode ser removido");
       return;
     }
-    setUsageLocations(usageLocations.filter((l) => l.id !== id));
+
+    const { error } = await supabase
+      .from('webhook_usage_locations')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error("Erro ao remover local de uso");
+      return;
+    }
+
     toast.success("Local de uso removido!");
+    await loadTypesAndLocations();
   };
 
   const resetForm = () => {
@@ -563,30 +616,46 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     toast.success("Variável removida!");
   };
 
-  const handleUpdateType = (typeId: string, newName: string) => {
+  const handleUpdateType = async (typeId: string, newName: string) => {
     if (!newName.trim()) {
       toast.error("Digite um nome válido");
       return;
     }
 
-    setWebhookTypes(webhookTypes.map(t => 
-      t.id === typeId ? { ...t, name: newName } : t
-    ));
+    const { error } = await supabase
+      .from('webhook_types')
+      .update({ name: newName })
+      .eq('id', typeId);
+
+    if (error) {
+      toast.error("Erro ao atualizar tipo");
+      return;
+    }
+
     setEditingTypeId(null);
     toast.success("Tipo atualizado!");
+    await loadTypesAndLocations();
   };
 
-  const handleUpdateLocation = (locationId: string, newName: string) => {
+  const handleUpdateLocation = async (locationId: string, newName: string) => {
     if (!newName.trim()) {
       toast.error("Digite um nome válido");
       return;
     }
 
-    setUsageLocations(usageLocations.map(l => 
-      l.id === locationId ? { ...l, name: newName } : l
-    ));
+    const { error } = await supabase
+      .from('webhook_usage_locations')
+      .update({ name: newName })
+      .eq('id', locationId);
+
+    if (error) {
+      toast.error("Erro ao atualizar local");
+      return;
+    }
+
     setEditingLocationId(null);
-    toast.success("Local atualizado!");
+    toast.success("Local de uso atualizado!");
+    await loadTypesAndLocations();
   };
 
   const filteredWebhooks = webhooks.filter((webhook) => {
