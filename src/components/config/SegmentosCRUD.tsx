@@ -64,7 +64,8 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome.trim()) {
+    const trimmedNome = nome.trim();
+    if (!trimmedNome) {
       toast({
         title: "Nome obrigatório",
         description: "Por favor, preencha o nome do segmento",
@@ -73,10 +74,24 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
       return;
     }
 
+    // Check for duplicates (case-insensitive)
+    const existingSegmento = segmentos.find(s => 
+      s.nome.toLowerCase() === trimmedNome.toLowerCase() && s.id !== editingId
+    );
+    
+    if (existingSegmento) {
+      toast({
+        title: "Nome duplicado",
+        description: "Já existe um segmento com este nome",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (editingId) {
       const { error } = await supabase
         .from("segmentos")
-        .update({ nome })
+        .update({ nome: trimmedNome })
         .eq("id", editingId);
 
       if (error) {
@@ -119,7 +134,7 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
 
       const { error } = await supabase
         .from("segmentos")
-        .insert([{ nome, estabelecimento_id: targetEstabelecimentoId }]);
+        .insert([{ nome: trimmedNome, estabelecimento_id: targetEstabelecimentoId }]);
 
       if (error) {
         const errorMsg = error.message.includes('segmentos_nome_unique') 

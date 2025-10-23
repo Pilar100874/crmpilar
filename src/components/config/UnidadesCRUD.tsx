@@ -64,7 +64,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome.trim()) {
+    const trimmedNome = nome.trim();
+    if (!trimmedNome) {
       toast({
         title: "Nome obrigatório",
         description: "Por favor, preencha o nome da unidade",
@@ -73,10 +74,24 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       return;
     }
 
+    // Check for duplicates (case-insensitive)
+    const existingUnidade = unidades.find(u => 
+      u.nome.toLowerCase() === trimmedNome.toLowerCase() && u.id !== editingId
+    );
+    
+    if (existingUnidade) {
+      toast({
+        title: "Nome duplicado",
+        description: "Já existe uma unidade com este nome",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (editingId) {
       const { error } = await supabase
         .from("unidades")
-        .update({ nome })
+        .update({ nome: trimmedNome })
         .eq("id", editingId);
 
       if (error) {
@@ -119,7 +134,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
 
       const { error } = await supabase
         .from("unidades")
-        .insert([{ nome, estabelecimento_id: targetEstabelecimentoId }]);
+        .insert([{ nome: trimmedNome, estabelecimento_id: targetEstabelecimentoId }]);
 
       if (error) {
         const errorMsg = error.message.includes('unidades_nome_unique') 
