@@ -80,6 +80,7 @@ export function WebhooksCRUD() {
   const [newVariableFormat, setNewVariableFormat] = useState("string");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>("all");
 
   const resetVariableForm = () => {
     setNewVariableName("");
@@ -429,20 +430,49 @@ export function WebhooksCRUD() {
     }));
   };
 
+  // Filtrar webhooks por local de uso
+  const filteredWebhooks = selectedLocationFilter === "all" 
+    ? webhooks 
+    : webhooks.filter(webhook => 
+        webhook.usageLocations?.includes(selectedLocationFilter)
+      );
+
   return (
     <div className="space-y-6">
-      {/* Header com botão de criar */}
-      <div className="flex items-center justify-between">
-        <div>
+      {/* Header com botão de criar e filtro */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
           <h2 className="text-2xl font-bold">Webhooks</h2>
           <p className="text-sm text-muted-foreground">
-            {webhooks.length} webhook{webhooks.length !== 1 ? 's' : ''} configurado{webhooks.length !== 1 ? 's' : ''}
+            {filteredWebhooks.length} webhook{filteredWebhooks.length !== 1 ? 's' : ''} 
+            {selectedLocationFilter !== "all" && " filtrado(s)"}
           </p>
         </div>
-        <Button onClick={handleOpenForm} size="lg" className="gap-2">
-          <Plus className="h-5 w-5" />
-          Novo Webhook
-        </Button>
+        
+        <div className="flex items-center gap-3">
+          {/* Filtro de Local de Uso */}
+          <div className="flex items-center gap-2">
+            <Label className="text-sm whitespace-nowrap">Filtrar por:</Label>
+            <Select value={selectedLocationFilter} onValueChange={setSelectedLocationFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Todos os locais" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os locais</SelectItem>
+                {usageLocations.map((location) => (
+                  <SelectItem key={location.id} value={location.id}>
+                    {location.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Button onClick={handleOpenForm} size="lg" className="gap-2">
+            <Plus className="h-5 w-5" />
+            Novo Webhook
+          </Button>
+        </div>
       </div>
 
       {/* Dialog do Formulário */}
@@ -962,7 +992,7 @@ export function WebhooksCRUD() {
       <Card className="p-6">
         <ScrollArea className="h-[calc(100vh-250px)]">
             <div className="space-y-3">
-              {webhooks.map((webhook) => (
+              {filteredWebhooks.map((webhook) => (
                 <Card key={webhook.id} className="p-4 hover:bg-secondary/50 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-2 flex-1">
@@ -1025,6 +1055,25 @@ export function WebhooksCRUD() {
                   </div>
                 </Card>
               ))}
+              {filteredWebhooks.length === 0 && webhooks.length > 0 && (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
+                    <Webhook className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">Nenhum webhook encontrado</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Não há webhooks cadastrados para o local "{usageLocations.find(l => l.id === selectedLocationFilter)?.name}"
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setSelectedLocationFilter("all")}
+                    className="mt-4"
+                  >
+                    Limpar filtro
+                  </Button>
+                </div>
+              )}
               {webhooks.length === 0 && (
                 <div className="text-center py-12">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
