@@ -14,11 +14,10 @@ import { toast } from "sonner";
 export interface WebhookVariable {
   id: string;
   name: string;
-  description: string;
   type: string;
-  key?: string; // Para headers, query params, form-data
-  defaultValue?: string; // Valor padrão
-  required?: boolean; // Se é obrigatório
+  description?: string;
+  defaultValue?: string;
+  required?: boolean;
   format?: string; // Para JSON (string, number, boolean, object, array)
 }
 
@@ -76,10 +75,18 @@ export function WebhooksCRUD() {
   const [newVariableName, setNewVariableName] = useState("");
   const [newVariableDescription, setNewVariableDescription] = useState("");
   const [newVariableType, setNewVariableType] = useState("json");
-  const [newVariableKey, setNewVariableKey] = useState("");
   const [newVariableDefaultValue, setNewVariableDefaultValue] = useState("");
   const [newVariableRequired, setNewVariableRequired] = useState(false);
   const [newVariableFormat, setNewVariableFormat] = useState("string");
+
+  const resetVariableForm = () => {
+    setNewVariableName("");
+    setNewVariableDescription("");
+    setNewVariableType("json");
+    setNewVariableDefaultValue("");
+    setNewVariableRequired(false);
+    setNewVariableFormat("string");
+  };
 
   useEffect(() => {
     const savedWebhooks = localStorage.getItem("webhooks");
@@ -241,18 +248,11 @@ export function WebhooksCRUD() {
       return;
     }
 
-    // Validação específica por tipo
-    if (["header", "query", "form-data"].includes(newVariableType) && !newVariableKey.trim()) {
-      toast.error("Digite uma chave para esta variável");
-      return;
-    }
-
     const newVariable: WebhookVariable = {
       id: Date.now().toString(),
       name: newVariableName,
-      description: newVariableDescription,
       type: newVariableType,
-      key: newVariableKey || undefined,
+      description: newVariableDescription || undefined,
       defaultValue: newVariableDefaultValue || undefined,
       required: newVariableRequired,
       format: newVariableType === "json" ? newVariableFormat : undefined,
@@ -262,13 +262,7 @@ export function WebhooksCRUD() {
       ...prev,
       variables: [...prev.variables, newVariable]
     }));
-    setNewVariableName("");
-    setNewVariableDescription("");
-    setNewVariableType("json");
-    setNewVariableKey("");
-    setNewVariableDefaultValue("");
-    setNewVariableRequired(false);
-    setNewVariableFormat("string");
+    resetVariableForm();
     toast.success("Variável adicionada!");
   };
 
@@ -484,80 +478,99 @@ export function WebhooksCRUD() {
             <div className="space-y-2">
               <Label>Variáveis do Webhook</Label>
               <Card className="p-3 space-y-3">
-                <div className="space-y-2">
-                  <Input
-                    value={newVariableName}
-                    onChange={(e) => setNewVariableName(e.target.value)}
-                    placeholder="Nome da variável (ex: user_id)"
-                  />
-                  <Textarea
-                    value={newVariableDescription}
-                    onChange={(e) => setNewVariableDescription(e.target.value)}
-                    placeholder="Descrição da variável"
-                    rows={2}
-                  />
-                  <Select value={newVariableType} onValueChange={setNewVariableType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tipo/Formato" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="json">JSON</SelectItem>
-                      <SelectItem value="body">Body</SelectItem>
-                      <SelectItem value="query">Query Params</SelectItem>
-                      <SelectItem value="header">Headers</SelectItem>
-                      <SelectItem value="path">Path Params</SelectItem>
-                      <SelectItem value="form-data">Form Data</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {/* Campos específicos para Headers, Query Params e Form Data */}
-                  {["header", "query", "form-data"].includes(newVariableType) && (
-                    <Input
-                      value={newVariableKey}
-                      onChange={(e) => setNewVariableKey(e.target.value)}
-                      placeholder={
-                        newVariableType === "header" ? "Nome do Header (ex: Authorization)" :
-                        newVariableType === "query" ? "Parâmetro (ex: page)" :
-                        "Campo (ex: file)"
-                      }
-                    />
-                  )}
-
-                  {/* Campo específico para Path Params */}
-                  {newVariableType === "path" && (
-                    <Input
-                      value={newVariableKey}
-                      onChange={(e) => setNewVariableKey(e.target.value)}
-                      placeholder="Nome do parâmetro na URL (ex: :id)"
-                    />
-                  )}
-
-                  {/* Formato para JSON */}
-                  {newVariableType === "json" && (
-                    <Select value={newVariableFormat} onValueChange={setNewVariableFormat}>
+                <div className="space-y-3">
+                  {/* Tipo - Primeira opção */}
+                  <div className="space-y-2">
+                    <Label>Tipo de Variável *</Label>
+                    <Select value={newVariableType} onValueChange={(value) => {
+                      setNewVariableType(value);
+                      // Resetar campos ao mudar tipo
+                      setNewVariableFormat("string");
+                      setNewVariableDefaultValue("");
+                    }}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Formato do dado" />
+                        <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="string">String</SelectItem>
-                        <SelectItem value="number">Number</SelectItem>
-                        <SelectItem value="boolean">Boolean</SelectItem>
-                        <SelectItem value="object">Object</SelectItem>
-                        <SelectItem value="array">Array</SelectItem>
+                        <SelectItem value="json">JSON Body</SelectItem>
+                        <SelectItem value="query">Query Params</SelectItem>
+                        <SelectItem value="header">Headers</SelectItem>
+                        <SelectItem value="path">Path Params</SelectItem>
+                        <SelectItem value="form-data">Form Data</SelectItem>
                       </SelectContent>
                     </Select>
-                  )}
+                    <p className="text-xs text-muted-foreground">
+                      {newVariableType === "json" && "Variável no corpo JSON da requisição"}
+                      {newVariableType === "query" && "Parâmetro na URL (?param=valor)"}
+                      {newVariableType === "header" && "Cabeçalho HTTP da requisição"}
+                      {newVariableType === "path" && "Parâmetro na rota (/api/:id)"}
+                      {newVariableType === "form-data" && "Campo de formulário multipart"}
+                    </p>
+                  </div>
 
-                  {/* Valor padrão (para todos exceto Path) */}
-                  {newVariableType !== "path" && (
+                  {/* Nome da variável */}
+                  <div className="space-y-2">
+                    <Label>Nome da Variável *</Label>
                     <Input
-                      value={newVariableDefaultValue}
-                      onChange={(e) => setNewVariableDefaultValue(e.target.value)}
-                      placeholder="Valor padrão (opcional)"
+                      value={newVariableName}
+                      onChange={(e) => setNewVariableName(e.target.value)}
+                      placeholder={
+                        newVariableType === "header" ? "Ex: Authorization" :
+                        newVariableType === "query" ? "Ex: page" :
+                        newVariableType === "path" ? "Ex: id" :
+                        newVariableType === "form-data" ? "Ex: file" :
+                        "Ex: user_id"
+                      }
                     />
+                  </div>
+
+                  {/* Formato - apenas para JSON */}
+                  {newVariableType === "json" && (
+                    <div className="space-y-2">
+                      <Label>Formato do Dado *</Label>
+                      <Select value={newVariableFormat} onValueChange={setNewVariableFormat}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Formato" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="string">String (texto)</SelectItem>
+                          <SelectItem value="number">Number (número)</SelectItem>
+                          <SelectItem value="boolean">Boolean (true/false)</SelectItem>
+                          <SelectItem value="object">Object (objeto)</SelectItem>
+                          <SelectItem value="array">Array (lista)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
 
-                  {/* Checkbox de obrigatório */}
+                  {/* Descrição - opcional para todos */}
+                  <div className="space-y-2">
+                    <Label>Descrição (opcional)</Label>
+                    <Textarea
+                      value={newVariableDescription}
+                      onChange={(e) => setNewVariableDescription(e.target.value)}
+                      placeholder="Descreva o propósito desta variável..."
+                      rows={2}
+                    />
+                  </div>
+
+                  {/* Valor padrão - apenas se não for path */}
+                  {newVariableType !== "path" && (
+                    <div className="space-y-2">
+                      <Label>Valor Padrão (opcional)</Label>
+                      <Input
+                        value={newVariableDefaultValue}
+                        onChange={(e) => setNewVariableDefaultValue(e.target.value)}
+                        placeholder={
+                          newVariableType === "json" && newVariableFormat === "boolean" ? "true ou false" :
+                          newVariableType === "json" && newVariableFormat === "number" ? "Ex: 0" :
+                          "Valor padrão"
+                        }
+                      />
+                    </div>
+                  )}
+
+                  {/* Checkbox obrigatório */}
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="variable-required"
@@ -582,39 +595,36 @@ export function WebhooksCRUD() {
                   <ScrollArea className="h-[150px]">
                     <div className="space-y-2">
                       {formData.variables.map((variable) => (
-                        <div key={variable.id} className="flex items-start justify-between p-2 border rounded">
-                          <div className="flex-1">
+                        <div key={variable.id} className="flex items-start justify-between p-3 border rounded">
+                          <div className="flex-1 space-y-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-sm">{variable.name}</span>
+                              <span className="font-medium">{variable.name}</span>
                               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                {variable.type.toUpperCase()}
+                                {variable.type === "json" ? "JSON" :
+                                 variable.type === "query" ? "Query" :
+                                 variable.type === "header" ? "Header" :
+                                 variable.type === "path" ? "Path" :
+                                 "Form Data"}
                               </span>
                               {variable.required && (
                                 <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
                                   Obrigatório
                                 </span>
                               )}
+                              {variable.format && (
+                                <span className="text-xs bg-secondary px-2 py-0.5 rounded">
+                                  {variable.format}
+                                </span>
+                              )}
                             </div>
                             {variable.description && (
-                              <div className="text-xs text-muted-foreground mt-1">{variable.description}</div>
+                              <p className="text-sm text-muted-foreground">{variable.description}</p>
                             )}
-                            <div className="flex flex-col gap-1 mt-1">
-                              {variable.key && (
-                                <div className="text-xs">
-                                  <span className="font-semibold">Chave:</span> <span className="font-mono">{variable.key}</span>
-                                </div>
-                              )}
-                              {variable.format && (
-                                <div className="text-xs">
-                                  <span className="font-semibold">Formato:</span> {variable.format}
-                                </div>
-                              )}
-                              {variable.defaultValue && (
-                                <div className="text-xs">
-                                  <span className="font-semibold">Padrão:</span> <span className="font-mono">{variable.defaultValue}</span>
-                                </div>
-                              )}
-                            </div>
+                            {variable.defaultValue && (
+                              <p className="text-xs text-muted-foreground">
+                                Padrão: <span className="font-mono">{variable.defaultValue}</span>
+                              </p>
+                            )}
                           </div>
                           <Button
                             type="button"
