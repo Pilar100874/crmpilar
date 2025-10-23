@@ -272,41 +272,46 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
         </div>
       )}
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Send Params</Label>
-          <Switch 
-            checked={config.sendParams || false}
-            onCheckedChange={(checked) => handleConfigChange("sendParams", checked)}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Attach parameters to the end of request URL (example: ?email=elon@tesla.com)
-        </p>
-      </div>
+      {/* Send Params, Customize Headers e Customize Body - apenas se não houver webhook selecionado */}
+      {!selectedWebhook && (
+        <>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Send Params</Label>
+              <Switch 
+                checked={config.sendParams || false}
+                onCheckedChange={(checked) => handleConfigChange("sendParams", checked)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Attach parameters to the end of request URL (example: ?email=elon@tesla.com)
+            </p>
+          </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Customize Headers</Label>
-          <Switch 
-            checked={config.customHeaders || false}
-            onCheckedChange={(checked) => handleConfigChange("customHeaders", checked)}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Add headers to your request (example: Content-Type: application/json)
-        </p>
-      </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Customize Headers</Label>
+              <Switch 
+                checked={config.customHeaders || false}
+                onCheckedChange={(checked) => handleConfigChange("customHeaders", checked)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Add headers to your request (example: Content-Type: application/json)
+            </p>
+          </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Customize Body</Label>
-          <Switch 
-            checked={config.customBody || false}
-            onCheckedChange={(checked) => handleConfigChange("customBody", checked)}
-          />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Customize Body</Label>
+              <Switch 
+                checked={config.customBody || false}
+                onCheckedChange={(checked) => handleConfigChange("customBody", checked)}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
