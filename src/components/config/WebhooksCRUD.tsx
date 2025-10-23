@@ -11,6 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Pencil, Trash2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
+export interface WebhookVariable {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface WebhookConfig {
   id: string;
   name: string;
@@ -19,6 +25,8 @@ export interface WebhookConfig {
   type: string;
   description: string;
   usageLocations: string[];
+  hasVariables: boolean;
+  variables?: WebhookVariable[];
   createdAt: Date;
 }
 
@@ -53,11 +61,15 @@ export function WebhooksCRUD() {
     type: "",
     description: "",
     usageLocations: [] as string[],
+    hasVariables: false,
+    variables: [] as WebhookVariable[],
   });
   const [newTypeName, setNewTypeName] = useState("");
   const [newLocationName, setNewLocationName] = useState("");
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+  const [newVariableName, setNewVariableName] = useState("");
+  const [newVariableDescription, setNewVariableDescription] = useState("");
 
   useEffect(() => {
     const savedWebhooks = localStorage.getItem("webhooks");
@@ -146,6 +158,8 @@ export function WebhooksCRUD() {
       type: webhook.type,
       description: webhook.description,
       usageLocations: webhook.usageLocations || [],
+      hasVariables: webhook.hasVariables || false,
+      variables: webhook.variables || [],
     });
   };
 
@@ -207,8 +221,37 @@ export function WebhooksCRUD() {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", url: "", method: "POST", type: "", description: "", usageLocations: [] });
+    setFormData({ name: "", url: "", method: "POST", type: "", description: "", usageLocations: [], hasVariables: false, variables: [] });
     setEditingWebhook(null);
+  };
+
+  const handleAddVariable = () => {
+    if (!newVariableName.trim()) {
+      toast.error("Digite um nome para a variável");
+      return;
+    }
+
+    const newVariable: WebhookVariable = {
+      id: Date.now().toString(),
+      name: newVariableName,
+      description: newVariableDescription,
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      variables: [...prev.variables, newVariable]
+    }));
+    setNewVariableName("");
+    setNewVariableDescription("");
+    toast.success("Variável adicionada!");
+  };
+
+  const handleDeleteVariable = (variableId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      variables: prev.variables.filter(v => v.id !== variableId)
+    }));
+    toast.success("Variável removida!");
   };
 
   const toggleLocation = (locationId: string) => {
@@ -395,6 +438,71 @@ export function WebhooksCRUD() {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="webhook-has-variables">Possuir Variáveis *</Label>
+            <Select 
+              value={formData.hasVariables ? "sim" : "nao"} 
+              onValueChange={(value) => setFormData({ ...formData, hasVariables: value === "sim" })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nao">Não</SelectItem>
+                <SelectItem value="sim">Sim</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {formData.hasVariables && (
+            <div className="space-y-2">
+              <Label>Variáveis do Webhook</Label>
+              <Card className="p-3 space-y-3">
+                <div className="space-y-2">
+                  <Input
+                    value={newVariableName}
+                    onChange={(e) => setNewVariableName(e.target.value)}
+                    placeholder="Nome da variável (ex: user_id)"
+                  />
+                  <Input
+                    value={newVariableDescription}
+                    onChange={(e) => setNewVariableDescription(e.target.value)}
+                    placeholder="Descrição da variável"
+                  />
+                  <Button type="button" onClick={handleAddVariable} size="sm" className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Variável
+                  </Button>
+                </div>
+                
+                {formData.variables.length > 0 && (
+                  <ScrollArea className="h-[150px]">
+                    <div className="space-y-2">
+                      {formData.variables.map((variable) => (
+                        <div key={variable.id} className="flex items-start justify-between p-2 border rounded">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{variable.name}</div>
+                            {variable.description && (
+                              <div className="text-xs text-muted-foreground">{variable.description}</div>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteVariable(variable.id)}
+                          >
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </Card>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button type="submit" className="flex-1">
               {editingWebhook ? "Atualizar" : "Adicionar"} Webhook
@@ -440,6 +548,22 @@ export function WebhooksCRUD() {
                             </span>
                           ) : null;
                         })}
+                      </div>
+                    )}
+                    {webhook.hasVariables && webhook.variables && webhook.variables.length > 0 && (
+                      <div className="mt-2">
+                        <div className="text-xs font-semibold mb-1">Variáveis:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {webhook.variables.map((variable) => (
+                            <span 
+                              key={variable.id} 
+                              className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded font-mono"
+                              title={variable.description}
+                            >
+                              {variable.name}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                     <p className="text-xs text-muted-foreground">
