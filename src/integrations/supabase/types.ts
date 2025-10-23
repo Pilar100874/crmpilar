@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      administradores: {
+        Row: {
+          cpf: string
+          created_at: string | null
+          id: string
+          nome: string
+          senha_hash: string
+          updated_at: string | null
+        }
+        Insert: {
+          cpf: string
+          created_at?: string | null
+          id?: string
+          nome: string
+          senha_hash: string
+          updated_at?: string | null
+        }
+        Update: {
+          cpf?: string
+          created_at?: string | null
+          id?: string
+          nome?: string
+          senha_hash?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       api_endpoints: {
         Row: {
           active: boolean | null

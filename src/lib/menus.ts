@@ -15,6 +15,7 @@ export const MENU_CONFIG = [
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },
   { id: "Textos Prontos", label: "Meus Textos Prontos" },
   { id: "Anexos", label: "Meus Anexos" },
+  { id: "Administradores", label: "Administradores" },
   { id: "Configurações", label: "Configurações" },
 ] as const;
 
