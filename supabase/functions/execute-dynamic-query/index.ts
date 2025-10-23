@@ -1,74 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import sql from 'npm:mssql@10';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface SqlConfig {
-  server: string;
-  database: string;
-  username: string;
-  password: string;
-  query: string;
-}
-
-async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
-  console.log('Executing SQL Server query...');
-  console.log('Query parameters:', params);
-  console.log('Connecting to SQL Server:', config.server);
-  
-  const sqlConfig = {
-    server: config.server,
-    port: 1433,
-    user: config.username,
-    password: config.password,
-    database: config.database,
-    options: {
-      encrypt: false,
-      trustServerCertificate: true,
-      enableArithAbort: true,
-    },
-    pool: {
-      max: 10,
-      min: 0,
-      idleTimeoutMillis: 30000
-    },
-    connectionTimeout: 60000,
-    requestTimeout: 60000,
-  };
-
-  try {
-    const pool = await sql.connect(sqlConfig);
-    console.log('Connected successfully. Executing query...');
-    
-    const request = pool.request();
-    
-    // Add parameters to the request
-    for (const [key, value] of Object.entries(params)) {
-      console.log(`Adding parameter @${key} = ${value}`);
-      request.input(key, value);
-    }
-    
-    const result = await request.query(config.query);
-    console.log('Query executed successfully. Rows:', result.recordset?.length || 0);
-    
-    await pool.close();
-    
-    return result.recordset || [];
-  } catch (error) {
-    console.error('SQL Server query error:', error);
-    try {
-      await sql.close();
-    } catch (closeError) {
-      console.error('Error closing connection:', closeError);
-    }
-    throw error;
-  }
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -126,27 +63,6 @@ serve(async (req) => {
       params = await req.json();
     }
 
-    // Get database connection details if connection_id is specified
-    let connectionConfig: any = apiConfig;
-    if (apiConfig.connection_id) {
-      const { data: connData, error: connError } = await supabase
-        .from('database_connections')
-        .select('*')
-        .eq('id', apiConfig.connection_id)
-        .eq('active', true)
-        .single();
-      
-      if (!connError && connData) {
-        connectionConfig = {
-          ...apiConfig,
-          sql_server: connData.sql_server,
-          sql_database: connData.sql_database,
-          sql_username: connData.sql_username,
-          sql_password: connData.sql_password,
-        };
-      }
-    }
-
     // Execute query based on database type
     if (apiConfig.database_type === 'supabase') {
       // Execute Supabase query
@@ -170,26 +86,15 @@ serve(async (req) => {
         }
       );
     } else if (apiConfig.database_type === 'sqlserver') {
-      // Execute SQL Server query
-      const sqlConfig: SqlConfig = {
-        server: connectionConfig.sql_server,
-        database: connectionConfig.sql_database,
-        username: connectionConfig.sql_username,
-        password: connectionConfig.sql_password,
-        query: apiConfig.query,
-      };
-
-      const result = await executeSqlServerQuery(sqlConfig, params);
-
+      // SQL Server support temporarily disabled
       return new Response(
-        JSON.stringify({
-          success: true,
-          data: result,
-          endpoint: endpointPath,
-          method: apiConfig.http_method,
+        JSON.stringify({ 
+          error: 'SQL Server support is currently disabled. Please use Supabase database type.',
+          success: false 
         }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        { 
+          status: 501,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     } else {
