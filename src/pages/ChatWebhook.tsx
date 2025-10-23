@@ -517,7 +517,7 @@ export default function ChatWebhook() {
                     {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
-                      className="max-h-96 overflow-y-auto mb-4 space-y-3 rounded-lg"
+                      className="max-h-48 overflow-y-auto mb-4 space-y-3 rounded-lg"
                     >
                       {aiMessages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
