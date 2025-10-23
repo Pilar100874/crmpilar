@@ -35,19 +35,26 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import logo from "@/assets/logo_preto.png";
 
+interface MenuPermissions {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  delete: boolean;
+}
+
 const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Atendimento", url: "/atendimento", icon: MessageSquare },
-  { title: "CRIAR BOT", url: "/bot-builder", icon: Workflow },
-  { title: "Desenho", url: "/desenho", icon: Pencil },
-  { title: "Teste do Bot", url: "/bot-test", icon: TestTube },
-  { title: "Teste de Webhooks", url: "/chat-webhook", icon: Webhook },
-  { title: "Config WhatsApp", url: "/whatsapp-config", icon: Smartphone },
-  { title: "Campanhas", url: "/campanhas", icon: Megaphone },
-  { title: "Clientes", url: "/clientes", icon: Users },
-  { title: "Conteúdos", url: "/conteudos", icon: FileText },
-  { title: "Configurações", url: "/config", icon: Settings },
-  { title: "Variáveis Globais", url: "/global-variables", icon: Globe },
+  { id: "Dashboard", title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { id: "Atendimento", title: "Atendimento", url: "/atendimento", icon: MessageSquare },
+  { id: "Bot Builder", title: "CRIAR BOT", url: "/bot-builder", icon: Workflow },
+  { id: "Desenho", title: "Desenho", url: "/desenho", icon: Pencil },
+  { id: "Bot Test", title: "Teste do Bot", url: "/bot-test", icon: TestTube },
+  { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/chat-webhook", icon: Webhook },
+  { id: "WhatsApp Config", title: "Config WhatsApp", url: "/whatsapp-config", icon: Smartphone },
+  { id: "Campanhas", title: "Campanhas", url: "/campanhas", icon: Megaphone },
+  { id: "Clientes", title: "Clientes", url: "/clientes", icon: Users },
+  { id: "Conteúdos", title: "Conteúdos", url: "/conteudos", icon: FileText },
+  { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
+  { id: "Variáveis Globais", title: "Variáveis Globais", url: "/global-variables", icon: Globe },
 ];
 
 interface LayoutProps {
@@ -59,6 +66,8 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -80,15 +89,70 @@ export default function Layout({ children }: LayoutProps) {
     return () => subscription.unsubscribe();
   }, [navigate, location.pathname]);
 
+  useEffect(() => {
+    const fetchUserPermissions = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Busca o usuário e seu grupo de acesso
+        const { data: usuario, error: userError } = await supabase
+          .from("usuarios")
+          .select("grupo_acesso_id")
+          .eq("id", user.id)
+          .single();
+
+        if (userError) throw userError;
+
+        // Se não tem grupo de acesso, permite todos os menus
+        if (!usuario?.grupo_acesso_id) {
+          const allMenus: Record<string, MenuPermissions> = {};
+          menuItems.forEach(item => {
+            allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
+          });
+          setAllowedMenus(allMenus);
+          setIsLoading(false);
+          return;
+        }
+
+        // Busca as permissões do grupo
+        const { data: grupo, error: groupError } = await supabase
+          .from("grupos_acesso")
+          .select("menus_permitidos")
+          .eq("id", usuario.grupo_acesso_id)
+          .single();
+
+        if (groupError) throw groupError;
+
+        setAllowedMenus((grupo?.menus_permitidos as unknown as Record<string, MenuPermissions>) || {});
+      } catch (error) {
+        console.error("Erro ao buscar permissões:", error);
+        toast.error("Erro ao carregar permissões do usuário");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserPermissions();
+  }, [user]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logout realizado com sucesso!");
     navigate("/");
   };
 
-  if (!user) {
+  if (!user || isLoading) {
     return null;
   }
+
+  // Filtra os menus baseado nas permissões
+  const visibleMenus = menuItems.filter(item => {
+    const permission = allowedMenus[item.id];
+    return permission?.view === true;
+  });
 
   return (
     <SidebarProvider>
@@ -114,7 +178,7 @@ export default function Layout({ children }: LayoutProps) {
               <SidebarGroupContent>
                 <ScrollArea className="flex-1">
                   <SidebarMenu className="space-y-1 p-2">
-                    {menuItems.map((item) => (
+                    {visibleMenus.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild>
                           <NavLink
