@@ -81,6 +81,7 @@ export function WebhooksCRUD() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>("all");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("all");
 
   const resetVariableForm = () => {
     setNewVariableName("");
@@ -430,31 +431,51 @@ export function WebhooksCRUD() {
     }));
   };
 
-  // Filtrar webhooks por local de uso
-  const filteredWebhooks = selectedLocationFilter === "all" 
-    ? webhooks 
-    : webhooks.filter(webhook => 
-        webhook.usageLocations?.includes(selectedLocationFilter)
-      );
+  // Filtrar webhooks por local de uso e tipo
+  const filteredWebhooks = webhooks.filter(webhook => {
+    const matchesLocation = selectedLocationFilter === "all" || 
+                           webhook.usageLocations?.includes(selectedLocationFilter);
+    const matchesType = selectedTypeFilter === "all" || 
+                       webhook.type === selectedTypeFilter;
+    return matchesLocation && matchesType;
+  });
 
   return (
     <div className="space-y-6">
-      {/* Header com botão de criar e filtro */}
+      {/* Header com botão de criar e filtros */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
           <h2 className="text-2xl font-bold">Webhooks</h2>
           <p className="text-sm text-muted-foreground">
-            {filteredWebhooks.length} webhook{filteredWebhooks.length !== 1 ? 's' : ''} 
-            {selectedLocationFilter !== "all" && " filtrado(s)"}
+            {filteredWebhooks.length} de {webhooks.length} webhook{webhooks.length !== 1 ? 's' : ''} 
+            {(selectedLocationFilter !== "all" || selectedTypeFilter !== "all") && " filtrado(s)"}
           </p>
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Filtro de Tipo */}
+          <div className="flex items-center gap-2">
+            <Label className="text-sm whitespace-nowrap">Tipo:</Label>
+            <Select value={selectedTypeFilter} onValueChange={setSelectedTypeFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Todos os tipos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                {webhookTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Filtro de Local de Uso */}
           <div className="flex items-center gap-2">
-            <Label className="text-sm whitespace-nowrap">Filtrar por:</Label>
+            <Label className="text-sm whitespace-nowrap">Local:</Label>
             <Select value={selectedLocationFilter} onValueChange={setSelectedLocationFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Todos os locais" />
               </SelectTrigger>
               <SelectContent>
@@ -1062,15 +1083,18 @@ export function WebhooksCRUD() {
                   </div>
                   <p className="text-muted-foreground font-medium">Nenhum webhook encontrado</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Não há webhooks cadastrados para o local "{usageLocations.find(l => l.id === selectedLocationFilter)?.name}"
+                    Não há webhooks para os filtros selecionados
                   </p>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setSelectedLocationFilter("all")}
+                    onClick={() => {
+                      setSelectedLocationFilter("all");
+                      setSelectedTypeFilter("all");
+                    }}
                     className="mt-4"
                   >
-                    Limpar filtro
+                    Limpar filtros
                   </Button>
                 </div>
               )}
