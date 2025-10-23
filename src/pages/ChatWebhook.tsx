@@ -83,7 +83,7 @@ export default function ChatWebhook() {
       
       // Filter AI webhooks
       const aiWebhooksList = loadedWebhooks.filter((w: WebhookConfig) => 
-        w.usageLocations?.includes("Menu do chat")
+        w.usageLocations?.includes("Menu do Chat")
       );
       setAiWebhooks(aiWebhooksList);
       if (aiWebhooksList.length > 0) {
