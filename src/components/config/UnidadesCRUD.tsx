@@ -23,7 +23,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
 
   useEffect(() => {
     fetchUnidades();
-  }, []);
+  }, [estabelecimentoId]);
 
   const fetchUnidades = async () => {
     let targetEstabelecimentoId = estabelecimentoId;

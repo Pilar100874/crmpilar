@@ -23,7 +23,7 @@ export const SegmentosCRUD = ({ estabelecimentoId }: SegmentosCRUDProps) => {
 
   useEffect(() => {
     fetchSegmentos();
-  }, []);
+  }, [estabelecimentoId]);
 
   const fetchSegmentos = async () => {
     let targetEstabelecimentoId = estabelecimentoId;
