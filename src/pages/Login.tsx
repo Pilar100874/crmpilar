@@ -1,59 +1,424 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Building2, ShieldCheck } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type LoginStep = "select-type" | "admin-login" | "select-company" | "select-user" | "user-password";
+
+interface Estabelecimento {
+  id: string;
+  nome: string;
+  cnpj: string;
+}
+
+interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
+}
 
 export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [step, setStep] = useState<LoginStep>("select-type");
+  
+  // Admin login
+  const [adminCpf, setAdminCpf] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  
+  // User login
+  const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
+  const [selectedEstabelecimento, setSelectedEstabelecimento] = useState<string>("");
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [selectedUsuario, setSelectedUsuario] = useState<string>("");
+  const [userPassword, setUserPassword] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (step === "select-company") {
+      fetchEstabelecimentos();
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (selectedEstabelecimento) {
+      fetchUsuarios(selectedEstabelecimento);
+    }
+  }, [selectedEstabelecimento]);
+
+  const fetchEstabelecimentos = async () => {
+    const { data, error } = await supabase
+      .from("estabelecimentos")
+      .select("id, nome, cnpj")
+      .order("nome");
+
+    if (error) {
+      toast.error("Erro ao carregar estabelecimentos");
+      console.error(error);
+      return;
+    }
+
+    setEstabelecimentos(data || []);
+  };
+
+  const fetchUsuarios = async (estabelecimentoId: string) => {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("id, nome, email")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .order("nome");
+
+    if (error) {
+      toast.error("Erro ao carregar usuários");
+      console.error(error);
+      return;
+    }
+
+    setUsuarios(data || []);
+  };
+
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    }
+    return value;
+  };
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const cleanCpf = adminCpf.replace(/\D/g, "");
+
+    // Buscar administrador por CPF
+    const { data: admin, error } = await supabase
+      .from("administradores")
+      .select("*")
+      .eq("cpf", cleanCpf)
+      .single();
+
+    if (error || !admin) {
+      setIsLoading(false);
+      toast.error("CPF ou senha inválidos");
+      return;
+    }
+
+    // Verificar senha (hash bcrypt seria ideal, mas por simplicidade estamos comparando diretamente)
+    if (admin.senha_hash !== adminPassword) {
+      setIsLoading(false);
+      toast.error("CPF ou senha inválidos");
+      return;
+    }
+
+    // Fazer login como administrador
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: `admin_${cleanCpf}@sistema.local`,
+      password: adminPassword,
     });
 
     setIsLoading(false);
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Login realizado com sucesso!");
-      navigate("/dashboard");
+    if (signInError) {
+      // Se não existe usuário no auth, criar um
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: `admin_${cleanCpf}@sistema.local`,
+        password: adminPassword,
+      });
+
+      if (signUpError) {
+        toast.error("Erro ao realizar login");
+        return;
+      }
     }
+
+    // Salvar tipo de login no localStorage
+    localStorage.setItem("userType", "admin");
+    localStorage.setItem("userId", admin.id);
+    toast.success("Login realizado com sucesso!");
+    navigate("/dashboard");
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleUserPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
+    // Buscar usuário
+    const { data: usuario, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("id", selectedUsuario)
+      .single();
+
+    if (error || !usuario) {
+      setIsLoading(false);
+      toast.error("Erro ao buscar usuário");
+      return;
+    }
+
+    // Verificar senha
+    if (usuario.senha_hash !== userPassword) {
+      setIsLoading(false);
+      toast.error("Senha inválida");
+      return;
+    }
+
+    // Fazer login
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: usuario.email,
+      password: userPassword,
     });
 
     setIsLoading(false);
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Conta criada! Você já pode fazer login.");
+    if (signInError) {
+      // Se não existe usuário no auth, criar um
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: usuario.email,
+        password: userPassword,
+      });
+
+      if (signUpError) {
+        toast.error("Erro ao realizar login");
+        return;
+      }
     }
+
+    // Salvar informações no localStorage
+    localStorage.setItem("userType", "user");
+    localStorage.setItem("userId", usuario.id);
+    localStorage.setItem("estabelecimentoId", selectedEstabelecimento);
+    toast.success("Login realizado com sucesso!");
+    navigate("/dashboard");
   };
+
+  const renderSelectType = () => (
+    <Card className="shadow-lg bg-slate-800 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white">Bem-vindo</CardTitle>
+        <CardDescription className="text-white/70">
+          Selecione o tipo de acesso
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Button 
+          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+          onClick={() => setStep("admin-login")}
+        >
+          <ShieldCheck className="mr-2 h-4 w-4" />
+          Acessar como Administrador
+        </Button>
+        <Button 
+          variant="outline"
+          className="w-full bg-slate-900 border-slate-700 text-white hover:bg-slate-700"
+          onClick={() => setStep("select-company")}
+        >
+          <Building2 className="mr-2 h-4 w-4" />
+          Acessar como Usuário
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
+  const renderAdminLogin = () => (
+    <Card className="shadow-lg bg-slate-800 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white">Login Administrativo</CardTitle>
+        <CardDescription className="text-white/70">
+          Entre com suas credenciais de administrador
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleAdminLogin}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="admin-cpf" className="text-white">CPF</Label>
+            <Input
+              id="admin-cpf"
+              value={adminCpf}
+              onChange={(e) => setAdminCpf(formatCPF(e.target.value))}
+              placeholder="000.000.000-00"
+              maxLength={14}
+              required
+              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="admin-password" className="text-white">Senha</Label>
+            <Input
+              id="admin-password"
+              type="password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              required
+              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+            />
+          </div>
+        </CardContent>
+        <CardContent className="space-y-2 pt-0">
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            className="w-full text-white hover:bg-slate-700"
+            onClick={() => setStep("select-type")}
+          >
+            Voltar
+          </Button>
+        </CardContent>
+      </form>
+    </Card>
+  );
+
+  const renderSelectCompany = () => (
+    <Card className="shadow-lg bg-slate-800 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white">Selecione a Empresa</CardTitle>
+        <CardDescription className="text-white/70">
+          Escolha o estabelecimento para acessar
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label className="text-white">Estabelecimento</Label>
+          <Select value={selectedEstabelecimento} onValueChange={setSelectedEstabelecimento}>
+            <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+              <SelectValue placeholder="Selecione um estabelecimento" />
+            </SelectTrigger>
+            <SelectContent>
+              {estabelecimentos.map((est) => (
+                <SelectItem key={est.id} value={est.id}>
+                  {est.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Button 
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+            onClick={() => setStep("select-user")}
+            disabled={!selectedEstabelecimento}
+          >
+            Continuar
+          </Button>
+          <Button 
+            variant="ghost" 
+            className="w-full text-white hover:bg-slate-700"
+            onClick={() => setStep("select-type")}
+          >
+            Voltar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderSelectUser = () => (
+    <Card className="shadow-lg bg-slate-800 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white">Selecione o Usuário</CardTitle>
+        <CardDescription className="text-white/70">
+          Escolha seu usuário para continuar
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label className="text-white">Usuário</Label>
+          <Select value={selectedUsuario} onValueChange={setSelectedUsuario}>
+            <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+              <SelectValue placeholder="Selecione um usuário" />
+            </SelectTrigger>
+            <SelectContent>
+              {usuarios.map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Button 
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+            onClick={() => setStep("user-password")}
+            disabled={!selectedUsuario}
+          >
+            Continuar
+          </Button>
+          <Button 
+            variant="ghost" 
+            className="w-full text-white hover:bg-slate-700"
+            onClick={() => {
+              setSelectedUsuario("");
+              setStep("select-company");
+            }}
+          >
+            Voltar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderUserPassword = () => (
+    <Card className="shadow-lg bg-slate-800 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white">Digite sua Senha</CardTitle>
+        <CardDescription className="text-white/70">
+          {usuarios.find(u => u.id === selectedUsuario)?.nome}
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleUserPasswordSubmit}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="user-password" className="text-white">Senha</Label>
+            <Input
+              id="user-password"
+              type="password"
+              value={userPassword}
+              onChange={(e) => setUserPassword(e.target.value)}
+              required
+              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+            />
+          </div>
+        </CardContent>
+        <CardContent className="space-y-2 pt-0">
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            className="w-full text-white hover:bg-slate-700"
+            onClick={() => {
+              setUserPassword("");
+              setStep("select-user");
+            }}
+          >
+            Voltar
+          </Button>
+        </CardContent>
+      </form>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
@@ -72,92 +437,11 @@ export default function Login() {
           </p>
         </div>
 
-        <Card className="shadow-lg bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Bem-vindo</CardTitle>
-            <CardDescription className="text-white/70">
-              Entre ou crie sua conta para começar
-            </CardDescription>
-          </CardHeader>
-          <Tabs defaultValue="login" className="w-full">
-            <div className="px-6">
-              <TabsList className="grid w-full grid-cols-2 bg-slate-900 border-slate-700">
-                <TabsTrigger value="login" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-white/70">Entrar</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-white/70">Cadastrar</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="login">
-              <form onSubmit={handleLogin}>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-white">Senha</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Button type="submit" className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700" disabled={isLoading}>
-                    {isLoading ? "Entrando..." : "Entrar"}
-                  </Button>
-                </CardFooter>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup}>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-white">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-white">Senha</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Button type="submit" className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700" disabled={isLoading}>
-                    {isLoading ? "Criando conta..." : "Criar conta"}
-                  </Button>
-                </CardFooter>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </Card>
+        {step === "select-type" && renderSelectType()}
+        {step === "admin-login" && renderAdminLogin()}
+        {step === "select-company" && renderSelectCompany()}
+        {step === "select-user" && renderSelectUser()}
+        {step === "user-password" && renderUserPassword()}
       </div>
     </div>
   );

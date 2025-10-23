@@ -107,6 +107,7 @@ export type Database = {
         Row: {
           active: boolean | null
           created_at: string | null
+          estabelecimento_id: string | null
           flow_data: Json
           id: string
           name: string
@@ -115,6 +116,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           created_at?: string | null
+          estabelecimento_id?: string | null
           flow_data: Json
           id?: string
           name: string
@@ -123,16 +125,26 @@ export type Database = {
         Update: {
           active?: boolean | null
           created_at?: string | null
+          estabelecimento_id?: string | null
           flow_data?: Json
           id?: string
           name?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bot_flows_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaigns: {
         Row: {
           created_at: string | null
+          estabelecimento_id: string | null
           id: string
           n8n_workflow_id: string | null
           nome: string
@@ -145,6 +157,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           n8n_workflow_id?: string | null
           nome: string
@@ -157,6 +170,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           n8n_workflow_id?: string | null
           nome?: string
@@ -167,7 +181,15 @@ export type Database = {
           template?: string
           variables?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_sessions: {
         Row: {
@@ -198,6 +220,7 @@ export type Database = {
           blob_ref: string | null
           created_at: string | null
           descricao: string | null
+          estabelecimento_id: string | null
           id: string
           tags: string[] | null
           tipo: string
@@ -208,6 +231,7 @@ export type Database = {
           blob_ref?: string | null
           created_at?: string | null
           descricao?: string | null
+          estabelecimento_id?: string | null
           id?: string
           tags?: string[] | null
           tipo: string
@@ -218,13 +242,22 @@ export type Database = {
           blob_ref?: string | null
           created_at?: string | null
           descricao?: string | null
+          estabelecimento_id?: string | null
           id?: string
           tags?: string[] | null
           tipo?: string
           titulo?: string
           url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contents_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -233,6 +266,7 @@ export type Database = {
           canal: string
           created_at: string | null
           customer_id: string
+          estabelecimento_id: string | null
           id: string
           metadata: Json | null
           status: string | null
@@ -244,6 +278,7 @@ export type Database = {
           canal: string
           created_at?: string | null
           customer_id: string
+          estabelecimento_id?: string | null
           id?: string
           metadata?: Json | null
           status?: string | null
@@ -255,6 +290,7 @@ export type Database = {
           canal?: string
           created_at?: string | null
           customer_id?: string
+          estabelecimento_id?: string | null
           id?: string
           metadata?: Json | null
           status?: string | null
@@ -268,6 +304,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conversations_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customers: {
@@ -275,6 +318,7 @@ export type Database = {
           created_at: string | null
           custom_fields: Json | null
           email: string
+          estabelecimento_id: string | null
           id: string
           nome: string
           tags: string[] | null
@@ -285,6 +329,7 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           email: string
+          estabelecimento_id?: string | null
           id?: string
           nome: string
           tags?: string[] | null
@@ -295,13 +340,22 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           email?: string
+          estabelecimento_id?: string | null
           id?: string
           nome?: string
           tags?: string[] | null
           telefone?: string
           tipo_operador?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       database_connections: {
         Row: {
@@ -348,10 +402,38 @@ export type Database = {
         }
         Relationships: []
       }
+      estabelecimentos: {
+        Row: {
+          cnpj: string
+          created_at: string | null
+          id: string
+          nome: string
+          numero_usuarios_permitidos: number
+          updated_at: string | null
+        }
+        Insert: {
+          cnpj: string
+          created_at?: string | null
+          id?: string
+          nome: string
+          numero_usuarios_permitidos?: number
+          updated_at?: string | null
+        }
+        Update: {
+          cnpj?: string
+          created_at?: string | null
+          id?: string
+          nome?: string
+          numero_usuarios_permitidos?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       flows: {
         Row: {
           created_at: string | null
           created_by: string | null
+          estabelecimento_id: string | null
           graph: Json
           id: string
           nome: string
@@ -362,6 +444,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          estabelecimento_id?: string | null
           graph: Json
           id?: string
           nome: string
@@ -372,6 +455,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          estabelecimento_id?: string | null
           graph?: Json
           id?: string
           nome?: string
@@ -379,7 +463,15 @@ export type Database = {
           updated_at?: string | null
           version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "flows_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       global_variables: {
         Row: {
@@ -697,6 +789,7 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string
+          estabelecimento_id: string | null
           grupo_acesso_id: string | null
           id: string
           nome: string
@@ -708,6 +801,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email: string
+          estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
           id?: string
           nome: string
@@ -719,6 +813,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string
+          estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
           id?: string
           nome?: string
@@ -728,6 +823,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "usuarios_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "usuarios_grupo_acesso_id_fkey"
             columns: ["grupo_acesso_id"]

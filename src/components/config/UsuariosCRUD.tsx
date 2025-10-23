@@ -16,10 +16,12 @@ interface Usuario {
   telefone: string | null;
   unidade_id: string | null;
   grupo_acesso_id: string | null;
+  estabelecimento_id: string | null;
   is_agente?: boolean | null;
   is_admin?: boolean;
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
+  estabelecimentos?: { nome: string };
 }
 
 interface Unidade {
@@ -37,11 +39,18 @@ interface Segmento {
   nome: string;
 }
 
+interface Estabelecimento {
+  id: string;
+  nome: string;
+  numero_usuarios_permitidos: number;
+}
+
 export const UsuariosCRUD = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
+  const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -49,6 +58,7 @@ export const UsuariosCRUD = () => {
   const [senha, setSenha] = useState("");
   const [unidadeId, setUnidadeId] = useState("");
   const [grupoAcessoId, setGrupoAcessoId] = useState("");
+  const [estabelecimentoId, setEstabelecimentoId] = useState("");
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
   const [isAgente, setIsAgente] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -66,6 +76,7 @@ export const UsuariosCRUD = () => {
       fetchUnidades(),
       fetchGrupos(),
       fetchSegmentos(),
+      fetchEstabelecimentos(),
     ]);
   };
 
@@ -75,7 +86,8 @@ export const UsuariosCRUD = () => {
       .select(`
         *,
         unidades(nome),
-        grupos_acesso(nome)
+        grupos_acesso(nome),
+        estabelecimentos(nome)
       `)
       .order("nome");
 
@@ -123,6 +135,11 @@ export const UsuariosCRUD = () => {
     setSegmentos(data || []);
   };
 
+  const fetchEstabelecimentos = async () => {
+    const { data } = await supabase.from("estabelecimentos").select("*").order("nome");
+    setEstabelecimentos(data || []);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -130,6 +147,15 @@ export const UsuariosCRUD = () => {
       toast({
         title: "Campos obrigatórios",
         description: "Nome e email são obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!estabelecimentoId) {
+      toast({
+        title: "Estabelecimento obrigatório",
+        description: "Selecione um estabelecimento",
         variant: "destructive",
       });
       return;
@@ -150,6 +176,7 @@ export const UsuariosCRUD = () => {
       telefone: telefone || null,
       unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
+      estabelecimento_id: estabelecimentoId,
       is_agente: isAgente,
       senha_hash: senha || undefined,
     };
@@ -256,6 +283,7 @@ export const UsuariosCRUD = () => {
     setSenha("");
     setUnidadeId("");
     setGrupoAcessoId("");
+    setEstabelecimentoId("");
     setSegmentosSelecionados([]);
     setIsAgente(false);
     setIsAdmin(false);
@@ -268,6 +296,7 @@ export const UsuariosCRUD = () => {
     setTelefone(usuario.telefone || "");
     setUnidadeId(usuario.unidade_id || "");
     setGrupoAcessoId(usuario.grupo_acesso_id || "");
+    setEstabelecimentoId(usuario.estabelecimento_id || "");
     setIsAgente(usuario.is_agente || false);
     setEditingId(usuario.id);
 
@@ -395,6 +424,22 @@ export const UsuariosCRUD = () => {
               </SelectContent>
             </Select>
           </div>
+
+          <div>
+            <Label htmlFor="usuario-estabelecimento">Estabelecimento *</Label>
+            <Select value={estabelecimentoId} onValueChange={setEstabelecimentoId}>
+              <SelectTrigger id="usuario-estabelecimento">
+                <SelectValue placeholder="Selecione o estabelecimento" />
+              </SelectTrigger>
+              <SelectContent>
+                {estabelecimentos.map((est) => (
+                  <SelectItem key={est.id} value={est.id}>
+                    {est.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex gap-6">
@@ -472,7 +517,8 @@ export const UsuariosCRUD = () => {
                 {usuario.is_admin && <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">Admin</span>}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {usuario.unidades?.nome && `Unidade: ${usuario.unidades.nome}`}
+                {usuario.estabelecimentos?.nome && `Estabelecimento: ${usuario.estabelecimentos.nome}`}
+                {usuario.unidades?.nome && ` • Unidade: ${usuario.unidades.nome}`}
                 {usuario.grupos_acesso?.nome && ` • Grupo: ${usuario.grupos_acesso.nome}`}
               </div>
             </div>
