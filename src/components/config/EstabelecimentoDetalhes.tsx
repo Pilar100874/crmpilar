@@ -39,22 +39,8 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
               <span className="font-medium">Campos do Cadastro de Cliente</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4 space-y-6">
+          <AccordionContent className="px-4 pb-4">
             <ClientesCRUD />
-            
-            <Accordion type="single" collapsible className="space-y-2">
-              <AccordionItem value="grupos-acesso" className="border rounded-md">
-                <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <FolderTree className="w-4 h-4 text-primary" />
-                    <span className="font-medium text-sm">Grupos de Acesso</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  <GruposAcessoCRUD estabelecimentoId={estabelecimentoId} />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
           </AccordionContent>
         </AccordionItem>
 
@@ -79,6 +65,18 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <SegmentosCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="grupos-acesso" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <FolderTree className="w-4 h-4 text-primary" />
+              <span className="font-medium">Grupos de Acesso</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <GruposAcessoCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
