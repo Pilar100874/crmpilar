@@ -668,6 +668,7 @@ export type Database = {
       quick_attachments: {
         Row: {
           created_at: string | null
+          estabelecimento_id: string | null
           file_type: string | null
           grupo_acesso_id: string | null
           id: string
@@ -681,6 +682,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           file_type?: string | null
           grupo_acesso_id?: string | null
           id?: string
@@ -694,6 +696,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           file_type?: string | null
           grupo_acesso_id?: string | null
           id?: string
@@ -706,6 +709,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quick_attachments_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quick_attachments_grupo_acesso_id_fkey"
             columns: ["grupo_acesso_id"]
@@ -726,6 +736,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string | null
+          estabelecimento_id: string | null
           grupo_acesso_id: string | null
           id: string
           is_global: boolean | null
@@ -737,6 +748,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string | null
+          estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
           id?: string
           is_global?: boolean | null
@@ -748,6 +760,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string | null
+          estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
           id?: string
           is_global?: boolean | null
@@ -757,6 +770,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quick_replies_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quick_replies_grupo_acesso_id_fkey"
             columns: ["grupo_acesso_id"]
@@ -1059,6 +1079,62 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          estabelecimento_id: string
+          has_variables: boolean | null
+          id: string
+          method: string
+          name: string
+          type: string
+          updated_at: string | null
+          url: string
+          usage_locations: Json | null
+          variables: Json | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          estabelecimento_id: string
+          has_variables?: boolean | null
+          id?: string
+          method?: string
+          name: string
+          type: string
+          updated_at?: string | null
+          url: string
+          usage_locations?: Json | null
+          variables?: Json | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          estabelecimento_id?: string
+          has_variables?: boolean | null
+          id?: string
+          method?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+          url?: string
+          usage_locations?: Json | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]

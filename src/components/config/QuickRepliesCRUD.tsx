@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface QuickReply {
   id: string;
@@ -51,23 +52,15 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
   }, [estabelecimentoId]);
 
   const loadQuickReplies = async () => {
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    
     let query = supabase
       .from("quick_replies")
       .select("*")
       .eq("is_global", true);
 
-    // Note: quick_replies não tem estabelecimento_id no schema atual
-    // Filtra por grupo_acesso_id se estabelecimento foi fornecido
-    if (estabelecimentoId) {
-      const { data: grupos } = await supabase
-        .from("grupos_acesso")
-        .select("id")
-        .eq("estabelecimento_id", estabelecimentoId);
-      
-      if (grupos && grupos.length > 0) {
-        const grupoIds = grupos.map(g => g.id);
-        query = query.in("grupo_acesso_id", grupoIds);
-      }
+    if (estabId) {
+      query = query.eq("estabelecimento_id", estabId);
     }
 
     const { data, error } = await query.order("created_at", { ascending: false });
@@ -105,12 +98,19 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
       return;
     }
 
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) {
+      toast.error("Estabelecimento não identificado");
+      return;
+    }
+
     const dataToSave = {
       title: formData.title,
       content: formData.content,
       grupo_acesso_id: formData.grupo_acesso_id || null,
       is_global: true,
       shortcut: formData.shortcut || null,
+      estabelecimento_id: estabId,
     };
 
     if (isEditing && currentId) {
