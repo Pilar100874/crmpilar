@@ -385,7 +385,7 @@ export default function ChatWebhook() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 container mx-auto px-4 py-6 flex flex-col max-w-4xl">
+        <div className="flex-1 container mx-auto px-4 py-6 flex flex-col max-w-full">
           <Card className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm border-primary/20 shadow-xl">
             <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
               {messages.length === 0 ? (
