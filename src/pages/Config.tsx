@@ -5,20 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2, Tag, FolderTree, Globe, MessageSquare, Link as LinkIcon, ShieldCheck, Store } from "lucide-react";
+import { Webhook, Key, Bell, Shield, Globe, MessageSquare, Link as LinkIcon, ShieldCheck, Store } from "lucide-react";
 import { toast } from "sonner";
-import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
-import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
-import { GruposAcessoCRUD } from "@/components/config/GruposAcessoCRUD";
-import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
-import { ClientesCRUD } from "@/components/config/ClientesCRUD";
 import { APIGeneratorCRUD } from "@/components/config/APIGeneratorCRUD";
 import { WebhooksCRUD } from "@/components/config/WebhooksCRUD";
 import QuickRepliesCRUD from "@/components/config/QuickRepliesCRUD";
 import QuickAttachmentsCRUD from "@/components/config/QuickAttachmentsCRUD";
-import { RedesSociaisCRUD } from "@/components/config/RedesSociaisCRUD";
 
 export default function Config() {
 
@@ -189,92 +183,8 @@ export default function Config() {
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6 space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Estabelecimentos</h3>
-                <EstabelecimentosCRUD />
-              </div>
-
-              <Accordion type="single" collapsible className="space-y-2">
-                <AccordionItem value="redes-sociais" className="border rounded-md">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                    <div className="flex items-center gap-2">
-                      <Share2 className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Redes Sociais</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    <RedesSociaisCRUD />
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="cadastro-clientes" className="border rounded-md">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Campos do Cadastro de Cliente</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4 space-y-6">
-                    <ClientesCRUD />
-                    
-                    <Accordion type="single" collapsible className="space-y-2">
-                      <AccordionItem value="grupos-acesso" className="border rounded-md">
-                        <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-muted/20">
-                          <div className="flex items-center gap-2">
-                            <FolderTree className="w-4 h-4 text-primary" />
-                            <span className="font-medium text-sm">Grupos de Acesso</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-4 pb-4">
-                          <GruposAcessoCRUD />
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="cadastro-unidades" className="border rounded-md">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Cadastro de Unidades</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    <UnidadesCRUD />
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="cadastro-segmentos" className="border rounded-md">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Cadastro de Segmentos</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    <SegmentosCRUD />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="cadastro-usuarios" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <UserCog className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Cadastro de Usuários</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Gerencie usuários e suas informações
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
-              <UsuariosCRUD />
+              <EstabelecimentosCRUD />
             </AccordionContent>
           </AccordionItem>
 
