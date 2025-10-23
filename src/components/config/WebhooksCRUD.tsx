@@ -79,6 +79,7 @@ export function WebhooksCRUD() {
   const [newVariableRequired, setNewVariableRequired] = useState(false);
   const [newVariableFormat, setNewVariableFormat] = useState("string");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
 
   const resetVariableForm = () => {
     setNewVariableName("");
@@ -178,26 +179,14 @@ export function WebhooksCRUD() {
       toast.success("Webhook criado!");
     }
 
-    resetForm();
-  };
-
-  const handleEdit = (webhook: WebhookConfig) => {
-    setEditingWebhook(webhook.id);
-    setFormData({
-      name: webhook.name,
-      url: webhook.url,
-      method: webhook.method || "POST",
-      type: webhook.type,
-      description: webhook.description,
-      usageLocations: webhook.usageLocations || [],
-      hasVariables: webhook.hasVariables || false,
-      variables: webhook.variables || [],
-    });
+    handleCloseForm();
   };
 
   const handleDelete = (id: string) => {
-    setWebhooks(webhooks.filter((w) => w.id !== id));
-    toast.success("Webhook removido!");
+    if (confirm("Tem certeza que deseja excluir este webhook?")) {
+      setWebhooks(webhooks.filter((w) => w.id !== id));
+      toast.success("Webhook removido!");
+    }
   };
 
   const handleAddType = () => {
@@ -255,6 +244,38 @@ export function WebhooksCRUD() {
   const resetForm = () => {
     setFormData({ name: "", url: "", method: "POST", type: "", description: "", usageLocations: [], hasVariables: false, variables: [] });
     setEditingWebhook(null);
+    setNewVariableName("");
+    setNewVariableDescription("");
+    setNewVariableType("json");
+    setNewVariableDefaultValue("");
+    setNewVariableRequired(false);
+    setNewVariableFormat("string");
+    setSelectedFile(null);
+  };
+
+  const handleOpenForm = () => {
+    resetForm();
+    setIsFormDialogOpen(true);
+  };
+
+  const handleEdit = (webhook: WebhookConfig) => {
+    setEditingWebhook(webhook.id);
+    setFormData({
+      name: webhook.name,
+      url: webhook.url,
+      method: webhook.method || "POST",
+      type: webhook.type,
+      description: webhook.description,
+      usageLocations: webhook.usageLocations || [],
+      hasVariables: webhook.hasVariables || false,
+      variables: webhook.variables || [],
+    });
+    setIsFormDialogOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormDialogOpen(false);
+    resetForm();
   };
 
   const handleAddVariable = () => {
@@ -410,19 +431,30 @@ export function WebhooksCRUD() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Formulário de Webhook */}
-        <Card className="p-6 h-fit">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-1">
-              {editingWebhook ? "Editar Webhook" : "Novo Webhook"}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Configure as informações do webhook
-            </p>
-          </div>
+      {/* Header com botão de criar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Webhooks</h2>
+          <p className="text-sm text-muted-foreground">
+            {webhooks.length} webhook{webhooks.length !== 1 ? 's' : ''} configurado{webhooks.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button onClick={handleOpenForm} size="lg" className="gap-2">
+          <Plus className="h-5 w-5" />
+          Novo Webhook
+        </Button>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Dialog do Formulário */}
+      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {editingWebhook ? "Editar Webhook" : "Novo Webhook"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             {/* Informações Básicas */}
             <div className="space-y-4 pb-4 border-b">
               <div className="space-y-2">
@@ -916,26 +948,19 @@ export function WebhooksCRUD() {
 
             <div className="flex gap-2 pt-4">
               <Button type="submit" className="flex-1 h-10">
-                {editingWebhook ? "Atualizar" : "Adicionar"} Webhook
+                {editingWebhook ? "Atualizar" : "Criar"} Webhook
               </Button>
-              {editingWebhook && (
-                <Button type="button" variant="outline" onClick={resetForm} className="h-10">
-                  Cancelar
-                </Button>
-              )}
+              <Button type="button" variant="outline" onClick={handleCloseForm} className="h-10">
+                Cancelar
+              </Button>
             </div>
           </form>
-        </Card>
+        </DialogContent>
+      </Dialog>
 
-        {/* Lista de Webhooks */}
-        <Card className="p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold mb-1">Webhooks Cadastrados</h3>
-            <p className="text-sm text-muted-foreground">
-              {webhooks.length} webhook{webhooks.length !== 1 ? 's' : ''} configurado{webhooks.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <ScrollArea className="h-[600px]">
+      {/* Lista de Webhooks */}
+      <Card className="p-6">
+        <ScrollArea className="h-[calc(100vh-250px)]">
             <div className="space-y-3">
               {webhooks.map((webhook) => (
                 <Card key={webhook.id} className="p-4 hover:bg-secondary/50 transition-colors">
@@ -1006,13 +1031,12 @@ export function WebhooksCRUD() {
                     <Webhook className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground font-medium">Nenhum webhook cadastrado</p>
-                  <p className="text-sm text-muted-foreground mt-1">Crie seu primeiro webhook usando o formulário ao lado</p>
+                  <p className="text-sm text-muted-foreground mt-1">Clique no botão "Novo Webhook" para criar seu primeiro webhook</p>
                 </div>
               )}
             </div>
           </ScrollArea>
         </Card>
-      </div>
     </div>
   );
 }
