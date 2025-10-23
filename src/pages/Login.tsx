@@ -180,13 +180,18 @@ export default function Login() {
       return;
     }
 
+    // Verificar se senha tem pelo menos 6 caracteres (requisito do Supabase)
+    if (userPassword.length < 6) {
+      setIsLoading(false);
+      toast.error("A senha deve ter pelo menos 6 caracteres. Entre em contato com o administrador para atualizar sua senha.");
+      return;
+    }
+
     // Fazer login
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: usuario.email,
       password: userPassword,
     });
-
-    setIsLoading(false);
 
     if (signInError) {
       // Se não existe usuário no auth, criar um
@@ -196,7 +201,12 @@ export default function Login() {
       });
 
       if (signUpError) {
-        toast.error("Erro ao realizar login");
+        if (signUpError.message.includes("weak_password") || signUpError.message.includes("6 characters")) {
+          toast.error("A senha deve ter pelo menos 6 caracteres. Entre em contato com o administrador para atualizar sua senha.");
+        } else {
+          toast.error(`Erro ao realizar login: ${signUpError.message}`);
+        }
+        setIsLoading(false);
         return;
       }
     }
@@ -206,6 +216,7 @@ export default function Login() {
     localStorage.setItem("userId", usuario.id);
     localStorage.setItem("estabelecimentoId", selectedEstabelecimento);
     toast.success("Login realizado com sucesso!");
+    setIsLoading(false);
     navigate("/dashboard");
   };
 
