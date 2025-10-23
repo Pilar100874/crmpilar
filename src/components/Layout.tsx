@@ -97,17 +97,40 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       try {
-        // Busca o usuário e seu grupo de acesso
+        // Primeiro verifica se é um administrador
+        const { data: admin, error: adminError } = await supabase
+          .from("administradores")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        // Se for administrador, dá acesso total a todos os menus
+        if (admin) {
+          const allMenus: Record<string, MenuPermissions> = {};
+          menuItems.forEach(item => {
+            allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
+          });
+          setAllowedMenus(allMenus);
+          setIsLoading(false);
+          return;
+        }
+
+        // Se não é admin, busca o usuário e seu grupo de acesso
         const { data: usuario, error: userError } = await supabase
           .from("usuarios")
           .select("grupo_acesso_id")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (userError) throw userError;
+        // Se não encontrou nem admin nem usuário, bloqueia tudo
+        if (!usuario) {
+          setAllowedMenus({});
+          setIsLoading(false);
+          return;
+        }
 
         // Se não tem grupo de acesso, permite todos os menus
-        if (!usuario?.grupo_acesso_id) {
+        if (!usuario.grupo_acesso_id) {
           const allMenus: Record<string, MenuPermissions> = {};
           menuItems.forEach(item => {
             allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
