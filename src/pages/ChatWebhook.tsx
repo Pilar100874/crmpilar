@@ -19,6 +19,16 @@ export interface Message {
   variables?: Record<string, string>;
 }
 
+export interface WebhookVariable {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  defaultValue?: string;
+  required?: boolean;
+  format?: string;
+}
+
 export interface WebhookConfig {
   id: string;
   name: string;
@@ -27,6 +37,8 @@ export interface WebhookConfig {
   type: string;
   description: string;
   usageLocations: string[];
+  hasVariables: boolean;
+  variables?: WebhookVariable[];
   createdAt: Date;
 }
 
@@ -46,6 +58,8 @@ export default function ChatWebhook() {
   const [selectedWebhook, setSelectedWebhook] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [variableValues, setVariableValues] = useState<Record<string, any>>({});
+  const [showVariableForm, setShowVariableForm] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,6 +91,27 @@ export default function ChatWebhook() {
     }
   }, [messages]);
 
+  // Reset variable values when webhook changes
+  useEffect(() => {
+    if (selectedWebhook) {
+      const webhook = webhooks.find((w) => w.id === selectedWebhook);
+      if (webhook?.hasVariables && webhook.variables) {
+        const defaultValues: Record<string, any> = {};
+        webhook.variables.forEach(variable => {
+          defaultValues[variable.name] = variable.defaultValue || "";
+        });
+        setVariableValues(defaultValues);
+        setShowVariableForm(true);
+      } else {
+        setVariableValues({});
+        setShowVariableForm(false);
+      }
+    } else {
+      setVariableValues({});
+      setShowVariableForm(false);
+    }
+  }, [selectedWebhook, webhooks]);
+
   const sendMessage = async (
     content: string,
     contentType: Message["contentType"],
@@ -95,6 +130,17 @@ export default function ChatWebhook() {
       return;
     }
 
+    // Validar variáveis obrigatórias
+    if (webhook.hasVariables && webhook.variables) {
+      const missingRequired = webhook.variables.filter(
+        v => v.required && !variableValues[v.name]
+      );
+      if (missingRequired.length > 0) {
+        toast.error(`Preencha as variáveis obrigatórias: ${missingRequired.map(v => v.name).join(", ")}`);
+        return;
+      }
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -103,28 +149,49 @@ export default function ChatWebhook() {
       timestamp: new Date(),
       fileUrl,
       fileName,
-      variables,
+      variables: webhook.hasVariables ? variableValues : variables,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
-      const payload = {
+      // Preparar payload baseado nas variáveis
+      let requestUrl = webhook.url;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      let bodyData: any = {
         timestamp: new Date().toISOString(),
         contentType,
         content,
         fileUrl,
         fileName,
-        variables,
       };
 
-      const response = await fetch(webhook.url, {
+      // Processar variáveis por tipo
+      if (webhook.hasVariables && webhook.variables) {
+        webhook.variables.forEach(variable => {
+          const value = variableValues[variable.name];
+          
+          if (variable.type === "header") {
+            headers[variable.name] = value || variable.defaultValue || "";
+          } else if (variable.type === "query") {
+            const separator = requestUrl.includes("?") ? "&" : "?";
+            requestUrl += `${separator}${variable.name}=${encodeURIComponent(value || variable.defaultValue || "")}`;
+          } else if (variable.type === "path") {
+            requestUrl = requestUrl.replace(`:${variable.name}`, value || variable.defaultValue || "");
+          } else if (variable.type === "json") {
+            bodyData[variable.name] = value || variable.defaultValue || "";
+          }
+          // form-data será implementado separadamente se necessário
+        });
+      }
+
+      const response = await fetch(requestUrl, {
         method: webhook.method || "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        headers,
+        body: JSON.stringify(bodyData),
       });
 
       let responseData: any;
@@ -152,6 +219,8 @@ export default function ChatWebhook() {
       
       if (!responseData || (typeof responseData === "string" && !responseData.trim())) {
         toast.warning("Webhook retornou resposta vazia");
+      } else {
+        toast.success("Mensagem enviada com sucesso!");
       }
     } catch (error: any) {
       toast.error(`Erro ao enviar mensagem: ${error.message}`);
@@ -165,16 +234,32 @@ export default function ChatWebhook() {
     ? webhooks.filter((w) => w.type === selectedType && w.usageLocations?.includes("teste"))
     : [];
 
+  const currentWebhook = webhooks.find((w) => w.id === selectedWebhook);
+
   return (
     <Layout>
       <div className="min-h-full bg-gradient-to-br from-background to-secondary/20 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
-          <div>
+          <div className="flex-1">
             <h2 className="text-2xl font-bold text-foreground">TESTE DE WEBHOOKS</h2>
             <p className="text-sm text-muted-foreground">
               Configure e teste suas integrações
             </p>
+            {currentWebhook && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm font-medium">Webhook:</span>
+                <span className="text-sm text-muted-foreground">{currentWebhook.name}</span>
+                <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded font-mono">
+                  {currentWebhook.method}
+                </span>
+                {currentWebhook.hasVariables && (
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    {currentWebhook.variables?.length || 0} variáveis
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           
           <WebhookSelector
@@ -221,6 +306,58 @@ export default function ChatWebhook() {
                 </div>
               )}
             </ScrollArea>
+
+            {/* Variable Form */}
+            {showVariableForm && currentWebhook?.variables && currentWebhook.variables.length > 0 && (
+              <div className="border-t border-border bg-secondary/30 p-4">
+                <div className="mb-3">
+                  <h3 className="font-semibold text-sm mb-1">Variáveis do Webhook</h3>
+                  <p className="text-xs text-muted-foreground">Preencha os valores antes de enviar a mensagem</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto">
+                  {currentWebhook.variables.map((variable) => (
+                    <div key={variable.id} className="space-y-1">
+                      <label className="text-xs font-medium flex items-center gap-1">
+                        {variable.name}
+                        {variable.required && <span className="text-destructive">*</span>}
+                        <span className="text-xs text-muted-foreground">({variable.type})</span>
+                      </label>
+                      {variable.type === "form-data" ? (
+                        <input
+                          type="file"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setVariableValues(prev => ({
+                                ...prev,
+                                [variable.name]: file
+                              }));
+                            }
+                          }}
+                          className="text-xs w-full border rounded px-2 py-1"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={variableValues[variable.name] || ""}
+                          onChange={(e) => {
+                            setVariableValues(prev => ({
+                              ...prev,
+                              [variable.name]: e.target.value
+                            }));
+                          }}
+                          placeholder={variable.defaultValue || `Digite ${variable.name}...`}
+                          className="text-xs w-full border rounded px-2 py-1 bg-background"
+                        />
+                      )}
+                      {variable.description && (
+                        <p className="text-[10px] text-muted-foreground">{variable.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Input Area */}
             <div className="border-t border-border bg-card/80 backdrop-blur-sm p-4">
