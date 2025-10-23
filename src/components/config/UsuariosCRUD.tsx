@@ -17,7 +17,6 @@ interface Usuario {
   unidade_id: string | null;
   grupo_acesso_id: string | null;
   estabelecimento_id: string | null;
-  is_agente?: boolean | null;
   is_admin?: boolean;
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
@@ -60,7 +59,6 @@ export const UsuariosCRUD = () => {
   const [grupoAcessoId, setGrupoAcessoId] = useState("");
   const [estabelecimentoId, setEstabelecimentoId] = useState("");
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
-  const [isAgente, setIsAgente] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
@@ -177,7 +175,6 @@ export const UsuariosCRUD = () => {
       unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
       estabelecimento_id: estabelecimentoId,
-      is_agente: isAgente,
       senha_hash: senha || undefined,
     };
 
@@ -285,7 +282,6 @@ export const UsuariosCRUD = () => {
     setGrupoAcessoId("");
     setEstabelecimentoId("");
     setSegmentosSelecionados([]);
-    setIsAgente(false);
     setIsAdmin(false);
     setEditingId(null);
   };
@@ -297,7 +293,6 @@ export const UsuariosCRUD = () => {
     setUnidadeId(usuario.unidade_id || "");
     setGrupoAcessoId(usuario.grupo_acesso_id || "");
     setEstabelecimentoId(usuario.estabelecimento_id || "");
-    setIsAgente(usuario.is_agente || false);
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
@@ -445,17 +440,6 @@ export const UsuariosCRUD = () => {
         <div className="flex gap-6">
           <div className="flex items-center space-x-2">
             <Switch
-              id="is-agente"
-              checked={isAgente}
-              onCheckedChange={setIsAgente}
-            />
-            <Label htmlFor="is-agente" className="cursor-pointer">
-              É Agente
-            </Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
               id="is-admin"
               checked={isAdmin}
               onCheckedChange={setIsAdmin}
@@ -513,7 +497,6 @@ export const UsuariosCRUD = () => {
               <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                 <span>{usuario.email}</span>
                 {usuario.telefone && <span>• {usuario.telefone}</span>}
-                {usuario.is_agente && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Agente</span>}
                 {usuario.is_admin && <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">Admin</span>}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
