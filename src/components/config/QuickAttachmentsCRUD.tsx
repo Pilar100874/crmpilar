@@ -118,12 +118,19 @@ export default function QuickAttachmentsCRUD({ estabelecimentoId }: QuickAttachm
       return;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
     const dataToSave = {
       title: formData.title,
       type: formData.type,
       url: formData.url,
       grupo_acesso_id: formData.grupo_acesso_id || null,
       is_global: true,
+      user_id: user.id,
       file_type: formData.type === "file" ? formData.file_type : null,
       thumbnail_url: formData.type === "file" ? formData.thumbnail_url : null,
       estabelecimento_id: estabId,
@@ -146,14 +153,15 @@ export default function QuickAttachmentsCRUD({ estabelecimentoId }: QuickAttachm
         .insert([dataToSave]);
 
       if (error) {
-        toast.error("Erro ao criar anexo rápido");
+        console.error("Erro ao criar anexo:", error);
+        toast.error(`Erro ao criar anexo rápido: ${error.message}`);
         return;
       }
       toast.success("Anexo rápido criado!");
     }
 
     resetForm();
-    loadQuickAttachments();
+    await loadQuickAttachments();
   };
 
   const handleEdit = (attachment: QuickAttachment) => {
