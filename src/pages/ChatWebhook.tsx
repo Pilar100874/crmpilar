@@ -5,8 +5,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatInput from "@/components/chat/ChatInput";
 import WebhookSelector from "@/components/chat/WebhookSelector";
-import { Webhook } from "lucide-react";
+import { Webhook, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export interface Message {
   id: string;
@@ -60,6 +61,7 @@ export default function ChatWebhook() {
   const [isLoading, setIsLoading] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showVariableForm, setShowVariableForm] = useState(false);
+  const [showAIWebhooks, setShowAIWebhooks] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -230,7 +232,9 @@ export default function ChatWebhook() {
     }
   };
 
-  const filteredWebhooks = selectedType
+  const filteredWebhooks = showAIWebhooks
+    ? webhooks.filter((w) => w.usageLocations?.includes("Teste de webhook"))
+    : selectedType
     ? webhooks.filter((w) => w.type === selectedType && w.usageLocations?.includes("teste"))
     : [];
 
@@ -262,14 +266,31 @@ export default function ChatWebhook() {
             )}
           </div>
           
-          <WebhookSelector
-            webhooks={filteredWebhooks}
-            webhookTypes={webhookTypes}
-            selectedWebhook={selectedWebhook}
-            selectedType={selectedType}
-            onSelectWebhook={setSelectedWebhook}
-            onSelectType={setSelectedType}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showAIWebhooks ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setShowAIWebhooks(!showAIWebhooks);
+                if (!showAIWebhooks) {
+                  setSelectedType(null);
+                }
+              }}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              IA
+            </Button>
+            
+            <WebhookSelector
+              webhooks={filteredWebhooks}
+              webhookTypes={webhookTypes}
+              selectedWebhook={selectedWebhook}
+              selectedType={selectedType}
+              onSelectWebhook={setSelectedWebhook}
+              onSelectType={setSelectedType}
+            />
+          </div>
         </div>
 
         {/* Chat Area */}
