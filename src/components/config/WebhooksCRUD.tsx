@@ -64,6 +64,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     { id: "teste", name: "TESTE DE WEBHOOK" },
     { id: "ia-chat", name: "IA CHAT" },
     { id: "campanha", name: "CAMPANHA" },
+    { id: "resposta-automatica-chat", name: "RESPOSTA AUTOMATICA NO CHAT" },
   ];
   const [editingWebhook, setEditingWebhook] = useState<string | null>(null);
   const [formData, setFormData] = useState({
