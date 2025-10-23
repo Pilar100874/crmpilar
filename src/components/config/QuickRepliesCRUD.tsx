@@ -21,6 +21,7 @@ interface QuickReply {
   content: string;
   grupo_acesso_id: string | null;
   is_global: boolean;
+  shortcut?: string | null;
 }
 
 interface GrupoAcesso {
@@ -37,6 +38,7 @@ export default function QuickRepliesCRUD() {
     title: "",
     content: "",
     grupo_acesso_id: "",
+    shortcut: "",
   });
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export default function QuickRepliesCRUD() {
       content: formData.content,
       grupo_acesso_id: formData.grupo_acesso_id || null,
       is_global: true,
+      shortcut: formData.shortcut || null,
     };
 
     if (isEditing && currentId) {
@@ -120,6 +123,7 @@ export default function QuickRepliesCRUD() {
       title: reply.title,
       content: reply.content,
       grupo_acesso_id: reply.grupo_acesso_id || "",
+      shortcut: reply.shortcut || "",
     });
   };
 
@@ -141,7 +145,7 @@ export default function QuickRepliesCRUD() {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", content: "", grupo_acesso_id: "" });
+    setFormData({ title: "", content: "", grupo_acesso_id: "", shortcut: "" });
     setIsEditing(false);
     setCurrentId(null);
   };
@@ -173,6 +177,21 @@ export default function QuickRepliesCRUD() {
               placeholder="Digite o texto pronto..."
               rows={4}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="shortcut">Atalho (opcional)</Label>
+            <Input
+              id="shortcut"
+              value={formData.shortcut}
+              onChange={(e) =>
+                setFormData({ ...formData, shortcut: e.target.value })
+              }
+              placeholder="Ex: /oi, /ajuda, ctrl+a"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Digite este atalho no campo de mensagem para inserir o texto automaticamente
+            </p>
           </div>
 
           <div>
@@ -217,6 +236,11 @@ export default function QuickRepliesCRUD() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium">{reply.title}</h4>
+                {reply.shortcut && (
+                  <p className="text-xs text-primary font-mono bg-primary/10 px-2 py-1 rounded inline-block mb-1">
+                    {reply.shortcut}
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
                   {reply.content}
                 </p>

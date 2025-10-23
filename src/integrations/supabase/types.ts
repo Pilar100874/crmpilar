@@ -506,6 +506,7 @@ export type Database = {
           grupo_acesso_id: string | null
           id: string
           is_global: boolean | null
+          shortcut: string | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -516,6 +517,7 @@ export type Database = {
           grupo_acesso_id?: string | null
           id?: string
           is_global?: boolean | null
+          shortcut?: string | null
           title: string
           updated_at?: string | null
           user_id?: string | null
@@ -526,6 +528,7 @@ export type Database = {
           grupo_acesso_id?: string | null
           id?: string
           is_global?: boolean | null
+          shortcut?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string | null

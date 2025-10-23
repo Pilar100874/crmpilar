@@ -16,6 +16,7 @@ interface QuickReply {
   title: string;
   content: string;
   is_global: boolean;
+  shortcut?: string | null;
 }
 
 interface QuickRepliesSelectorProps {
@@ -83,7 +84,14 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h5 className="font-medium text-sm">{reply.title}</h5>
+                      <div className="flex items-center gap-2 mb-1">
+                        {reply.shortcut && (
+                          <span className="text-xs text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">
+                            {reply.shortcut}
+                          </span>
+                        )}
+                        <h5 className="font-medium text-sm">{reply.title}</h5>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                         {reply.content}
                       </p>

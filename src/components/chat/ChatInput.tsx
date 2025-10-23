@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Mic, Image, Paperclip, Variable } from "lucide-react";
@@ -25,7 +26,23 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
+  const [quickReplies, setQuickReplies] = useState<Array<{content: string, shortcut: string}>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    loadQuickReplies();
+  }, []);
+
+  const loadQuickReplies = async () => {
+    const { data } = await supabase
+      .from("quick_replies")
+      .select("content, shortcut")
+      .not("shortcut", "is", null);
+    
+    if (data) {
+      setQuickReplies(data);
+    }
+  };
 
   const handleSend = () => {
     if (message.trim() && !disabled) {
@@ -82,6 +99,20 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
     textareaRef.current?.focus();
   };
 
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newMessage = e.target.value;
+    setMessage(newMessage);
+
+    // Check if any shortcut matches the end of the message
+    for (const reply of quickReplies) {
+      if (reply.shortcut && newMessage.endsWith(reply.shortcut)) {
+        const beforeShortcut = newMessage.slice(0, -reply.shortcut.length);
+        setMessage(beforeShortcut + reply.content);
+        break;
+      }
+    }
+  };
+
   const handleQuickAttachmentSelect = (attachment: any) => {
     onSendMessage(
       `${attachment.type === "link" ? "Link" : "Arquivo"}: ${attachment.title}`,
@@ -98,7 +129,7 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
           <Textarea
             ref={textareaRef}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
             className="min-h-[80px] resize-none"
