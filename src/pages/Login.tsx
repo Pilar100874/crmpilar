@@ -39,6 +39,14 @@ export default function Login() {
   const [selectedUsuario, setSelectedUsuario] = useState<string>("");
   const [userPassword, setUserPassword] = useState("");
 
+  // Garantir logout ao entrar na tela de login
+  useEffect(() => {
+    const clearSession = async () => {
+      await supabase.auth.signOut();
+    };
+    clearSession();
+  }, []);
+
   useEffect(() => {
     if (step === "select-company") {
       fetchEstabelecimentos();
@@ -52,10 +60,14 @@ export default function Login() {
   }, [selectedEstabelecimento]);
 
   const fetchEstabelecimentos = async () => {
+    console.log("Buscando estabelecimentos...");
     const { data, error } = await supabase
       .from("estabelecimentos")
       .select("id, nome, cnpj")
       .order("nome");
+
+    console.log("Estabelecimentos retornados:", data);
+    console.log("Erro (se houver):", error);
 
     if (error) {
       toast.error("Erro ao carregar estabelecimentos");
