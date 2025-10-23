@@ -168,6 +168,15 @@ export const UsuariosCRUD = () => {
       return;
     }
 
+    if (senha && senha.length < 6) {
+      toast({
+        title: "Senha inválida",
+        description: "A senha deve ter no mínimo 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const usuarioData = {
       nome,
       email,
@@ -378,14 +387,20 @@ export const UsuariosCRUD = () => {
           </div>
 
           <div>
-            <Label htmlFor="usuario-senha">Senha {!editingId && "*"}</Label>
+            <Label htmlFor="usuario-senha">Senha {!editingId && "*"} (mínimo 6 caracteres)</Label>
             <Input
               id="usuario-senha"
               type="password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              placeholder={editingId ? "Deixe vazio para manter" : "Digite a senha"}
+              placeholder={editingId ? "Deixe vazio para manter" : "Mínimo 6 caracteres"}
+              minLength={6}
             />
+            {senha && senha.length < 6 && (
+              <p className="text-xs text-destructive mt-1">
+                A senha deve ter no mínimo 6 caracteres
+              </p>
+            )}
           </div>
 
           <div>
