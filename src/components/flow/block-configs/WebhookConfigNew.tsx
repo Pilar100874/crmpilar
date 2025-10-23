@@ -6,6 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Info, Plus } from "lucide-react";
 import { VariableInput } from "@/components/flow/VariableInput";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { toast } from "sonner";
 
 interface WebhookVariable {
   id: string;
@@ -44,16 +47,47 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
   const testFields = config.testFields || [];
 
   useEffect(() => {
-    // Carregar webhooks do localStorage
-    const savedWebhooks = localStorage.getItem("webhooks");
-    if (savedWebhooks) {
-      const parsed = JSON.parse(savedWebhooks);
-      const botWebhooks = parsed
-        .filter((w: WebhookConfig) => w.usageLocations?.includes("bot"))
-        .map((w: any) => ({ ...w, createdAt: new Date(w.createdAt) }));
-      setWebhooks(botWebhooks);
-    }
+    loadWebhooks();
   }, []);
+
+  const loadWebhooks = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) {
+      toast.error("Estabelecimento não identificado");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('webhooks')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .eq('type', 'bot')
+      .eq('active', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Erro ao carregar webhooks:", error);
+      toast.error("Erro ao carregar webhooks");
+      return;
+    }
+
+    const botWebhooks = (data || [])
+      .filter((w: any) => w.usage_locations?.includes("bot"))
+      .map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        url: w.url,
+        method: w.method,
+        type: w.type,
+        description: w.description || "",
+        usageLocations: w.usage_locations || [],
+        hasVariables: w.has_variables || false,
+        variables: w.variables || [],
+        createdAt: new Date(w.created_at),
+      }));
+    
+    setWebhooks(botWebhooks);
+  };
 
   useEffect(() => {
     // Quando um webhook é selecionado, carregar seus dados
