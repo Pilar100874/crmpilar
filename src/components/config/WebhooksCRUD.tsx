@@ -82,6 +82,7 @@ export function WebhooksCRUD() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("all");
+  const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
 
   const resetVariableForm = () => {
     setNewVariableName("");
@@ -286,8 +287,8 @@ export function WebhooksCRUD() {
       return;
     }
 
-    // Se já existe variável, forçar o tipo para ser o mesmo
-    if (formData.variables.length > 0) {
+    // Se já existe variável e não está editando, forçar o tipo para ser o mesmo
+    if (formData.variables.length > 0 && !editingVariableId) {
       const existingType = formData.variables[0].type;
       // Garantir que o tipo está correto (por segurança)
       if (newVariableType !== existingType) {
@@ -385,27 +386,75 @@ export function WebhooksCRUD() {
       // Permite criar sem valor padrão
     }
 
-    const newVariable: WebhookVariable = {
-      id: Date.now().toString(),
-      name: newVariableName,
-      type: newVariableType,
-      description: newVariableDescription || undefined,
-      defaultValue: newVariableDefaultValue || undefined,
-      required: newVariableRequired,
-      format: newVariableType === "json" ? newVariableFormat : undefined,
-    };
+    if (editingVariableId) {
+      // Atualizar variável existente
+      setFormData(prev => ({
+        ...prev,
+        variables: prev.variables.map(v => 
+          v.id === editingVariableId 
+            ? {
+                ...v,
+                name: newVariableName,
+                type: newVariableType,
+                description: newVariableDescription || undefined,
+                defaultValue: newVariableDefaultValue || undefined,
+                required: newVariableRequired,
+                format: newVariableType === "json" ? newVariableFormat : undefined,
+              }
+            : v
+        )
+      }));
+      
+      // Manter o tipo para a próxima variável
+      const currentType = newVariableType;
+      resetVariableForm();
+      setNewVariableType(currentType);
+      setEditingVariableId(null);
+      
+      toast.success("Variável atualizada!");
+    } else {
+      // Adicionar nova variável
+      const newVariable: WebhookVariable = {
+        id: Date.now().toString(),
+        name: newVariableName,
+        type: newVariableType,
+        description: newVariableDescription || undefined,
+        defaultValue: newVariableDefaultValue || undefined,
+        required: newVariableRequired,
+        format: newVariableType === "json" ? newVariableFormat : undefined,
+      };
 
-    setFormData(prev => ({
-      ...prev,
-      variables: [...prev.variables, newVariable]
-    }));
-    
-    // Manter o tipo para a próxima variável
-    const currentType = newVariableType;
+      setFormData(prev => ({
+        ...prev,
+        variables: [...prev.variables, newVariable]
+      }));
+      
+      // Manter o tipo para a próxima variável
+      const currentType = newVariableType;
+      resetVariableForm();
+      setNewVariableType(currentType);
+      
+      toast.success("Variável adicionada!");
+    }
+  };
+
+  const handleEditVariable = (variable: WebhookVariable) => {
+    setEditingVariableId(variable.id);
+    setNewVariableName(variable.name);
+    setNewVariableType(variable.type);
+    setNewVariableDescription(variable.description || "");
+    setNewVariableDefaultValue(variable.defaultValue || "");
+    setNewVariableRequired(variable.required || false);
+    setNewVariableFormat(variable.format || "string");
+  };
+
+  const handleCancelEditVariable = () => {
+    setEditingVariableId(null);
     resetVariableForm();
-    setNewVariableType(currentType);
-    
-    toast.success("Variável adicionada!");
+    // Manter o tipo se houver variáveis
+    if (formData.variables.length > 0) {
+      setNewVariableType(formData.variables[0].type);
+    }
   };
 
   const handleDeleteVariable = (variableId: string) => {
@@ -941,16 +990,28 @@ export function WebhooksCRUD() {
                     </label>
                   </div>
 
-                  <Button type="button" onClick={handleAddVariable} size="sm" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Variável
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button type="button" onClick={handleAddVariable} size="sm" className="flex-1">
+                      <Plus className="h-4 w-4 mr-2" />
+                      {editingVariableId ? "Atualizar Variável" : "Adicionar Variável"}
+                    </Button>
+                    {editingVariableId && (
+                      <Button type="button" onClick={handleCancelEditVariable} size="sm" variant="outline">
+                        Cancelar
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 {formData.variables.length > 0 && (
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
                     {formData.variables.map((variable) => (
-                      <div key={variable.id} className="flex items-start justify-between p-2 border rounded bg-background">
+                      <div 
+                        key={variable.id} 
+                        className={`flex items-start justify-between p-2 border rounded bg-background ${
+                          editingVariableId === variable.id ? 'ring-2 ring-primary' : ''
+                        }`}
+                      >
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-sm">{variable.name}</span>
@@ -981,14 +1042,26 @@ export function WebhooksCRUD() {
                             </p>
                           )}
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteVariable(variable.id)}
-                        >
-                          <X className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditVariable(variable)}
+                            disabled={editingVariableId !== null && editingVariableId !== variable.id}
+                          >
+                            <Pencil className="h-4 w-4 text-primary" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteVariable(variable.id)}
+                            disabled={editingVariableId !== null}
+                          >
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
