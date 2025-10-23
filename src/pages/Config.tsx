@@ -160,24 +160,6 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="redes-sociais" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Redes Sociais</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Configure os links das suas redes sociais para o bloco de despedida
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6 space-y-4">
-...
-              <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
-            </AccordionContent>
-          </AccordionItem>
-
           <AccordionItem value="cadastro-webhooks" className="border rounded-lg bg-white shadow-sm">
             <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
@@ -212,71 +194,123 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="cadastro-clientes" className="border rounded-lg bg-white shadow-sm">
+          <AccordionItem value="cadastro-estabelecimentos" className="border rounded-lg bg-white shadow-sm">
             <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
+                <Store className="w-5 h-5 text-primary" />
                 <div className="text-left">
-                  <div className="font-semibold">Campos do Cadastro de Cliente</div>
+                  <div className="font-semibold">Cadastro de Estabelecimentos</div>
                   <div className="text-sm text-muted-foreground font-normal">
-                    Configure campos e informações dos clientes
+                    Gerencie estabelecimentos/empresas do sistema
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <ClientesCRUD />
-            </AccordionContent>
-          </AccordionItem>
+            <AccordionContent className="px-6 pb-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Estabelecimentos</h3>
+                <EstabelecimentosCRUD />
+              </div>
 
-          <AccordionItem value="cadastro-unidades" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Cadastro de Unidades</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Gerencie as unidades/filiais da empresa
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <UnidadesCRUD />
-            </AccordionContent>
-          </AccordionItem>
+              <Accordion type="single" collapsible className="space-y-2">
+                <AccordionItem value="redes-sociais" className="border rounded-md">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Share2 className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Redes Sociais</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <Input
+                        id="whatsapp"
+                        placeholder="https://wa.me/5511999999999"
+                        value={socialLinks.whatsapp}
+                        onChange={(e) => setSocialLinks({...socialLinks, whatsapp: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="instagram">Instagram</Label>
+                      <Input
+                        id="instagram"
+                        placeholder="https://instagram.com/seuperfil"
+                        value={socialLinks.instagram}
+                        onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="facebook">Facebook</Label>
+                      <Input
+                        id="facebook"
+                        placeholder="https://facebook.com/suapagina"
+                        value={socialLinks.facebook}
+                        onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="website">Website</Label>
+                      <Input
+                        id="website"
+                        placeholder="https://seusite.com.br"
+                        value={socialLinks.website}
+                        onChange={(e) => setSocialLinks({...socialLinks, website: e.target.value})}
+                      />
+                    </div>
+                    <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
+                  </AccordionContent>
+                </AccordionItem>
 
-          <AccordionItem value="cadastro-segmentos" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Tag className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Cadastro de Segmentos</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Gerencie os segmentos de atuação
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <SegmentosCRUD />
-            </AccordionContent>
-          </AccordionItem>
+                <AccordionItem value="cadastro-clientes" className="border rounded-md">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Campos do Cadastro de Cliente</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 space-y-6">
+                    <ClientesCRUD />
+                    
+                    <Accordion type="single" collapsible className="space-y-2">
+                      <AccordionItem value="grupos-acesso" className="border rounded-md">
+                        <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-muted/20">
+                          <div className="flex items-center gap-2">
+                            <FolderTree className="w-4 h-4 text-primary" />
+                            <span className="font-medium text-sm">Grupos de Acesso</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                          <GruposAcessoCRUD />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </AccordionContent>
+                </AccordionItem>
 
-          <AccordionItem value="grupos-acesso" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <FolderTree className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Grupos de Acesso</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Configure grupos e permissões de menu
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <GruposAcessoCRUD />
+                <AccordionItem value="cadastro-unidades" className="border rounded-md">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Cadastro de Unidades</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <UnidadesCRUD />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="cadastro-segmentos" className="border rounded-md">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Cadastro de Segmentos</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <SegmentosCRUD />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </AccordionContent>
           </AccordionItem>
 
@@ -294,23 +328,6 @@ export default function Config() {
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <UsuariosCRUD />
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="cadastro-estabelecimentos" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Store className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Cadastro de Estabelecimentos</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Gerencie estabelecimentos/empresas do sistema
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <EstabelecimentosCRUD />
             </AccordionContent>
           </AccordionItem>
 
