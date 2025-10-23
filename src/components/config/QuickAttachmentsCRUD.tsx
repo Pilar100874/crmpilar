@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Pencil, Trash2, X, Link as LinkIcon, FileUp } from "lucide-react";
+import { Pencil, Trash2, X, Link as LinkIcon, FileUp, Upload } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -34,6 +34,8 @@ export default function QuickAttachmentsCRUD() {
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: "",
     type: "link" as "link" | "file",
@@ -144,10 +146,47 @@ export default function QuickAttachmentsCRUD() {
     loadQuickAttachments();
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `attachments/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('bot-media')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('bot-media')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, url: publicUrl }));
+      toast.success("Arquivo enviado com sucesso!");
+    } catch (error: any) {
+      toast.error(`Erro ao enviar arquivo: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({ title: "", type: "link", url: "", grupo_acesso_id: "" });
     setIsEditing(false);
     setCurrentId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const linkAttachments = quickAttachments.filter((a) => a.type === "link");
@@ -189,20 +228,47 @@ export default function QuickAttachmentsCRUD() {
 
           <div>
             <Label htmlFor="url">
-              {formData.type === "link" ? "URL *" : "URL do Arquivo *"}
+              {formData.type === "link" ? "URL *" : "Arquivo *"}
             </Label>
-            <Input
-              id="url"
-              value={formData.url}
-              onChange={(e) =>
-                setFormData({ ...formData, url: e.target.value })
-              }
-              placeholder={
-                formData.type === "link"
-                  ? "https://exemplo.com"
-                  : "https://exemplo.com/arquivo.pdf"
-              }
-            />
+            {formData.type === "file" ? (
+              <div className="space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                  accept="*/*"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="flex-1"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isUploading ? "Enviando..." : "Selecionar Arquivo"}
+                  </Button>
+                </div>
+                {formData.url && (
+                  <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+                    <p className="font-medium">Arquivo enviado:</p>
+                    <p className="truncate">{formData.url}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Input
+                id="url"
+                value={formData.url}
+                onChange={(e) =>
+                  setFormData({ ...formData, url: e.target.value })
+                }
+                placeholder="https://exemplo.com"
+              />
+            )}
           </div>
 
           <div>
