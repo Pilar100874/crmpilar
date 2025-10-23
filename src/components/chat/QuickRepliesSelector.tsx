@@ -10,6 +10,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface QuickReply {
   id: string;
@@ -35,9 +36,16 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
   }, [open]);
 
   const loadQuickReplies = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) {
+      toast.error("Estabelecimento não identificado");
+      return;
+    }
+
     const { data, error } = await supabase
       .from("quick_replies")
       .select("*")
+      .eq("estabelecimento_id", estabId)
       .order("is_global", { ascending: false })
       .order("created_at", { ascending: false });
 

@@ -10,6 +10,7 @@ import EmojiPicker from "./EmojiPicker";
 import QuickRepliesSelector from "./QuickRepliesSelector";
 import QuickAttachmentsSelector from "./QuickAttachmentsSelector";
 import { Message } from "@/pages/ChatWebhook";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface ChatInputProps {
   onSendMessage: (
@@ -34,9 +35,13 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   }, []);
 
   const loadQuickReplies = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
     const { data } = await supabase
       .from("quick_replies")
       .select("content, shortcut")
+      .eq("estabelecimento_id", estabId)
       .not("shortcut", "is", null);
     
     if (data) {
