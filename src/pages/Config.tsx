@@ -50,40 +50,6 @@ export default function Config() {
         </div>
 
         <Accordion type="single" collapsible className="space-y-4 max-w-4xl">
-          <AccordionItem value="n8n" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Webhook className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Integração n8n</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Configure a conexão com seu workflow n8n
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="n8n-url">URL Base n8n</Label>
-                <Input
-                  id="n8n-url"
-                  placeholder="https://seu-n8n.com"
-                  defaultValue=""
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="n8n-key">API Key</Label>
-                <Input
-                  id="n8n-key"
-                  type="password"
-                  placeholder="Sua API key"
-                  defaultValue=""
-                />
-              </div>
-              <Button className="w-full">Salvar Integração</Button>
-            </AccordionContent>
-          </AccordionItem>
-
           <AccordionItem value="canais" className="border rounded-lg bg-white shadow-sm">
             <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
