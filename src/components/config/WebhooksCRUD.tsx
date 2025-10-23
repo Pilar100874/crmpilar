@@ -258,6 +258,96 @@ export function WebhooksCRUD() {
       return;
     }
 
+    // Validações específicas por tipo
+    
+    // 1. Validar nome da variável (sem caracteres especiais problemáticos)
+    const namePattern = /^[a-zA-Z0-9_-]+$/;
+    if (!namePattern.test(newVariableName)) {
+      toast.error("O nome da variável deve conter apenas letras, números, underscore (_) ou hífen (-)");
+      return;
+    }
+
+    // 2. Validar Headers (não pode ter espaços ou caracteres especiais no nome)
+    if (newVariableType === "header") {
+      const headerPattern = /^[a-zA-Z0-9-]+$/;
+      if (!headerPattern.test(newVariableName)) {
+        toast.error("Nome de header inválido. Use apenas letras, números e hífen");
+        return;
+      }
+    }
+
+    // 3. Validar Query Params (formato de parâmetro URL)
+    if (newVariableType === "query") {
+      const queryPattern = /^[a-zA-Z0-9_]+$/;
+      if (!queryPattern.test(newVariableName)) {
+        toast.error("Nome de query param inválido. Use apenas letras, números e underscore");
+        return;
+      }
+    }
+
+    // 4. Validar Path Params (não pode começar com :)
+    if (newVariableType === "path") {
+      if (newVariableName.startsWith(":")) {
+        toast.error("Não use ':' no início do nome do path param");
+        return;
+      }
+      const pathPattern = /^[a-zA-Z0-9_]+$/;
+      if (!pathPattern.test(newVariableName)) {
+        toast.error("Nome de path param inválido. Use apenas letras, números e underscore");
+        return;
+      }
+    }
+
+    // 5. Validar valor padrão para JSON com formato específico
+    if (newVariableType === "json" && newVariableDefaultValue) {
+      if (newVariableFormat === "number") {
+        if (isNaN(Number(newVariableDefaultValue))) {
+          toast.error("Valor padrão deve ser um número válido");
+          return;
+        }
+      } else if (newVariableFormat === "boolean") {
+        if (newVariableDefaultValue !== "true" && newVariableDefaultValue !== "false") {
+          toast.error("Valor padrão deve ser 'true' ou 'false'");
+          return;
+        }
+      } else if (newVariableFormat === "object") {
+        try {
+          const parsed = JSON.parse(newVariableDefaultValue);
+          if (typeof parsed !== "object" || Array.isArray(parsed)) {
+            toast.error("Valor padrão deve ser um objeto JSON válido");
+            return;
+          }
+        } catch (e) {
+          toast.error("Valor padrão deve ser um JSON válido de objeto. Ex: {\"key\": \"value\"}");
+          return;
+        }
+      } else if (newVariableFormat === "array") {
+        try {
+          const parsed = JSON.parse(newVariableDefaultValue);
+          if (!Array.isArray(parsed)) {
+            toast.error("Valor padrão deve ser um array JSON válido");
+            return;
+          }
+        } catch (e) {
+          toast.error("Valor padrão deve ser um JSON válido de array. Ex: [\"item1\", \"item2\"]");
+          return;
+        }
+      }
+    }
+
+    // 6. Validar Query Params - valor padrão não pode ter espaços
+    if (newVariableType === "query" && newVariableDefaultValue) {
+      if (newVariableDefaultValue.includes(" ")) {
+        toast.error("Valor padrão de query param não pode conter espaços");
+        return;
+      }
+    }
+
+    // 7. Validar Form Data - se não tem arquivo e não tem valor padrão
+    if (newVariableType === "form-data" && !selectedFile && !newVariableDefaultValue) {
+      // Permite criar sem valor padrão
+    }
+
     const newVariable: WebhookVariable = {
       id: Date.now().toString(),
       name: newVariableName,
@@ -553,11 +643,11 @@ export function WebhooksCRUD() {
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      {newVariableType === "header" && "Nome do cabeçalho HTTP que será enviado"}
-                      {newVariableType === "query" && "Nome do parâmetro que aparece na URL após '?'"}
-                      {newVariableType === "path" && "Nome do parâmetro dinâmico na rota (use sem ':')"}
-                      {newVariableType === "form-data" && "Nome do campo no formulário"}
-                      {newVariableType === "json" && "Chave do objeto JSON que será enviado"}
+                      {newVariableType === "header" && "Use apenas letras, números e hífen (ex: X-API-Key)"}
+                      {newVariableType === "query" && "Use apenas letras, números e underscore (ex: user_id)"}
+                      {newVariableType === "path" && "Use apenas letras, números e underscore, sem ':' (ex: userId)"}
+                      {newVariableType === "form-data" && "Use apenas letras, números, underscore ou hífen"}
+                      {newVariableType === "json" && "Use apenas letras, números, underscore ou hífen"}
                     </p>
                   </div>
 
@@ -582,16 +672,16 @@ export function WebhooksCRUD() {
                           <><strong>Exemplo:</strong> "João Silva", "user@email.com"</>
                         )}
                         {newVariableFormat === "number" && (
-                          <><strong>Exemplo:</strong> 123, 45.67, -10</>
+                          <><strong>Exemplo:</strong> 123, 45.67, -10 (somente números)</>
                         )}
                         {newVariableFormat === "boolean" && (
-                          <><strong>Exemplo:</strong> true, false</>
+                          <><strong>Exemplo:</strong> true ou false (exatamente assim)</>
                         )}
                         {newVariableFormat === "object" && (
-                          <><strong>Exemplo:</strong> {`{ "name": "João", "age": 30 }`}</>
+                          <><strong>Exemplo JSON:</strong> {`{"name": "João", "age": 30}`}</>
                         )}
                         {newVariableFormat === "array" && (
-                          <><strong>Exemplo:</strong> ["item1", "item2", "item3"]</>
+                          <><strong>Exemplo JSON:</strong> ["item1", "item2", "item3"]</>
                         )}
                       </div>
                     </div>
