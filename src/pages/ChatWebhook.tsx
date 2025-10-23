@@ -480,53 +480,19 @@ export default function ChatWebhook() {
               </div>
 
               {/* AI Webhooks List */}
-              {showAIChat && (
-                <div className="mb-3">
-                  <div className="text-xs font-semibold mb-2 text-primary flex items-center gap-2">
-                    <Sparkles className="h-3 w-3" />
-                    Assistentes IA Disponíveis
-                  </div>
-                  {aiWebhooks.length > 0 ? (
-                    <div className="grid gap-2">
-                      {aiWebhooks.map((webhook) => (
-                        <button
-                          key={webhook.id}
-                          onClick={() => setSelectedAIWebhook(webhook.id)}
-                          className={`group relative p-3 rounded-lg text-left transition-all ${
-                            selectedAIWebhook === webhook.id
-                              ? "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground shadow-lg"
-                              : "bg-card hover:bg-secondary/50 border border-border hover:border-primary/30"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-sm mb-1 truncate">{webhook.name}</div>
-                              {webhook.description && (
-                                <p className={`text-xs leading-relaxed ${
-                                  selectedAIWebhook === webhook.id ? "opacity-90" : "text-muted-foreground"
-                                }`}>
-                                  {webhook.description}
-                                </p>
-                              )}
-                            </div>
-                            <div className={`flex items-center gap-1 text-xs font-mono px-2 py-1 rounded ${
-                              selectedAIWebhook === webhook.id 
-                                ? "bg-white/20" 
-                                : "bg-secondary text-secondary-foreground"
-                            }`}>
-                              {webhook.method}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
-                      <p className="text-xs text-muted-foreground text-center">
-                        Nenhum webhook com local de uso "Menu do Chat" encontrado
-                      </p>
-                    </div>
-                  )}
+              {showAIChat && aiWebhooks.length > 0 && (
+                <div className="mb-2">
+                  <select
+                    value={selectedAIWebhook || ""}
+                    onChange={(e) => setSelectedAIWebhook(e.target.value)}
+                    className="w-full text-sm border rounded-lg px-3 py-2 bg-background hover:bg-secondary/50 transition-colors"
+                  >
+                    {aiWebhooks.map((webhook) => (
+                      <option key={webhook.id} value={webhook.id}>
+                        {webhook.name} • {webhook.method}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
@@ -534,13 +500,6 @@ export default function ChatWebhook() {
               {showAIChat && (
                 <Card className="mb-3 bg-secondary/30 border-primary/20">
                   <div className="p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                        Chat IA - {currentAIWebhook?.name}
-                      </h4>
-                    </div>
-                    
                     {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
