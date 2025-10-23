@@ -9,7 +9,6 @@ import WebhookSelector from "@/components/chat/WebhookSelector";
 import { Button } from "@/components/ui/button";
 import { Settings, Webhook } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/logo_preto.png";
 
 export interface Message {
   id: string;
@@ -170,37 +169,31 @@ export default function ChatWebhook() {
     <Layout>
       <div className="min-h-full bg-gradient-to-br from-background to-secondary/20 flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img src={logo} alt="Logo" className="h-10 w-auto" />
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                    Teste de Webhooks
-                  </h1>
-                  <p className="text-sm text-muted-foreground">Integração com n8n / WAHA / WhatsApp</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <WebhookSelector
-                  webhooks={filteredWebhooks}
-                  webhookTypes={webhookTypes}
-                  selectedWebhook={selectedWebhook}
-                  selectedType={selectedType}
-                  onSelectWebhook={setSelectedWebhook}
-                  onSelectType={setSelectedType}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsManagerOpen(true)}
-                  className="hover:bg-primary/10"
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+        <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">TESTE DE WEBHOOKS</h2>
+            <p className="text-sm text-muted-foreground">
+              Configure e teste suas integrações
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <WebhookSelector
+              webhooks={filteredWebhooks}
+              webhookTypes={webhookTypes}
+              selectedWebhook={selectedWebhook}
+              selectedType={selectedType}
+              onSelectWebhook={setSelectedWebhook}
+              onSelectType={setSelectedType}
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsManagerOpen(true)}
+              className="hover:bg-primary/10"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
