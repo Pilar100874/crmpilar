@@ -16,6 +16,10 @@ export interface WebhookVariable {
   name: string;
   description: string;
   type: string;
+  key?: string; // Para headers, query params, form-data
+  defaultValue?: string; // Valor padrão
+  required?: boolean; // Se é obrigatório
+  format?: string; // Para JSON (string, number, boolean, object, array)
 }
 
 export interface WebhookConfig {
@@ -72,6 +76,10 @@ export function WebhooksCRUD() {
   const [newVariableName, setNewVariableName] = useState("");
   const [newVariableDescription, setNewVariableDescription] = useState("");
   const [newVariableType, setNewVariableType] = useState("json");
+  const [newVariableKey, setNewVariableKey] = useState("");
+  const [newVariableDefaultValue, setNewVariableDefaultValue] = useState("");
+  const [newVariableRequired, setNewVariableRequired] = useState(false);
+  const [newVariableFormat, setNewVariableFormat] = useState("string");
 
   useEffect(() => {
     const savedWebhooks = localStorage.getItem("webhooks");
@@ -233,11 +241,21 @@ export function WebhooksCRUD() {
       return;
     }
 
+    // Validação específica por tipo
+    if (["header", "query", "form-data"].includes(newVariableType) && !newVariableKey.trim()) {
+      toast.error("Digite uma chave para esta variável");
+      return;
+    }
+
     const newVariable: WebhookVariable = {
       id: Date.now().toString(),
       name: newVariableName,
       description: newVariableDescription,
       type: newVariableType,
+      key: newVariableKey || undefined,
+      defaultValue: newVariableDefaultValue || undefined,
+      required: newVariableRequired,
+      format: newVariableType === "json" ? newVariableFormat : undefined,
     };
 
     setFormData(prev => ({
@@ -247,6 +265,10 @@ export function WebhooksCRUD() {
     setNewVariableName("");
     setNewVariableDescription("");
     setNewVariableType("json");
+    setNewVariableKey("");
+    setNewVariableDefaultValue("");
+    setNewVariableRequired(false);
+    setNewVariableFormat("string");
     toast.success("Variável adicionada!");
   };
 
@@ -468,10 +490,11 @@ export function WebhooksCRUD() {
                     onChange={(e) => setNewVariableName(e.target.value)}
                     placeholder="Nome da variável (ex: user_id)"
                   />
-                  <Input
+                  <Textarea
                     value={newVariableDescription}
                     onChange={(e) => setNewVariableDescription(e.target.value)}
                     placeholder="Descrição da variável"
+                    rows={2}
                   />
                   <Select value={newVariableType} onValueChange={setNewVariableType}>
                     <SelectTrigger>
@@ -486,6 +509,69 @@ export function WebhooksCRUD() {
                       <SelectItem value="form-data">Form Data</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {/* Campos específicos para Headers, Query Params e Form Data */}
+                  {["header", "query", "form-data"].includes(newVariableType) && (
+                    <Input
+                      value={newVariableKey}
+                      onChange={(e) => setNewVariableKey(e.target.value)}
+                      placeholder={
+                        newVariableType === "header" ? "Nome do Header (ex: Authorization)" :
+                        newVariableType === "query" ? "Parâmetro (ex: page)" :
+                        "Campo (ex: file)"
+                      }
+                    />
+                  )}
+
+                  {/* Campo específico para Path Params */}
+                  {newVariableType === "path" && (
+                    <Input
+                      value={newVariableKey}
+                      onChange={(e) => setNewVariableKey(e.target.value)}
+                      placeholder="Nome do parâmetro na URL (ex: :id)"
+                    />
+                  )}
+
+                  {/* Formato para JSON */}
+                  {newVariableType === "json" && (
+                    <Select value={newVariableFormat} onValueChange={setNewVariableFormat}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Formato do dado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="string">String</SelectItem>
+                        <SelectItem value="number">Number</SelectItem>
+                        <SelectItem value="boolean">Boolean</SelectItem>
+                        <SelectItem value="object">Object</SelectItem>
+                        <SelectItem value="array">Array</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {/* Valor padrão (para todos exceto Path) */}
+                  {newVariableType !== "path" && (
+                    <Input
+                      value={newVariableDefaultValue}
+                      onChange={(e) => setNewVariableDefaultValue(e.target.value)}
+                      placeholder="Valor padrão (opcional)"
+                    />
+                  )}
+
+                  {/* Checkbox de obrigatório */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="variable-required"
+                      checked={newVariableRequired}
+                      onCheckedChange={(checked) => setNewVariableRequired(checked as boolean)}
+                    />
+                    <label
+                      htmlFor="variable-required"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Campo obrigatório
+                    </label>
+                  </div>
+
                   <Button type="button" onClick={handleAddVariable} size="sm" className="w-full">
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar Variável
@@ -498,15 +584,37 @@ export function WebhooksCRUD() {
                       {formData.variables.map((variable) => (
                         <div key={variable.id} className="flex items-start justify-between p-2 border rounded">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium text-sm">{variable.name}</span>
                               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
                                 {variable.type.toUpperCase()}
                               </span>
+                              {variable.required && (
+                                <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
+                                  Obrigatório
+                                </span>
+                              )}
                             </div>
                             {variable.description && (
                               <div className="text-xs text-muted-foreground mt-1">{variable.description}</div>
                             )}
+                            <div className="flex flex-col gap-1 mt-1">
+                              {variable.key && (
+                                <div className="text-xs">
+                                  <span className="font-semibold">Chave:</span> <span className="font-mono">{variable.key}</span>
+                                </div>
+                              )}
+                              {variable.format && (
+                                <div className="text-xs">
+                                  <span className="font-semibold">Formato:</span> {variable.format}
+                                </div>
+                              )}
+                              {variable.defaultValue && (
+                                <div className="text-xs">
+                                  <span className="font-semibold">Padrão:</span> <span className="font-mono">{variable.defaultValue}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <Button
                             type="button"
