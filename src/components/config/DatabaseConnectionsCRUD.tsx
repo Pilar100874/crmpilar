@@ -11,6 +11,7 @@ import { Trash2, Plus, Eye, EyeOff, Database, Edit } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface DatabaseConnection {
   id: string;
@@ -26,7 +27,11 @@ interface DatabaseConnection {
   active: boolean;
 }
 
-export function DatabaseConnectionsCRUD() {
+interface DatabaseConnectionsCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export function DatabaseConnectionsCRUD({ estabelecimentoId }: DatabaseConnectionsCRUDProps = {}) {
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -45,14 +50,19 @@ export function DatabaseConnectionsCRUD() {
 
   useEffect(() => {
     loadConnections();
-  }, []);
+  }, [estabelecimentoId]);
 
   const loadConnections = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("database_connections")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
+
+      if (estabelecimentoId) {
+        query = query.eq("estabelecimento_id", estabelecimentoId);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       setConnections(data || []);
@@ -76,7 +86,16 @@ export function DatabaseConnectionsCRUD() {
         if (error) throw error;
         toast.success("Conexão atualizada com sucesso!");
       } else {
-        const { error } = await supabase.from("database_connections").insert([formData]);
+        const estabId = await getEstabelecimentoId(estabelecimentoId);
+        if (!estabId) {
+          toast.error("Estabelecimento não identificado");
+          return;
+        }
+
+        const { error } = await supabase
+          .from("database_connections")
+          .insert([{ ...formData, estabelecimento_id: estabId }]);
+        
         if (error) throw error;
         toast.success("Conexão criada com sucesso!");
       }

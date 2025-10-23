@@ -411,6 +411,7 @@ export type Database = {
           created_at: string | null
           database_type: string
           description: string | null
+          estabelecimento_id: string | null
           id: string
           name: string
           proxy_url: string | null
@@ -425,6 +426,7 @@ export type Database = {
           created_at?: string | null
           database_type: string
           description?: string | null
+          estabelecimento_id?: string | null
           id?: string
           name: string
           proxy_url?: string | null
@@ -439,6 +441,7 @@ export type Database = {
           created_at?: string | null
           database_type?: string
           description?: string | null
+          estabelecimento_id?: string | null
           id?: string
           name?: string
           proxy_url?: string | null
@@ -448,7 +451,15 @@ export type Database = {
           sql_server?: string
           sql_username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "database_connections_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       estabelecimentos: {
         Row: {

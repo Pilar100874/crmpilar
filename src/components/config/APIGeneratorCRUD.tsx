@@ -93,11 +93,16 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
 
   const loadConnections = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("database_connections")
         .select("*")
-        .eq("active", true)
-        .order("name");
+        .eq("active", true);
+
+      if (estabelecimentoId) {
+        query = query.eq("estabelecimento_id", estabelecimentoId);
+      }
+
+      const { data, error } = await query.order("name");
 
       if (error) throw error;
       setConnections(data || []);
@@ -966,7 +971,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
       </TabsContent>
 
       <TabsContent value="connections">
-        <DatabaseConnectionsCRUD />
+        <DatabaseConnectionsCRUD estabelecimentoId={estabelecimentoId} />
       </TabsContent>
     </Tabs>
   );
