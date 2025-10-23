@@ -81,10 +81,20 @@ export default function ChatWebhook() {
       const loadedWebhooks = parsed.map((w: any) => ({ ...w, createdAt: new Date(w.createdAt) }));
       setWebhooks(loadedWebhooks);
       
+      console.log("Total webhooks loaded:", loadedWebhooks.length);
+      console.log("All webhooks:", loadedWebhooks.map((w: WebhookConfig) => ({
+        name: w.name,
+        usageLocations: w.usageLocations
+      })));
+      
       // Filter AI webhooks
       const aiWebhooksList = loadedWebhooks.filter((w: WebhookConfig) => 
         w.usageLocations?.includes("Menu do Chat")
       );
+      
+      console.log("AI webhooks found:", aiWebhooksList.length);
+      console.log("AI webhooks:", aiWebhooksList.map((w: WebhookConfig) => w.name));
+      
       setAiWebhooks(aiWebhooksList);
       if (aiWebhooksList.length > 0) {
         setSelectedAIWebhook(aiWebhooksList[0].id);
