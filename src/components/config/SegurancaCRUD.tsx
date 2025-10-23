@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface SegurancaCRUDProps {
-  estabelecimentoId: string;
+  estabelecimentoId?: string;
 }
 
 export const SegurancaCRUD = ({ estabelecimentoId }: SegurancaCRUDProps) => {
@@ -23,10 +24,13 @@ export const SegurancaCRUD = ({ estabelecimentoId }: SegurancaCRUDProps) => {
   }, [estabelecimentoId]);
 
   const fetchConfig = async () => {
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) return;
+
     const { data, error } = await supabase
       .from("seguranca_config")
       .select("*")
-      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("estabelecimento_id", estabId)
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
@@ -46,10 +50,21 @@ export const SegurancaCRUD = ({ estabelecimentoId }: SegurancaCRUDProps) => {
   const handleSave = async () => {
     setLoading(true);
 
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) {
+      toast({
+        title: "Erro",
+        description: "Estabelecimento não identificado",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     const { data: existing } = await supabase
       .from("seguranca_config")
       .select("id")
-      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("estabelecimento_id", estabId)
       .maybeSingle();
 
     let error;
@@ -57,11 +72,11 @@ export const SegurancaCRUD = ({ estabelecimentoId }: SegurancaCRUDProps) => {
       ({ error } = await supabase
         .from("seguranca_config")
         .update(config)
-        .eq("estabelecimento_id", estabelecimentoId));
+        .eq("estabelecimento_id", estabId));
     } else {
       ({ error } = await supabase
         .from("seguranca_config")
-        .insert([{ estabelecimento_id: estabelecimentoId, ...config }]));
+        .insert([{ estabelecimento_id: estabId, ...config }]));
     }
 
     if (error) {
