@@ -95,6 +95,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
         .eq("id", editingId);
 
       if (error) {
+        console.error("Erro ao atualizar grupo:", error);
         toast({
           title: "Erro ao atualizar",
           description: error.message,
@@ -107,6 +108,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
       }
     } else {
       const targetEstabelecimentoId = await getEstabelecimentoId(estabelecimentoId);
+      console.log("Estabelecimento ID:", targetEstabelecimentoId);
 
       if (!targetEstabelecimentoId) {
         toast({
@@ -117,11 +119,15 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
         return;
       }
 
+      const dataToInsert = { ...grupoData, estabelecimento_id: targetEstabelecimentoId };
+      console.log("Dados a inserir:", dataToInsert);
+
       const { error } = await supabase
         .from("grupos_acesso")
-        .insert([{ ...grupoData, estabelecimento_id: targetEstabelecimentoId }]);
+        .insert([dataToInsert]);
 
       if (error) {
+        console.error("Erro ao criar grupo:", error);
         const errorMsg = error.message.includes('grupos_acesso_nome_unique') 
           ? 'Já existe um grupo de acesso com este nome'
           : error.message;
