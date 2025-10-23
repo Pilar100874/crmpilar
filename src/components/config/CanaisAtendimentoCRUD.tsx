@@ -4,9 +4,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface CanaisAtendimentoCRUDProps {
-  estabelecimentoId: string;
+  estabelecimentoId?: string;
 }
 
 export const CanaisAtendimentoCRUD = ({ estabelecimentoId }: CanaisAtendimentoCRUDProps) => {
@@ -23,10 +24,13 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId }: CanaisAtendimentoCR
   }, [estabelecimentoId]);
 
   const fetchConfig = async () => {
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) return;
+
     const { data, error } = await supabase
       .from("canais_atendimento")
       .select("*")
-      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("estabelecimento_id", estabId)
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
@@ -47,10 +51,21 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId }: CanaisAtendimentoCR
   const handleSave = async () => {
     setLoading(true);
 
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) {
+      toast({
+        title: "Erro",
+        description: "Estabelecimento não identificado",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     const { data: existing } = await supabase
       .from("canais_atendimento")
       .select("id")
-      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("estabelecimento_id", estabId)
       .maybeSingle();
 
     let error;
@@ -58,11 +73,11 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId }: CanaisAtendimentoCR
       ({ error } = await supabase
         .from("canais_atendimento")
         .update(config)
-        .eq("estabelecimento_id", estabelecimentoId));
+        .eq("estabelecimento_id", estabId));
     } else {
       ({ error } = await supabase
         .from("canais_atendimento")
-        .insert([{ estabelecimento_id: estabelecimentoId, ...config }]));
+        .insert([{ estabelecimento_id: estabId, ...config }]));
     }
 
     if (error) {

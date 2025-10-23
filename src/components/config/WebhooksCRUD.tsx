@@ -185,11 +185,6 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     }
   };
 
-  useEffect(() => {
-    loadWebhooks();
-    loadTypesAndLocations();
-  }, [estabelecimentoId]);
-
   const findBotsUsingWebhook = async (webhookId: string) => {
     try {
       const { data: botFlows, error } = await supabase
