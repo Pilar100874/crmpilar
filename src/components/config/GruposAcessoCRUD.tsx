@@ -9,6 +9,7 @@ import { Trash2, Edit, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface MenuPermissions {
   view: boolean;
@@ -42,22 +43,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   }, [estabelecimentoId]);
 
   const fetchGrupos = async () => {
-    let targetEstabelecimentoId = estabelecimentoId;
-
-    if (!targetEstabelecimentoId) {
-      // Get current user's estabelecimento_id
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: userData } = await supabase
-        .from('usuarios')
-        .select('estabelecimento_id')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      targetEstabelecimentoId = userData?.estabelecimento_id;
-    }
-
+    const targetEstabelecimentoId = await getEstabelecimentoId(estabelecimentoId);
     if (!targetEstabelecimentoId) return;
 
     const { data, error } = await supabase
@@ -120,26 +106,12 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
         fetchGrupos();
       }
     } else {
-      let targetEstabelecimentoId = estabelecimentoId;
-
-      if (!targetEstabelecimentoId) {
-        // Get current user's estabelecimento_id
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: userData } = await supabase
-          .from('usuarios')
-          .select('estabelecimento_id')
-          .eq('email', user.email)
-          .maybeSingle();
-
-        targetEstabelecimentoId = userData?.estabelecimento_id;
-      }
+      const targetEstabelecimentoId = await getEstabelecimentoId(estabelecimentoId);
 
       if (!targetEstabelecimentoId) {
         toast({
           title: "Erro",
-          description: "Estabelecimento não identificado",
+          description: "Selecione um estabelecimento primeiro",
           variant: "destructive",
         });
         return;
