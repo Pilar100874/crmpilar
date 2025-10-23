@@ -154,9 +154,6 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                           </div>
                           <div className="flex-1 min-w-0">
                             <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {attachment.url}
-                            </p>
                           </div>
                         </div>
                         {attachment.is_global && (
@@ -254,12 +251,6 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                         </div>
                         <div className="flex-1 min-w-0">
                           <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
-                          <p className="text-xs text-muted-foreground truncate">{attachment.url}</p>
-                          {attachment.is_global && (
-                            <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                              Global
-                            </span>
-                          )}
                         </div>
                       </div>
                     </Card>
@@ -279,13 +270,12 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                         </div>
                         <div className="flex-1 min-w-0">
                           <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
-                          <p className="text-xs text-muted-foreground truncate">{attachment.url}</p>
-                          {attachment.is_global && (
-                            <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                              Global
-                            </span>
-                          )}
                         </div>
+                        {attachment.is_global && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                            Global
+                          </span>
+                        )}
                       </div>
                     </Card>
                   ))}
@@ -304,13 +294,12 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                         </div>
                         <div className="flex-1 min-w-0">
                           <h5 className="font-semibold text-sm mb-1">{attachment.title}</h5>
-                          <p className="text-xs text-muted-foreground truncate">{attachment.url}</p>
-                          {attachment.is_global && (
-                            <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                              Global
-                            </span>
-                          )}
                         </div>
+                        {attachment.is_global && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                            Global
+                          </span>
+                        )}
                       </div>
                     </Card>
                   ))}
