@@ -78,6 +78,7 @@ export function WebhooksCRUD() {
   const [newVariableDefaultValue, setNewVariableDefaultValue] = useState("");
   const [newVariableRequired, setNewVariableRequired] = useState(false);
   const [newVariableFormat, setNewVariableFormat] = useState("string");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const resetVariableForm = () => {
     setNewVariableName("");
@@ -86,6 +87,15 @@ export function WebhooksCRUD() {
     setNewVariableDefaultValue("");
     setNewVariableRequired(false);
     setNewVariableFormat("string");
+    setSelectedFile(null);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setNewVariableDefaultValue(file.name);
+    }
   };
 
   useEffect(() => {
@@ -608,22 +618,62 @@ export function WebhooksCRUD() {
                   {newVariableType !== "path" && (
                     <div className="space-y-2">
                       <Label>Valor Padrão (opcional)</Label>
-                      <Input
-                        value={newVariableDefaultValue}
-                        onChange={(e) => setNewVariableDefaultValue(e.target.value)}
-                        placeholder={
-                          newVariableType === "header" ? "Bearer token123, application/json..." :
-                          newVariableType === "query" ? "1, 10, active..." :
-                          newVariableType === "form-data" ? "default.jpg, sem_arquivo.pdf..." :
-                          newVariableType === "json" && newVariableFormat === "boolean" ? "true ou false" :
-                          newVariableType === "json" && newVariableFormat === "number" ? "0, 1, 100..." :
-                          newVariableType === "json" && newVariableFormat === "string" ? "Não informado, N/A, Vazio..." :
-                          "Valor que será usado se nenhum for fornecido"
-                        }
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Valor usado quando a variável não for fornecida na requisição
-                      </p>
+                      
+                      {newVariableType === "form-data" ? (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              type="file"
+                              onChange={handleFileSelect}
+                              className="flex-1"
+                              accept="*/*"
+                            />
+                            {selectedFile && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedFile(null);
+                                  setNewVariableDefaultValue("");
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          {selectedFile && (
+                            <div className="text-xs bg-secondary/50 p-2 rounded flex items-center gap-2">
+                              <span className="font-medium">Arquivo selecionado:</span>
+                              <span className="font-mono">{selectedFile.name}</span>
+                              <span className="text-muted-foreground">
+                                ({(selectedFile.size / 1024).toFixed(2)} KB)
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Selecione um arquivo que será usado como padrão quando nenhum for fornecido
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <Input
+                            value={newVariableDefaultValue}
+                            onChange={(e) => setNewVariableDefaultValue(e.target.value)}
+                            placeholder={
+                              newVariableType === "header" ? "Bearer token123, application/json..." :
+                              newVariableType === "query" ? "1, 10, active..." :
+                              newVariableType === "json" && newVariableFormat === "boolean" ? "true ou false" :
+                              newVariableType === "json" && newVariableFormat === "number" ? "0, 1, 100..." :
+                              newVariableType === "json" && newVariableFormat === "string" ? "Não informado, N/A, Vazio..." :
+                              "Valor que será usado se nenhum for fornecido"
+                            }
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Valor usado quando a variável não for fornecida na requisição
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
 
