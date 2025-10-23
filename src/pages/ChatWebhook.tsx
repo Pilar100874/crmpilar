@@ -129,6 +129,12 @@ export default function ChatWebhook() {
     }
   }, [aiMessages]);
 
+  // Clear AI chat when webhook changes
+  useEffect(() => {
+    setAiMessages([]);
+    setAiInput("");
+  }, [selectedAIWebhook]);
+
   // Reset variable values when webhook changes
   useEffect(() => {
     if (selectedWebhook) {
