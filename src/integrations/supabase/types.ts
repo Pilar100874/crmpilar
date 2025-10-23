@@ -1099,6 +1099,7 @@ export type Database = {
         Args: { cpf_input: string; password_input: string }
         Returns: string
       }
+      admins_present: { Args: never; Returns: boolean }
       get_user_estabelecimento_id: {
         Args: { _user_id: string }
         Returns: string
