@@ -8,8 +8,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Trash2, Plus, X, Webhook } from "lucide-react";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { Pencil, Trash2, Plus, X, Webhook, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface WebhookVariable {
   id: string;
@@ -83,6 +85,11 @@ export function WebhooksCRUD() {
   const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("all");
   const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
+  const [affectedBots, setAffectedBots] = useState<{name: string, id: string}[]>([]);
+  const [showAffectedBotsDialog, setShowAffectedBotsDialog] = useState(false);
+  const [webhookToDelete, setWebhookToDelete] = useState<string | null>(null);
+  const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
+  const [editingLocationId, setEditingLocationId] = useState<string | null>(null);
 
   const resetVariableForm = () => {
     setNewVariableName("");
@@ -136,7 +143,43 @@ export function WebhooksCRUD() {
     localStorage.setItem("usageLocations", JSON.stringify(usageLocations));
   }, [usageLocations]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Função para buscar bots que usam um webhook específico
+  const findBotsUsingWebhook = async (webhookId: string) => {
+    try {
+      const { data: botFlows, error } = await supabase
+        .from('bot_flows')
+        .select('id, name, flow_data');
+
+      if (error) throw error;
+
+      const botsUsingWebhook: {name: string, id: string}[] = [];
+
+      botFlows?.forEach((bot) => {
+        const flowData = bot.flow_data as any;
+        
+        // Percorrer todos os nodes do flow
+        if (flowData.nodes) {
+          const hasWebhook = flowData.nodes.some((node: any) => {
+            return node.data?.config?.selectedWebhookId === webhookId;
+          });
+
+          if (hasWebhook) {
+            botsUsingWebhook.push({
+              name: bot.name,
+              id: bot.id
+            });
+          }
+        }
+      });
+
+      return botsUsingWebhook;
+    } catch (error) {
+      console.error("Erro ao buscar bots:", error);
+      return [];
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validar campos obrigatórios
@@ -164,6 +207,20 @@ export function WebhooksCRUD() {
     }
 
     if (editingWebhook) {
+      // Se está editando, verificar se as variáveis mudaram
+      const oldWebhook = webhooks.find(w => w.id === editingWebhook);
+      const variablesChanged = JSON.stringify(oldWebhook?.variables) !== JSON.stringify(formData.variables);
+      
+      if (variablesChanged) {
+        // Verificar quais bots usam este webhook
+        const botsUsing = await findBotsUsingWebhook(editingWebhook);
+        
+        if (botsUsing.length > 0) {
+          setAffectedBots(botsUsing);
+          setShowAffectedBotsDialog(true);
+        }
+      }
+
       setWebhooks(
         webhooks.map((w) =>
           w.id === editingWebhook
@@ -185,7 +242,17 @@ export function WebhooksCRUD() {
     handleCloseForm();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // Verificar se o webhook está sendo usado em algum bot
+    const botsUsing = await findBotsUsingWebhook(id);
+    
+    if (botsUsing.length > 0) {
+      setAffectedBots(botsUsing);
+      setWebhookToDelete(id);
+      setShowAffectedBotsDialog(true);
+      return;
+    }
+
     if (confirm("Tem certeza que deseja excluir este webhook?")) {
       setWebhooks(webhooks.filter((w) => w.id !== id));
       toast.success("Webhook removido!");
@@ -1183,6 +1250,56 @@ export function WebhooksCRUD() {
             </div>
           </ScrollArea>
         </Card>
+
+      {/* Dialog de bots afetados */}
+      <AlertDialog open={showAffectedBotsDialog} onOpenChange={setShowAffectedBotsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+              <AlertDialogTitle>
+                {webhookToDelete ? "Webhook em Uso" : "Atenção: Variáveis Alteradas"}
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="space-y-3">
+              {webhookToDelete ? (
+                <p>
+                  Este webhook não pode ser excluído pois está sendo usado nos seguintes bots:
+                </p>
+              ) : (
+                <p>
+                  As variáveis deste webhook foram alteradas. Os seguintes bots estão usando este webhook e podem precisar de ajustes:
+                </p>
+              )}
+              <div className="bg-secondary/30 rounded-lg p-3 max-h-60 overflow-y-auto">
+                <ul className="space-y-2">
+                  {affectedBots.map((bot) => (
+                    <li key={bot.id} className="flex items-center gap-2 text-sm">
+                      <div className="h-2 w-2 rounded-full bg-primary" />
+                      <span className="font-medium">{bot.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {!webhookToDelete && (
+                <p className="text-sm text-muted-foreground">
+                  Por favor, verifique e atualize as configurações destes bots se necessário.
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setWebhookToDelete(null);
+                setAffectedBots([]);
+              }}
+            >
+              {webhookToDelete ? "Fechar" : "Entendi"}
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
