@@ -22,9 +22,20 @@ export const UnidadesCRUD = () => {
   }, []);
 
   const fetchUnidades = async () => {
+    // Get current user's estabelecimento_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: userData } = await supabase
+      .from('usuarios')
+      .select('estabelecimento_id')
+      .eq('email', user.email)
+      .single();
+
     const { data, error } = await supabase
       .from("unidades")
       .select("*")
+      .eq('estabelecimento_id', userData?.estabelecimento_id)
       .order("nome");
 
     if (error) {
@@ -69,9 +80,19 @@ export const UnidadesCRUD = () => {
         fetchUnidades();
       }
     } else {
+      // Get current user's estabelecimento_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('email', user.email)
+        .single();
+
       const { error } = await supabase
         .from("unidades")
-        .insert([{ nome }]);
+        .insert([{ nome, estabelecimento_id: userData?.estabelecimento_id }]);
 
       if (error) {
         const errorMsg = error.message.includes('unidades_nome_unique') 

@@ -18,26 +18,9 @@ import { APIGeneratorCRUD } from "@/components/config/APIGeneratorCRUD";
 import { WebhooksCRUD } from "@/components/config/WebhooksCRUD";
 import QuickRepliesCRUD from "@/components/config/QuickRepliesCRUD";
 import QuickAttachmentsCRUD from "@/components/config/QuickAttachmentsCRUD";
+import { RedesSociaisCRUD } from "@/components/config/RedesSociaisCRUD";
 
 export default function Config() {
-  const [socialLinks, setSocialLinks] = useState({
-    whatsapp: "",
-    instagram: "",
-    facebook: "",
-    website: ""
-  });
-
-  useEffect(() => {
-    const saved = localStorage.getItem("socialLinks");
-    if (saved) {
-      setSocialLinks(JSON.parse(saved));
-    }
-  }, []);
-
-  const handleSaveSocialLinks = () => {
-    localStorage.setItem("socialLinks", JSON.stringify(socialLinks));
-    toast.success("Links das redes sociais salvos!");
-  };
 
   return (
     <Layout>
@@ -220,44 +203,8 @@ export default function Config() {
                       <span className="font-medium">Redes Sociais</span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="whatsapp">WhatsApp</Label>
-                      <Input
-                        id="whatsapp"
-                        placeholder="https://wa.me/5511999999999"
-                        value={socialLinks.whatsapp}
-                        onChange={(e) => setSocialLinks({...socialLinks, whatsapp: e.target.value})}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="instagram">Instagram</Label>
-                      <Input
-                        id="instagram"
-                        placeholder="https://instagram.com/seuperfil"
-                        value={socialLinks.instagram}
-                        onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="facebook">Facebook</Label>
-                      <Input
-                        id="facebook"
-                        placeholder="https://facebook.com/suapagina"
-                        value={socialLinks.facebook}
-                        onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
-                      <Input
-                        id="website"
-                        placeholder="https://seusite.com.br"
-                        value={socialLinks.website}
-                        onChange={(e) => setSocialLinks({...socialLinks, website: e.target.value})}
-                      />
-                    </div>
-                    <Button onClick={handleSaveSocialLinks} className="w-full">Salvar Links</Button>
+                  <AccordionContent className="px-4 pb-4">
+                    <RedesSociaisCRUD />
                   </AccordionContent>
                 </AccordionItem>
 

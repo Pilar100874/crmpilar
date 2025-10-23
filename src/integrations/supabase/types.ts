@@ -509,6 +509,7 @@ export type Database = {
       grupos_acesso: {
         Row: {
           created_at: string | null
+          estabelecimento_id: string | null
           id: string
           menus_permitidos: Json | null
           nome: string
@@ -516,6 +517,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           menus_permitidos?: Json | null
           nome: string
@@ -523,12 +525,21 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           menus_permitidos?: Json | null
           nome?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "grupos_acesso_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -662,26 +673,78 @@ export type Database = {
           },
         ]
       }
+      redes_sociais: {
+        Row: {
+          created_at: string | null
+          estabelecimento_id: string
+          facebook: string | null
+          id: string
+          instagram: string | null
+          updated_at: string | null
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          estabelecimento_id: string
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          estabelecimento_id?: string
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redes_sociais_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       segmentos: {
         Row: {
           created_at: string | null
+          estabelecimento_id: string | null
           id: string
           nome: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           nome: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           nome?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "segmentos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       twilio_config: {
         Row: {
@@ -713,23 +776,34 @@ export type Database = {
       unidades: {
         Row: {
           created_at: string | null
+          estabelecimento_id: string | null
           id: string
           nome: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           nome: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           nome?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "unidades_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

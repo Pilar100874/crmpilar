@@ -34,9 +34,20 @@ export const GruposAcessoCRUD = () => {
   }, []);
 
   const fetchGrupos = async () => {
+    // Get current user's estabelecimento_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: userData } = await supabase
+      .from('usuarios')
+      .select('estabelecimento_id')
+      .eq('email', user.email)
+      .single();
+
     const { data, error } = await supabase
       .from("grupos_acesso")
       .select("*")
+      .eq('estabelecimento_id', userData?.estabelecimento_id)
       .order("nome");
 
     if (error) {
@@ -93,9 +104,19 @@ export const GruposAcessoCRUD = () => {
         fetchGrupos();
       }
     } else {
+      // Get current user's estabelecimento_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('email', user.email)
+        .single();
+
       const { error } = await supabase
         .from("grupos_acesso")
-        .insert([grupoData]);
+        .insert([{ ...grupoData, estabelecimento_id: userData?.estabelecimento_id }]);
 
       if (error) {
         const errorMsg = error.message.includes('grupos_acesso_nome_unique') 
