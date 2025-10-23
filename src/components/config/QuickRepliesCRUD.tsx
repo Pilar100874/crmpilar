@@ -104,11 +104,18 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
       return;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
     const dataToSave = {
       title: formData.title,
       content: formData.content,
       grupo_acesso_id: formData.grupo_acesso_id || null,
       is_global: true,
+      user_id: user.id,
       shortcut: formData.shortcut || null,
       estabelecimento_id: estabId,
     };
@@ -130,14 +137,15 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
         .insert([dataToSave]);
 
       if (error) {
-        toast.error("Erro ao criar texto pronto");
+        console.error("Erro ao criar texto pronto:", error);
+        toast.error(`Erro ao criar texto pronto: ${error.message}`);
         return;
       }
       toast.success("Texto pronto criado!");
     }
 
     resetForm();
-    loadQuickReplies();
+    await loadQuickReplies();
   };
 
   const handleEdit = (reply: QuickReply) => {
