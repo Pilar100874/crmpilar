@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Pencil, Trash2, X, Link as LinkIcon, FileUp, Upload } from "lucide-react";
+import { Pencil, Trash2, X, Link as LinkIcon, FileUp, Upload, Image as ImageIcon } from "lucide-react";
+import { createThumbnail, getFileTypeAccept, getFileTypeIcon } from "@/lib/imageUtils";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,8 @@ interface QuickAttachment {
   url: string;
   grupo_acesso_id: string | null;
   is_global: boolean;
+  file_type?: string | null;
+  thumbnail_url?: string | null;
 }
 
 interface GrupoAcesso {
@@ -41,6 +44,8 @@ export default function QuickAttachmentsCRUD() {
     type: "link" as "link" | "file",
     url: "",
     grupo_acesso_id: "",
+    file_type: "",
+    thumbnail_url: "",
   });
 
   useEffect(() => {
@@ -83,12 +88,19 @@ export default function QuickAttachmentsCRUD() {
       return;
     }
 
+    if (formData.type === "file" && !formData.file_type) {
+      toast.error("Selecione o tipo de arquivo");
+      return;
+    }
+
     const dataToSave = {
       title: formData.title,
       type: formData.type,
       url: formData.url,
       grupo_acesso_id: formData.grupo_acesso_id || null,
       is_global: true,
+      file_type: formData.type === "file" ? formData.file_type : null,
+      thumbnail_url: formData.type === "file" ? formData.thumbnail_url : null,
     };
 
     if (isEditing && currentId) {
@@ -126,6 +138,8 @@ export default function QuickAttachmentsCRUD() {
       type: attachment.type,
       url: attachment.url,
       grupo_acesso_id: attachment.grupo_acesso_id || "",
+      file_type: attachment.file_type || "",
+      thumbnail_url: attachment.thumbnail_url || "",
     });
   };
 
@@ -171,7 +185,34 @@ export default function QuickAttachmentsCRUD() {
         .from('bot-media')
         .getPublicUrl(filePath);
 
-      setFormData(prev => ({ ...prev, url: publicUrl }));
+      // Create thumbnail if it's an image
+      let thumbnailUrl = "";
+      if (formData.file_type === "image") {
+        try {
+          const thumbnailBlob = await createThumbnail(file);
+          const thumbFileName = `thumb_${fileName}`;
+          const thumbFilePath = `attachments/${thumbFileName}`;
+          
+          const { error: thumbError } = await supabase.storage
+            .from('bot-media')
+            .upload(thumbFilePath, thumbnailBlob);
+          
+          if (!thumbError) {
+            const { data: { publicUrl: thumbUrl } } = supabase.storage
+              .from('bot-media')
+              .getPublicUrl(thumbFilePath);
+            thumbnailUrl = thumbUrl;
+          }
+        } catch (thumbError) {
+          console.error("Error creating thumbnail:", thumbError);
+        }
+      }
+
+      setFormData(prev => ({ 
+        ...prev, 
+        url: publicUrl,
+        thumbnail_url: thumbnailUrl 
+      }));
       toast.success("Arquivo enviado com sucesso!");
     } catch (error: any) {
       toast.error(`Erro ao enviar arquivo: ${error.message}`);
@@ -181,7 +222,14 @@ export default function QuickAttachmentsCRUD() {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", type: "link", url: "", grupo_acesso_id: "" });
+    setFormData({ 
+      title: "", 
+      type: "link", 
+      url: "", 
+      grupo_acesso_id: "",
+      file_type: "",
+      thumbnail_url: ""
+    });
     setIsEditing(false);
     setCurrentId(null);
     if (fileInputRef.current) {
@@ -226,6 +274,28 @@ export default function QuickAttachmentsCRUD() {
             </Select>
           </div>
 
+          {formData.type === "file" && (
+            <div>
+              <Label htmlFor="file_type">Tipo de Arquivo *</Label>
+              <Select
+                value={formData.file_type}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, file_type: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="image">🖼️ Imagem (JPG, PNG, GIF, WebP)</SelectItem>
+                  <SelectItem value="pdf">📄 PDF</SelectItem>
+                  <SelectItem value="excel">📊 Excel</SelectItem>
+                  <SelectItem value="word">📝 Word</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="url">
               {formData.type === "link" ? "URL *" : "Arquivo *"}
@@ -238,24 +308,40 @@ export default function QuickAttachmentsCRUD() {
                   onChange={handleFileUpload}
                   className="hidden"
                   id="file-upload"
-                  accept="*/*"
+                  accept={formData.file_type ? getFileTypeAccept(formData.file_type) : "*/*"}
                 />
                 <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
+                    disabled={isUploading || !formData.file_type}
                     className="flex-1"
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     {isUploading ? "Enviando..." : "Selecionar Arquivo"}
                   </Button>
                 </div>
+                {!formData.file_type && (
+                  <p className="text-xs text-muted-foreground">
+                    Selecione o tipo de arquivo primeiro
+                  </p>
+                )}
                 {formData.url && (
-                  <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
-                    <p className="font-medium">Arquivo enviado:</p>
-                    <p className="truncate">{formData.url}</p>
+                  <div className="space-y-2">
+                    {formData.thumbnail_url && (
+                      <div className="flex justify-center">
+                        <img 
+                          src={formData.thumbnail_url} 
+                          alt="Miniatura" 
+                          className="h-24 w-24 object-cover rounded border"
+                        />
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+                      <p className="font-medium">Arquivo enviado:</p>
+                      <p className="truncate">{formData.url}</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -370,22 +456,37 @@ export default function QuickAttachmentsCRUD() {
           {fileAttachments.map((attachment) => (
             <Card key={attachment.id} className="p-4">
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium">{attachment.title}</h4>
-                  <a
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline break-all"
-                  >
-                    {attachment.url}
-                  </a>
-                  {attachment.grupo_acesso_id && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Grupo:{" "}
-                      {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
-                    </p>
+                <div className="flex gap-3 flex-1 min-w-0">
+                  {attachment.thumbnail_url ? (
+                    <img 
+                      src={attachment.thumbnail_url} 
+                      alt={attachment.title}
+                      className="h-16 w-16 object-cover rounded border flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 flex items-center justify-center bg-muted rounded border flex-shrink-0">
+                      <span className="text-2xl">{getFileTypeIcon(attachment.file_type)}</span>
+                    </div>
                   )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium">{attachment.title}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Tipo: {getFileTypeIcon(attachment.file_type)} {attachment.file_type || "arquivo"}
+                    </p>
+                    <a
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline break-all"
+                    >
+                      {attachment.url}
+                    </a>
+                    {attachment.grupo_acesso_id && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Grupo: {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button

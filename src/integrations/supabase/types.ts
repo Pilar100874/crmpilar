@@ -452,9 +452,11 @@ export type Database = {
       quick_attachments: {
         Row: {
           created_at: string | null
+          file_type: string | null
           grupo_acesso_id: string | null
           id: string
           is_global: boolean | null
+          thumbnail_url: string | null
           title: string
           type: string
           updated_at: string | null
@@ -463,9 +465,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          file_type?: string | null
           grupo_acesso_id?: string | null
           id?: string
           is_global?: boolean | null
+          thumbnail_url?: string | null
           title: string
           type: string
           updated_at?: string | null
@@ -474,9 +478,11 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          file_type?: string | null
           grupo_acesso_id?: string | null
           id?: string
           is_global?: boolean | null
+          thumbnail_url?: string | null
           title?: string
           type?: string
           updated_at?: string | null
