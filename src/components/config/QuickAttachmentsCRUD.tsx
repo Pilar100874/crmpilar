@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Pencil, Trash2, X, Link as LinkIcon, FileUp, Upload, Image as ImageIcon } from "lucide-react";
+import { Pencil, Trash2, X, Link as LinkIcon, FileUp, Upload, Image as ImageIcon, Search, File, FileText, FileSpreadsheet } from "lucide-react";
 import { createThumbnail, getFileTypeAccept, getFileTypeIcon } from "@/lib/imageUtils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -38,6 +39,7 @@ export default function QuickAttachmentsCRUD() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -237,8 +239,20 @@ export default function QuickAttachmentsCRUD() {
     }
   };
 
-  const linkAttachments = quickAttachments.filter((a) => a.type === "link");
-  const fileAttachments = quickAttachments.filter((a) => a.type === "file");
+  // Filter by search query
+  const filteredAttachments = quickAttachments.filter((attachment) =>
+    attachment.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const linkAttachments = filteredAttachments.filter((a) => a.type === "link");
+  const fileAttachments = filteredAttachments.filter((a) => a.type === "file");
+  
+  // Separate files by type
+  const images = fileAttachments.filter((f) => f.file_type === "image");
+  const pdfs = fileAttachments.filter((f) => f.file_type === "pdf");
+  const excels = fileAttachments.filter((f) => f.file_type === "excel");
+  const words = fileAttachments.filter((f) => f.file_type === "word");
+  const others = fileAttachments.filter((f) => !f.file_type);
 
   return (
     <div className="space-y-4">
@@ -394,124 +408,326 @@ export default function QuickAttachmentsCRUD() {
       </Card>
 
       <Tabs defaultValue="links" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="links">
-            <LinkIcon className="h-4 w-4 mr-2" />
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="links" className="gap-2">
+            <LinkIcon className="h-4 w-4" />
             Links ({linkAttachments.length})
           </TabsTrigger>
-          <TabsTrigger value="files">
-            <FileUp className="h-4 w-4 mr-2" />
+          <TabsTrigger value="files" className="gap-2">
+            <FileUp className="h-4 w-4" />
             Arquivos ({fileAttachments.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="links" className="space-y-2 mt-4">
-          {linkAttachments.map((attachment) => (
-            <Card key={attachment.id} className="p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium">{attachment.title}</h4>
-                  <a
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline break-all"
-                  >
-                    {attachment.url}
-                  </a>
-                  {attachment.grupo_acesso_id && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Grupo:{" "}
-                      {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
-                    </p>
-                  )}
+        <div className="mt-4 mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Pesquisar anexos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        <TabsContent value="links" className="space-y-3 mt-0">
+          <ScrollArea className="h-[500px]">
+            <div className="space-y-2 pr-4">
+              {linkAttachments.length === 0 ? (
+                <div className="text-center py-12">
+                  <LinkIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum link cadastrado
+                  </p>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(attachment)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(attachment.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-          {linkAttachments.length === 0 && (
-            <p className="text-center text-muted-foreground py-8">
-              Nenhum link cadastrado
-            </p>
-          )}
+              ) : (
+                linkAttachments.map((attachment) => (
+                  <Card key={attachment.id} className="p-4 hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex gap-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <LinkIcon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold mb-1">{attachment.title}</h4>
+                          {attachment.grupo_acesso_id && (
+                            <p className="text-xs text-muted-foreground">
+                              Grupo: {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(attachment)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(attachment.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="files" className="space-y-2 mt-4">
-          {fileAttachments.map((attachment) => (
-            <Card key={attachment.id} className="p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex gap-3 flex-1 min-w-0">
-                  {attachment.thumbnail_url ? (
-                    <img 
-                      src={attachment.thumbnail_url} 
-                      alt={attachment.title}
-                      className="h-16 w-16 object-cover rounded border flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="h-16 w-16 flex items-center justify-center bg-muted rounded border flex-shrink-0">
-                      <span className="text-2xl">{getFileTypeIcon(attachment.file_type)}</span>
+        <TabsContent value="files" className="space-y-4 mt-0">
+          <ScrollArea className="h-[500px]">
+            <div className="space-y-4 pr-4">
+              {fileAttachments.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileUp className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum arquivo cadastrado
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {images.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4" />
+                        IMAGENS ({images.length})
+                      </h5>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {images.map((attachment) => (
+                          <Card key={attachment.id} className="group relative overflow-hidden">
+                            <div className="aspect-square relative">
+                              {attachment.thumbnail_url || attachment.url ? (
+                                <img 
+                                  src={attachment.thumbnail_url || attachment.url} 
+                                  alt={attachment.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-muted">
+                                  <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-3 border-t bg-background">
+                              <p className="text-xs font-medium truncate mb-2">{attachment.title}</p>
+                              {attachment.grupo_acesso_id && (
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
+                                </p>
+                              )}
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 flex-1"
+                                  onClick={() => handleEdit(attachment)}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 flex-1"
+                                  onClick={() => handleDelete(attachment.id)}
+                                >
+                                  <Trash2 className="h-3 w-3 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium">{attachment.title}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Tipo: {getFileTypeIcon(attachment.file_type)} {attachment.file_type || "arquivo"}
-                    </p>
-                    <a
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline break-all"
-                    >
-                      {attachment.url}
-                    </a>
-                    {attachment.grupo_acesso_id && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Grupo: {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(attachment)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(attachment.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-          {fileAttachments.length === 0 && (
-            <p className="text-center text-muted-foreground py-8">
-              Nenhum arquivo cadastrado
-            </p>
-          )}
+
+                  {pdfs.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        PDFs ({pdfs.length})
+                      </h5>
+                      <div className="space-y-2">
+                        {pdfs.map((attachment) => (
+                          <Card key={attachment.id} className="p-4 hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500/20 hover:border-l-red-500">
+                            <div className="flex items-start gap-4">
+                              <div className="flex gap-3 flex-1 min-w-0">
+                                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                                  <FileText className="h-5 w-5 text-red-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold mb-1">{attachment.title}</h4>
+                                  {attachment.grupo_acesso_id && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Grupo: {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(attachment)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(attachment.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {excels.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                        <FileSpreadsheet className="h-4 w-4" />
+                        EXCEL ({excels.length})
+                      </h5>
+                      <div className="space-y-2">
+                        {excels.map((attachment) => (
+                          <Card key={attachment.id} className="p-4 hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500/20 hover:border-l-green-500">
+                            <div className="flex items-start gap-4">
+                              <div className="flex gap-3 flex-1 min-w-0">
+                                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                                  <FileSpreadsheet className="h-5 w-5 text-green-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold mb-1">{attachment.title}</h4>
+                                  {attachment.grupo_acesso_id && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Grupo: {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(attachment)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(attachment.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {words.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                        <File className="h-4 w-4" />
+                        WORD ({words.length})
+                      </h5>
+                      <div className="space-y-2">
+                        {words.map((attachment) => (
+                          <Card key={attachment.id} className="p-4 hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500/20 hover:border-l-blue-500">
+                            <div className="flex items-start gap-4">
+                              <div className="flex gap-3 flex-1 min-w-0">
+                                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                  <File className="h-5 w-5 text-blue-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold mb-1">{attachment.title}</h4>
+                                  {attachment.grupo_acesso_id && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Grupo: {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(attachment)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(attachment.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {others.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-muted-foreground mb-3">OUTROS ({others.length})</h5>
+                      <div className="space-y-2">
+                        {others.map((attachment) => (
+                          <Card key={attachment.id} className="p-4 hover:shadow-md transition-all duration-200">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold mb-1">{attachment.title}</h4>
+                                {attachment.grupo_acesso_id && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Grupo: {grupos.find((g) => g.id === attachment.grupo_acesso_id)?.nome}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(attachment)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(attachment.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </ScrollArea>
         </TabsContent>
       </Tabs>
     </div>
