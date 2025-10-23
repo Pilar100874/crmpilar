@@ -83,8 +83,10 @@ export function WebhooksCRUD() {
   const resetVariableForm = () => {
     setNewVariableName("");
     setNewVariableDescription("");
-    // Manter o tipo se já existirem variáveis
-    if (formData.variables.length === 0) {
+    // Se já existirem variáveis, manter o tipo delas, senão resetar para json
+    if (formData.variables.length > 0) {
+      setNewVariableType(formData.variables[0].type);
+    } else {
       setNewVariableType("json");
     }
     setNewVariableDefaultValue("");
@@ -261,12 +263,12 @@ export function WebhooksCRUD() {
       return;
     }
 
-    // Verificar se já existe variável e se o tipo é diferente
+    // Se já existe variável, forçar o tipo para ser o mesmo
     if (formData.variables.length > 0) {
       const existingType = formData.variables[0].type;
+      // Garantir que o tipo está correto (por segurança)
       if (newVariableType !== existingType) {
-        toast.error(`Você já tem variáveis do tipo "${existingType}". Todas as variáveis devem ser do mesmo tipo.`);
-        return;
+        setNewVariableType(existingType);
       }
     }
 
@@ -374,7 +376,12 @@ export function WebhooksCRUD() {
       ...prev,
       variables: [...prev.variables, newVariable]
     }));
+    
+    // Manter o tipo para a próxima variável
+    const currentType = newVariableType;
     resetVariableForm();
+    setNewVariableType(currentType);
+    
     toast.success("Variável adicionada!");
   };
 
