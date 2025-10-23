@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2, Tag, FolderTree, Globe } from "lucide-react";
+import { Webhook, Key, Bell, Shield, Share2, Users, UserCog, Building2, Tag, FolderTree, Globe, MessageSquare, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { UnidadesCRUD } from "@/components/config/UnidadesCRUD";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
@@ -14,6 +14,8 @@ import { UsuariosCRUD } from "@/components/config/UsuariosCRUD";
 import { ClientesCRUD } from "@/components/config/ClientesCRUD";
 import { APIGeneratorCRUD } from "@/components/config/APIGeneratorCRUD";
 import { WebhooksCRUD } from "@/components/config/WebhooksCRUD";
+import QuickRepliesCRUD from "@/components/config/QuickRepliesCRUD";
+import QuickAttachmentsCRUD from "@/components/config/QuickAttachmentsCRUD";
 
 export default function Config() {
   const [socialLinks, setSocialLinks] = useState({
@@ -324,6 +326,40 @@ export default function Config() {
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <UsuariosCRUD />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="textos-prontos" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Textos Prontos Globais</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Crie textos prontos disponíveis para grupos de acesso
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <QuickRepliesCRUD />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="anexos-rapidos" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <LinkIcon className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Anexos Rápidos Globais</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Cadastre links e arquivos para grupos de acesso
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <QuickAttachmentsCRUD />
             </AccordionContent>
           </AccordionItem>
         </Accordion>

@@ -449,6 +449,91 @@ export type Database = {
           },
         ]
       }
+      quick_attachments: {
+        Row: {
+          created_at: string | null
+          grupo_acesso_id: string | null
+          id: string
+          is_global: boolean | null
+          title: string
+          type: string
+          updated_at: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          grupo_acesso_id?: string | null
+          id?: string
+          is_global?: boolean | null
+          title: string
+          type: string
+          updated_at?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          grupo_acesso_id?: string | null
+          id?: string
+          is_global?: boolean | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_attachments_grupo_acesso_id_fkey"
+            columns: ["grupo_acesso_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_acesso"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quick_replies: {
+        Row: {
+          content: string
+          created_at: string | null
+          grupo_acesso_id: string | null
+          id: string
+          is_global: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          grupo_acesso_id?: string | null
+          id?: string
+          is_global?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          grupo_acesso_id?: string | null
+          id?: string
+          is_global?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_replies_grupo_acesso_id_fkey"
+            columns: ["grupo_acesso_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_acesso"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       segmentos: {
         Row: {
           created_at: string | null
@@ -662,10 +747,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      roles_present: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      roles_present: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "gestor" | "agente"
