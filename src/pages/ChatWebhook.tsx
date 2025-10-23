@@ -465,22 +465,39 @@ export default function ChatWebhook() {
                   disabled={aiWebhooks.length === 0}
                 >
                   <Sparkles className="h-4 w-4" />
-                  IA
+                  IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
                 </Button>
-                {showAIChat && aiWebhooks.length > 1 && (
-                  <select
-                    value={selectedAIWebhook || ""}
-                    onChange={(e) => setSelectedAIWebhook(e.target.value)}
-                    className="text-sm border rounded px-2 py-1 bg-background"
-                  >
-                    {aiWebhooks.map((webhook) => (
-                      <option key={webhook.id} value={webhook.id}>
-                        {webhook.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
               </div>
+
+              {/* AI Webhooks List */}
+              {showAIChat && aiWebhooks.length > 0 && (
+                <div className="mb-3 p-2 bg-secondary/20 rounded-lg">
+                  <p className="text-xs font-medium mb-2 text-muted-foreground">
+                    Webhooks de IA disponíveis:
+                  </p>
+                  <div className="space-y-1">
+                    {aiWebhooks.map((webhook) => (
+                      <button
+                        key={webhook.id}
+                        onClick={() => setSelectedAIWebhook(webhook.id)}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                          selectedAIWebhook === webhook.id
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-background hover:bg-secondary"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{webhook.name}</span>
+                          <span className="text-xs opacity-70">{webhook.method}</span>
+                        </div>
+                        {webhook.description && (
+                          <p className="text-xs opacity-70 mt-1">{webhook.description}</p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* AI Chat Box */}
               {showAIChat && (
