@@ -5,8 +5,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatInput from "@/components/chat/ChatInput";
 import WebhookSelector from "@/components/chat/WebhookSelector";
-import { Webhook } from "lucide-react";
+import { Webhook, Sparkles, Send, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface Message {
   id: string;
@@ -61,13 +63,32 @@ export default function ChatWebhook() {
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [showVariableForm, setShowVariableForm] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // AI Chat states
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiWebhooks, setAiWebhooks] = useState<WebhookConfig[]>([]);
+  const [selectedAIWebhook, setSelectedAIWebhook] = useState<string | null>(null);
+  const [aiInput, setAiInput] = useState("");
+  const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  const [isAILoading, setIsAILoading] = useState(false);
+  const aiScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedWebhooks = localStorage.getItem("webhooks");
     const savedTypes = localStorage.getItem("webhookTypes");
     if (savedWebhooks) {
       const parsed = JSON.parse(savedWebhooks);
-      setWebhooks(parsed.map((w: any) => ({ ...w, createdAt: new Date(w.createdAt) })));
+      const loadedWebhooks = parsed.map((w: any) => ({ ...w, createdAt: new Date(w.createdAt) }));
+      setWebhooks(loadedWebhooks);
+      
+      // Filter AI webhooks
+      const aiWebhooksList = loadedWebhooks.filter((w: WebhookConfig) => 
+        w.usageLocations?.includes("Menu do chat")
+      );
+      setAiWebhooks(aiWebhooksList);
+      if (aiWebhooksList.length > 0) {
+        setSelectedAIWebhook(aiWebhooksList[0].id);
+      }
     }
     if (savedTypes) {
       setWebhookTypes(JSON.parse(savedTypes));
@@ -90,6 +111,12 @@ export default function ChatWebhook() {
       }
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (aiScrollRef.current) {
+      aiScrollRef.current.scrollTop = aiScrollRef.current.scrollHeight;
+    }
+  }, [aiMessages]);
 
   // Reset variable values when webhook changes
   useEffect(() => {
@@ -230,11 +257,79 @@ export default function ChatWebhook() {
     }
   };
 
+  const sendAIMessage = async () => {
+    if (!aiInput.trim() || !selectedAIWebhook) {
+      toast.error("Digite uma mensagem e selecione um webhook de IA");
+      return;
+    }
+
+    const webhook = aiWebhooks.find((w) => w.id === selectedAIWebhook);
+    if (!webhook) {
+      toast.error("Webhook de IA não encontrado");
+      return;
+    }
+
+    const userMessage = { role: "user" as const, content: aiInput };
+    setAiMessages((prev) => [...prev, userMessage]);
+    setAiInput("");
+    setIsAILoading(true);
+
+    try {
+      const response = await fetch(webhook.url, {
+        method: webhook.method || "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          contentType: "text",
+          content: aiInput,
+        }),
+      });
+
+      let responseData: any;
+      const responseContentType = response.headers.get("content-type");
+      
+      if (responseContentType?.includes("application/json")) {
+        responseData = await response.json();
+      } else {
+        responseData = await response.text();
+      }
+
+      if (!response.ok) {
+        throw new Error(`Webhook retornou status ${response.status}`);
+      }
+
+      const assistantMessage = {
+        role: "assistant" as const,
+        content: typeof responseData === "string" ? responseData : JSON.stringify(responseData, null, 2),
+      };
+
+      setAiMessages((prev) => [...prev, assistantMessage]);
+      toast.success("Resposta recebida!");
+    } catch (error: any) {
+      toast.error(`Erro ao enviar mensagem: ${error.message}`);
+      console.error("Error sending AI message:", error);
+    } finally {
+      setIsAILoading(false);
+    }
+  };
+
+  const sendAIResponseToMainChat = (content: string) => {
+    if (!selectedWebhook) {
+      toast.error("Selecione um webhook no chat principal primeiro");
+      return;
+    }
+    sendMessage(content, "text");
+    toast.success("Mensagem enviada para o chat principal!");
+  };
+
   const filteredWebhooks = selectedType
     ? webhooks.filter((w) => w.type === selectedType && w.usageLocations?.includes("teste"))
     : [];
 
   const currentWebhook = webhooks.find((w) => w.id === selectedWebhook);
+  const currentAIWebhook = aiWebhooks.find((w) => w.id === selectedAIWebhook);
 
   return (
     <Layout>
@@ -361,6 +456,109 @@ export default function ChatWebhook() {
 
             {/* Input Area */}
             <div className="border-t border-border bg-card/80 backdrop-blur-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Button
+                  variant={showAIChat ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowAIChat(!showAIChat)}
+                  className="gap-2"
+                  disabled={aiWebhooks.length === 0}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  IA
+                </Button>
+                {showAIChat && aiWebhooks.length > 1 && (
+                  <select
+                    value={selectedAIWebhook || ""}
+                    onChange={(e) => setSelectedAIWebhook(e.target.value)}
+                    className="text-sm border rounded px-2 py-1 bg-background"
+                  >
+                    {aiWebhooks.map((webhook) => (
+                      <option key={webhook.id} value={webhook.id}>
+                        {webhook.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* AI Chat Box */}
+              {showAIChat && (
+                <Card className="mb-3 bg-secondary/30 border-primary/20">
+                  <div className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        Chat IA - {currentAIWebhook?.name}
+                      </h4>
+                    </div>
+                    
+                    {/* AI Messages */}
+                    <div
+                      ref={aiScrollRef}
+                      className="max-h-64 overflow-y-auto mb-3 space-y-2 bg-background/50 rounded p-2"
+                    >
+                      {aiMessages.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">
+                          Faça uma pergunta para a IA...
+                        </p>
+                      ) : (
+                        aiMessages.map((msg, idx) => (
+                          <div
+                            key={idx}
+                            className={`text-sm p-2 rounded ${
+                              msg.role === "user"
+                                ? "bg-primary text-primary-foreground ml-8"
+                                : "bg-card mr-8"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="whitespace-pre-wrap break-words flex-1">{msg.content}</p>
+                              {msg.role === "assistant" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 shrink-0"
+                                  onClick={() => sendAIResponseToMainChat(msg.content)}
+                                  title="Enviar para o chat principal"
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* AI Input */}
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={aiInput}
+                        onChange={(e) => setAiInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            sendAIMessage();
+                          }
+                        }}
+                        placeholder="Digite sua mensagem para a IA..."
+                        className="min-h-[60px] text-sm"
+                        disabled={isAILoading}
+                      />
+                      <Button
+                        onClick={sendAIMessage}
+                        disabled={!aiInput.trim() || isAILoading}
+                        size="sm"
+                        className="shrink-0"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               <ChatInput onSendMessage={sendMessage} disabled={!selectedWebhook || isLoading} />
             </div>
           </Card>
