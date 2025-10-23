@@ -196,51 +196,97 @@ export const GruposAcessoCRUD = () => {
       .join(' | ');
   };
 
-  return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="grupo-nome">Nome do Grupo *</Label>
-          <Input
-            id="grupo-nome"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            placeholder="Digite o nome do grupo"
-            required
-          />
-        </div>
+  const selectAll = () => {
+    const allPermissions: Record<string, MenuPermissions> = {};
+    MENUS_DISPONIVEIS.forEach(menu => {
+      allPermissions[menu] = { view: true, create: true, edit: true, delete: true };
+    });
+    setMenusPermitidos(allPermissions);
+  };
 
-        <div>
-          <Label className="text-base mb-3 block">Permissões por Menu</Label>
-          <div className="space-y-3">
-            {MENUS_DISPONIVEIS.map((menu) => {
-              const permissions = menusPermitidos[menu] || { view: false, create: false, edit: false, delete: false };
-              
-              return (
-                <Card key={menu} className="p-4">
-                  <div className="font-medium mb-3">{menu}</div>
-                  <div className="grid grid-cols-4 gap-4">
-                    {(['view', 'create', 'edit', 'delete'] as const).map((perm) => (
-                      <div key={perm} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`${menu}-${perm}`}
-                          checked={permissions[perm]}
-                          onCheckedChange={() => togglePermission(menu, perm)}
-                        />
-                        <label
-                          htmlFor={`${menu}-${perm}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {getPermissionLabel(perm)}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              );
-            })}
+  const clearAll = () => {
+    setMenusPermitidos({});
+  };
+
+  const hasAnyPermission = Object.keys(menusPermitidos).length > 0;
+
+  return (
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="grupo-nome" className="text-base">Nome do Grupo *</Label>
+              <Input
+                id="grupo-nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Digite o nome do grupo"
+                className="mt-2"
+                required
+              />
+            </div>
           </div>
-        </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-base">Permissões por Menu</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAll}
+                >
+                  Selecionar Todos
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAll}
+                  disabled={!hasAnyPermission}
+                >
+                  Limpar Todos
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid gap-3">
+              {MENUS_DISPONIVEIS.map((menu) => {
+                const permissions = menusPermitidos[menu] || { view: false, create: false, edit: false, delete: false };
+                const hasAnyMenuPermission = Object.values(permissions).some(p => p);
+                
+                return (
+                  <Card key={menu} className={`p-4 transition-all ${hasAnyMenuPermission ? 'border-primary/50 bg-primary/5' : ''}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="font-medium text-sm min-w-[180px]">{menu}</div>
+                      <div className="flex gap-6 flex-wrap">
+                        {(['view', 'create', 'edit', 'delete'] as const).map((perm) => (
+                          <div key={perm} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`${menu}-${perm}`}
+                              checked={permissions[perm]}
+                              onCheckedChange={() => togglePermission(menu, perm)}
+                            />
+                            <label
+                              htmlFor={`${menu}-${perm}`}
+                              className="text-sm cursor-pointer select-none"
+                            >
+                              {getPermissionLabel(perm)}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
 
         <div className="flex gap-2">
           <Button type="submit">
@@ -258,39 +304,52 @@ export const GruposAcessoCRUD = () => {
         </div>
       </form>
 
-      <div className="space-y-2">
-        {grupos.map((grupo) => (
-          <div
-            key={grupo.id}
-            className="flex items-start justify-between p-4 border rounded-md"
-          >
-            <div className="flex-1">
-              <div className="font-semibold mb-2">{grupo.nome}</div>
-              <div className="text-sm text-muted-foreground">
-                {Object.keys(grupo.menus_permitidos || {}).length > 0 
-                  ? formatPermissions(grupo.menus_permitidos)
-                  : "Nenhuma permissão definida"}
-              </div>
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Grupos Cadastrados</h3>
+        <div className="space-y-3">
+          {grupos.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum grupo cadastrado ainda
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(grupo)}
+          ) : (
+            grupos.map((grupo) => (
+              <Card
+                key={grupo.id}
+                className="p-4 hover:shadow-md transition-shadow"
               >
-                <Edit className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(grupo.id)}
-              >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-base mb-2">{grupo.nome}</div>
+                    <div className="text-sm text-muted-foreground break-words">
+                      {Object.keys(grupo.menus_permitidos || {}).length > 0 
+                        ? formatPermissions(grupo.menus_permitidos)
+                        : "Nenhuma permissão definida"}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(grupo)}
+                      title="Editar"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(grupo.id)}
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+      </Card>
     </div>
   );
 };
