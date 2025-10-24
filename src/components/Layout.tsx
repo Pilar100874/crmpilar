@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
@@ -280,55 +281,50 @@ export default function Layout({ children }: LayoutProps) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   
                   return (
-                    <div key={item.id} className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setOpenSubmenuId(openSubmenuId === item.id ? null : item.id)}
-                        className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
-                          isSubItemActive
-                            ? "bg-sidebar-accent text-primary"
-                            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                        }`}
-                      >
-                        {isSubItemActive && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                        )}
-                        <item.icon className={`w-6 h-6 transition-colors ${
-                          isSubItemActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`} />
-                        <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
-                          isSubItemActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`}>
-                          {item.title}
-                        </span>
-                        <ChevronDown className={`w-3 h-3 transition-transform ${openSubmenuId === item.id ? "rotate-180" : ""} ${
-                          isSubItemActive ? "text-primary" : "text-sidebar-foreground/70"
-                        }`} />
-                      </button>
-                      {openSubmenuId === item.id && (
-                        <div className="absolute left-full top-0 ml-2 w-48 p-2 bg-card border rounded-md shadow-lg z-50">
-                          <div className="space-y-1">
-                            {item.subItems.map((subItem) => (
-                              <NavLink
-                                key={subItem.id}
-                                to={subItem.url}
-                                onClick={() => setOpenSubmenuId(null)}
-                                className={({ isActive }) =>
-                                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                                    isActive
-                                      ? "bg-primary text-primary-foreground"
-                                      : "hover:bg-muted text-foreground"
-                                  }`
-                                }
-                              >
-                                <subItem.icon className="w-4 h-4" />
-                                <span className="text-sm font-medium">{subItem.title}</span>
-                              </NavLink>
-                            ))}
-                          </div>
+                    <Popover key={item.id}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
+                            isSubItemActive
+                              ? "bg-sidebar-accent text-primary"
+                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          }`}
+                        >
+                          {isSubItemActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                          )}
+                          <item.icon className={`w-6 h-6 transition-colors ${
+                            isSubItemActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`} />
+                          <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
+                            isSubItemActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`}>
+                            {item.title}
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent side="right" align="start" sideOffset={8} className="w-48 p-2">
+                        <div className="space-y-1">
+                          {item.subItems.map((subItem) => (
+                            <NavLink
+                              key={subItem.id}
+                              to={subItem.url}
+                              className={({ isActive }) =>
+                                `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                  isActive
+                                    ? "bg-primary text-primary-foreground"
+                                    : "hover:bg-muted text-foreground"
+                                }`
+                              }
+                            >
+                              <subItem.icon className="w-4 h-4" />
+                              <span className="text-sm font-medium">{subItem.title}</span>
+                            </NavLink>
+                          ))}
                         </div>
-                      )}
-                    </div>
+                      </PopoverContent>
+                    </Popover>
                   );
                 }
                 
