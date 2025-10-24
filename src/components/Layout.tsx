@@ -356,6 +356,7 @@ export default function Layout({ children }: LayoutProps) {
                   <NavLink
                     key={item.title}
                     to={item.url!}
+                    onClick={() => setOpenSubmenuId(null)}
                     className={({ isActive }) =>
                       `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
                         isActive
