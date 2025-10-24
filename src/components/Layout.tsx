@@ -291,18 +291,10 @@ export default function Layout({ children }: LayoutProps) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   
                   return (
-                    <Popover key={item.id} open={openSubmenuId === item.id} onOpenChange={(open) => {
-                      console.log('Popover change:', item.id, open);
-                      setOpenSubmenuId(open ? item.id : null);
-                    }}>
+                    <Popover key={item.id}>
                       <PopoverTrigger asChild>
                         <button
                           type="button"
-                          onClick={(e) => {
-                            console.log('Button clicked:', item.id);
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
                           className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
                             isSubItemActive
                               ? "bg-sidebar-accent text-primary"
@@ -320,18 +312,17 @@ export default function Layout({ children }: LayoutProps) {
                           }`}>
                             {item.title}
                           </span>
-                          <ChevronDown className={`w-3 h-3 transition-transform ${openSubmenuId === item.id ? "rotate-180" : ""} ${
+                          <ChevronDown className={`w-3 h-3 transition-transform ${
                             isSubItemActive ? "text-primary" : "text-sidebar-foreground/70"
                           }`} />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent side="right" align="start" className="w-48 p-2 bg-card border-border">
+                      <PopoverContent side="right" align="start" sideOffset={8} className="w-48 p-2 bg-card border-border shadow-lg">
                         <div className="space-y-1">
                           {item.subItems.map((subItem) => (
                             <NavLink
                               key={subItem.id}
                               to={subItem.url}
-                              onClick={() => setOpenSubmenuId(null)}
                               className={({ isActive }) =>
                                 `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
                                   isActive
