@@ -276,7 +276,7 @@ export default function Layout({ children }: LayoutProps) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col bg-background">
-          <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card shadow-sm">
+          <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-card shadow-sm">
             <div className="flex items-center gap-6 text-sm">
               {estabelecimentoName && (
                 <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export default function Layout({ children }: LayoutProps) {
               </Button>
             )}
           </header>
-          <div className="flex-1 overflow-auto bg-background">
+          <div className="flex-1 overflow-auto bg-background p-6">
             {children}
           </div>
         </main>
