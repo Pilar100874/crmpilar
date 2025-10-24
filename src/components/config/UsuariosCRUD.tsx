@@ -18,6 +18,12 @@ interface Usuario {
   unidade_id: string | null;
   grupo_acesso_id: string | null;
   estabelecimento_id: string | null;
+  smtp: string | null;
+  porta_smtp: number | null;
+  pop: string | null;
+  porta_pop: number | null;
+  senha_email: string | null;
+  usar_autenticacao: boolean | null;
   is_admin?: boolean;
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
@@ -60,6 +66,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [senha, setSenha] = useState("");
+  const [smtp, setSmtp] = useState("");
+  const [portaSmtp, setPortaSmtp] = useState("");
+  const [pop, setPop] = useState("");
+  const [portaPop, setPortaPop] = useState("");
+  const [senhaEmail, setSenhaEmail] = useState("");
+  const [usarAutenticacao, setUsarAutenticacao] = useState(true);
   const [unidadeId, setUnidadeId] = useState("");
   const [grupoAcessoId, setGrupoAcessoId] = useState("");
   const [selectedEstabelecimentoId, setSelectedEstabelecimentoId] = useState("");
@@ -211,6 +223,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       grupo_acesso_id: grupoAcessoId || null,
       estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
       senha_hash: senha || undefined,
+      smtp: smtp || null,
+      porta_smtp: portaSmtp ? parseInt(portaSmtp) : null,
+      pop: pop || null,
+      porta_pop: portaPop ? parseInt(portaPop) : null,
+      senha_email: senhaEmail || null,
+      usar_autenticacao: usarAutenticacao,
     };
 
     if (editingId) {
@@ -313,6 +331,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setEmail("");
     setTelefone("");
     setSenha("");
+    setSmtp("");
+    setPortaSmtp("");
+    setPop("");
+    setPortaPop("");
+    setSenhaEmail("");
+    setUsarAutenticacao(true);
     setUnidadeId("");
     setGrupoAcessoId("");
     setSelectedEstabelecimentoId("");
@@ -325,6 +349,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setNome(usuario.nome);
     setEmail(usuario.email);
     setTelefone(usuario.telefone || "");
+    setSmtp(usuario.smtp || "");
+    setPortaSmtp(usuario.porta_smtp?.toString() || "");
+    setPop(usuario.pop || "");
+    setPortaPop(usuario.porta_pop?.toString() || "");
+    setSenhaEmail(usuario.senha_email || "");
+    setUsarAutenticacao(usuario.usar_autenticacao ?? true);
     setUnidadeId(usuario.unidade_id || "");
     setGrupoAcessoId(usuario.grupo_acesso_id || "");
     setSelectedEstabelecimentoId(usuario.estabelecimento_id || "");
@@ -519,6 +549,78 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               </Select>
             </div>
           )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="text-sm font-semibold text-muted-foreground border-b pb-2">
+            Configurações de E-mail
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="usuario-smtp">Servidor SMTP</Label>
+              <Input
+                id="usuario-smtp"
+                value={smtp}
+                onChange={(e) => setSmtp(e.target.value)}
+                placeholder="smtp.exemplo.com"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-porta-smtp">Porta SMTP</Label>
+              <Input
+                id="usuario-porta-smtp"
+                type="number"
+                value={portaSmtp}
+                onChange={(e) => setPortaSmtp(e.target.value)}
+                placeholder="587"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-pop">Servidor POP</Label>
+              <Input
+                id="usuario-pop"
+                value={pop}
+                onChange={(e) => setPop(e.target.value)}
+                placeholder="pop.exemplo.com"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-porta-pop">Porta POP</Label>
+              <Input
+                id="usuario-porta-pop"
+                type="number"
+                value={portaPop}
+                onChange={(e) => setPortaPop(e.target.value)}
+                placeholder="995"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-senha-email">Senha do E-mail</Label>
+              <Input
+                id="usuario-senha-email"
+                type="password"
+                value={senhaEmail}
+                onChange={(e) => setSenhaEmail(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2 pt-6">
+              <Switch
+                id="usar-autenticacao"
+                checked={usarAutenticacao}
+                onCheckedChange={setUsarAutenticacao}
+              />
+              <Label htmlFor="usar-autenticacao" className="cursor-pointer">
+                Usar Autenticação
+              </Label>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-6">

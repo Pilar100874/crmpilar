@@ -1027,10 +1027,16 @@ export type Database = {
           grupo_acesso_id: string | null
           id: string
           nome: string
+          pop: string | null
+          porta_pop: number | null
+          porta_smtp: number | null
+          senha_email: string | null
           senha_hash: string
+          smtp: string | null
           telefone: string | null
           unidade_id: string | null
           updated_at: string | null
+          usar_autenticacao: boolean | null
         }
         Insert: {
           created_at?: string | null
@@ -1039,10 +1045,16 @@ export type Database = {
           grupo_acesso_id?: string | null
           id?: string
           nome: string
+          pop?: string | null
+          porta_pop?: number | null
+          porta_smtp?: number | null
+          senha_email?: string | null
           senha_hash: string
+          smtp?: string | null
           telefone?: string | null
           unidade_id?: string | null
           updated_at?: string | null
+          usar_autenticacao?: boolean | null
         }
         Update: {
           created_at?: string | null
@@ -1051,10 +1063,16 @@ export type Database = {
           grupo_acesso_id?: string | null
           id?: string
           nome?: string
+          pop?: string | null
+          porta_pop?: number | null
+          porta_smtp?: number | null
+          senha_email?: string | null
           senha_hash?: string
+          smtp?: string | null
           telefone?: string | null
           unidade_id?: string | null
           updated_at?: string | null
+          usar_autenticacao?: boolean | null
         }
         Relationships: [
           {
