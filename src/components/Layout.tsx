@@ -314,7 +314,7 @@ export default function Layout({ children }: LayoutProps) {
                           {/* Submenu panel */}
                           <div className="fixed left-20 top-0 bottom-0 w-72 bg-card border-r border-border/30 shadow-sm z-50 overflow-y-auto">
                             <div className="p-8 pt-10">
-                              <h3 className="text-xs font-semibold text-foreground/60 mb-6 uppercase tracking-wider">
+                              <h3 className="text-lg font-bold text-foreground mb-6">
                                 {item.title}
                               </h3>
                               
@@ -335,7 +335,7 @@ export default function Layout({ children }: LayoutProps) {
                                         }`
                                       }
                                     >
-                                      <span className="text-base font-semibold">{subItem.title}</span>
+                                      <span className="text-sm font-medium">{subItem.title}</span>
                                       {location.pathname === subItem.url && (
                                         <Pencil className="w-3 h-3 text-muted-foreground opacity-40" />
                                       )}
