@@ -76,8 +76,8 @@ export default function Email() {
       const { data: usuario, error } = await supabase
         .from('usuarios')
         .select('smtp, porta_smtp, pop, porta_pop, senha_email, estabelecimento_id')
-        .eq('id', user.id)
-        .single();
+        .ilike('email', user.email || '')
+        .maybeSingle();
 
       if (error) {
         console.error('Erro ao verificar configuração:', error);
@@ -100,7 +100,7 @@ export default function Email() {
             .from('resend_config')
             .select('*')
             .eq('estabelecimento_id', usuario.estabelecimento_id)
-            .single();
+            .maybeSingle();
           
           setHasResendConfig(!!resendConfig);
         } else {
