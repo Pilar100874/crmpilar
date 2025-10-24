@@ -289,7 +289,7 @@ export default function Layout({ children }: LayoutProps) {
                       <button
                         type="button"
                         onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
-                        className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
+                        className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 group relative ${
                           isSubItemActive || isMenuOpen
                             ? "bg-sidebar-accent text-primary"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -298,10 +298,10 @@ export default function Layout({ children }: LayoutProps) {
                         {(isSubItemActive || isMenuOpen) && (
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
                         )}
-                        <item.icon className={`w-6 h-6 transition-colors ${
+                        <item.icon className={`w-6 h-6 ${
                           isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`} />
-                        <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
+                        <span className={`text-[10px] font-medium text-center leading-tight ${
                           isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`}>
                           {item.title}
@@ -333,7 +333,7 @@ export default function Layout({ children }: LayoutProps) {
                                       to={subItem.url}
                                       onClick={() => setOpenSubmenuId(null)}
                                       className={({ isActive }) =>
-                                        `flex items-center justify-between py-4 transition-colors group ${
+                                        `flex items-center justify-between py-4 group ${
                                           isActive
                                             ? "text-foreground"
                                             : "text-foreground/70 hover:text-foreground"
@@ -362,29 +362,33 @@ export default function Layout({ children }: LayoutProps) {
                     key={item.title}
                     to={item.url!}
                     onClick={() => setOpenSubmenuId(null)}
-                    className={({ isActive }) =>
-                      `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
-                        isActive
+                    className={({ isActive }) => {
+                      const shouldHighlight = isActive && !openSubmenuId;
+                      return `flex flex-col items-center justify-center gap-1 py-3 px-2 group relative ${
+                        shouldHighlight
                           ? "bg-sidebar-accent text-primary"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }`
-                    }
+                      }`;
+                    }}
                   >
-                    {({ isActive }) => (
-                      <>
-                        {isActive && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                        )}
-                        <item.icon className={`w-6 h-6 transition-colors ${
-                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`} />
-                        <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
-                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`}>
-                          {item.title}
-                        </span>
-                      </>
-                    )}
+                    {({ isActive }) => {
+                      const shouldHighlight = isActive && !openSubmenuId;
+                      return (
+                        <>
+                          {shouldHighlight && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                          )}
+                          <item.icon className={`w-6 h-6 ${
+                            shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`} />
+                          <span className={`text-[10px] font-medium text-center leading-tight ${
+                            shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`}>
+                            {item.title}
+                          </span>
+                        </>
+                      );
+                    }}
                   </NavLink>
                 );
               })}
