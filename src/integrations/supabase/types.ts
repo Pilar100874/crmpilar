@@ -876,6 +876,44 @@ export type Database = {
           },
         ]
       }
+      resend_config: {
+        Row: {
+          api_key: string
+          created_at: string | null
+          estabelecimento_id: string
+          from_email: string
+          from_name: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          created_at?: string | null
+          estabelecimento_id: string
+          from_email: string
+          from_name: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          created_at?: string | null
+          estabelecimento_id?: string
+          from_email?: string
+          from_name?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resend_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       segmentos: {
         Row: {
           created_at: string | null

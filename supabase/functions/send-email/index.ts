@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,31 +39,57 @@ serve(async (req) => {
       throw new Error('Destinatário, assunto e corpo do email são obrigatórios');
     }
 
-    // Buscar configurações SMTP do usuário autenticado
+    // Buscar estabelecimento do usuário
     const { data: usuario, error: usuarioError } = await supabase
       .from('usuarios')
-      .select('smtp, porta_smtp, email, senha_email, usar_autenticacao')
+      .select('estabelecimento_id, email')
       .eq('id', user.id)
       .single();
 
-    if (usuarioError || !usuario) {
-      throw new Error('Configurações de email não encontradas. Configure seu email nas configurações do usuário.');
+    if (usuarioError || !usuario?.estabelecimento_id) {
+      throw new Error('Usuário não vinculado a um estabelecimento');
     }
 
-    if (!usuario.smtp || !usuario.porta_smtp || !usuario.email || !usuario.senha_email) {
-      throw new Error('Configure completamente o servidor SMTP e senha do email nas configurações do usuário');
+    // Buscar configuração Resend do estabelecimento
+    const { data: resendConfig, error: configError } = await supabase
+      .from('resend_config')
+      .select('*')
+      .eq('estabelecimento_id', usuario.estabelecimento_id)
+      .single();
+
+    if (configError || !resendConfig) {
+      throw new Error('Configuração Resend não encontrada. Configure o Resend nas configurações do estabelecimento.');
     }
 
-    console.log('Usuário autenticado:', usuario.email);
-    console.log('Enviando email para:', to);
+    console.log('Enviando email via Resend...');
+    console.log('De:', resendConfig.from_email);
+    console.log('Para:', to);
     console.log('Assunto:', subject);
 
-    // Salvar na pasta enviados vinculado ao usuário
+    // Inicializar Resend com a API Key do estabelecimento
+    const resend = new Resend(resendConfig.api_key);
+
+    // Enviar email via Resend
+    const { data: emailData, error: resendError } = await resend.emails.send({
+      from: `${resendConfig.from_name} <${resendConfig.from_email}>`,
+      to: [to],
+      subject: subject,
+      html: body.replace(/\n/g, '<br>'),
+    });
+
+    if (resendError) {
+      console.error('Erro ao enviar via Resend:', resendError);
+      throw new Error(`Erro ao enviar email: ${resendError.message}`);
+    }
+
+    console.log('Email enviado com sucesso via Resend:', emailData);
+
+    // Salvar na pasta enviados
     const { error: saveError } = await supabase
       .from('emails')
       .insert({
         user_id: user.id,
-        from_email: usuario.email,
+        from_email: resendConfig.from_email,
         to_email: to,
         subject: subject,
         body: body,
@@ -72,22 +99,15 @@ serve(async (req) => {
       });
 
     if (saveError) {
-      console.error('Erro ao salvar email:', saveError);
-      throw new Error('Erro ao salvar email: ' + saveError.message);
+      console.error('Erro ao salvar email no banco:', saveError);
+      // Não lança erro aqui pois o email já foi enviado
     }
-
-    console.log('Email salvo com sucesso para o usuário:', user.email);
-
-    // NOTA: Implementação simplificada
-    // Para envio real de email via SMTP, seria necessário:
-    // 1. Usar um serviço de terceiros como SendGrid, Resend, etc.
-    // 2. Ou implementar um proxy SMTP dedicado
-    // O nodemailer não é compatível com Deno Edge Functions
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Email salvo com sucesso. NOTA: Para envio real, configure um serviço de email como Resend ou SendGrid.'
+        message: 'Email enviado com sucesso!',
+        emailId: emailData?.id
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

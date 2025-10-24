@@ -14,9 +14,10 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Webhook, ShieldCheck, Store, MessageSquare, Save, ExternalLink, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Globe, Type, Hash, Calendar, List as ListIcon, ToggleLeft, Lock, Unlock, Trash2 } from "lucide-react";
+import { Webhook, ShieldCheck, Store, MessageSquare, Save, ExternalLink, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Globe, Type, Hash, Calendar, List as ListIcon, ToggleLeft, Lock, Unlock, Trash2, Mail } from "lucide-react";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
+import { ResendCRUD } from "@/components/config/ResendCRUD";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -293,6 +294,23 @@ export default function Config() {
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <AdministradoresCRUD />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="resend-config" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Configuração Resend (Email)</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configure o serviço de envio de emails para o estabelecimento
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <ResendCRUD />
             </AccordionContent>
           </AccordionItem>
 
