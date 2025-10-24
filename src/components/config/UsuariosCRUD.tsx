@@ -329,6 +329,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const detectEmailProvider = (emailAddress: string) => {
     const domain = emailAddress.toLowerCase().split('@')[1];
     
+    if (!domain) return;
+    
     const configs: Record<string, {
       smtp: string;
       portaSmtp: string;
@@ -366,8 +368,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       },
     };
 
-    if (configs[domain]) {
-      const config = configs[domain];
+    const config = configs[domain];
+    
+    if (config) {
       setSmtp(config.smtp);
       setPortaSmtp(config.portaSmtp);
       setPop(config.pop);
@@ -375,15 +378,18 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       setUsarAutenticacao(true);
       
       toast({
-        title: "Configurações aplicadas!",
-        description: `Configurações de ${config.providerName} aplicadas automaticamente. Você ainda precisa informar a senha do email.`,
+        title: "✅ Configurações aplicadas automaticamente!",
+        description: `Servidor ${config.providerName} configurado. Agora basta informar a senha do email.`,
       });
     }
   };
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
-    if (value.includes('@') && value.split('@')[1]) {
+    
+    // Detecta provedor quando o email estiver completo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailRegex.test(value)) {
       detectEmailProvider(value);
     }
   };
@@ -528,7 +534,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             <Label htmlFor="usuario-email">
               Email *
               <span className="text-xs text-muted-foreground ml-2 font-normal">
-                (Gmail e Hotmail são configurados automaticamente)
+                (Gmail, Hotmail e Outlook são configurados automaticamente)
               </span>
             </Label>
             <Input
@@ -536,8 +542,13 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               type="email"
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
-              placeholder="email@exemplo.com"
+              placeholder="usuario@gmail.com"
             />
+            {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Digite um email válido para configuração automática
+              </p>
+            )}
           </div>
 
           <div>
@@ -625,55 +636,76 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="usuario-smtp">Servidor SMTP</Label>
+              <Label htmlFor="usuario-smtp">
+                Servidor SMTP
+                {smtp && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+              </Label>
               <Input
                 id="usuario-smtp"
                 value={smtp}
                 onChange={(e) => setSmtp(e.target.value)}
                 placeholder="smtp.exemplo.com"
+                className={smtp ? "border-green-500/50" : ""}
               />
             </div>
 
             <div>
-              <Label htmlFor="usuario-porta-smtp">Porta SMTP</Label>
+              <Label htmlFor="usuario-porta-smtp">
+                Porta SMTP
+                {portaSmtp && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+              </Label>
               <Input
                 id="usuario-porta-smtp"
                 type="number"
                 value={portaSmtp}
                 onChange={(e) => setPortaSmtp(e.target.value)}
                 placeholder="587"
+                className={portaSmtp ? "border-green-500/50" : ""}
               />
             </div>
 
             <div>
-              <Label htmlFor="usuario-pop">Servidor POP</Label>
+              <Label htmlFor="usuario-pop">
+                Servidor IMAP/POP
+                {pop && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+              </Label>
               <Input
                 id="usuario-pop"
                 value={pop}
                 onChange={(e) => setPop(e.target.value)}
-                placeholder="pop.exemplo.com"
+                placeholder="imap.exemplo.com"
+                className={pop ? "border-green-500/50" : ""}
               />
             </div>
 
             <div>
-              <Label htmlFor="usuario-porta-pop">Porta POP</Label>
+              <Label htmlFor="usuario-porta-pop">
+                Porta IMAP/POP
+                {portaPop && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+              </Label>
               <Input
                 id="usuario-porta-pop"
                 type="number"
                 value={portaPop}
                 onChange={(e) => setPortaPop(e.target.value)}
-                placeholder="995"
+                placeholder="993"
+                className={portaPop ? "border-green-500/50" : ""}
               />
             </div>
 
             <div>
-              <Label htmlFor="usuario-senha-email">Senha do E-mail</Label>
+              <Label htmlFor="usuario-senha-email">
+                Senha do E-mail *
+                <span className="text-xs text-muted-foreground ml-2 font-normal">
+                  (Para Gmail, use Senha de App)
+                </span>
+              </Label>
               <Input
                 id="usuario-senha-email"
                 type="password"
                 value={senhaEmail}
                 onChange={(e) => setSenhaEmail(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Digite a senha do email"
               />
             </div>
 
