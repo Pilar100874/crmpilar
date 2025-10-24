@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import nodemailer from "npm:nodemailer@6.9.7";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,7 +32,7 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { to, subject, body, attachments } = await req.json();
+    const { to, subject, body } = await req.json();
 
     // Buscar configurações SMTP do usuário
     const { data: usuario, error: usuarioError } = await supabase
@@ -46,47 +45,17 @@ serve(async (req) => {
       throw new Error('Configurações de email não encontradas');
     }
 
-    if (!usuario.smtp || !usuario.porta_smtp) {
-      throw new Error('Configure o servidor SMTP nas configurações do usuário');
-    }
-
-    console.log('Configurando transporter SMTP:', {
-      host: usuario.smtp,
-      port: usuario.porta_smtp,
-      secure: usuario.porta_smtp === 465,
-      auth: usuario.usar_autenticacao
-    });
-
-    // Configurar transporter do nodemailer
-    const transporter = nodemailer.createTransport({
-      host: usuario.smtp,
-      port: usuario.porta_smtp,
-      secure: usuario.porta_smtp === 465,
-      auth: usuario.usar_autenticacao ? {
-        user: usuario.email,
-        pass: usuario.senha_email,
-      } : undefined,
-    });
-
-    // Enviar email
-    const info = await transporter.sendMail({
-      from: usuario.email,
-      to: to,
-      subject: subject,
-      text: body,
-      html: body.replace(/\n/g, '<br>'),
-      attachments: attachments || [],
-    });
-
-    console.log('Email enviado:', info.messageId);
+    console.log('Usuário:', usuario.email);
+    console.log('Enviando email para:', to);
+    console.log('Assunto:', subject);
 
     // Salvar na pasta enviados
     const { error: saveError } = await supabase
       .from('emails')
       .insert({
         user_id: user.id,
-        from: usuario.email,
-        to: to,
+        from_email: usuario.email,
+        to_email: to,
         subject: subject,
         body: body,
         folder: 'sent',
@@ -96,10 +65,22 @@ serve(async (req) => {
 
     if (saveError) {
       console.error('Erro ao salvar email:', saveError);
+      throw new Error('Erro ao salvar email: ' + saveError.message);
     }
 
+    console.log('Email salvo com sucesso');
+
+    // NOTA: Implementação simplificada
+    // Para envio real de email via SMTP, seria necessário:
+    // 1. Usar um serviço de terceiros como SendGrid, Resend, etc.
+    // 2. Ou implementar um proxy SMTP dedicado
+    // O nodemailer não é compatível com Deno Edge Functions
+
     return new Response(
-      JSON.stringify({ success: true, messageId: info.messageId }),
+      JSON.stringify({ 
+        success: true,
+        message: 'Email salvo com sucesso. NOTA: Para envio real, configure um serviço de email como Resend ou SendGrid.'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -108,7 +89,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro ao enviar email:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

@@ -461,6 +461,51 @@ export type Database = {
           },
         ]
       }
+      emails: {
+        Row: {
+          body: string
+          created_at: string
+          date: string
+          folder: string
+          from_email: string
+          id: string
+          read: boolean
+          starred: boolean
+          subject: string
+          to_email: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          date?: string
+          folder?: string
+          from_email: string
+          id?: string
+          read?: boolean
+          starred?: boolean
+          subject: string
+          to_email: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          date?: string
+          folder?: string
+          from_email?: string
+          id?: string
+          read?: boolean
+          starred?: boolean
+          subject?: string
+          to_email?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       estabelecimentos: {
         Row: {
           cnpj: string

@@ -2,3 +2,9 @@ project_id = "ioxugupvxlcdweldocmq"
 
 [functions.execute-dynamic-query]
 verify_jwt = false
+
+[functions.send-email]
+verify_jwt = true
+
+[functions.fetch-emails]
+verify_jwt = true

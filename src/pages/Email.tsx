@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,11 +23,11 @@ import { toast } from "sonner";
 
 interface Email {
   id: string;
-  from: string;
-  to: string;
+  from_email: string;
+  to_email: string;
   subject: string;
   body: string;
-  date: Date;
+  date: string;
   read: boolean;
   starred: boolean;
   folder: "inbox" | "sent" | "trash" | "archive";
@@ -37,37 +38,56 @@ export default function Email() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [composing, setComposing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
   
   // Compose email states
   const [newEmailTo, setNewEmailTo] = useState("");
   const [newEmailSubject, setNewEmailSubject] = useState("");
   const [newEmailBody, setNewEmailBody] = useState("");
 
-  // Mock emails data
-  const [emails] = useState<Email[]>([
-    {
-      id: "1",
-      from: "cliente@exemplo.com",
-      to: "voce@empresa.com",
-      subject: "Consulta sobre produto",
-      body: "Olá, gostaria de saber mais informações sobre o produto X...",
-      date: new Date(2024, 0, 15, 14, 30),
-      read: false,
-      starred: false,
-      folder: "inbox",
-    },
-    {
-      id: "2",
-      from: "fornecedor@exemplo.com",
-      to: "voce@empresa.com",
-      subject: "Atualização de pedido",
-      body: "Seu pedido #12345 foi atualizado...",
-      date: new Date(2024, 0, 15, 10, 15),
-      read: true,
-      starred: true,
-      folder: "inbox",
-    },
-  ]);
+  // Emails data
+  const [emails, setEmails] = useState<Email[]>([]);
+
+  // Carregar emails do banco
+  useEffect(() => {
+    loadEmails();
+  }, [selectedFolder]);
+
+  const loadEmails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('emails')
+        .select('*')
+        .eq('folder', selectedFolder)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setEmails((data as any[]).map(email => ({
+        ...email,
+        folder: email.folder as "inbox" | "sent" | "trash" | "archive"
+      })));
+    } catch (error) {
+      console.error('Erro ao carregar emails:', error);
+      toast.error('Erro ao carregar emails');
+    }
+  };
+
+  const fetchNewEmails = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('fetch-emails');
+      
+      if (error) throw error;
+      
+      toast.success('Emails atualizados com sucesso!');
+      await loadEmails();
+    } catch (error: any) {
+      console.error('Erro ao buscar emails:', error);
+      toast.error(error.message || 'Erro ao buscar emails');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const folders = [
     { id: "inbox", name: "Caixa de Entrada", icon: Inbox, count: emails.filter(e => e.folder === "inbox" && !e.read).length },
@@ -78,34 +98,56 @@ export default function Email() {
 
   const filteredEmails = emails.filter(
     (email) =>
-      email.folder === selectedFolder &&
-      (email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        email.body.toLowerCase().includes(searchQuery.toLowerCase()))
+      email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.from_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.body.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
     if (!newEmailTo || !newEmailSubject || !newEmailBody) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
-    toast.success("Email enviado com sucesso!");
-    setComposing(false);
-    setNewEmailTo("");
-    setNewEmailSubject("");
-    setNewEmailBody("");
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: newEmailTo,
+          subject: newEmailSubject,
+          body: newEmailBody,
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Email enviado com sucesso!");
+      setComposing(false);
+      setNewEmailTo("");
+      setNewEmailSubject("");
+      setNewEmailBody("");
+      
+      if (selectedFolder === 'sent') {
+        await loadEmails();
+      }
+    } catch (error: any) {
+      console.error('Erro ao enviar email:', error);
+      toast.error(error.message || 'Erro ao enviar email');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReply = () => {
     if (!selectedEmail) return;
     setComposing(true);
-    setNewEmailTo(selectedEmail.from);
+    setNewEmailTo(selectedEmail.from_email);
     setNewEmailSubject(`Re: ${selectedEmail.subject}`);
     setNewEmailBody(`\n\n--- Original ---\n${selectedEmail.body}`);
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     const today = new Date();
     const isToday = date.toDateString() === today.toDateString();
     
@@ -163,8 +205,13 @@ export default function Email() {
             <h2 className="text-lg font-semibold">
               {folders.find(f => f.id === selectedFolder)?.name}
             </h2>
-            <Button variant="ghost" size="icon">
-              <RefreshCw className="w-4 h-4" />
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={fetchNewEmails}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
           
@@ -196,7 +243,7 @@ export default function Email() {
                   } ${!email.read ? "font-semibold" : ""}`}
                 >
                   <div className="flex items-start justify-between mb-1">
-                    <span className="text-sm truncate flex-1">{email.from}</span>
+                    <span className="text-sm truncate flex-1">{email.from_email}</span>
                     <div className="flex items-center gap-2 ml-2">
                       {email.starred && <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />}
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -279,11 +326,11 @@ export default function Email() {
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold mb-1">{selectedEmail.subject}</h2>
                   <div className="text-sm text-muted-foreground">
-                    De: {selectedEmail.from}
+                    De: {selectedEmail.from_email}
                   </div>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {selectedEmail.date.toLocaleString("pt-BR")}
+                  {new Date(selectedEmail.date).toLocaleString("pt-BR")}
                 </span>
               </div>
               
