@@ -291,9 +291,18 @@ export default function Layout({ children }: LayoutProps) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   
                   return (
-                    <Popover key={item.id} open={openSubmenuId === item.id} onOpenChange={(open) => setOpenSubmenuId(open ? item.id : null)}>
+                    <Popover key={item.id} open={openSubmenuId === item.id} onOpenChange={(open) => {
+                      console.log('Popover change:', item.id, open);
+                      setOpenSubmenuId(open ? item.id : null);
+                    }}>
                       <PopoverTrigger asChild>
                         <button
+                          type="button"
+                          onClick={(e) => {
+                            console.log('Button clicked:', item.id);
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
                             isSubItemActive
                               ? "bg-sidebar-accent text-primary"
