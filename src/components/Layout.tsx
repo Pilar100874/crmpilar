@@ -312,38 +312,35 @@ export default function Layout({ children }: LayoutProps) {
                           />
                           
                           {/* Submenu panel */}
-                          <div className="fixed left-20 top-0 bottom-0 w-72 bg-white border-r border-border shadow-xl z-50 overflow-y-auto">
-                            <div className="p-6">
-                              <h2 className="text-2xl font-bold text-foreground mb-2 uppercase">
+                          <div className="fixed left-20 top-0 bottom-0 w-72 bg-card border-r border-border/30 shadow-sm z-50 overflow-y-auto">
+                            <div className="p-8 pt-10">
+                              <h3 className="text-xs font-semibold text-foreground/60 mb-6 uppercase tracking-wider">
                                 {item.title}
-                              </h2>
-                              <p className="text-sm text-muted-foreground mb-6">
-                                Selecione uma opção abaixo
-                              </p>
+                              </h3>
                               
-                              <div className="space-y-2">
-                                {item.subItems.map((subItem) => (
-                                  <NavLink
-                                    key={subItem.id}
-                                    to={subItem.url}
-                                    onClick={() => setOpenSubmenuId(null)}
-                                    className={({ isActive }) =>
-                                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                                        isActive
-                                          ? "bg-primary text-primary-foreground shadow-sm"
-                                          : "hover:bg-muted text-foreground"
-                                      }`
-                                    }
-                                  >
-                                    <div className={`p-2 rounded-md ${
-                                      location.pathname === subItem.url
-                                        ? "bg-primary-foreground/20"
-                                        : "bg-muted"
-                                    }`}>
-                                      <subItem.icon className="w-5 h-5" />
-                                    </div>
-                                    <span className="text-sm font-medium">{subItem.title}</span>
-                                  </NavLink>
+                              <div className="space-y-0">
+                                {item.subItems.map((subItem, index) => (
+                                  <div key={subItem.id}>
+                                    {index > 0 && (
+                                      <div className="border-t border-border/20" />
+                                    )}
+                                    <NavLink
+                                      to={subItem.url}
+                                      onClick={() => setOpenSubmenuId(null)}
+                                      className={({ isActive }) =>
+                                        `flex items-center justify-between py-4 transition-colors group ${
+                                          isActive
+                                            ? "text-foreground"
+                                            : "text-foreground/70 hover:text-foreground"
+                                        }`
+                                      }
+                                    >
+                                      <span className="text-sm">{subItem.title}</span>
+                                      {location.pathname === subItem.url && (
+                                        <Pencil className="w-3 h-3 text-muted-foreground opacity-40" />
+                                      )}
+                                    </NavLink>
+                                  </div>
                                 ))}
                               </div>
                             </div>
