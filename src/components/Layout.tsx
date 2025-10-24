@@ -5,14 +5,7 @@ import { Session, User } from "@supabase/supabase-js";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -24,11 +17,9 @@ import {
   Workflow,
   Megaphone,
   LogOut,
-  TestTube,
   Smartphone,
   Globe,
   Pencil,
-  Webhook,
   Building2,
   User as UserIcon,
 } from "lucide-react";
@@ -47,18 +38,16 @@ interface MenuPermissions {
 }
 
 const menuItems = [
-  { id: "Dashboard", title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { id: "Atendimento", title: "Atendimento", url: "/atendimento", icon: MessageSquare },
-  { id: "Bot Builder", title: "CRIAR BOT", url: "/bot-builder", icon: Workflow },
-  { id: "Desenho", title: "Desenho", url: "/desenho", icon: Pencil },
-  { id: "Bot Test", title: "Teste do Bot", url: "/bot-test", icon: TestTube },
-  { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/chat-webhook", icon: Webhook },
-  { id: "WhatsApp Config", title: "Config WhatsApp", url: "/whatsapp-config", icon: Smartphone },
-  { id: "Campanhas", title: "Campanhas", url: "/campanhas", icon: Megaphone },
-  { id: "Clientes", title: "Clientes", url: "/clientes", icon: Users },
-  { id: "Conteúdos", title: "Conteúdos", url: "/conteudos", icon: FileText },
+  { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
+  { id: "Clientes", title: "Leads", url: "/clientes", icon: Users },
+  { id: "Atendimento", title: "Chats", url: "/atendimento", icon: MessageSquare },
+  { id: "WhatsApp Config", title: "WhatsApp", url: "/whatsapp-config", icon: Smartphone },
+  { id: "Campanhas", title: "Calendário", url: "/campanhas", icon: Megaphone },
+  { id: "Conteúdos", title: "Listas", url: "/conteudos", icon: FileText },
+  { id: "Bot Builder", title: "E-mail", url: "/bot-builder", icon: Workflow },
+  { id: "Desenho", title: "Estatísticas", url: "/desenho", icon: Pencil },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
-  { id: "Variáveis Globais", title: "Variáveis Globais", url: "/global-variables", icon: Globe },
+  { id: "Variáveis Globais", title: "Ajuda", url: "/global-variables", icon: Globe },
 ];
 
 interface LayoutProps {
@@ -228,98 +217,79 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="border-r border-border bg-card">
-          <div className="p-3 border-b border-border bg-muted">
-            <div className="flex items-center gap-2 mb-2">
-              <img 
-                src={logo} 
-                alt="Pilar Logo" 
-                className="h-[73px] w-auto -ml-[1.5cm]"
-              />
-              <div className="-ml-[1.5cm]">
-                <h2 className="font-bold text-lg text-foreground">Bot</h2>
-                <p className="text-xs text-muted-foreground">Atendimento IA</p>
-              </div>
-            </div>
+        <Sidebar className="w-20 border-r border-sidebar-border bg-sidebar">
+          {/* Logo no topo */}
+          <div className="flex items-center justify-center py-4 border-b border-sidebar-border">
+            <img 
+              src={logo} 
+              alt="Pilar Logo" 
+              className="h-10 w-10 rounded-lg object-contain"
+            />
           </div>
 
-          <SidebarContent className="bg-card">
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-muted-foreground uppercase text-xs px-4 py-2">Menu Principal</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <ScrollArea className="flex-1">
-                  <SidebarMenu className="space-y-1 p-2">
-                    {visibleMenus.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
-                          <NavLink
-                            to={item.url}
-                            className={({ isActive }) =>
-                              `flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-150 group border ${
-                                isActive
-                                  ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-foreground font-semibold"
-                                  : "border-transparent hover:bg-muted hover:border-cyan-500/20 text-foreground"
-                              }`
-                            }
-                          >
-                            {({ isActive }) => (
-                              <>
-                                <div className={`p-1 rounded-md bg-gradient-to-br transition-all ${
-                                  isActive 
-                                    ? "from-cyan-500/20 to-blue-500/20 border border-cyan-500/40" 
-                                    : "from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 group-hover:border-cyan-500/40"
-                                }`}>
-                                  <item.icon className={`w-3.5 h-3.5 transition-colors ${
-                                    isActive ? "text-cyan-600" : "text-cyan-600 group-hover:text-cyan-700"
-                                  }`} />
-                                </div>
-                                <span className={`text-sm transition-colors ${
-                                  isActive ? "text-foreground" : "group-hover:text-cyan-700"
-                                }`}>{item.title}</span>
-                              </>
-                            )}
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </ScrollArea>
-              </SidebarGroupContent>
-            </SidebarGroup>
+          <SidebarContent className="bg-sidebar">
+            <ScrollArea className="flex-1">
+              <div className="py-2 space-y-1">
+                {visibleMenus.map((item) => (
+                  <NavLink
+                    key={item.title}
+                    to={item.url}
+                    className={({ isActive }) =>
+                      `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
+                        isActive
+                          ? "bg-sidebar-accent text-primary"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {isActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                        )}
+                        <item.icon className={`w-6 h-6 transition-colors ${
+                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        }`} />
+                        <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
+                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        }`}>
+                          {item.title}
+                        </span>
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </ScrollArea>
           </SidebarContent>
 
-          <div className="p-3 border-t border-border mt-auto bg-card">
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-2 hover:bg-muted hover:border-cyan-500/20 transition-all group"
+          {/* Botão de sair no final */}
+          <div className="border-t border-sidebar-border bg-sidebar">
+            <button 
               onClick={handleLogout}
+              className="relative flex flex-col items-center justify-center w-full py-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
             >
-              <div className="p-1 rounded-md bg-gradient-to-br from-red-500/10 to-red-600/10 border border-red-500/20 group-hover:border-red-500/40 transition-all">
-                <LogOut className="w-3.5 h-3.5 text-red-600" />
-              </div>
-              <span className="text-sm">Sair</span>
-            </Button>
+              <LogOut className="w-6 h-6" />
+              <span className="text-[10px] font-medium mt-1">Sair</span>
+            </button>
           </div>
         </Sidebar>
 
         <main className="flex-1 flex flex-col bg-background">
-          <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div className="flex items-center gap-6 text-sm">
-                {estabelecimentoName && (
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium text-foreground">{estabelecimentoName}</span>
-                  </div>
-                )}
-                {userName && (
-                  <div className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{userName}</span>
-                  </div>
-                )}
-              </div>
+          <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card shadow-sm">
+            <div className="flex items-center gap-6 text-sm">
+              {estabelecimentoName && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-semibold text-foreground">{estabelecimentoName}</span>
+                </div>
+              )}
+              {userName && (
+                <div className="flex items-center gap-2">
+                  <UserIcon className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{userName}</span>
+                </div>
+              )}
             </div>
             {isAdmin && (
               <Button
