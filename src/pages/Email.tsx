@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Inbox,
   Send,
@@ -18,8 +19,11 @@ import {
   Reply,
   Forward,
   RefreshCw,
+  AlertCircle,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface Email {
   id: string;
@@ -34,11 +38,14 @@ interface Email {
 }
 
 export default function Email() {
+  const navigate = useNavigate();
   const [selectedFolder, setSelectedFolder] = useState<"inbox" | "sent" | "trash" | "archive">("inbox");
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [composing, setComposing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasEmailConfig, setHasEmailConfig] = useState<boolean | null>(null);
+  const [checkingConfig, setCheckingConfig] = useState(true);
   
   // Compose email states
   const [newEmailTo, setNewEmailTo] = useState("");
@@ -48,10 +55,55 @@ export default function Email() {
   // Emails data
   const [emails, setEmails] = useState<Email[]>([]);
 
+  // Verificar configuração de email do usuário
+  useEffect(() => {
+    checkEmailConfiguration();
+  }, []);
+
+  const checkEmailConfiguration = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setHasEmailConfig(false);
+        setCheckingConfig(false);
+        return;
+      }
+
+      const { data: usuario, error } = await supabase
+        .from('usuarios')
+        .select('smtp, porta_smtp, pop, porta_pop, senha_email')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Erro ao verificar configuração:', error);
+        setHasEmailConfig(false);
+      } else {
+        // Verifica se todos os campos necessários estão preenchidos
+        const isConfigured = !!(
+          usuario?.smtp && 
+          usuario?.porta_smtp && 
+          usuario?.pop && 
+          usuario?.porta_pop && 
+          usuario?.senha_email
+        );
+        setHasEmailConfig(isConfigured);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar configuração:', error);
+      setHasEmailConfig(false);
+    } finally {
+      setCheckingConfig(false);
+    }
+  };
+
   // Carregar emails do banco
   useEffect(() => {
-    loadEmails();
-  }, [selectedFolder]);
+    if (hasEmailConfig) {
+      loadEmails();
+    }
+  }, [selectedFolder, hasEmailConfig]);
 
   const loadEmails = async () => {
     try {
@@ -156,6 +208,68 @@ export default function Email() {
     }
     return date.toLocaleDateString("pt-BR");
   };
+
+  // Mostrar tela de carregamento
+  if (checkingConfig) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Verificando configurações...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar aviso se não tiver configuração de email
+  if (!hasEmailConfig) {
+    return (
+      <div className="flex h-screen items-center justify-center p-4">
+        <Card className="max-w-2xl w-full p-8">
+          <Alert>
+            <AlertCircle className="h-5 w-5" />
+            <AlertTitle className="text-xl mb-2">Configuração de Email Necessária</AlertTitle>
+            <AlertDescription className="space-y-4">
+              <p className="text-base">
+                Para utilizar o sistema de email, você precisa configurar seus dados de acesso ao servidor de email.
+              </p>
+              
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <p className="font-semibold">Informações necessárias:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Servidor SMTP e porta</li>
+                  <li>Servidor IMAP/POP e porta</li>
+                  <li>Senha do email (Senha de App para Gmail)</li>
+                </ul>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                As configurações são preenchidas automaticamente para Gmail, Hotmail e Outlook. 
+                Você só precisa informar a senha do email.
+              </p>
+
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={() => navigate('/config')}
+                  className="flex-1"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Ir para Configurações
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  className="flex-1"
+                >
+                  Voltar ao Início
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex bg-white">

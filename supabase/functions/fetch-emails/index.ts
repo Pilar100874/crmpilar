@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      throw new Error('Autenticação necessária');
     }
 
     const supabase = createClient(
@@ -29,46 +29,45 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      throw new Error('Usuário não autenticado');
     }
 
-    // Buscar configurações POP/IMAP do usuário
+    // Buscar configurações POP/IMAP do usuário autenticado
     const { data: usuario, error: usuarioError } = await supabase
       .from('usuarios')
-      .select('pop, porta_pop, email, senha_email')
+      .select('pop, porta_pop, email, senha_email, smtp, porta_smtp')
       .eq('id', user.id)
       .single();
 
     if (usuarioError || !usuario) {
-      throw new Error('Configurações de email não encontradas');
+      throw new Error('Configurações de email não encontradas. Configure seu email nas configurações do usuário.');
     }
 
-    if (!usuario.pop || !usuario.porta_pop) {
-      throw new Error('Configure o servidor POP/IMAP nas configurações do usuário');
+    if (!usuario.pop || !usuario.porta_pop || !usuario.senha_email) {
+      throw new Error('Configure completamente o servidor POP/IMAP e senha do email nas configurações do usuário');
     }
 
-    console.log('Tentando conectar ao servidor:', {
-      host: usuario.pop,
-      port: usuario.porta_pop,
-      user: usuario.email
+    console.log('Configurações do usuário:', {
+      email: usuario.email,
+      pop: usuario.pop,
+      porta_pop: usuario.porta_pop
     });
 
-    // Por enquanto, criar alguns emails de exemplo para teste
-    // Em produção, você precisará usar uma biblioteca apropriada
-    // ou um serviço de API de email
+    // NOTA: Implementação simplificada para teste
+    // Em produção, seria necessário usar uma biblioteca IMAP para Deno
     const mockEmails = [
       {
         from_email: 'exemplo@teste.com',
         to_email: usuario.email,
         subject: 'Bem-vindo ao sistema de email',
-        body: 'Este é um email de teste. Configure suas credenciais IMAP corretamente para receber emails reais.',
+        body: 'Configure suas credenciais IMAP corretamente para receber emails reais. Suas configurações foram detectadas com sucesso.',
         date: new Date().toISOString(),
         read: false,
         starred: false,
       }
     ];
 
-    // Salvar emails no banco
+    // Salvar emails no banco vinculados ao usuário
     let savedCount = 0;
     for (const email of mockEmails) {
       const { error: saveError } = await supabase
@@ -94,7 +93,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`${savedCount} emails salvos com sucesso`);
+    console.log(`${savedCount} emails salvos com sucesso para o usuário ${user.email}`);
 
     return new Response(
       JSON.stringify({ 
@@ -113,7 +112,7 @@ serve(async (req) => {
       JSON.stringify({ error: (error as Error).message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 400,
       }
     );
   }

@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      throw new Error('Autenticação necessária');
     }
 
     const supabase = createClient(
@@ -29,12 +29,16 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      throw new Error('Usuário não autenticado');
     }
 
     const { to, subject, body } = await req.json();
 
-    // Buscar configurações SMTP do usuário
+    if (!to || !subject || !body) {
+      throw new Error('Destinatário, assunto e corpo do email são obrigatórios');
+    }
+
+    // Buscar configurações SMTP do usuário autenticado
     const { data: usuario, error: usuarioError } = await supabase
       .from('usuarios')
       .select('smtp, porta_smtp, email, senha_email, usar_autenticacao')
@@ -42,14 +46,18 @@ serve(async (req) => {
       .single();
 
     if (usuarioError || !usuario) {
-      throw new Error('Configurações de email não encontradas');
+      throw new Error('Configurações de email não encontradas. Configure seu email nas configurações do usuário.');
     }
 
-    console.log('Usuário:', usuario.email);
+    if (!usuario.smtp || !usuario.porta_smtp || !usuario.email || !usuario.senha_email) {
+      throw new Error('Configure completamente o servidor SMTP e senha do email nas configurações do usuário');
+    }
+
+    console.log('Usuário autenticado:', usuario.email);
     console.log('Enviando email para:', to);
     console.log('Assunto:', subject);
 
-    // Salvar na pasta enviados
+    // Salvar na pasta enviados vinculado ao usuário
     const { error: saveError } = await supabase
       .from('emails')
       .insert({
@@ -68,7 +76,7 @@ serve(async (req) => {
       throw new Error('Erro ao salvar email: ' + saveError.message);
     }
 
-    console.log('Email salvo com sucesso');
+    console.log('Email salvo com sucesso para o usuário:', user.email);
 
     // NOTA: Implementação simplificada
     // Para envio real de email via SMTP, seria necessário:
@@ -92,7 +100,7 @@ serve(async (req) => {
       JSON.stringify({ error: (error as Error).message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 400,
       }
     );
   }
