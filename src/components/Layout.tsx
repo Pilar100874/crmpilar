@@ -73,7 +73,6 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Desenho", title: "Estatísticas", url: "/desenho", icon: Pencil },
-  { id: "Variáveis Globais", title: "Ajuda", url: "/global-variables", icon: Globe },
   { id: "Teste de Webhooks", title: "Webhooks", url: "/chat-webhook", icon: Globe },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
