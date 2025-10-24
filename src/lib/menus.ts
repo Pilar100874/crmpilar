@@ -10,6 +10,8 @@ export const MENU_CONFIG = [
   { id: "Desenho", label: "Desenho" },
   { id: "Bot Builder", label: "Bot Builder" },
   { id: "Bot Test", label: "Teste de Bot" },
+  { id: "Criar Bot", label: "Criar Bot" },
+  { id: "Testar", label: "Testar" },
   { id: "WhatsApp Config", label: "WhatsApp Config" },
   { id: "Variáveis Globais", label: "Variáveis Globais" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },

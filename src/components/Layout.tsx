@@ -22,9 +22,17 @@ import {
   Pencil,
   Building2,
   User as UserIcon,
+  ChevronDown,
+  Plus,
+  TestTube2,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
@@ -37,7 +45,22 @@ interface MenuPermissions {
   delete: boolean;
 }
 
-const menuItems = [
+interface SubMenuItem {
+  id: string;
+  title: string;
+  url: string;
+  icon: any;
+}
+
+interface MenuItem {
+  id: string;
+  title: string;
+  url?: string;
+  icon: any;
+  subItems?: SubMenuItem[];
+}
+
+const menuItems: MenuItem[] = [
   { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
   { id: "Clientes", title: "Leads", url: "/clientes", icon: Users },
   { id: "Atendimento", title: "Chats", url: "/atendimento", icon: MessageSquare },
@@ -45,7 +68,15 @@ const menuItems = [
   { id: "Campanhas", title: "Calendário", url: "/campanhas", icon: Megaphone },
   { id: "Conteúdos", title: "Listas", url: "/conteudos", icon: FileText },
   { id: "Bot Builder", title: "E-mail", url: "/bot-builder", icon: Workflow },
-  { id: "Bot Test", title: "Teste Bot", url: "/bot-test", icon: Workflow },
+  { 
+    id: "Bot Test", 
+    title: "Teste Bot", 
+    icon: Workflow,
+    subItems: [
+      { id: "Criar Bot", title: "Criar Bot", url: "/bot-create", icon: Plus },
+      { id: "Testar", title: "Testar", url: "/bot-test", icon: TestTube2 },
+    ]
+  },
   { id: "Desenho", title: "Estatísticas", url: "/desenho", icon: Pencil },
   { id: "Variáveis Globais", title: "Ajuda", url: "/global-variables", icon: Globe },
   { id: "Teste de Webhooks", title: "Webhooks", url: "/chat-webhook", icon: Globe },
@@ -67,6 +98,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
+  const [openSubMenus, setOpenSubMenus] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -206,6 +238,30 @@ export default function Layout({ children }: LayoutProps) {
     navigate("/");
   };
 
+  const toggleSubMenu = (menuId: string) => {
+    setOpenSubMenus(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(menuId)) {
+        newSet.delete(menuId);
+      } else {
+        newSet.add(menuId);
+      }
+      return newSet;
+    });
+  };
+
+  // Auto-open submenu if current path matches a subitem
+  useEffect(() => {
+    menuItems.forEach(item => {
+      if (item.subItems) {
+        const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
+        if (isSubItemActive) {
+          setOpenSubMenus(prev => new Set(prev).add(item.id));
+        }
+      }
+    });
+  }, [location.pathname]);
+
   if (!user || isLoading) {
     return null;
   }
@@ -213,7 +269,29 @@ export default function Layout({ children }: LayoutProps) {
   // Filtra os menus baseado nas permissões
   const visibleMenus = menuItems.filter(item => {
     const permission = allowedMenus[item.id];
+    
+    // Se o menu tem subitems, verifica se pelo menos um tem permissão
+    if (item.subItems) {
+      const hasSubItemPermission = item.subItems.some(subItem => {
+        const subPermission = allowedMenus[subItem.id];
+        return subPermission?.view === true;
+      });
+      return permission?.view === true || hasSubItemPermission;
+    }
+    
     return permission?.view === true;
+  }).map(item => {
+    // Filtra os subitems também por permissão
+    if (item.subItems) {
+      return {
+        ...item,
+        subItems: item.subItems.filter(subItem => {
+          const subPermission = allowedMenus[subItem.id];
+          return subPermission?.view === true;
+        })
+      };
+    }
+    return item;
   });
 
   return (
@@ -231,35 +309,108 @@ export default function Layout({ children }: LayoutProps) {
 
           <ScrollArea className="flex-1 bg-sidebar">
             <div className="py-2">
-              {visibleMenus.map((item) => (
-                <NavLink
-                  key={item.title}
-                  to={item.url}
-                  className={({ isActive }) =>
-                    `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
-                      isActive
-                        ? "bg-sidebar-accent text-primary"
-                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      {isActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                      )}
-                      <item.icon className={`w-6 h-6 transition-colors ${
-                        isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                      }`} />
-                      <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
-                        isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                      }`}>
-                        {item.title}
-                      </span>
-                    </>
-                  )}
-                </NavLink>
-              ))}
+              {visibleMenus.map((item) => {
+                if (item.subItems) {
+                  // Menu com submenu
+                  const isOpen = openSubMenus.has(item.id);
+                  const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
+                  
+                  return (
+                    <Collapsible
+                      key={item.id}
+                      open={isOpen}
+                      onOpenChange={() => toggleSubMenu(item.id)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <button
+                          className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
+                            isSubItemActive
+                              ? "bg-sidebar-accent text-primary"
+                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          }`}
+                        >
+                          {isSubItemActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                          )}
+                          <item.icon className={`w-6 h-6 transition-colors ${
+                            isSubItemActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`} />
+                          <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
+                            isSubItemActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`}>
+                            {item.title}
+                          </span>
+                          <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""} ${
+                            isSubItemActive ? "text-primary" : "text-sidebar-foreground/70"
+                          }`} />
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="bg-sidebar-accent/30">
+                        {item.subItems.map((subItem) => (
+                          <NavLink
+                            key={subItem.id}
+                            to={subItem.url}
+                            className={({ isActive }) =>
+                              `flex flex-col items-center justify-center gap-1 py-2 px-2 transition-all duration-200 group relative ${
+                                isActive
+                                  ? "bg-sidebar-accent text-primary"
+                                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                              }`
+                            }
+                          >
+                            {({ isActive }) => (
+                              <>
+                                {isActive && (
+                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                                )}
+                                <subItem.icon className={`w-5 h-5 transition-colors ${
+                                  isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                                }`} />
+                                <span className={`text-[9px] font-medium text-center leading-tight transition-colors ${
+                                  isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                                }`}>
+                                  {subItem.title}
+                                </span>
+                              </>
+                            )}
+                          </NavLink>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                }
+                
+                // Menu normal sem submenu
+                return (
+                  <NavLink
+                    key={item.title}
+                    to={item.url!}
+                    className={({ isActive }) =>
+                      `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
+                        isActive
+                          ? "bg-sidebar-accent text-primary"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {isActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                        )}
+                        <item.icon className={`w-6 h-6 transition-colors ${
+                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        }`} />
+                        <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
+                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        }`}>
+                          {item.title}
+                        </span>
+                      </>
+                    )}
+                  </NavLink>
+                );
+              })}
             </div>
           </ScrollArea>
 
