@@ -18,7 +18,7 @@ export default function BotCreate() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/bot-builder")}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/bot-test")}>
             <CardHeader>
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Workflow className="w-6 h-6 text-primary" />
