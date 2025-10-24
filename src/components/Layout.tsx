@@ -227,6 +227,11 @@ export default function Layout({ children }: LayoutProps) {
     fetchUserAndEstabelecimento();
   }, [user, isAdmin]);
 
+  // Close any open submenu whenever the route changes
+  useEffect(() => {
+    setOpenSubmenuId(null);
+  }, [location.pathname]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logout realizado com sucesso!");
@@ -305,9 +310,9 @@ export default function Layout({ children }: LayoutProps) {
                       
                       {isMenuOpen && (
                         <>
-                          {/* Overlay to close menu when clicking outside */}
+                          {/* Overlay to close menu when clicking outside (doesn't cover the main sidebar) */}
                           <div 
-                            className="fixed inset-0 z-40" 
+                            className="fixed left-20 top-0 bottom-0 right-0 z-40" 
                             onClick={() => setOpenSubmenuId(null)}
                           />
                           
@@ -357,33 +362,29 @@ export default function Layout({ children }: LayoutProps) {
                     key={item.title}
                     to={item.url!}
                     onClick={() => setOpenSubmenuId(null)}
-                    className={({ isActive }) => {
-                      const shouldShowActive = isActive && !openSubmenuId;
-                      return `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
-                        shouldShowActive
+                    className={({ isActive }) =>
+                      `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
+                        isActive
                           ? "bg-sidebar-accent text-primary"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }`;
-                    }}
+                      }`
+                    }
                   >
-                    {({ isActive }) => {
-                      const shouldShowActive = isActive && !openSubmenuId;
-                      return (
-                        <>
-                          {shouldShowActive && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                          )}
-                          <item.icon className={`w-6 h-6 transition-colors ${
-                            shouldShowActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                          }`} />
-                          <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
-                            shouldShowActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                          }`}>
-                            {item.title}
-                          </span>
-                        </>
-                      );
-                    }}
+                    {({ isActive }) => (
+                      <>
+                        {isActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                        )}
+                        <item.icon className={`w-6 h-6 transition-colors ${
+                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        }`} />
+                        <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
+                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        }`}>
+                          {item.title}
+                        </span>
+                      </>
+                    )}
                   </NavLink>
                 );
               })}
