@@ -13,6 +13,9 @@ export default {
       },
     },
       extend: {
+        fontFamily: {
+          sans: ['Tahoma', 'Verdana', 'Geneva', 'sans-serif'],
+        },
         colors: {
           border: "hsl(var(--border))",
           input: "hsl(var(--input))",
