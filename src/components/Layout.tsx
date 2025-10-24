@@ -45,9 +45,15 @@ const menuItems = [
   { id: "Campanhas", title: "Calendário", url: "/campanhas", icon: Megaphone },
   { id: "Conteúdos", title: "Listas", url: "/conteudos", icon: FileText },
   { id: "Bot Builder", title: "E-mail", url: "/bot-builder", icon: Workflow },
+  { id: "Bot Test", title: "Teste Bot", url: "/bot-test", icon: Workflow },
   { id: "Desenho", title: "Estatísticas", url: "/desenho", icon: Pencil },
-  { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
   { id: "Variáveis Globais", title: "Ajuda", url: "/global-variables", icon: Globe },
+  { id: "Teste de Webhooks", title: "Webhooks", url: "/chat-webhook", icon: Globe },
+  { id: "Textos Prontos", title: "Textos", url: "/meus-textos-prontos", icon: FileText },
+  { id: "Anexos", title: "Anexos", url: "/meus-anexos", icon: FileText },
+  { id: "Estabelecimentos", title: "Empresas", url: "/config", icon: Building2 },
+  { id: "Administradores", title: "Admins", url: "/config", icon: UserIcon },
+  { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
 interface LayoutProps {
