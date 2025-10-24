@@ -326,6 +326,68 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     }
   };
 
+  const detectEmailProvider = (emailAddress: string) => {
+    const domain = emailAddress.toLowerCase().split('@')[1];
+    
+    const configs: Record<string, {
+      smtp: string;
+      portaSmtp: string;
+      pop: string;
+      portaPop: string;
+      providerName: string;
+    }> = {
+      'gmail.com': {
+        smtp: 'smtp.gmail.com',
+        portaSmtp: '587',
+        pop: 'imap.gmail.com',
+        portaPop: '993',
+        providerName: 'Gmail'
+      },
+      'hotmail.com': {
+        smtp: 'smtp-mail.outlook.com',
+        portaSmtp: '587',
+        pop: 'outlook.office365.com',
+        portaPop: '993',
+        providerName: 'Hotmail'
+      },
+      'outlook.com': {
+        smtp: 'smtp-mail.outlook.com',
+        portaSmtp: '587',
+        pop: 'outlook.office365.com',
+        portaPop: '993',
+        providerName: 'Outlook'
+      },
+      'live.com': {
+        smtp: 'smtp-mail.outlook.com',
+        portaSmtp: '587',
+        pop: 'outlook.office365.com',
+        portaPop: '993',
+        providerName: 'Live'
+      },
+    };
+
+    if (configs[domain]) {
+      const config = configs[domain];
+      setSmtp(config.smtp);
+      setPortaSmtp(config.portaSmtp);
+      setPop(config.pop);
+      setPortaPop(config.portaPop);
+      setUsarAutenticacao(true);
+      
+      toast({
+        title: "Configurações aplicadas!",
+        description: `Configurações de ${config.providerName} aplicadas automaticamente. Você ainda precisa informar a senha do email.`,
+      });
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (value.includes('@') && value.split('@')[1]) {
+      detectEmailProvider(value);
+    }
+  };
+
   const resetForm = () => {
     setNome("");
     setEmail("");
@@ -463,12 +525,17 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           </div>
           
           <div>
-            <Label htmlFor="usuario-email">Email *</Label>
+            <Label htmlFor="usuario-email">
+              Email *
+              <span className="text-xs text-muted-foreground ml-2 font-normal">
+                (Gmail e Hotmail são configurados automaticamente)
+              </span>
+            </Label>
             <Input
               id="usuario-email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="email@exemplo.com"
             />
           </div>
