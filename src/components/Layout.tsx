@@ -215,9 +215,9 @@ export default function Layout({ children }: LayoutProps) {
   });
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true} open={true}>
       <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0">
+        <div className="w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col">
           {/* Logo no topo */}
           <div className="flex items-center justify-center py-4 border-b border-sidebar-border">
             <img 
@@ -227,41 +227,39 @@ export default function Layout({ children }: LayoutProps) {
             />
           </div>
 
-          <SidebarContent className="bg-sidebar">
-            <ScrollArea className="flex-1">
-              <div className="py-2">
-                {visibleMenus.map((item) => (
-                  <NavLink
-                    key={item.title}
-                    to={item.url}
-                    className={({ isActive }) =>
-                      `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
-                        isActive
-                          ? "bg-sidebar-accent text-primary"
-                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        {isActive && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                        )}
-                        <item.icon className={`w-6 h-6 transition-colors ${
-                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`} />
-                        <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
-                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`}>
-                          {item.title}
-                        </span>
-                      </>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-            </ScrollArea>
-          </SidebarContent>
+          <ScrollArea className="flex-1 bg-sidebar">
+            <div className="py-2">
+              {visibleMenus.map((item) => (
+                <NavLink
+                  key={item.title}
+                  to={item.url}
+                  className={({ isActive }) =>
+                    `flex flex-col items-center justify-center gap-1 py-3 px-2 transition-all duration-200 group relative ${
+                      isActive
+                        ? "bg-sidebar-accent text-primary"
+                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                      )}
+                      <item.icon className={`w-6 h-6 transition-colors ${
+                        isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                      }`} />
+                      <span className={`text-[10px] font-medium text-center leading-tight transition-colors ${
+                        isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                      }`}>
+                        {item.title}
+                      </span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </ScrollArea>
 
           {/* Botão de sair no final */}
           <div className="border-t border-sidebar-border bg-sidebar">
@@ -273,7 +271,7 @@ export default function Layout({ children }: LayoutProps) {
               <span className="text-[10px] font-medium mt-1">Sair</span>
             </button>
           </div>
-        </Sidebar>
+        </div>
 
         <main className="flex-1 flex flex-col bg-background min-w-0">
           <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-card shadow-sm">
