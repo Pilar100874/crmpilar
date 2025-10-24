@@ -7,8 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Usuario {
   id: string;
@@ -693,20 +701,127 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <Label htmlFor="usuario-senha-email">
                 Senha do E-mail *
                 <span className="text-xs text-muted-foreground ml-2 font-normal">
                   (Para Gmail, use Senha de App)
                 </span>
               </Label>
-              <Input
-                id="usuario-senha-email"
-                type="password"
-                value={senhaEmail}
-                onChange={(e) => setSenhaEmail(e.target.value)}
-                placeholder="Digite a senha do email"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="usuario-senha-email"
+                  type="password"
+                  value={senhaEmail}
+                  onChange={(e) => setSenhaEmail(e.target.value)}
+                  placeholder="Digite a senha do email"
+                  className="flex-1"
+                />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon"
+                      className="shrink-0"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Como usar Senha de App</DialogTitle>
+                      <DialogDescription>
+                        Instruções para configurar a senha do email
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-6 text-sm">
+                      <div>
+                        <h3 className="font-semibold text-base mb-2">🔐 Por que preciso de Senha de App?</h3>
+                        <p className="text-muted-foreground">
+                          O Google não permite usar sua senha normal em aplicativos de terceiros. 
+                          Você precisa gerar uma senha específica para este sistema.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-base mb-3">📧 Como gerar a Senha de App (Gmail):</h3>
+                        <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
+                          <li>
+                            <strong>Acesse sua conta Google</strong>
+                            <a 
+                              href="https://myaccount.google.com/" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 ml-2 text-primary hover:underline"
+                            >
+                              myaccount.google.com
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </li>
+                          <li>
+                            <strong>Ative a verificação em 2 etapas</strong> (se não estiver ativa):
+                            <ul className="ml-6 mt-1 list-disc">
+                              <li>Vá em "Segurança" → "Verificação em duas etapas"</li>
+                            </ul>
+                          </li>
+                          <li>
+                            <strong>Gere a Senha de App</strong>:
+                            <ul className="ml-6 mt-1 list-disc space-y-1">
+                              <li>
+                                Acesse: 
+                                <a 
+                                  href="https://myaccount.google.com/apppasswords" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 ml-1 text-primary hover:underline"
+                                >
+                                  myaccount.google.com/apppasswords
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </li>
+                              <li>Escolha "App": selecione "E-mail"</li>
+                              <li>Escolha "Dispositivo": selecione "Outro" e digite um nome (ex: "Sistema Atendimento")</li>
+                              <li>Clique em "Gerar"</li>
+                            </ul>
+                          </li>
+                          <li>
+                            <strong>Copie a senha gerada</strong> (16 caracteres sem espaços)
+                            <div className="ml-6 mt-2 p-2 bg-muted rounded font-mono text-xs">
+                              Exemplo: abcd efgh ijkl mnop
+                            </div>
+                          </li>
+                        </ol>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-base mb-3">✅ Como usar no sistema:</h3>
+                        <ol className="space-y-2 list-decimal list-inside text-muted-foreground">
+                          <li>Preencha seu <strong>email</strong> completo (ex: seuemail@gmail.com)</li>
+                          <li>Os servidores serão <strong>configurados automaticamente</strong></li>
+                          <li>No campo <strong>"Senha do E-mail"</strong>, cole a senha de app que você gerou</li>
+                          <li>Salve o usuário</li>
+                        </ol>
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <p className="text-xs text-muted-foreground">
+                          <strong>Nota:</strong> Para Hotmail/Outlook, você também precisa gerar uma senha de app em{" "}
+                          <a 
+                            href="https://account.live.com/proofs/AppPassword" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline"
+                          >
+                            account.live.com/proofs/AppPassword
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
             <div className="flex items-center space-x-2 pt-6">
