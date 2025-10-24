@@ -486,8 +486,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   };
 
   return (
-    <Layout>
-      <CanvasProvider onSelectionChange={(objType) => {
+    <CanvasProvider onSelectionChange={(objType) => {
         setSelectedObjectType(objType);
         if (objType && !userSelectedPanel) {
           // Só abre automaticamente se usuário não selecionou manualmente um painel
@@ -612,8 +611,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           gabaritoCanvasRetangularUrl={productData?.gabarito_canvas_retangular_url || null}
           />
         </div>
-      </div>
-    </CanvasProvider>
+    </div>
+  </CanvasProvider>
   );
 };
 

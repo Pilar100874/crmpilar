@@ -158,8 +158,7 @@ export default function MeusAnexos() {
   const globalFiles = globalAttachments.filter((a) => a.type === "file");
 
   return (
-    <Layout>
-      <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">Meus Anexos Rápidos</h1>
 
         <Card className="p-4 mb-6">
@@ -385,7 +384,7 @@ export default function MeusAnexos() {
               )}
             </TabsContent>
           </Tabs>
-        </div>
       </div>
+    </div>
   );
 }
