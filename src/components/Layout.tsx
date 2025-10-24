@@ -217,7 +217,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="w-20 border-r border-sidebar-border bg-sidebar">
+        <Sidebar className="w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0">
           {/* Logo no topo */}
           <div className="flex items-center justify-center py-4 border-b border-sidebar-border">
             <img 
@@ -229,7 +229,7 @@ export default function Layout({ children }: LayoutProps) {
 
           <SidebarContent className="bg-sidebar">
             <ScrollArea className="flex-1">
-              <div className="py-2 space-y-1">
+              <div className="py-2">
                 {visibleMenus.map((item) => (
                   <NavLink
                     key={item.title}
@@ -275,7 +275,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col bg-background">
+        <main className="flex-1 flex flex-col bg-background min-w-0">
           <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-card shadow-sm">
             <div className="flex items-center gap-6 text-sm">
               {estabelecimentoName && (
@@ -303,7 +303,7 @@ export default function Layout({ children }: LayoutProps) {
               </Button>
             )}
           </header>
-          <div className="flex-1 overflow-auto bg-background p-6">
+          <div className="flex-1 overflow-auto bg-background">
             {children}
           </div>
         </main>
