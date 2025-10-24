@@ -322,7 +322,7 @@ export default function Layout({ children }: LayoutProps) {
                                 {item.subItems.map((subItem, index) => (
                                   <div key={subItem.id}>
                                     {index > 0 && (
-                                      <div className="border-t border-border/20" />
+                                      <div className="border-t border-border/30" />
                                     )}
                                     <NavLink
                                       to={subItem.url}
@@ -335,7 +335,7 @@ export default function Layout({ children }: LayoutProps) {
                                         }`
                                       }
                                     >
-                                      <span className="text-sm">{subItem.title}</span>
+                                      <span className="text-base font-semibold">{subItem.title}</span>
                                       {location.pathname === subItem.url && (
                                         <Pencil className="w-3 h-3 text-muted-foreground opacity-40" />
                                       )}
