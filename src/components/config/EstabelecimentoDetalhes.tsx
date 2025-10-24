@@ -22,10 +22,258 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Save, AlertCircle, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 
 interface EstabelecimentoDetalhesProps {
   estabelecimentoId: string;
   estabelecimentoNome: string;
+}
+
+function WhatsAppConfigSection({ estabelecimentoId }: { estabelecimentoId: string }) {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [showToken, setShowToken] = useState(false);
+  
+  const [whatsappToken, setWhatsappToken] = useState("");
+  const [phoneNumberId, setPhoneNumberId] = useState("");
+  const [businessAccountId, setBusinessAccountId] = useState("");
+  const [configId, setConfigId] = useState<string | null>(null);
+  const [webhookUrl] = useState(
+    "https://kiuztueouxtyqiecgdxk.supabase.co/functions/v1/whatsapp-webhook"
+  );
+
+  useEffect(() => {
+    loadWhatsAppConfig();
+  }, [estabelecimentoId]);
+
+  const loadWhatsAppConfig = async () => {
+    try {
+      const { data } = await supabase
+        .from('whatsapp_config')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .single();
+
+      if (data) {
+        setConfigId(data.id);
+        setWhatsappToken(data.business_token || "");
+        setPhoneNumberId(data.phone_number_id || "");
+        setBusinessAccountId(data.business_account_id || "");
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configuração:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!whatsappToken || !phoneNumberId) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o Token e Phone Number ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (configId) {
+        const { error } = await supabase
+          .from('whatsapp_config')
+          .update({
+            business_token: whatsappToken,
+            phone_number_id: phoneNumberId,
+            business_account_id: businessAccountId || null,
+          })
+          .eq('id', configId);
+
+        if (error) throw error;
+        toast({
+          title: "✓ Configuração atualizada!",
+          description: "WhatsApp Business API configurado com sucesso.",
+        });
+      } else {
+        const { data, error } = await supabase
+          .from('whatsapp_config')
+          .insert({
+            estabelecimento_id: estabelecimentoId,
+            business_token: whatsappToken,
+            phone_number_id: phoneNumberId,
+            business_account_id: businessAccountId || null,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setConfigId(data.id);
+        toast({
+          title: "✓ Configuração salva!",
+          description: "WhatsApp Business API configurado com sucesso.",
+        });
+      }
+
+      loadWhatsAppConfig();
+    } catch (error: any) {
+      console.error('Erro ao salvar configuração:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MessageSquare className="h-5 w-5" />
+            WhatsApp Business API
+          </CardTitle>
+          <CardDescription>
+            Configure as credenciais da API Oficial do WhatsApp Business
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="whatsapp-token">WhatsApp Business Token *</Label>
+            <div className="flex gap-2">
+              <Input
+                id="whatsapp-token"
+                type={showToken ? "text" : "password"}
+                placeholder="EAAxxxxxxxxxx..."
+                value={whatsappToken}
+                onChange={(e) => setWhatsappToken(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setShowToken(!showToken)}
+              >
+                {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Token de acesso permanente do WhatsApp Business
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="phone-number-id">Phone Number ID *</Label>
+            <Input
+              id="phone-number-id"
+              placeholder="123456789012345"
+              value={phoneNumberId}
+              onChange={(e) => setPhoneNumberId(e.target.value)}
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              ID do número de telefone do WhatsApp Business
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="business-account-id">Business Account ID (opcional)</Label>
+            <Input
+              id="business-account-id"
+              placeholder="123456789012345"
+              value={businessAccountId}
+              onChange={(e) => setBusinessAccountId(e.target.value)}
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              ID da conta de negócios do Meta
+            </p>
+          </div>
+
+          <Button onClick={handleSave} className="w-full" disabled={loading}>
+            <Save className="w-4 h-4 mr-2" />
+            {loading ? "Salvando..." : "Salvar Configurações"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Webhook URL</CardTitle>
+          <CardDescription>
+            Configure este URL no WAHA para receber mensagens
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>URL do Webhook</Label>
+            <div className="flex gap-2 mt-1">
+              <Input value={webhookUrl} readOnly />
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(webhookUrl);
+                  sonnerToast.success("URL copiada!");
+                }}
+              >
+                Copiar
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Use esta URL como webhook no WAHA para receber mensagens
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Como Configurar</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3 text-sm">
+            <div>
+              <h3 className="font-semibold mb-1">1. Crie uma Conta Meta Business</h3>
+              <p className="text-muted-foreground">
+                Acesse business.facebook.com e crie uma conta de negócios
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-1">2. Configure WhatsApp Business</h3>
+              <p className="text-muted-foreground">
+                No Meta Business, adicione WhatsApp Business e configure seu número
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-1">3. Gere Token de Acesso</h3>
+              <p className="text-muted-foreground">
+                Em Configurações do App, gere um token de acesso permanente
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-1">4. Configure Webhook</h3>
+              <p className="text-muted-foreground">
+                Use a URL de webhook acima nas configurações do WhatsApp Business
+              </p>
+            </div>
+
+            <Button variant="outline" className="w-full" asChild>
+              <a
+                href="https://developers.facebook.com/docs/whatsapp/cloud-api"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Documentação WhatsApp Business API
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function ResendConfigSection({ estabelecimentoId }: { estabelecimentoId: string }) {
@@ -248,6 +496,18 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
       </div>
 
       <Accordion type="single" collapsible className="space-y-2">
+        <AccordionItem value="whatsapp-config" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-primary" />
+              <span className="font-medium">Configuração WhatsApp Business API</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <WhatsAppConfigSection estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="resend-config" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">

@@ -1388,6 +1388,7 @@ export type Database = {
           business_account_id: string | null
           business_token: string
           created_at: string | null
+          estabelecimento_id: string | null
           id: string
           phone_number_id: string
           updated_at: string | null
@@ -1396,6 +1397,7 @@ export type Database = {
           business_account_id?: string | null
           business_token: string
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           phone_number_id: string
           updated_at?: string | null
@@ -1404,11 +1406,20 @@ export type Database = {
           business_account_id?: string | null
           business_token?: string
           created_at?: string | null
+          estabelecimento_id?: string | null
           id?: string
           phone_number_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
