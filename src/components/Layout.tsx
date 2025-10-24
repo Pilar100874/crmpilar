@@ -26,7 +26,7 @@ import {
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import logo from "@/assets/logo_preto.png";
+import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -219,11 +219,11 @@ export default function Layout({ children }: LayoutProps) {
       <div className="min-h-screen flex w-full bg-background">
         <div className="w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col">
           {/* Logo no topo */}
-          <div className="flex items-center justify-center py-4 border-b border-sidebar-border">
+          <div className="flex items-center justify-center py-6 border-b border-sidebar-border">
             <img 
               src={logo} 
               alt="Pilar Logo" 
-              className="h-10 w-10 rounded-lg object-contain"
+              className="h-8 w-14 object-contain"
             />
           </div>
 
