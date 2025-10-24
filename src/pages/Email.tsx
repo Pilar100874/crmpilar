@@ -8,6 +8,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Inbox,
   Send,
   Trash2,
@@ -321,53 +328,57 @@ export default function Email() {
   }
 
   return (
-    <div className="h-full flex bg-white">
-      {/* Sidebar - Folders */}
-      <div className="w-64 border-r bg-card flex flex-col">
-        <div className="p-4 border-b">
-          <Button 
-            className="w-full gap-2" 
-            onClick={() => setComposing(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Novo E-mail
-          </Button>
-        </div>
-
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => setSelectedFolder(folder.id as any)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
-                  selectedFolder === folder.id
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <folder.icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{folder.name}</span>
-                </div>
-                {folder.count > 0 && (
-                  <Badge variant={selectedFolder === folder.id ? "secondary" : "default"}>
-                    {folder.count}
-                  </Badge>
-                )}
-              </button>
-            ))}
+    <div className="h-full flex flex-col bg-white">
+      {/* Header com dropdown de pasta e botões */}
+      <div className="border-b bg-card">
+        <div className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Select value={selectedFolder} onValueChange={(value) => setSelectedFolder(value as any)}>
+              <SelectTrigger className="w-[220px] font-semibold">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {folders.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    <div className="flex items-center gap-2">
+                      <folder.icon className="w-4 h-4" />
+                      <span>{folder.name}</span>
+                      {folder.count > 0 && (
+                        <Badge variant="secondary" className="ml-2">{folder.count}</Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <div className="relative w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Busca e filtro"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
-        </ScrollArea>
-      </div>
 
-      {/* Email List */}
-      <div className="w-96 border-r flex flex-col bg-background">
-        <div className="p-4 border-b space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {folders.find(f => f.id === selectedFolder)?.name}
-            </h2>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/config')}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              CONFIGURAÇÕES
+            </Button>
+            <Button 
+              onClick={() => setComposing(true)}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              ESCREVER
+            </Button>
             <Button 
               variant="ghost" 
               size="icon"
@@ -377,162 +388,164 @@ export default function Email() {
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar emails..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
         </div>
-
-        <ScrollArea className="flex-1">
-          <div className="divide-y">
-            {filteredEmails.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <Inbox className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                <p>Nenhum email nesta pasta</p>
-              </div>
-            ) : (
-              filteredEmails.map((email) => (
-                <button
-                  key={email.id}
-                  onClick={() => setSelectedEmail(email)}
-                  className={`w-full text-left p-4 hover:bg-muted transition-colors relative ${
-                    selectedEmail?.id === email.id ? "bg-muted" : ""
-                  } ${!email.read ? "font-semibold" : ""}`}
-                >
-                  <div className="flex items-start justify-between mb-1">
-                    <span className="text-sm truncate flex-1">{email.from_email}</span>
-                    <div className="flex items-center gap-2 ml-2">
-                      {email.starred && <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />}
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDate(email.date)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-sm truncate mb-1">{email.subject}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {email.body}
-                  </div>
-                  {!email.read && (
-                    <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
-                  )}
-                </button>
-              ))
-            )}
-          </div>
-        </ScrollArea>
       </div>
 
-      {/* Email Content / Compose */}
+      {/* Área principal de emails */}
       <div className="flex-1 flex flex-col">
         {composing ? (
-          <div className="flex-1 flex flex-col">
-            <div className="p-4 border-b flex items-center justify-between bg-card">
-              <h2 className="text-lg font-semibold">Novo E-mail</h2>
-              <div className="flex gap-2">
-                <Button onClick={handleSendEmail} className="gap-2">
-                  <Send className="w-4 h-4" />
-                  Enviar
-                </Button>
-                <Button variant="outline" onClick={() => setComposing(false)}>
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex-1 p-6 space-y-4 overflow-auto">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Para:</label>
-                <Input
-                  placeholder="destinatario@exemplo.com"
-                  value={newEmailTo}
-                  onChange={(e) => setNewEmailTo(e.target.value)}
-                />
+          <div className="flex-1 p-8 overflow-auto bg-background">
+            <Card className="max-w-4xl mx-auto">
+              <div className="p-6 border-b flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Novo E-mail</h2>
+                <div className="flex gap-2">
+                  <Button onClick={handleSendEmail} className="gap-2">
+                    <Send className="w-4 h-4" />
+                    Enviar
+                  </Button>
+                  <Button variant="outline" onClick={() => setComposing(false)}>
+                    Cancelar
+                  </Button>
+                </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Assunto:</label>
-                <Input
-                  placeholder="Assunto do e-mail"
-                  value={newEmailSubject}
-                  onChange={(e) => setNewEmailSubject(e.target.value)}
-                />
-              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Para:</label>
+                  <Input
+                    placeholder="destinatario@exemplo.com"
+                    value={newEmailTo}
+                    onChange={(e) => setNewEmailTo(e.target.value)}
+                  />
+                </div>
 
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">Mensagem:</label>
-                <Textarea
-                  placeholder="Digite sua mensagem..."
-                  value={newEmailBody}
-                  onChange={(e) => setNewEmailBody(e.target.value)}
-                  className="min-h-[400px] resize-none"
-                />
-              </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Assunto:</label>
+                  <Input
+                    placeholder="Assunto do e-mail"
+                    value={newEmailSubject}
+                    onChange={(e) => setNewEmailSubject(e.target.value)}
+                  />
+                </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Paperclip className="w-4 h-4" />
-                  Anexar arquivo
-                </Button>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Mensagem:</label>
+                  <Textarea
+                    placeholder="Digite sua mensagem..."
+                    value={newEmailBody}
+                    onChange={(e) => setNewEmailBody(e.target.value)}
+                    className="min-h-[400px] resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Paperclip className="w-4 h-4" />
+                    Anexar arquivo
+                  </Button>
+                </div>
               </div>
-            </div>
+            </Card>
           </div>
         ) : selectedEmail ? (
-          <div className="flex-1 flex flex-col">
-            <div className="p-4 border-b bg-card">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold mb-1">{selectedEmail.subject}</h2>
-                  <div className="text-sm text-muted-foreground">
-                    De: {selectedEmail.from_email}
+          <div className="flex-1 p-8 overflow-auto bg-background">
+            <Card className="max-w-4xl mx-auto">
+              <div className="p-6 border-b">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h2 className="text-lg font-semibold mb-1">{selectedEmail.subject}</h2>
+                    <div className="text-sm text-muted-foreground">
+                      De: {selectedEmail.from_email}
+                    </div>
                   </div>
+                  <span className="text-sm text-muted-foreground">
+                    {new Date(selectedEmail.date).toLocaleString("pt-BR")}
+                  </span>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {new Date(selectedEmail.date).toLocaleString("pt-BR")}
-                </span>
+                
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={handleReply}>
+                    <Reply className="w-4 h-4" />
+                    Responder
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Forward className="w-4 h-4" />
+                    Encaminhar
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Archive className="w-4 h-4" />
+                    Arquivar
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Excluir
+                  </Button>
+                </div>
               </div>
-              
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="gap-2" onClick={handleReply}>
-                  <Reply className="w-4 h-4" />
-                  Responder
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Forward className="w-4 h-4" />
-                  Encaminhar
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Archive className="w-4 h-4" />
-                  Arquivar
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Trash2 className="w-4 h-4" />
-                  Excluir
-                </Button>
-              </div>
-            </div>
 
-            <ScrollArea className="flex-1">
               <div className="p-6">
-                <Card className="p-6 bg-muted/30">
+                <div className="p-6 bg-muted/30 rounded-lg">
                   <div className="whitespace-pre-wrap text-sm leading-relaxed">
                     {selectedEmail.body}
                   </div>
-                </Card>
+                </div>
               </div>
-            </ScrollArea>
+            </Card>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <Inbox className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p>Selecione um e-mail para visualizar</p>
+          <div className="flex-1 flex flex-col">
+            {/* Cabeçalho da tabela */}
+            <div className="border-b bg-muted/30">
+              <div className="grid grid-cols-12 gap-4 px-6 py-3 text-sm font-medium text-muted-foreground">
+                <div className="col-span-3">DE</div>
+                <div className="col-span-6">MENSAGEM E CONEXÃO DE LEAD</div>
+                <div className="col-span-3 text-right">DATA</div>
+              </div>
             </div>
+
+            {/* Lista de emails */}
+            <ScrollArea className="flex-1">
+              {filteredEmails.length === 0 ? (
+                <div className="p-16 text-center">
+                  <p className="text-red-500 text-sm">Desculpe, não há mensagens.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {filteredEmails.map((email) => (
+                    <button
+                      key={email.id}
+                      onClick={() => setSelectedEmail(email)}
+                      className="w-full text-left px-6 py-4 hover:bg-muted/50 transition-colors relative"
+                    >
+                      <div className="grid grid-cols-12 gap-4 items-center">
+                        <div className="col-span-3 text-sm truncate">
+                          {email.from_email}
+                        </div>
+                        <div className="col-span-6">
+                          <div className="text-sm font-medium truncate mb-1">
+                            {email.subject}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {email.body}
+                          </div>
+                        </div>
+                        <div className="col-span-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {email.starred && <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />}
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(email.date)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {!email.read && (
+                        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
           </div>
         )}
       </div>
