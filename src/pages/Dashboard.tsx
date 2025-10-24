@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Users, TrendingUp, Clock } from "lucide-react";
 
@@ -35,8 +34,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <Layout>
-      <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
+    <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">
@@ -122,6 +120,5 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 }

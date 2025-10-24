@@ -610,12 +610,15 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           onCancel={handleTemplateCancel}
           gabaritoCanvasUrl={productData?.gabarito_canvas_url || null}
           gabaritoCanvasRetangularUrl={productData?.gabarito_canvas_retangular_url || null}
-        />
-          </div>
+          />
         </div>
-      </CanvasProvider>
-    </Layout>
+      </div>
+    </CanvasProvider>
   );
 };
 
-export default CanvasStudioV2;
+export default function Desenho() {
+  return (
+    <CanvasStudioV2 selectedSize="medio" />
+  );
+}

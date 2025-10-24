@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +12,7 @@ export default function Clientes() {
   ];
 
   return (
-    <Layout>
-      <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
+    <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-foreground">Clientes</h1>
@@ -77,6 +75,5 @@ export default function Clientes() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
   );
 }

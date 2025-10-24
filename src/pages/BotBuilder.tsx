@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
 import {
@@ -716,8 +715,7 @@ function BotBuilderContent() {
   }, [isLocked]);
 
   return (
-    <Layout>
-      <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white">
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-6">
             <div>
@@ -1013,7 +1011,6 @@ function BotBuilderContent() {
           description={errorDialog.description}
         />
       </div>
-    </Layout>
   );
 }
 

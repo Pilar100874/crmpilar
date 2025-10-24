@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -148,8 +147,7 @@ export default function MeusTextosProntos() {
   const globalReplies = quickReplies.filter((r) => r.is_global);
 
   return (
-    <Layout>
-      <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">Meus Textos Prontos</h1>
 
         <Card className="p-4 mb-6">
@@ -267,6 +265,5 @@ export default function MeusTextosProntos() {
           </div>
         </div>
       </div>
-    </Layout>
   );
 }

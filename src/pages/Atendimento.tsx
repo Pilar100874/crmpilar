@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,8 +28,7 @@ export default function Atendimento() {
   };
 
   return (
-    <Layout>
-      <div className="h-full flex bg-white">
+    <div className="h-full flex bg-white">
         {/* Conversation List */}
         <div className="w-96 border-r border-border bg-card flex flex-col">
           <div className="p-4 border-b">
@@ -139,6 +137,5 @@ export default function Atendimento() {
           )}
         </div>
       </div>
-    </Layout>
   );
 }

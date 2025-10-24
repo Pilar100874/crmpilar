@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +7,7 @@ export default function BotCreate() {
   const navigate = useNavigate();
 
   return (
-    <Layout>
-      <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
+    <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-foreground">Criar Bot</h1>
           <p className="text-muted-foreground">
@@ -37,7 +35,6 @@ export default function BotCreate() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </Layout>
+    </div>
   );
 }

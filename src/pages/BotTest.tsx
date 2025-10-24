@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -108,8 +107,7 @@ export default function BotTest() {
   };
 
   return (
-    <Layout>
-      <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white">
         <div className="p-4 border-b border-border bg-white shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -240,6 +238,5 @@ export default function BotTest() {
           </Tabs>
         </div>
       </div>
-    </Layout>
   );
 }

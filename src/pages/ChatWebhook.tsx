@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "@/components/chat/ChatMessage";
@@ -575,8 +574,7 @@ export default function ChatWebhook() {
   const currentAIWebhook = aiWebhooks.find((w) => w.id === selectedAIWebhook);
 
   return (
-    <Layout>
-      <div className="min-h-full bg-gradient-to-br from-background to-secondary/20 flex flex-col">
+    <div className="min-h-full bg-gradient-to-br from-background to-secondary/20 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
           <div className="flex-1">
@@ -856,6 +854,5 @@ export default function ChatWebhook() {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 }
