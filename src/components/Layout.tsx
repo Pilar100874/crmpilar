@@ -223,7 +223,7 @@ export default function Layout({ children }: LayoutProps) {
             <img 
               src={logo} 
               alt="Pilar Logo" 
-              className="h-8 w-14 object-contain"
+              className="h-10 w-18 object-contain"
             />
           </div>
 
