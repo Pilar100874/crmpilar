@@ -65,10 +65,10 @@ const menuItems: MenuItem[] = [
   { id: "Bot Builder", title: "E-mail", url: "/bot-builder", icon: Workflow },
   { 
     id: "Bot Test", 
-    title: "Teste Bot", 
+    title: "Bot", 
     icon: Workflow,
     subItems: [
-      { id: "Criar Bot", title: "Criar Bot", url: "/bot-create", icon: Plus },
+      { id: "Criar Bot", title: "Criar / Editar", url: "/bot-create", icon: Plus },
       { id: "Testar", title: "Testar", url: "/bot-test", icon: TestTube2 },
     ]
   },
