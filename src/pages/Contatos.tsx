@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit, Settings2 } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
@@ -93,6 +94,7 @@ export default function Contatos() {
       return JSON.parse(saved);
     }
     return [
+      { id: "actions", label: "Ações", visible: true, width: 80 },
       { id: "name", label: "Nome", visible: true, width: 250, locked: true },
       { id: "company", label: "Empresa", visible: true, width: 200 },
       { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
@@ -105,6 +107,9 @@ export default function Contatos() {
     ];
   });
 
+  // Estado de ordenação
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
   // Salvar configurações de colunas no localStorage
   useEffect(() => {
     localStorage.setItem("contactsTableColumns", JSON.stringify(tableColumns));
@@ -112,6 +117,32 @@ export default function Contatos() {
 
   const handleColumnsChange = (newColumns: TableColumn[]) => {
     setTableColumns(newColumns);
+  };
+
+  const handleSort = (columnId: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig && sortConfig.key === columnId) {
+      if (sortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else {
+        // Remove sort
+        setSortConfig(null);
+        return;
+      }
+    }
+    
+    setSortConfig({ key: columnId, direction });
+  };
+
+  const getSortIcon = (columnId: string) => {
+    if (!sortConfig || sortConfig.key !== columnId) {
+      return <ArrowUpDown className="w-3 h-3 text-muted-foreground" />;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="w-3 h-3 text-primary" />
+      : <ArrowDown className="w-3 h-3 text-primary" />;
   };
   
   // Hooks para buscar CEP e CNPJ
@@ -750,6 +781,55 @@ export default function Contatos() {
     return true;
   });
 
+  // Aplicar ordenação
+  const sortedContacts = React.useMemo(() => {
+    if (!sortConfig) return filteredContacts;
+
+    return [...filteredContacts].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      // Obter valores baseado na coluna
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = a.name;
+          bValue = b.name;
+          break;
+        case 'company':
+          aValue = a.company;
+          bValue = b.company;
+          break;
+        case 'phone':
+          aValue = a.phone;
+          bValue = b.phone;
+          break;
+        case 'email':
+          aValue = a.email;
+          bValue = b.email;
+          break;
+        case 'position':
+          aValue = a.position;
+          bValue = b.position;
+          break;
+        default:
+          aValue = a.customFields?.[sortConfig.key] || '';
+          bValue = b.customFields?.[sortConfig.key] || '';
+      }
+
+      // Converter para string para comparação
+      aValue = String(aValue || '').toLowerCase();
+      bValue = String(bValue || '').toLowerCase();
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredContacts, sortConfig]);
+
   if (!showForm) {
     return (
       <div className="flex-1 flex flex-col h-full bg-background">
@@ -798,13 +878,13 @@ export default function Contatos() {
             </div>
             
             <div className="ml-auto text-sm text-muted-foreground">
-              {filteredContacts.length} elementos
+              {sortedContacts.length} elementos
             </div>
           </div>
         </div>
 
         <div className="flex-1 overflow-auto">
-          {filteredContacts.length === 0 ? (
+          {sortedContacts.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
               Nenhum contato cadastrado. Clique em "ADICIONAR CONTATO" para começar.
             </div>
@@ -813,83 +893,96 @@ export default function Contatos() {
               <table className="w-full">
                 <thead className="border-b border-border sticky top-0 bg-background z-10">
                   <tr>
-                    <th className="text-left p-3 font-medium text-sm text-muted-foreground w-[60px] sticky left-0 bg-background border-r border-border">
-                      AÇÕES
-                    </th>
-                    {tableColumns.filter(col => col.visible).map((column) => (
+                    {tableColumns.filter(col => col.visible).map((column, index) => (
                       <th
                         key={column.id}
-                        className="text-left p-3 font-medium text-sm text-muted-foreground relative"
+                        className={`text-left p-3 font-medium text-sm text-muted-foreground relative ${
+                          index === 0 ? 'sticky left-0 bg-background border-r border-border z-20' : ''
+                        }`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
-                        <div className="flex items-center justify-between pr-4">
+                        <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label.toUpperCase()}</span>
+                          {column.id !== 'actions' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 hover:bg-transparent"
+                              onClick={() => handleSort(column.id)}
+                            >
+                              {getSortIcon(column.id)}
+                            </Button>
+                          )}
                         </div>
-                        {!column.locked && (
-                          <div
-                            className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary bg-border/50 z-20"
-                            style={{ touchAction: 'none' }}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const startX = e.clientX;
-                              const startWidth = column.width;
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary bg-border/50 z-20"
+                          style={{ touchAction: 'none' }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const startX = e.clientX;
+                            const startWidth = column.width;
 
-                              const handleMouseMove = (moveEvent: MouseEvent) => {
-                                moveEvent.preventDefault();
-                                const diff = moveEvent.clientX - startX;
-                                const newWidth = Math.max(80, startWidth + diff);
-                                setTableColumns(prev =>
-                                  prev.map(col =>
-                                    col.id === column.id ? { ...col, width: newWidth } : col
-                                  )
-                                );
-                              };
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                              moveEvent.preventDefault();
+                              const diff = moveEvent.clientX - startX;
+                              const newWidth = Math.max(60, startWidth + diff);
+                              setTableColumns(prev =>
+                                prev.map(col =>
+                                  col.id === column.id ? { ...col, width: newWidth } : col
+                                )
+                              );
+                            };
 
-                              const handleMouseUp = () => {
-                                document.removeEventListener('mousemove', handleMouseMove);
-                                document.removeEventListener('mouseup', handleMouseUp);
-                                document.body.style.cursor = '';
-                                document.body.style.userSelect = '';
-                              };
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                              document.body.style.cursor = '';
+                              document.body.style.userSelect = '';
+                            };
 
-                              document.body.style.cursor = 'col-resize';
-                              document.body.style.userSelect = 'none';
-                              document.addEventListener('mousemove', handleMouseMove);
-                              document.addEventListener('mouseup', handleMouseUp);
-                            }}
-                          />
-                        )}
+                            document.body.style.cursor = 'col-resize';
+                            document.body.style.userSelect = 'none';
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                          }}
+                        />
                       </th>
                     ))}
                     <th className="w-[50px] p-3"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredContacts.map((contact) => (
+                  {sortedContacts.map((contact) => (
                     <tr key={contact.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <td className="p-3 sticky left-0 bg-background border-r border-border">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          onClick={() => {
-                            setEditingContact(contact);
-                            setFormData({
-                              name: contact.name,
-                              phone: contact.phone,
-                              email: contact.email,
-                              position: contact.position,
-                              ...contact.customFields
-                            });
-                            setShowForm(true);
-                          }}
-                          title="Editar cadastro completo"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </td>
-                      {tableColumns.filter(col => col.visible).map((column) => (
+                      {tableColumns.filter(col => col.visible).map((column, index) => {
+                        if (column.id === 'actions') {
+                          return (
+                            <td key="actions" className="p-3 sticky left-0 bg-background border-r border-border">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setEditingContact(contact);
+                                  setFormData({
+                                    name: contact.name,
+                                    phone: contact.phone,
+                                    email: contact.email,
+                                    position: contact.position,
+                                    ...contact.customFields
+                                  });
+                                  setShowForm(true);
+                                }}
+                                title="Editar cadastro completo"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          );
+                        }
+
+                        return (
                         <td 
                           key={column.id} 
                           className="p-3 group relative"
@@ -951,7 +1044,8 @@ export default function Contatos() {
                             </div>
                           )}
                         </td>
-                      ))}
+                        );
+                      })}
                       <td className="p-3">
                         <Button
                           variant="ghost"
