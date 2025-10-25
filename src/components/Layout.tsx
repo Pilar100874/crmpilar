@@ -285,19 +285,19 @@ export default function Layout({ children }: LayoutProps) {
               className="h-10 w-18 object-contain mb-3"
             />
             {/* Informações do usuário e estabelecimento */}
-            <div className="w-full px-1 space-y-1">
+            <div className="w-full px-1 space-y-2">
               {estabelecimentoName && (
                 <div className="flex flex-col items-center">
-                  <Building2 className="w-3 h-3 text-sidebar-foreground/50 mb-0.5" />
-                  <span className="text-[8px] text-sidebar-foreground/70 text-center leading-tight line-clamp-2 px-1">
+                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
                     {estabelecimentoName}
                   </span>
                 </div>
               )}
               {userName && (
                 <div className="flex flex-col items-center pt-1">
-                  <UserIcon className="w-3 h-3 text-sidebar-foreground/50 mb-0.5" />
-                  <span className="text-[8px] text-sidebar-foreground/60 text-center leading-tight line-clamp-1 px-1">
+                  <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
                     {userName}
                   </span>
                 </div>
