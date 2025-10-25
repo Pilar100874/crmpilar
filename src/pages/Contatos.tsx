@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit, Settings2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
@@ -19,6 +19,7 @@ import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
+import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import {
   DndContext,
   closestCenter,
@@ -84,6 +85,19 @@ export default function Contatos() {
   const [editingValue, setEditingValue] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+  
+  // Gerenciamento de colunas da tabela
+  const [tableColumns, setTableColumns] = useState<TableColumn[]>([
+    { id: "name", label: "Nome", visible: true, width: 250, locked: true },
+    { id: "company", label: "Empresa", visible: true, width: 200 },
+    { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
+    { id: "email", label: "E-mail", visible: true, width: 250 },
+    { id: "position", label: "Posição", visible: false, width: 150 },
+    { id: "cpf_cnpj", label: "CPF/CNPJ", visible: false, width: 180 },
+    { id: "company_fantasia", label: "Nome Fantasia", visible: false, width: 200 },
+    { id: "city", label: "Cidade", visible: false, width: 150 },
+    { id: "state", label: "UF", visible: false, width: 80 },
+  ]);
   
   // Hooks para buscar CEP e CNPJ
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
@@ -751,6 +765,11 @@ export default function Contatos() {
               Filtros avançados
             </Button>
             
+            <TableColumnsConfig 
+              columns={tableColumns} 
+              onColumnsChange={setTableColumns}
+            />
+            
             <div className="flex-1 max-w-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -775,214 +794,156 @@ export default function Contatos() {
               Nenhum contato cadastrado. Clique em "ADICIONAR CONTATO" para começar.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>NOME</TableHead>
-                  <TableHead>EMPRESA</TableHead>
-                  <TableHead>TELEFONE</TableHead>
-                  <TableHead>E-MAIL</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContacts.map((contact) => (
-                  <TableRow key={contact.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium text-primary group relative">
-                      {editingCell?.contactId === contact.id && editingCell?.field === "name" ? (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveInlineEdit();
-                              if (e.key === "Escape") handleCancelEdit();
-                            }}
-                            className="h-8"
-                            autoFocus
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={handleSaveInlineEdit}
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span className="flex-1">{contact.name}</span>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingContact(contact);
-                                setFormData({
-                                  name: contact.name,
-                                  phone: contact.phone,
-                                  email: contact.email,
-                                  position: contact.position,
-                                  ...contact.customFields
-                                });
-                                setShowForm(true);
-                              }}
-                              title="Editar cadastro completo"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStartEdit(contact.id, "name", contact.name);
-                              }}
-                              title="Edição rápida"
-                            >
-                              <Pencil className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="group relative">
-                      {editingCell?.contactId === contact.id && editingCell?.field === "company" ? (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveInlineEdit();
-                              if (e.key === "Escape") handleCancelEdit();
-                            }}
-                            className="h-8"
-                            autoFocus
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={handleSaveInlineEdit}
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <span>{contact.company || "-"}</span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartEdit(contact.id, "company", contact.company || "");
-                            }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="group relative">
-                      {editingCell?.contactId === contact.id && editingCell?.field === "phone" ? (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveInlineEdit();
-                              if (e.key === "Escape") handleCancelEdit();
-                            }}
-                            className="h-8"
-                            autoFocus
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={handleSaveInlineEdit}
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <span>{contact.phone}</span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartEdit(contact.id, "phone", contact.phone);
-                            }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="group relative">
-                      {editingCell?.contactId === contact.id && editingCell?.field === "email" ? (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveInlineEdit();
-                              if (e.key === "Escape") handleCancelEdit();
-                            }}
-                            className="h-8"
-                            autoFocus
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={handleSaveInlineEdit}
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <span>{contact.email}</span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartEdit(contact.id, "email", contact.email);
-                            }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteContact(contact.id);
-                        }}
+            <div className="relative">
+              <table className="w-full">
+                <thead className="border-b border-border sticky top-0 bg-background z-10">
+                  <tr>
+                    <th className="text-left p-3 font-medium text-sm text-muted-foreground w-[60px] sticky left-0 bg-background border-r border-border">
+                      AÇÕES
+                    </th>
+                    {tableColumns.filter(col => col.visible).map((column) => (
+                      <th
+                        key={column.id}
+                        className="text-left p-3 font-medium text-sm text-muted-foreground group relative"
+                        style={{ width: column.width }}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                        <div className="flex items-center justify-between">
+                          <span>{column.label.toUpperCase()}</span>
+                          {!column.locked && (
+                            <div
+                              className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                const startX = e.clientX;
+                                const startWidth = column.width;
+
+                                const handleMouseMove = (e: MouseEvent) => {
+                                  const diff = e.clientX - startX;
+                                  const newWidth = Math.max(80, startWidth + diff);
+                                  setTableColumns(prev =>
+                                    prev.map(col =>
+                                      col.id === column.id ? { ...col, width: newWidth } : col
+                                    )
+                                  );
+                                };
+
+                                const handleMouseUp = () => {
+                                  document.removeEventListener('mousemove', handleMouseMove);
+                                  document.removeEventListener('mouseup', handleMouseUp);
+                                };
+
+                                document.addEventListener('mousemove', handleMouseMove);
+                                document.addEventListener('mouseup', handleMouseUp);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                    <th className="w-[50px] p-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredContacts.map((contact) => (
+                    <tr key={contact.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <td className="p-3 sticky left-0 bg-background border-r border-border">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setEditingContact(contact);
+                            setFormData({
+                              name: contact.name,
+                              phone: contact.phone,
+                              email: contact.email,
+                              position: contact.position,
+                              ...contact.customFields
+                            });
+                            setShowForm(true);
+                          }}
+                          title="Editar cadastro completo"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </td>
+                      {tableColumns.filter(col => col.visible).map((column) => (
+                        <td key={column.id} className="p-3 group relative">
+                          {editingCell?.contactId === contact.id && editingCell?.field === column.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleSaveInlineEdit();
+                                  if (e.key === "Escape") handleCancelEdit();
+                                }}
+                                className="h-8"
+                                autoFocus
+                              />
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 flex-shrink-0"
+                                onClick={handleSaveInlineEdit}
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between min-w-0">
+                              <span className={`truncate ${column.id === 'name' ? 'font-medium text-primary' : ''}`}>
+                                {column.id === 'name' && contact.name}
+                                {column.id === 'company' && (contact.company || "-")}
+                                {column.id === 'phone' && contact.phone}
+                                {column.id === 'email' && contact.email}
+                                {column.id === 'position' && contact.position}
+                                {column.id === 'cpf_cnpj' && (contact.customFields?.cpf_cnpj || "-")}
+                                {column.id === 'company_fantasia' && (contact.customFields?.company_fantasia || "-")}
+                                {column.id === 'city' && (contact.customFields?.city || "-")}
+                                {column.id === 'state' && (contact.customFields?.state || "-")}
+                              </span>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  let value = "";
+                                  if (column.id === 'name') value = contact.name;
+                                  else if (column.id === 'company') value = contact.company || "";
+                                  else if (column.id === 'phone') value = contact.phone;
+                                  else if (column.id === 'email') value = contact.email;
+                                  else if (column.id === 'position') value = contact.position;
+                                  else value = contact.customFields?.[column.id] || "";
+                                  handleStartEdit(contact.id, column.id, value);
+                                }}
+                                title="Edição rápida"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </td>
+                      ))}
+                      <td className="p-3">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteContact(contact.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
