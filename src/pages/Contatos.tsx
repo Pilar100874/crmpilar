@@ -262,243 +262,187 @@ export default function Contatos() {
     return (
       <div className="flex-1 flex flex-col h-full bg-background">
         <div className="border-b border-border bg-card px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-foreground">TODOS OS CONTATOS E EMPRESAS</h1>
-            <Button onClick={() => setShowForm(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              ADICIONAR CONTATO
-            </Button>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 bg-primary/10 text-primary border-primary/20"
-            >
-              Lista completa
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-              onClick={() => setShowSearchPanel(true)}
-            >
-              <Search className="w-4 h-4" />
-              Busca e filtro
-            </Button>
-            <div className="ml-auto text-sm text-muted-foreground">
-              {filteredContacts.length} elementos
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-muted-foreground">
+                {filteredContacts.length} elementos
+              </div>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+              <Button onClick={() => setShowForm(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                ADICIONAR CONTATO
+              </Button>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
-          {filteredContacts.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              Nenhum contato cadastrado. Clique em "ADICIONAR CONTATO" para começar.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>NOME</TableHead>
-                  <TableHead>EMPRESA</TableHead>
-                  <TableHead>TELEFONE</TableHead>
-                  <TableHead>E-MAIL</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContacts.map((contact) => (
-                  <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell 
-                      className="font-medium text-primary"
-                      onClick={() => handleEditContact(contact)}
-                    >
-                      {contact.name}
-                    </TableCell>
-                    <TableCell onClick={() => handleEditContact(contact)}>
-                      {contact.company || "-"}
-                    </TableCell>
-                    <TableCell onClick={() => handleEditContact(contact)}>
-                      {contact.phone}
-                    </TableCell>
-                    <TableCell onClick={() => handleEditContact(contact)}>
-                      {contact.email}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm("Deseja realmente excluir este contato?")) {
-                            handleDeleteContact(contact.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-
-        {/* Search Panel */}
-        <Sheet open={showSearchPanel} onOpenChange={setShowSearchPanel}>
-          <SheetContent side="right" className="w-full sm:max-w-[900px] p-0 overflow-hidden">
-            <div className="flex h-full">
-              {/* Left Sidebar - Filter Lists */}
-              <div className="w-64 border-r border-border bg-muted/30 overflow-y-auto">
-                <div className="p-4">
-                  <div className="mb-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-medium text-primary bg-primary/10 hover:bg-primary/20"
-                    >
-                      Lista completa
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Contatos sem tarefas atribuí...
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Contatos com tarefas atrasa...
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Sem leads vinculado
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Exluído
-                    </Button>
-                  </div>
-                </div>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Sidebar - Contact List */}
+          <div className="w-72 border-r border-border bg-background overflow-y-auto">
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 bg-primary/10 text-primary border-primary/20 flex-1"
+                >
+                  Lista completa
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setShowSearchPanel(!showSearchPanel)}
+                >
+                  <Search className="w-4 h-4" />
+                  Busca e filtro
+                </Button>
               </div>
 
-              {/* Main Content - Search Fields */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Left Column */}
-                    <div className="space-y-4">
-                      <div>
-                        <Input
-                          placeholder="Nome"
-                          value={searchFilters.name}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, name: e.target.value })}
-                          className="h-10"
-                        />
+              <div className="space-y-1">
+                {filteredContacts.map((contact) => (
+                  <div
+                    key={contact.id}
+                    className="p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                    onClick={() => handleEditContact(contact)}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-medium text-primary">
+                          {contact.name.charAt(0).toUpperCase()}
+                        </span>
                       </div>
-
-                      <div>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal h-10 text-muted-foreground"
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          A qualquer hora
-                        </Button>
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Funil de vendas, etapas"
-                          value={searchFilters.funnel}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, funnel: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Usuário responsável"
-                          value={searchFilters.responsible}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, responsible: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Criado por"
-                          value={searchFilters.createdBy}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, createdBy: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Modificado por"
-                          value={searchFilters.modifiedBy}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, modifiedBy: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal h-10 text-muted-foreground"
-                        >
-                          Tarefas: Todos valores
-                        </Button>
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Telefone"
-                          value={searchFilters.phone}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, phone: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="E-mail"
-                          value={searchFilters.email}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, email: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Posição"
-                          value={searchFilters.position}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, position: e.target.value })}
-                          className="h-10"
-                        />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-primary truncate">
+                          {contact.name}
+                        </p>
+                        {contact.company && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {contact.company}
+                          </p>
+                        )}
                       </div>
                     </div>
+                  </div>
+                ))}
+                
+                {filteredContacts.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8 text-sm">
+                    Nenhum contato encontrado
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-                    {/* Right Column - Tags */}
+          {/* Main Content Area */}
+          {showSearchPanel ? (
+            /* Search Panel */
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6">
+                <div className="grid grid-cols-[1fr,300px] gap-6">
+                  {/* Left Column - Filters */}
+                  <div>
+                    <div className="mb-4">
+                      <Button
+                        variant="ghost"
+                        className="text-primary font-medium"
+                      >
+                        Lista completa
+                      </Button>
+                    </div>
+
+                    <div className="space-y-1 mb-8">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                      >
+                        Contatos sem tarefas atribuí...
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                      >
+                        Contatos com tarefas atrasa...
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                      >
+                        Sem leads vinculado
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                      >
+                        Exluído
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Input
+                        placeholder="Nome"
+                        value={searchFilters.name}
+                        onChange={(e) => setSearchFilters({ ...searchFilters, name: e.target.value })}
+                        className="h-9"
+                      />
+
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal h-9 text-muted-foreground"
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        A qualquer hora
+                      </Button>
+
+                      <Input
+                        placeholder="Funil de vendas, etapas"
+                        value={searchFilters.funnel}
+                        onChange={(e) => setSearchFilters({ ...searchFilters, funnel: e.target.value })}
+                        className="h-9"
+                      />
+
+                      <Input
+                        placeholder="Usuário responsável"
+                        value={searchFilters.responsible}
+                        onChange={(e) => setSearchFilters({ ...searchFilters, responsible: e.target.value })}
+                        className="h-9"
+                      />
+
+                      <Input
+                        placeholder="Criado por"
+                        value={searchFilters.createdBy}
+                        onChange={(e) => setSearchFilters({ ...searchFilters, createdBy: e.target.value })}
+                        className="h-9"
+                      />
+
+                      <Input
+                        placeholder="Modificado por"
+                        value={searchFilters.modifiedBy}
+                        onChange={(e) => setSearchFilters({ ...searchFilters, modifiedBy: e.target.value })}
+                        className="h-9"
+                      />
+
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal h-9 text-muted-foreground"
+                      >
+                        Tarefas: Todos valores
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Tags */}
+                  <div>
                     <div className="space-y-4">
-                      <div className="border border-border rounded-lg p-4">
+                      <div className="border border-border rounded-lg p-4 bg-background">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm font-medium">TAGS</span>
                           <Button variant="link" className="h-auto p-0 text-primary text-sm">
@@ -509,7 +453,7 @@ export default function Contatos() {
                           placeholder="Localizar tags"
                           value={searchFilters.tags}
                           onChange={(e) => setSearchFilters({ ...searchFilters, tags: e.target.value })}
-                          className="h-10 mb-3"
+                          className="h-9 mb-3"
                         />
                         <p className="text-sm text-muted-foreground">
                           Você não tem tags conectadas
@@ -517,39 +461,67 @@ export default function Contatos() {
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex gap-2 mt-6 pt-6 border-t">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSearchFilters({
-                          name: "",
-                          dateFilter: "",
-                          funnel: "",
-                          responsible: "",
-                          createdBy: "",
-                          modifiedBy: "",
-                          tasks: "",
-                          phone: "",
-                          email: "",
-                          position: "",
-                          tags: "",
-                        });
-                      }}
-                    >
-                      Limpar filtros
-                    </Button>
-                    <Button
-                      onClick={() => setShowSearchPanel(false)}
-                    >
-                      Aplicar
-                    </Button>
-                  </div>
                 </div>
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
+          ) : (
+            /* Table View */
+            <div className="flex-1 overflow-auto">
+              {filteredContacts.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">
+                  Nenhum contato cadastrado. Clique em "ADICIONAR CONTATO" para começar.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>NOME</TableHead>
+                      <TableHead>EMPRESA</TableHead>
+                      <TableHead>TELEFONE</TableHead>
+                      <TableHead>E-MAIL</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredContacts.map((contact) => (
+                      <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
+                        <TableCell 
+                          className="font-medium text-primary"
+                          onClick={() => handleEditContact(contact)}
+                        >
+                          {contact.name}
+                        </TableCell>
+                        <TableCell onClick={() => handleEditContact(contact)}>
+                          {contact.company || "-"}
+                        </TableCell>
+                        <TableCell onClick={() => handleEditContact(contact)}>
+                          {contact.phone}
+                        </TableCell>
+                        <TableCell onClick={() => handleEditContact(contact)}>
+                          {contact.email}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm("Deseja realmente excluir este contato?")) {
+                                handleDeleteContact(contact.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
