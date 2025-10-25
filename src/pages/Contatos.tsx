@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2 } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from "@/lib/masks";
@@ -98,6 +98,7 @@ export default function Contatos() {
   const [newFieldOptions, setNewFieldOptions] = useState("");
   const [activeFieldTab, setActiveFieldTab] = useState<"contact" | "company">("contact");
   const [fieldMasks, setFieldMasks] = useState<FieldMask[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     name: "",
@@ -244,6 +245,15 @@ export default function Contatos() {
     const handleFieldChange = (newValue: string) => {
       let processedValue = newValue;
       
+      // Limpar erro do campo quando o usuário começar a digitar
+      if (fieldErrors[field.id]) {
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field.id];
+          return newErrors;
+        });
+      }
+      
       // Aplicar máscara automática baseada no ID do campo
       if (field.id === "cpf_cnpj") {
         const companyType = formData.company_type;
@@ -318,29 +328,49 @@ export default function Contatos() {
     switch (field.type) {
       case "textarea":
         return (
-          <Textarea
-            id={field.id}
-            placeholder="..."
-            value={value}
-            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-            onBlur={handleFieldBlur}
-            required={field.required}
-          />
+          <div>
+            <Textarea
+              id={field.id}
+              placeholder="..."
+              value={value}
+              onChange={(e) => {
+                if (fieldErrors[field.id]) {
+                  setFieldErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors[field.id];
+                    return newErrors;
+                  });
+                }
+                setFormData({ ...formData, [field.id]: e.target.value });
+              }}
+              onBlur={handleFieldBlur}
+              required={field.required}
+              className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}
+            />
+            {fieldErrors[field.id] && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
+            )}
+          </div>
         );
       case "select":
         return (
-          <Select value={value} onValueChange={(val) => handleFieldChange(val)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione..." />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div>
+            <Select value={value} onValueChange={(val) => handleFieldChange(val)}>
+              <SelectTrigger className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}>
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options?.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors[field.id] && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
+            )}
+          </div>
         );
       case "checkbox":
         return (
@@ -366,7 +396,11 @@ export default function Contatos() {
               onChange={(e) => handleFieldChange(e.target.value)}
               onBlur={handleFieldBlur}
               required={field.required}
+              className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}
             />
+            {fieldErrors[field.id] && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
+            )}
             {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
             ) : null}
@@ -376,50 +410,75 @@ export default function Contatos() {
   };
 
   const handleSaveContact = () => {
+    const errors: Record<string, string> = {};
+    
     // Validar campos obrigatórios de contato
-    if (!formData.name || !formData.phone || !formData.email || !formData.position) {
-      toast.error("Preencha os campos obrigatórios: Nome, WhatsApp, E-mail e Posição");
-      return;
+    if (!formData.name) {
+      errors.name = "Campo obrigatório";
     }
-
-    // Validar email
-    if (!validateEmail(formData.email)) {
-      toast.error("E-mail inválido");
-      return;
+    if (!formData.phone) {
+      errors.phone = "Campo obrigatório";
+    } else if (!validatePhone(formData.phone)) {
+      errors.phone = "Telefone/WhatsApp inválido";
     }
-
-    // Validar telefone
-    if (!validatePhone(formData.phone)) {
-      toast.error("Telefone/WhatsApp inválido");
-      return;
+    if (!formData.email) {
+      errors.email = "Campo obrigatório";
+    } else if (!validateEmail(formData.email)) {
+      errors.email = "E-mail inválido";
+    }
+    if (!formData.position) {
+      errors.position = "Campo obrigatório";
     }
 
     // Validar campos obrigatórios de empresa se preenchidos
     if (formData.company_type) {
-      const requiredCompanyFields = ["company_type", "cpf_cnpj", "company_name", "company_fantasia", "cep", "address", "city", "neighborhood", "state", "inscricao"];
-      const missingFields = requiredCompanyFields.filter(field => !formData[field]);
+      const requiredCompanyFields = [
+        { id: "company_type", label: "Tipo" },
+        { id: "cpf_cnpj", label: "CPF/CNPJ" },
+        { id: "company_name", label: "Nome" },
+        { id: "company_fantasia", label: "Nome Fantasia" },
+        { id: "cep", label: "CEP" },
+        { id: "address", label: "Endereço" },
+        { id: "city", label: "Cidade" },
+        { id: "neighborhood", label: "Bairro" },
+        { id: "state", label: "UF" },
+        { id: "inscricao", label: "Inscrição" }
+      ];
       
-      if (missingFields.length > 0) {
-        toast.error("Preencha todos os campos obrigatórios da empresa");
-        return;
-      }
+      requiredCompanyFields.forEach(field => {
+        if (!formData[field.id]) {
+          errors[field.id] = "Campo obrigatório";
+        }
+      });
 
       // Validar CPF ou CNPJ
-      const companyType = formData.company_type;
-      if (companyType === "Pessoa Física" && !validateCPF(formData.cpf_cnpj)) {
-        toast.error("CPF inválido");
-        return;
-      }
-      if (companyType === "Pessoa Jurídica" && !validateCNPJ(formData.cpf_cnpj)) {
-        toast.error("CNPJ inválido");
-        return;
+      if (formData.cpf_cnpj) {
+        const companyType = formData.company_type;
+        if (companyType === "Pessoa Física" && !validateCPF(formData.cpf_cnpj)) {
+          errors.cpf_cnpj = "CPF inválido";
+        }
+        if (companyType === "Pessoa Jurídica" && !validateCNPJ(formData.cpf_cnpj)) {
+          errors.cpf_cnpj = "CNPJ inválido";
+        }
       }
 
       // Validar CEP
-      if (!validateCEP(formData.cep)) {
-        toast.error("CEP inválido");
-        return;
+      if (formData.cep && !validateCEP(formData.cep)) {
+        errors.cep = "CEP inválido";
       }
+    }
+
+    // Se houver erros, marcar campos e fazer scroll para o primeiro erro
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstErrorField = Object.keys(errors)[0];
+      const firstErrorElement = document.getElementById(firstErrorField);
+      if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstErrorElement.focus();
+      }
+      toast.error("Preencha todos os campos obrigatórios corretamente");
+      return;
     }
 
     const newContact: Contact = {
@@ -450,6 +509,7 @@ export default function Contatos() {
     setShowForm(false);
     setFormData({});
     setEditingContact(null);
+    setFieldErrors({});
   };
 
   const handleEditContact = (contact: Contact) => {
@@ -952,13 +1012,6 @@ export default function Contatos() {
     <div className="flex-1 flex flex-col h-full bg-background">
       <div className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowForm(false)}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
           <h1 className="text-2xl font-bold text-foreground">{editingContact ? editingContact.name : "Novo Contato"}</h1>
           <Button variant="ghost" size="sm" className="gap-2 ml-auto">
             #ADICIONAR TAGS
