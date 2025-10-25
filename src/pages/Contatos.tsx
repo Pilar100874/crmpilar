@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP } from "@/lib/validators";
+import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from "@/lib/masks";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
@@ -62,16 +62,13 @@ interface Contact {
 }
 
 interface SearchFilters {
-  name: string;
+  unifiedSearch: string;
   dateFilter: string;
   funnel: string;
   responsible: string;
   createdBy: string;
   modifiedBy: string;
   tasks: string;
-  phone: string;
-  email: string;
-  position: string;
   tags: string;
   [key: string]: string; // Permite campos dinâmicos customizados
 }
@@ -127,16 +124,13 @@ export default function Contatos() {
   );
   
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
-    name: "",
+    unifiedSearch: "",
     dateFilter: "",
     funnel: "",
     responsible: "",
     createdBy: "",
     modifiedBy: "",
     tasks: "",
-    phone: "",
-    email: "",
-    position: "",
     tags: "",
   });
 
@@ -386,6 +380,13 @@ export default function Contatos() {
           toast.error("Telefone inválido");
         }
       }
+      
+      // Validar inscrição estadual ao sair do campo
+      if (field.id === "inscricao" && value && value.toUpperCase() !== "ISENTO") {
+        if (!validateInscricaoEstadual(value)) {
+          toast.error("Inscrição estadual inválida");
+        }
+      }
     };
     
     switch (field.type) {
@@ -619,17 +620,24 @@ export default function Contatos() {
   };
 
   const filteredContacts = contacts.filter(contact => {
-    if (searchFilters.name && !contact.name.toLowerCase().includes(searchFilters.name.toLowerCase())) {
-      return false;
-    }
-    if (searchFilters.phone && !contact.phone.includes(searchFilters.phone)) {
-      return false;
-    }
-    if (searchFilters.email && !contact.email.toLowerCase().includes(searchFilters.email.toLowerCase())) {
-      return false;
-    }
-    if (searchFilters.position && !contact.position.toLowerCase().includes(searchFilters.position.toLowerCase())) {
-      return false;
+    // Busca unificada nos campos principais
+    if (searchFilters.unifiedSearch) {
+      const searchTerm = searchFilters.unifiedSearch.toLowerCase();
+      const cpfCnpj = (contact.customFields?.cpf_cnpj || "").toString().toLowerCase();
+      const companyName = (contact.customFields?.company_name || "").toString().toLowerCase();
+      const companyFantasia = (contact.customFields?.company_fantasia || "").toString().toLowerCase();
+      
+      const matchesSearch = 
+        contact.name.toLowerCase().includes(searchTerm) ||
+        cpfCnpj.includes(searchTerm) ||
+        companyName.includes(searchTerm) ||
+        companyFantasia.includes(searchTerm) ||
+        contact.phone.includes(searchTerm) ||
+        contact.email.toLowerCase().includes(searchTerm);
+      
+      if (!matchesSearch) {
+        return false;
+      }
     }
     
     // Filtrar por campos customizados marcados como searchable
@@ -939,12 +947,18 @@ export default function Contatos() {
                     {/* Left Column */}
                     <div className="space-y-4">
                       <div>
+                        <Label className="text-sm font-medium mb-2 block">
+                          Busca Global
+                        </Label>
                         <Input
-                          placeholder="Nome"
-                          value={searchFilters.name}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, name: e.target.value })}
+                          placeholder="Buscar por nome, CPF/CNPJ, empresa, fantasia, WhatsApp ou e-mail..."
+                          value={searchFilters.unifiedSearch}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
                           className="h-10"
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Digite para buscar em todos os campos principais
+                        </p>
                       </div>
 
                       <div>
@@ -1001,33 +1015,6 @@ export default function Contatos() {
                           Tarefas: Todos valores
                         </Button>
                       </div>
-
-                      <div>
-                        <Input
-                          placeholder="Telefone"
-                          value={searchFilters.phone}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, phone: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="E-mail"
-                          value={searchFilters.email}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, email: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Posição"
-                          value={searchFilters.position}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, position: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
                       
                       {/* Campos customizados searchable */}
                       {[...contactFields, ...companyFields]
@@ -1071,16 +1058,13 @@ export default function Contatos() {
                       variant="outline"
                       onClick={() => {
                         setSearchFilters({
-                          name: "",
+                          unifiedSearch: "",
                           dateFilter: "",
                           funnel: "",
                           responsible: "",
                           createdBy: "",
                           modifiedBy: "",
                           tasks: "",
-                          phone: "",
-                          email: "",
-                          position: "",
                           tags: "",
                         });
                       }}
