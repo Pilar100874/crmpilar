@@ -316,9 +316,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                     <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 flex" align="start">
+                <PopoverContent className="w-auto p-0 flex bg-background z-50" align="start">
                   {/* Opções rápidas */}
-                  <div className="border-r">
+                  <div className="border-r bg-background">
                     <ScrollArea className="h-[300px] w-[140px]">
                       <div className="p-2 space-y-1">
                         {[
@@ -333,8 +333,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                         ].map(({ label, days }) => (
                           <button
                             key={label}
+                            type="button"
                             className="w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors"
-                            onClick={() => handleQuickDate(days)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleQuickDate(days);
+                            }}
                           >
                             {label}
                           </button>
@@ -382,17 +387,20 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                     <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-[120px] p-0" align="start">
-                  <ScrollArea className="h-[240px]">
+                <PopoverContent className="w-[120px] p-0 bg-background z-50" align="start">
+                  <ScrollArea className="h-[280px]">
                     <div className="p-2 space-y-1">
                       {hourSlots.map((hour) => (
                         <button
                           key={hour}
+                          type="button"
                           className={cn(
                             "w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
                             hours === hour && "bg-accent font-medium"
                           )}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setHours(hour);
                             setHourPickerOpen(false);
                           }}
@@ -428,16 +436,19 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                     <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-[100px] p-0" align="start">
+                <PopoverContent className="w-[100px] p-0 bg-background z-50" align="start">
                   <div className="p-2 space-y-1">
                     {minuteSlots.map((minute) => (
                       <button
                         key={minute}
+                        type="button"
                         className={cn(
                           "w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
                           minutes === minute && "bg-accent font-medium"
                         )}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           setMinutes(minute);
                           setMinutePickerOpen(false);
                         }}
