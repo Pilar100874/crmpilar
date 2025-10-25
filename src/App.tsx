@@ -15,6 +15,9 @@ import WhatsAppConfig from "./pages/WhatsAppConfig";
 import Campanhas from "./pages/Campanhas";
 import Funil from "./pages/Funil";
 import Conteudos from "./pages/Conteudos";
+import Contatos from "./pages/Contatos";
+import Empresas from "./pages/Empresas";
+import Todos from "./pages/Todos";
 import Config from "./pages/Config";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
@@ -53,6 +56,9 @@ const App = () => (
             <Route path="/campanhas" element={<Campanhas />} />
             <Route path="/funil" element={<Funil />} />
             <Route path="/conteudos" element={<Conteudos />} />
+            <Route path="/contatos" element={<Contatos />} />
+            <Route path="/empresas" element={<Empresas />} />
+            <Route path="/todos" element={<Todos />} />
             <Route path="/config" element={<Config />} />
             <Route path="/global-variables" element={<GlobalVariables />} />
             <Route path="/desenho" element={<Desenho />} />
