@@ -48,6 +48,20 @@ const mockDeals: Deal[] = [
   },
 ];
 
+interface StageConfig {
+  id: string;
+  title: string;
+  isDefault: boolean;
+}
+
+const defaultStages: StageConfig[] = [
+  { id: 'lead', title: 'ETAPA DE LEADS DE ENTRADA', isDefault: true },
+  { id: 'qualificacao', title: 'CONTATO INICIAL', isDefault: true },
+  { id: 'proposta', title: 'DISCUSSÕES', isDefault: true },
+  { id: 'negociacao', title: 'TOMADA DE DECISÃO', isDefault: true },
+  { id: 'fechamento', title: 'DISCUSSÃO DE CONTRATO', isDefault: true },
+];
+
 export default function Funil() {
   const { toast } = useToast();
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
@@ -57,6 +71,11 @@ export default function Funil() {
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [configureStagesOpen, setConfigureStagesOpen] = useState(false);
+  const [stagesConfig, setStagesConfig] = useState<StageConfig[]>(() => {
+    // Tentar carregar do localStorage
+    const saved = localStorage.getItem('funilStagesConfig');
+    return saved ? JSON.parse(saved) : defaultStages;
+  });
 
   // Simular detecção de SLA (negócios parados)
   useEffect(() => {
@@ -70,7 +89,7 @@ export default function Funil() {
     return () => clearInterval(interval);
   }, []);
 
-  // Organiza os deals por estágio
+  // Organiza os deals por estágio usando as configurações salvas
   const columns: FunilColumn[] = useMemo(() => {
     const filteredDeals = deals.filter(deal => {
       // Filtro de busca
@@ -97,34 +116,13 @@ export default function Funil() {
       return true;
     });
 
-    return [
-      {
-        id: 'lead',
-        title: 'ETAPA DE LEADS DE ENTRADA',
-        deals: filteredDeals.filter(d => (d as any).stage === 'lead'),
-      },
-      {
-        id: 'qualificacao',
-        title: 'CONTATO INICIAL',
-        deals: filteredDeals.filter(d => (d as any).stage === 'qualificacao'),
-      },
-      {
-        id: 'proposta',
-        title: 'DISCUSSÕES',
-        deals: filteredDeals.filter(d => (d as any).stage === 'proposta'),
-      },
-      {
-        id: 'negociacao',
-        title: 'TOMADA DE DECISÃO',
-        deals: filteredDeals.filter(d => (d as any).stage === 'negociacao'),
-      },
-      {
-        id: 'fechamento',
-        title: 'DISCUSSÃO DE CONTRATO',
-        deals: filteredDeals.filter(d => (d as any).stage === 'fechamento'),
-      },
-    ];
-  }, [deals, searchQuery, filters]);
+    // Gera colunas dinamicamente baseado nas configurações
+    return stagesConfig.map(stage => ({
+      id: stage.id as FunilStage,
+      title: stage.title,
+      deals: filteredDeals.filter(d => (d as any).stage === stage.id),
+    }));
+  }, [deals, searchQuery, filters, stagesConfig]);
 
   const handleDealMove = (dealId: string, newStage: FunilStage) => {
     const deal = deals.find(d => d.id === dealId);
@@ -151,15 +149,10 @@ export default function Funil() {
     }
   };
 
-  const getStageTitle = (stage: FunilStage): string => {
-    const titles: Record<FunilStage, string> = {
-      lead: 'Leads de Entrada',
-      qualificacao: 'Contato Inicial',
-      proposta: 'Discussões',
-      negociacao: 'Tomada de Decisão',
-      fechamento: 'Discussão de Contrato',
-    };
-    return titles[stage];
+  const getStageTitle = (stage: FunilStage | string): string => {
+    // Busca o título da etapa nas configurações
+    const stageConfig = stagesConfig.find(s => s.id === stage);
+    return stageConfig?.title || stage.toString();
   };
 
   const handleNewLead = () => {
@@ -200,7 +193,11 @@ export default function Funil() {
     setConfigureStagesOpen(true);
   };
 
-  const handleSaveStages = (stages: any[]) => {
+  const handleSaveStages = (stages: StageConfig[]) => {
+    // Salva as configurações no estado e no localStorage
+    setStagesConfig(stages);
+    localStorage.setItem('funilStagesConfig', JSON.stringify(stages));
+    
     toast({
       title: 'Etapas configuradas',
       description: `${stages.length} etapas foram configuradas com sucesso.`,
@@ -257,6 +254,7 @@ export default function Funil() {
         onOpenChange={setConfigureStagesOpen}
         onSave={handleSaveStages}
         currentDeals={deals}
+        initialStages={stagesConfig}
       />
     </div>
   );

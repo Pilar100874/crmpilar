@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -57,6 +57,7 @@ interface ConfigureStagesDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (stages: StageConfig[]) => void;
   currentDeals: Array<{ id: string; stage?: FunilStage | string }>;
+  initialStages: StageConfig[];
 }
 
 const defaultStages: StageConfig[] = [
@@ -67,12 +68,17 @@ const defaultStages: StageConfig[] = [
   { id: 'fechamento', title: 'DISCUSSÃO DE CONTRATO', isDefault: true },
 ];
 
-export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals }: ConfigureStagesDialogProps) {
-  const [stages, setStages] = useState<StageConfig[]>(defaultStages);
+export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals, initialStages }: ConfigureStagesDialogProps) {
+  const [stages, setStages] = useState<StageConfig[]>(initialStages);
   const [newStageTitle, setNewStageTitle] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [stageToDelete, setStageToDelete] = useState<StageConfig | null>(null);
   const [targetStageId, setTargetStageId] = useState<string>('');
+
+  // Atualiza stages quando initialStages mudar
+  useEffect(() => {
+    setStages(initialStages);
+  }, [initialStages]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
