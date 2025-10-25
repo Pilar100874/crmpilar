@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 
 interface Contact {
   id: string;
@@ -55,6 +56,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [hourPickerOpen, setHourPickerOpen] = useState(false);
   const [minutePickerOpen, setMinutePickerOpen] = useState(false);
   const [selectedQuickOption, setSelectedQuickOption] = useState<string | null>(null);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const [conflictingTasks, setConflictingTasks] = useState<any[]>([]);
+  const [pendingTaskData, setPendingTaskData] = useState<any>(null);
 
   // Carregar contatos do localStorage
   useEffect(() => {
@@ -265,17 +269,23 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       if (savedTasks) {
         const tasks = JSON.parse(savedTasks);
         const dateStr = format(date, "yyyy-MM-dd");
-        const conflictingTasks = tasks.filter((t: any) => 
+        const conflicts = tasks.filter((t: any) => 
           format(new Date(t.date), "yyyy-MM-dd") === dateStr
         );
         
-        if (conflictingTasks.length > 0) {
-          const confirmed = window.confirm(
-            `Já existem ${conflictingTasks.length} tarefa(s) nesta data. Deseja realmente adicionar esta tarefa de dia todo? As outras tarefas serão mantidas.`
-          );
-          if (!confirmed) {
-            return;
-          }
+        if (conflicts.length > 0) {
+          // Mostrar diálogo de conflito
+          setConflictingTasks(conflicts);
+          setPendingTaskData({
+            contactId: selectedContact.id,
+            contactName: selectedContact.name,
+            date,
+            time: "",
+            type: taskType,
+            observation,
+          });
+          setConflictDialogOpen(true);
+          return;
         }
       }
     }
@@ -294,7 +304,54 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     onOpenChange(false);
   };
 
+  const handleMoveTasksToNextDay = () => {
+    if (!pendingTaskData) return;
+
+    const savedTasks = localStorage.getItem("calendar_tasks");
+    if (savedTasks) {
+      const tasks = JSON.parse(savedTasks);
+      const nextDay = addDays(pendingTaskData.date, 1);
+      
+      // Mover tarefas conflitantes para o próximo dia
+      const updatedTasks = tasks.map((t: any) => {
+        const isConflicting = conflictingTasks.some(ct => ct.id === t.id);
+        if (isConflicting) {
+          return { ...t, date: nextDay.toISOString() };
+        }
+        return t;
+      });
+      
+      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+      toast.success(`${conflictingTasks.length} tarefa(s) movida(s) para ${format(nextDay, "dd/MM/yyyy")}`);
+    }
+
+    // Adicionar a nova tarefa
+    onSave(pendingTaskData);
+    setConflictDialogOpen(false);
+    setPendingTaskData(null);
+    setConflictingTasks([]);
+    onOpenChange(false);
+  };
+
+  const handleKeepAllTasks = () => {
+    if (!pendingTaskData) return;
+
+    // Apenas adicionar a nova tarefa, mantendo as existentes
+    onSave(pendingTaskData);
+    setConflictDialogOpen(false);
+    setPendingTaskData(null);
+    setConflictingTasks([]);
+    onOpenChange(false);
+  };
+
+  const handleCancelConflict = () => {
+    setConflictDialogOpen(false);
+    setPendingTaskData(null);
+    setConflictingTasks([]);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader className="sr-only">
@@ -596,5 +653,46 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Diálogo de conflito */}
+    <AlertDialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Tarefas existentes nesta data</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Já existem {conflictingTasks.length} tarefa(s) agendada(s) para {pendingTaskData && format(pendingTaskData.date, "dd/MM/yyyy")}:
+              </p>
+              <ScrollArea className="max-h-[200px] rounded-md border p-3">
+                <div className="space-y-2">
+                  {conflictingTasks.map((task, index) => (
+                    <div key={task.id || index} className="text-sm border-b pb-2 last:border-b-0">
+                      <div className="font-medium">{task.contactName}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {task.time ? `${task.time}` : 'Dia todo'} - {task.type === 'accompany' ? 'Acompanhar' : task.type === 'call' ? 'Ligação' : 'Reunião'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <p className="text-sm">O que deseja fazer?</p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <Button onClick={handleMoveTasksToNextDay} className="w-full" size="sm">
+            Mover tarefas para o próximo dia
+          </Button>
+          <Button onClick={handleKeepAllTasks} variant="secondary" className="w-full" size="sm">
+            Manter todas as tarefas
+          </Button>
+          <AlertDialogCancel onClick={handleCancelConflict} className="w-full mt-0" asChild>
+            <Button variant="outline" size="sm">Cancelar</Button>
+          </AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
