@@ -44,6 +44,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [isAllDay, setIsAllDay] = useState(false);
   const [taskType, setTaskType] = useState("accompany");
   const [observation, setObservation] = useState("");
+  const [selectedQuickOption, setSelectedQuickOption] = useState<string | null>(null);
 
   // Carregar contatos do localStorage
   useEffect(() => {
@@ -95,9 +96,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     setShowContactList(false);
   };
 
-  const handleQuickDate = (days: number) => {
+  const handleQuickDate = (days: number, optionId: string) => {
     const now = new Date();
     let newDate: Date;
+    
+    setSelectedQuickOption(optionId);
     
     if (days === 0) {
       newDate = now;
@@ -184,12 +187,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh]">
-        <DialogHeader>
-          <DialogTitle className="sr-only">Nova Tarefa</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+        <div className="p-6 space-y-6">
           {/* Campo de busca de contato */}
           <div className="relative">
             <Input
@@ -200,13 +199,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                 setShowContactList(e.target.value.length > 0);
               }}
               onFocus={() => searchQuery.length > 0 && setShowContactList(true)}
-              className="w-full"
+              className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
             />
             {selectedContact && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
                 onClick={() => {
                   setSelectedContact(null);
                   setSearchQuery("");
@@ -218,11 +217,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
             
             {/* Lista de contatos */}
             {showContactList && filteredContacts.length > 0 && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {filteredContacts.map((contact) => (
                   <div
                     key={contact.id}
-                    className="p-3 hover:bg-accent cursor-pointer border-b last:border-b-0"
+                    className="p-3 hover:bg-accent cursor-pointer"
                     onClick={() => handleSelectContact(contact)}
                   >
                     <div className="font-medium text-sm">{contact.name}</div>
@@ -238,33 +237,32 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
           </div>
 
           {/* Informações da tarefa */}
-          <div className="flex items-center gap-4 flex-wrap text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">
-                {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
-              </span>
-            </div>
+          <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground">
+            <span>
+              {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
+            </span>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Checkbox 
                 id="allday" 
                 checked={isAllDay}
-                onCheckedChange={(checked) => setIsAllDay(checked as boolean)}
+                onCheckedChange={(checked) => {
+                  setIsAllDay(checked as boolean);
+                  if (checked) setTime("");
+                }}
               />
-              <label htmlFor="allday" className="text-sm cursor-pointer">
+              <label htmlFor="allday" className="text-xs cursor-pointer">
                 Dia todo
               </label>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">para</span>
-              <span className="font-medium">
-                {selectedContact?.name || "Selecione um contato"}
-              </span>
-            </div>
+            <span>para</span>
+            <span className="text-foreground font-medium">
+              {selectedContact?.name || "Selecione um contato"}
+            </span>
 
             <Select value={taskType} onValueChange={setTaskType}>
-              <SelectTrigger className="w-auto border-0 h-auto p-0 text-sm font-medium focus:ring-0">
+              <SelectTrigger className="w-auto border-0 h-auto p-0 text-xs focus:ring-0 text-foreground font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -277,81 +275,90 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
           </div>
 
           {/* Layout principal: Opções rápidas | Calendário | Horários */}
-          <div className="grid grid-cols-[160px_1fr_200px] gap-4 h-[400px]">
+          <div className="grid grid-cols-[140px_1fr_180px] gap-6 h-[380px]">
             {/* Opções rápidas de data */}
-            <div className="space-y-1 overflow-y-auto pr-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(-1)}
+            <div className="space-y-0.5 overflow-y-auto">
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "15min" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(-1, "15min")}
               >
                 Após 15 minutos
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(-2)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "30min" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(-2, "30min")}
               >
                 Após 30 minutos
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(-3)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "1hour" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(-3, "1hour")}
               >
                 Em uma hora
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(0)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "today" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(0, "today")}
               >
                 Hoje
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(1)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "tomorrow" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(1, "tomorrow")}
               >
                 Amanhã
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(7)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "week" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(7, "week")}
               >
                 Esta semana
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(7)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "7days" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(7, "7days")}
               >
                 Em 7 dias
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(30)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "30days" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(30, "30days")}
               >
                 Em 30 dias
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm font-normal"
-                onClick={() => handleQuickDate(365)}
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                  selectedQuickOption === "1year" && "bg-accent"
+                )}
+                onClick={() => handleQuickDate(365, "1year")}
               >
                 Em 1 ano
-              </Button>
+              </button>
             </div>
 
             {/* Calendário */}
@@ -359,39 +366,45 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={setDate}
+                onSelect={(newDate) => {
+                  setDate(newDate);
+                  setSelectedQuickOption(null);
+                }}
                 locale={ptBR}
-                className="pointer-events-auto border rounded-lg"
+                className="pointer-events-auto"
               />
             </div>
 
             {/* Lista de horários */}
             {!isAllDay && (
-              <div className="space-y-1 overflow-y-auto pr-2 border-l pl-4">
-                <div className="text-sm font-medium mb-2 sticky top-0 bg-background">
-                  Acompanhar
+              <div className="space-y-0.5 overflow-y-auto border-l pl-4">
+                <div className="text-xs font-medium mb-2 text-muted-foreground sticky top-0 bg-background">
+                  {taskType === "accompany" ? "Acompanhar" : 
+                   taskType === "call" ? "Ligação" : 
+                   taskType === "meeting" ? "Reunião" : "Outro"}
                 </div>
                 {timeSlots.map((slot) => (
-                  <Button
+                  <button
                     key={slot}
-                    variant={time === slot ? "default" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start text-sm font-normal"
+                    className={cn(
+                      "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                      time === slot && "bg-accent font-medium"
+                    )}
                     onClick={() => setTime(slot)}
                   >
                     {slot}
-                  </Button>
+                  </button>
                 ))}
               </div>
             )}
           </div>
 
           {/* Botões de ação */}
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)} size="sm">
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} size="sm">
               Salvar
             </Button>
           </div>
