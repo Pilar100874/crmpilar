@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Filter, RefreshCw, GripVertical } from "lucide-react";
-import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks } from "date-fns";
+import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import {
@@ -192,6 +192,57 @@ export default function Calendario() {
       },
     })
   );
+
+  // Função para obter o próximo dia útil
+  const getNextBusinessDay = (date: Date): Date => {
+    let nextDay = addDays(date, 1);
+    
+    // Se cair no fim de semana, avançar para segunda-feira
+    while (isWeekend(nextDay)) {
+      nextDay = addDays(nextDay, 1);
+    }
+    
+    return nextDay;
+  };
+
+  // Mover tarefas não realizadas para o próximo dia útil
+  const moveOverdueTasks = () => {
+    const now = new Date();
+    const today = startOfDay(now);
+    let movedCount = 0;
+
+    const updatedTasks = tasks.map(task => {
+      // Verificar se a tarefa está pendente e a data já passou
+      if (task.status === "pending" && startOfDay(task.date) < today) {
+        movedCount++;
+        return {
+          ...task,
+          date: getNextBusinessDay(now),
+        };
+      }
+      return task;
+    });
+
+    if (movedCount > 0) {
+      setTasks(updatedTasks);
+      const nextDay = getNextBusinessDay(now);
+      toast.info(
+        `${movedCount} tarefa${movedCount > 1 ? 's' : ''} não realizada${movedCount > 1 ? 's' : ''} movida${movedCount > 1 ? 's' : ''} para ${format(nextDay, "dd/MM/yyyy", { locale: ptBR })}`
+      );
+    }
+  };
+
+  // Verificar tarefas atrasadas ao carregar e a cada hora
+  useEffect(() => {
+    moveOverdueTasks();
+    
+    // Verificar a cada hora
+    const interval = setInterval(() => {
+      moveOverdueTasks();
+    }, 3600000); // 1 hora
+
+    return () => clearInterval(interval);
+  }, [tasks]);
 
   // Navegação
   const handlePrevious = () => {
