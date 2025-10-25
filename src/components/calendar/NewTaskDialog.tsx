@@ -44,14 +44,16 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showContactList, setShowContactList] = useState(false);
   const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
-  const [time, setTime] = useState("");
+  const [dateInput, setDateInput] = useState("");
+  const [hours, setHours] = useState("");
+  const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [taskType, setTaskType] = useState("accompany");
   const [assignedTo, setAssignedTo] = useState("me");
   const [observation, setObservation] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [timePickerOpen, setTimePickerOpen] = useState(false);
-  const [quickDateOpen, setQuickDateOpen] = useState(false);
+  const [hourPickerOpen, setHourPickerOpen] = useState(false);
+  const [minutePickerOpen, setMinutePickerOpen] = useState(false);
 
   // Carregar contatos do localStorage
   useEffect(() => {
@@ -71,11 +73,15 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       setSelectedContact(null);
       setShowContactList(false);
       setDate(initialDate || new Date());
-      setTime("");
+      setDateInput(format(initialDate || new Date(), "dd/MM/yyyy"));
+      setHours("");
+      setMinutes("");
       setIsAllDay(false);
       setTaskType("accompany");
       setAssignedTo("me");
       setObservation("");
+    } else {
+      setDateInput(format(initialDate || new Date(), "dd/MM/yyyy"));
     }
   }, [open, initialDate]);
 
@@ -111,31 +117,51 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     if (days === -1) { // 15 minutos
       newDate = addMinutes(now, 15);
       setDate(newDate);
-      setTime(format(newDate, "HH:mm"));
+      setDateInput(format(newDate, "dd/MM/yyyy"));
+      setHours(format(newDate, "HH"));
+      setMinutes(format(newDate, "mm"));
       setIsAllDay(false);
     } else if (days === -2) { // 30 minutos
       newDate = addMinutes(now, 30);
       setDate(newDate);
-      setTime(format(newDate, "HH:mm"));
+      setDateInput(format(newDate, "dd/MM/yyyy"));
+      setHours(format(newDate, "HH"));
+      setMinutes(format(newDate, "mm"));
       setIsAllDay(false);
     } else if (days === -3) { // 1 hora
       newDate = addMinutes(now, 60);
       setDate(newDate);
-      setTime(format(newDate, "HH:mm"));
+      setDateInput(format(newDate, "dd/MM/yyyy"));
+      setHours(format(newDate, "HH"));
+      setMinutes(format(newDate, "mm"));
       setIsAllDay(false);
     } else {
       newDate = addDays(now, days);
       setDate(newDate);
+      setDateInput(format(newDate, "dd/MM/yyyy"));
     }
     
-    setQuickDateOpen(false);
+    setDatePickerOpen(false);
+  };
+
+  const handleDateInputChange = (value: string) => {
+    setDateInput(value);
+    // Tentar fazer parse da data no formato dd/MM/yyyy
+    if (value.length === 10) {
+      try {
+        const parsed = parse(value, "dd/MM/yyyy", new Date());
+        if (!isNaN(parsed.getTime())) {
+          setDate(parsed);
+        }
+      } catch (e) {
+        // Ignorar erro de parse
+      }
+    }
   };
 
   // Gerar horários
-  const timeSlots = Array.from({ length: 24 }, (_, i) => {
-    const hour = i.toString().padStart(2, '0');
-    return `${hour}:00`;
-  });
+  const hourSlots = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+  const minuteSlots = ['00', '15', '30', '45'];
 
   const handleSave = () => {
     if (!selectedContact) {
@@ -148,8 +174,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       return;
     }
 
-    if (!isAllDay && !time) {
-      toast.error("Selecione um horário");
+    if (!isAllDay && (!hours || !minutes)) {
+      toast.error("Selecione hora e minutos");
       return;
     }
 
@@ -157,9 +183,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     const now = new Date();
     const taskDate = new Date(date);
     
-    if (!isAllDay && time) {
-      const [hours, minutes] = time.split(':').map(Number);
-      taskDate.setHours(hours, minutes, 0, 0);
+    if (!isAllDay) {
+      taskDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     }
 
     if (taskDate < now && !isAllDay) {
@@ -167,11 +192,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       return;
     }
 
+    const timeString = isAllDay ? "" : `${hours}:${minutes}`;
+
     onSave({
       contactId: selectedContact.id,
       contactName: selectedContact.name,
       date,
-      time: isAllDay ? "" : time,
+      time: timeString,
       type: taskType,
       observation,
     });
@@ -231,22 +258,21 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
           </div>
 
           {/* Grid de data e hora */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Seletor de data com opções rápidas */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* Campo de data editável */}
             <div className="space-y-2">
               <Label className="text-sm">Data</Label>
               <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Selecione"}
-                  </Button>
+                  <div className="relative">
+                    <Input
+                      placeholder="dd/mm/aaaa"
+                      value={dateInput}
+                      onChange={(e) => handleDateInputChange(e.target.value)}
+                      className="pr-8"
+                    />
+                    <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
+                  </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 flex" align="start">
                   {/* Opções rápidas */}
@@ -281,6 +307,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                     onSelect={(newDate) => {
                       if (newDate) {
                         setDate(newDate);
+                        setDateInput(format(newDate, "dd/MM/yyyy"));
                         setDatePickerOpen(false);
                       }
                     }}
@@ -294,40 +321,79 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
             {/* Seletor de hora */}
             <div className="space-y-2">
               <Label className="text-sm">Hora</Label>
-              <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen}>
+              <Popover open={hourPickerOpen} onOpenChange={setHourPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !time && !isAllDay && "text-muted-foreground"
+                      !hours && !isAllDay && "text-muted-foreground"
                     )}
                     disabled={isAllDay}
                   >
                     <Clock className="mr-2 h-4 w-4" />
-                    {isAllDay ? "Dia todo" : time || "Selecione"}
+                    {isAllDay ? "Dia" : hours || "HH"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0" align="start">
-                  <ScrollArea className="h-[300px]">
+                <PopoverContent className="w-[120px] p-0" align="start">
+                  <ScrollArea className="h-[240px]">
                     <div className="p-2 space-y-1">
-                      {timeSlots.map((slot) => (
+                      {hourSlots.map((hour) => (
                         <button
-                          key={slot}
+                          key={hour}
                           className={cn(
                             "w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
-                            time === slot && "bg-accent font-medium"
+                            hours === hour && "bg-accent font-medium"
                           )}
                           onClick={() => {
-                            setTime(slot);
-                            setTimePickerOpen(false);
+                            setHours(hour);
+                            setHourPickerOpen(false);
                           }}
                         >
-                          {slot}
+                          {hour}
                         </button>
                       ))}
                     </div>
                   </ScrollArea>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Seletor de minutos */}
+            <div className="space-y-2">
+              <Label className="text-sm">Minutos</Label>
+              <Popover open={minutePickerOpen} onOpenChange={setMinutePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !minutes && !isAllDay && "text-muted-foreground"
+                    )}
+                    disabled={isAllDay}
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    {isAllDay ? "todo" : minutes || "MM"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[100px] p-0" align="start">
+                  <div className="p-2 space-y-1">
+                    {minuteSlots.map((minute) => (
+                      <button
+                        key={minute}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
+                          minutes === minute && "bg-accent font-medium"
+                        )}
+                        onClick={() => {
+                          setMinutes(minute);
+                          setMinutePickerOpen(false);
+                        }}
+                      >
+                        {minute}
+                      </button>
+                    ))}
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>
@@ -340,7 +406,10 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
               checked={isAllDay}
               onCheckedChange={(checked) => {
                 setIsAllDay(checked as boolean);
-                if (checked) setTime("");
+                if (checked) {
+                  setHours("");
+                  setMinutes("");
+                }
               }}
             />
             <label htmlFor="allday" className="text-sm cursor-pointer">
