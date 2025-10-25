@@ -116,35 +116,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     
     if (days === -1) { // 15 minutos
       newDate = addMinutes(now, 15);
-      setDate(newDate);
-      setDateInput(format(newDate, "dd/MM/yyyy"));
-      const hour = format(newDate, "HH");
-      const minute = format(newDate, "mm");
-      // Arredondar minutos para múltiplo de 15
-      const roundedMinute = Math.floor(parseInt(minute) / 15) * 15;
-      setHours(hour);
-      setMinutes(roundedMinute.toString().padStart(2, '0'));
-      setIsAllDay(false);
+      setFromInstant(newDate);
     } else if (days === -2) { // 30 minutos
       newDate = addMinutes(now, 30);
-      setDate(newDate);
-      setDateInput(format(newDate, "dd/MM/yyyy"));
-      const hour = format(newDate, "HH");
-      const minute = format(newDate, "mm");
-      const roundedMinute = Math.floor(parseInt(minute) / 15) * 15;
-      setHours(hour);
-      setMinutes(roundedMinute.toString().padStart(2, '0'));
-      setIsAllDay(false);
+      setFromInstant(newDate);
     } else if (days === -3) { // 1 hora
       newDate = addMinutes(now, 60);
-      setDate(newDate);
-      setDateInput(format(newDate, "dd/MM/yyyy"));
-      const hour = format(newDate, "HH");
-      const minute = format(newDate, "mm");
-      const roundedMinute = Math.floor(parseInt(minute) / 15) * 15;
-      setHours(hour);
-      setMinutes(roundedMinute.toString().padStart(2, '0'));
-      setIsAllDay(false);
+      setFromInstant(newDate);
     } else {
       newDate = addDays(now, days);
       setDate(newDate);
@@ -152,6 +130,22 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     }
     
     setDatePickerOpen(false);
+  };
+
+  // Ajusta data e preenche hora/min para o múltiplo de 15 mais próximo
+  const setFromInstant = (d: Date) => {
+    setDate(d);
+    setDateInput(format(d, "dd/MM/yyyy"));
+    let h = parseInt(format(d, "HH"));
+    let m = parseInt(format(d, "mm"));
+    let rounded = Math.round(m / 15) * 15; // aproxima ao mais próximo de 15
+    if (rounded === 60) {
+      h = (h + 1) % 24;
+      rounded = 0;
+    }
+    setHours(h.toString().padStart(2, '0'));
+    setMinutes(rounded.toString().padStart(2, '0'));
+    setIsAllDay(false);
   };
 
   const applyDateMask = (value: string) => {
@@ -388,8 +382,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                   </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-[120px] p-0 bg-background z-50" align="start">
-                  <ScrollArea className="h-[280px]">
-                    <div className="p-2 space-y-1">
+                  <ScrollArea className="h-[320px]">
+                    <div className="p-2 grid grid-cols-2 gap-1">
                       {hourSlots.map((hour) => (
                         <button
                           key={hour}
