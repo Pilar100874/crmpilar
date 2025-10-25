@@ -117,31 +117,16 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
 
     if (days === -1) {
       newDate = addMinutes(now, 15);
-      setFromInstant(newDate);
     } else if (days === -2) {
       newDate = addMinutes(now, 30);
-      setFromInstant(newDate);
     } else if (days === -3) {
       newDate = addMinutes(now, 60);
-      setFromInstant(newDate);
-    } else if (days === 0) {
-      // Hoje: data de hoje com sugestão de +60 minutos
-      newDate = addMinutes(now, 60);
-      setFromInstant(newDate);
-    } else if (days === 1 || days === 7) {
-      // Amanhã e em 7 dias: define a data e exige que usuário preencha hora e minuto
-      const d = addDays(now, days);
-      setDate(d);
-      setDateInput(format(d, "dd/MM/yyyy"));
-      setHours("");
-      setMinutes("");
-      setIsAllDay(false);
     } else {
-      // Demais (ex.: 30 dias, 1 ano): mantém sugestão de horário atual arredondado
       newDate = addDays(now, days);
-      setFromInstant(newDate);
     }
 
+    console.log("[NewTaskDialog] Quick option selected:", { days, newDate });
+    setFromInstant(newDate);
     setSelectedQuickOption(optionId ?? null);
     setDatePickerOpen(false);
     setHourPickerOpen(false);
