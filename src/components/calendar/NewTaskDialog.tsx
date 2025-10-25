@@ -317,28 +317,28 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                     <ScrollArea className="h-[300px] w-[140px]">
                       <div className="p-2 space-y-1">
                         {[
-                          { label: "Após 15 min", days: -1 },
-                          { label: "Após 30 min", days: -2 },
-                          { label: "Em 1 hora", days: -3 },
-                          { label: "Hoje", days: 0 },
-                          { label: "Amanhã", days: 1 },
-                          { label: "Em 7 dias", days: 7 },
-                          { label: "Em 30 dias", days: 30 },
-                          { label: "Em 1 ano", days: 365 },
-                        ].map(({ label, days }) => (
+                          { id: "15m", label: "Após 15 min", days: -1 },
+                          { id: "30m", label: "Após 30 min", days: -2 },
+                          { id: "1h", label: "Em 1 hora", days: -3 },
+                          { id: "today", label: "Hoje", days: 0 },
+                          { id: "tomorrow", label: "Amanhã", days: 1 },
+                          { id: "7d", label: "Em 7 dias", days: 7 },
+                          { id: "30d", label: "Em 30 dias", days: 30 },
+                          { id: "1y", label: "Em 1 ano", days: 365 },
+                        ].map(({ id, label, days }) => (
                           <button
-                            key={label}
+                            key={id}
                             type="button"
                             role="option"
                             className={cn(
                               "w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors",
                               "hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50",
-                              selectedQuickOption === `${label}` && "bg-accent text-accent-foreground font-medium"
+                              selectedQuickOption === id && "bg-accent text-accent-foreground font-medium"
                             )}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleQuickDate(days, `${label}`);
+                              handleQuickDate(days, id);
                             }}
                           >
                             {label}
