@@ -731,14 +731,104 @@ export default function Contatos() {
   const handleSaveInlineEdit = () => {
     if (!editingCell) return;
 
+    const trimmedValue = editingValue.trim();
+    
+    // Validar campo antes de salvar
+    if (editingCell.field === 'email') {
+      if (trimmedValue && !validateEmail(trimmedValue)) {
+        toast.error("E-mail inválido");
+        return;
+      }
+    }
+    
+    if (editingCell.field === 'phone') {
+      if (trimmedValue && !validatePhone(trimmedValue)) {
+        toast.error("Telefone inválido");
+        return;
+      }
+      
+      // Verificar duplicação de WhatsApp
+      const duplicatePhone = contacts.find(c => 
+        c.id !== editingCell.contactId && 
+        c.active &&
+        c.phone && 
+        c.phone.replace(/\D/g, '') === trimmedValue.replace(/\D/g, '')
+      );
+      
+      if (duplicatePhone) {
+        toast.error("WhatsApp já cadastrado");
+        return;
+      }
+    }
+    
+    if (editingCell.field === 'cpf_cnpj') {
+      if (trimmedValue) {
+        const cleanValue = trimmedValue.replace(/\D/g, '');
+        if (cleanValue.length === 11) {
+          if (!validateCPF(trimmedValue)) {
+            toast.error("CPF inválido");
+            return;
+          }
+        } else if (cleanValue.length === 14) {
+          if (!validateCNPJ(trimmedValue)) {
+            toast.error("CNPJ inválido");
+            return;
+          }
+        } else {
+          toast.error("CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos");
+          return;
+        }
+        
+        // Verificar duplicação de CPF/CNPJ
+        const duplicateCpfCnpj = contacts.find(c => 
+          c.id !== editingCell.contactId && 
+          c.active &&
+          c.customFields?.cpf_cnpj && 
+          c.customFields.cpf_cnpj.replace(/\D/g, '') === cleanValue
+        );
+        
+        if (duplicateCpfCnpj) {
+          toast.error("CPF/CNPJ já cadastrado");
+          return;
+        }
+      }
+    }
+    
+    if (editingCell.field === 'cep') {
+      if (trimmedValue && !validateCEP(trimmedValue)) {
+        toast.error("CEP inválido");
+        return;
+      }
+    }
+    
+    // Validar campos obrigatórios
+    const requiredFields = ['name', 'phone', 'email'];
+    if (requiredFields.includes(editingCell.field) && !trimmedValue) {
+      toast.error("Este campo é obrigatório");
+      return;
+    }
+
     const updatedContacts = contacts.map(contact => {
       if (contact.id === editingCell.contactId) {
-        return {
-          ...contact,
-          [editingCell.field]: editingValue,
-          modifiedAt: new Date().toISOString(),
-          modifiedBy: "Usuário Atual",
-        };
+        // Atualizar campo principal ou customField
+        if (['name', 'company', 'phone', 'email', 'position'].includes(editingCell.field)) {
+          return {
+            ...contact,
+            [editingCell.field]: trimmedValue,
+            modifiedAt: new Date().toISOString(),
+            modifiedBy: "Usuário Atual",
+          };
+        } else {
+          return {
+            ...contact,
+            customFields: {
+              ...contact.customFields,
+              [editingCell.field]: trimmedValue,
+            },
+            modifiedAt: new Date().toISOString(),
+            modifiedBy: "Usuário Atual",
+          };
+        }
       }
       return contact;
     });
