@@ -685,9 +685,22 @@ export default function Contatos() {
               className="gap-2"
               onClick={() => setShowSearchPanel(true)}
             >
-              <Search className="w-4 h-4" />
-              Busca e filtro
+              <Filter className="w-4 h-4" />
+              Filtros avançados
             </Button>
+            
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome, CPF/CNPJ, empresa, fantasia, WhatsApp ou e-mail..."
+                  value={searchFilters.unifiedSearch}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
+                  className="pl-10 h-9"
+                />
+              </div>
+            </div>
+            
             <div className="ml-auto text-sm text-muted-foreground">
               {filteredContacts.length} elementos
             </div>
@@ -943,24 +956,9 @@ export default function Contatos() {
               {/* Main Content - Search Fields */}
               <div className="flex-1 overflow-y-auto">
                 <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Left Column */}
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">
-                          Busca Global
-                        </Label>
-                        <Input
-                          placeholder="Buscar por nome, CPF/CNPJ, empresa, fantasia, WhatsApp ou e-mail..."
-                          value={searchFilters.unifiedSearch}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
-                          className="h-10"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Digite para buscar em todos os campos principais
-                        </p>
-                      </div>
-
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Left Column */}
+                      <div className="space-y-4">
                       <div>
                         <Button
                           variant="outline"
