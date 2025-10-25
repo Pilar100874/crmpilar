@@ -311,6 +311,7 @@ export default function Layout({ children }: LayoutProps) {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   const isMenuOpen = openSubmenuId === item.id;
+                  const shouldHighlight = (isSubItemActive || isMenuOpen) && openSubmenuId === item.id;
                   
                   return (
                     <div key={item.id} className="relative">
@@ -318,19 +319,19 @@ export default function Layout({ children }: LayoutProps) {
                         type="button"
                         onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
                         className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 group relative ${
-                          isSubItemActive || isMenuOpen
+                          shouldHighlight
                             ? "bg-sidebar-accent text-primary"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                         }`}
                       >
-                        {(isSubItemActive || isMenuOpen) && (
+                        {shouldHighlight && (
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
                         )}
                         <item.icon className={`w-6 h-6 ${
-                          isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`} />
                         <span className={`text-[10px] font-medium text-center leading-tight ${
-                          isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`}>
                           {item.title}
                         </span>
@@ -390,9 +391,8 @@ export default function Layout({ children }: LayoutProps) {
                   <NavLink
                     key={item.title}
                     to={item.url!}
-                    onClick={() => setOpenSubmenuId(null)}
                     className={({ isActive }) => {
-                      const shouldHighlight = isActive && !openSubmenuId;
+                      const shouldHighlight = isActive;
                       return `flex flex-col items-center justify-center gap-1 py-3 px-2 group relative ${
                         shouldHighlight
                           ? "bg-sidebar-accent text-primary"
@@ -401,7 +401,7 @@ export default function Layout({ children }: LayoutProps) {
                     }}
                   >
                     {({ isActive }) => {
-                      const shouldHighlight = isActive && !openSubmenuId;
+                      const shouldHighlight = isActive;
                       return (
                         <>
                           {shouldHighlight && (
