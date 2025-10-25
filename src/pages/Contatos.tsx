@@ -350,158 +350,202 @@ export default function Contatos() {
 
         {/* Search Panel */}
         <Sheet open={showSearchPanel} onOpenChange={setShowSearchPanel}>
-          <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Busca e filtro</SheetTitle>
-            </SheetHeader>
-
-            <div className="mt-6 space-y-4">
-              <div>
-                <Label htmlFor="search-name">Nome</Label>
-                <Input
-                  id="search-name"
-                  placeholder="Nome"
-                  value={searchFilters.name}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, name: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="search-date">Data</Label>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  A qualquer hora
-                </Button>
-              </div>
-
-              <div>
-                <Label htmlFor="search-funnel">Funil de vendas, etapas</Label>
-                <Input
-                  id="search-funnel"
-                  placeholder="Funil de vendas, etapas"
-                  value={searchFilters.funnel}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, funnel: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="search-responsible">Usuário responsável</Label>
-                <Input
-                  id="search-responsible"
-                  placeholder="Usuário responsável"
-                  value={searchFilters.responsible}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, responsible: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="search-created">Criado por</Label>
-                <Input
-                  id="search-created"
-                  placeholder="Criado por"
-                  value={searchFilters.createdBy}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, createdBy: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="search-modified">Modificado por</Label>
-                <Input
-                  id="search-modified"
-                  placeholder="Modificado por"
-                  value={searchFilters.modifiedBy}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, modifiedBy: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="search-tasks">Tarefas</Label>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  Tarefas: Todos valores
-                </Button>
-              </div>
-
-              <div>
-                <Label htmlFor="search-phone">Telefone</Label>
-                <Input
-                  id="search-phone"
-                  placeholder="Telefone"
-                  value={searchFilters.phone}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, phone: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="search-email">E-mail</Label>
-                <Input
-                  id="search-email"
-                  placeholder="E-mail"
-                  value={searchFilters.email}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, email: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="search-position">Posição</Label>
-                <Input
-                  id="search-position"
-                  placeholder="Posição"
-                  value={searchFilters.position}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, position: e.target.value })}
-                />
-              </div>
-
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <Label>TAGS</Label>
-                  <Button variant="link" className="h-auto p-0 text-primary">
-                    Gerenciar
-                  </Button>
+          <SheetContent side="right" className="w-full sm:max-w-[900px] p-0 overflow-hidden">
+            <div className="flex h-full">
+              {/* Left Sidebar - Filter Lists */}
+              <div className="w-64 border-r border-border bg-muted/30 overflow-y-auto">
+                <div className="p-4">
+                  <div className="mb-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left font-medium text-primary bg-primary/10 hover:bg-primary/20"
+                    >
+                      Lista completa
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                    >
+                      Contatos sem tarefas atribuí...
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                    >
+                      Contatos com tarefas atrasa...
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                    >
+                      Sem leads vinculado
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
+                    >
+                      Exluído
+                    </Button>
+                  </div>
                 </div>
-                <Input
-                  placeholder="Localizar tags"
-                  value={searchFilters.tags}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, tags: e.target.value })}
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  Você não tem tags conectadas
-                </p>
               </div>
 
-              <div className="flex gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setSearchFilters({
-                      name: "",
-                      dateFilter: "",
-                      funnel: "",
-                      responsible: "",
-                      createdBy: "",
-                      modifiedBy: "",
-                      tasks: "",
-                      phone: "",
-                      email: "",
-                      position: "",
-                      tags: "",
-                    });
-                  }}
-                >
-                  Limpar filtros
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={() => setShowSearchPanel(false)}
-                >
-                  Aplicar
-                </Button>
+              {/* Main Content - Search Fields */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Left Column */}
+                    <div className="space-y-4">
+                      <div>
+                        <Input
+                          placeholder="Nome"
+                          value={searchFilters.name}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, name: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal h-10 text-muted-foreground"
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          A qualquer hora
+                        </Button>
+                      </div>
+
+                      <div>
+                        <Input
+                          placeholder="Funil de vendas, etapas"
+                          value={searchFilters.funnel}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, funnel: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div>
+                        <Input
+                          placeholder="Usuário responsável"
+                          value={searchFilters.responsible}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, responsible: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div>
+                        <Input
+                          placeholder="Criado por"
+                          value={searchFilters.createdBy}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, createdBy: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div>
+                        <Input
+                          placeholder="Modificado por"
+                          value={searchFilters.modifiedBy}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, modifiedBy: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal h-10 text-muted-foreground"
+                        >
+                          Tarefas: Todos valores
+                        </Button>
+                      </div>
+
+                      <div>
+                        <Input
+                          placeholder="Telefone"
+                          value={searchFilters.phone}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, phone: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div>
+                        <Input
+                          placeholder="E-mail"
+                          value={searchFilters.email}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, email: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+
+                      <div>
+                        <Input
+                          placeholder="Posição"
+                          value={searchFilters.position}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, position: e.target.value })}
+                          className="h-10"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right Column - Tags */}
+                    <div className="space-y-4">
+                      <div className="border border-border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-medium">TAGS</span>
+                          <Button variant="link" className="h-auto p-0 text-primary text-sm">
+                            Gerenciar
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Localizar tags"
+                          value={searchFilters.tags}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, tags: e.target.value })}
+                          className="h-10 mb-3"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Você não tem tags conectadas
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-6 pt-6 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchFilters({
+                          name: "",
+                          dateFilter: "",
+                          funnel: "",
+                          responsible: "",
+                          createdBy: "",
+                          modifiedBy: "",
+                          tasks: "",
+                          phone: "",
+                          email: "",
+                          position: "",
+                          tags: "",
+                        });
+                      }}
+                    >
+                      Limpar filtros
+                    </Button>
+                    <Button
+                      onClick={() => setShowSearchPanel(false)}
+                    >
+                      Aplicar
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </SheetContent>
