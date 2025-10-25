@@ -260,7 +260,7 @@ export default function Email() {
         <Card className="max-w-2xl w-full p-8">
           <Alert>
             <AlertCircle className="h-5 w-5" />
-            <AlertTitle className="text-xl mb-2">
+            <AlertTitle className="text-lg mb-2">
               {!hasEmailConfig && !hasResendConfig 
                 ? "Configurações de Email Necessárias" 
                 : !hasEmailConfig 
@@ -345,7 +345,7 @@ export default function Email() {
                 title="E-mail"
                 onOpenSubmenu={() => openSubmenu("Email")}
               />
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-lg font-semibold">
                 {folders.find(f => f.id === selectedFolder)?.name}
               </h2>
               

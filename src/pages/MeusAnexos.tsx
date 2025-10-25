@@ -159,7 +159,7 @@ export default function MeusAnexos() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Meus Anexos Rápidos</h1>
+        <h1 className="text-lg font-bold mb-6">Meus Anexos Rápidos</h1>
 
         <Card className="p-4 mb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -228,7 +228,7 @@ export default function MeusAnexos() {
 
         {(globalLinks.length > 0 || globalFiles.length > 0) && (
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">Anexos Globais</h2>
+            <h2 className="text-lg font-semibold mb-3">Anexos Globais</h2>
             <Tabs defaultValue="links" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="links">
@@ -287,7 +287,7 @@ export default function MeusAnexos() {
         )}
 
         <div>
-          <h2 className="text-xl font-semibold mb-3">Meus Anexos</h2>
+          <h2 className="text-lg font-semibold mb-3">Meus Anexos</h2>
           <Tabs defaultValue="links" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="links">

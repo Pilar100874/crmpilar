@@ -148,7 +148,7 @@ export default function MeusTextosProntos() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Meus Textos Prontos</h1>
+        <h1 className="text-lg font-bold mb-6">Meus Textos Prontos</h1>
 
         <Card className="p-4 mb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -194,7 +194,7 @@ export default function MeusTextosProntos() {
 
         {globalReplies.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">Textos Globais</h2>
+            <h2 className="text-lg font-semibold mb-3">Textos Globais</h2>
             <div className="space-y-2">
               {globalReplies.map((reply) => (
                 <Card key={reply.id} className="p-4 bg-muted/50">
@@ -220,7 +220,7 @@ export default function MeusTextosProntos() {
         )}
 
         <div>
-          <h2 className="text-xl font-semibold mb-3">Meus Textos</h2>
+          <h2 className="text-lg font-semibold mb-3">Meus Textos</h2>
           <div className="space-y-2">
             {myReplies.map((reply) => (
               <Card key={reply.id} className="p-4">

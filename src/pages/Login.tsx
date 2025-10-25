@@ -458,7 +458,7 @@ export default function Login() {
               <MessageSquare className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-lg font-bold text-white">
             Pilar BOT
           </h1>
           <p className="text-white/70 mt-2">

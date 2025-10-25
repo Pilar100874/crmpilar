@@ -578,7 +578,7 @@ export default function ChatWebhook() {
         {/* Header */}
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-foreground">TESTE DE WEBHOOKS</h2>
+            <h2 className="text-lg font-bold text-foreground">TESTE DE WEBHOOKS</h2>
             <p className="text-sm text-muted-foreground">
               Configure e teste suas integrações
             </p>
@@ -617,7 +617,7 @@ export default function ChatWebhook() {
                   <div className="bg-gradient-to-br from-primary/20 to-primary-glow/20 p-6 rounded-full mb-4">
                     <Webhook className="h-12 w-12 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Bem-vindo ao Chat de Webhooks</h3>
+                  <h3 className="text-lg font-semibold mb-2">Bem-vindo ao Chat de Webhooks</h3>
                   <p className="text-muted-foreground max-w-md">
                     Selecione um webhook e comece a testar suas integrações. Você pode enviar texto, áudio, imagens,
                     arquivos e variáveis customizadas.

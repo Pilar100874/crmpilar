@@ -17,7 +17,7 @@ export default function BotCreate() {
               title="Bot"
               onOpenSubmenu={() => openSubmenu("Bot Test")}
             />
-            <h1 className="text-3xl font-bold text-foreground">Criar Bot</h1>
+            <h1 className="text-lg font-bold text-foreground">Criar Bot</h1>
           </div>
           <p className="text-muted-foreground">
             Crie e configure novos bots para automação de atendimento

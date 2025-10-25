@@ -719,7 +719,7 @@ function BotBuilderContent() {
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-6">
             <div>
-              <h2 className="text-2xl font-bold text-foreground">CRIAR BOT</h2>
+              <h2 className="text-lg font-bold text-foreground">CRIAR BOT</h2>
               <p className="text-sm text-muted-foreground">
                 Arraste blocos para criar seu fluxo
               </p>

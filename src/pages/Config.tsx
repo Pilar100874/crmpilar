@@ -205,7 +205,7 @@ export default function Config() {
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-foreground">Configurações</h1>
+          <h1 className="text-lg font-bold mb-2 text-foreground">Configurações</h1>
           <p className="text-muted-foreground">
             Gerencie as configurações da plataforma
           </p>

@@ -119,7 +119,7 @@ export default function BotTest() {
                   title="Bot"
                   onOpenSubmenu={() => openSubmenu("Bot Test")}
                 />
-                <h2 className="text-2xl font-bold text-foreground">TESTE DO BOT</h2>
+                <h2 className="text-lg font-bold text-foreground">TESTE DO BOT</h2>
               </div>
               <p className="text-sm text-muted-foreground">
                 {selectedBotName ? `Testando: ${selectedBotName}` : "Selecione um bot para testar"}
@@ -220,7 +220,7 @@ export default function BotTest() {
             <TabsContent value="twilio" className="flex-1 m-0 overflow-auto">
               <div className="max-w-3xl mx-auto p-4">
                 <div className="mb-4 text-center">
-                  <h3 className="text-xl font-bold text-foreground mb-2">
+                  <h3 className="text-lg font-bold text-foreground mb-2">
                     ⚡ Teste Grátis com Twilio Sandbox
                   </h3>
                   <p className="text-muted-foreground text-sm">
@@ -234,7 +234,7 @@ export default function BotTest() {
             <TabsContent value="whatsapp" className="flex-1 m-0 overflow-auto">
               <div className="max-w-3xl mx-auto p-4">
                 <div className="mb-4 text-center">
-                  <h3 className="text-xl font-bold text-foreground mb-2">
+                  <h3 className="text-lg font-bold text-foreground mb-2">
                     📱 WhatsApp Business API Oficial
                   </h3>
                   <p className="text-muted-foreground text-sm">

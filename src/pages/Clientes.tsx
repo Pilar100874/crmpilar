@@ -15,7 +15,7 @@ export default function Clientes() {
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-foreground">Clientes</h1>
+            <h1 className="text-lg font-bold mb-2 text-foreground">Clientes</h1>
             <p className="text-muted-foreground">
               Gerencie sua base de clientes
             </p>
