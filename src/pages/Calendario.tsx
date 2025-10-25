@@ -280,6 +280,26 @@ export default function Calendario() {
     const overData = over.data.current;
     if (overData?.date) {
       const newDate = overData.date as Date;
+      const now = new Date();
+      
+      // Verificar se a nova data é anterior à data atual
+      if (newDate < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+        toast.error("Não é possível mover tarefa para data passada");
+        return;
+      }
+      
+      // Se a tarefa tem horário e a nova data é hoje, verificar se o horário já passou
+      if (task.time && isSameDay(newDate, now)) {
+        const [hours, minutes] = task.time.split(':').map(Number);
+        const taskDateTime = new Date(newDate);
+        taskDateTime.setHours(hours, minutes, 0, 0);
+        
+        if (taskDateTime < now) {
+          toast.error("Não é possível mover tarefa para horário passado");
+          return;
+        }
+      }
+      
       setTasks(tasks.map(t =>
         t.id === taskId ? { ...t, date: newDate } : t
       ));
