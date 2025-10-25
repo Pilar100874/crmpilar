@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Menu, Filter, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Filter, RefreshCw } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -120,8 +120,8 @@ export default function Calendario() {
   const renderMonthView = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { locale: ptBR });
-    const endDate = endOfWeek(monthEnd, { locale: ptBR });
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
     const dateFormat = "EEE";
     const days = [];
@@ -204,7 +204,7 @@ export default function Calendario() {
 
   // Renderizar visualização de semana
   const renderWeekView = () => {
-    const startDate = startOfWeek(currentDate, { locale: ptBR });
+    const startDate = startOfWeek(currentDate, { weekStartsOn: 1 });
     const days = [];
 
     for (let i = 0; i < 7; i++) {
@@ -394,9 +394,7 @@ export default function Calendario() {
       <div className="border-b border-border bg-card">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Menu className="w-5 h-5" />
-            </Button>
+            <h1 className="text-2xl font-bold text-foreground">CALENDÁRIO</h1>
 
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
               <TabsList>
