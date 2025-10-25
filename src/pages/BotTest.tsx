@@ -10,8 +10,11 @@ import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { WhatsAppQRCode } from "@/components/WhatsAppQRCode";
 import { TwilioSandbox } from "@/components/TwilioSandbox";
 import { Node, Edge } from "@xyflow/react";
+import { SubMenuHeader } from "@/components/SubMenuHeader";
+import { useLayout } from "@/contexts/LayoutContext";
 
 export default function BotTest() {
+  const { openSubmenu } = useLayout();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [savedBots, setSavedBots] = useState<any[]>([]);
@@ -111,7 +114,14 @@ export default function BotTest() {
         <div className="p-4 border-b border-border bg-white shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold text-foreground">TESTE DO BOT</h2>
+              <div className="flex items-center gap-3 mb-2">
+                <SubMenuHeader 
+                  title="Bot"
+                  onOpenSubmenu={() => openSubmenu("Bot Test")}
+                />
+                <span className="text-muted-foreground">→</span>
+                <h2 className="text-2xl font-bold text-foreground">TESTE DO BOT</h2>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {selectedBotName ? `Testando: ${selectedBotName}` : "Selecione um bot para testar"}
               </p>

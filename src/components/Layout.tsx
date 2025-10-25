@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { LayoutContext } from "@/contexts/LayoutContext";
 
 interface MenuPermissions {
   view: boolean;
@@ -274,8 +275,9 @@ export default function Layout({ children }: LayoutProps) {
   });
 
   return (
-    <SidebarProvider defaultOpen={true} open={true}>
-      <div className="min-h-screen flex w-full bg-background">
+    <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
+      <SidebarProvider defaultOpen={true} open={true}>
+        <div className="min-h-screen flex w-full bg-background">
         <div className="w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col">
           {/* Logo no topo */}
           <div className="flex flex-col items-center py-4 border-b border-sidebar-border">
@@ -464,5 +466,6 @@ export default function Layout({ children }: LayoutProps) {
         }}
       />
     </SidebarProvider>
+    </LayoutContext.Provider>
   );
 }

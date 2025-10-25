@@ -2,14 +2,24 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Workflow, ArrowRight } from "lucide-react";
+import { SubMenuHeader } from "@/components/SubMenuHeader";
+import { useLayout } from "@/contexts/LayoutContext";
 
 export default function BotCreate() {
   const navigate = useNavigate();
+  const { openSubmenu } = useLayout();
 
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-foreground">Criar Bot</h1>
+          <div className="flex items-center gap-3 mb-3">
+            <SubMenuHeader 
+              title="Bot"
+              onOpenSubmenu={() => openSubmenu("Bot Test")}
+            />
+            <span className="text-muted-foreground">→</span>
+            <h1 className="text-3xl font-bold text-foreground">Criar Bot</h1>
+          </div>
           <p className="text-muted-foreground">
             Crie e configure novos bots para automação de atendimento
           </p>

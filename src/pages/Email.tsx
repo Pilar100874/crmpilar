@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
+import { SubMenuHeader } from "@/components/SubMenuHeader";
+import { useLayout } from "@/contexts/LayoutContext";
 
 interface Email {
   id: string;
@@ -41,6 +43,7 @@ interface Email {
 export default function Email() {
   const navigate = useNavigate();
   const { folder } = useParams<{ folder?: string }>();
+  const { openSubmenu } = useLayout();
   const [selectedFolder, setSelectedFolder] = useState<"inbox" | "sent" | "trash" | "archive">(
     (folder as "inbox" | "sent" | "trash" | "archive") || "inbox"
   );
@@ -338,6 +341,11 @@ export default function Email() {
         <div className="border-b bg-card">
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <SubMenuHeader 
+                title="E-mail"
+                onOpenSubmenu={() => openSubmenu("Email")}
+              />
+              <span className="text-muted-foreground">→</span>
               <h2 className="text-xl font-semibold">
                 {folders.find(f => f.id === selectedFolder)?.name}
               </h2>
