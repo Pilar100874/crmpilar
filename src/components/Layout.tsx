@@ -278,12 +278,31 @@ export default function Layout({ children }: LayoutProps) {
       <div className="min-h-screen flex w-full bg-background">
         <div className="w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col">
           {/* Logo no topo */}
-          <div className="flex items-center justify-center py-6 border-b border-sidebar-border">
+          <div className="flex flex-col items-center py-4 border-b border-sidebar-border">
             <img 
               src={logo} 
               alt="Pilar Logo" 
-              className="h-10 w-18 object-contain"
+              className="h-10 w-18 object-contain mb-3"
             />
+            {/* Informações do usuário e estabelecimento */}
+            <div className="w-full px-1 space-y-1">
+              {estabelecimentoName && (
+                <div className="flex flex-col items-center">
+                  <Building2 className="w-3 h-3 text-sidebar-foreground/50 mb-0.5" />
+                  <span className="text-[8px] text-sidebar-foreground/70 text-center leading-tight line-clamp-2 px-1">
+                    {estabelecimentoName}
+                  </span>
+                </div>
+              )}
+              {userName && (
+                <div className="flex flex-col items-center pt-1">
+                  <UserIcon className="w-3 h-3 text-sidebar-foreground/50 mb-0.5" />
+                  <span className="text-[8px] text-sidebar-foreground/60 text-center leading-tight line-clamp-1 px-1">
+                    {userName}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           <ScrollArea className="flex-1 bg-sidebar">
@@ -418,22 +437,8 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         <main className="flex-1 flex flex-col bg-background min-w-0">
-          <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-card shadow-sm">
-            <div className="flex items-center gap-6 text-sm">
-              {estabelecimentoName && (
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-semibold text-foreground">{estabelecimentoName}</span>
-                </div>
-              )}
-              {userName && (
-                <div className="flex items-center gap-2">
-                  <UserIcon className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{userName}</span>
-                </div>
-              )}
-            </div>
-            {isAdmin && (
+          {isAdmin && (
+            <header className="h-12 border-b border-border flex items-center justify-end px-6 bg-card">
               <Button
                 variant="outline"
                 size="sm"
@@ -443,8 +448,8 @@ export default function Layout({ children }: LayoutProps) {
                 <Building2 className="w-4 h-4" />
                 Trocar Estabelecimento
               </Button>
-            )}
-          </header>
+            </header>
+          )}
           <div className="flex-1 overflow-auto bg-background">
             {children}
           </div>
