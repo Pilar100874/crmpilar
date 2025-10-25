@@ -114,20 +114,23 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const handleQuickDate = (days: number, optionId?: string) => {
     const now = new Date();
     let newDate: Date;
-    
-    if (days === -1) { // 15 minutos
+
+    if (days === -1) {
       newDate = addMinutes(now, 15);
-    } else if (days === -2) { // 30 minutos
+    } else if (days === -2) {
       newDate = addMinutes(now, 30);
-    } else if (days === -3) { // 1 hora
+    } else if (days === -3) {
       newDate = addMinutes(now, 60);
     } else {
       newDate = addDays(now, days);
     }
-    
+
+    console.log("[NewTaskDialog] Quick option selected:", { days, newDate });
     setFromInstant(newDate);
     setSelectedQuickOption(optionId ?? null);
     setDatePickerOpen(false);
+    setHourPickerOpen(false);
+    setMinutePickerOpen(false);
   };
 
   // Ajusta data e preenche hora/min para o múltiplo de 15 mais próximo
