@@ -87,17 +87,32 @@ export default function Contatos() {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   
   // Gerenciamento de colunas da tabela
-  const [tableColumns, setTableColumns] = useState<TableColumn[]>([
-    { id: "name", label: "Nome", visible: true, width: 250, locked: true },
-    { id: "company", label: "Empresa", visible: true, width: 200 },
-    { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
-    { id: "email", label: "E-mail", visible: true, width: 250 },
-    { id: "position", label: "Posição", visible: false, width: 150 },
-    { id: "cpf_cnpj", label: "CPF/CNPJ", visible: false, width: 180 },
-    { id: "company_fantasia", label: "Nome Fantasia", visible: false, width: 200 },
-    { id: "city", label: "Cidade", visible: false, width: 150 },
-    { id: "state", label: "UF", visible: false, width: 80 },
-  ]);
+  const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
+    const saved = localStorage.getItem("contactsTableColumns");
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [
+      { id: "name", label: "Nome", visible: true, width: 250, locked: true },
+      { id: "company", label: "Empresa", visible: true, width: 200 },
+      { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
+      { id: "email", label: "E-mail", visible: true, width: 250 },
+      { id: "position", label: "Posição", visible: false, width: 150 },
+      { id: "cpf_cnpj", label: "CPF/CNPJ", visible: false, width: 180 },
+      { id: "company_fantasia", label: "Nome Fantasia", visible: false, width: 200 },
+      { id: "city", label: "Cidade", visible: false, width: 150 },
+      { id: "state", label: "UF", visible: false, width: 80 },
+    ];
+  });
+
+  // Salvar configurações de colunas no localStorage
+  useEffect(() => {
+    localStorage.setItem("contactsTableColumns", JSON.stringify(tableColumns));
+  }, [tableColumns]);
+
+  const handleColumnsChange = (newColumns: TableColumn[]) => {
+    setTableColumns(newColumns);
+  };
   
   // Hooks para buscar CEP e CNPJ
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
@@ -767,7 +782,7 @@ export default function Contatos() {
             
             <TableColumnsConfig 
               columns={tableColumns} 
-              onColumnsChange={setTableColumns}
+              onColumnsChange={handleColumnsChange}
             />
             
             <div className="flex-1 max-w-md">
@@ -804,40 +819,47 @@ export default function Contatos() {
                     {tableColumns.filter(col => col.visible).map((column) => (
                       <th
                         key={column.id}
-                        className="text-left p-3 font-medium text-sm text-muted-foreground group relative"
-                        style={{ width: column.width }}
+                        className="text-left p-3 font-medium text-sm text-muted-foreground relative"
+                        style={{ width: column.width, minWidth: column.width }}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between pr-4">
                           <span>{column.label.toUpperCase()}</span>
-                          {!column.locked && (
-                            <div
-                              className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                const startX = e.clientX;
-                                const startWidth = column.width;
-
-                                const handleMouseMove = (e: MouseEvent) => {
-                                  const diff = e.clientX - startX;
-                                  const newWidth = Math.max(80, startWidth + diff);
-                                  setTableColumns(prev =>
-                                    prev.map(col =>
-                                      col.id === column.id ? { ...col, width: newWidth } : col
-                                    )
-                                  );
-                                };
-
-                                const handleMouseUp = () => {
-                                  document.removeEventListener('mousemove', handleMouseMove);
-                                  document.removeEventListener('mouseup', handleMouseUp);
-                                };
-
-                                document.addEventListener('mousemove', handleMouseMove);
-                                document.addEventListener('mouseup', handleMouseUp);
-                              }}
-                            />
-                          )}
                         </div>
+                        {!column.locked && (
+                          <div
+                            className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary bg-border/50 z-20"
+                            style={{ touchAction: 'none' }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const startX = e.clientX;
+                              const startWidth = column.width;
+
+                              const handleMouseMove = (moveEvent: MouseEvent) => {
+                                moveEvent.preventDefault();
+                                const diff = moveEvent.clientX - startX;
+                                const newWidth = Math.max(80, startWidth + diff);
+                                setTableColumns(prev =>
+                                  prev.map(col =>
+                                    col.id === column.id ? { ...col, width: newWidth } : col
+                                  )
+                                );
+                              };
+
+                              const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove);
+                                document.removeEventListener('mouseup', handleMouseUp);
+                                document.body.style.cursor = '';
+                                document.body.style.userSelect = '';
+                              };
+
+                              document.body.style.cursor = 'col-resize';
+                              document.body.style.userSelect = 'none';
+                              document.addEventListener('mousemove', handleMouseMove);
+                              document.addEventListener('mouseup', handleMouseUp);
+                            }}
+                          />
+                        )}
                       </th>
                     ))}
                     <th className="w-[50px] p-3"></th>
@@ -868,7 +890,11 @@ export default function Contatos() {
                         </Button>
                       </td>
                       {tableColumns.filter(col => col.visible).map((column) => (
-                        <td key={column.id} className="p-3 group relative">
+                        <td 
+                          key={column.id} 
+                          className="p-3 group relative"
+                          style={{ width: column.width, maxWidth: column.width }}
+                        >
                           {editingCell?.contactId === contact.id && editingCell?.field === column.id ? (
                             <div className="flex items-center gap-2">
                               <Input
