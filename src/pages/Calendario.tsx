@@ -7,7 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Filter, RefreshCw, GripVertical } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
+import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2 } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -38,7 +40,7 @@ interface Task {
   createdAt: Date;
 }
 
-type ViewMode = "day" | "week" | "month" | "list";
+type ViewMode = "day" | "week" | "month" | "list" | "table";
 
 // Componente de dia com drop zone
 function DroppableDay({ 
@@ -184,6 +186,69 @@ export default function Calendario() {
   });
   const [filterBy, setFilterBy] = useState<"all" | "my">("my");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
+  const [editingValue, setEditingValue] = useState("");
+  
+  // Configuração de colunas da tabela
+  const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
+    const saved = localStorage.getItem("calendarTableColumns");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // Se houver erro ao parsear, usar valores padrão
+      }
+    }
+    return [
+      { id: "status", label: "Status", visible: true, width: 100, locked: true },
+      { id: "title", label: "Título", visible: true, width: 250, locked: true },
+      { id: "date", label: "Data", visible: true, width: 120 },
+      { id: "time", label: "Hora", visible: true, width: 100 },
+      { id: "type", label: "Tipo", visible: true, width: 150 },
+      { id: "assignedTo", label: "Atribuído para", visible: true, width: 180 },
+      { id: "description", label: "Descrição", visible: false, width: 300 },
+      { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
+    ];
+  });
+
+  // Estado de ordenação
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  // Salvar configurações de colunas no localStorage
+  useEffect(() => {
+    localStorage.setItem("calendarTableColumns", JSON.stringify(tableColumns));
+  }, [tableColumns]);
+
+  const handleColumnsChange = (newColumns: TableColumn[]) => {
+    setTableColumns(newColumns);
+  };
+
+  const handleSort = (columnId: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig && sortConfig.key === columnId) {
+      if (sortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else {
+        // Remove sort
+        setSortConfig(null);
+        return;
+      }
+    }
+    
+    setSortConfig({ key: columnId, direction });
+  };
+
+  const getSortIcon = (columnId: string) => {
+    if (!sortConfig || sortConfig.key !== columnId) {
+      return <ArrowUpDown className="w-3 h-3 text-muted-foreground" />;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="w-3 h-3 text-primary" />
+      : <ArrowDown className="w-3 h-3 text-primary" />;
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -550,6 +615,315 @@ export default function Calendario() {
     );
   };
 
+  // Funções de edição inline
+  const handleStartEdit = (taskId: string, field: string, value: any) => {
+    setEditingCell({ taskId, field });
+    setEditingValue(value || "");
+  };
+
+  const handleSaveInlineEdit = () => {
+    if (!editingCell) return;
+
+    const updatedTasks = tasks.map(task => {
+      if (task.id === editingCell.taskId) {
+        if (editingCell.field === 'title') return { ...task, title: editingValue };
+        if (editingCell.field === 'description') return { ...task, description: editingValue };
+        if (editingCell.field === 'assignedTo') return { ...task, assignedTo: editingValue };
+        if (editingCell.field === 'time') return { ...task, time: editingValue };
+      }
+      return task;
+    });
+
+    setTasks(updatedTasks);
+    setEditingCell(null);
+    setEditingValue("");
+    toast.success("Tarefa atualizada");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCell(null);
+    setEditingValue("");
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
+      setTasks(tasks.filter(t => t.id !== taskId));
+      toast.success("Tarefa excluída");
+    }
+  };
+
+  const getTypeLabel = (type: Task["type"]) => {
+    const labels = {
+      accompany: "Acompanhar",
+      call: "Ligar",
+      meeting: "Reunião",
+      other: "Outro"
+    };
+    return labels[type] || type;
+  };
+
+  // Filtrar e ordenar tarefas para a tabela
+  const filteredTasks = tasks.filter(task => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      task.title.toLowerCase().includes(query) ||
+      task.description?.toLowerCase().includes(query) ||
+      task.assignedTo?.toLowerCase().includes(query) ||
+      format(task.date, "dd/MM/yyyy").includes(query)
+    );
+  });
+
+  const sortedTasks = sortConfig
+    ? [...filteredTasks].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'title':
+            aValue = a.title;
+            bValue = b.title;
+            break;
+          case 'date':
+            aValue = a.date.getTime();
+            bValue = b.date.getTime();
+            break;
+          case 'time':
+            aValue = a.time || '';
+            bValue = b.time || '';
+            break;
+          case 'type':
+            aValue = getTypeLabel(a.type);
+            bValue = getTypeLabel(b.type);
+            break;
+          case 'assignedTo':
+            aValue = a.assignedTo || '';
+            bValue = b.assignedTo || '';
+            break;
+          case 'status':
+            aValue = a.status;
+            bValue = b.status;
+            break;
+          default:
+            return 0;
+        }
+
+        if (typeof aValue === 'string') {
+          aValue = aValue.toLowerCase();
+          bValue = String(bValue || '').toLowerCase();
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      })
+    : filteredTasks;
+
+  // Renderizar visualização em tabela
+  const renderTableView = () => {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="border-b border-border bg-card px-6 py-4">
+          <div className="flex items-center gap-3">
+            <TableColumnsConfig 
+              columns={tableColumns} 
+              onColumnsChange={handleColumnsChange}
+            />
+            
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar tarefas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-9"
+                />
+              </div>
+            </div>
+            
+            <div className="ml-auto text-sm text-muted-foreground">
+              {sortedTasks.length} tarefa{sortedTasks.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto">
+          {sortedTasks.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">
+              {searchQuery ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa cadastrada"}
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="border-b border-border sticky top-0 bg-background z-10">
+                <tr>
+                  {tableColumns.filter(col => col.visible).map((column, index) => (
+                    <th
+                      key={column.id}
+                      className={`text-left p-3 font-medium text-sm text-muted-foreground relative ${
+                        column.id === 'status' ? 'sticky left-0 bg-background border-r border-border z-20' : ''
+                      }`}
+                      style={{ width: column.width, minWidth: column.width }}
+                    >
+                      <div className="flex items-center justify-between gap-2 pr-4">
+                        <span>{column.label.toUpperCase()}</span>
+                        {column.id !== 'actions' && column.id !== 'status' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 hover:bg-transparent"
+                            onClick={() => handleSort(column.id)}
+                          >
+                            {getSortIcon(column.id)}
+                          </Button>
+                        )}
+                      </div>
+                      <div
+                        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary bg-border/50 z-20"
+                        style={{ touchAction: 'none' }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const startX = e.clientX;
+                          const startWidth = column.width;
+
+                          const handleMouseMove = (moveEvent: MouseEvent) => {
+                            moveEvent.preventDefault();
+                            const diff = moveEvent.clientX - startX;
+                            const newWidth = Math.max(60, startWidth + diff);
+                            setTableColumns(prev =>
+                              prev.map(col =>
+                                col.id === column.id ? { ...col, width: newWidth } : col
+                              )
+                            );
+                          };
+
+                          const handleMouseUp = () => {
+                            document.removeEventListener('mousemove', handleMouseMove);
+                            document.removeEventListener('mouseup', handleMouseUp);
+                            document.body.style.cursor = '';
+                            document.body.style.userSelect = '';
+                          };
+
+                          document.body.style.cursor = 'col-resize';
+                          document.body.style.userSelect = 'none';
+                          document.addEventListener('mousemove', handleMouseMove);
+                          document.addEventListener('mouseup', handleMouseUp);
+                        }}
+                      />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedTasks.map((task) => (
+                  <tr key={task.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                    {tableColumns.filter(col => col.visible).map((column) => {
+                      if (column.id === 'status') {
+                        return (
+                          <td key="status" className="p-3 sticky left-0 bg-background border-r border-border">
+                            <input
+                              type="checkbox"
+                              checked={task.status === "completed"}
+                              onChange={() => handleToggleTaskStatus(task.id)}
+                              className="cursor-pointer w-4 h-4"
+                            />
+                          </td>
+                        );
+                      }
+
+                      if (column.id === 'actions') {
+                        return (
+                          <td key="actions" className="p-3">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleDeleteTask(task.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </td>
+                        );
+                      }
+
+                      return (
+                        <td 
+                          key={column.id} 
+                          className="p-3 group relative"
+                          style={{ width: column.width, maxWidth: column.width }}
+                        >
+                          {editingCell?.taskId === task.id && editingCell?.field === column.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleSaveInlineEdit();
+                                  if (e.key === "Escape") handleCancelEdit();
+                                }}
+                                className="h-8"
+                                autoFocus
+                              />
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 flex-shrink-0"
+                                onClick={handleSaveInlineEdit}
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between min-w-0">
+                              <span className={`truncate ${
+                                column.id === 'title' ? 'font-medium text-primary' : ''
+                              } ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+                                {column.id === 'title' && task.title}
+                                {column.id === 'date' && format(task.date, "dd/MM/yyyy", { locale: ptBR })}
+                                {column.id === 'time' && (task.time || "-")}
+                                {column.id === 'type' && getTypeLabel(task.type)}
+                                {column.id === 'assignedTo' && (task.assignedTo || "-")}
+                                {column.id === 'description' && (task.description || "-")}
+                              </span>
+                              {column.id !== 'date' && column.id !== 'type' && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    let value = "";
+                                    if (column.id === 'title') value = task.title;
+                                    else if (column.id === 'time') value = task.time || "";
+                                    else if (column.id === 'assignedTo') value = task.assignedTo || "";
+                                    else if (column.id === 'description') value = task.description || "";
+                                    handleStartEdit(task.id, column.id, value);
+                                  }}
+                                  title="Edição rápida"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Renderizar visualização de lista
   const renderListView = () => {
     const today = new Date();
@@ -653,6 +1027,7 @@ export default function Calendario() {
                 <TabsTrigger value="week">SEMANA</TabsTrigger>
                 <TabsTrigger value="month">MÊS</TabsTrigger>
                 <TabsTrigger value="list">LISTA</TabsTrigger>
+                <TabsTrigger value="table">TABELA</TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -690,7 +1065,7 @@ export default function Calendario() {
         </div>
 
         {/* Navegação de data */}
-        {viewMode !== "list" && (
+        {viewMode !== "list" && viewMode !== "table" && (
           <div className="px-6 pb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={handlePrevious}>
@@ -739,6 +1114,7 @@ export default function Calendario() {
         {viewMode === "week" && renderWeekView()}
         {viewMode === "day" && renderDayView()}
         {viewMode === "list" && renderListView()}
+        {viewMode === "table" && renderTableView()}
       </div>
 
       {/* Dialog para adicionar tarefa */}
