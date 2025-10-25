@@ -329,9 +329,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                           <button
                             key={label}
                             type="button"
+                            role="option"
                             className={cn(
-                              "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                              selectedQuickOption === `${label}` && "bg-accent font-medium"
+                              "w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors",
+                              "hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50",
+                              selectedQuickOption === `${label}` && "bg-accent text-accent-foreground font-medium"
                             )}
                             onClick={(e) => {
                               e.preventDefault();
