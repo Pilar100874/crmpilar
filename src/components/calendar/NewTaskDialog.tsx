@@ -118,22 +118,32 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       newDate = addMinutes(now, 15);
       setDate(newDate);
       setDateInput(format(newDate, "dd/MM/yyyy"));
-      setHours(format(newDate, "HH"));
-      setMinutes(format(newDate, "mm"));
+      const hour = format(newDate, "HH");
+      const minute = format(newDate, "mm");
+      // Arredondar minutos para múltiplo de 15
+      const roundedMinute = Math.floor(parseInt(minute) / 15) * 15;
+      setHours(hour);
+      setMinutes(roundedMinute.toString().padStart(2, '0'));
       setIsAllDay(false);
     } else if (days === -2) { // 30 minutos
       newDate = addMinutes(now, 30);
       setDate(newDate);
       setDateInput(format(newDate, "dd/MM/yyyy"));
-      setHours(format(newDate, "HH"));
-      setMinutes(format(newDate, "mm"));
+      const hour = format(newDate, "HH");
+      const minute = format(newDate, "mm");
+      const roundedMinute = Math.floor(parseInt(minute) / 15) * 15;
+      setHours(hour);
+      setMinutes(roundedMinute.toString().padStart(2, '0'));
       setIsAllDay(false);
     } else if (days === -3) { // 1 hora
       newDate = addMinutes(now, 60);
       setDate(newDate);
       setDateInput(format(newDate, "dd/MM/yyyy"));
-      setHours(format(newDate, "HH"));
-      setMinutes(format(newDate, "mm"));
+      const hour = format(newDate, "HH");
+      const minute = format(newDate, "mm");
+      const roundedMinute = Math.floor(parseInt(minute) / 15) * 15;
+      setHours(hour);
+      setMinutes(roundedMinute.toString().padStart(2, '0'));
       setIsAllDay(false);
     } else {
       newDate = addDays(now, days);
@@ -144,17 +154,35 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     setDatePickerOpen(false);
   };
 
+  const applyDateMask = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/\D/g, '');
+    
+    // Aplica a máscara dd/mm/aaaa
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+    } else {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+    }
+  };
+
   const handleDateInputChange = (value: string) => {
-    setDateInput(value);
+    const masked = applyDateMask(value);
+    setDateInput(masked);
+    
     // Tentar fazer parse da data no formato dd/MM/yyyy
-    if (value.length === 10) {
+    if (masked.length === 10) {
       try {
-        const parsed = parse(value, "dd/MM/yyyy", new Date());
+        const parsed = parse(masked, "dd/MM/yyyy", new Date());
         if (!isNaN(parsed.getTime())) {
           setDate(parsed);
+        } else {
+          toast.error("Data inválida");
         }
       } catch (e) {
-        // Ignorar erro de parse
+        toast.error("Data inválida");
       }
     }
   };
@@ -170,7 +198,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     }
 
     if (!date) {
-      toast.error("Selecione uma data");
+      toast.error("Selecione uma data válida");
       return;
     }
 
@@ -179,20 +207,34 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       return;
     }
 
+    // Validar hora e minutos
+    if (!isAllDay) {
+      const h = parseInt(hours);
+      const m = parseInt(minutes);
+      if (isNaN(h) || h < 0 || h > 23) {
+        toast.error("Hora inválida (0-23)");
+        return;
+      }
+      if (isNaN(m) || m < 0 || m > 59) {
+        toast.error("Minutos inválidos (0-59)");
+        return;
+      }
+    }
+
     // Validar se a data/hora não é anterior ao momento atual
     const now = new Date();
     const taskDate = new Date(date);
     
     if (!isAllDay) {
       taskDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      if (taskDate < now) {
+        toast.error("Não é possível adicionar tarefas com data/hora anterior ao momento atual");
+        return;
+      }
     }
 
-    if (taskDate < now && !isAllDay) {
-      toast.error("Não é possível adicionar tarefas com data/hora anterior ao momento atual");
-      return;
-    }
-
-    const timeString = isAllDay ? "" : `${hours}:${minutes}`;
+    const timeString = isAllDay ? "" : `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
 
     onSave({
       contactId: selectedContact.id,
@@ -323,17 +365,22 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
               <Label className="text-sm">Hora</Label>
               <Popover open={hourPickerOpen} onOpenChange={setHourPickerOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !hours && !isAllDay && "text-muted-foreground"
-                    )}
-                    disabled={isAllDay}
-                  >
-                    <Clock className="mr-2 h-4 w-4" />
-                    {isAllDay ? "Dia" : hours || "HH"}
-                  </Button>
+                  <div className="relative">
+                    <Input
+                      placeholder="HH"
+                      value={hours}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
+                          setHours(value);
+                        }
+                      }}
+                      disabled={isAllDay}
+                      className="pr-8"
+                      maxLength={2}
+                    />
+                    <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
+                  </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-[120px] p-0" align="start">
                   <ScrollArea className="h-[240px]">
@@ -364,17 +411,22 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
               <Label className="text-sm">Minutos</Label>
               <Popover open={minutePickerOpen} onOpenChange={setMinutePickerOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !minutes && !isAllDay && "text-muted-foreground"
-                    )}
-                    disabled={isAllDay}
-                  >
-                    <Clock className="mr-2 h-4 w-4" />
-                    {isAllDay ? "todo" : minutes || "MM"}
-                  </Button>
+                  <div className="relative">
+                    <Input
+                      placeholder="MM"
+                      value={minutes}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
+                          setMinutes(value);
+                        }
+                      }}
+                      disabled={isAllDay}
+                      className="pr-8"
+                      maxLength={2}
+                    />
+                    <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
+                  </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-[100px] p-0" align="start">
                   <div className="p-2 space-y-1">
