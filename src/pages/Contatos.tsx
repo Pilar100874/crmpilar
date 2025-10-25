@@ -4,36 +4,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Settings, MoreVertical, ArrowLeft } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
 interface CustomField {
   id: string;
   label: string;
-  type: string;
+  type: "text" | "email" | "phone" | "textarea" | "select" | "checkbox" | "date" | "number";
   category: "contact" | "company";
+  options?: string[];
 }
 
 export default function Contatos() {
   const [showForm, setShowForm] = useState(false);
-  const [showFieldConfig, setShowFieldConfig] = useState(false);
   const [contactFields, setContactFields] = useState<CustomField[]>([
     { id: "name", label: "Nome de contato", type: "text", category: "contact" },
-    { id: "phone", label: "Telefone", type: "text", category: "contact" },
+    { id: "phone", label: "Telefone", type: "phone", category: "contact" },
     { id: "email", label: "E-mail", type: "email", category: "contact" },
     { id: "position", label: "Posição", type: "text", category: "contact" },
   ]);
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_name", label: "Nome da empresa", type: "text", category: "company" },
-    { id: "company_phone", label: "Telefone", type: "text", category: "company" },
+    { id: "company_phone", label: "Telefone", type: "phone", category: "company" },
     { id: "company_email", label: "E-mail", type: "email", category: "company" },
-    { id: "site", label: "Site", type: "url", category: "company" },
+    { id: "site", label: "Site", type: "text", category: "company" },
     { id: "address", label: "Endereço", type: "text", category: "company" },
   ]);
 
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, any>>({});
   const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldType, setNewFieldType] = useState<CustomField["type"]>("text");
+  const [newFieldOptions, setNewFieldOptions] = useState("");
   const [activeFieldTab, setActiveFieldTab] = useState<"contact" | "company">("contact");
 
   const handleAddField = () => {
@@ -45,8 +49,9 @@ export default function Contatos() {
     const newField: CustomField = {
       id: `custom_${Date.now()}`,
       label: newFieldLabel,
-      type: "text",
+      type: newFieldType,
       category: activeFieldTab,
+      options: newFieldType === "select" && newFieldOptions ? newFieldOptions.split(",").map(o => o.trim()) : undefined,
     };
 
     if (activeFieldTab === "contact") {
@@ -56,7 +61,72 @@ export default function Contatos() {
     }
 
     setNewFieldLabel("");
+    setNewFieldType("text");
+    setNewFieldOptions("");
     toast.success("Campo adicionado com sucesso");
+  };
+
+  const handleRemoveField = (fieldId: string, category: "contact" | "company") => {
+    if (category === "contact") {
+      setContactFields(contactFields.filter(f => f.id !== fieldId));
+    } else {
+      setCompanyFields(companyFields.filter(f => f.id !== fieldId));
+    }
+    toast.success("Campo removido com sucesso");
+  };
+
+  const renderField = (field: CustomField) => {
+    const value = formData[field.id] || "";
+    
+    switch (field.type) {
+      case "textarea":
+        return (
+          <Textarea
+            id={field.id}
+            placeholder="..."
+            value={value}
+            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+          />
+        );
+      case "select":
+        return (
+          <Select value={value} onValueChange={(val) => setFormData({ ...formData, [field.id]: val })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={field.id}
+              checked={value === true}
+              onCheckedChange={(checked) => setFormData({ ...formData, [field.id]: checked })}
+            />
+            <label htmlFor={field.id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Sim
+            </label>
+          </div>
+        );
+      default:
+        return (
+          <Input
+            id={field.id}
+            type={field.type}
+            placeholder="..."
+            value={value}
+            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+          />
+        );
+    }
   };
 
   const handleSaveContact = () => {
@@ -136,90 +206,6 @@ export default function Contatos() {
             <Card className="p-6 space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium text-foreground/70">INFORMAÇÕES DO CONTATO</h3>
-                <Dialog open={showFieldConfig} onOpenChange={setShowFieldConfig}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <Settings className="w-4 h-4" />
-                      Configurar campos
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Campos e grupos</DialogTitle>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Kamno oferece a opção de adicionar seus próprios campos personalizados. 
-                        Eles são ótimos para filtrar dados e compilar relatórios.
-                      </p>
-                    </DialogHeader>
-
-                    <Tabs value={activeFieldTab} onValueChange={(v) => setActiveFieldTab(v as "contact" | "company")} className="w-full">
-                      <TabsList className="w-full grid grid-cols-3">
-                        <TabsTrigger value="contact">Principal</TabsTrigger>
-                        <TabsTrigger value="company">Leads</TabsTrigger>
-                        <TabsTrigger value="add">
-                          <Plus className="w-4 h-4" />
-                        </TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="contact" className="space-y-3 mt-4">
-                        {contactFields.map((field) => (
-                          <div key={field.id} className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                            <div className="flex-1">
-                              <Input
-                                value={field.label}
-                                readOnly
-                                className="bg-background"
-                              />
-                            </div>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <div className="flex gap-2 mt-4">
-                          <Input
-                            placeholder="Nome do novo campo"
-                            value={newFieldLabel}
-                            onChange={(e) => setNewFieldLabel(e.target.value)}
-                          />
-                          <Button onClick={handleAddField}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Adicionar campo
-                          </Button>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="company" className="space-y-3 mt-4">
-                        <h4 className="text-sm font-medium text-foreground/70 mb-3">Campos da empresa</h4>
-                        {companyFields.map((field) => (
-                          <div key={field.id} className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                            <div className="flex-1">
-                              <Input
-                                value={field.label}
-                                readOnly
-                                className="bg-background"
-                              />
-                            </div>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <div className="flex gap-2 mt-4">
-                          <Input
-                            placeholder="Nome do novo campo"
-                            value={newFieldLabel}
-                            onChange={(e) => setNewFieldLabel(e.target.value)}
-                          />
-                          <Button onClick={handleAddField}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Adicionar campo
-                          </Button>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                  </DialogContent>
-                </Dialog>
               </div>
 
               <div className="space-y-4">
@@ -236,13 +222,7 @@ export default function Contatos() {
                 {contactFields.map((field) => (
                   <div key={field.id}>
                     <Label htmlFor={field.id}>{field.label}</Label>
-                    <Input
-                      id={field.id}
-                      type={field.type}
-                      placeholder="..."
-                      value={formData[field.id] || ""}
-                      onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                    />
+                    {renderField(field)}
                   </div>
                 ))}
               </div>
@@ -258,13 +238,7 @@ export default function Contatos() {
                 {companyFields.map((field) => (
                   <div key={field.id}>
                     <Label htmlFor={field.id}>{field.label}</Label>
-                    <Input
-                      id={field.id}
-                      type={field.type}
-                      placeholder="..."
-                      value={formData[field.id] || ""}
-                      onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                    />
+                    {renderField(field)}
                   </div>
                 ))}
               </div>
@@ -292,10 +266,191 @@ export default function Contatos() {
 
           <TabsContent value="configuracoes" className="p-6">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Configurações do Contato</h3>
-              <p className="text-sm text-muted-foreground">
-                Configurações adicionais do contato aparecerão aqui.
-              </p>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Campos e grupos</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Adicione seus próprios campos personalizados. Eles são ótimos para filtrar dados e compilar relatórios.
+                  </p>
+                </div>
+
+                <Tabs value={activeFieldTab} onValueChange={(v) => setActiveFieldTab(v as "contact" | "company")} className="w-full">
+                  <TabsList className="w-full grid grid-cols-2">
+                    <TabsTrigger value="contact">Campos de Contato</TabsTrigger>
+                    <TabsTrigger value="company">Campos de Empresa</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="contact" className="space-y-4 mt-6">
+                    <div className="space-y-3">
+                      {contactFields.map((field) => (
+                        <div key={field.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background">
+                          <GripVertical className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{field.label}</span>
+                              <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
+                                {field.type}
+                              </span>
+                            </div>
+                            {field.options && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Opções: {field.options.join(", ")}
+                              </div>
+                            )}
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleRemoveField(field.id, "contact")}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-t pt-6 space-y-4">
+                      <h4 className="text-sm font-semibold">Adicionar novo campo</h4>
+                      <div className="grid gap-4">
+                        <div>
+                          <Label htmlFor="newFieldLabel">Nome do campo</Label>
+                          <Input
+                            id="newFieldLabel"
+                            placeholder="Ex: Cargo, Departamento..."
+                            value={newFieldLabel}
+                            onChange={(e) => setNewFieldLabel(e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="newFieldType">Tipo de campo</Label>
+                          <Select value={newFieldType} onValueChange={(val: any) => setNewFieldType(val)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="text">Texto</SelectItem>
+                              <SelectItem value="email">E-mail</SelectItem>
+                              <SelectItem value="phone">Telefone</SelectItem>
+                              <SelectItem value="number">Número</SelectItem>
+                              <SelectItem value="date">Data</SelectItem>
+                              <SelectItem value="textarea">Texto longo</SelectItem>
+                              <SelectItem value="select">Lista de opções</SelectItem>
+                              <SelectItem value="checkbox">Checkbox</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {newFieldType === "select" && (
+                          <div>
+                            <Label htmlFor="newFieldOptions">Opções (separadas por vírgula)</Label>
+                            <Input
+                              id="newFieldOptions"
+                              placeholder="Opção 1, Opção 2, Opção 3"
+                              value={newFieldOptions}
+                              onChange={(e) => setNewFieldOptions(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Digite as opções separadas por vírgula
+                            </p>
+                          </div>
+                        )}
+
+                        <Button onClick={handleAddField} className="w-full">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar campo
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="company" className="space-y-4 mt-6">
+                    <div className="space-y-3">
+                      {companyFields.map((field) => (
+                        <div key={field.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background">
+                          <GripVertical className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{field.label}</span>
+                              <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
+                                {field.type}
+                              </span>
+                            </div>
+                            {field.options && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Opções: {field.options.join(", ")}
+                              </div>
+                            )}
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleRemoveField(field.id, "company")}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-t pt-6 space-y-4">
+                      <h4 className="text-sm font-semibold">Adicionar novo campo</h4>
+                      <div className="grid gap-4">
+                        <div>
+                          <Label htmlFor="newFieldLabel">Nome do campo</Label>
+                          <Input
+                            id="newFieldLabel"
+                            placeholder="Ex: CNPJ, Setor..."
+                            value={newFieldLabel}
+                            onChange={(e) => setNewFieldLabel(e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="newFieldType">Tipo de campo</Label>
+                          <Select value={newFieldType} onValueChange={(val: any) => setNewFieldType(val)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="text">Texto</SelectItem>
+                              <SelectItem value="email">E-mail</SelectItem>
+                              <SelectItem value="phone">Telefone</SelectItem>
+                              <SelectItem value="number">Número</SelectItem>
+                              <SelectItem value="date">Data</SelectItem>
+                              <SelectItem value="textarea">Texto longo</SelectItem>
+                              <SelectItem value="select">Lista de opções</SelectItem>
+                              <SelectItem value="checkbox">Checkbox</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {newFieldType === "select" && (
+                          <div>
+                            <Label htmlFor="newFieldOptions">Opções (separadas por vírgula)</Label>
+                            <Input
+                              id="newFieldOptions"
+                              placeholder="Opção 1, Opção 2, Opção 3"
+                              value={newFieldOptions}
+                              onChange={(e) => setNewFieldOptions(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Digite as opções separadas por vírgula
+                            </p>
+                          </div>
+                        )}
+
+                        <Button onClick={handleAddField} className="w-full">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar campo
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>
