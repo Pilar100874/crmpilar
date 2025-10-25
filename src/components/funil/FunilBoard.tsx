@@ -16,9 +16,10 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 interface FunilBoardProps {
   columns: FunilColumnType[];
   onDealMove: (dealId: string, newStage: FunilStage) => void;
+  onDealClick: (deal: Deal) => void;
 }
 
-export function FunilBoard({ columns, onDealMove }: FunilBoardProps) {
+export function FunilBoard({ columns, onDealMove, onDealClick }: FunilBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   
   const sensors = useSensors(
@@ -77,6 +78,7 @@ export function FunilBoard({ columns, onDealMove }: FunilBoardProps) {
               id={column.id}
               title={column.title}
               deals={column.deals}
+              onDealClick={onDealClick}
             />
           ))}
         </div>
@@ -84,7 +86,7 @@ export function FunilBoard({ columns, onDealMove }: FunilBoardProps) {
       </ScrollArea>
 
       <DragOverlay>
-        {activeDeal ? <FunilCard deal={activeDeal} /> : null}
+        {activeDeal ? <FunilCard deal={activeDeal} onClick={() => {}} /> : null}
       </DragOverlay>
     </DndContext>
   );

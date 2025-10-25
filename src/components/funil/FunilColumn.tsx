@@ -10,9 +10,10 @@ interface FunilColumnProps {
   id: FunilStage;
   title: string;
   deals: Deal[];
+  onDealClick: (deal: Deal) => void;
 }
 
-export function FunilColumn({ id, title, deals }: FunilColumnProps) {
+export function FunilColumn({ id, title, deals, onDealClick }: FunilColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
   
   const totalValue = deals.reduce((sum, deal) => sum + deal.valor, 0);
@@ -50,7 +51,11 @@ export function FunilColumn({ id, title, deals }: FunilColumnProps) {
             </div>
           ) : (
             deals.map((deal) => (
-              <FunilCard key={deal.id} deal={deal} />
+              <FunilCard 
+                key={deal.id} 
+                deal={deal} 
+                onClick={() => onDealClick(deal)}
+              />
             ))
           )}
         </SortableContext>

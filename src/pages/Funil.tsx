@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FunilBoard } from '@/components/funil/FunilBoard';
 import { FunilHeader } from '@/components/funil/FunilHeader';
+import { NewDealDialog } from '@/components/funil/NewDealDialog';
+import { DealDetailsDialog } from '@/components/funil/DealDetailsDialog';
 import { Deal, FunilStage, FunilColumn } from '@/types/funil';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock data inicial
+// Mock data inicial com stages
 const mockDeals: Deal[] = [
   {
     id: '1',
@@ -16,6 +18,7 @@ const mockDeals: Deal[] = [
     status: 'normal',
     saude: 'verde',
     tags: [],
+    stage: 'lead',
   },
   {
     id: '2',
@@ -27,6 +30,7 @@ const mockDeals: Deal[] = [
     status: 'normal',
     saude: 'amarelo',
     tags: ['Sem Tarefas'],
+    stage: 'qualificacao',
   },
   {
     id: '3',
@@ -39,6 +43,7 @@ const mockDeals: Deal[] = [
     saude: 'vermelho',
     diasParado: 5,
     tags: ['Sem Tarefas'],
+    stage: 'negociacao',
   },
 ];
 
@@ -47,6 +52,21 @@ export default function Funil() {
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<any>({});
+  const [newDealOpen, setNewDealOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  // Simular detecção de SLA (negócios parados)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDeals(prev => prev.map(deal => ({
+        ...deal,
+        diasParado: deal.diasParado ? deal.diasParado + 1 : 1,
+      })));
+    }, 60000); // Atualiza a cada minuto (em produção seria diário)
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Organiza os deals por estágio
   const columns: FunilColumn[] = useMemo(() => {
@@ -56,7 +76,8 @@ export default function Funil() {
         const query = searchQuery.toLowerCase();
         return (
           deal.cliente.toLowerCase().includes(query) ||
-          deal.responsavel.toLowerCase().includes(query)
+          deal.responsavel.toLowerCase().includes(query) ||
+          (deal.origem && deal.origem.toLowerCase().includes(query))
         );
       }
       return true;
@@ -68,6 +89,9 @@ export default function Funil() {
       if (filters.status && filters.status !== 'todos') {
         return deal.status === filters.status;
       }
+      if (filters.origem && filters.origem !== 'todos') {
+        return deal.origem?.toLowerCase() === filters.origem.toLowerCase();
+      }
       return true;
     });
 
@@ -75,48 +99,98 @@ export default function Funil() {
       {
         id: 'lead',
         title: 'ETAPA DE LEADS DE ENTRADA',
-        deals: filteredDeals.filter(d => !d.id || d.id === '1'), // Mock: primeiro deal
+        deals: filteredDeals.filter(d => (d as any).stage === 'lead'),
       },
       {
         id: 'qualificacao',
         title: 'CONTATO INICIAL',
-        deals: filteredDeals.filter(d => d.id === '2'), // Mock: segundo deal
+        deals: filteredDeals.filter(d => (d as any).stage === 'qualificacao'),
       },
       {
         id: 'proposta',
         title: 'DISCUSSÕES',
-        deals: [],
+        deals: filteredDeals.filter(d => (d as any).stage === 'proposta'),
       },
       {
         id: 'negociacao',
         title: 'TOMADA DE DECISÃO',
-        deals: filteredDeals.filter(d => d.id === '3'), // Mock: terceiro deal
+        deals: filteredDeals.filter(d => (d as any).stage === 'negociacao'),
       },
       {
         id: 'fechamento',
         title: 'DISCUSSÃO DE CONTRATO',
-        deals: [],
+        deals: filteredDeals.filter(d => (d as any).stage === 'fechamento'),
       },
     ];
   }, [deals, searchQuery, filters]);
 
   const handleDealMove = (dealId: string, newStage: FunilStage) => {
+    const deal = deals.find(d => d.id === dealId);
+    
     setDeals(prevDeals => 
-      prevDeals.map(deal => 
-        deal.id === dealId ? { ...deal, stage: newStage } : deal
+      prevDeals.map(d => 
+        d.id === dealId ? { ...d, stage: newStage, diasParado: 0 } as any : d
       )
     );
     
     toast({
       title: 'Negócio movido',
-      description: 'O negócio foi movido para a nova etapa com sucesso.',
+      description: `${deal?.cliente} foi movido para ${getStageTitle(newStage)}`,
     });
+
+    // Simular playbook automático
+    if (newStage === 'qualificacao') {
+      setTimeout(() => {
+        toast({
+          title: '🤖 Playbook ativado',
+          description: 'Tarefa automática criada: Enviar script de qualificação',
+        });
+      }, 1000);
+    }
+  };
+
+  const getStageTitle = (stage: FunilStage): string => {
+    const titles: Record<FunilStage, string> = {
+      lead: 'Leads de Entrada',
+      qualificacao: 'Contato Inicial',
+      proposta: 'Discussões',
+      negociacao: 'Tomada de Decisão',
+      fechamento: 'Discussão de Contrato',
+    };
+    return titles[stage];
   };
 
   const handleNewLead = () => {
+    setNewDealOpen(true);
+  };
+
+  const handleSaveNewDeal = (newDeal: Omit<Deal, 'id'>) => {
+    const deal: Deal = {
+      ...newDeal,
+      id: `deal-${Date.now()}`,
+    };
+    
+    setDeals(prev => [...prev, deal as any]);
+    
     toast({
-      title: 'Novo Lead',
-      description: 'Funcionalidade de criação de novo lead em desenvolvimento.',
+      title: 'Lead criado',
+      description: `${deal.cliente} foi adicionado ao funil com sucesso.`,
+    });
+  };
+
+  const handleDealClick = (deal: Deal) => {
+    setSelectedDeal(deal);
+    setDetailsOpen(true);
+  };
+
+  const handleUpdateDeal = (dealId: string, updates: Partial<Deal>) => {
+    setDeals(prev => prev.map(d => 
+      d.id === dealId ? { ...d, ...updates } : d
+    ));
+    
+    toast({
+      title: 'Negócio atualizado',
+      description: 'As alterações foram salvas com sucesso.',
     });
   };
 
@@ -144,8 +218,25 @@ export default function Funil() {
       </div>
       
       <div className="flex-1 p-6 overflow-hidden">
-        <FunilBoard columns={columns} onDealMove={handleDealMove} />
+        <FunilBoard 
+          columns={columns} 
+          onDealMove={handleDealMove}
+          onDealClick={handleDealClick}
+        />
       </div>
+
+      <NewDealDialog
+        open={newDealOpen}
+        onOpenChange={setNewDealOpen}
+        onSave={handleSaveNewDeal}
+      />
+
+      <DealDetailsDialog
+        deal={selectedDeal}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        onUpdate={handleUpdateDeal}
+      />
     </div>
   );
 }

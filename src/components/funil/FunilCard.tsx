@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 
 interface FunilCardProps {
   deal: Deal;
+  onClick?: () => void;
 }
 
-export function FunilCard({ deal }: FunilCardProps) {
+export function FunilCard({ deal, onClick }: FunilCardProps) {
   const {
     attributes,
     listeners,
@@ -49,7 +50,12 @@ export function FunilCard({ deal }: FunilCardProps) {
         isDragging && 'opacity-50'
       )}
     >
-      <Card className={cn(
+      <Card 
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.();
+        }}
+        className={cn(
         'p-3 mb-2 hover:shadow-md transition-shadow border-l-4',
         deal.status ? statusColors[deal.status] : 'border-l-primary'
       )}>

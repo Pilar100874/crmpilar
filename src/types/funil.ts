@@ -15,6 +15,7 @@ export interface Deal {
   prioridade?: number;
   ultimaInteracao?: string;
   tags?: string[];
+  stage?: FunilStage;
 }
 
 export interface FunilColumn {
