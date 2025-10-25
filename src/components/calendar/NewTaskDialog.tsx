@@ -116,19 +116,18 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     
     if (days === -1) { // 15 minutos
       newDate = addMinutes(now, 15);
-      setFromInstant(newDate);
     } else if (days === -2) { // 30 minutos
       newDate = addMinutes(now, 30);
-      setFromInstant(newDate);
     } else if (days === -3) { // 1 hora
       newDate = addMinutes(now, 60);
-      setFromInstant(newDate);
     } else {
+      // Para outras opções (hoje, amanhã, 7 dias, etc), adiciona os dias
+      // mas mantém a hora atual como sugestão
       newDate = addDays(now, days);
-      setDate(newDate);
-      setDateInput(format(newDate, "dd/MM/yyyy"));
     }
     
+    // Sempre preenche data e hora (arredondada para múltiplo de 15)
+    setFromInstant(newDate);
     setDatePickerOpen(false);
   };
 
