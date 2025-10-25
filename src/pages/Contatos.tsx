@@ -17,6 +17,22 @@ import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
+import { SortableFieldItem } from "@/components/config/SortableFieldItem";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 interface CustomField {
   id: string;
@@ -26,6 +42,7 @@ interface CustomField {
   options?: string[];
   required?: boolean;
   locked?: boolean; // Não pode ser removido
+  searchable?: boolean; // Aparece nos filtros de pesquisa
 }
 
 interface Contact {
@@ -56,6 +73,7 @@ interface SearchFilters {
   email: string;
   position: string;
   tags: string;
+  [key: string]: string; // Permite campos dinâmicos customizados
 }
 
 export default function Contatos() {
@@ -100,6 +118,14 @@ export default function Contatos() {
   const [fieldMasks, setFieldMasks] = useState<FieldMask[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   
+  // Sensores para drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     name: "",
     dateFilter: "",
@@ -140,6 +166,7 @@ export default function Contatos() {
       type: newFieldType,
       category: activeFieldTab,
       options: newFieldType === "select" && newFieldOptions ? newFieldOptions.split(",").map(o => o.trim()) : undefined,
+      searchable: false, // Por padrão não aparece na busca
     };
 
     if (activeFieldTab === "contact") {
@@ -152,6 +179,42 @@ export default function Contatos() {
     setNewFieldType("text");
     setNewFieldOptions("");
     toast.success("Campo adicionado com sucesso");
+  };
+
+  const handleDragEndContact = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setContactFields((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleDragEndCompany = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setCompanyFields((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleToggleSearchable = (fieldId: string, category: "contact" | "company") => {
+    if (category === "contact") {
+      setContactFields(contactFields.map(f => 
+        f.id === fieldId ? { ...f, searchable: !f.searchable } : f
+      ));
+    } else {
+      setCompanyFields(companyFields.map(f => 
+        f.id === fieldId ? { ...f, searchable: !f.searchable } : f
+      ));
+    }
   };
 
   const handleRemoveField = (fieldId: string, category: "contact" | "company") => {
@@ -568,6 +631,23 @@ export default function Contatos() {
     if (searchFilters.position && !contact.position.toLowerCase().includes(searchFilters.position.toLowerCase())) {
       return false;
     }
+    
+    // Filtrar por campos customizados marcados como searchable
+    const allSearchableFields = [...contactFields, ...companyFields].filter(f => f.searchable);
+    for (const field of allSearchableFields) {
+      const filterValue = searchFilters[field.id as keyof SearchFilters];
+      const contactValue = contact.customFields[field.id];
+      
+      if (filterValue && contactValue) {
+        const filterStr = String(filterValue).toLowerCase();
+        const contactStr = String(contactValue).toLowerCase();
+        
+        if (!contactStr.includes(filterStr)) {
+          return false;
+        }
+      }
+    }
+    
     return true;
   });
 
@@ -948,6 +1028,20 @@ export default function Contatos() {
                           className="h-10"
                         />
                       </div>
+                      
+                      {/* Campos customizados searchable */}
+                      {[...contactFields, ...companyFields]
+                        .filter(f => f.searchable && !f.locked)
+                        .map((field) => (
+                          <div key={field.id}>
+                            <Input
+                              placeholder={field.label}
+                              value={searchFilters[field.id as keyof SearchFilters] || ""}
+                              onChange={(e) => setSearchFilters({ ...searchFilters, [field.id]: e.target.value })}
+                              className="h-10"
+                            />
+                          </div>
+                        ))}
                     </div>
 
                     {/* Right Column - Tags */}
@@ -1126,41 +1220,27 @@ export default function Contatos() {
                   </TabsList>
 
                   <TabsContent value="contact" className="space-y-4 mt-6">
-                    <div className="space-y-3">
-                      {contactFields.map((field) => (
-                        <div key={field.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background">
-                          <GripVertical className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{field.label}</span>
-                              <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
-                                {field.type}
-                              </span>
-                              {field.required && (
-                                <Badge variant="secondary" className="text-xs">Obrigatório</Badge>
-                              )}
-                              {field.locked && (
-                                <Badge variant="outline" className="text-xs">Não removível</Badge>
-                              )}
-                            </div>
-                            {field.options && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Opções: {field.options.join(", ")}
-                              </div>
-                            )}
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleRemoveField(field.id, "contact")}
-                            className="text-destructive hover:text-destructive"
-                            disabled={field.locked}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEndContact}
+                    >
+                      <SortableContext
+                        items={contactFields.map(f => f.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-3">
+                          {contactFields.map((field) => (
+                            <SortableFieldItem
+                              key={field.id}
+                              field={field}
+                              onRemove={(id) => handleRemoveField(id, "contact")}
+                              onToggleSearchable={(id) => handleToggleSearchable(id, "contact")}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </SortableContext>
+                    </DndContext>
 
                     <div className="border-t pt-6 space-y-4">
                       <h4 className="text-sm font-semibold">Adicionar novo campo</h4>
@@ -1218,41 +1298,27 @@ export default function Contatos() {
                   </TabsContent>
 
                   <TabsContent value="company" className="space-y-4 mt-6">
-                    <div className="space-y-3">
-                      {companyFields.map((field) => (
-                        <div key={field.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background">
-                          <GripVertical className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{field.label}</span>
-                              <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
-                                {field.type}
-                              </span>
-                              {field.required && (
-                                <Badge variant="secondary" className="text-xs">Obrigatório</Badge>
-                              )}
-                              {field.locked && (
-                                <Badge variant="outline" className="text-xs">Não removível</Badge>
-                              )}
-                            </div>
-                            {field.options && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Opções: {field.options.join(", ")}
-                              </div>
-                            )}
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleRemoveField(field.id, "company")}
-                            className="text-destructive hover:text-destructive"
-                            disabled={field.locked}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEndCompany}
+                    >
+                      <SortableContext
+                        items={companyFields.map(f => f.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-3">
+                          {companyFields.map((field) => (
+                            <SortableFieldItem
+                              key={field.id}
+                              field={field}
+                              onRemove={(id) => handleRemoveField(id, "company")}
+                              onToggleSearchable={(id) => handleToggleSearchable(id, "company")}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </SortableContext>
+                    </DndContext>
 
                     <div className="border-t pt-6 space-y-4">
                       <h4 className="text-sm font-semibold">Adicionar novo campo</h4>
