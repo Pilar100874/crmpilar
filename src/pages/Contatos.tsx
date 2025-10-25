@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,10 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical, Search, Filter, Calendar, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface CustomField {
@@ -18,8 +21,42 @@ interface CustomField {
   options?: string[];
 }
 
+interface Contact {
+  id: string;
+  name: string;
+  company: string;
+  phone: string;
+  email: string;
+  position: string;
+  responsible: string;
+  tags: string[];
+  createdAt: string;
+  createdBy: string;
+  modifiedAt: string;
+  modifiedBy: string;
+  customFields: Record<string, any>;
+}
+
+interface SearchFilters {
+  name: string;
+  dateFilter: string;
+  funnel: string;
+  responsible: string;
+  createdBy: string;
+  modifiedBy: string;
+  tasks: string;
+  phone: string;
+  email: string;
+  position: string;
+  tags: string;
+}
+
 export default function Contatos() {
   const [showForm, setShowForm] = useState(false);
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  
   const [contactFields, setContactFields] = useState<CustomField[]>([
     { id: "name", label: "Nome de contato", type: "text", category: "contact" },
     { id: "phone", label: "Telefone", type: "phone", category: "contact" },
@@ -39,6 +76,34 @@ export default function Contatos() {
   const [newFieldType, setNewFieldType] = useState<CustomField["type"]>("text");
   const [newFieldOptions, setNewFieldOptions] = useState("");
   const [activeFieldTab, setActiveFieldTab] = useState<"contact" | "company">("contact");
+  
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    name: "",
+    dateFilter: "",
+    funnel: "",
+    responsible: "",
+    createdBy: "",
+    modifiedBy: "",
+    tasks: "",
+    phone: "",
+    email: "",
+    position: "",
+    tags: "",
+  });
+
+  // Carregar contatos do localStorage
+  useEffect(() => {
+    const savedContacts = localStorage.getItem("contacts");
+    if (savedContacts) {
+      setContacts(JSON.parse(savedContacts));
+    }
+  }, []);
+
+  // Salvar contatos no localStorage
+  const saveContactsToStorage = (updatedContacts: Contact[]) => {
+    localStorage.setItem("contacts", JSON.stringify(updatedContacts));
+    setContacts(updatedContacts);
+  };
 
   const handleAddField = () => {
     if (!newFieldLabel.trim()) {
@@ -130,28 +195,317 @@ export default function Contatos() {
   };
 
   const handleSaveContact = () => {
-    toast.success("Contato salvo com sucesso");
+    if (!formData.name || !formData.phone || !formData.email) {
+      toast.error("Preencha os campos obrigatórios: Nome, Telefone e E-mail");
+      return;
+    }
+
+    const newContact: Contact = {
+      id: editingContact?.id || `contact_${Date.now()}`,
+      name: formData.name || "",
+      company: formData.company_name || "",
+      phone: formData.phone || "",
+      email: formData.email || "",
+      position: formData.position || "",
+      responsible: formData.responsible || "",
+      tags: [],
+      createdAt: editingContact?.createdAt || new Date().toISOString(),
+      createdBy: editingContact?.createdBy || "Usuário Atual",
+      modifiedAt: new Date().toISOString(),
+      modifiedBy: "Usuário Atual",
+      customFields: formData,
+    };
+
+    if (editingContact) {
+      const updatedContacts = contacts.map(c => c.id === editingContact.id ? newContact : c);
+      saveContactsToStorage(updatedContacts);
+      toast.success("Contato atualizado com sucesso");
+    } else {
+      saveContactsToStorage([...contacts, newContact]);
+      toast.success("Contato salvo com sucesso");
+    }
+    
     setShowForm(false);
     setFormData({});
+    setEditingContact(null);
   };
+
+  const handleEditContact = (contact: Contact) => {
+    setEditingContact(contact);
+    setFormData(contact.customFields);
+    setShowForm(true);
+  };
+
+  const handleDeleteContact = (contactId: string) => {
+    const updatedContacts = contacts.filter(c => c.id !== contactId);
+    saveContactsToStorage(updatedContacts);
+    toast.success("Contato excluído com sucesso");
+  };
+
+  const filteredContacts = contacts.filter(contact => {
+    if (searchFilters.name && !contact.name.toLowerCase().includes(searchFilters.name.toLowerCase())) {
+      return false;
+    }
+    if (searchFilters.phone && !contact.phone.includes(searchFilters.phone)) {
+      return false;
+    }
+    if (searchFilters.email && !contact.email.toLowerCase().includes(searchFilters.email.toLowerCase())) {
+      return false;
+    }
+    if (searchFilters.position && !contact.position.toLowerCase().includes(searchFilters.position.toLowerCase())) {
+      return false;
+    }
+    return true;
+  });
 
   if (!showForm) {
     return (
       <div className="flex-1 flex flex-col h-full bg-background">
         <div className="border-b border-border bg-card px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-foreground">Contatos</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-foreground">TODOS OS CONTATOS E EMPRESAS</h1>
             <Button onClick={() => setShowForm(true)} className="gap-2">
               <Plus className="w-4 h-4" />
-              Novo Contato
+              ADICIONAR CONTATO
             </Button>
           </div>
-        </div>
-        <div className="flex-1 overflow-auto p-6">
-          <div className="text-center text-muted-foreground py-12">
-            Nenhum contato cadastrado. Clique em "Novo Contato" para começar.
+          
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 bg-primary/10 text-primary border-primary/20"
+            >
+              Lista completa
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={() => setShowSearchPanel(true)}
+            >
+              <Search className="w-4 h-4" />
+              Busca e filtro
+            </Button>
+            <div className="ml-auto text-sm text-muted-foreground">
+              {filteredContacts.length} elementos
+            </div>
           </div>
         </div>
+
+        <div className="flex-1 overflow-auto">
+          {filteredContacts.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">
+              Nenhum contato cadastrado. Clique em "ADICIONAR CONTATO" para começar.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>NOME</TableHead>
+                  <TableHead>EMPRESA</TableHead>
+                  <TableHead>TELEFONE</TableHead>
+                  <TableHead>E-MAIL</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredContacts.map((contact) => (
+                  <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableCell 
+                      className="font-medium text-primary"
+                      onClick={() => handleEditContact(contact)}
+                    >
+                      {contact.name}
+                    </TableCell>
+                    <TableCell onClick={() => handleEditContact(contact)}>
+                      {contact.company || "-"}
+                    </TableCell>
+                    <TableCell onClick={() => handleEditContact(contact)}>
+                      {contact.phone}
+                    </TableCell>
+                    <TableCell onClick={() => handleEditContact(contact)}>
+                      {contact.email}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm("Deseja realmente excluir este contato?")) {
+                            handleDeleteContact(contact.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+
+        {/* Search Panel */}
+        <Sheet open={showSearchPanel} onOpenChange={setShowSearchPanel}>
+          <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Busca e filtro</SheetTitle>
+            </SheetHeader>
+
+            <div className="mt-6 space-y-4">
+              <div>
+                <Label htmlFor="search-name">Nome</Label>
+                <Input
+                  id="search-name"
+                  placeholder="Nome"
+                  value={searchFilters.name}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="search-date">Data</Label>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  A qualquer hora
+                </Button>
+              </div>
+
+              <div>
+                <Label htmlFor="search-funnel">Funil de vendas, etapas</Label>
+                <Input
+                  id="search-funnel"
+                  placeholder="Funil de vendas, etapas"
+                  value={searchFilters.funnel}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, funnel: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="search-responsible">Usuário responsável</Label>
+                <Input
+                  id="search-responsible"
+                  placeholder="Usuário responsável"
+                  value={searchFilters.responsible}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, responsible: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="search-created">Criado por</Label>
+                <Input
+                  id="search-created"
+                  placeholder="Criado por"
+                  value={searchFilters.createdBy}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, createdBy: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="search-modified">Modificado por</Label>
+                <Input
+                  id="search-modified"
+                  placeholder="Modificado por"
+                  value={searchFilters.modifiedBy}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, modifiedBy: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="search-tasks">Tarefas</Label>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  Tarefas: Todos valores
+                </Button>
+              </div>
+
+              <div>
+                <Label htmlFor="search-phone">Telefone</Label>
+                <Input
+                  id="search-phone"
+                  placeholder="Telefone"
+                  value={searchFilters.phone}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, phone: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="search-email">E-mail</Label>
+                <Input
+                  id="search-email"
+                  placeholder="E-mail"
+                  value={searchFilters.email}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, email: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="search-position">Posição</Label>
+                <Input
+                  id="search-position"
+                  placeholder="Posição"
+                  value={searchFilters.position}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, position: e.target.value })}
+                />
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <Label>TAGS</Label>
+                  <Button variant="link" className="h-auto p-0 text-primary">
+                    Gerenciar
+                  </Button>
+                </div>
+                <Input
+                  placeholder="Localizar tags"
+                  value={searchFilters.tags}
+                  onChange={(e) => setSearchFilters({ ...searchFilters, tags: e.target.value })}
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  Você não tem tags conectadas
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setSearchFilters({
+                      name: "",
+                      dateFilter: "",
+                      funnel: "",
+                      responsible: "",
+                      createdBy: "",
+                      modifiedBy: "",
+                      tasks: "",
+                      phone: "",
+                      email: "",
+                      position: "",
+                      tags: "",
+                    });
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => setShowSearchPanel(false)}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     );
   }
@@ -167,7 +521,7 @@ export default function Contatos() {
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="text-2xl font-bold text-foreground">Nome completo</h1>
+          <h1 className="text-2xl font-bold text-foreground">{editingContact ? editingContact.name : "Novo Contato"}</h1>
           <Button variant="ghost" size="sm" className="gap-2 ml-auto">
             #ADICIONAR TAGS
           </Button>
