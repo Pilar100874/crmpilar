@@ -326,7 +326,7 @@ export default function Layout({ children }: LayoutProps) {
                                 {item.subItems.map((subItem, index) => (
                                   <div key={subItem.id}>
                                     {index > 0 && (
-                                      <div className="border-t border-border/30" />
+                                      <div className="border-t border-border/60" />
                                     )}
                                     <NavLink
                                       to={subItem.url}
