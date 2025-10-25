@@ -281,6 +281,22 @@ export default function Calendario() {
       return;
     }
 
+    // Validar se a data/hora não é anterior ao momento atual
+    const now = new Date();
+    const taskDate = parseISO(taskForm.date);
+    
+    if (taskForm.time) {
+      const [hours, minutes] = taskForm.time.split(':').map(Number);
+      taskDate.setHours(hours, minutes, 0, 0);
+    } else {
+      taskDate.setHours(23, 59, 59, 999);
+    }
+
+    if (taskDate < now) {
+      toast.error("Não é possível adicionar tarefas com data/hora anterior ao momento atual");
+      return;
+    }
+
     const newTask: Task = {
       id: `task_${Date.now()}`,
       title: taskForm.title,
