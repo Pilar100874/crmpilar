@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { FunilBoard } from '@/components/funil/FunilBoard';
+import { FunilListView } from '@/components/funil/FunilListView';
 import { FunilHeader } from '@/components/funil/FunilHeader';
 import { NewDealDialog } from '@/components/funil/NewDealDialog';
 import { DealDetailsDialog } from '@/components/funil/DealDetailsDialog';
@@ -71,6 +72,7 @@ export default function Funil() {
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [configureStagesOpen, setConfigureStagesOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [stagesConfig, setStagesConfig] = useState<StageConfig[]>(() => {
     try {
       const saved = localStorage.getItem('funilStagesConfig');
@@ -229,6 +231,38 @@ export default function Funil() {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
+  const handleViewModeChange = (mode: 'kanban' | 'list') => {
+    setViewMode(mode);
+  };
+
+  // Lista plana de deals para a visualização em lista
+  const flatDeals = useMemo(() => {
+    return deals.filter(deal => {
+      // Filtro de busca
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          deal.cliente.toLowerCase().includes(query) ||
+          deal.responsavel.toLowerCase().includes(query) ||
+          (deal.origem && deal.origem.toLowerCase().includes(query))
+        );
+      }
+      return true;
+    }).filter(deal => {
+      // Filtros adicionais
+      if (filters.responsavel && filters.responsavel !== 'todos') {
+        return deal.responsavel.toLowerCase() === filters.responsavel.toLowerCase();
+      }
+      if (filters.status && filters.status !== 'todos') {
+        return deal.status === filters.status;
+      }
+      if (filters.origem && filters.origem !== 'todos') {
+        return deal.origem?.toLowerCase() === filters.origem.toLowerCase();
+      }
+      return true;
+    });
+  }, [deals, searchQuery, filters]);
+
   const totalValue = deals.reduce((sum, deal) => sum + deal.valor, 0);
   const leadsAtivos = deals.length;
 
@@ -242,15 +276,25 @@ export default function Funil() {
           onSearch={handleSearch}
           onFilterChange={handleFilterChange}
           onConfigureStages={handleConfigureStages}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
         />
       </div>
       
       <div className="flex-1 p-6 overflow-hidden">
-        <FunilBoard 
-          columns={columns} 
-          onDealMove={handleDealMove}
-          onDealClick={handleDealClick}
-        />
+        {viewMode === 'kanban' ? (
+          <FunilBoard 
+            columns={columns} 
+            onDealMove={handleDealMove}
+            onDealClick={handleDealClick}
+          />
+        ) : (
+          <FunilListView
+            deals={flatDeals}
+            stages={stagesConfig}
+            onDealClick={handleDealClick}
+          />
+        )}
       </div>
 
       <NewDealDialog

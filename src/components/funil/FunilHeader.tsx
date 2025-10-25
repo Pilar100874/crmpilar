@@ -16,6 +16,8 @@ import {
   Zap,
   MoreHorizontal,
   ChevronDown,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -23,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface FunilHeaderProps {
   leadsAtivos: number;
@@ -31,6 +34,8 @@ interface FunilHeaderProps {
   onSearch: (query: string) => void;
   onFilterChange: (filters: any) => void;
   onConfigureStages: () => void;
+  viewMode: 'kanban' | 'list';
+  onViewModeChange: (mode: 'kanban' | 'list') => void;
 }
 
 export function FunilHeader({
@@ -40,6 +45,8 @@ export function FunilHeader({
   onSearch,
   onFilterChange,
   onConfigureStages,
+  viewMode,
+  onViewModeChange,
 }: FunilHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -85,6 +92,23 @@ export function FunilHeader({
 
         {/* Ações principais */}
         <div className="flex items-center gap-2">
+          {/* Toggle de visualização */}
+          <ToggleGroup 
+            type="single" 
+            value={viewMode} 
+            onValueChange={(value) => value && onViewModeChange(value as 'kanban' | 'list')}
+            className="border rounded-sm"
+          >
+            <ToggleGroupItem value="kanban" aria-label="Visualização Kanban" className="gap-2">
+              <LayoutGrid className="w-4 h-4" />
+              Kanban
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" aria-label="Visualização Lista" className="gap-2">
+              <List className="w-4 h-4" />
+              Lista
+            </ToggleGroupItem>
+          </ToggleGroup>
+
           <Button
             variant="outline"
             size="sm"
