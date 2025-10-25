@@ -258,23 +258,60 @@ export default function Contatos() {
         processedValue = maskPhone(newValue);
       }
       
-      setFormData({ ...formData, [field.id]: processedValue });
-      
-      // Auto-buscar CNPJ quando completo
-      if (field.id === "cpf_cnpj" && formData.company_type === "Pessoa Jurídica" && newValue.replace(/\D/g, '').length === 14) {
-        handleCNPJLookup(newValue);
-      }
-      
-      // Auto-buscar CEP quando completo
-      if (field.id === "cep" && newValue.replace(/\D/g, '').length === 8) {
-        handleCEPLookup(newValue);
-      }
-      
       // Auto-preencher inscrição como "isento" para pessoa física
       if (field.id === "company_type" && newValue === "Pessoa Física") {
         setFormData({ ...formData, [field.id]: newValue, inscricao: "ISENTO" });
       } else {
         setFormData({ ...formData, [field.id]: processedValue });
+      }
+    };
+    
+    const handleFieldBlur = () => {
+      const cleanValue = value.replace(/\D/g, '');
+      
+      // Validar CPF/CNPJ ao sair do campo
+      if (field.id === "cpf_cnpj") {
+        const companyType = formData.company_type;
+        if (companyType === "Pessoa Física") {
+          if (cleanValue.length === 11) {
+            if (!validateCPF(value)) {
+              toast.error("CPF inválido");
+            }
+          }
+        } else if (companyType === "Pessoa Jurídica") {
+          if (cleanValue.length === 14) {
+            if (!validateCNPJ(value)) {
+              toast.error("CNPJ inválido");
+            } else {
+              // Auto-buscar CNPJ quando completo
+              handleCNPJLookup(value);
+            }
+          }
+        }
+      }
+      
+      // Validar CEP ao sair do campo
+      if (field.id === "cep" && cleanValue.length === 8) {
+        if (!validateCEP(value)) {
+          toast.error("CEP inválido");
+        } else {
+          // Auto-buscar CEP quando completo
+          handleCEPLookup(value);
+        }
+      }
+      
+      // Validar email ao sair do campo
+      if (field.type === "email" && value) {
+        if (!validateEmail(value)) {
+          toast.error("E-mail inválido");
+        }
+      }
+      
+      // Validar telefone ao sair do campo
+      if ((field.id === "phone" || field.type === "phone") && value) {
+        if (!validatePhone(value)) {
+          toast.error("Telefone inválido");
+        }
       }
     };
     
@@ -286,6 +323,7 @@ export default function Contatos() {
             placeholder="..."
             value={value}
             onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+            onBlur={handleFieldBlur}
             required={field.required}
           />
         );
@@ -326,6 +364,7 @@ export default function Contatos() {
               placeholder="..."
               value={displayValue}
               onChange={(e) => handleFieldChange(e.target.value)}
+              onBlur={handleFieldBlur}
               required={field.required}
             />
             {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (

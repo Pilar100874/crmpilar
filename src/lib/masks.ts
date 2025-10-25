@@ -1,54 +1,49 @@
 // Aplicar máscara de CPF
 export const maskCPF = (value: string): string => {
-  const cleanValue = value.replace(/\D/g, '');
-  return cleanValue
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-    .substring(0, 14);
+  const cleanValue = value.replace(/\D/g, '').substring(0, 11);
+  
+  if (cleanValue.length <= 3) return cleanValue;
+  if (cleanValue.length <= 6) return cleanValue.replace(/^(\d{3})(\d{0,3})/, '$1.$2');
+  if (cleanValue.length <= 9) return cleanValue.replace(/^(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+  return cleanValue.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
 };
 
 // Aplicar máscara de CNPJ
 export const maskCNPJ = (value: string): string => {
-  const cleanValue = value.replace(/\D/g, '');
-  return cleanValue
-    .replace(/^(\d{2})(\d)/, '$1.$2')
-    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\d{4})(\d)/, '$1-$2')
-    .substring(0, 18);
+  const cleanValue = value.replace(/\D/g, '').substring(0, 14);
+  
+  if (cleanValue.length <= 2) return cleanValue;
+  if (cleanValue.length <= 5) return cleanValue.replace(/^(\d{2})(\d{0,3})/, '$1.$2');
+  if (cleanValue.length <= 8) return cleanValue.replace(/^(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+  if (cleanValue.length <= 12) return cleanValue.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, '$1.$2.$3/$4');
+  return cleanValue.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
 };
 
 // Aplicar máscara de CEP
 export const maskCEP = (value: string): string => {
-  const cleanValue = value.replace(/\D/g, '');
-  return cleanValue
-    .replace(/^(\d{5})(\d)/, '$1-$2')
-    .substring(0, 9);
+  const cleanValue = value.replace(/\D/g, '').substring(0, 8);
+  
+  if (cleanValue.length <= 5) return cleanValue;
+  return cleanValue.replace(/^(\d{5})(\d{0,3})/, '$1-$2');
 };
 
 // Aplicar máscara de Telefone
 export const maskPhone = (value: string): string => {
-  const cleanValue = value.replace(/\D/g, '');
-  if (cleanValue.length <= 10) {
-    return cleanValue
-      .replace(/^(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{4})(\d)/, '$1-$2')
-      .substring(0, 14);
-  }
-  return cleanValue
-    .replace(/^(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d{5})(\d)/, '$1-$2')
-    .substring(0, 15);
+  const cleanValue = value.replace(/\D/g, '').substring(0, 11);
+  
+  if (cleanValue.length <= 2) return cleanValue;
+  if (cleanValue.length <= 6) return cleanValue.replace(/^(\d{2})(\d{0,4})/, '($1) $2');
+  if (cleanValue.length <= 10) return cleanValue.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+  return cleanValue.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
 };
 
 // Aplicar máscara de Data
 export const maskDate = (value: string): string => {
-  const cleanValue = value.replace(/\D/g, '');
-  return cleanValue
-    .replace(/^(\d{2})(\d)/, '$1/$2')
-    .replace(/(\d{2})(\d)/, '$1/$2')
-    .substring(0, 10);
+  const cleanValue = value.replace(/\D/g, '').substring(0, 8);
+  
+  if (cleanValue.length <= 2) return cleanValue;
+  if (cleanValue.length <= 4) return cleanValue.replace(/^(\d{2})(\d{0,2})/, '$1/$2');
+  return cleanValue.replace(/^(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
 };
 
 // Aplicar máscara customizada
