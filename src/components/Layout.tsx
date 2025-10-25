@@ -318,9 +318,10 @@ export default function Layout({ children }: LayoutProps) {
                           {/* Submenu panel */}
                           <div className="fixed left-20 top-0 bottom-0 w-72 bg-card border-r border-border/30 shadow-sm z-50 overflow-y-auto">
                             <div className="p-8 pt-10">
-                              <h3 className="text-lg font-bold text-foreground mb-6">
+                              <h3 className="text-lg font-bold text-foreground mb-4">
                                 {item.title}
                               </h3>
+                              <div className="border-t border-border/90 mb-6" />
                               
                               <div className="space-y-0">
                                 {item.subItems.map((subItem, index) => (
