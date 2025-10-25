@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical, Search, Filter, Calendar, X } from "lucide-react";
+import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface CustomField {
@@ -56,6 +56,8 @@ export default function Contatos() {
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [editingCell, setEditingCell] = useState<{ contactId: string; field: string } | null>(null);
+  const [editingValue, setEditingValue] = useState("");
   
   const [contactFields, setContactFields] = useState<CustomField[]>([
     { id: "name", label: "Nome de contato", type: "text", category: "contact" },
@@ -242,6 +244,37 @@ export default function Contatos() {
     toast.success("Contato excluído com sucesso");
   };
 
+  const handleStartEdit = (contactId: string, field: string, value: string) => {
+    setEditingCell({ contactId, field });
+    setEditingValue(value);
+  };
+
+  const handleSaveInlineEdit = () => {
+    if (!editingCell) return;
+
+    const updatedContacts = contacts.map(contact => {
+      if (contact.id === editingCell.contactId) {
+        return {
+          ...contact,
+          [editingCell.field]: editingValue,
+          modifiedAt: new Date().toISOString(),
+          modifiedBy: "Usuário Atual",
+        };
+      }
+      return contact;
+    });
+
+    saveContactsToStorage(updatedContacts);
+    setEditingCell(null);
+    setEditingValue("");
+    toast.success("Campo atualizado com sucesso");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCell(null);
+    setEditingValue("");
+  };
+
   const filteredContacts = contacts.filter(contact => {
     if (searchFilters.name && !contact.name.toLowerCase().includes(searchFilters.name.toLowerCase())) {
       return false;
@@ -311,21 +344,162 @@ export default function Contatos() {
               </TableHeader>
               <TableBody>
                 {filteredContacts.map((contact) => (
-                  <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell 
-                      className="font-medium text-primary"
-                      onClick={() => handleEditContact(contact)}
-                    >
-                      {contact.name}
+                  <TableRow key={contact.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium text-primary group relative">
+                      {editingCell?.contactId === contact.id && editingCell?.field === "name" ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveInlineEdit();
+                              if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            className="h-8"
+                            autoFocus
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={handleSaveInlineEdit}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <span>{contact.name}</span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEdit(contact.id, "name", contact.name);
+                            }}
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell onClick={() => handleEditContact(contact)}>
-                      {contact.company || "-"}
+                    <TableCell className="group relative">
+                      {editingCell?.contactId === contact.id && editingCell?.field === "company" ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveInlineEdit();
+                              if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            className="h-8"
+                            autoFocus
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={handleSaveInlineEdit}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <span>{contact.company || "-"}</span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEdit(contact.id, "company", contact.company || "");
+                            }}
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell onClick={() => handleEditContact(contact)}>
-                      {contact.phone}
+                    <TableCell className="group relative">
+                      {editingCell?.contactId === contact.id && editingCell?.field === "phone" ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveInlineEdit();
+                              if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            className="h-8"
+                            autoFocus
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={handleSaveInlineEdit}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <span>{contact.phone}</span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEdit(contact.id, "phone", contact.phone);
+                            }}
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell onClick={() => handleEditContact(contact)}>
-                      {contact.email}
+                    <TableCell className="group relative">
+                      {editingCell?.contactId === contact.id && editingCell?.field === "email" ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveInlineEdit();
+                              if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            className="h-8"
+                            autoFocus
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={handleSaveInlineEdit}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <span>{contact.email}</span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEdit(contact.id, "email", contact.email);
+                            }}
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Button
