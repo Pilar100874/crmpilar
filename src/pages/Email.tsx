@@ -8,13 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Inbox,
   Send,
   Trash2,
@@ -28,9 +21,10 @@ import {
   RefreshCw,
   AlertCircle,
   Settings,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface Email {
   id: string;
@@ -46,7 +40,10 @@ interface Email {
 
 export default function Email() {
   const navigate = useNavigate();
-  const [selectedFolder, setSelectedFolder] = useState<"inbox" | "sent" | "trash" | "archive">("inbox");
+  const { folder } = useParams<{ folder?: string }>();
+  const [selectedFolder, setSelectedFolder] = useState<"inbox" | "sent" | "trash" | "archive">(
+    (folder as "inbox" | "sent" | "trash" | "archive") || "inbox"
+  );
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [composing, setComposing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,6 +119,13 @@ export default function Email() {
       setCheckingConfig(false);
     }
   };
+
+  // Sincronizar pasta com a URL
+  useEffect(() => {
+    if (folder && folder !== selectedFolder) {
+      setSelectedFolder(folder as "inbox" | "sent" | "trash" | "archive");
+    }
+  }, [folder]);
 
   // Carregar emails do banco
   useEffect(() => {
@@ -329,67 +333,54 @@ export default function Email() {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header com dropdown de pasta e botões */}
-      <div className="border-b bg-card">
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Select value={selectedFolder} onValueChange={(value) => setSelectedFolder(value as any)}>
-              <SelectTrigger className="w-[220px] font-semibold">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {folders.map((folder) => (
-                  <SelectItem key={folder.id} value={folder.id}>
-                    <div className="flex items-center gap-2">
-                      <folder.icon className="w-4 h-4" />
-                      <span>{folder.name}</span>
-                      {folder.count > 0 && (
-                        <Badge variant="secondary" className="ml-2">{folder.count}</Badge>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <div className="relative w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Busca e filtro"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+      {/* Header com botões - só aparece quando não está vendo um email */}
+      {!selectedEmail && !composing && (
+        <div className="border-b bg-card">
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-semibold">
+                {folders.find(f => f.id === selectedFolder)?.name}
+              </h2>
+              
+              <div className="relative w-96">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Busca e filtro"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/config')}
+                className="gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                CONFIGURAÇÕES
+              </Button>
+              <Button 
+                onClick={() => setComposing(true)}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                ESCREVER
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={fetchNewEmails}
+                disabled={loading}
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => navigate('/config')}
-              className="gap-2"
-            >
-              <Settings className="w-4 h-4" />
-              CONFIGURAÇÕES
-            </Button>
-            <Button 
-              onClick={() => setComposing(true)}
-              className="gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              ESCREVER
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={fetchNewEmails}
-              disabled={loading}
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Área principal de emails */}
       <div className="flex-1 flex flex-col">
@@ -449,48 +440,59 @@ export default function Email() {
           </div>
         ) : selectedEmail ? (
           <div className="flex-1 p-8 overflow-auto bg-background">
-            <Card className="max-w-4xl mx-auto">
-              <div className="p-6 border-b">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h2 className="text-lg font-semibold mb-1">{selectedEmail.subject}</h2>
-                    <div className="text-sm text-muted-foreground">
-                      De: {selectedEmail.from_email}
+            <div className="max-w-4xl mx-auto">
+              <Button 
+                variant="ghost" 
+                className="mb-4 gap-2"
+                onClick={() => setSelectedEmail(null)}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Voltar para lista
+              </Button>
+              
+              <Card>
+                <div className="p-6 border-b">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold mb-1">{selectedEmail.subject}</h2>
+                      <div className="text-sm text-muted-foreground">
+                        De: {selectedEmail.from_email}
+                      </div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(selectedEmail.date).toLocaleString("pt-BR")}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-2" onClick={handleReply}>
+                      <Reply className="w-4 h-4" />
+                      Responder
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Forward className="w-4 h-4" />
+                      Encaminhar
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Archive className="w-4 h-4" />
+                      Arquivar
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Trash2 className="w-4 h-4" />
+                      Excluir
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="p-6 bg-muted/30 rounded-lg">
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {selectedEmail.body}
                     </div>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(selectedEmail.date).toLocaleString("pt-BR")}
-                  </span>
                 </div>
-                
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2" onClick={handleReply}>
-                    <Reply className="w-4 h-4" />
-                    Responder
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Forward className="w-4 h-4" />
-                    Encaminhar
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Archive className="w-4 h-4" />
-                    Arquivar
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Trash2 className="w-4 h-4" />
-                    Excluir
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="p-6 bg-muted/30 rounded-lg">
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {selectedEmail.body}
-                  </div>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col">

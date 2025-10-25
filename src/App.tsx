@@ -45,6 +45,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/atendimento" element={<Atendimento />} />
             <Route path="/email" element={<Email />} />
+            <Route path="/email/:folder" element={<Email />} />
             <Route path="/bot-builder" element={<BotBuilder />} />
             <Route path="/bot-test" element={<BotTest />} />
             <Route path="/bot-create" element={<BotCreate />} />

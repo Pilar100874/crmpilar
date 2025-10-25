@@ -62,7 +62,17 @@ const menuItems: MenuItem[] = [
   { id: "WhatsApp Config", title: "WhatsApp", url: "/whatsapp-config", icon: Smartphone },
   { id: "Campanhas", title: "Calendário", url: "/campanhas", icon: Megaphone },
   { id: "Conteúdos", title: "Listas", url: "/conteudos", icon: FileText },
-  { id: "Email", title: "E-mail", url: "/email", icon: Workflow },
+  { 
+    id: "Email", 
+    title: "E-mail", 
+    icon: Workflow,
+    subItems: [
+      { id: "Caixa de Entrada", title: "Caixa de Entrada", url: "/email/inbox", icon: MessageSquare },
+      { id: "Enviados", title: "Enviados", url: "/email/sent", icon: MessageSquare },
+      { id: "Arquivados", title: "Arquivados", url: "/email/archive", icon: MessageSquare },
+      { id: "Lixeira", title: "Lixeira", url: "/email/trash", icon: MessageSquare },
+    ]
+  },
   { 
     id: "Bot Test", 
     title: "Bot", 
