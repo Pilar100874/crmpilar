@@ -13,6 +13,7 @@ import BotCreate from "./pages/BotCreate";
 import Email from "./pages/Email";
 import WhatsAppConfig from "./pages/WhatsAppConfig";
 import Campanhas from "./pages/Campanhas";
+import Calendario from "./pages/Calendario";
 import Funil from "./pages/Funil";
 import Conteudos from "./pages/Conteudos";
 import Contatos from "./pages/Contatos";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/bot-create" element={<BotCreate />} />
             <Route path="/whatsapp-config" element={<WhatsAppConfig />} />
             <Route path="/campanhas" element={<Campanhas />} />
+            <Route path="/calendario" element={<Calendario />} />
             <Route path="/funil" element={<Funil />} />
             <Route path="/conteudos" element={<Conteudos />} />
             <Route path="/contatos" element={<Contatos />} />

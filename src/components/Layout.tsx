@@ -61,7 +61,7 @@ const menuItems: MenuItem[] = [
   { id: "Clientes", title: "Funil", url: "/funil", icon: Users },
   { id: "Atendimento", title: "Chats", url: "/atendimento", icon: MessageSquare },
   { id: "WhatsApp Config", title: "WhatsApp", url: "/whatsapp-config", icon: Smartphone },
-  { id: "Campanhas", title: "Calendário", url: "/campanhas", icon: Megaphone },
+  { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },
   { 
     id: "Conteúdos", 
     title: "Listas", 
