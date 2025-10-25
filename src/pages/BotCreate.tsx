@@ -17,7 +17,7 @@ export default function BotCreate() {
               title="Bot"
               onOpenSubmenu={() => openSubmenu("Bot Test")}
             />
-            <span className="text-muted-foreground">→</span>
+            <span className="text-muted-foreground text-xl">›</span>
             <h1 className="text-3xl font-bold text-foreground">Criar Bot</h1>
           </div>
           <p className="text-muted-foreground">

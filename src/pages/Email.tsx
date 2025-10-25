@@ -345,7 +345,7 @@ export default function Email() {
                 title="E-mail"
                 onOpenSubmenu={() => openSubmenu("Email")}
               />
-              <span className="text-muted-foreground">→</span>
+              <span className="text-muted-foreground text-xl">›</span>
               <h2 className="text-xl font-semibold">
                 {folders.find(f => f.id === selectedFolder)?.name}
               </h2>

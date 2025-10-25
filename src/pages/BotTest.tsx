@@ -119,7 +119,7 @@ export default function BotTest() {
                   title="Bot"
                   onOpenSubmenu={() => openSubmenu("Bot Test")}
                 />
-                <span className="text-muted-foreground">→</span>
+                <span className="text-muted-foreground text-xl">›</span>
                 <h2 className="text-2xl font-bold text-foreground">TESTE DO BOT</h2>
               </div>
               <p className="text-sm text-muted-foreground">
