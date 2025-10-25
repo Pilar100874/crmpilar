@@ -114,19 +114,49 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const handleQuickDate = (days: number, optionId?: string) => {
     const now = new Date();
     let newDate: Date;
+    let clearTime = false;
 
     if (days === -1) {
+      // Após 15 min
       newDate = addMinutes(now, 15);
     } else if (days === -2) {
+      // Após 30 min
       newDate = addMinutes(now, 30);
     } else if (days === -3) {
+      // Em 1 hora
+      newDate = addMinutes(now, 60);
+    } else if (days === 0) {
+      // Hoje
       newDate = addMinutes(now, 60);
     } else {
+      // Amanhã, 7 dias, 30 dias, 1 ano - apenas preenche data
       newDate = addDays(now, days);
+      clearTime = true;
     }
 
-    console.log("[NewTaskDialog] Quick option selected:", { days, newDate });
-    setFromInstant(newDate);
+    // Verificar se cai em final de semana (0 = domingo, 6 = sábado)
+    const dayOfWeek = newDate.getDay();
+    if (dayOfWeek === 0) {
+      // Domingo -> mover para segunda (adicionar 1 dia)
+      newDate = addDays(newDate, 1);
+      toast.info("Data ajustada para segunda-feira");
+    } else if (dayOfWeek === 6) {
+      // Sábado -> mover para segunda (adicionar 2 dias)
+      newDate = addDays(newDate, 2);
+      toast.info("Data ajustada para segunda-feira");
+    }
+
+    console.log("[NewTaskDialog] Quick option selected:", { days, newDate, clearTime });
+    
+    if (clearTime) {
+      setDate(newDate);
+      setDateInput(format(newDate, "dd/MM/yyyy"));
+      setHours("");
+      setMinutes("");
+    } else {
+      setFromInstant(newDate);
+    }
+    
     setSelectedQuickOption(optionId ?? null);
     setDatePickerOpen(false);
     setHourPickerOpen(false);
@@ -226,6 +256,27 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       if (taskDate < now) {
         toast.error("Não é possível adicionar tarefas com data/hora anterior ao momento atual");
         return;
+      }
+    }
+
+    // Verificar conflitos se for "dia todo"
+    if (isAllDay) {
+      const savedTasks = localStorage.getItem("calendar_tasks");
+      if (savedTasks) {
+        const tasks = JSON.parse(savedTasks);
+        const dateStr = format(date, "yyyy-MM-dd");
+        const conflictingTasks = tasks.filter((t: any) => 
+          format(new Date(t.date), "yyyy-MM-dd") === dateStr
+        );
+        
+        if (conflictingTasks.length > 0) {
+          const confirmed = window.confirm(
+            `Já existem ${conflictingTasks.length} tarefa(s) nesta data. Deseja realmente adicionar esta tarefa de dia todo? As outras tarefas serão mantidas.`
+          );
+          if (!confirmed) {
+            return;
+          }
+        }
       }
     }
 
