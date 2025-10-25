@@ -91,10 +91,26 @@ export default function Contatos() {
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
     const saved = localStorage.getItem("contactsTableColumns");
     if (saved) {
-      return JSON.parse(saved);
+      try {
+        const parsed = JSON.parse(saved);
+        // Garantir que a coluna actions sempre existe
+        const hasActions = parsed.some((col: TableColumn) => col.id === 'actions');
+        if (!hasActions) {
+          return [
+            { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
+            ...parsed
+          ];
+        }
+        // Garantir que actions está locked
+        return parsed.map((col: TableColumn) => 
+          col.id === 'actions' ? { ...col, locked: true, visible: true } : col
+        );
+      } catch {
+        // Se houver erro ao parsear, usar valores padrão
+      }
     }
     return [
-      { id: "actions", label: "Ações", visible: true, width: 80 },
+      { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
       { id: "name", label: "Nome", visible: true, width: 250, locked: true },
       { id: "company", label: "Empresa", visible: true, width: 200 },
       { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
