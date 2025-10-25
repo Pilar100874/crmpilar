@@ -59,6 +59,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<any[]>([]);
   const [pendingTaskData, setPendingTaskData] = useState<any>(null);
+  const [contactTasksDialogOpen, setContactTasksDialogOpen] = useState(false);
+  const [contactExistingTasks, setContactExistingTasks] = useState<any[]>([]);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   // Carregar contatos do localStorage
   useEffect(() => {
@@ -113,6 +116,18 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     setSelectedContact(contact);
     setSearchQuery(contact.name);
     setShowContactList(false);
+
+    // Verificar se existem tarefas para este contato
+    const savedTasks = localStorage.getItem("calendar_tasks");
+    if (savedTasks) {
+      const tasks = JSON.parse(savedTasks);
+      const existingTasks = tasks.filter((t: any) => t.contactId === contact.id);
+      
+      if (existingTasks.length > 0) {
+        setContactExistingTasks(existingTasks);
+        setContactTasksDialogOpen(true);
+      }
+    }
   };
 
   const handleQuickDate = (days: number, optionId?: string) => {
@@ -292,6 +307,31 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
 
     const timeString = isAllDay ? "" : `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
 
+    // Se estiver editando uma tarefa existente, atualizar ao invés de criar nova
+    if (editingTaskId) {
+      const savedTasks = localStorage.getItem("calendar_tasks");
+      if (savedTasks) {
+        const tasks = JSON.parse(savedTasks);
+        const updatedTasks = tasks.map((t: any) => {
+          if (t.id === editingTaskId) {
+            return {
+              ...t,
+              date,
+              time: timeString,
+              type: taskType,
+              observation,
+            };
+          }
+          return t;
+        });
+        localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+        toast.success("Tarefa atualizada com sucesso");
+        setEditingTaskId(null);
+        onOpenChange(false);
+        return;
+      }
+    }
+
     onSave({
       contactId: selectedContact.id,
       contactName: selectedContact.name,
@@ -348,6 +388,64 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     setConflictDialogOpen(false);
     setPendingTaskData(null);
     setConflictingTasks([]);
+  };
+
+  const handleInsertNewTask = () => {
+    setContactTasksDialogOpen(false);
+    setContactExistingTasks([]);
+    // Continua com a criação normal da tarefa
+  };
+
+  const handleEditExistingTask = (task: any) => {
+    setContactTasksDialogOpen(false);
+    setContactExistingTasks([]);
+    
+    // Preencher o formulário com os dados da tarefa
+    setEditingTaskId(task.id);
+    setDate(new Date(task.date));
+    setDateInput(format(new Date(task.date), "dd/MM/yyyy"));
+    
+    if (task.time) {
+      const [h, m] = task.time.split(':');
+      setHours(h);
+      setMinutes(m);
+      setIsAllDay(false);
+    } else {
+      setIsAllDay(true);
+      setHours("");
+      setMinutes("");
+    }
+    
+    setTaskType(task.type);
+    setObservation(task.observation || "");
+  };
+
+  const handleDeleteExistingTask = (taskId: string) => {
+    const savedTasks = localStorage.getItem("calendar_tasks");
+    if (savedTasks) {
+      const tasks = JSON.parse(savedTasks);
+      const updatedTasks = tasks.filter((t: any) => t.id !== taskId);
+      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+      
+      // Atualizar lista de tarefas do contato
+      const remainingTasks = contactExistingTasks.filter(t => t.id !== taskId);
+      setContactExistingTasks(remainingTasks);
+      
+      toast.success("Tarefa excluída com sucesso");
+      
+      // Se não houver mais tarefas, fechar o diálogo
+      if (remainingTasks.length === 0) {
+        setContactTasksDialogOpen(false);
+        setContactExistingTasks([]);
+      }
+    }
+  };
+
+  const handleCancelContactTasks = () => {
+    setContactTasksDialogOpen(false);
+    setContactExistingTasks([]);
+    setSelectedContact(null);
+    setSearchQuery("");
   };
 
   return (
@@ -688,6 +786,74 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
             Manter todas as tarefas
           </Button>
           <AlertDialogCancel onClick={handleCancelConflict} className="w-full mt-0" asChild>
+            <Button variant="outline" size="sm">Cancelar</Button>
+          </AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Diálogo de tarefas existentes do contato */}
+    <AlertDialog open={contactTasksDialogOpen} onOpenChange={setContactTasksDialogOpen}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Tarefas existentes para este contato</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {selectedContact?.name} já possui {contactExistingTasks.length} tarefa(s) agendada(s):
+              </p>
+              <ScrollArea className="max-h-[300px] rounded-md border p-3">
+                <div className="space-y-3">
+                  {contactExistingTasks.map((task, index) => (
+                    <div key={task.id || index} className="border rounded-md p-3 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">
+                            {format(new Date(task.date), "dd/MM/yyyy", { locale: ptBR })}
+                            {task.time && ` às ${task.time}`}
+                            {!task.time && " (Dia todo)"}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {task.type === 'accompany' ? 'Acompanhar' : task.type === 'call' ? 'Ligação' : 'Reunião'}
+                          </div>
+                          {task.observation && (
+                            <div className="text-xs text-muted-foreground mt-1 italic">
+                              {task.observation}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleEditExistingTask(task)} 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1"
+                        >
+                          Alterar
+                        </Button>
+                        <Button 
+                          onClick={() => handleDeleteExistingTask(task.id)} 
+                          variant="destructive" 
+                          size="sm"
+                          className="flex-1"
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <p className="text-sm">O que deseja fazer?</p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <Button onClick={handleInsertNewTask} className="w-full" size="sm">
+            Inserir nova tarefa
+          </Button>
+          <AlertDialogCancel onClick={handleCancelContactTasks} className="w-full mt-0" asChild>
             <Button variant="outline" size="sm">Cancelar</Button>
           </AlertDialogCancel>
         </AlertDialogFooter>
