@@ -43,12 +43,12 @@ export function FunilBoard({ columns, onDealMove, onDealClick }: FunilBoardProps
     }
 
     const dealId = active.id as string;
-    const newStage = over.id as FunilStage;
+    const newStage = over.id as FunilStage | string;
 
-    // Verifica se é uma coluna válida
-    const validStages: FunilStage[] = ['lead', 'qualificacao', 'proposta', 'negociacao', 'fechamento'];
-    if (validStages.includes(newStage)) {
-      onDealMove(dealId, newStage);
+    // Calcula estágios válidos a partir das colunas atuais
+    const validStages = new Set(columns.map(c => c.id));
+    if (validStages.has(newStage as FunilStage)) {
+      onDealMove(dealId, newStage as FunilStage);
     }
 
     setActiveId(null);

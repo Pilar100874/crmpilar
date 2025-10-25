@@ -46,6 +46,22 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// Sortable row component
+function SortableRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  } as React.CSSProperties;
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
+
+
 interface StageConfig {
   id: FunilStage | string;
   title: string;
@@ -55,7 +71,7 @@ interface StageConfig {
 interface ConfigureStagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (stages: StageConfig[]) => void;
+  onSave: (stages: StageConfig[], moves: { from: string; to: string }[]) => void;
   currentDeals: Array<{ id: string; stage?: FunilStage | string }>;
   initialStages: StageConfig[];
 }
@@ -74,6 +90,7 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [stageToDelete, setStageToDelete] = useState<StageConfig | null>(null);
   const [targetStageId, setTargetStageId] = useState<string>('');
+  const [moves, setMoves] = useState<{ from: string; to: string }[]>([]);
 
   // Atualiza stages quando initialStages mudar
   useEffect(() => {
@@ -143,16 +160,19 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
       return; // Não permite deletar sem escolher uma etapa de destino
     }
 
-    // Remove a etapa
+  // Remove a etapa
     setStages(stages.filter(s => s.id !== stageToDelete.id));
+    
+    // Registra movimentação caso haja negócios
+    if (dealCount > 0 && targetStageId) {
+      setMoves(prev => [...prev, { from: String(stageToDelete.id), to: targetStageId }]);
+    }
     
     // Fecha o diálogo
     setDeleteConfirmOpen(false);
     setStageToDelete(null);
     setTargetStageId('');
 
-    // Aqui você pode adicionar lógica para mover os deals se necessário
-    // onSave será chamado quando o usuário clicar em Salvar
   };
 
   const cancelDelete = () => {
@@ -168,7 +188,7 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
   };
 
   const handleSave = () => {
-    onSave(stages);
+    onSave(stages, moves);
     onOpenChange(false);
   };
 
@@ -200,9 +220,9 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
               >
                 <div className="space-y-2">
                   {stages.map((stage, index) => {
-                    const dealCount = getDealCountForStage(stage.id);
+                    const dealCount = getDealCountForStage(stage.id as string);
                     return (
-                      <div key={stage.id}>
+                      <SortableRow key={String(stage.id)} id={String(stage.id)}>
                         <Card className="p-3">
                           <div className="flex items-center gap-3">
                             <div className="cursor-grab active:cursor-grabbing text-muted-foreground">
@@ -227,7 +247,7 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
                               </div>
                               <Input
                                 value={stage.title}
-                                onChange={(e) => handleUpdateStageTitle(stage.id, e.target.value)}
+                                onChange={(e) => handleUpdateStageTitle(stage.id as string, e.target.value)}
                                 placeholder="Nome da etapa"
                                 className="font-medium"
                               />
@@ -236,14 +256,14 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleRemoveStage(stage.id)}
+                              onClick={() => handleRemoveStage(stage.id as string)}
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </Card>
-                      </div>
+                      </SortableRow>
                     );
                   })}
                 </div>

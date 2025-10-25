@@ -72,9 +72,14 @@ export default function Funil() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [configureStagesOpen, setConfigureStagesOpen] = useState(false);
   const [stagesConfig, setStagesConfig] = useState<StageConfig[]>(() => {
-    // Tentar carregar do localStorage
-    const saved = localStorage.getItem('funilStagesConfig');
-    return saved ? JSON.parse(saved) : defaultStages;
+    try {
+      const saved = localStorage.getItem('funilStagesConfig');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch {}
+    return defaultStages;
   });
 
   // Simular detecção de SLA (negócios parados)
@@ -193,10 +198,22 @@ export default function Funil() {
     setConfigureStagesOpen(true);
   };
 
-  const handleSaveStages = (stages: StageConfig[]) => {
+  const handleSaveStages = (stages: StageConfig[], moves: { from: string; to: string }[]) => {
     // Salva as configurações no estado e no localStorage
     setStagesConfig(stages);
     localStorage.setItem('funilStagesConfig', JSON.stringify(stages));
+
+    const stageIds = new Set(stages.map(s => s.id));
+    const movesMap = new Map(moves.map(m => [m.from, m.to] as const));
+    const fallbackStage = stages[0]?.id;
+
+    // Aplica movimentações e garante que todos os deals tenham estágio válido
+    setDeals(prev => prev.map(d => {
+      const currentStage = (d as any).stage as string | undefined;
+      const movedTo = currentStage ? movesMap.get(currentStage) : undefined;
+      const nextStage = movedTo || (currentStage && stageIds.has(currentStage) ? currentStage : fallbackStage);
+      return { ...d, stage: nextStage } as any;
+    }));
     
     toast({
       title: 'Etapas configuradas',
