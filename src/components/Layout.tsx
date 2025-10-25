@@ -58,7 +58,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
-  { id: "Clientes", title: "Leads", url: "/clientes", icon: Users },
+  { id: "Clientes", title: "Funil", url: "/funil", icon: Users },
   { id: "Atendimento", title: "Chats", url: "/atendimento", icon: MessageSquare },
   { id: "WhatsApp Config", title: "WhatsApp", url: "/whatsapp-config", icon: Smartphone },
   { id: "Campanhas", title: "Calendário", url: "/campanhas", icon: Megaphone },

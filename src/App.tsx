@@ -13,7 +13,7 @@ import BotCreate from "./pages/BotCreate";
 import Email from "./pages/Email";
 import WhatsAppConfig from "./pages/WhatsAppConfig";
 import Campanhas from "./pages/Campanhas";
-import Clientes from "./pages/Clientes";
+import Funil from "./pages/Funil";
 import Conteudos from "./pages/Conteudos";
 import Config from "./pages/Config";
 import GlobalVariables from "./pages/GlobalVariables";
@@ -51,7 +51,7 @@ const App = () => (
             <Route path="/bot-create" element={<BotCreate />} />
             <Route path="/whatsapp-config" element={<WhatsAppConfig />} />
             <Route path="/campanhas" element={<Campanhas />} />
-            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/funil" element={<Funil />} />
             <Route path="/conteudos" element={<Conteudos />} />
             <Route path="/config" element={<Config />} />
             <Route path="/global-variables" element={<GlobalVariables />} />
