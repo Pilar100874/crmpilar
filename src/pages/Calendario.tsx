@@ -7,10 +7,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Filter, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Filter, RefreshCw, GripVertical } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  closestCenter,
+  DragOverEvent,
+  useDroppable,
+} from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Task {
   id: string;
@@ -25,6 +39,134 @@ interface Task {
 }
 
 type ViewMode = "day" | "week" | "month" | "list";
+
+// Componente de dia com drop zone
+function DroppableDay({ 
+  date, 
+  children, 
+  className, 
+  onClick 
+}: { 
+  date: Date; 
+  children: React.ReactNode; 
+  className?: string; 
+  onClick?: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: format(date, "yyyy-MM-dd"),
+    data: { date },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`${className} ${isOver ? "ring-2 ring-primary ring-inset" : ""}`}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Componente de tarefa arrastável
+function DraggableTask({ task, onClick }: { task: Task; onClick?: (e?: any) => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id, data: { task } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group text-xs px-2 py-1 rounded flex items-center gap-1 cursor-move ${
+        task.status === "completed"
+          ? "bg-muted text-muted-foreground line-through"
+          : "bg-primary/10 text-primary hover:bg-primary/20"
+      }`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(e);
+      }}
+      {...attributes}
+      {...listeners}
+    >
+      <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <span className="truncate flex-1">
+        {task.time && `${task.time} `}{task.title}
+      </span>
+    </div>
+  );
+}
+
+// Componente de card de tarefa arrastável (para lista)
+function DraggableTaskCard({ task, onToggle }: { task: Task; onToggle: () => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id, data: { task } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className="mb-2 cursor-move">
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <div {...attributes} {...listeners}>
+                <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-grab" />
+              </div>
+              <span className="text-sm font-medium">
+                {format(task.date, "dd/MM/yyyy", { locale: ptBR })}
+              </span>
+              {task.time && (
+                <span className="text-xs text-muted-foreground">{task.time}</span>
+              )}
+              {task.assignedTo && (
+                <Badge variant="outline" className="text-xs">
+                  para {task.assignedTo}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={task.status === "completed"}
+                onChange={onToggle}
+                className="cursor-pointer"
+              />
+              <span className={task.status === "completed" ? "line-through text-muted-foreground" : ""}>
+                {task.title}
+              </span>
+            </div>
+            {task.description && (
+              <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Calendario() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -41,6 +183,15 @@ export default function Calendario() {
     type: "other" as Task["type"]
   });
   const [filterBy, setFilterBy] = useState<"all" | "my">("my");
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   // Navegação
   const handlePrevious = () => {
@@ -111,6 +262,31 @@ export default function Calendario() {
     ));
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Se o over.id é uma data (formato ISO), atualiza a data da tarefa
+    const overData = over.data.current;
+    if (overData?.date) {
+      const newDate = overData.date as Date;
+      setTasks(tasks.map(t =>
+        t.id === taskId ? { ...t, date: newDate } : t
+      ));
+      toast.success("Tarefa movida com sucesso");
+    }
+  };
+
   // Obter tarefas do dia
   const getTasksForDay = (date: Date) => {
     return tasks.filter(task => isSameDay(task.date, date));
@@ -147,8 +323,9 @@ export default function Calendario() {
         const isTodayDate = isToday(day);
 
         cells.push(
-          <div
+          <DroppableDay
             key={day.toString()}
+            date={currentDay}
             className={`min-h-[120px] border-r border-b border-border p-2 cursor-pointer hover:bg-muted/50 transition-colors ${
               !isCurrentMonth ? "bg-muted/20 text-muted-foreground" : ""
             } ${isTodayDate ? "bg-primary/5" : ""}`}
@@ -163,18 +340,14 @@ export default function Calendario() {
             </div>
             <div className="space-y-1">
               {dayTasks.slice(0, 3).map(task => (
-                <div
+                <DraggableTask
                   key={task.id}
-                  className={`text-xs px-2 py-1 rounded truncate ${
-                    task.status === "completed" ? "bg-muted text-muted-foreground line-through" : "bg-primary/10 text-primary"
-                  }`}
+                  task={task}
                   onClick={(e) => {
-                    e.stopPropagation();
+                    e?.stopPropagation();
                     handleToggleTaskStatus(task.id);
                   }}
-                >
-                  {task.time && `${task.time} `}{task.title}
-                </div>
+                />
               ))}
               {dayTasks.length > 3 && (
                 <div className="text-xs text-muted-foreground px-2">
@@ -182,7 +355,7 @@ export default function Calendario() {
                 </div>
               )}
             </div>
-          </div>
+          </DroppableDay>
         );
         day = addDays(day, 1);
       }
@@ -213,7 +386,11 @@ export default function Calendario() {
       const isTodayDate = isToday(day);
 
       days.push(
-        <div key={i} className="flex-1 border-r border-b border-border">
+        <DroppableDay 
+          key={i} 
+          date={day}
+          className="flex-1 border-r border-b border-border"
+        >
           <div className={`p-3 border-b border-border text-center ${isTodayDate ? "bg-primary/5" : ""}`}>
             <div className="text-xs text-muted-foreground uppercase">
               {format(day, "EEE", { locale: ptBR })}
@@ -224,21 +401,14 @@ export default function Calendario() {
           </div>
           <div className="p-2 space-y-2 min-h-[400px]">
             {dayTasks.map(task => (
-              <div
+              <DraggableTask
                 key={task.id}
-                className={`p-2 rounded border cursor-pointer ${
-                  task.status === "completed"
-                    ? "bg-muted text-muted-foreground line-through border-muted"
-                    : "bg-card border-border hover:border-primary"
-                }`}
+                task={task}
                 onClick={() => handleToggleTaskStatus(task.id)}
-              >
-                <div className="font-medium text-sm">{task.title}</div>
-                {task.time && <div className="text-xs text-muted-foreground">{task.time}</div>}
-              </div>
+              />
             ))}
           </div>
-        </div>
+        </DroppableDay>
       );
     }
 
@@ -311,44 +481,6 @@ export default function Calendario() {
       return diff > 7 && task.status === "pending";
     });
 
-    const TaskCard = ({ task }: { task: Task }) => (
-      <Card className="mb-2">
-        <CardContent className="p-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium">
-                  {format(task.date, "dd/MM/yyyy", { locale: ptBR })}
-                </span>
-                {task.time && (
-                  <span className="text-xs text-muted-foreground">{task.time}</span>
-                )}
-                {task.assignedTo && (
-                  <Badge variant="outline" className="text-xs">
-                    para {task.assignedTo}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={task.status === "completed"}
-                  onChange={() => handleToggleTaskStatus(task.id)}
-                  className="cursor-pointer"
-                />
-                <span className={task.status === "completed" ? "line-through text-muted-foreground" : ""}>
-                  {task.title}
-                </span>
-              </div>
-              {task.description && (
-                <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-
     return (
       <div className="grid grid-cols-4 gap-4 p-4">
         <div>
@@ -356,7 +488,13 @@ export default function Calendario() {
             <h3 className="font-semibold text-sm uppercase">TAREFAS DE HOJE</h3>
             <p className="text-xs text-muted-foreground">{todayTasks.length} tarefas</p>
           </div>
-          {todayTasks.map(task => <TaskCard key={task.id} task={task} />)}
+          {todayTasks.map(task => 
+            <DraggableTaskCard 
+              key={task.id} 
+              task={task} 
+              onToggle={() => handleToggleTaskStatus(task.id)}
+            />
+          )}
         </div>
 
         <div>
@@ -364,7 +502,13 @@ export default function Calendario() {
             <h3 className="font-semibold text-sm uppercase">TAREFAS DE AMANHÃ</h3>
             <p className="text-xs text-muted-foreground">{tomorrowTasks.length} tarefas</p>
           </div>
-          {tomorrowTasks.map(task => <TaskCard key={task.id} task={task} />)}
+          {tomorrowTasks.map(task => 
+            <DraggableTaskCard 
+              key={task.id} 
+              task={task} 
+              onToggle={() => handleToggleTaskStatus(task.id)}
+            />
+          )}
         </div>
 
         <div>
@@ -372,7 +516,13 @@ export default function Calendario() {
             <h3 className="font-semibold text-sm uppercase">TAREFAS DA PRÓXIMA SEMANA</h3>
             <p className="text-xs text-muted-foreground">{nextWeekTasks.length} tarefa{nextWeekTasks.length !== 1 ? 's' : ''}</p>
           </div>
-          {nextWeekTasks.map(task => <TaskCard key={task.id} task={task} />)}
+          {nextWeekTasks.map(task => 
+            <DraggableTaskCard 
+              key={task.id} 
+              task={task} 
+              onToggle={() => handleToggleTaskStatus(task.id)}
+            />
+          )}
         </div>
 
         <div>
@@ -380,7 +530,13 @@ export default function Calendario() {
             <h3 className="font-semibold text-sm uppercase">TAREFAS PARA O FUTURO</h3>
             <p className="text-xs text-muted-foreground">{futureTasks.length} tarefa{futureTasks.length !== 1 ? 's' : ''}</p>
           </div>
-          {futureTasks.map(task => <TaskCard key={task.id} task={task} />)}
+          {futureTasks.map(task => 
+            <DraggableTaskCard 
+              key={task.id} 
+              task={task} 
+              onToggle={() => handleToggleTaskStatus(task.id)}
+            />
+          )}
         </div>
       </div>
     );
@@ -388,8 +544,16 @@ export default function Calendario() {
 
   const getTotalTasks = () => tasks.filter(t => t.status === "pending").length;
 
+  const activeTask = activeId ? tasks.find(t => t.id === activeId) : null;
+
   return (
-    <div className="flex flex-col h-full bg-background">
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="px-6 py-4 flex items-center justify-between">
@@ -569,6 +733,17 @@ export default function Calendario() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Drag Overlay */}
+      <DragOverlay>
+        {activeTask ? (
+          <div className="bg-primary/20 text-primary px-3 py-2 rounded shadow-lg border border-primary">
+            <div className="font-medium text-sm">{activeTask.title}</div>
+            {activeTask.time && <div className="text-xs">{activeTask.time}</div>}
+          </div>
+        ) : null}
+      </DragOverlay>
     </div>
+    </DndContext>
   );
 }
