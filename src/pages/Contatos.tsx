@@ -10,8 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check } from "lucide-react";
+import { Plus, MoreVertical, ArrowLeft, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP } from "@/lib/validators";
+import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from "@/lib/masks";
+import { useAddressLookup } from "@/hooks/useAddressLookup";
+import { useCNPJLookup } from "@/hooks/useCNPJLookup";
+import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
 
 interface CustomField {
   id: string;
@@ -19,6 +24,8 @@ interface CustomField {
   type: "text" | "email" | "phone" | "textarea" | "select" | "checkbox" | "date" | "number";
   category: "contact" | "company";
   options?: string[];
+  required?: boolean;
+  locked?: boolean; // Não pode ser removido
 }
 
 interface Contact {
@@ -59,18 +66,30 @@ export default function Contatos() {
   const [editingCell, setEditingCell] = useState<{ contactId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
   
+  // Hooks para buscar CEP e CNPJ
+  const { lookupCEP, loading: cepLoading } = useAddressLookup();
+  const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
+  
+  // Campos obrigatórios fixos de contato (não podem ser removidos)
   const [contactFields, setContactFields] = useState<CustomField[]>([
-    { id: "name", label: "Nome de contato", type: "text", category: "contact" },
-    { id: "phone", label: "Telefone", type: "phone", category: "contact" },
-    { id: "email", label: "E-mail", type: "email", category: "contact" },
-    { id: "position", label: "Posição", type: "text", category: "contact" },
+    { id: "name", label: "Nome de contato", type: "text", category: "contact", required: true, locked: true },
+    { id: "phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
+    { id: "email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
+    { id: "position", label: "Posição", type: "text", category: "contact", required: true, locked: true },
   ]);
+  
+  // Campos obrigatórios fixos de empresa (não podem ser removidos)
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
-    { id: "company_name", label: "Nome da empresa", type: "text", category: "company" },
-    { id: "company_phone", label: "Telefone", type: "phone", category: "company" },
-    { id: "company_email", label: "E-mail", type: "email", category: "company" },
-    { id: "site", label: "Site", type: "text", category: "company" },
-    { id: "address", label: "Endereço", type: "text", category: "company" },
+    { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: true },
+    { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: true },
+    { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
+    { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: true },
+    { id: "cep", label: "CEP", type: "text", category: "company", required: true, locked: true },
+    { id: "address", label: "Endereço", type: "text", category: "company", required: true, locked: true },
+    { id: "city", label: "Cidade", type: "text", category: "company", required: true, locked: true },
+    { id: "neighborhood", label: "Bairro", type: "text", category: "company", required: true, locked: true },
+    { id: "state", label: "UF", type: "text", category: "company", required: true, locked: true },
+    { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: true, locked: true },
   ]);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -78,6 +97,7 @@ export default function Contatos() {
   const [newFieldType, setNewFieldType] = useState<CustomField["type"]>("text");
   const [newFieldOptions, setNewFieldOptions] = useState("");
   const [activeFieldTab, setActiveFieldTab] = useState<"contact" | "company">("contact");
+  const [fieldMasks, setFieldMasks] = useState<FieldMask[]>([]);
   
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     name: "",
@@ -134,6 +154,15 @@ export default function Contatos() {
   };
 
   const handleRemoveField = (fieldId: string, category: "contact" | "company") => {
+    const fields = category === "contact" ? contactFields : companyFields;
+    const field = fields.find(f => f.id === fieldId);
+    
+    // Não permite remover campos bloqueados
+    if (field?.locked) {
+      toast.error("Este campo é obrigatório e não pode ser removido");
+      return;
+    }
+    
     if (category === "contact") {
       setContactFields(contactFields.filter(f => f.id !== fieldId));
     } else {
@@ -142,8 +171,112 @@ export default function Contatos() {
     toast.success("Campo removido com sucesso");
   };
 
+  // Buscar dados do CNPJ
+  const handleCNPJLookup = async (cnpj: string) => {
+    if (!validateCNPJ(cnpj)) {
+      toast.error("CNPJ inválido");
+      return;
+    }
+
+    const data = await lookupCNPJ(cnpj);
+    if (data) {
+      setFormData({
+        ...formData,
+        company_name: data.nome,
+        company_fantasia: data.fantasia,
+        cep: data.cep,
+        address: data.logradouro + (data.numero ? ', ' + data.numero : ''),
+        city: data.municipio,
+        neighborhood: data.bairro,
+        state: data.uf,
+      });
+      toast.success("Dados preenchidos automaticamente");
+    }
+  };
+
+  // Buscar dados do CEP
+  const handleCEPLookup = async (cep: string) => {
+    if (!validateCEP(cep)) {
+      toast.error("CEP inválido");
+      return;
+    }
+
+    const data = await lookupCEP(cep);
+    if (data) {
+      setFormData({
+        ...formData,
+        address: data.logradouro,
+        city: data.localidade,
+        neighborhood: data.bairro,
+        state: data.uf,
+      });
+      toast.success("Endereço preenchido automaticamente");
+    }
+  };
+
+  // Aplicar máscara ao campo
+  const applyFieldMask = (fieldId: string, value: string): string => {
+    const mask = fieldMasks.find(m => m.fieldId === fieldId);
+    if (!mask) return value;
+
+    switch (mask.maskType) {
+      case "cpf":
+        return maskCPF(value);
+      case "cnpj":
+        return maskCNPJ(value);
+      case "date":
+        return maskDate(value);
+      case "phone":
+        return maskPhone(value);
+      case "custom":
+        return mask.customMask ? applyCustomMask(value, mask.customMask) : value;
+      default:
+        return value;
+    }
+  };
+
   const renderField = (field: CustomField) => {
     const value = formData[field.id] || "";
+    
+    // Aplicar máscara se configurada
+    const displayValue = applyFieldMask(field.id, value);
+    
+    const handleFieldChange = (newValue: string) => {
+      let processedValue = newValue;
+      
+      // Aplicar máscara automática baseada no ID do campo
+      if (field.id === "cpf_cnpj") {
+        const companyType = formData.company_type;
+        if (companyType === "Pessoa Física") {
+          processedValue = maskCPF(newValue);
+        } else if (companyType === "Pessoa Jurídica") {
+          processedValue = maskCNPJ(newValue);
+        }
+      } else if (field.id === "cep") {
+        processedValue = maskCEP(newValue);
+      } else if (field.id === "phone" || field.type === "phone") {
+        processedValue = maskPhone(newValue);
+      }
+      
+      setFormData({ ...formData, [field.id]: processedValue });
+      
+      // Auto-buscar CNPJ quando completo
+      if (field.id === "cpf_cnpj" && formData.company_type === "Pessoa Jurídica" && newValue.replace(/\D/g, '').length === 14) {
+        handleCNPJLookup(newValue);
+      }
+      
+      // Auto-buscar CEP quando completo
+      if (field.id === "cep" && newValue.replace(/\D/g, '').length === 8) {
+        handleCEPLookup(newValue);
+      }
+      
+      // Auto-preencher inscrição como "isento" para pessoa física
+      if (field.id === "company_type" && newValue === "Pessoa Física") {
+        setFormData({ ...formData, [field.id]: newValue, inscricao: "ISENTO" });
+      } else {
+        setFormData({ ...formData, [field.id]: processedValue });
+      }
+    };
     
     switch (field.type) {
       case "textarea":
@@ -153,11 +286,12 @@ export default function Contatos() {
             placeholder="..."
             value={value}
             onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+            required={field.required}
           />
         );
       case "select":
         return (
-          <Select value={value} onValueChange={(val) => setFormData({ ...formData, [field.id]: val })}>
+          <Select value={value} onValueChange={(val) => handleFieldChange(val)}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione..." />
             </SelectTrigger>
@@ -185,21 +319,68 @@ export default function Contatos() {
         );
       default:
         return (
-          <Input
-            id={field.id}
-            type={field.type}
-            placeholder="..."
-            value={value}
-            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-          />
+          <div className="relative">
+            <Input
+              id={field.id}
+              type={field.type === "email" ? "email" : field.type === "number" ? "number" : "text"}
+              placeholder="..."
+              value={displayValue}
+              onChange={(e) => handleFieldChange(e.target.value)}
+              required={field.required}
+            />
+            {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+            ) : null}
+          </div>
         );
     }
   };
 
   const handleSaveContact = () => {
-    if (!formData.name || !formData.phone || !formData.email) {
-      toast.error("Preencha os campos obrigatórios: Nome, Telefone e E-mail");
+    // Validar campos obrigatórios de contato
+    if (!formData.name || !formData.phone || !formData.email || !formData.position) {
+      toast.error("Preencha os campos obrigatórios: Nome, WhatsApp, E-mail e Posição");
       return;
+    }
+
+    // Validar email
+    if (!validateEmail(formData.email)) {
+      toast.error("E-mail inválido");
+      return;
+    }
+
+    // Validar telefone
+    if (!validatePhone(formData.phone)) {
+      toast.error("Telefone/WhatsApp inválido");
+      return;
+    }
+
+    // Validar campos obrigatórios de empresa se preenchidos
+    if (formData.company_type) {
+      const requiredCompanyFields = ["company_type", "cpf_cnpj", "company_name", "company_fantasia", "cep", "address", "city", "neighborhood", "state", "inscricao"];
+      const missingFields = requiredCompanyFields.filter(field => !formData[field]);
+      
+      if (missingFields.length > 0) {
+        toast.error("Preencha todos os campos obrigatórios da empresa");
+        return;
+      }
+
+      // Validar CPF ou CNPJ
+      const companyType = formData.company_type;
+      if (companyType === "Pessoa Física" && !validateCPF(formData.cpf_cnpj)) {
+        toast.error("CPF inválido");
+        return;
+      }
+      if (companyType === "Pessoa Jurídica" && !validateCNPJ(formData.cpf_cnpj)) {
+        toast.error("CNPJ inválido");
+        return;
+      }
+
+      // Validar CEP
+      if (!validateCEP(formData.cep)) {
+        toast.error("CEP inválido");
+        return;
+      }
     }
 
     const newContact: Contact = {
@@ -863,6 +1044,12 @@ export default function Contatos() {
                               <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
                                 {field.type}
                               </span>
+                              {field.required && (
+                                <Badge variant="secondary" className="text-xs">Obrigatório</Badge>
+                              )}
+                              {field.locked && (
+                                <Badge variant="outline" className="text-xs">Não removível</Badge>
+                              )}
                             </div>
                             {field.options && (
                               <div className="text-xs text-muted-foreground mt-1">
@@ -875,6 +1062,7 @@ export default function Contatos() {
                             size="icon"
                             onClick={() => handleRemoveField(field.id, "contact")}
                             className="text-destructive hover:text-destructive"
+                            disabled={field.locked}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -948,6 +1136,12 @@ export default function Contatos() {
                               <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
                                 {field.type}
                               </span>
+                              {field.required && (
+                                <Badge variant="secondary" className="text-xs">Obrigatório</Badge>
+                              )}
+                              {field.locked && (
+                                <Badge variant="outline" className="text-xs">Não removível</Badge>
+                              )}
                             </div>
                             {field.options && (
                               <div className="text-xs text-muted-foreground mt-1">
@@ -960,6 +1154,7 @@ export default function Contatos() {
                             size="icon"
                             onClick={() => handleRemoveField(field.id, "company")}
                             className="text-destructive hover:text-destructive"
+                            disabled={field.locked}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -1022,6 +1217,15 @@ export default function Contatos() {
                     </div>
                   </TabsContent>
                 </Tabs>
+                
+                {/* Configuração de Máscaras */}
+                <div className="mt-6">
+                  <FieldMaskConfig
+                    availableFields={[...contactFields, ...companyFields].map(f => ({ id: f.id, label: f.label }))}
+                    masks={fieldMasks}
+                    onMasksChange={setFieldMasks}
+                  />
+                </div>
               </div>
             </Card>
           </TabsContent>
