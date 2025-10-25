@@ -329,11 +329,16 @@ export default function Layout({ children }: LayoutProps) {
                         <item.icon className={`w-6 h-6 ${
                           isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`} />
-                        <span className={`text-[10px] font-medium text-center leading-tight ${
-                          isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`}>
-                          {item.title}
-                        </span>
+                        <div className="flex items-center gap-0.5">
+                          <span className={`text-[10px] font-medium text-center leading-tight ${
+                            isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`}>
+                            {item.title}
+                          </span>
+                          <ChevronDown className={`w-2.5 h-2.5 transition-transform ${
+                            isMenuOpen ? "rotate-180" : ""
+                          } ${isSubItemActive || isMenuOpen ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"}`} />
+                        </div>
                       </button>
                       
                       {isMenuOpen && (
