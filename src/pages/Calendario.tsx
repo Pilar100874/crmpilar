@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
-import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2 } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
 import {
   DndContext,
   DragEndEvent,
@@ -38,6 +36,8 @@ interface Task {
   status: "pending" | "completed";
   type: "accompany" | "call" | "meeting" | "other";
   createdAt: Date;
+  contactId?: string;
+  contactName?: string;
 }
 
 type ViewMode = "day" | "week" | "month" | "list" | "table";
@@ -176,14 +176,6 @@ export default function Calendario() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [taskForm, setTaskForm] = useState({
-    title: "",
-    description: "",
-    date: "",
-    time: "",
-    assignedTo: "",
-    type: "other" as Task["type"]
-  });
   const [filterBy, setFilterBy] = useState<"all" | "my">("my");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -335,56 +327,36 @@ export default function Calendario() {
   };
 
   // Adicionar tarefa
-  const handleAddTask = () => {
-    if (!taskForm.title.trim()) {
-      toast.error("Digite um título para a tarefa");
-      return;
-    }
-
-    if (!taskForm.date) {
-      toast.error("Selecione uma data para a tarefa");
-      return;
-    }
-
-    // Validar se a data/hora não é anterior ao momento atual
-    const now = new Date();
-    const taskDate = parseISO(taskForm.date);
-    
-    if (taskForm.time) {
-      const [hours, minutes] = taskForm.time.split(':').map(Number);
-      taskDate.setHours(hours, minutes, 0, 0);
-    } else {
-      taskDate.setHours(23, 59, 59, 999);
-    }
-
-    if (taskDate < now) {
-      toast.error("Não é possível adicionar tarefas com data/hora anterior ao momento atual");
-      return;
-    }
-
+  const handleSaveTask = (taskData: {
+    contactId: string;
+    contactName: string;
+    date: Date;
+    time: string;
+    type: string;
+    observation?: string;
+  }) => {
     const newTask: Task = {
       id: `task_${Date.now()}`,
-      title: taskForm.title,
-      description: taskForm.description,
-      date: parseISO(taskForm.date),
-      time: taskForm.time,
-      assignedTo: taskForm.assignedTo,
+      title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+      description: taskData.observation,
+      date: taskData.date,
+      time: taskData.time,
+      assignedTo: taskData.contactName,
       status: "pending",
-      type: taskForm.type,
+      type: taskData.type as Task["type"],
       createdAt: new Date(),
+      contactId: taskData.contactId,
+      contactName: taskData.contactName,
     };
 
-    setTasks([...tasks, newTask]);
-    setShowTaskDialog(false);
-    setTaskForm({ title: "", description: "", date: "", time: "", assignedTo: "", type: "other" });
+    const updatedTasks = [...tasks, newTask];
+    setTasks(updatedTasks);
+    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
     toast.success("Tarefa adicionada com sucesso");
   };
 
   const handleOpenNewTask = (date?: Date) => {
     setSelectedDate(date || null);
-    if (date) {
-      setTaskForm({ ...taskForm, date: format(date, "yyyy-MM-dd") });
-    }
     setShowTaskDialog(true);
   };
 
@@ -1050,9 +1022,6 @@ export default function Calendario() {
             <span className="text-sm text-muted-foreground">
               {getTotalTasks()} tarefa{getTotalTasks() !== 1 ? 's' : ''}
             </span>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="w-5 h-5" />
-            </Button>
             <Button variant="outline" size="sm">
               <RefreshCw className="w-4 h-4 mr-2" />
               SINCRONIZAR
@@ -1118,84 +1087,12 @@ export default function Calendario() {
       </div>
 
       {/* Dialog para adicionar tarefa */}
-      <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Nova Tarefa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Título *</label>
-              <Input
-                placeholder="Digite o título da tarefa"
-                value={taskForm.title}
-                onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Descrição</label>
-              <Textarea
-                placeholder="Adicione uma descrição (opcional)"
-                value={taskForm.description}
-                onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Data *</label>
-                <Input
-                  type="date"
-                  value={taskForm.date}
-                  onChange={(e) => setTaskForm({ ...taskForm, date: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Hora</label>
-                <Input
-                  type="time"
-                  value={taskForm.time}
-                  onChange={(e) => setTaskForm({ ...taskForm, time: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Tipo</label>
-              <Select value={taskForm.type} onValueChange={(value) => setTaskForm({ ...taskForm, type: value as Task["type"] })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="accompany">Acompanhar</SelectItem>
-                  <SelectItem value="call">Ligar</SelectItem>
-                  <SelectItem value="meeting">Reunião</SelectItem>
-                  <SelectItem value="other">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Atribuir para</label>
-              <Input
-                placeholder="Nome do responsável"
-                value={taskForm.assignedTo}
-                onChange={(e) => setTaskForm({ ...taskForm, assignedTo: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTaskDialog(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAddTask}>
-              Adicionar Tarefa
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NewTaskDialog
+        open={showTaskDialog}
+        onOpenChange={setShowTaskDialog}
+        onSave={handleSaveTask}
+        initialDate={selectedDate || undefined}
+      />
 
       {/* Drag Overlay */}
       <DragOverlay>
