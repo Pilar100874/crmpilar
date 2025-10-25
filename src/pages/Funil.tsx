@@ -3,6 +3,7 @@ import { FunilBoard } from '@/components/funil/FunilBoard';
 import { FunilHeader } from '@/components/funil/FunilHeader';
 import { NewDealDialog } from '@/components/funil/NewDealDialog';
 import { DealDetailsDialog } from '@/components/funil/DealDetailsDialog';
+import { ConfigureStagesDialog } from '@/components/funil/ConfigureStagesDialog';
 import { Deal, FunilStage, FunilColumn } from '@/types/funil';
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,6 +56,7 @@ export default function Funil() {
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [configureStagesOpen, setConfigureStagesOpen] = useState(false);
 
   // Simular detecção de SLA (negócios parados)
   useEffect(() => {
@@ -194,6 +196,17 @@ export default function Funil() {
     });
   };
 
+  const handleConfigureStages = () => {
+    setConfigureStagesOpen(true);
+  };
+
+  const handleSaveStages = (stages: any[]) => {
+    toast({
+      title: 'Etapas configuradas',
+      description: `${stages.length} etapas foram configuradas com sucesso.`,
+    });
+  };
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
@@ -214,6 +227,7 @@ export default function Funil() {
           onNewLead={handleNewLead}
           onSearch={handleSearch}
           onFilterChange={handleFilterChange}
+          onConfigureStages={handleConfigureStages}
         />
       </div>
       
@@ -236,6 +250,12 @@ export default function Funil() {
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         onUpdate={handleUpdateDeal}
+      />
+
+      <ConfigureStagesDialog
+        open={configureStagesOpen}
+        onOpenChange={setConfigureStagesOpen}
+        onSave={handleSaveStages}
       />
     </div>
   );

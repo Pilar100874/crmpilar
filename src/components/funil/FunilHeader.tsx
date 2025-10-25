@@ -30,6 +30,7 @@ interface FunilHeaderProps {
   onNewLead: () => void;
   onSearch: (query: string) => void;
   onFilterChange: (filters: any) => void;
+  onConfigureStages: () => void;
 }
 
 export function FunilHeader({
@@ -38,6 +39,7 @@ export function FunilHeader({
   onNewLead,
   onSearch,
   onFilterChange,
+  onConfigureStages,
 }: FunilHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -106,7 +108,9 @@ export function FunilHeader({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>Exportar funil</DropdownMenuItem>
-              <DropdownMenuItem>Configurar etapas</DropdownMenuItem>
+              <DropdownMenuItem onClick={onConfigureStages}>
+                Configurar etapas
+              </DropdownMenuItem>
               <DropdownMenuItem>Relatórios</DropdownMenuItem>
               <DropdownMenuItem>Playbooks</DropdownMenuItem>
             </DropdownMenuContent>
