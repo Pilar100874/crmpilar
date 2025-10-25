@@ -54,6 +54,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [hourPickerOpen, setHourPickerOpen] = useState(false);
   const [minutePickerOpen, setMinutePickerOpen] = useState(false);
+  const [selectedQuickOption, setSelectedQuickOption] = useState<string | null>(null);
 
   // Carregar contatos do localStorage
   useEffect(() => {
@@ -110,7 +111,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     setShowContactList(false);
   };
 
-  const handleQuickDate = (days: number) => {
+  const handleQuickDate = (days: number, optionId?: string) => {
     const now = new Date();
     let newDate: Date;
     
@@ -121,13 +122,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     } else if (days === -3) { // 1 hora
       newDate = addMinutes(now, 60);
     } else {
-      // Para outras opções (hoje, amanhã, 7 dias, etc), adiciona os dias
-      // mas mantém a hora atual como sugestão
       newDate = addDays(now, days);
     }
     
-    // Sempre preenche data e hora (arredondada para múltiplo de 15)
     setFromInstant(newDate);
+    setSelectedQuickOption(optionId ?? null);
     setDatePickerOpen(false);
   };
 
@@ -327,11 +326,14 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                           <button
                             key={label}
                             type="button"
-                            className="w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors"
+                            className={cn(
+                              "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
+                              selectedQuickOption === `${label}` && "bg-accent font-medium"
+                            )}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleQuickDate(days);
+                              handleQuickDate(days, `${label}`);
                             }}
                           >
                             {label}
