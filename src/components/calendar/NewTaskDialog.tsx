@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
@@ -246,6 +246,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Nova tarefa</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           {/* Campo de busca de contato */}
           <div className="relative">
@@ -311,7 +314,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                     <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 flex bg-background z-50" align="start">
+                <PopoverContent className="w-auto p-0 flex bg-background z-50 pointer-events-auto" align="start">
                   {/* Opções rápidas */}
                   <div className="border-r bg-background">
                     <ScrollArea className="h-[300px] w-[140px]">
@@ -335,6 +338,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                               "hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50",
                               selectedQuickOption === id && "bg-accent text-accent-foreground font-medium"
                             )}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleQuickDate(days, id);
+                            }}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
