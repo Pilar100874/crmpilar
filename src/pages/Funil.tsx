@@ -256,6 +256,7 @@ export default function Funil() {
         open={configureStagesOpen}
         onOpenChange={setConfigureStagesOpen}
         onSave={handleSaveStages}
+        currentDeals={deals}
       />
     </div>
   );

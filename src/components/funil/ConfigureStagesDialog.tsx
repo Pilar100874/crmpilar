@@ -6,13 +6,45 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { GripVertical, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { FunilStage } from '@/types/funil';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface StageConfig {
   id: FunilStage | string;
@@ -24,6 +56,7 @@ interface ConfigureStagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (stages: StageConfig[]) => void;
+  currentDeals: Array<{ id: string; stage?: FunilStage | string }>;
 }
 
 const defaultStages: StageConfig[] = [
@@ -34,9 +67,35 @@ const defaultStages: StageConfig[] = [
   { id: 'fechamento', title: 'DISCUSSÃO DE CONTRATO', isDefault: true },
 ];
 
-export function ConfigureStagesDialog({ open, onOpenChange, onSave }: ConfigureStagesDialogProps) {
+export function ConfigureStagesDialog({ open, onOpenChange, onSave, currentDeals }: ConfigureStagesDialogProps) {
   const [stages, setStages] = useState<StageConfig[]>(defaultStages);
   const [newStageTitle, setNewStageTitle] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [stageToDelete, setStageToDelete] = useState<StageConfig | null>(null);
+  const [targetStageId, setTargetStageId] = useState<string>('');
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const getDealCountForStage = (stageId: string): number => {
+    return currentDeals.filter(deal => deal.stage === stageId).length;
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setStages((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const handleAddStage = () => {
     if (newStageTitle.trim()) {
@@ -51,7 +110,49 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave }: ConfigureS
   };
 
   const handleRemoveStage = (id: string) => {
-    setStages(stages.filter(s => s.id !== id));
+    const stage = stages.find(s => s.id === id);
+    if (!stage) return;
+
+    const dealCount = getDealCountForStage(id);
+    
+    if (dealCount > 0) {
+      // Se houver negócios, abre o diálogo de confirmação
+      setStageToDelete(stage);
+      setTargetStageId(''); // Reset
+      setDeleteConfirmOpen(true);
+    } else {
+      // Se não houver negócios, pede confirmação simples
+      setStageToDelete(stage);
+      setTargetStageId('none'); // Indica que não há necessidade de mover
+      setDeleteConfirmOpen(true);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (!stageToDelete) return;
+
+    const dealCount = getDealCountForStage(stageToDelete.id);
+
+    if (dealCount > 0 && !targetStageId) {
+      return; // Não permite deletar sem escolher uma etapa de destino
+    }
+
+    // Remove a etapa
+    setStages(stages.filter(s => s.id !== stageToDelete.id));
+    
+    // Fecha o diálogo
+    setDeleteConfirmOpen(false);
+    setStageToDelete(null);
+    setTargetStageId('');
+
+    // Aqui você pode adicionar lógica para mover os deals se necessário
+    // onSave será chamado quando o usuário clicar em Salvar
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmOpen(false);
+    setStageToDelete(null);
+    setTargetStageId('');
   };
 
   const handleUpdateStageTitle = (id: string, newTitle: string) => {
@@ -69,56 +170,79 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave }: ConfigureS
     setStages(defaultStages);
   };
 
+  const dealCountForDeletedStage = stageToDelete ? getDealCountForStage(stageToDelete.id) : 0;
+  const availableTargetStages = stages.filter(s => s.id !== stageToDelete?.id);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Configurar Etapas do Funil</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Configurar Etapas do Funil</DialogTitle>
+          </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-          {/* Lista de etapas */}
-          <div className="space-y-2">
-            {stages.map((stage, index) => (
-              <Card key={stage.id} className="p-3">
-                <div className="flex items-center gap-3">
-                  <div className="cursor-grab text-muted-foreground">
-                    <GripVertical className="w-4 h-4" />
-                  </div>
-                  
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        Etapa {index + 1}
-                      </Badge>
-                      {stage.isDefault && (
-                        <Badge variant="secondary" className="text-xs">
-                          Padrão
-                        </Badge>
-                      )}
-                    </div>
-                    <Input
-                      value={stage.title}
-                      onChange={(e) => handleUpdateStageTitle(stage.id, e.target.value)}
-                      placeholder="Nome da etapa"
-                      className="font-medium"
-                    />
-                  </div>
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            {/* Lista de etapas com drag & drop */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={stages.map(s => s.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {stages.map((stage, index) => {
+                    const dealCount = getDealCountForStage(stage.id);
+                    return (
+                      <div key={stage.id}>
+                        <Card className="p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="cursor-grab active:cursor-grabbing text-muted-foreground">
+                              <GripVertical className="w-4 h-4" />
+                            </div>
+                            
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  Etapa {index + 1}
+                                </Badge>
+                                {stage.isDefault && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Padrão
+                                  </Badge>
+                                )}
+                                {dealCount > 0 && (
+                                  <Badge className="text-xs">
+                                    {dealCount} negócio{dealCount !== 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                              </div>
+                              <Input
+                                value={stage.title}
+                                onChange={(e) => handleUpdateStageTitle(stage.id, e.target.value)}
+                                placeholder="Nome da etapa"
+                                className="font-medium"
+                              />
+                            </div>
 
-                  {!stage.isDefault && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveStage(stage.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveStage(stage.id)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </Card>
+                      </div>
+                    );
+                  })}
                 </div>
-              </Card>
-            ))}
-          </div>
+              </SortableContext>
+            </DndContext>
 
           {/* Adicionar nova etapa */}
           <Card className="p-3 border-dashed">
@@ -140,30 +264,95 @@ export function ConfigureStagesDialog({ open, onOpenChange, onSave }: ConfigureS
             </div>
           </Card>
 
-          {/* Informações */}
-          <div className="bg-muted/50 p-4 rounded-sm space-y-2 text-sm">
-            <p className="font-semibold">💡 Dicas:</p>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Arraste as etapas para reordenar (em breve)</li>
-              <li>Etapas padrão não podem ser removidas</li>
-              <li>Você pode renomear qualquer etapa</li>
-              <li>Etapas customizadas podem ser removidas</li>
-            </ul>
+            {/* Informações */}
+            <div className="bg-muted/50 p-4 rounded-sm space-y-2 text-sm">
+              <p className="font-semibold">💡 Dicas:</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>Arraste as etapas para reordenar</li>
+                <li>Você pode renomear qualquer etapa</li>
+                <li>Ao excluir uma etapa com negócios, escolha para onde movê-los</li>
+                <li>Sempre confirme antes de excluir</li>
+              </ul>
+            </div>
           </div>
-        </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleReset}>
-            Restaurar Padrão
-          </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave}>
-            Salvar Configurações
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleReset}>
+              Restaurar Padrão
+            </Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>
+              Salvar Configurações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de confirmação de exclusão */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Tem certeza que deseja excluir a etapa{' '}
+                <strong className="text-foreground">{stageToDelete?.title}</strong>?
+              </p>
+              
+              {dealCountForDeletedStage > 0 && (
+                <>
+                  <div className="bg-orange-50 dark:bg-orange-950 p-3 rounded-sm border border-orange-200 dark:border-orange-800">
+                    <p className="text-sm text-orange-900 dark:text-orange-100">
+                      ⚠️ Existem <strong>{dealCountForDeletedStage} negócio{dealCountForDeletedStage !== 1 ? 's' : ''}</strong> nesta etapa.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="target-stage" className="text-foreground">
+                      Para qual etapa deseja mover os negócios?
+                    </Label>
+                    <Select value={targetStageId} onValueChange={setTargetStageId}>
+                      <SelectTrigger id="target-stage">
+                        <SelectValue placeholder="Selecione uma etapa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTargetStages.map((stage) => (
+                          <SelectItem key={stage.id} value={stage.id}>
+                            {stage.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {dealCountForDeletedStage === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Esta etapa não possui negócios e pode ser excluída com segurança.
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={cancelDelete}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={dealCountForDeletedStage > 0 && !targetStageId}
+            >
+              Excluir Etapa
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
