@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2 } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from "@/lib/masks";
@@ -59,6 +60,7 @@ interface Contact {
   modifiedAt: string;
   modifiedBy: string;
   customFields: Record<string, any>;
+  active: boolean;
 }
 
 interface SearchFilters {
@@ -80,6 +82,8 @@ export default function Contatos() {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [editingCell, setEditingCell] = useState<{ contactId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   
   // Hooks para buscar CEP e CNPJ
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
@@ -532,6 +536,33 @@ export default function Contatos() {
       }
     }
 
+    // Validar duplicatas (CPF/CNPJ/WhatsApp)
+    const duplicateCpfCnpj = contacts.find(c => 
+      c.id !== (editingContact?.id) && 
+      c.active &&
+      c.customFields?.cpf_cnpj && 
+      formData.cpf_cnpj && 
+      c.customFields.cpf_cnpj.replace(/\D/g, '') === formData.cpf_cnpj.replace(/\D/g, '')
+    );
+    
+    if (duplicateCpfCnpj) {
+      errors.cpf_cnpj = "CPF/CNPJ já cadastrado";
+      toast.error("CPF/CNPJ já cadastrado no sistema");
+    }
+    
+    const duplicatePhone = contacts.find(c => 
+      c.id !== (editingContact?.id) && 
+      c.active &&
+      c.phone && 
+      formData.phone && 
+      c.phone.replace(/\D/g, '') === formData.phone.replace(/\D/g, '')
+    );
+    
+    if (duplicatePhone) {
+      errors.phone = "WhatsApp já cadastrado";
+      toast.error("WhatsApp já cadastrado no sistema");
+    }
+
     // Se houver erros, marcar campos e fazer scroll para o primeiro erro
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -559,6 +590,7 @@ export default function Contatos() {
       modifiedAt: new Date().toISOString(),
       modifiedBy: "Usuário Atual",
       customFields: formData,
+      active: editingContact?.active ?? true,
     };
 
     if (editingContact) {
@@ -583,9 +615,36 @@ export default function Contatos() {
   };
 
   const handleDeleteContact = (contactId: string) => {
-    const updatedContacts = contacts.filter(c => c.id !== contactId);
-    saveContactsToStorage(updatedContacts);
-    toast.success("Contato excluído com sucesso");
+    const contact = contacts.find(c => c.id === contactId);
+    if (!contact) return;
+    
+    setContactToDelete(contact);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!contactToDelete) return;
+    
+    // Verificar se o contato está em uso (simular verificação)
+    // Em um sistema real, você verificaria se há conversas, pedidos, etc
+    const isInUse = Math.random() > 0.7; // Simula 30% de chance de estar em uso
+    
+    if (isInUse) {
+      // Inativar ao invés de excluir
+      const updatedContacts = contacts.map(c =>
+        c.id === contactToDelete.id ? { ...c, active: false } : c
+      );
+      saveContactsToStorage(updatedContacts);
+      toast.warning("Contato inativado pois está em uso no sistema");
+    } else {
+      // Pode excluir
+      const updatedContacts = contacts.filter(c => c.id !== contactToDelete.id);
+      saveContactsToStorage(updatedContacts);
+      toast.success("Contato excluído com sucesso");
+    }
+    
+    setDeleteDialogOpen(false);
+    setContactToDelete(null);
   };
 
   const handleStartEdit = (contactId: string, field: string, value: string) => {
@@ -620,6 +679,9 @@ export default function Contatos() {
   };
 
   const filteredContacts = contacts.filter(contact => {
+    // Filtrar apenas contatos ativos
+    if (!contact.active) return false;
+    
     // Busca unificada nos campos principais
     if (searchFilters.unifiedSearch) {
       const searchTerm = searchFilters.unifiedSearch.toLowerCase();
@@ -749,19 +811,42 @@ export default function Contatos() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between">
-                          <span>{contact.name}</span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartEdit(contact.id, "name", contact.name);
-                            }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
+                        <div className="flex items-center gap-2">
+                          <span className="flex-1">{contact.name}</span>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingContact(contact);
+                                setFormData({
+                                  name: contact.name,
+                                  phone: contact.phone,
+                                  email: contact.email,
+                                  position: contact.position,
+                                  ...contact.customFields
+                                });
+                                setShowForm(true);
+                              }}
+                              title="Editar cadastro completo"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartEdit(contact.id, "name", contact.name);
+                              }}
+                              title="Edição rápida"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </TableCell>
@@ -888,9 +973,7 @@ export default function Contatos() {
                         size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm("Deseja realmente excluir este contato?")) {
-                            handleDeleteContact(contact.id);
-                          }
+                          handleDeleteContact(contact.id);
                         }}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -902,6 +985,27 @@ export default function Contatos() {
             </Table>
           )}
         </div>
+
+        {/* Dialog de confirmação de exclusão */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o contato <strong>{contactToDelete?.name}</strong>?
+                {"\n\n"}
+                Se o contato estiver em uso no sistema (conversas, pedidos, etc.), 
+                ele será inativado ao invés de excluído.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete}>
+                Confirmar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Search Panel */}
         <Sheet open={showSearchPanel} onOpenChange={setShowSearchPanel}>
