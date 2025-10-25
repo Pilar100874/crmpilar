@@ -4,12 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, User, X } from "lucide-react";
-import { format, addDays, addWeeks, addMonths, addYears, addMinutes, startOfDay, endOfDay } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { X, CalendarIcon } from "lucide-react";
+import { format, addDays, addMinutes, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface Contact {
   id: string;
@@ -40,11 +44,15 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showContactList, setShowContactList] = useState(false);
   const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
-  const [time, setTime] = useState("");
+  const [dateInput, setDateInput] = useState("");
+  const [hours, setHours] = useState("");
+  const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [taskType, setTaskType] = useState("accompany");
+  const [assignedTo, setAssignedTo] = useState("me");
   const [observation, setObservation] = useState("");
   const [selectedQuickOption, setSelectedQuickOption] = useState<string | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Carregar contatos do localStorage
   useEffect(() => {
@@ -64,10 +72,16 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       setSelectedContact(null);
       setShowContactList(false);
       setDate(initialDate || new Date());
-      setTime("");
+      setDateInput("");
+      setHours("");
+      setMinutes("");
       setIsAllDay(false);
       setTaskType("accompany");
+      setAssignedTo("me");
       setObservation("");
+      setShowCalendar(false);
+    } else {
+      setDateInput(format(initialDate || new Date(), "dd/MM/yyyy"));
     }
   }, [open, initialDate]);
 
@@ -101,6 +115,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     let newDate: Date;
     
     setSelectedQuickOption(optionId);
+    setShowCalendar(false);
     
     if (days === 0) {
       newDate = now;
@@ -111,23 +126,29 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     } else if (days === 30) {
       newDate = addDays(now, 30);
     } else if (days === 365) {
-      newDate = addYears(now, 1);
+      newDate = addDays(now, 365);
     } else if (days === -1) { // 15 minutos
       newDate = addMinutes(now, 15);
       setDate(newDate);
-      setTime(format(newDate, "HH:mm"));
+      setDateInput(format(newDate, "dd/MM/yyyy"));
+      setHours(format(newDate, "HH"));
+      setMinutes(format(newDate, "mm"));
       setIsAllDay(false);
       return;
     } else if (days === -2) { // 30 minutos
       newDate = addMinutes(now, 30);
       setDate(newDate);
-      setTime(format(newDate, "HH:mm"));
+      setDateInput(format(newDate, "dd/MM/yyyy"));
+      setHours(format(newDate, "HH"));
+      setMinutes(format(newDate, "mm"));
       setIsAllDay(false);
       return;
     } else if (days === -3) { // 1 hora
       newDate = addMinutes(now, 60);
       setDate(newDate);
-      setTime(format(newDate, "HH:mm"));
+      setDateInput(format(newDate, "dd/MM/yyyy"));
+      setHours(format(newDate, "HH"));
+      setMinutes(format(newDate, "mm"));
       setIsAllDay(false);
       return;
     } else {
@@ -135,13 +156,27 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     }
     
     setDate(newDate);
+    setDateInput(format(newDate, "dd/MM/yyyy"));
   };
 
-  // Gerar horários de 00:00 até 23:00
-  const timeSlots = Array.from({ length: 24 }, (_, i) => {
-    const hour = i.toString().padStart(2, '0');
-    return `${hour}:00`;
-  });
+  const handleDateInputChange = (value: string) => {
+    setDateInput(value);
+    // Tentar fazer parse da data no formato dd/MM/yyyy
+    if (value.length === 10) {
+      try {
+        const parsed = parse(value, "dd/MM/yyyy", new Date());
+        if (!isNaN(parsed.getTime())) {
+          setDate(parsed);
+        }
+      } catch (e) {
+        // Ignorar erro de parse
+      }
+    }
+  };
+
+  // Gerar horários
+  const hourSlots = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+  const minuteSlots = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
   const handleSave = () => {
     if (!selectedContact) {
@@ -154,8 +189,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       return;
     }
 
-    if (!isAllDay && !time) {
-      toast.error("Selecione um horário");
+    if (!isAllDay && (!hours || !minutes)) {
+      toast.error("Selecione um horário completo (hora e minuto)");
       return;
     }
 
@@ -164,8 +199,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     const taskDate = new Date(date);
     
     if (!isAllDay) {
-      const [hours, minutes] = time.split(':').map(Number);
-      taskDate.setHours(hours, minutes, 0, 0);
+      taskDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     }
 
     if (taskDate < now && !isAllDay) {
@@ -173,11 +207,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       return;
     }
 
+    const timeString = isAllDay ? "" : `${hours}:${minutes}`;
+
     onSave({
       contactId: selectedContact.id,
       contactName: selectedContact.name,
       date,
-      time: isAllDay ? "" : time,
+      time: timeString,
       type: taskType,
       observation,
     });
@@ -187,8 +223,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-        <div className="p-6 space-y-6">
+      <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden">
+        <div className="p-6 space-y-4">
           {/* Campo de busca de contato */}
           <div className="relative">
             <Input
@@ -199,13 +235,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                 setShowContactList(e.target.value.length > 0);
               }}
               onFocus={() => searchQuery.length > 0 && setShowContactList(true)}
-              className="border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+              className="border rounded-md px-3 py-2"
             />
             {selectedContact && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
                 onClick={() => {
                   setSelectedContact(null);
                   setSearchQuery("");
@@ -221,7 +257,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                 {filteredContacts.map((contact) => (
                   <div
                     key={contact.id}
-                    className="p-3 hover:bg-accent cursor-pointer"
+                    className="p-3 hover:bg-accent cursor-pointer border-b last:border-b-0"
                     onClick={() => handleSelectContact(contact)}
                   >
                     <div className="font-medium text-sm">{contact.name}</div>
@@ -236,171 +272,182 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
             )}
           </div>
 
-          {/* Informações da tarefa */}
-          <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground">
-            <span>
-              {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
-            </span>
-            
-            <div className="flex items-center gap-1.5">
+          {/* Campo de data e informações */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative">
+              <Input
+                placeholder="dd/mm/aaaa"
+                value={dateInput}
+                onChange={(e) => handleDateInputChange(e.target.value)}
+                onFocus={() => setShowCalendar(true)}
+                className="w-32 text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
               <Checkbox 
                 id="allday" 
                 checked={isAllDay}
                 onCheckedChange={(checked) => {
                   setIsAllDay(checked as boolean);
-                  if (checked) setTime("");
+                  if (checked) {
+                    setHours("");
+                    setMinutes("");
+                  }
                 }}
               />
-              <label htmlFor="allday" className="text-xs cursor-pointer">
+              <label htmlFor="allday" className="text-sm cursor-pointer">
                 Dia todo
               </label>
             </div>
 
-            <span>para</span>
-            <span className="text-foreground font-medium">
-              {selectedContact?.name || "Selecione um contato"}
+            <span className="text-sm text-muted-foreground">para</span>
+            <span className="text-sm font-medium">
+              {selectedContact?.name || "Selecione um contato"}:
             </span>
 
-            <Select value={taskType} onValueChange={setTaskType}>
-              <SelectTrigger className="w-auto border-0 h-auto p-0 text-xs focus:ring-0 text-foreground font-medium">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="accompany">Acompanhar</SelectItem>
-                <SelectItem value="call">Ligação</SelectItem>
-                <SelectItem value="meeting">Reunião</SelectItem>
-                <SelectItem value="other">Outro</SelectItem>
-              </SelectContent>
-            </Select>
+            <RadioGroup value={taskType} onValueChange={setTaskType} className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="accompany" id="accompany" />
+                <Label htmlFor="accompany" className="text-sm cursor-pointer">Acompanhar</Label>
+              </div>
+            </RadioGroup>
           </div>
 
-          {/* Layout principal: Opções rápidas | Calendário | Horários */}
-          <div className="grid grid-cols-[140px_1fr_180px] gap-6 h-[380px]">
+          {/* Layout principal: Opções rápidas | Calendário | Seleção de hora */}
+          <div className="grid grid-cols-[140px_1fr_auto] gap-4 h-[400px]">
             {/* Opções rápidas de data */}
-            <div className="space-y-0.5 overflow-y-auto">
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "15min" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(-1, "15min")}
-              >
-                Após 15 minutos
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "30min" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(-2, "30min")}
-              >
-                Após 30 minutos
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "1hour" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(-3, "1hour")}
-              >
-                Em uma hora
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "today" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(0, "today")}
-              >
-                Hoje
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "tomorrow" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(1, "tomorrow")}
-              >
-                Amanhã
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "week" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(7, "week")}
-              >
-                Esta semana
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "7days" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(7, "7days")}
-              >
-                Em 7 dias
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "30days" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(30, "30days")}
-              >
-                Em 30 dias
-              </button>
-              <button
-                className={cn(
-                  "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                  selectedQuickOption === "1year" && "bg-accent"
-                )}
-                onClick={() => handleQuickDate(365, "1year")}
-              >
-                Em 1 ano
-              </button>
+            <div className="space-y-1 overflow-y-auto pr-2">
+              {[
+                { label: "Após 15 minutos", days: -1, id: "15min" },
+                { label: "Após 30 minutos", days: -2, id: "30min" },
+                { label: "Em uma hora", days: -3, id: "1hour" },
+                { label: "Hoje", days: 0, id: "today" },
+                { label: "Amanhã", days: 1, id: "tomorrow" },
+                { label: "Esta semana", days: 7, id: "week" },
+                { label: "Em 7 dias", days: 7, id: "7days" },
+                { label: "Em 30 dias", days: 30, id: "30days" },
+                { label: "Em 1 ano", days: 365, id: "1year" },
+              ].map(({ label, days, id }) => (
+                <button
+                  key={id}
+                  className={cn(
+                    "w-full text-left px-3 py-2 text-xs rounded hover:bg-accent transition-colors",
+                    selectedQuickOption === id && "bg-accent font-medium"
+                  )}
+                  onClick={() => handleQuickDate(days, id)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
-            {/* Calendário */}
-            <div className="flex items-start justify-center">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(newDate) => {
-                  setDate(newDate);
-                  setSelectedQuickOption(null);
-                }}
-                locale={ptBR}
-                className="pointer-events-auto"
-              />
-            </div>
-
-            {/* Lista de horários */}
-            {!isAllDay && (
-              <div className="space-y-0.5 overflow-y-auto border-l pl-4">
-                <div className="text-xs font-medium mb-2 text-muted-foreground sticky top-0 bg-background">
-                  {taskType === "accompany" ? "Acompanhar" : 
-                   taskType === "call" ? "Ligação" : 
-                   taskType === "meeting" ? "Reunião" : "Outro"}
+            {/* Calendário ou Tabs de horário */}
+            <div className="border rounded-md p-4 overflow-auto">
+              {showCalendar ? (
+                <div className="flex justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(newDate) => {
+                      if (newDate) {
+                        setDate(newDate);
+                        setDateInput(format(newDate, "dd/MM/yyyy"));
+                        setSelectedQuickOption(null);
+                      }
+                    }}
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
                 </div>
-                {timeSlots.map((slot) => (
-                  <button
-                    key={slot}
-                    className={cn(
-                      "w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent transition-colors",
-                      time === slot && "bg-accent font-medium"
-                    )}
-                    onClick={() => setTime(slot)}
-                  >
-                    {slot}
-                  </button>
-                ))}
+              ) : (
+                <Tabs defaultValue="accompany" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="allday" onClick={() => setIsAllDay(true)}>
+                      Dia todo
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="accompany" 
+                      onClick={() => setIsAllDay(false)}
+                    >
+                      Acompanhar
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="allday" className="mt-4">
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Tarefa configurada para o dia todo
+                    </p>
+                  </TabsContent>
+                  <TabsContent value="accompany" className="mt-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4 max-h-[280px] overflow-y-auto pr-2">
+                      {hourSlots.map((hour) => (
+                        <button
+                          key={hour}
+                          className={cn(
+                            "px-3 py-2 text-sm rounded hover:bg-accent transition-colors text-left",
+                            hours === hour && "bg-accent font-medium"
+                          )}
+                          onClick={() => setHours(hour)}
+                        >
+                          {hour}:00
+                        </button>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              )}
+            </div>
+
+            {/* Seleção de minutos */}
+            {!isAllDay && !showCalendar && hours && (
+              <div className="border rounded-md p-4 w-32 overflow-y-auto">
+                <div className="text-xs font-medium mb-2 text-muted-foreground">
+                  Minutos
+                </div>
+                <div className="space-y-1">
+                  {minuteSlots.filter((_, i) => i % 5 === 0).map((minute) => (
+                    <button
+                      key={minute}
+                      className={cn(
+                        "w-full text-left px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors",
+                        minutes === minute && "bg-accent font-medium"
+                      )}
+                      onClick={() => setMinutes(minute)}
+                    >
+                      {minute}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
+          {/* Campo de observação e atribuição */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">Atribuir para:</span>
+              <RadioGroup value={assignedTo} onValueChange={setAssignedTo} className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="me" id="me" />
+                  <Label htmlFor="me" className="text-sm cursor-pointer">Eu</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="other" id="other" />
+                  <Label htmlFor="other" className="text-sm cursor-pointer">Outro usuário</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <Textarea
+              placeholder="Adicionar observação (opcional)"
+              value={observation}
+              onChange={(e) => setObservation(e.target.value)}
+              className="min-h-[80px] resize-none"
+            />
+          </div>
+
           {/* Botões de ação */}
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-2 border-t">
             <Button variant="ghost" onClick={() => onOpenChange(false)} size="sm">
               Cancelar
             </Button>
