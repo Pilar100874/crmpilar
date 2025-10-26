@@ -12,6 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DndContext,
   DragEndEvent,
@@ -186,6 +187,25 @@ export default function Calendario() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [isWeekendDialogOpen, setIsWeekendDialogOpen] = useState(false);
+  const [weekendPendingTask, setWeekendPendingTask] = useState<{ 
+    taskData: {
+      contactId: string;
+      contactName: string;
+      date: Date;
+      time: string;
+      type: string;
+      observation?: string;
+      isAllDay?: boolean;
+      userId?: string;
+    } | null;
+    existingTask: Task | null;
+    targetDate: Date;
+    isMove: boolean;
+  } | null>(null);
+  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
+  const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
+  const [pendingTask, setPendingTask] = useState<Task | null>(null);
   
   // Configuração de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -353,8 +373,39 @@ export default function Calendario() {
     setCurrentDate(new Date());
   };
 
+  // Verificar se é fim de semana
+  const checkWeekend = (date: Date): boolean => {
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // 0 = domingo, 6 = sábado
+  };
+
   // Adicionar tarefa
   const handleSaveTask = async (taskData: {
+    contactId: string;
+    contactName: string;
+    date: Date;
+    time: string;
+    type: string;
+    observation?: string;
+    isAllDay?: boolean;
+    userId?: string;
+  }) => {
+    // Verificar se é fim de semana
+    if (checkWeekend(taskData.date)) {
+      setWeekendPendingTask({
+        taskData: taskData,
+        existingTask: null,
+        targetDate: taskData.date,
+        isMove: false
+      });
+      setIsWeekendDialogOpen(true);
+      return;
+    }
+
+    await saveTaskInternal(taskData);
+  };
+
+  const saveTaskInternal = async (taskData: {
     contactId: string;
     contactName: string;
     date: Date;
@@ -449,6 +500,8 @@ export default function Calendario() {
       localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       toast.success("Tarefa adicionada com sucesso");
     }
+    
+    setShowTaskDialog(false);
   };
 
   const handleOpenNewTask = (date?: Date) => {
@@ -502,6 +555,34 @@ export default function Calendario() {
         }
       }
       
+      // Verificar se é fim de semana
+      if (checkWeekend(newDate)) {
+        setWeekendPendingTask({
+          taskData: null,
+          existingTask: task,
+          targetDate: newDate,
+          isMove: true
+        });
+        setIsWeekendDialogOpen(true);
+        return;
+      }
+
+      // Verificar se já existem tarefas no mesmo horário
+      if (task.time) {
+        const existingTasks = tasks.filter(t => 
+          t.id !== taskId &&
+          isSameDay(t.date, newDate) && 
+          t.time === task.time
+        );
+
+        if (existingTasks.length > 0) {
+          setConflictingTasks(existingTasks);
+          setPendingTask({ ...task, date: newDate });
+          setIsConflictDialogOpen(true);
+          return;
+        }
+      }
+      
       const updatedTasks = tasks.map(t =>
         t.id === taskId ? { ...t, date: newDate } : t
       );
@@ -509,6 +590,39 @@ export default function Calendario() {
       localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       toast.success("Tarefa movida com sucesso");
     }
+  };
+
+  const handleReplaceConflicting = () => {
+    if (!pendingTask) return;
+
+    // Remove conflicting tasks and add the pending task
+    const updatedTasks = tasks.filter(t => 
+      !conflictingTasks.some(ct => ct.id === t.id)
+    ).map(t => 
+      t.id === pendingTask.id ? pendingTask : t
+    );
+
+    setTasks(updatedTasks);
+    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+    setIsConflictDialogOpen(false);
+    setPendingTask(null);
+    setConflictingTasks([]);
+    toast.success("Tarefas substituídas");
+  };
+
+  const handleKeepAll = () => {
+    if (!pendingTask) return;
+
+    const updatedTasks = tasks.map(t =>
+      t.id === pendingTask.id ? pendingTask : t
+    );
+    
+    setTasks(updatedTasks);
+    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+    setIsConflictDialogOpen(false);
+    setPendingTask(null);
+    setConflictingTasks([]);
+    toast.success("Tarefa adicionada");
   };
 
   // Obter tarefas do dia
@@ -1196,6 +1310,112 @@ export default function Calendario() {
         onSave={handleSaveTask}
         initialDate={selectedDate || undefined}
       />
+
+      {/* Dialog de conflito */}
+      <Dialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tarefas Existentes Nesta Data</DialogTitle>
+            <DialogDescription>
+              Já existem {conflictingTasks.length} tarefa(s) agendada(s) para este horário.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+            {conflictingTasks.map(task => (
+              <div key={task.id} className="p-2 border rounded">
+                <div className="font-medium">{task.title}</div>
+                <div className="text-sm text-muted-foreground">{task.time}</div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
+            <Button variant="outline" onClick={() => setIsConflictDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleReplaceConflicting}>
+              Substituir Existentes
+            </Button>
+            <Button onClick={handleKeepAll}>
+              Manter Todos
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de fim de semana */}
+      <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tarefa em Fim de Semana</DialogTitle>
+            <DialogDescription>
+              Esta tarefa está agendada para {format(weekendPendingTask?.targetDate || new Date(), "EEEE, dd/MM/yyyy", { locale: ptBR })}.
+              <br />O que você deseja fazer?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsWeekendDialogOpen(false);
+                setWeekendPendingTask(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (weekendPendingTask) {
+                  if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
+                    // Mover tarefa existente
+                    const updatedTasks = tasks.map(t =>
+                      t.id === weekendPendingTask.existingTask!.id 
+                        ? { ...t, date: weekendPendingTask.targetDate } 
+                        : t
+                    );
+                    setTasks(updatedTasks);
+                    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+                    toast.success("Tarefa movida para fim de semana");
+                  } else if (weekendPendingTask.taskData) {
+                    // Criar nova tarefa
+                    await saveTaskInternal(weekendPendingTask.taskData);
+                  }
+                }
+                setIsWeekendDialogOpen(false);
+                setWeekendPendingTask(null);
+              }}
+            >
+              Manter na Data
+            </Button>
+            <Button
+              onClick={async () => {
+                if (weekendPendingTask) {
+                  const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
+                  
+                  if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
+                    // Mover tarefa existente
+                    const updatedTasks = tasks.map(t =>
+                      t.id === weekendPendingTask.existingTask!.id 
+                        ? { ...t, date: nextBusinessDay } 
+                        : t
+                    );
+                    setTasks(updatedTasks);
+                    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+                    toast.success(`Tarefa movida para ${format(nextBusinessDay, "dd/MM/yyyy", { locale: ptBR })}`);
+                  } else if (weekendPendingTask.taskData) {
+                    // Criar nova tarefa
+                    await saveTaskInternal({ ...weekendPendingTask.taskData, date: nextBusinessDay });
+                  }
+                }
+                setIsWeekendDialogOpen(false);
+                setWeekendPendingTask(null);
+              }}
+            >
+              Mover para Próximo Dia Útil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Drag Overlay */}
       <DragOverlay>
