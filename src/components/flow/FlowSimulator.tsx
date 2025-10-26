@@ -39,6 +39,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const [pendingVariable, setPendingVariable] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const contextRef = useRef<Record<string, any>>({});
 
   useEffect(() => {
     // Garantir que isActive está true quando o componente monta
@@ -61,6 +62,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   }, [currentNodeId, onHighlightNode]);
 
   useEffect(() => {
+    contextRef.current = context;
     onContextChange?.(context);
   }, [context, onContextChange]);
 
@@ -121,18 +123,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return parts.length > 0 ? parts : text;
   };
 
-  const interpolateVariables = (text: string, context: Record<string, any>): string => {
+  const interpolateVariables = (text: string, ctx?: Record<string, any>): string => {
     if (!text) return "";
+    const primary = ctx || {};
+    const fallback = contextRef.current || {};
     console.log("🔄 Interpolating variables in text:", text);
-    console.log("📦 Current context:", context);
+    console.log("📦 Provided context:", primary);
+    console.log("📦 Fallback (latest) context:", fallback);
     
     const result = text.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
       const cleanVar = variable.trim();
-      // Tentar com e sem @ no início
       const varWithoutAt = cleanVar.replace(/^@/, "");
-      const value = context[cleanVar] !== undefined ? context[cleanVar] : context[varWithoutAt];
+      const value =
+        primary[cleanVar] ??
+        primary[varWithoutAt] ??
+        fallback[cleanVar] ??
+        fallback[varWithoutAt];
       
-      console.log(`🔍 Looking for variable: "${cleanVar}" (or "${varWithoutAt}") = ${value !== undefined ? value : "NOT FOUND"}`);
+      console.log(`🔍 Lookup: "${cleanVar}" →`, value !== undefined ? value : "NOT FOUND");
       
       return value !== undefined ? String(value) : match;
     });
