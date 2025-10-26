@@ -156,32 +156,8 @@ function BotBuilderContent() {
     }
   }, [botNameFromUrl, botDescriptionFromUrl, currentBotId]);
 
-  // Auto-save quando houver mudanças (sem criar loop infinito)
-  useEffect(() => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
+  // Auto-save movido abaixo (após handleSave) para evitar closures desatualizadas.
 
-    const currentSig = getFlowSignature();
-    const changed = lastSavedSignatureRef.current !== currentSig;
-    setHasUnsavedChanges(changed);
-
-    // Não salvar se for um bot novo sem ID ainda ou se nada mudou
-    if (!currentBotId || !changed) return;
-
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      console.log("[BotBuilder] Auto-save disparado");
-      // Salvar silenciosamente sem mostrar toast
-      handleSave(true);
-    }, 2000); // Auto-save após 2 segundos de inatividade
-
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, getFlowSignature, currentBotId]);
 
   // Salvar ao sair da página
   useEffect(() => {
@@ -628,6 +604,30 @@ function BotBuilderContent() {
 
     return saved;
   }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables, getFlowSignature]);
+
+  // Auto-save quando houver mudanças (posicionado após handleSave para usar a versão mais recente)
+  useEffect(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    const currentSig = getFlowSignature();
+    const changed = lastSavedSignatureRef.current !== currentSig;
+    setHasUnsavedChanges(changed);
+
+    if (!currentBotId || !changed) return;
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      console.log("[BotBuilder] Auto-save disparado");
+      handleSave(true);
+    }, 2000);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, currentBotId, getFlowSignature, handleSave]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
