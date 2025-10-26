@@ -104,6 +104,8 @@ function BotBuilderContent() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [botToDelete, setBotToDelete] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   // Load saved bots on mount
   useEffect(() => {
@@ -125,6 +127,11 @@ function BotBuilderContent() {
   useEffect(() => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Marcar que há mudanças não salvas
+    if (currentBotId) {
+      setHasUnsavedChanges(true);
     }
 
     // Não salvar se for um bot novo sem ID ainda
@@ -552,6 +559,7 @@ function BotBuilderContent() {
             duration: 3000,
           });
         }
+        setHasUnsavedChanges(false);
         loadSavedBots();
       }
     } finally {
@@ -828,6 +836,23 @@ function BotBuilderContent() {
     toast.info(isLocked ? "Canvas desbloqueado" : "Canvas bloqueado");
   }, [isLocked]);
 
+  const handleExit = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setShowExitDialog(true);
+    } else {
+      navigate("/bot-create");
+    }
+  }, [hasUnsavedChanges, navigate]);
+
+  const handleExitWithSave = useCallback(async () => {
+    await handleSave(false);
+    navigate("/bot-create");
+  }, [handleSave, navigate]);
+
+  const handleExitWithoutSave = useCallback(() => {
+    navigate("/bot-create");
+  }, [navigate]);
+
   return (
     <div className="h-full flex flex-col bg-white">
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
@@ -919,7 +944,7 @@ function BotBuilderContent() {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/bot-create")}>
+            <Button variant="outline" size="sm" onClick={handleExit}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Sair
             </Button>
@@ -1151,6 +1176,27 @@ function BotBuilderContent() {
           title="Confirmar exclusão"
           description="Tem certeza que deseja excluir este bot? Esta ação não pode ser desfeita."
         />
+
+        {/* Dialog de confirmação ao sair */}
+        <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Mudanças não salvas</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você tem mudanças não salvas. O que deseja fazer?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <Button variant="outline" onClick={handleExitWithoutSave}>
+                Sair sem salvar
+              </Button>
+              <AlertDialogAction onClick={handleExitWithSave}>
+                Salvar e sair
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
   );
 }
