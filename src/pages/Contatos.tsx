@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import * as React from "react";
+import * as XLSX from 'xlsx';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1765,7 +1766,10 @@ export default function Contatos() {
                     variant="outline" 
                     className="w-full"
                     onClick={() => {
-                      // Criar CSV com cabeçalhos dos campos obrigatórios
+                      // Criar workbook Excel
+                      const wb = XLSX.utils.book_new();
+                      
+                      // Definir cabeçalhos
                       const headers = [
                         "Nome de contato",
                         "WhatsApp",
@@ -1783,7 +1787,7 @@ export default function Contatos() {
                         "Inscrição"
                       ];
                       
-                      // Adicionar linha de exemplo
+                      // Linha de exemplo
                       const exampleRow = [
                         "João Silva",
                         "(11) 99999-9999",
@@ -1801,22 +1805,25 @@ export default function Contatos() {
                         "123456789"
                       ];
                       
-                      const csvContent = [
-                        headers.join(","),
-                        exampleRow.join(",")
-                      ].join("\n");
+                      // Criar worksheet com cabeçalhos e exemplo
+                      const wsData = [headers, exampleRow];
+                      const ws = XLSX.utils.aoa_to_sheet(wsData);
                       
-                      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                      const link = document.createElement("a");
-                      link.href = URL.createObjectURL(blob);
-                      link.download = "modelo_importacao_contatos.csv";
-                      link.click();
+                      // Definir largura das colunas
+                      const colWidths = headers.map(() => ({ wch: 20 }));
+                      ws['!cols'] = colWidths;
                       
-                      toast.success("Modelo baixado com sucesso!");
+                      // Adicionar worksheet ao workbook
+                      XLSX.utils.book_append_sheet(wb, ws, "Contatos");
+                      
+                      // Gerar arquivo Excel e baixar
+                      XLSX.writeFile(wb, "modelo_importacao_contatos.xlsx");
+                      
+                      toast.success("Modelo Excel baixado com sucesso!");
                     }}
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Baixar Modelo de Importação
+                    Baixar Modelo de Importação (Excel)
                   </Button>
                 </div>
               </div>
