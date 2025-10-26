@@ -43,6 +43,8 @@ export default function BotCreate() {
   const [renameDescription, setRenameDescription] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
 
   // Fail-safe para fechar overlays caso algo fique preso
   const closeOverlays = () => {
@@ -338,7 +340,7 @@ export default function BotCreate() {
                 onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
               >
                 <div className="absolute top-4 right-4 z-10">
-                  <DropdownMenu>
+                  <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreVertical className="w-4 h-4" />
@@ -347,6 +349,7 @@ export default function BotCreate() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
+                        setOpenMenuId(null);
                         navigate(`/bot-builder?id=${bot.id}`);
                       }}>
                         <Edit className="w-4 h-4 mr-2" />
@@ -354,6 +357,7 @@ export default function BotCreate() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
+                        setOpenMenuId(null);
                         setSelectedBot(bot);
                         setRenameName(bot.name);
                         setRenameDescription(bot.description || "");
@@ -364,6 +368,7 @@ export default function BotCreate() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
+                        setOpenMenuId(null);
                         setSelectedBot(bot);
                         setDuplicateName(`${bot.name} (cópia)`);
                         setDuplicateDescription(bot.description || "");
@@ -374,6 +379,7 @@ export default function BotCreate() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
+                        setOpenMenuId(null);
                         handleToggleActive(bot.id, bot.active);
                       }}>
                         <Power className="w-4 h-4 mr-2" />
@@ -382,6 +388,7 @@ export default function BotCreate() {
                       <DropdownMenuItem 
                         onClick={(e) => {
                           e.stopPropagation();
+                          setOpenMenuId(null);
                           handleDeleteBot(bot.id, bot.name);
                         }}
                         className="text-destructive"
