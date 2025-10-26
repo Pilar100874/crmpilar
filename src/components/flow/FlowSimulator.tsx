@@ -365,9 +365,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const rawVar = config.variable || (type === "ask_name" ? "nome" : "resposta");
         const variable = normalizeVarName(rawVar);
         const question = interpolateVariables(config.question || "Pergunta não configurada", context);
+        console.log("❓ Question block:", { 
+          type, 
+          rawVar, 
+          variable, 
+          question,
+          currentContext: context 
+        });
         addBotMessage(question, node.id);
         setIsWaitingInput(true);
         setPendingVariable(variable);
+        console.log("⏳ Waiting for input, pendingVariable set to:", variable);
         break;
 
       case "condition":
@@ -979,31 +987,42 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const handleSendMessage = () => {
     if (!input.trim()) return;
 
+    console.log("📨 handleSendMessage called with:", { 
+      input, 
+      pendingVariable,
+      currentContext: context 
+    });
+
     addUserMessage(input);
 
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
       console.log("💾 Saving variable:", cleanVarName, "=", input);
       console.log("📦 Context before save:", context);
+      
       setContext((prev) => {
         const newContext = { ...prev, [cleanVarName]: input };
         console.log("📦 Context after save:", newContext);
+        
+        // Execute next node with updated context
+        if (currentNodeId) {
+          const nextNode = getNextNode(currentNodeId);
+          console.log("➡️ Next node after saving variable:", nextNode?.id);
+          if (nextNode) {
+            safeSetTimeout(() => {
+              console.log("🚀 Executing next node");
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }, 500);
+          }
+        }
+        
         return newContext;
       });
       
       addSuccessMessage(`Variável "${cleanVarName}" = "${input}"`);
       setPendingVariable(null);
       setIsWaitingInput(false);
-
-      if (currentNodeId) {
-        const nextNode = getNextNode(currentNodeId);
-        if (nextNode) {
-          safeSetTimeout(() => {
-            setCurrentNodeId(nextNode.id);
-            executeNode(nextNode);
-          }, 500);
-        }
-      }
     }
 
     setInput("");
