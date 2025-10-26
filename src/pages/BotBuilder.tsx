@@ -932,7 +932,15 @@ function BotBuilderContent() {
               onConnect={onConnect}
               onReconnect={onReconnect}
               onEdgesDelete={onEdgesDelete}
-              onInit={setReactFlowInstance}
+              onInit={(instance) => {
+                setReactFlowInstance(instance);
+                // Forçar zoom inicial para 50%
+                try {
+                  instance.setViewport({ x: 0, y: 0, zoom: 0.5 });
+                } catch (e) {
+                  // noop
+                }
+              }}
               onDrop={onDrop}
               onDragOver={onDragOver}
               onNodeClick={onNodeClick}
