@@ -22,6 +22,7 @@ import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
+import { APIImportDialog } from "@/components/config/APIImportDialog";
 import {
   DndContext,
   closestCenter,
@@ -1665,14 +1666,21 @@ export default function Contatos() {
           </TabsContent>
 
           <TabsContent value="importacao" className="p-6">
-            <Card className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Importar Contatos</h3>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Faça upload de um arquivo CSV ou Excel para importar múltiplos contatos de uma vez.
-                  </p>
-                </div>
+            <Tabs defaultValue="arquivo" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="arquivo">Por Arquivo</TabsTrigger>
+                <TabsTrigger value="api">Por API</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="arquivo">
+                <Card className="p-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Importar Contatos por Arquivo</h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Faça upload de um arquivo CSV ou Excel para importar múltiplos contatos de uma vez.
+                      </p>
+                    </div>
 
                 <div className="border-2 border-dashed border-border rounded-lg p-8">
                   <div className="flex flex-col items-center justify-center space-y-4">
@@ -1828,6 +1836,12 @@ export default function Contatos() {
                 </div>
               </div>
             </Card>
+              </TabsContent>
+
+              <TabsContent value="api">
+                <APIImportDialog />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>
