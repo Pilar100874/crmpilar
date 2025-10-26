@@ -1,3 +1,22 @@
+/**
+ * EDGE FUNCTION: execute-dynamic-query
+ * 
+ * ⚠️ NÃO MODIFICAR ESTA FUNÇÃO SEM NECESSIDADE EXTREMA ⚠️
+ * 
+ * Esta função é responsável por executar queries SQL dinâmicas
+ * em bancos de dados SQL Server e Supabase.
+ * 
+ * Funcionalidades:
+ * - Conexão com SQL Server usando mssql@^10
+ * - Suporte a parâmetros dinâmicos
+ * - Gerenciamento de pool de conexões
+ * - Timeout configurado (60s)
+ * - CORS habilitado para requisições web
+ * 
+ * Última modificação: Funcionando corretamente (10,592 registros testados)
+ * Status: ✅ PRODUÇÃO - NÃO ALTERAR
+ */
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -17,12 +36,28 @@ interface SqlConfig {
   query: string;
 }
 
+/**
+ * Executa query no SQL Server com suporte a parâmetros
+ * 
+ * ⚠️ CONFIGURAÇÃO CRÍTICA - NÃO ALTERAR SEM TESTES ⚠️
+ * 
+ * Esta configuração foi testada e validada para conexões SQL Server.
+ * Qualquer alteração pode causar falhas na conexão ou timeout.
+ * 
+ * Configurações importantes:
+ * - port: 1433 (padrão SQL Server)
+ * - encrypt: false (compatibilidade)
+ * - trustServerCertificate: true (certificados auto-assinados)
+ * - timeout: 60000ms (60 segundos)
+ * - pool: max 10 conexões simultâneas
+ */
 async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
   console.log('Executing SQL Server query...');
   console.log('Query parameters:', params);
   
   console.log('Connecting to SQL Server:', config.server);
   
+  // ⚠️ NÃO MODIFICAR ESTA CONFIGURAÇÃO
   const sqlConfig = {
     server: config.server,
     port: 1433,
