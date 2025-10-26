@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Copy, Trash2, Plus, Eye, EyeOff, Play, Database, Globe, Edit, Link } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,6 +74,8 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
   const [testEndpoint, setTestEndpoint] = useState<APIEndpoint | null>(null);
   const [testParams, setTestParams] = useState<Record<string, string>>({});
   const [testViewMode, setTestViewMode] = useState<'table' | 'json'>('table');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [endpointToDelete, setEndpointToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -297,19 +300,27 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
   };
 
   const deleteEndpoint = async (id: string) => {
-    if (!confirm("Deseja realmente excluir este endpoint?")) return;
+    setEndpointToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteEndpoint = async () => {
+    if (!endpointToDelete) return;
 
     try {
       const { error } = await supabase
         .from("api_endpoints")
         .delete()
-        .eq("id", id);
+        .eq("id", endpointToDelete);
 
       if (error) throw error;
       toast.success("Endpoint excluído!");
       loadEndpoints();
     } catch (error: any) {
       toast.error("Erro ao excluir: " + error.message);
+    } finally {
+      setDeleteConfirmOpen(false);
+      setEndpointToDelete(null);
     }
   };
 
@@ -983,6 +994,14 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
       <TabsContent value="connections">
         <DatabaseConnectionsCRUD estabelecimentoId={estabelecimentoId} />
       </TabsContent>
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={confirmDeleteEndpoint}
+        title="Confirmar exclusão"
+        description="Tem certeza que deseja excluir este endpoint? Esta ação não pode ser desfeita."
+      />
     </Tabs>
   );
 }

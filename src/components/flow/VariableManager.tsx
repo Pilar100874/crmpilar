@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Trash2, Variable, Type, Hash, Calendar, List, ToggleLeft, Lock, Unlock, Globe, User } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 export type VariableType = "text" | "number" | "date" | "array" | "boolean";
 
@@ -63,6 +64,8 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
   const [newVarDescription, setNewVarDescription] = useState("");
   const [newVarIsConstant, setNewVarIsConstant] = useState(false);
   const [newVarDefaultValue, setNewVarDefaultValue] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [variableToDelete, setVariableToDelete] = useState<FlowVariable | null>(null);
 
   const handleAddVariable = () => {
     if (!newVarName.trim()) {
@@ -149,10 +152,17 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
     const variable = variables.find(v => v.id === id);
     if (!variable) return;
 
-    if (!confirm(`Tem certeza que deseja excluir a variável "${variable.name}"?`)) return;
+    setVariableToDelete(variable);
+    setDeleteConfirmOpen(true);
+  };
 
-    onVariablesChange(variables.filter(v => v.id !== id));
-    toast.success(`Variável "${variable.name}" excluída!`);
+  const confirmDeleteVariable = () => {
+    if (!variableToDelete) return;
+
+    onVariablesChange(variables.filter(v => v.id !== variableToDelete.id));
+    toast.success(`Variável "${variableToDelete.name}" excluída!`);
+    setDeleteConfirmOpen(false);
+    setVariableToDelete(null);
   };
 
   return (
@@ -400,6 +410,14 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
           </div>
         </div>
       </SheetContent>
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={confirmDeleteVariable}
+        title="Confirmar exclusão"
+        itemName={variableToDelete?.name}
+      />
     </Sheet>
   );
 }

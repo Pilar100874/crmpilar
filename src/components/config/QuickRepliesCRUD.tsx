@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface QuickReply {
   id: string;
@@ -39,6 +40,8 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [replyToDelete, setReplyToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -160,20 +163,27 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir este texto pronto?")) return;
+    setReplyToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!replyToDelete) return;
 
     const { error } = await supabase
       .from("quick_replies")
       .delete()
-      .eq("id", id);
+      .eq("id", replyToDelete);
 
     if (error) {
       toast.error("Erro ao excluir texto pronto");
-      return;
+    } else {
+      toast.success("Texto pronto excluído!");
+      loadQuickReplies();
     }
-
-    toast.success("Texto pronto excluído!");
-    loadQuickReplies();
+    
+    setDeleteConfirmOpen(false);
+    setReplyToDelete(null);
   };
 
   const resetForm = () => {
@@ -308,6 +318,14 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
           </p>
         )}
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={confirmDelete}
+        title="Confirmar exclusão"
+        description="Tem certeza que deseja excluir este texto pronto? Esta ação não pode ser desfeita."
+      />
     </div>
   );
 }

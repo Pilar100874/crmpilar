@@ -14,6 +14,7 @@ import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
   DndContext,
   DragEndEvent,
@@ -281,6 +282,8 @@ export default function Calendario() {
   const [pendingTask, setPendingTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   
   // Configuração de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -912,12 +915,19 @@ export default function Calendario() {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
-      const updatedTasks = tasks.filter(t => t.id !== taskId);
+    setTaskToDelete(taskId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteTask = () => {
+    if (taskToDelete) {
+      const updatedTasks = tasks.filter(t => t.id !== taskToDelete);
       setTasks(updatedTasks);
       localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       toast.success("Tarefa excluída");
+      setTaskToDelete(null);
     }
+    setDeleteConfirmOpen(false);
   };
 
   const handleEditTask = (task: Task) => {
@@ -1610,6 +1620,15 @@ export default function Calendario() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={confirmDeleteTask}
+        title="Confirmar exclusão"
+        description="Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita."
+      />
 
       {/* Drag Overlay */}
       <DragOverlay>

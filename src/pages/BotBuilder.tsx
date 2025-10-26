@@ -28,6 +28,7 @@ import { BlockMonitor } from "@/components/flow/BlockMonitor";
 import { ErrorDialog } from "@/components/flow/ErrorDialog";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 const nodeTypes = {
   custom: FlowNode,
@@ -81,6 +82,8 @@ function BotBuilderContent() {
     description: string;
   }>({ open: false, description: "" });
   const [isDroppingNode, setIsDroppingNode] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [botToDelete, setBotToDelete] = useState<string | null>(null);
 
   // Load saved bots on mount
   useEffect(() => {
@@ -547,12 +550,17 @@ function BotBuilderContent() {
   }, []);
 
   const handleDeleteBot = useCallback(async (botId: string) => {
-    if (!confirm("Tem certeza que deseja excluir este bot?")) return;
+    setBotToDelete(botId);
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  const confirmDeleteBot = useCallback(async () => {
+    if (!botToDelete) return;
 
     const { error } = await supabase
       .from("bot_flows")
       .delete()
-      .eq("id", botId);
+      .eq("id", botToDelete);
 
     if (error) {
       console.error("Error deleting bot:", error);
@@ -564,11 +572,11 @@ function BotBuilderContent() {
     } else {
       toast.success("Bot excluído!");
       loadSavedBots();
-      if (currentBotId === botId) {
-        handleNewBot();
-      }
     }
-  }, [currentBotId, handleNewBot]);
+    
+    setDeleteConfirmOpen(false);
+    setBotToDelete(null);
+  }, [botToDelete]);
 
   const handleExport = useCallback(() => {
     const flow = {
@@ -1006,9 +1014,18 @@ function BotBuilderContent() {
         {/* Dialog de erro */}
         <ErrorDialog
           open={errorDialog.open}
-          onClose={() => setErrorDialog({ open: false, description: "" })}
+          onClose={() => setErrorDialog({ open: false, description: "", title: "" })}
           title={errorDialog.title}
           description={errorDialog.description}
+        />
+
+        {/* Dialog de confirmação de exclusão */}
+        <DeleteConfirmDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          onConfirm={confirmDeleteBot}
+          title="Confirmar exclusão"
+          description="Tem certeza que deseja excluir este bot? Esta ação não pode ser desfeita."
         />
       </div>
   );
