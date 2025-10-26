@@ -302,8 +302,8 @@ export default function BotCreate() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-primary/30" onClick={() => setNewBotDialogOpen(true)}>
+        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 scale-[0.7] origin-top-left" onClick={() => setNewBotDialogOpen(true)}>
             <CardHeader>
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Workflow className="w-6 h-6 text-primary" />
@@ -324,7 +324,7 @@ export default function BotCreate() {
 
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="animate-pulse">
+              <Card key={i} className="animate-pulse scale-[0.7] origin-top-left">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
                   <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
@@ -336,7 +336,7 @@ export default function BotCreate() {
             bots.map((bot) => (
               <Card 
                 key={bot.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer relative group"
+                className="hover:shadow-lg transition-all cursor-pointer relative group scale-[0.7] origin-top-left"
                 onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
               >
                 <div className="absolute top-4 right-4 z-10">
