@@ -130,7 +130,7 @@ function BotBuilderContent() {
     }
 
     // Marcar que há mudanças não salvas
-    if (currentBotId) {
+    if (!hasUnsavedChanges) {
       setHasUnsavedChanges(true);
     }
 
@@ -147,7 +147,7 @@ function BotBuilderContent() {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription]);
+  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, hasUnsavedChanges, currentBotId]);
 
   // Salvar ao sair da página
   useEffect(() => {
@@ -467,7 +467,8 @@ function BotBuilderContent() {
     });
   }, [reactFlowInstance, setNodes]);
 
-  const handleSave = useCallback(async (silent = false) => {
+  const handleSave = useCallback(async (silent = false): Promise<boolean> => {
+    let saved = false;
     if (!silent) {
       setIsSaving(true);
     }
@@ -481,7 +482,7 @@ function BotBuilderContent() {
             description: "Por favor, dê um nome ao bot antes de salvar.",
           });
         }
-        return;
+        return false;
       }
 
       // Validar conexões antes de salvar
@@ -490,7 +491,7 @@ function BotBuilderContent() {
         if (!silent) {
           highlightDisconnectedNodes(validation.disconnectedNodes);
         }
-        return;
+        return false;
       }
 
       // Obter estabelecimento_id
@@ -504,7 +505,7 @@ function BotBuilderContent() {
             description: "Não foi possível identificar o estabelecimento. Por favor, selecione um estabelecimento.",
           });
         }
-        return;
+        return false;
       }
 
       const flow = {
@@ -561,12 +562,15 @@ function BotBuilderContent() {
         }
         setHasUnsavedChanges(false);
         loadSavedBots();
+        saved = true;
       }
     } finally {
       if (!silent) {
         setIsSaving(false);
       }
     }
+
+    return saved;
   }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
@@ -845,11 +849,17 @@ function BotBuilderContent() {
   }, [hasUnsavedChanges, navigate]);
 
   const handleExitWithSave = useCallback(async () => {
-    await handleSave(false);
-    navigate("/bot-create");
+    const ok = await handleSave(false);
+    if (ok) {
+      setShowExitDialog(false);
+      navigate("/bot-create");
+    } else {
+      toast.error("Não foi possível salvar. Corrija os erros e tente novamente.");
+    }
   }, [handleSave, navigate]);
 
   const handleExitWithoutSave = useCallback(() => {
+    setShowExitDialog(false);
     navigate("/bot-create");
   }, [navigate]);
 
@@ -944,9 +954,9 @@ function BotBuilderContent() {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExit}>
+            <Button variant="outline" size="sm" onClick={handleExit} disabled={isSaving}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Sair
+              {isSaving ? "Salvando..." : "Sair"}
             </Button>
             <Button variant="outline" size="sm" onClick={handleImport}>
               <Upload className="w-4 h-4 mr-2" />
