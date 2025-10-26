@@ -1,4 +1,4 @@
-export type FunilStage = 'lead' | 'qualificacao' | 'proposta' | 'negociacao' | 'fechamento';
+export type FunilStage = 'lead' | 'qualificacao' | 'proposta' | 'negociacao' | 'fechamento' | string;
 
 export interface Deal {
   id: string;
@@ -9,13 +9,13 @@ export interface Deal {
   origem?: string;
   segmento?: string;
   cluster?: string;
-  status?: 'normal' | 'vencido' | 'parado' | 'urgente';
+  status?: 'normal' | 'vencido' | 'parado' | 'urgente' | 'ativo';
   saude?: 'verde' | 'amarelo' | 'vermelho';
   diasParado?: number;
   prioridade?: number;
   ultimaInteracao?: string;
   tags?: string[];
-  stage?: FunilStage;
+  stage?: FunilStage | string;
 }
 
 export interface FunilColumn {

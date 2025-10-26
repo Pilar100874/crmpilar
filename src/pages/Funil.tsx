@@ -5,8 +5,13 @@ import { FunilHeader } from '@/components/funil/FunilHeader';
 import { NewDealDialog } from '@/components/funil/NewDealDialog';
 import { DealDetailsDialog } from '@/components/funil/DealDetailsDialog';
 import { ConfigureStagesDialog } from '@/components/funil/ConfigureStagesDialog';
+import { FunilSelector } from '@/components/funil/FunilSelector';
+import { NewFunilDialog } from '@/components/funil/NewFunilDialog';
+import { ManageFunisDialog } from '@/components/funil/ManageFunisDialog';
 import { Deal, FunilStage, FunilColumn } from '@/types/funil';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 // Mock data inicial com stages
 const mockDeals: Deal[] = [
@@ -65,24 +70,86 @@ const defaultStages: StageConfig[] = [
 
 export default function Funil() {
   const { toast } = useToast();
-  const [deals, setDeals] = useState<Deal[]>(mockDeals);
+  const [selectedFunilId, setSelectedFunilId] = useState<string | null>(null);
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<any>({});
   const [newDealOpen, setNewDealOpen] = useState(false);
+  const [newFunilOpen, setNewFunilOpen] = useState(false);
+  const [manageFunisOpen, setManageFunisOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [configureStagesOpen, setConfigureStagesOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-  const [stagesConfig, setStagesConfig] = useState<StageConfig[]>(() => {
+  const [stagesConfig, setStagesConfig] = useState<StageConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carrega dados quando o funil é selecionado
+  useEffect(() => {
+    if (selectedFunilId) {
+      loadStages();
+      loadDeals();
+    }
+  }, [selectedFunilId]);
+
+  const loadStages = async () => {
+    if (!selectedFunilId) return;
+
     try {
-      const saved = localStorage.getItem('funilStagesConfig');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length) return parsed;
-      }
-    } catch {}
-    return defaultStages;
-  });
+      const { data, error } = await supabase
+        .from('funil_stages')
+        .select('*')
+        .eq('funil_id', selectedFunilId)
+        .order('ordem', { ascending: true });
+
+      if (error) throw error;
+      
+      setStagesConfig(data?.map(stage => ({
+        id: stage.id,
+        title: stage.nome,
+        isDefault: false,
+      })) || []);
+    } catch (error) {
+      console.error('Erro ao carregar etapas:', error);
+    }
+  };
+
+  const loadDeals = async () => {
+    if (!selectedFunilId) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('funil_deals')
+        .select(`
+          *,
+          stage:funil_stages(id, nome),
+          responsavel:usuarios(nome)
+        `)
+        .eq('funil_id', selectedFunilId);
+
+      if (error) throw error;
+      
+      setDeals(data?.map(deal => ({
+        id: deal.id,
+        cliente: deal.cliente_nome,
+        valor: Number(deal.valor),
+        dataEstimada: deal.data_estimada || '',
+        responsavel: deal.responsavel?.nome || 'Sem responsável',
+        origem: deal.origem,
+        status: deal.status as any,
+        saude: deal.saude as any,
+        diasParado: deal.dias_parado,
+        tags: deal.tags || [],
+        stage: deal.stage_id,
+      })) || []);
+    } catch (error) {
+      console.error('Erro ao carregar deals:', error);
+      toast({ title: 'Erro ao carregar negócios', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Simular detecção de SLA (negócios parados)
   useEffect(() => {
@@ -266,9 +333,75 @@ export default function Funil() {
   const totalValue = deals.reduce((sum, deal) => sum + deal.valor, 0);
   const leadsAtivos = deals.length;
 
+  const handleFunilChange = (funilId: string) => {
+    setSelectedFunilId(funilId);
+  };
+
+  const handleNewFunil = () => {
+    setNewFunilOpen(true);
+  };
+
+  const handleManageFunis = () => {
+    setManageFunisOpen(true);
+  };
+
+  const handleFunilCreated = (funilId: string) => {
+    setSelectedFunilId(funilId);
+  };
+
+  const handleFunilsUpdated = () => {
+    // Recarrega os dados
+    if (selectedFunilId) {
+      loadStages();
+      loadDeals();
+    }
+  };
+
+  if (!selectedFunilId) {
+    return (
+      <div className="h-full flex flex-col bg-background">
+        <div className="p-6 border-b bg-card">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold">Funil de Vendas</h1>
+            <FunilSelector
+              selectedFunilId={selectedFunilId}
+              onFunilChange={handleFunilChange}
+              onNewFunil={handleNewFunil}
+              onManageFunis={handleManageFunis}
+            />
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <p className="text-muted-foreground">Selecione ou crie um funil para começar</p>
+          </div>
+        </div>
+        <NewFunilDialog
+          open={newFunilOpen}
+          onOpenChange={setNewFunilOpen}
+          onSuccess={handleFunilCreated}
+        />
+        <ManageFunisDialog
+          open={manageFunisOpen}
+          onOpenChange={setManageFunisOpen}
+          onFunilsUpdated={handleFunilsUpdated}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="p-6 border-b bg-card">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Funil de Vendas</h1>
+          <FunilSelector
+            selectedFunilId={selectedFunilId}
+            onFunilChange={handleFunilChange}
+            onNewFunil={handleNewFunil}
+            onManageFunis={handleManageFunis}
+          />
+        </div>
         <FunilHeader
           leadsAtivos={leadsAtivos}
           totalValue={totalValue}
@@ -316,6 +449,18 @@ export default function Funil() {
         onSave={handleSaveStages}
         currentDeals={deals}
         initialStages={stagesConfig}
+      />
+
+      <NewFunilDialog
+        open={newFunilOpen}
+        onOpenChange={setNewFunilOpen}
+        onSuccess={handleFunilCreated}
+      />
+
+      <ManageFunisDialog
+        open={manageFunisOpen}
+        onOpenChange={setManageFunisOpen}
+        onFunilsUpdated={handleFunilsUpdated}
       />
     </div>
   );
