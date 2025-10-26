@@ -96,6 +96,7 @@ export default function Funil() {
   const loadStages = async () => {
     if (!selectedFunilId) return;
 
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('funil_stages')
@@ -112,13 +113,15 @@ export default function Funil() {
       })) || []);
     } catch (error) {
       console.error('Erro ao carregar etapas:', error);
+      toast({ title: 'Erro ao carregar etapas', variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadDeals = async () => {
     if (!selectedFunilId) return;
 
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('funil_deals')
@@ -147,8 +150,6 @@ export default function Funil() {
     } catch (error) {
       console.error('Erro ao carregar deals:', error);
       toast({ title: 'Erro ao carregar negócios', variant: 'destructive' });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -420,7 +421,14 @@ export default function Funil() {
       </div>
       
       <div className="flex-1 p-6 overflow-hidden">
-        {viewMode === 'kanban' ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground">Carregando funil...</p>
+            </div>
+          </div>
+        ) : viewMode === 'kanban' ? (
           <FunilBoard 
             columns={columns} 
             onDealMove={handleDealMove}
