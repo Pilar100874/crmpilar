@@ -932,15 +932,7 @@ function BotBuilderContent() {
               onConnect={onConnect}
               onReconnect={onReconnect}
               onEdgesDelete={onEdgesDelete}
-              onInit={(instance) => {
-                setReactFlowInstance(instance);
-                // Forçar zoom inicial para 50%
-                try {
-                  instance.setViewport({ x: 0, y: 0, zoom: 0.5 });
-                } catch (e) {
-                  // noop
-                }
-              }}
+              onInit={setReactFlowInstance}
               onDrop={onDrop}
               onDragOver={onDragOver}
               onNodeClick={onNodeClick}
@@ -950,7 +942,7 @@ function BotBuilderContent() {
               nodesConnectable={!isLocked && !showSimulator && !isDroppingNode}
               nodesFocusable={!isLocked}
               edgesFocusable={!isLocked}
-              defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+              fitView
               className="bg-background"
               deleteKeyCode={isLocked ? null : "Delete"}
               connectOnClick={false}
