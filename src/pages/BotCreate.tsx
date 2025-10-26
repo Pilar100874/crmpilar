@@ -38,6 +38,8 @@ export default function BotCreate() {
   const [selectedBot, setSelectedBot] = useState<any>(null);
   const [duplicateName, setDuplicateName] = useState("");
   const [renameName, setRenameName] = useState("");
+  const [isDuplicating, setIsDuplicating] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
 
   useEffect(() => {
     loadBots();
@@ -161,11 +163,14 @@ export default function BotCreate() {
 
     if (!selectedBot) return;
 
+    setIsDuplicating(true);
+
     try {
       const estabelecimentoId = await getEstabelecimentoId();
       
       if (!estabelecimentoId) {
         toast.error("Não foi possível identificar o estabelecimento");
+        setIsDuplicating(false);
         return;
       }
 
@@ -178,6 +183,7 @@ export default function BotCreate() {
 
       if (existingBots && existingBots.length > 0) {
         toast.error("Já existe um bot com este nome. Por favor, escolha outro nome.");
+        setIsDuplicating(false);
         return;
       }
 
@@ -197,10 +203,12 @@ export default function BotCreate() {
       setDuplicateDialogOpen(false);
       setDuplicateName("");
       setSelectedBot(null);
-      loadBots();
+      await loadBots();
     } catch (error) {
       console.error("Error duplicating bot:", error);
       toast.error("Erro ao duplicar bot");
+    } finally {
+      setIsDuplicating(false);
     }
   };
 
@@ -212,11 +220,14 @@ export default function BotCreate() {
 
     if (!selectedBot) return;
 
+    setIsRenaming(true);
+
     try {
       const estabelecimentoId = await getEstabelecimentoId();
       
       if (!estabelecimentoId) {
         toast.error("Não foi possível identificar o estabelecimento");
+        setIsRenaming(false);
         return;
       }
 
@@ -229,6 +240,7 @@ export default function BotCreate() {
 
       if (existingBots && existingBots.length > 0 && existingBots[0].id !== selectedBot.id) {
         toast.error("Já existe um bot com este nome. Por favor, escolha outro nome.");
+        setIsRenaming(false);
         return;
       }
 
@@ -244,10 +256,12 @@ export default function BotCreate() {
       setRenameDialogOpen(false);
       setRenameName("");
       setSelectedBot(null);
-      loadBots();
+      await loadBots();
     } catch (error) {
       console.error("Error renaming bot:", error);
       toast.error("Erro ao renomear bot");
+    } finally {
+      setIsRenaming(false);
     }
   };
 
@@ -447,7 +461,16 @@ export default function BotCreate() {
       </Dialog>
 
       {/* Dialog de duplicar bot */}
-      <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+      <Dialog 
+        open={duplicateDialogOpen} 
+        onOpenChange={(open) => {
+          setDuplicateDialogOpen(open);
+          if (!open) {
+            setDuplicateName("");
+            setSelectedBot(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Duplicar Bot</DialogTitle>
@@ -480,22 +503,32 @@ export default function BotCreate() {
                 setDuplicateDialogOpen(false);
                 setSelectedBot(null);
               }}
+              disabled={isDuplicating}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               onClick={handleDuplicateBot}
-              disabled={!duplicateName.trim()}
+              disabled={!duplicateName.trim() || isDuplicating}
             >
-              Duplicar Bot
+              {isDuplicating ? "Duplicando..." : "Duplicar Bot"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Dialog de renomear bot */}
-      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+      <Dialog 
+        open={renameDialogOpen} 
+        onOpenChange={(open) => {
+          setRenameDialogOpen(open);
+          if (!open) {
+            setRenameName("");
+            setSelectedBot(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Renomear Bot</DialogTitle>
@@ -528,15 +561,16 @@ export default function BotCreate() {
                 setRenameDialogOpen(false);
                 setSelectedBot(null);
               }}
+              disabled={isRenaming}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               onClick={handleRenameBot}
-              disabled={!renameName.trim()}
+              disabled={!renameName.trim() || isRenaming}
             >
-              Renomear Bot
+              {isRenaming ? "Renomeando..." : "Renomear Bot"}
             </Button>
           </DialogFooter>
         </DialogContent>
