@@ -288,165 +288,170 @@ export default function BotCreate() {
   };
 
   return (
-    <div className="p-6 md:p-10 space-y-6 animate-fade-in bg-background min-h-full">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-2">
+    <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
+        <div>
+          <div className="flex items-center gap-3 mb-3">
             <SubMenuHeader 
               title="Bot"
               onOpenSubmenu={() => openSubmenu("Bot Test")}
             />
-            <h1 className="text-2xl font-semibold text-foreground">Bots</h1>
+            <h1 className="text-lg font-bold text-foreground">Criar Bot</h1>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Gerencie seus bots de atendimento
+          <p className="text-muted-foreground">
+            Crie e configure novos bots para automação de atendimento
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-medium text-muted-foreground">
-                {loading ? "Carregando..." : `${bots.length} ${bots.length === 1 ? 'bot' : 'bots'}`}
-              </h2>
-            </div>
-            <Button onClick={() => setNewBotDialogOpen(true)} size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Bot
-            </Button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-
-            {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse border border-border rounded-lg p-4 bg-card">
-                  <div className="h-5 bg-muted rounded w-3/4 mb-3"></div>
-                  <div className="h-4 bg-muted rounded w-full mb-2"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
-              ))
-            ) : (
-              bots.map((bot) => (
-                <div 
-                  key={bot.id} 
-                  className="border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer relative group bg-card"
-                  onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
-                >
-                  <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreVertical className="w-3.5 h-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(null);
-                          navigate(`/bot-builder?id=${bot.id}`);
-                        }}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(null);
-                          setSelectedBot(bot);
-                          setRenameName(bot.name);
-                          setRenameDescription(bot.description || "");
-                          setRenameDialogOpen(true);
-                        }}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Renomear
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(null);
-                          setSelectedBot(bot);
-                          setDuplicateName(`${bot.name} (cópia)`);
-                          setDuplicateDescription(bot.description || "");
-                          setDuplicateDialogOpen(true);
-                        }}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Duplicar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(null);
-                          handleToggleActive(bot.id, bot.active);
-                        }}>
-                          <Power className="w-4 h-4 mr-2" />
-                          {bot.active ? "Desativar" : "Ativar"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(null);
-                            handleDeleteBot(bot.id, bot.name);
-                          }}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-foreground truncate">{bot.name}</h3>
-                        {bot.active && (
-                          <Badge variant="default" className="bg-success text-success-foreground text-xs px-1.5 py-0">
-                            Ativo
-                          </Badge>
-                        )}
-                      </div>
-                      {bot.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{bot.description}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Workflow className="w-3 h-3" />
-                      {bot.flow_data?.nodes?.length || 0} blocos
-                    </span>
-                    <span>
-                      {formatDistanceToNow(new Date(bot.updated_at), { 
-                        addSuffix: true, 
-                        locale: ptBR 
-                      })}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {!loading && bots.length === 0 && (
-            <div className="text-center py-16">
-              <Workflow className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-sm text-muted-foreground mb-4">
-                Nenhum bot criado ainda
-              </p>
-              <Button onClick={() => setNewBotDialogOpen(true)} size="sm" variant="outline" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Criar primeiro bot
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-primary/30" onClick={() => setNewBotDialogOpen(true)}>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Workflow className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle>Novo Bot de Fluxo</CardTitle>
+              <CardDescription>
+                Crie um bot usando o editor visual de fluxos. Ideal para automações complexas com múltiplas ramificações.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Novo Bot
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-            </div>
+            </CardContent>
+          </Card>
+
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
+                  <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                </CardHeader>
+              </Card>
+            ))
+          ) : (
+            bots.map((bot) => (
+              <Card 
+                key={bot.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer relative group"
+                onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
+              >
+                <div className="absolute top-4 right-4 z-10">
+                  <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(null);
+                        navigate(`/bot-builder?id=${bot.id}`);
+                      }}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(null);
+                        setSelectedBot(bot);
+                        setRenameName(bot.name);
+                        setRenameDescription(bot.description || "");
+                        setRenameDialogOpen(true);
+                      }}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Renomear
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(null);
+                        setSelectedBot(bot);
+                        setDuplicateName(`${bot.name} (cópia)`);
+                        setDuplicateDescription(bot.description || "");
+                        setDuplicateDialogOpen(true);
+                      }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Duplicar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(null);
+                        handleToggleActive(bot.id, bot.active);
+                      }}>
+                        <Power className="w-4 h-4 mr-2" />
+                        {bot.active ? "Desativar" : "Ativar"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleDeleteBot(bot.id, bot.name);
+                        }}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Workflow className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CardTitle className="flex-1">{bot.name}</CardTitle>
+                    {bot.active && (
+                      <Badge variant="default" className="bg-green-500">
+                        Ativo
+                      </Badge>
+                    )}
+                  </div>
+                  {bot.description && (
+                    <p className="text-sm text-muted-foreground mb-2">{bot.description}</p>
+                  )}
+                  <CardDescription>
+                    {bot.flow_data?.nodes?.length || 0} blocos • 
+                    Atualizado {formatDistanceToNow(new Date(bot.updated_at), { 
+                      addSuffix: true, 
+                      locale: ptBR 
+                    })}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Abrir Editor
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
           )}
         </div>
 
+        {!loading && bots.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 rounded-2xl bg-muted mx-auto mb-4 flex items-center justify-center">
+              <Workflow className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground">
+              Você ainda não tem bots criados. Clique no card acima para criar seu primeiro bot!
+            </p>
+          </div>
+        )}
+
       {/* Dialog de criar novo bot */}
       <Dialog open={newBotDialogOpen} onOpenChange={setNewBotDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Novo Bot</DialogTitle>
+            <DialogTitle>Criar Novo Bot</DialogTitle>
             <DialogDescription>
-              Crie um novo bot de atendimento
+              Digite um nome único para o novo bot de atendimento.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -509,16 +514,15 @@ export default function BotCreate() {
           setDuplicateDialogOpen(open);
           if (!open) {
             setDuplicateName("");
-            setDuplicateDescription("");
             setSelectedBot(null);
           }
         }}
       >
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Duplicar Bot</DialogTitle>
             <DialogDescription>
-              Criar uma cópia do bot
+              Digite um nome único para o bot duplicado.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -583,16 +587,15 @@ export default function BotCreate() {
           setRenameDialogOpen(open);
           if (!open) {
             setRenameName("");
-            setRenameDescription("");
             setSelectedBot(null);
           }
         }}
       >
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Renomear Bot</DialogTitle>
             <DialogDescription>
-              Alterar nome e descrição
+              Digite um novo nome para o bot.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
