@@ -1009,22 +1009,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
-      console.log("💾 Saving variable:", cleanVarName, "=", input);
-      console.log("📦 Context before save:", context);
+      console.log("💾 [CRITICAL] Saving variable:", cleanVarName, "=", input);
+      console.log("📦 [CRITICAL] Context before save:", context);
+      console.log("🔍 [CRITICAL] pendingVariable raw value:", pendingVariable);
+      console.log("🧹 [CRITICAL] cleanVarName after normalize:", cleanVarName);
       
       setContext((prev) => {
         const newContext = { ...prev, [cleanVarName]: input };
-        console.log("📦 Context after save:", newContext);
+        console.log("📦 [CRITICAL] Context after save:", newContext);
+        console.log("✅ [CRITICAL] Variable saved successfully:", cleanVarName, "→", newContext[cleanVarName]);
         // Atualiza imediatamente o contextRef para próxima interpolação
         contextRef.current = newContext;
         
         // Execute next node with updated context
         if (currentNodeId) {
           const nextNode = getNextNode(currentNodeId);
-          console.log("➡️ Next node after saving variable:", nextNode?.id);
+          console.log("➡️ [CRITICAL] Next node after saving variable:", nextNode?.id);
           if (nextNode) {
             safeSetTimeout(() => {
-              console.log("🚀 Executing next node");
+              console.log("🚀 [CRITICAL] Executing next node with context:", contextRef.current);
               setCurrentNodeId(nextNode.id);
               executeNode(nextNode);
             }, 500);
