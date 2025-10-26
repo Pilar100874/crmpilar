@@ -103,6 +103,7 @@ function BotBuilderContent() {
   const [isDroppingNode, setIsDroppingNode] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [botToDelete, setBotToDelete] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Load saved bots on mount
   useEffect(() => {
@@ -460,93 +461,105 @@ function BotBuilderContent() {
   }, [reactFlowInstance, setNodes]);
 
   const handleSave = useCallback(async (silent = false) => {
-    if (!currentBotName.trim()) {
-      if (!silent) {
-        setErrorDialog({
-          open: true,
-          title: "Nome Obrigatório",
-          description: "Por favor, dê um nome ao bot antes de salvar.",
-        });
-      }
-      return;
+    if (!silent) {
+      setIsSaving(true);
     }
 
-    // Validar conexões antes de salvar
-    const validation = validateConnections();
-    if (!validation.isValid) {
-      if (!silent) {
-        highlightDisconnectedNodes(validation.disconnectedNodes);
+    try {
+      if (!currentBotName.trim()) {
+        if (!silent) {
+          setErrorDialog({
+            open: true,
+            title: "Nome Obrigatório",
+            description: "Por favor, dê um nome ao bot antes de salvar.",
+          });
+        }
+        return;
       }
-      return;
-    }
 
-    // Obter estabelecimento_id
-    const estabelecimentoId = await getEstabelecimentoId();
-    
-    if (!estabelecimentoId) {
-      if (!silent) {
-        setErrorDialog({
-          open: true,
-          title: "Erro",
-          description: "Não foi possível identificar o estabelecimento. Por favor, selecione um estabelecimento.",
-        });
+      // Validar conexões antes de salvar
+      const validation = validateConnections();
+      if (!validation.isValid) {
+        if (!silent) {
+          highlightDisconnectedNodes(validation.disconnectedNodes);
+        }
+        return;
       }
-      return;
-    }
 
-    const flow = {
-      nodes,
-      edges,
-      viewport: reactFlowInstance?.getViewport(),
-      variables: flowVariables,
-    };
-
-    const botData = {
-      name: currentBotName,
-      description: currentBotDescription,
-      flow_data: flow as any, // Cast to any for Json compatibility
-      updated_at: new Date().toISOString(),
-      estabelecimento_id: estabelecimentoId,
-    };
-
-    let error, data;
-    if (currentBotId) {
-      // Update existing bot
-      ({ error, data } = await supabase
-        .from("bot_flows")
-        .update(botData)
-        .eq("id", currentBotId)
-        .select()
-        .single());
-    } else {
-      // Create new bot
-      ({ error, data } = await supabase
-        .from("bot_flows")
-        .insert([{ ...botData, active: false }])
-        .select()
-        .single());
+      // Obter estabelecimento_id
+      const estabelecimentoId = await getEstabelecimentoId();
       
-      if (data) {
-        setCurrentBotId(data.id);
+      if (!estabelecimentoId) {
+        if (!silent) {
+          setErrorDialog({
+            open: true,
+            title: "Erro",
+            description: "Não foi possível identificar o estabelecimento. Por favor, selecione um estabelecimento.",
+          });
+        }
+        return;
       }
-    }
 
-    if (error) {
-      console.error("Error saving bot:", error);
-      if (!silent) {
-        setErrorDialog({
-          open: true,
-          title: "Erro ao Salvar",
-          description: "Não foi possível salvar o bot. Por favor, tente novamente.",
-        });
+      const flow = {
+        nodes,
+        edges,
+        viewport: reactFlowInstance?.getViewport(),
+        variables: flowVariables,
+      };
+
+      const botData = {
+        name: currentBotName,
+        description: currentBotDescription,
+        flow_data: flow as any, // Cast to any for Json compatibility
+        updated_at: new Date().toISOString(),
+        estabelecimento_id: estabelecimentoId,
+      };
+
+      let error, data;
+      if (currentBotId) {
+        // Update existing bot
+        ({ error, data } = await supabase
+          .from("bot_flows")
+          .update(botData)
+          .eq("id", currentBotId)
+          .select()
+          .single());
+      } else {
+        // Create new bot
+        ({ error, data } = await supabase
+          .from("bot_flows")
+          .insert([{ ...botData, active: false }])
+          .select()
+          .single());
+        
+        if (data) {
+          setCurrentBotId(data.id);
+        }
       }
-    } else {
-      if (!silent) {
-        toast.success("Bot salvo com sucesso!");
+
+      if (error) {
+        console.error("Error saving bot:", error);
+        if (!silent) {
+          setErrorDialog({
+            open: true,
+            title: "Erro ao Salvar",
+            description: "Não foi possível salvar o bot. Por favor, tente novamente.",
+          });
+        }
+      } else {
+        if (!silent) {
+          toast.success("✓ Bot salvo com sucesso!", {
+            duration: 3000,
+          });
+        }
+        loadSavedBots();
       }
-      loadSavedBots();
+    } finally {
+      if (!silent) {
+        setIsSaving(false);
+      }
     }
-  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, validateConnections, highlightDisconnectedNodes, flowVariables]);
+  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
@@ -914,9 +927,15 @@ function BotBuilderContent() {
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleSave(false)}>
-              <Save className="w-4 h-4 mr-2" />
-              Salvar
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleSave(false)}
+              disabled={isSaving}
+              className={isSaving ? "bg-green-50" : ""}
+            >
+              <Save className={`w-4 h-4 mr-2 ${isSaving ? "animate-pulse" : ""}`} />
+              {isSaving ? "Salvando..." : "Salvar"}
             </Button>
             <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg">
               <Play className="w-4 h-4 mr-2" />
