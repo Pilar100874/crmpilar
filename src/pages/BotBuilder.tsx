@@ -883,15 +883,15 @@ function BotBuilderContent() {
                 allVariables={allVariables}
               />
               
-              {/* Caixa de Nome do Bot */}
+              {/* Nome do Bot (somente leitura) */}
               <div className="flex items-center gap-2 border-l border-border pl-4">
                 <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Nome do Bot:
                 </label>
                 <Input
                   value={currentBotName}
-                  onChange={(e) => setCurrentBotName(e.target.value)}
-                  className="h-9 w-[200px]"
+                  disabled
+                  className="h-9 w-[200px] bg-muted"
                   placeholder="Nome do bot"
                 />
               </div>

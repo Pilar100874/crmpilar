@@ -31,6 +31,13 @@ export default function BotCreate() {
   const [newBotDialogOpen, setNewBotDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  
+  // Dialogs para duplicar e renomear
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [selectedBot, setSelectedBot] = useState<any>(null);
+  const [duplicateName, setDuplicateName] = useState("");
+  const [renameName, setRenameName] = useState("");
 
   useEffect(() => {
     loadBots();
@@ -146,6 +153,104 @@ export default function BotCreate() {
     }
   };
 
+  const handleDuplicateBot = async () => {
+    if (!duplicateName.trim()) {
+      toast.error("Por favor, informe um nome para o bot duplicado");
+      return;
+    }
+
+    if (!selectedBot) return;
+
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      
+      if (!estabelecimentoId) {
+        toast.error("Não foi possível identificar o estabelecimento");
+        return;
+      }
+
+      // Verificar se já existe um bot com este nome
+      const { data: existingBots } = await supabase
+        .from("bot_flows")
+        .select("name")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .ilike("name", duplicateName.trim());
+
+      if (existingBots && existingBots.length > 0) {
+        toast.error("Já existe um bot com este nome. Por favor, escolha outro nome.");
+        return;
+      }
+
+      // Duplicar o bot
+      const { error } = await supabase
+        .from("bot_flows")
+        .insert({
+          name: duplicateName.trim(),
+          flow_data: selectedBot.flow_data,
+          active: false,
+          estabelecimento_id: estabelecimentoId,
+        });
+
+      if (error) throw error;
+
+      toast.success("Bot duplicado com sucesso!");
+      setDuplicateDialogOpen(false);
+      setDuplicateName("");
+      setSelectedBot(null);
+      loadBots();
+    } catch (error) {
+      console.error("Error duplicating bot:", error);
+      toast.error("Erro ao duplicar bot");
+    }
+  };
+
+  const handleRenameBot = async () => {
+    if (!renameName.trim()) {
+      toast.error("Por favor, informe um novo nome para o bot");
+      return;
+    }
+
+    if (!selectedBot) return;
+
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      
+      if (!estabelecimentoId) {
+        toast.error("Não foi possível identificar o estabelecimento");
+        return;
+      }
+
+      // Verificar se já existe outro bot com este nome
+      const { data: existingBots } = await supabase
+        .from("bot_flows")
+        .select("id, name")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .ilike("name", renameName.trim());
+
+      if (existingBots && existingBots.length > 0 && existingBots[0].id !== selectedBot.id) {
+        toast.error("Já existe um bot com este nome. Por favor, escolha outro nome.");
+        return;
+      }
+
+      // Renomear o bot
+      const { error } = await supabase
+        .from("bot_flows")
+        .update({ name: renameName.trim() })
+        .eq("id", selectedBot.id);
+
+      if (error) throw error;
+
+      toast.success("Bot renomeado com sucesso!");
+      setRenameDialogOpen(false);
+      setRenameName("");
+      setSelectedBot(null);
+      loadBots();
+    } catch (error) {
+      console.error("Error renaming bot:", error);
+      toast.error("Erro ao renomear bot");
+    }
+  };
+
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
@@ -212,6 +317,24 @@ export default function BotCreate() {
                       }}>
                         <Edit className="w-4 h-4 mr-2" />
                         Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedBot(bot);
+                        setRenameName(bot.name);
+                        setRenameDialogOpen(true);
+                      }}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Renomear
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedBot(bot);
+                        setDuplicateName(`${bot.name} (cópia)`);
+                        setDuplicateDialogOpen(true);
+                      }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Duplicar
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
@@ -318,6 +441,102 @@ export default function BotCreate() {
               disabled={!newBotName.trim() || isCreating}
             >
               {isCreating ? "Criando..." : "Criar Bot"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de duplicar bot */}
+      <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Duplicar Bot</DialogTitle>
+            <DialogDescription>
+              Digite um nome único para o bot duplicado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="duplicate-name">Nome do Bot</Label>
+              <Input
+                id="duplicate-name"
+                value={duplicateName}
+                onChange={(e) => setDuplicateName(e.target.value)}
+                placeholder="Ex: Bot de Vendas (cópia)"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && duplicateName.trim()) {
+                    handleDuplicateBot();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setDuplicateName("");
+                setDuplicateDialogOpen(false);
+                setSelectedBot(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleDuplicateBot}
+              disabled={!duplicateName.trim()}
+            >
+              Duplicar Bot
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de renomear bot */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Renomear Bot</DialogTitle>
+            <DialogDescription>
+              Digite um novo nome para o bot.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="rename-name">Nome do Bot</Label>
+              <Input
+                id="rename-name"
+                value={renameName}
+                onChange={(e) => setRenameName(e.target.value)}
+                placeholder="Ex: Bot de Vendas"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && renameName.trim()) {
+                    handleRenameBot();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRenameName("");
+                setRenameDialogOpen(false);
+                setSelectedBot(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleRenameBot}
+              disabled={!renameName.trim()}
+            >
+              Renomear Bot
             </Button>
           </DialogFooter>
         </DialogContent>
