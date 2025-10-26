@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
@@ -1411,6 +1411,12 @@ export default function Contatos() {
               >
                 Configurações
               </TabsTrigger>
+              <TabsTrigger 
+                value="importacao"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              >
+                Importação
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -1652,6 +1658,65 @@ export default function Contatos() {
                     masks={fieldMasks}
                     onMasksChange={setFieldMasks}
                   />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="importacao" className="p-6">
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Importar Contatos</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Faça upload de um arquivo CSV ou Excel para importar múltiplos contatos de uma vez.
+                  </p>
+                </div>
+
+                <div className="border-2 border-dashed border-border rounded-lg p-8">
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-primary" />
+                    </div>
+                    
+                    <div className="text-center space-y-2">
+                      <h4 className="font-medium">Arraste e solte seu arquivo aqui</h4>
+                      <p className="text-sm text-muted-foreground">ou clique para selecionar</p>
+                      <p className="text-xs text-muted-foreground">Formatos aceitos: CSV, XLS, XLSX (máx. 10MB)</p>
+                    </div>
+
+                    <Button className="mt-4">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Selecionar Arquivo
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold">Instruções de Importação</h4>
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">1.</span>
+                      <p>Prepare seu arquivo CSV ou Excel com as colunas: Nome, Telefone/WhatsApp, E-mail, Empresa</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">2.</span>
+                      <p>Certifique-se que a primeira linha contém os cabeçalhos das colunas</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">3.</span>
+                      <p>Telefones devem estar no formato: (00) 00000-0000</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">4.</span>
+                      <p>Contatos duplicados (mesmo telefone ou e-mail) serão automaticamente ignorados</p>
+                    </div>
+                  </div>
+
+                  <Button variant="outline" className="w-full">
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar Modelo de Importação
+                  </Button>
                 </div>
               </div>
             </Card>
