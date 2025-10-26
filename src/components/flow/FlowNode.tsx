@@ -341,17 +341,19 @@ export const FlowNode = memo((props: any) => {
                 {section.items.map((item: any) => (
                   <div key={item.id} className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-pink-500 rounded-md group hover:bg-pink-600 transition-colors ml-2">
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs font-medium text-white block truncate">{item.label}</span>
+                      <span className="text-xs font-medium text-white block truncate">
+                        {item.label || "Item sem nome"}
+                      </span>
                       {item.description && (
                         <span className="text-[10px] text-white/80 block truncate">{item.description}</span>
                       )}
                     </div>
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       <Handle
                         type="source"
                         position={Position.Right}
                         id={item.id}
-                        className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                        className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform !cursor-pointer"
                         style={{ position: 'relative' }}
                       />
                       <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
