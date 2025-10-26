@@ -1454,10 +1454,6 @@ export default function Contatos() {
                   </div>
                 ))}
               </div>
-
-              <Button variant="link" className="text-muted-foreground p-0 h-auto">
-                cancelar
-              </Button>
             </Card>
 
             <div className="flex justify-end gap-3">
