@@ -63,6 +63,7 @@ function BotBuilderContent() {
   const botDescriptionFromUrl = searchParams.get("description");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const savingRef = useRef(false);
   
   // Criar bloco Start por padrão
   const initialNodes: Node[] = [
@@ -499,12 +500,25 @@ function BotBuilderContent() {
   }, [reactFlowInstance, setNodes]);
 
   const handleSave = useCallback(async (silent = false): Promise<boolean> => {
+    if (savingRef.current) {
+      return false; // já salvando; evita corrida
+    }
+    savingRef.current = true;
+
+    // evitar auto-save concorrente
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
+    }
+
     let saved = false;
     if (!silent) {
       setIsSaving(true);
     }
 
     try {
+      console.log("[BotBuilder] Salvando...", { id: currentBotId, signature: getFlowSignature() });
+
       if (!currentBotName.trim()) {
         if (!silent) {
           setErrorDialog({
@@ -554,7 +568,7 @@ function BotBuilderContent() {
         estabelecimento_id: estabelecimentoId,
       };
 
-      let error, data;
+      let error: any, data: any;
       if (currentBotId) {
         // Update existing bot
         ({ error, data } = await supabase
@@ -600,10 +614,11 @@ function BotBuilderContent() {
       if (!silent) {
         setIsSaving(false);
       }
+      savingRef.current = false;
     }
 
     return saved;
-  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables]);
+  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables, getFlowSignature]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
