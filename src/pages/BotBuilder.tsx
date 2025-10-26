@@ -561,6 +561,11 @@ function BotBuilderContent() {
     }
   }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables]);
 
+  const handleExit = useCallback(async () => {
+    await handleSave(true); // Salvar silenciosamente antes de sair
+    navigate("/bot-create");
+  }, [handleSave, navigate]);
+
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
       .from("bot_flows")
@@ -919,7 +924,7 @@ function BotBuilderContent() {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/bot-create")}>
+            <Button variant="outline" size="sm" onClick={handleExit}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Sair
             </Button>
