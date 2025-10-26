@@ -17,46 +17,72 @@ interface SqlConfig {
 }
 
 async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
-  // Import mssql from esm.sh
-  const { default: sql } = await import('https://esm.sh/mssql@10.0.1');
+  const { Connection, Request, TYPES } = await import('https://esm.sh/tedious@18.6.1');
   
-  const poolConfig = {
-    user: config.username,
-    password: config.password,
-    server: config.server,
-    database: config.database,
-    port: parseInt(config.port || '1433'),
-    options: {
-      encrypt: true,
-      trustServerCertificate: true,
-      enableArithAbort: true,
-      requestTimeout: 30000,
-    },
-    connectionTimeout: 30000,
-  };
-
-  let pool;
-  try {
-    console.log('Connecting to SQL Server:', config.server, config.database);
-    pool = await sql.connect(poolConfig);
-    
-    console.log('Executing query:', config.query);
-    const result = await pool.request().query(config.query);
-    
-    console.log('Query executed successfully, rows:', result.recordset?.length || 0);
-    return result.recordset || [];
-  } catch (error: any) {
-    console.error('SQL Server execution error:', error);
-    throw new Error(`Failed to execute SQL Server query: ${error.message}`);
-  } finally {
-    if (pool) {
-      try {
-        await pool.close();
-      } catch (closeError) {
-        console.error('Error closing pool:', closeError);
+  return new Promise((resolve, reject) => {
+    const sqlConfig = {
+      server: config.server,
+      authentication: {
+        type: 'default' as const,
+        options: {
+          userName: config.username,
+          password: config.password,
+        }
+      },
+      options: {
+        database: config.database,
+        port: parseInt(config.port || '1433'),
+        encrypt: true,
+        trustServerCertificate: true,
+        rowCollectionOnRequestCompletion: true,
+        requestTimeout: 30000,
       }
-    }
-  }
+    };
+
+    console.log('Connecting to SQL Server:', config.server, config.database);
+    const connection = new Connection(sqlConfig);
+    
+    connection.on('connect', (err: any) => {
+      if (err) {
+        console.error('Connection error:', err);
+        reject(new Error(`Failed to connect to SQL Server: ${err.message}`));
+        return;
+      }
+
+      console.log('Connected. Executing query:', config.query);
+      const request = new Request(config.query, (err: any, rowCount?: number, rows?: any[]) => {
+        connection.close();
+        
+        if (err) {
+          console.error('Query error:', err);
+          reject(new Error(`Query execution failed: ${err.message}`));
+          return;
+        }
+
+        console.log('Query executed successfully, rows:', rowCount || 0);
+        
+        // Convert rows to plain objects
+        const results = (rows || []).map((row: any) => {
+          const obj: Record<string, any> = {};
+          row.forEach((column: any) => {
+            obj[column.metadata.colName] = column.value;
+          });
+          return obj;
+        });
+        
+        resolve(results);
+      });
+
+      connection.execSql(request);
+    });
+
+    connection.on('error', (err: any) => {
+      console.error('Connection error:', err);
+      reject(new Error(`SQL Server connection error: ${err.message}`));
+    });
+
+    connection.connect();
+  });
 }
 
 serve(async (req) => {
