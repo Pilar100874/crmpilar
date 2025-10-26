@@ -60,7 +60,7 @@ export function NewFunilDialog({ open, onOpenChange, onSuccess }: NewFunilDialog
     try {
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
-        toast.error('Estabelecimento não encontrado');
+        toast.error('Por favor, selecione um estabelecimento primeiro');
         return;
       }
 

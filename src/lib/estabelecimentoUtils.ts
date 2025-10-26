@@ -28,10 +28,23 @@ export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
+    // Verifica se é administrador
+    const { data: adminData } = await supabase
+      .from('administradores')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    // Se é administrador mas não selecionou estabelecimento, retorna null
+    if (adminData) {
+      return null;
+    }
+
+    // Se não é admin, busca na tabela usuarios
     const { data: userData } = await supabase
       .from('usuarios')
       .select('estabelecimento_id')
-      .eq('email', user.email)
+      .eq('id', user.id)
       .maybeSingle();
 
     return userData?.estabelecimento_id || null;
