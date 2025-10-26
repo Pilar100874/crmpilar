@@ -129,6 +129,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     });
   };
 
+  const normalizeVarName = (name?: string | null): string => {
+    if (!name) return "";
+    return name.trim().replace(/^@/, "").replace(/^\{\{\s*/, "").replace(/\s*\}\}$/, "");
+  };
+
   const evaluateExpression = (expression: string, context: Record<string, any>): boolean => {
     try {
       const interpolated = interpolateVariables(expression, context);
@@ -344,8 +349,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       case "ask_file":
       case "ask_address":
       case "ask_url":
+        const type = (node.data as any)?.type;
+        const rawVar = config.variable || (type === "ask_name" ? "nome" : "resposta");
+        const variable = normalizeVarName(rawVar);
         const question = interpolateVariables(config.question || "Pergunta não configurada", context);
-        const variable = config.variable || "resposta";
         addBotMessage(question, node.id);
         setIsWaitingInput(true);
         setPendingVariable(variable);
@@ -640,8 +647,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }
         
         setIsWaitingInput(true);
-        setPendingVariable(config.variable || "button_response");
-        console.log("Waiting for button input, pendingVariable:", config.variable || "button_response");
+        setPendingVariable(normalizeVarName(config.variable || "button_response"));
+        console.log("Waiting for button input, pendingVariable:", normalizeVarName(config.variable || "button_response"));
         break;
 
       case "list_buttons":
@@ -664,7 +671,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }, 500);
         
         setIsWaitingInput(true);
-        setPendingVariable(config.variable || "list_response");
+        setPendingVariable(normalizeVarName(config.variable || "list_response"));
         break;
 
       case "keyword_options":
@@ -963,8 +970,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     addUserMessage(input);
 
     if (pendingVariable) {
-      // Remove as chaves duplas do nome da variável para normalizar
-      const cleanVarName = pendingVariable.replace(/^\{\{|\}\}$/g, '');
+      const cleanVarName = normalizeVarName(pendingVariable);
       setContext((prev) => ({
         ...prev,
         [cleanVarName]: input,
@@ -993,8 +999,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     addUserMessage(button.text);
     
     if (pendingVariable) {
-      // Remove as chaves duplas do nome da variável para normalizar
-      const cleanVarName = pendingVariable.replace(/^\{\{|\}\}$/g, '');
+      const cleanVarName = normalizeVarName(pendingVariable);
       console.log("Saving variable:", cleanVarName, "with value:", button.value);
       setContext((prev) => {
         const newContext = { ...prev, [cleanVarName]: button.value };
