@@ -370,6 +370,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       case "ask_address":
       case "ask_url":
         const type = (node.data as any)?.type;
+        console.log("🔍 Full config for question block:", config);
+        console.log("🔍 config.variable:", config.variable);
         const rawVar = config.variable || (type === "ask_name" ? "nome" : "resposta");
         const variable = normalizeVarName(rawVar);
         const question = interpolateVariables(config.question || "Pergunta não configurada", context);
@@ -378,6 +380,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           rawVar, 
           variable, 
           question,
+          fullConfig: config,
           currentContext: context 
         });
         addBotMessage(question, node.id);
