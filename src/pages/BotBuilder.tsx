@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
+import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, ArrowLeft } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -919,6 +919,10 @@ function BotBuilderContent() {
           </div>
           
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/bot-create")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Sair
+            </Button>
             <Button variant="outline" size="sm" onClick={handleImport}>
               <Upload className="w-4 h-4 mr-2" />
               Importar
