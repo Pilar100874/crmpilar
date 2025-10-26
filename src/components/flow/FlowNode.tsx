@@ -85,23 +85,28 @@ export const FlowNode = memo((props: any) => {
       };
     }
 
-    // List buttons - uma saída para cada item
+    // List buttons - seções e itens
     if (data.type === "list_buttons" && config.sections) {
       const sections = Array.isArray(config.sections) ? config.sections : [];
-      const allItems: any[] = [];
+      const listSections: any[] = [];
+      
       sections.forEach((section: any, sectionIdx: number) => {
-        if (section.items && Array.isArray(section.items)) {
-          section.items.forEach((item: any, itemIdx: number) => {
-            allItems.push({
-              id: `section_${sectionIdx}_item_${itemIdx}`,
-              label: item.label || `Item ${allItems.length + 1}`,
-              color: "bg-indigo-500"
-            });
+        const sectionItems = (section.items || []).map((item: any, itemIdx: number) => ({
+          id: `section_${sectionIdx}_item_${itemIdx}`,
+          label: item.label || `Item ${itemIdx + 1}`,
+          description: item.description || ""
+        }));
+        
+        if (sectionItems.length > 0) {
+          listSections.push({
+            title: section.title || `Seção ${sectionIdx + 1}`,
+            items: sectionItems
           });
         }
       });
-      if (allItems.length > 0) {
-        return { buttons: allItems };
+      
+      if (listSections.length > 0) {
+        return { listSections };
       }
     }
 
@@ -317,6 +322,38 @@ export const FlowNode = memo((props: any) => {
                   />
                   <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
+              </div>
+            ))}
+            
+            {/* List Sections with Items */}
+            {dynamicHandles.listSections?.map((section: any, sectionIdx: number) => (
+              <div key={`section-${sectionIdx}`} className="space-y-1">
+                {/* Section Header (sem handle) */}
+                <div className="py-1.5 px-2 bg-slate-100 border border-slate-200 rounded-md">
+                  <span className="text-xs font-semibold text-slate-700">{section.title}</span>
+                </div>
+                
+                {/* Section Items (com handles) */}
+                {section.items.map((item: any) => (
+                  <div key={item.id} className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-pink-500 rounded-md group hover:bg-pink-600 transition-colors ml-2">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-medium text-white block truncate">{item.label}</span>
+                      {item.description && (
+                        <span className="text-[10px] text-white/80 block truncate">{item.description}</span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Handle
+                        type="source"
+                        position={Position.Right}
+                        id={item.id}
+                        className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                        style={{ position: 'relative' }}
+                      />
+                      <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
             
