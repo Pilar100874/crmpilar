@@ -151,9 +151,16 @@ export function APIImportDialog() {
         
         fieldMappings.forEach(mapping => {
           if (mapping.apiField) {
-            const rawValue = record[mapping.apiField];
-            const convertedValue = applyConversion(rawValue, mapping.conversion || "none");
-            mapped[mapping.systemField] = convertedValue;
+            // Verificar se é valor fixo
+            if (mapping.apiField.startsWith("FIXED:")) {
+              const fixedValue = mapping.apiField.replace("FIXED:", "");
+              const convertedValue = applyConversion(fixedValue, mapping.conversion || "none");
+              mapped[mapping.systemField] = convertedValue;
+            } else {
+              const rawValue = record[mapping.apiField];
+              const convertedValue = applyConversion(rawValue, mapping.conversion || "none");
+              mapped[mapping.systemField] = convertedValue;
+            }
           }
         });
 
@@ -356,25 +363,52 @@ export function APIImportDialog() {
                     </div>
 
                     <div>
-                      <Label className="text-xs text-muted-foreground">Campo da API</Label>
-                      <Select
-                        value={mapping.apiField || "none"}
-                        onValueChange={(value) => {
-                          const updated = [...fieldMappings];
-                          updated[index].apiField = value === "none" ? "" : value;
-                          setFieldMappings(updated);
-                        }}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Nenhum</SelectItem>
-                          {apiFields.map(field => (
-                            <SelectItem key={field} value={field}>{field}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-xs text-muted-foreground">Campo da API ou Valor Fixo</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Select
+                          value={mapping.apiField?.startsWith("FIXED:") ? "fixed" : mapping.apiField || "none"}
+                          onValueChange={(value) => {
+                            const updated = [...fieldMappings];
+                            if (value === "fixed") {
+                              // Manter valor fixo atual ou iniciar com vazio
+                              updated[index].apiField = mapping.apiField?.startsWith("FIXED:") 
+                                ? mapping.apiField 
+                                : "FIXED:";
+                            } else {
+                              updated[index].apiField = value === "none" ? "" : value;
+                            }
+                            setFieldMappings(updated);
+                          }}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhum</SelectItem>
+                            <SelectItem value="fixed">🔒 Valor Fixo (digite ao lado)</SelectItem>
+                            {apiFields.map(field => (
+                              <SelectItem key={field} value={field}>{field}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {(mapping.apiField?.startsWith("FIXED:") || mapping.apiField === "FIXED:") && (
+                          <Input
+                            placeholder="Digite o valor fixo"
+                            value={mapping.apiField.replace("FIXED:", "")}
+                            onChange={(e) => {
+                              const updated = [...fieldMappings];
+                              updated[index].apiField = "FIXED:" + e.target.value;
+                              setFieldMappings(updated);
+                            }}
+                            className="flex-1"
+                          />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {mapping.apiField?.startsWith("FIXED:") 
+                          ? "Este valor será aplicado a todos os registros"
+                          : "Selecione um campo da API ou use valor fixo"}
+                      </p>
                     </div>
 
                     <div>
