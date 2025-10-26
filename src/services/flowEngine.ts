@@ -151,16 +151,30 @@ export class FlowEngine {
 
     const question = this.interpolate(config.question || "");
     
+    const defaults: Record<string, string> = {
+      ask_name: "nome",
+      ask_question: "resposta",
+      ask_email: "email",
+      ask_number: "numero",
+      ask_phone: "telefone",
+      ask_date: "data",
+      ask_file: "arquivo",
+      ask_address: "endereco",
+      ask_url: "url",
+    };
+    const type = data.type as string;
+    const outputVar = (config.variable as string) || defaults[type] || undefined;
+    
     await this.onResponse({
       type: "question",
       question,
       questionType: data.type,
-      outputVariable: config.variable,
+      outputVariable: outputVar,
     });
 
     // Store user's answer in context
-    if (config.variable) {
-      this.context.vars[config.variable] = this.context.userMessage;
+    if (outputVar) {
+      this.context.vars[outputVar] = this.context.userMessage;
     }
 
     const nextNodes = this.getNextNodes(node.id);

@@ -67,6 +67,8 @@ export const PropertiesPanel = ({
         return "any"; // Set field can work with any type
       case "lead_scoring":
         return "number"; // Lead scoring works with numbers
+      case "send_message":
+        return "any"; // Messages can interpolate any variable type
       default:
         return "text"; // Most blocks work with text/string
     }

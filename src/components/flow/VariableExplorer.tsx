@@ -80,10 +80,21 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
     case "ask_date":
     case "ask_file":
     case "ask_address":
-    case "ask_url":
-      if (config.variable) {
-        // Normalizar nome da variável (remover @ se houver)
-        const cleanVarName = config.variable.replace(/^@/, "");
+    case "ask_url": {
+      const defaults: Record<string, string> = {
+        ask_name: "nome",
+        ask_question: "resposta",
+        ask_email: "email",
+        ask_number: "numero",
+        ask_phone: "telefone",
+        ask_date: "data",
+        ask_file: "arquivo",
+        ask_address: "endereco",
+        ask_url: "url",
+      };
+      const varName = (config.variable || defaults[data.type]) as string | undefined;
+      if (varName) {
+        const cleanVarName = String(varName).replace(/^@/, "");
         outputs.push({
           name: cleanVarName,
           description: `Resposta: ${config.question || 'pergunta'}`,
@@ -93,6 +104,7 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
         });
       }
       break;
+    }
 
     case "webhook":
       if (config.outputVariable) {

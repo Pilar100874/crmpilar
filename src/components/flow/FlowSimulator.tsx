@@ -369,10 +369,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       case "ask_file":
       case "ask_address":
       case "ask_url":
-        const type = (node.data as any)?.type;
-        console.log("🔍 Full config for question block:", config);
-        console.log("🔍 config.variable:", config.variable);
-        const rawVar = config.variable || (type === "ask_name" ? "nome" : "resposta");
+        const type = (node.data as any)?.type as string;
+        const defaults: Record<string, string> = {
+          ask_name: "nome",
+          ask_question: "resposta",
+          ask_email: "email",
+          ask_number: "numero",
+          ask_phone: "telefone",
+          ask_date: "data",
+          ask_file: "arquivo",
+          ask_address: "endereco",
+          ask_url: "url",
+        };
+        const rawVar = config.variable || defaults[type] || "resposta";
         const variable = normalizeVarName(rawVar);
         const question = interpolateVariables(config.question || "Pergunta não configurada", context);
         console.log("❓ Question block:", { 
