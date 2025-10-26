@@ -2,6 +2,16 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Plus, Workflow, ArrowRight, MoreVertical, Trash2, Edit, Power } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
@@ -18,6 +28,9 @@ export default function BotCreate() {
   const { openSubmenu } = useLayout();
   const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newBotDialogOpen, setNewBotDialogOpen] = useState(false);
+  const [newBotName, setNewBotName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     loadBots();
@@ -92,6 +105,47 @@ export default function BotCreate() {
     }
   };
 
+  const handleCreateNewBot = async () => {
+    if (!newBotName.trim()) {
+      toast.error("Por favor, informe um nome para o bot");
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      
+      if (!estabelecimentoId) {
+        toast.error("Não foi possível identificar o estabelecimento");
+        return;
+      }
+
+      // Verificar se já existe um bot com este nome
+      const { data: existingBots } = await supabase
+        .from("bot_flows")
+        .select("name")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .ilike("name", newBotName.trim());
+
+      if (existingBots && existingBots.length > 0) {
+        toast.error("Já existe um bot com este nome. Por favor, escolha outro nome.");
+        setIsCreating(false);
+        return;
+      }
+
+      // Navegar para o builder com o nome do bot como parâmetro
+      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}`);
+      setNewBotDialogOpen(false);
+      setNewBotName("");
+    } catch (error) {
+      console.error("Error creating bot:", error);
+      toast.error("Erro ao criar bot");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
@@ -108,7 +162,7 @@ export default function BotCreate() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-primary/30" onClick={() => navigate("/bot-builder")}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-primary/30" onClick={() => setNewBotDialogOpen(true)}>
             <CardHeader>
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Workflow className="w-6 h-6 text-primary" />
@@ -221,6 +275,53 @@ export default function BotCreate() {
             </p>
           </div>
         )}
+
+      {/* Dialog de criar novo bot */}
+      <Dialog open={newBotDialogOpen} onOpenChange={setNewBotDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Criar Novo Bot</DialogTitle>
+            <DialogDescription>
+              Digite um nome único para o novo bot de atendimento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="bot-name">Nome do Bot</Label>
+              <Input
+                id="bot-name"
+                value={newBotName}
+                onChange={(e) => setNewBotName(e.target.value)}
+                placeholder="Ex: Bot de Vendas"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newBotName.trim()) {
+                    handleCreateNewBot();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setNewBotName("");
+                setNewBotDialogOpen(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleCreateNewBot}
+              disabled={!newBotName.trim() || isCreating}
+            >
+              {isCreating ? "Criando..." : "Criar Bot"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ import { FlowNode } from "@/components/flow/FlowNode";
 import { BlockLibrary } from "@/components/flow/BlockLibrary";
 import { PropertiesPanel } from "@/components/flow/PropertiesPanel";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
-import { NewBotDialog } from "@/components/flow/NewBotDialog";
 import { VariableManager, FlowVariable } from "@/components/flow/VariableManager";
 import { VariableMonitor } from "@/components/flow/VariableMonitor";
 import { BlockMonitor } from "@/components/flow/BlockMonitor";
@@ -58,8 +57,11 @@ const getId = () => {
 
 function BotBuilderContent() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const botIdFromUrl = searchParams.get("id");
+  const botNameFromUrl = searchParams.get("name");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Criar bloco Start por padrão
   const initialNodes: Node[] = [
@@ -105,6 +107,53 @@ function BotBuilderContent() {
     loadSavedBots();
     loadGlobalVariables();
   }, []);
+
+  // Definir nome do bot se vier da URL
+  useEffect(() => {
+    if (botNameFromUrl && !currentBotId) {
+      setCurrentBotName(decodeURIComponent(botNameFromUrl));
+    }
+  }, [botNameFromUrl, currentBotId]);
+
+  // Auto-save quando houver mudanças (sem criar loop infinito)
+  useEffect(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Não salvar se for um bot novo sem ID ainda
+    if (!currentBotId) return;
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      // Salvar silenciosamente sem mostrar toast
+      handleSave(true);
+    }, 3000); // Auto-save após 3 segundos de inatividade
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [nodes, edges, flowVariables, currentBotName]);
+
+  // Salvar ao sair da página
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (currentBotId) {
+        await handleSave();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      // Salvar ao desmontar o componente
+      if (currentBotId) {
+        handleSave();
+      }
+    };
+  }, [currentBotId]);
 
 
   const loadSavedBots = async () => {
@@ -405,79 +454,24 @@ function BotBuilderContent() {
     });
   }, [reactFlowInstance, setNodes]);
 
-  const handleNewBot = useCallback(async (newBotName: string) => {
-    if (!newBotName.trim()) {
-      setErrorDialog({
-        open: true,
-        title: "Nome Obrigatório",
-        description: "Por favor, informe um nome para o bot.",
-      });
-      return false;
-    }
-
-    // Verificar se já existe um bot com este nome
-    const estabelecimentoId = await getEstabelecimentoId();
-    if (!estabelecimentoId) {
-      setErrorDialog({
-        open: true,
-        title: "Erro",
-        description: "Não foi possível identificar o estabelecimento.",
-      });
-      return false;
-    }
-
-    const { data: existingBots } = await supabase
-      .from("bot_flows")
-      .select("name")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .ilike("name", newBotName.trim());
-
-    if (existingBots && existingBots.length > 0) {
-      setErrorDialog({
-        open: true,
-        title: "Nome Duplicado",
-        description: "Já existe um bot com este nome. Por favor, escolha outro nome.",
-      });
-      return false;
-    }
-
-    setCurrentBotId(null);
-    setCurrentBotName(newBotName.trim());
-    setSelectedNode(null);
-    setEdges([]);
-    setFlowVariables([]);
-    
-    // Criar bloco Start automaticamente
-    const startNode: Node = {
-      id: "start_node",
-      type: "custom",
-      position: { x: 250, y: 100 },
-      data: {
-        label: "Iniciar conversa",
-        type: "start",
-        config: {},
-      },
-    };
-    setNodes([startNode]);
-    
-    toast.success("Novo bot criado!");
-    return true;
-  }, [setNodes, setEdges]);
-
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (silent = false) => {
     if (!currentBotName.trim()) {
-      setErrorDialog({
-        open: true,
-        title: "Nome Obrigatório",
-        description: "Por favor, dê um nome ao bot antes de salvar.",
-      });
+      if (!silent) {
+        setErrorDialog({
+          open: true,
+          title: "Nome Obrigatório",
+          description: "Por favor, dê um nome ao bot antes de salvar.",
+        });
+      }
       return;
     }
 
     // Validar conexões antes de salvar
     const validation = validateConnections();
     if (!validation.isValid) {
-      highlightDisconnectedNodes(validation.disconnectedNodes);
+      if (!silent) {
+        highlightDisconnectedNodes(validation.disconnectedNodes);
+      }
       return;
     }
 
@@ -485,11 +479,13 @@ function BotBuilderContent() {
     const estabelecimentoId = await getEstabelecimentoId();
     
     if (!estabelecimentoId) {
-      setErrorDialog({
-        open: true,
-        title: "Erro",
-        description: "Não foi possível identificar o estabelecimento. Por favor, selecione um estabelecimento.",
-      });
+      if (!silent) {
+        setErrorDialog({
+          open: true,
+          title: "Erro",
+          description: "Não foi possível identificar o estabelecimento. Por favor, selecione um estabelecimento.",
+        });
+      }
       return;
     }
 
@@ -531,13 +527,17 @@ function BotBuilderContent() {
 
     if (error) {
       console.error("Error saving bot:", error);
-      setErrorDialog({
-        open: true,
-        title: "Erro ao Salvar",
-        description: "Não foi possível salvar o bot. Por favor, tente novamente.",
-      });
+      if (!silent) {
+        setErrorDialog({
+          open: true,
+          title: "Erro ao Salvar",
+          description: "Não foi possível salvar o bot. Por favor, tente novamente.",
+        });
+      }
     } else {
-      toast.success("Bot salvo com sucesso!");
+      if (!silent) {
+        toast.success("Bot salvo com sucesso!");
+      }
       loadSavedBots();
     }
   }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, validateConnections, highlightDisconnectedNodes, flowVariables]);
@@ -820,7 +820,6 @@ function BotBuilderContent() {
             </div>
             
             <div className="flex gap-1 border-l border-border pl-6">
-              <NewBotDialog onCreateBot={handleNewBot} />
               <Button 
                 variant="outline" 
                 size="icon" 
@@ -908,7 +907,7 @@ function BotBuilderContent() {
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSave}>
+            <Button variant="outline" size="sm" onClick={() => handleSave(false)}>
               <Save className="w-4 h-4 mr-2" />
               Salvar
             </Button>
