@@ -106,20 +106,22 @@ export const DynamicDataConfig = ({ config, handleConfigChange, inputRefs, openV
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2">
-            Save user answer in the field
-            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+          <Label className="flex items-center gap-2 text-slate-900">
+            Salvar resposta do usuário no campo
+            <Info className="h-4 w-4 text-slate-500 cursor-help" />
           </Label>
         </div>
-        <Input
-          value={config.variable || ""}
-          onChange={(e) => handleConfigChange("variable", e.target.value)}
-          placeholder="Search or create"
-          className="bg-accent/50"
-        />
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          ⚠️ If a field is not set, the answer won't be saved.
-        </p>
+        <div className="relative">
+          <Input
+            value={config.variable || "resposta_dinamica"}
+            onChange={(e) => handleConfigChange("variable", e.target.value)}
+            placeholder="resposta_dinamica"
+            className="bg-white border-slate-200 text-slate-900"
+          />
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+            T
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -129,8 +131,15 @@ export const DynamicDataConfig = ({ config, handleConfigChange, inputRefs, openV
           onCheckedChange={(checked) => handleConfigChange("saveArrayIndex", checked)}
         />
         <Label htmlFor="saveArrayIndex" className="font-normal cursor-pointer">
-          Save array index
+          Salvar índice do array
         </Label>
+      </div>
+
+      <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-slate-700">
+          Este bloco itera sobre um array e coleta respostas dinâmicas do usuário, salvando cada resposta e opcionalmente seu índice nos campos especificados.
+        </p>
       </div>
     </div>
   );

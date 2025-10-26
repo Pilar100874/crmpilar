@@ -69,17 +69,32 @@ export const AskNameConfig = ({ config, handleConfigChange, inputRefs, openVaria
       </div>
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar"
-        value={config.variable || "nome"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="nome"
-        required
-        info="Se um campo não for definido, a resposta não será salva."
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar resposta do usuário no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "nome"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="nome"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          T
+        </span>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta o nome do usuário e salva no campo especificado para uso posterior no fluxo.
+      </p>
+    </div>
 
     <ConfigInfo variant="info">
       <p className="font-semibold mb-1">💡 Dica:</p>
@@ -163,17 +178,32 @@ export const AskQuestionConfig = ({ config, handleConfigChange, inputRefs, openV
         </ConfigSection>
       )}
 
-      <ConfigSection title="Salvar Resposta">
-        <ConfigInput
-          label="Campo para salvar"
-          value={config.variable || "resposta"}
-          onChange={(v) => handleConfigChange("variable", v)}
-          placeholder="resposta"
-          required
-          info="Se um campo não for definido, a resposta não será salva."
-          prefix="@"
-        />
-      </ConfigSection>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2 text-slate-900">
+            Salvar resposta do usuário no campo
+            <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          </Label>
+        </div>
+        <div className="relative">
+          <Input
+            value={config.variable || "resposta"}
+            onChange={(e) => handleConfigChange("variable", e.target.value)}
+            placeholder="resposta"
+            className="bg-white border-slate-200 text-slate-900"
+          />
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+            T
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-slate-700">
+          Este bloco coleta uma resposta personalizada e salva no campo especificado para uso posterior no fluxo.
+        </p>
+      </div>
     </div>
   );
 };
@@ -224,16 +254,32 @@ export const AskEmailConfig = ({ config, handleConfigChange, inputRefs, openVari
       />
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar"
-        value={config.variable || "email"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="email"
-        required
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar resposta do usuário no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "email"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="email"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          T
+        </span>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta o e-mail do usuário e salva no campo especificado para uso posterior no fluxo.
+      </p>
+    </div>
   </div>
 );
 
@@ -299,16 +345,32 @@ export const AskNumberConfig = ({ config, handleConfigChange, inputRefs, openVar
       />
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar"
-        value={config.variable || "numero"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="numero"
-        required
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar resposta do usuário no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "numero"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="numero"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          N
+        </span>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta um número do usuário e salva no campo especificado para uso posterior no fluxo.
+      </p>
+    </div>
   </div>
 );
 
@@ -368,16 +430,32 @@ export const AskPhoneConfig = ({ config, handleConfigChange, inputRefs, openVari
       />
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar"
-        value={config.variable || "telefone"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="telefone"
-        required
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar resposta do usuário no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "telefone"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="telefone"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          T
+        </span>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta o telefone do usuário e salva no campo especificado para uso posterior no fluxo.
+      </p>
+    </div>
   </div>
 );
 
@@ -437,16 +515,32 @@ export const AskDateConfig = ({ config, handleConfigChange, inputRefs, openVaria
       />
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar"
-        value={config.variable || "data"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="data"
-        required
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar resposta do usuário no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "data"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="data"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          D
+        </span>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta uma data do usuário e salva no campo especificado para uso posterior no fluxo.
+      </p>
+    </div>
   </div>
 );
 
@@ -502,16 +596,32 @@ export const AskFileConfig = ({ config, handleConfigChange, inputRefs, openVaria
       />
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar URL"
-        value={config.variable || "arquivo"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="arquivo"
-        required
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar URL do arquivo no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "arquivo"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="arquivo"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          F
+        </span>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta um arquivo do usuário e salva a URL no campo especificado para uso posterior no fluxo.
+      </p>
+    </div>
   </div>
 );
 
@@ -544,21 +654,32 @@ export const AskAddressConfig = ({ config, handleConfigChange, inputRefs, openVa
       </div>
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar"
-        value={config.variable || "endereco"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="endereco"
-        required
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar resposta do usuário no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "endereco"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="endereco"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          T
+        </span>
+      </div>
+    </div>
 
-    <ConfigInfo variant="info">
-      <p className="font-semibold mb-1">ℹ️ Dica:</p>
-      <p>Você pode pedir o endereço completo ou dividir em campos separados (rua, número, cidade, etc)</p>
-    </ConfigInfo>
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta o endereço do usuário e salva no campo especificado. Você pode pedir o endereço completo ou dividir em campos separados (rua, número, cidade, etc).
+      </p>
+    </div>
   </div>
 );
 
@@ -608,15 +729,31 @@ export const AskUrlConfig = ({ config, handleConfigChange, inputRefs, openVariab
       />
     </ConfigSection>
 
-    <ConfigSection title="Salvar Resposta">
-      <ConfigInput
-        label="Campo para salvar"
-        value={config.variable || "url"}
-        onChange={(v) => handleConfigChange("variable", v)}
-        placeholder="url"
-        required
-        prefix="@"
-      />
-    </ConfigSection>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 text-slate-900">
+          Salvar resposta do usuário no campo
+          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+        </Label>
+      </div>
+      <div className="relative">
+        <Input
+          value={config.variable || "url"}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          placeholder="url"
+          className="bg-white border-slate-200 text-slate-900"
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          U
+        </span>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-slate-700">
+        Este bloco coleta uma URL do usuário e salva no campo especificado para uso posterior no fluxo.
+      </p>
+    </div>
   </div>
 );
