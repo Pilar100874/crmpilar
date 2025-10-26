@@ -90,6 +90,8 @@ export const FlowNode = memo((props: any) => {
       const sections = Array.isArray(config.sections) ? config.sections : [];
       const listSections: any[] = [];
       
+      console.log("🔍 List buttons config:", { sections });
+      
       sections.forEach((section: any, sectionIdx: number) => {
         const sectionItems = (section.items || []).map((item: any, itemIdx: number) => ({
           id: `section_${sectionIdx}_item_${itemIdx}`,
@@ -104,6 +106,8 @@ export const FlowNode = memo((props: any) => {
           });
         }
       });
+      
+      console.log("✅ List sections created:", listSections);
       
       if (listSections.length > 0) {
         return { listSections };
