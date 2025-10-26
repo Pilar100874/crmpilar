@@ -4,6 +4,16 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ReactFlow,
   Background,
   Controls,
@@ -85,12 +95,50 @@ function BotBuilderContent() {
   const [isDroppingNode, setIsDroppingNode] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [botToDelete, setBotToDelete] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [confirmNavigation, setConfirmNavigation] = useState<{
+    open: boolean;
+    action: (() => void) | null;
+  }>({ open: false, action: null });
+  const lastSavedState = useRef<string>("");
 
   // Load saved bots on mount
   useEffect(() => {
     loadSavedBots();
     loadGlobalVariables();
   }, []);
+
+  // Detectar mudanças não salvas
+  useEffect(() => {
+    const currentState = JSON.stringify({
+      nodes,
+      edges,
+      flowVariables,
+      name: currentBotName,
+    });
+
+    if (lastSavedState.current === "") {
+      lastSavedState.current = currentState;
+      return;
+    }
+
+    if (currentState !== lastSavedState.current) {
+      setHasUnsavedChanges(true);
+    }
+  }, [nodes, edges, flowVariables, currentBotName]);
+
+  // Prevenir saída acidental da página
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const loadSavedBots = async () => {
     const estabelecimentoId = await getEstabelecimentoId();
@@ -391,27 +439,46 @@ function BotBuilderContent() {
   }, [reactFlowInstance, setNodes]);
 
   const handleNewBot = useCallback(() => {
-    setCurrentBotId(null);
-    setCurrentBotName("Novo Bot");
-    setSelectedNode(null);
-    setEdges([]);
-    setFlowVariables([]);
-    
-    // Criar bloco Start automaticamente
-    const startNode: Node = {
-      id: "start_node",
-      type: "custom",
-      position: { x: 250, y: 100 },
-      data: {
-        label: "Iniciar conversa",
-        type: "start",
-        config: {},
-      },
+    const createNewBot = () => {
+      setCurrentBotId(null);
+      setCurrentBotName("Novo Bot");
+      setSelectedNode(null);
+      setEdges([]);
+      setFlowVariables([]);
+      
+      // Criar bloco Start automaticamente
+      const startNode: Node = {
+        id: "start_node",
+        type: "custom",
+        position: { x: 250, y: 100 },
+        data: {
+          label: "Iniciar conversa",
+          type: "start",
+          config: {},
+        },
+      };
+      setNodes([startNode]);
+      
+      setHasUnsavedChanges(false);
+      lastSavedState.current = JSON.stringify({
+        nodes: [startNode],
+        edges: [],
+        flowVariables: [],
+        name: "Novo Bot",
+      });
+      
+      toast.success("Novo bot criado!");
     };
-    setNodes([startNode]);
-    
-    toast.success("Novo bot criado!");
-  }, [setNodes, setEdges]);
+
+    if (hasUnsavedChanges) {
+      setConfirmNavigation({
+        open: true,
+        action: createNewBot,
+      });
+    } else {
+      createNewBot();
+    }
+  }, [setNodes, setEdges, hasUnsavedChanges]);
 
   const handleSave = useCallback(async () => {
     if (!currentBotName.trim()) {
@@ -487,67 +554,94 @@ function BotBuilderContent() {
       });
     } else {
       toast.success("Bot salvo com sucesso!");
+      setHasUnsavedChanges(false);
+      lastSavedState.current = JSON.stringify({
+        nodes,
+        edges,
+        flowVariables,
+        name: currentBotName,
+      });
       loadSavedBots();
     }
   }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, validateConnections, highlightDisconnectedNodes, flowVariables]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
-    const { data, error } = await supabase
-      .from("bot_flows")
-      .select("*")
-      .eq("id", botId)
-      .single();
+    const loadBot = async () => {
+      const { data, error } = await supabase
+        .from("bot_flows")
+        .select("*")
+        .eq("id", botId)
+        .single();
 
-    if (error) {
-      console.error("Error loading bot:", error);
-      setErrorDialog({
-        open: true,
-        title: "Erro ao Carregar Bot",
-        description: "Não foi possível carregar o bot. Por favor, tente novamente.",
-      });
-      return;
-    }
-
-    if (data && data.flow_data) {
-      const flowData = data.flow_data as any;
-      let loadedNodes = flowData.nodes || [];
-      
-      // Remover nós duplicados (com mesmo ID)
-      const seenIds = new Set<string>();
-      loadedNodes = loadedNodes.filter((node: any) => {
-        if (seenIds.has(node.id)) {
-          console.warn(`Nó duplicado removido: ${node.id}`);
-          return false;
-        }
-        seenIds.add(node.id);
-        return true;
-      });
-      
-      // Garantir que tem um bloco Start
-      const hasStart = loadedNodes.some((node: any) => node.data.type === "start");
-      if (!hasStart) {
-        const startNode: Node = {
-          id: "start_node",
-          type: "custom",
-          position: { x: 250, y: 100 },
-          data: {
-            label: "Iniciar conversa",
-            type: "start",
-            config: {},
-          },
-        };
-        loadedNodes.unshift(startNode);
+      if (error) {
+        console.error("Error loading bot:", error);
+        setErrorDialog({
+          open: true,
+          title: "Erro ao Carregar Bot",
+          description: "Não foi possível carregar o bot. Por favor, tente novamente.",
+        });
+        return;
       }
-      
-      setNodes(loadedNodes);
-      setEdges(flowData.edges || []);
-      setFlowVariables(flowData.variables || []);
-      setCurrentBotId(data.id);
-      setCurrentBotName(data.name);
-      setSelectedNode(null);
-      toast.success(`Bot "${data.name}" carregado!`);
+
+      if (data && data.flow_data) {
+        const flowData = data.flow_data as any;
+        let loadedNodes = flowData.nodes || [];
+        
+        // Remover nós duplicados (com mesmo ID)
+        const seenIds = new Set<string>();
+        loadedNodes = loadedNodes.filter((node: any) => {
+          if (seenIds.has(node.id)) {
+            console.warn(`Nó duplicado removido: ${node.id}`);
+            return false;
+          }
+          seenIds.add(node.id);
+          return true;
+        });
+        
+        // Garantir que tem um bloco Start
+        const hasStart = loadedNodes.some((node: any) => node.data.type === "start");
+        if (!hasStart) {
+          const startNode: Node = {
+            id: "start_node",
+            type: "custom",
+            position: { x: 250, y: 100 },
+            data: {
+              label: "Iniciar conversa",
+              type: "start",
+              config: {},
+            },
+          };
+          loadedNodes.unshift(startNode);
+        }
+        
+        setNodes(loadedNodes);
+        setEdges(flowData.edges || []);
+        setFlowVariables(flowData.variables || []);
+        setCurrentBotId(data.id);
+        setCurrentBotName(data.name);
+        setSelectedNode(null);
+        
+        setHasUnsavedChanges(false);
+        lastSavedState.current = JSON.stringify({
+          nodes: loadedNodes,
+          edges: flowData.edges || [],
+          flowVariables: flowData.variables || [],
+          name: data.name,
+        });
+        
+        toast.success(`Bot "${data.name}" carregado!`);
+      }
+    };
+
+    if (hasUnsavedChanges) {
+      setConfirmNavigation({
+        open: true,
+        action: () => loadBot(),
+      });
+    } else {
+      await loadBot();
     }
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, hasUnsavedChanges]);
 
   const handleToggleActive = useCallback(async (botId: string, currentActive: boolean) => {
     // If activating, deactivate all others first
@@ -836,6 +930,7 @@ function BotBuilderContent() {
               onToggleActive={handleToggleActive}
               onDeleteBot={handleDeleteBot}
               onNameChange={setCurrentBotName}
+              hasUnsavedChanges={hasUnsavedChanges}
             />
             <Button variant="outline" size="sm" onClick={handleImport}>
               <Upload className="w-4 h-4 mr-2" />
@@ -1059,6 +1154,32 @@ function BotBuilderContent() {
           title="Confirmar exclusão"
           description="Tem certeza que deseja excluir este bot? Esta ação não pode ser desfeita."
         />
+
+        {/* Dialog de confirmação de navegação */}
+        <AlertDialog open={confirmNavigation.open} onOpenChange={(open) => setConfirmNavigation({ open, action: null })}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você tem alterações não salvas. Deseja continuar sem salvar?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (confirmNavigation.action) {
+                    confirmNavigation.action();
+                  }
+                  setConfirmNavigation({ open: false, action: null });
+                }}
+                className="bg-amber-600 text-white hover:bg-amber-700"
+              >
+                Continuar sem salvar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
   );
 }
