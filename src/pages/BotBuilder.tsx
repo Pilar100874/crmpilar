@@ -60,6 +60,7 @@ function BotBuilderContent() {
   const navigate = useNavigate();
   const botIdFromUrl = searchParams.get("id");
   const botNameFromUrl = searchParams.get("name");
+  const botDescriptionFromUrl = searchParams.get("description");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -85,6 +86,7 @@ function BotBuilderContent() {
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [currentBotId, setCurrentBotId] = useState<string | null>(null);
   const [currentBotName, setCurrentBotName] = useState("Novo Bot");
+  const [currentBotDescription, setCurrentBotDescription] = useState("");
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
@@ -108,12 +110,15 @@ function BotBuilderContent() {
     loadGlobalVariables();
   }, []);
 
-  // Definir nome do bot se vier da URL
+  // Definir nome e descrição do bot se vier da URL
   useEffect(() => {
     if (botNameFromUrl && !currentBotId) {
       setCurrentBotName(decodeURIComponent(botNameFromUrl));
     }
-  }, [botNameFromUrl, currentBotId]);
+    if (botDescriptionFromUrl && !currentBotId) {
+      setCurrentBotDescription(decodeURIComponent(botDescriptionFromUrl));
+    }
+  }, [botNameFromUrl, botDescriptionFromUrl, currentBotId]);
 
   // Auto-save quando houver mudanças (sem criar loop infinito)
   useEffect(() => {
@@ -134,7 +139,7 @@ function BotBuilderContent() {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [nodes, edges, flowVariables, currentBotName]);
+  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription]);
 
   // Salvar ao sair da página
   useEffect(() => {
@@ -498,6 +503,7 @@ function BotBuilderContent() {
 
     const botData = {
       name: currentBotName,
+      description: currentBotDescription,
       flow_data: flow as any, // Cast to any for Json compatibility
       updated_at: new Date().toISOString(),
       estabelecimento_id: estabelecimentoId,
@@ -595,6 +601,7 @@ function BotBuilderContent() {
       setFlowVariables(flowData.variables || []);
       setCurrentBotId(data.id);
       setCurrentBotName(data.name);
+      setCurrentBotDescription(data.description || "");
       setSelectedNode(null);
       
       toast.success(`Bot "${data.name}" carregado!`);

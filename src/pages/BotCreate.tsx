@@ -30,6 +30,7 @@ export default function BotCreate() {
   const [loading, setLoading] = useState(true);
   const [newBotDialogOpen, setNewBotDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
+  const [newBotDescription, setNewBotDescription] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   
   // Dialogs para duplicar e renomear
@@ -37,7 +38,9 @@ export default function BotCreate() {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [selectedBot, setSelectedBot] = useState<any>(null);
   const [duplicateName, setDuplicateName] = useState("");
+  const [duplicateDescription, setDuplicateDescription] = useState("");
   const [renameName, setRenameName] = useState("");
+  const [renameDescription, setRenameDescription] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
 
@@ -152,9 +155,10 @@ export default function BotCreate() {
       }
 
       // Navegar para o builder com o nome do bot como parâmetro
-      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}`);
+      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}`);
       setNewBotDialogOpen(false);
       setNewBotName("");
+      setNewBotDescription("");
     } catch (error) {
       console.error("Error creating bot:", error);
       toast.error("Erro ao criar bot");
@@ -200,6 +204,7 @@ export default function BotCreate() {
         .from("bot_flows")
         .insert({
           name: duplicateName.trim(),
+          description: duplicateDescription.trim(),
           flow_data: selectedBot.flow_data,
           active: false,
           estabelecimento_id: estabelecimentoId,
@@ -210,6 +215,7 @@ export default function BotCreate() {
       toast.success("Bot duplicado com sucesso!");
       setDuplicateDialogOpen(false);
       setDuplicateName("");
+      setDuplicateDescription("");
       setSelectedBot(null);
       closeOverlays();
       await loadBots();
@@ -256,7 +262,10 @@ export default function BotCreate() {
       // Renomear o bot
       const { error } = await supabase
         .from("bot_flows")
-        .update({ name: renameName.trim() })
+        .update({ 
+          name: renameName.trim(),
+          description: renameDescription.trim()
+        })
         .eq("id", selectedBot.id);
 
       if (error) throw error;
@@ -264,6 +273,7 @@ export default function BotCreate() {
       toast.success("Bot renomeado com sucesso!");
       setRenameDialogOpen(false);
       setRenameName("");
+      setRenameDescription("");
       setSelectedBot(null);
       closeOverlays();
       await loadBots();
@@ -346,6 +356,7 @@ export default function BotCreate() {
                         e.stopPropagation();
                         setSelectedBot(bot);
                         setRenameName(bot.name);
+                        setRenameDescription(bot.description || "");
                         setRenameDialogOpen(true);
                       }}>
                         <Edit className="w-4 h-4 mr-2" />
@@ -355,6 +366,7 @@ export default function BotCreate() {
                         e.stopPropagation();
                         setSelectedBot(bot);
                         setDuplicateName(`${bot.name} (cópia)`);
+                        setDuplicateDescription(bot.description || "");
                         setDuplicateDialogOpen(true);
                       }}>
                         <Plus className="w-4 h-4 mr-2" />
@@ -393,6 +405,9 @@ export default function BotCreate() {
                       </Badge>
                     )}
                   </div>
+                  {bot.description && (
+                    <p className="text-sm text-muted-foreground mb-2">{bot.description}</p>
+                  )}
                   <CardDescription>
                     {bot.flow_data?.nodes?.length || 0} blocos • 
                     Atualizado {formatDistanceToNow(new Date(bot.updated_at), { 
@@ -447,6 +462,20 @@ export default function BotCreate() {
                 }}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="bot-description">Descrição (opcional)</Label>
+              <Input
+                id="bot-description"
+                value={newBotDescription}
+                onChange={(e) => setNewBotDescription(e.target.value)}
+                placeholder="Ex: Automatiza atendimento de vendas"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newBotName.trim()) {
+                    handleCreateNewBot();
+                  }
+                }}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -454,6 +483,7 @@ export default function BotCreate() {
               variant="outline"
               onClick={() => {
                 setNewBotName("");
+                setNewBotDescription("");
                 setNewBotDialogOpen(false);
               }}
             >
@@ -503,6 +533,20 @@ export default function BotCreate() {
                 }}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="duplicate-description">Descrição (opcional)</Label>
+              <Input
+                id="duplicate-description"
+                value={duplicateDescription}
+                onChange={(e) => setDuplicateDescription(e.target.value)}
+                placeholder="Ex: Automatiza atendimento de vendas"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && duplicateName.trim()) {
+                    handleDuplicateBot();
+                  }
+                }}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -510,6 +554,7 @@ export default function BotCreate() {
               variant="outline"
               onClick={() => {
                 setDuplicateName("");
+                setDuplicateDescription("");
                 setDuplicateDialogOpen(false);
                 setSelectedBot(null);
               }}
@@ -561,6 +606,20 @@ export default function BotCreate() {
                 }}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="rename-description">Descrição (opcional)</Label>
+              <Input
+                id="rename-description"
+                value={renameDescription}
+                onChange={(e) => setRenameDescription(e.target.value)}
+                placeholder="Ex: Automatiza atendimento de vendas"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && renameName.trim()) {
+                    handleRenameBot();
+                  }
+                }}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -568,6 +627,7 @@ export default function BotCreate() {
               variant="outline"
               onClick={() => {
                 setRenameName("");
+                setRenameDescription("");
                 setRenameDialogOpen(false);
                 setSelectedBot(null);
               }}
