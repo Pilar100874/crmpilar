@@ -111,23 +111,27 @@ function BotBuilderContent() {
     loadGlobalVariables();
   }, []);
 
-  // Detectar mudanças não salvas
+  // Detectar mudanças não salvas com debounce
   useEffect(() => {
-    const currentState = JSON.stringify({
-      nodes,
-      edges,
-      flowVariables,
-      name: currentBotName,
-    });
+    const timeoutId = setTimeout(() => {
+      const currentState = JSON.stringify({
+        nodes,
+        edges,
+        flowVariables,
+        name: currentBotName,
+      });
 
-    if (lastSavedState.current === "") {
-      lastSavedState.current = currentState;
-      return;
-    }
+      if (lastSavedState.current === "") {
+        lastSavedState.current = currentState;
+        return;
+      }
 
-    if (currentState !== lastSavedState.current) {
-      setHasUnsavedChanges(true);
-    }
+      if (currentState !== lastSavedState.current) {
+        setHasUnsavedChanges(true);
+      }
+    }, 500); // Aguarda 500ms após a última mudança
+
+    return () => clearTimeout(timeoutId);
   }, [nodes, edges, flowVariables, currentBotName]);
 
   // Prevenir saída acidental da página
