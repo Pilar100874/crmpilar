@@ -942,7 +942,7 @@ function BotBuilderContent() {
               nodesConnectable={!isLocked && !showSimulator && !isDroppingNode}
               nodesFocusable={!isLocked}
               edgesFocusable={!isLocked}
-              fitView
+              defaultViewport={{ x: 0, y: 0, zoom: 0.25 }}
               className="bg-background"
               deleteKeyCode={isLocked ? null : "Delete"}
               connectOnClick={false}
