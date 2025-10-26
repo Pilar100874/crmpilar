@@ -42,39 +42,68 @@ const variableTypeColors = {
 };
 
 export function VariableMonitor({ variables, context }: VariableMonitorProps) {
-  const formatValue = (value: any, variable: FlowVariable): string => {
-    // Se não houver valor no contexto e a variável tiver valor padrão, usa o padrão
-    const displayValue = value !== undefined && value !== null ? value : variable.defaultValue;
+  const formatValue = (value: any, type?: string): string => {
+    if (value === undefined || value === null) return "-";
     
-    if (displayValue === undefined || displayValue === null) return "-";
-    
-    if (variable.type === "array") {
+    if (type === "array" || Array.isArray(value)) {
       try {
-        return Array.isArray(displayValue) ? `[${displayValue.length} itens]` : JSON.stringify(displayValue);
+        return Array.isArray(value) ? `[${value.length} itens]` : JSON.stringify(value);
       } catch {
-        return String(displayValue);
+        return String(value);
       }
     }
     
-    if (variable.type === "boolean") {
-      return displayValue ? "Verdadeiro" : "Falso";
+    if (type === "boolean" || typeof value === "boolean") {
+      return value ? "Verdadeiro" : "Falso";
     }
     
-    if (variable.type === "date") {
+    if (type === "date" || value instanceof Date) {
       try {
-        return new Date(displayValue).toLocaleString("pt-BR");
+        return new Date(value).toLocaleString("pt-BR");
       } catch {
-        return String(displayValue);
+        return String(value);
       }
     }
     
-    return String(displayValue);
+    return String(value);
   };
 
   const getValueColor = (value: any): string => {
     if (value === undefined || value === null) return "text-slate-500";
     return "text-slate-900";
   };
+
+  const inferType = (value: any): string => {
+    if (value === null || value === undefined) return "text";
+    if (typeof value === "boolean") return "boolean";
+    if (typeof value === "number") return "number";
+    if (value instanceof Date) return "date";
+    if (Array.isArray(value)) return "array";
+    return "text";
+  };
+
+  // Criar uma lista combinada de variáveis (definidas + contexto)
+  const allVariables: Array<FlowVariable & { fromContext?: boolean }> = [...variables];
+  
+  // Adicionar variáveis do contexto que não estão na lista de variáveis definidas
+  Object.keys(context).forEach(key => {
+    const exists = variables.some(v => {
+      const cleanName = v.name.replace(/^\{\{|\}\}$/g, '');
+      return cleanName === key;
+    });
+    
+    if (!exists) {
+      const value = context[key];
+      allVariables.push({
+        id: `context_${key}`,
+        name: key,
+        type: inferType(value),
+        scope: "local",
+        description: "Variável criada pelo fluxo",
+        fromContext: true,
+      } as FlowVariable & { fromContext?: boolean });
+    }
+  });
 
   return (
     <Sheet>
@@ -100,11 +129,11 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
         </SheetHeader>
 
         <div className="mt-6">
-          {variables.length === 0 ? (
+          {allVariables.length === 0 ? (
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
               <Eye className="h-12 w-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-600">Nenhuma variável para monitorar</p>
-              <p className="text-sm text-slate-500 mt-1">Crie variáveis no gerenciador de variáveis</p>
+              <p className="text-sm text-slate-500 mt-1">Execute o simulador para ver as variáveis</p>
             </div>
           ) : (
             <ScrollArea className="h-[calc(100vh-200px)]">
@@ -118,7 +147,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {variables.map((variable) => {
+                    {allVariables.map((variable) => {
                       const Icon = variableTypeIcons[variable.type];
                       const typeColor = variableTypeColors[variable.type];
                       // Normaliza o nome da variável removendo chaves duplas para buscar no contexto
@@ -137,6 +166,11 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                               <span className="font-mono text-sm text-slate-900 break-all">
                                 {variable.name}
                               </span>
+                              {variable.fromContext && (
+                                <span title="Variável do fluxo" className="flex-shrink-0">
+                                  <User className="h-3 w-3 text-blue-600" />
+                                </span>
+                              )}
                               {variable.scope === "global" && (
                                 <span title="Variável global" className="flex-shrink-0">
                                   <Globe className="h-3 w-3 text-green-600" />
@@ -172,9 +206,9 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                           <TableCell className="align-top">
                             <div className="flex items-start gap-2 flex-wrap">
                               <code 
-                                className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-slate-50 px-2 py-1 rounded border border-slate-200 break-all max-w-full`}
+                                className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : (variable as any).defaultValue)} bg-slate-50 px-2 py-1 rounded border border-slate-200 break-all max-w-full`}
                               >
-                                {formatValue(currentValue, variable)}
+                                {formatValue(currentValue, variable.type)}
                               </code>
                               {hasValue && (
                                 <Badge 
@@ -184,7 +218,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                                   ✓
                                 </Badge>
                               )}
-                              {!hasValue && variable.defaultValue !== undefined && (
+                              {!hasValue && (variable as any).defaultValue !== undefined && (
                                 <Badge 
                                   variant="outline" 
                                   className="text-amber-700 border-amber-300 bg-amber-50 text-xs whitespace-nowrap flex-shrink-0"
@@ -224,6 +258,10 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
                   <div className="flex items-center gap-2">
                     <ToggleLeft className="h-3 w-3 text-pink-600" />
                     <span>Booleano</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <User className="h-3 w-3 text-blue-600" />
+                    <span>Do Fluxo</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock className="h-3 w-3 text-amber-600" />
