@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RotateCcw, MessageSquare, Smartphone, Zap, AlertCircle, Power } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { WhatsAppQRCode } from "@/components/WhatsAppQRCode";
 import { TwilioSandbox } from "@/components/TwilioSandbox";
@@ -28,9 +29,17 @@ export default function BotTest() {
   }, []);
 
   const loadSavedBots = async () => {
+    const estabelecimentoId = await getEstabelecimentoId();
+    
+    if (!estabelecimentoId) {
+      toast.error("Não foi possível identificar o estabelecimento");
+      return;
+    }
+
     const { data, error } = await supabase
       .from("bot_flows")
       .select("*")
+      .eq("estabelecimento_id", estabelecimentoId)
       .order("updated_at", { ascending: false });
 
     if (error) {
@@ -88,17 +97,26 @@ export default function BotTest() {
   };
 
   const handleActivateBot = async (botId: string) => {
-    // Desativar todos os outros
+    const estabelecimentoId = await getEstabelecimentoId();
+    
+    if (!estabelecimentoId) {
+      toast.error("Não foi possível identificar o estabelecimento");
+      return;
+    }
+
+    // Desativar todos os outros do mesmo estabelecimento
     await supabase
       .from("bot_flows")
       .update({ active: false })
+      .eq("estabelecimento_id", estabelecimentoId)
       .neq("id", botId);
 
     // Ativar o selecionado
     const { error } = await supabase
       .from("bot_flows")
       .update({ active: true })
-      .eq("id", botId);
+      .eq("id", botId)
+      .eq("estabelecimento_id", estabelecimentoId);
 
     if (error) {
       console.error("Error activating bot:", error);

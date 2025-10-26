@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import { Smartphone, RefreshCw, Copy, CheckCircle, AlertCircle, Info } from "lucide-react";
 
@@ -23,11 +24,20 @@ export const WhatsAppQRCode = () => {
 
   const loadConfig = async () => {
     try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      
+      if (!estabelecimentoId) {
+        toast.error("Não foi possível identificar o estabelecimento");
+        setIsLoading(false);
+        return;
+      }
+
       // Check for active bot
       const { data: botData } = await supabase
         .from("bot_flows")
         .select("id, name, active")
         .eq("active", true)
+        .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
 
       setHasActiveBot(!!botData);

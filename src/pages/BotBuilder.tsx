@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
 import {
@@ -92,9 +93,22 @@ function BotBuilderContent() {
   }, []);
 
   const loadSavedBots = async () => {
+    const estabelecimentoId = await getEstabelecimentoId();
+    
+    if (!estabelecimentoId) {
+      console.error("No estabelecimento_id found");
+      setErrorDialog({
+        open: true,
+        title: "Erro",
+        description: "Não foi possível identificar o estabelecimento. Por favor, selecione um estabelecimento.",
+      });
+      return;
+    }
+
     const { data, error } = await supabase
       .from("bot_flows")
       .select("*")
+      .eq("estabelecimento_id", estabelecimentoId)
       .order("updated_at", { ascending: false });
 
     if (error) {
@@ -416,6 +430,18 @@ function BotBuilderContent() {
       return;
     }
 
+    // Obter estabelecimento_id
+    const estabelecimentoId = await getEstabelecimentoId();
+    
+    if (!estabelecimentoId) {
+      setErrorDialog({
+        open: true,
+        title: "Erro",
+        description: "Não foi possível identificar o estabelecimento. Por favor, selecione um estabelecimento.",
+      });
+      return;
+    }
+
     const flow = {
       nodes,
       edges,
@@ -427,6 +453,7 @@ function BotBuilderContent() {
       name: currentBotName,
       flow_data: flow as any, // Cast to any for Json compatibility
       updated_at: new Date().toISOString(),
+      estabelecimento_id: estabelecimentoId,
     };
 
     let error, data;
@@ -462,7 +489,7 @@ function BotBuilderContent() {
       toast.success("Bot salvo com sucesso!");
       loadSavedBots();
     }
-  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, validateConnections, highlightDisconnectedNodes]);
+  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, validateConnections, highlightDisconnectedNodes, flowVariables]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
