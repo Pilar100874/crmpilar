@@ -6,13 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DndContext,
   DragEndEvent,
@@ -75,7 +76,17 @@ function DroppableDay({
 }
 
 // Componente de tarefa arrastável
-function DraggableTask({ task, onClick }: { task: Task; onClick?: (e?: any) => void }) {
+function DraggableTask({ 
+  task, 
+  onClick, 
+  onEdit, 
+  onDelete 
+}: { 
+  task: Task; 
+  onClick?: (e?: any) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
   const {
     attributes,
     listeners,
@@ -95,30 +106,70 @@ function DraggableTask({ task, onClick }: { task: Task; onClick?: (e?: any) => v
     <div
       ref={setNodeRef}
       style={style}
-      className={`group text-xs px-2 py-1 rounded flex items-center gap-1 cursor-move ${
+      className={`group text-xs px-2 py-1 rounded flex items-center gap-1 ${
         task.status === "completed"
           ? "bg-muted text-muted-foreground line-through"
           : task.isAllDay
           ? "bg-secondary/30 text-secondary-foreground hover:bg-secondary/40"
           : "bg-primary/10 text-primary hover:bg-primary/20"
       }`}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.(e);
-      }}
-      {...attributes}
-      {...listeners}
     >
-      <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <span className="truncate flex-1">
+      <div {...attributes} {...listeners} className="cursor-move">
+        <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <span 
+        className="truncate flex-1 cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.(e);
+        }}
+      >
         {task.time && `${task.time} `}{task.title}
       </span>
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {onEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 hover:bg-background/50"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          >
+            <Edit className="w-3 h-3" />
+          </Button>
+        )}
+        {onDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
 
 // Componente de card de tarefa arrastável (para lista)
-function DraggableTaskCard({ task, onToggle }: { task: Task; onToggle: () => void }) {
+function DraggableTaskCard({ 
+  task, 
+  onToggle,
+  onEdit,
+  onDelete 
+}: { 
+  task: Task; 
+  onToggle: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
   const {
     attributes,
     listeners,
@@ -135,7 +186,7 @@ function DraggableTaskCard({ task, onToggle }: { task: Task; onToggle: () => voi
   };
 
   return (
-    <Card ref={setNodeRef} style={style} className="mb-2 cursor-move">
+    <Card ref={setNodeRef} style={style} className="mb-2">
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -168,6 +219,28 @@ function DraggableTaskCard({ task, onToggle }: { task: Task; onToggle: () => voi
             </div>
             {task.description && (
               <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-1 ml-2">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={onEdit}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
+                onClick={onDelete}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             )}
           </div>
         </div>
@@ -206,6 +279,8 @@ export default function Calendario() {
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
   const [pendingTask, setPendingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Configuração de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -685,6 +760,8 @@ export default function Calendario() {
                     e?.stopPropagation();
                     handleToggleTaskStatus(task.id);
                   }}
+                  onEdit={() => handleEditTask(task)}
+                  onDelete={() => handleDeleteTask(task.id)}
                 />
               ))}
               {dayTasks.length > 3 && (
@@ -743,6 +820,8 @@ export default function Calendario() {
                 key={task.id}
                 task={task}
                 onClick={() => handleToggleTaskStatus(task.id)}
+                onEdit={() => handleEditTask(task)}
+                onDelete={() => handleDeleteTask(task.id)}
               />
             ))}
           </div>
@@ -839,6 +918,11 @@ export default function Calendario() {
       localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       toast.success("Tarefa excluída");
     }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsEditDialogOpen(true);
   };
 
   const getTypeLabel = (type: Task["type"]) => {
@@ -1143,6 +1227,8 @@ export default function Calendario() {
               key={task.id} 
               task={task} 
               onToggle={() => handleToggleTaskStatus(task.id)}
+              onEdit={() => handleEditTask(task)}
+              onDelete={() => handleDeleteTask(task.id)}
             />
           )}
         </div>
@@ -1157,6 +1243,8 @@ export default function Calendario() {
               key={task.id} 
               task={task} 
               onToggle={() => handleToggleTaskStatus(task.id)}
+              onEdit={() => handleEditTask(task)}
+              onDelete={() => handleDeleteTask(task.id)}
             />
           )}
         </div>
@@ -1171,6 +1259,8 @@ export default function Calendario() {
               key={task.id} 
               task={task} 
               onToggle={() => handleToggleTaskStatus(task.id)}
+              onEdit={() => handleEditTask(task)}
+              onDelete={() => handleDeleteTask(task.id)}
             />
           )}
         </div>
@@ -1185,6 +1275,8 @@ export default function Calendario() {
               key={task.id} 
               task={task} 
               onToggle={() => handleToggleTaskStatus(task.id)}
+              onEdit={() => handleEditTask(task)}
+              onDelete={() => handleDeleteTask(task.id)}
             />
           )}
         </div>
@@ -1310,6 +1402,108 @@ export default function Calendario() {
         onSave={handleSaveTask}
         initialDate={selectedDate || undefined}
       />
+
+      {/* Dialog para editar tarefa */}
+      {editingTask && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar Tarefa</DialogTitle>
+              <DialogDescription>
+                Edite as informações da tarefa abaixo.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium">Data</label>
+                <Input
+                  type="date"
+                  defaultValue={format(editingTask.date, "yyyy-MM-dd")}
+                  onChange={(e) => {
+                    const newDate = new Date(e.target.value);
+                    setEditingTask({ ...editingTask, date: newDate });
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Horário</label>
+                <Input
+                  type="time"
+                  defaultValue={editingTask.time}
+                  onChange={(e) => {
+                    setEditingTask({ ...editingTask, time: e.target.value });
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Tipo</label>
+                <select
+                  className="w-full p-2 border rounded"
+                  defaultValue={editingTask.type}
+                  onChange={(e) => {
+                    setEditingTask({ ...editingTask, type: e.target.value as any });
+                  }}
+                >
+                  <option value="accompany">Acompanhamento</option>
+                  <option value="call">Ligação</option>
+                  <option value="meeting">Reunião</option>
+                  <option value="other">Outro</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Observação</label>
+                <Textarea
+                  defaultValue={editingTask.description}
+                  onChange={(e) => {
+                    setEditingTask({ ...editingTask, description: e.target.value });
+                  }}
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingTask(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!editingTask) return;
+                  
+                  // Verificar se é fim de semana
+                  if (checkWeekend(editingTask.date)) {
+                    setWeekendPendingTask({
+                      taskData: null,
+                      existingTask: editingTask,
+                      targetDate: editingTask.date,
+                      isMove: true
+                    });
+                    setIsWeekendDialogOpen(true);
+                    setIsEditDialogOpen(false);
+                    return;
+                  }
+
+                  const updatedTasks = tasks.map(t => 
+                    t.id === editingTask.id ? editingTask : t
+                  );
+                  setTasks(updatedTasks);
+                  localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+                  toast.success("Tarefa atualizada com sucesso");
+                  setIsEditDialogOpen(false);
+                  setEditingTask(null);
+                }}
+              >
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Dialog de conflito */}
       <Dialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
