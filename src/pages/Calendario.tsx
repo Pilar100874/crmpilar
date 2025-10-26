@@ -11,6 +11,7 @@ import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOf
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DndContext,
   DragEndEvent,
@@ -38,6 +39,8 @@ interface Task {
   createdAt: Date;
   contactId?: string;
   contactName?: string;
+  isAllDay?: boolean;
+  userId?: string;
 }
 
 type ViewMode = "day" | "week" | "month" | "list" | "table";
@@ -94,6 +97,8 @@ function DraggableTask({ task, onClick }: { task: Task; onClick?: (e?: any) => v
       className={`group text-xs px-2 py-1 rounded flex items-center gap-1 cursor-move ${
         task.status === "completed"
           ? "bg-muted text-muted-foreground line-through"
+          : task.isAllDay
+          ? "bg-secondary/30 text-secondary-foreground hover:bg-secondary/40"
           : "bg-primary/10 text-primary hover:bg-primary/20"
       }`}
       onClick={(e) => {
@@ -349,32 +354,101 @@ export default function Calendario() {
   };
 
   // Adicionar tarefa
-  const handleSaveTask = (taskData: {
+  const handleSaveTask = async (taskData: {
     contactId: string;
     contactName: string;
     date: Date;
     time: string;
     type: string;
     observation?: string;
+    isAllDay?: boolean;
+    userId?: string;
   }) => {
-    const newTask: Task = {
-      id: `task_${Date.now()}`,
-      title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
-      description: taskData.observation,
-      date: taskData.date,
-      time: taskData.time,
-      assignedTo: taskData.contactName,
-      status: "pending",
-      type: taskData.type as Task["type"],
-      createdAt: new Date(),
-      contactId: taskData.contactId,
-      contactName: taskData.contactName,
-    };
+    // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
+    if (taskData.isAllDay) {
+      try {
+        // Buscar jornada de trabalho do usuário atual do Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error("Usuário não autenticado");
+          return;
+        }
+        
+        const { data: userData, error } = await supabase
+          .from("usuarios")
+          .select("hora_inicial, hora_final")
+          .eq("id", user.id)
+          .single();
+        
+        if (error || !userData) {
+          toast.error("Erro ao buscar jornada de trabalho do usuário");
+          return;
+        }
+        
+        const horaInicial = userData.hora_inicial || "08:00";
+        const horaFinal = userData.hora_final || "18:00";
+        
+        // Gerar slots de 15 minutos entre hora inicial e final
+        const [startHour, startMinute] = horaInicial.split(':').map(Number);
+        const [endHour, endMinute] = horaFinal.split(':').map(Number);
+        
+        const startTime = startHour * 60 + startMinute;
+        const endTime = endHour * 60 + endMinute;
+        
+        const newTasks: Task[] = [];
+        
+        for (let time = startTime; time < endTime; time += 15) {
+          const hour = Math.floor(time / 60);
+          const minute = time % 60;
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          
+          newTasks.push({
+            id: `task_${Date.now()}_${time}`,
+            title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+            description: taskData.observation,
+            date: taskData.date,
+            time: timeString,
+            assignedTo: taskData.contactName,
+            status: "pending",
+            type: taskData.type as Task["type"],
+            createdAt: new Date(),
+            contactId: taskData.contactId,
+            contactName: taskData.contactName,
+            isAllDay: true,
+            userId: user.id,
+          });
+        }
+        
+        const updatedTasks = [...tasks, ...newTasks];
+        setTasks(updatedTasks);
+        localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+        toast.success(`${newTasks.length} tarefas adicionadas para o dia todo`);
+      } catch (error) {
+        console.error("Erro ao criar tarefas de dia todo:", error);
+        toast.error("Erro ao criar tarefas de dia todo");
+      }
+    } else {
+      // Tarefa normal com horário específico
+      const newTask: Task = {
+        id: `task_${Date.now()}`,
+        title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+        description: taskData.observation,
+        date: taskData.date,
+        time: taskData.time,
+        assignedTo: taskData.contactName,
+        status: "pending",
+        type: taskData.type as Task["type"],
+        createdAt: new Date(),
+        contactId: taskData.contactId,
+        contactName: taskData.contactName,
+        isAllDay: false,
+      };
 
-    const updatedTasks = [...tasks, newTask];
-    setTasks(updatedTasks);
-    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
-    toast.success("Tarefa adicionada com sucesso");
+      const updatedTasks = [...tasks, newTask];
+      setTasks(updatedTasks);
+      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+      toast.success("Tarefa adicionada com sucesso");
+    }
   };
 
   const handleOpenNewTask = (date?: Date) => {

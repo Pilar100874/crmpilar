@@ -35,6 +35,8 @@ interface NewTaskDialogProps {
     time: string;
     type: string;
     observation?: string;
+    isAllDay?: boolean;
+    userId?: string;
   }) => void;
   initialDate?: Date;
 }
@@ -336,6 +338,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
       time: timeString,
       type: taskType,
       observation,
+      isAllDay,
     });
 
     onOpenChange(false);

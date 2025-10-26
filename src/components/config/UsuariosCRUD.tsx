@@ -32,6 +32,8 @@ interface Usuario {
   porta_pop: number | null;
   senha_email: string | null;
   usar_autenticacao: boolean | null;
+  hora_inicial: string;
+  hora_final: string;
   is_admin?: boolean;
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
@@ -85,6 +87,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [selectedEstabelecimentoId, setSelectedEstabelecimentoId] = useState("");
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [horaInicial, setHoraInicial] = useState("08:00");
+  const [horaFinal, setHoraFinal] = useState("18:00");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
@@ -187,10 +191,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome.trim() || !email.trim()) {
+    if (!nome.trim() || !email.trim() || !horaInicial || !horaFinal) {
       toast({
         title: "Campos obrigatórios",
-        description: "Nome e email são obrigatórios",
+        description: "Nome, email e jornada de trabalho são obrigatórios",
         variant: "destructive",
       });
       return;
@@ -237,6 +241,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       porta_pop: portaPop ? parseInt(portaPop) : null,
       senha_email: senhaEmail || null,
       usar_autenticacao: usarAutenticacao,
+      hora_inicial: horaInicial,
+      hora_final: horaFinal,
     };
 
     if (editingId) {
@@ -418,6 +424,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSelectedEstabelecimentoId("");
     setSegmentosSelecionados([]);
     setIsAdmin(false);
+    setHoraInicial("08:00");
+    setHoraFinal("18:00");
     setEditingId(null);
   };
 
@@ -434,6 +442,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setUnidadeId(usuario.unidade_id || "");
     setGrupoAcessoId(usuario.grupo_acesso_id || "");
     setSelectedEstabelecimentoId(usuario.estabelecimento_id || "");
+    setHoraInicial(usuario.hora_inicial || "08:00");
+    setHoraFinal(usuario.hora_final || "18:00");
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
@@ -584,6 +594,28 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 A senha deve ter no mínimo 6 caracteres
               </p>
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="usuario-hora-inicial">Hora Inicial (Jornada) *</Label>
+            <Input
+              id="usuario-hora-inicial"
+              type="time"
+              value={horaInicial}
+              onChange={(e) => setHoraInicial(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="usuario-hora-final">Hora Final (Jornada) *</Label>
+            <Input
+              id="usuario-hora-final"
+              type="time"
+              value={horaFinal}
+              onChange={(e) => setHoraFinal(e.target.value)}
+              required
+            />
           </div>
 
           <div>

@@ -1108,6 +1108,8 @@ export type Database = {
           email: string
           estabelecimento_id: string | null
           grupo_acesso_id: string | null
+          hora_final: string
+          hora_inicial: string
           id: string
           nome: string
           pop: string | null
@@ -1126,6 +1128,8 @@ export type Database = {
           email: string
           estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
+          hora_final?: string
+          hora_inicial?: string
           id?: string
           nome: string
           pop?: string | null
@@ -1144,6 +1148,8 @@ export type Database = {
           email?: string
           estabelecimento_id?: string | null
           grupo_acesso_id?: string | null
+          hora_final?: string
+          hora_inicial?: string
           id?: string
           nome?: string
           pop?: string | null
