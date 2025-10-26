@@ -48,6 +48,17 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
     handleConfigChange("sections", newSections);
   };
 
+  const updateItem = (sectionIndex: number, itemIndex: number, field: string, value: any) => {
+    const newSections = [...sections];
+    newSections[sectionIndex].items[itemIndex] = {
+      ...newSections[sectionIndex].items[itemIndex],
+      [field]: value
+    };
+    handleConfigChange("sections", newSections);
+  };
+
+  const totalItems = sections.reduce((sum: number, section: any) => sum + (section.items?.length || 0), 0);
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -56,29 +67,18 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
           value={config.header || ""}
           onChange={(e) => handleConfigChange("header", e.target.value)}
           placeholder="Header"
-          rows={3}
+          rows={2}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Text (max. 1024 characters)</Label>
+        <Label>Text (max. 1024 characters) *</Label>
         <Textarea
           value={config.text || ""}
           onChange={(e) => handleConfigChange("text", e.target.value)}
-          placeholder="Body"
+          placeholder="Body text"
           rows={3}
         />
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Bold className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Italic className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" className="ml-auto">
-            Use field
-          </Button>
-        </div>
       </div>
 
       <div className="space-y-2">
@@ -87,12 +87,12 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
           value={config.footer || ""}
           onChange={(e) => handleConfigChange("footer", e.target.value)}
           placeholder="Footer"
-          rows={3}
+          rows={2}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>List header / CTA</Label>
+        <Label>List header / CTA *</Label>
         <Input
           value={config.listHeader || ""}
           onChange={(e) => handleConfigChange("listHeader", e.target.value)}
@@ -101,49 +101,100 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
       </div>
 
       <div className="space-y-3">
-        <Label>Sections & Items (Max. 10 items)</Label>
+        <div className="flex items-center justify-between">
+          <Label>Sections & Items</Label>
+          <span className="text-sm text-muted-foreground">{totalItems}/10 items</span>
+        </div>
         
         {sections.map((section: any, sIndex: number) => (
-          <div key={section.id || sIndex} className="space-y-2">
-            <div className="flex items-center gap-2 bg-pink-500 text-white p-2 rounded">
-              <span>Item {sIndex}</span>
-              <Button variant="ghost" size="icon" className="ml-auto h-6 w-6">
-                <GripVertical className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
+          <div key={section.id} className="space-y-3 border rounded-lg p-3 bg-muted/50">
+            {/* Section Header */}
+            <div className="flex items-center gap-2">
+              <Input
+                value={section.title || ""}
+                onChange={(e) => updateSection(sIndex, "title", e.target.value)}
+                placeholder={`Section ${sIndex + 1} title (optional)`}
+                className="flex-1"
+              />
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => removeSection(sIndex)}
+                className="h-8 w-8"
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="flex items-center gap-2 bg-pink-500 text-white p-2 rounded">
-              <span>Item {sIndex + 1}</span>
-              <Button variant="ghost" size="icon" className="ml-auto h-6 w-6">
-                <GripVertical className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Trash2 className="h-4 w-4" />
+            {/* Section Items */}
+            <div className="space-y-2 ml-4">
+              {(section.items || []).map((item: any, iIndex: number) => (
+                <div key={item.id} className="space-y-2 border rounded p-2 bg-background">
+                  <div className="flex items-start gap-2">
+                    <GripVertical className="h-4 w-4 text-muted-foreground mt-2" />
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        value={item.label || ""}
+                        onChange={(e) => updateItem(sIndex, iIndex, "label", e.target.value)}
+                        placeholder="Item name (max 24 chars) *"
+                        maxLength={24}
+                      />
+                      <Input
+                        value={item.description || ""}
+                        onChange={(e) => updateItem(sIndex, iIndex, "description", e.target.value)}
+                        placeholder="Description (max 72 chars, optional)"
+                        maxLength={72}
+                      />
+                      <Input
+                        value={item.value || ""}
+                        onChange={(e) => updateItem(sIndex, iIndex, "value", e.target.value)}
+                        placeholder="Value to save (optional)"
+                      />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => removeItem(sIndex, iIndex)}
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Add Item to Section */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => addItem(sIndex)}
+                disabled={totalItems >= 10}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add item
               </Button>
             </div>
           </div>
         ))}
 
+        {/* Add New Section */}
         <Button 
           variant="default" 
-          size="lg" 
           onClick={addSection}
-          className="w-full bg-slate-700 hover:bg-slate-800 text-white"
-        >
-          Add new item
-        </Button>
-
-        <Button 
-          variant="secondary" 
-          size="lg" 
-          onClick={addSection}
+          disabled={totalItems >= 10}
           className="w-full"
         >
+          <Plus className="h-4 w-4 mr-2" />
           Add new section
         </Button>
+
+        {totalItems >= 10 && (
+          <p className="text-sm text-amber-600 flex items-center gap-1">
+            <Info className="h-4 w-4" />
+            Maximum of 10 items reached
+          </p>
+        )}
       </div>
     </div>
   );
