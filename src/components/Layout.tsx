@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
+import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { LayoutContext } from "@/contexts/LayoutContext";
 
@@ -109,9 +110,11 @@ export default function Layout({ children }: LayoutProps) {
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
+  const [showUsuarioSelector, setShowUsuarioSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -230,6 +233,7 @@ export default function Layout({ children }: LayoutProps) {
         // Buscar nome do estabelecimento
         const estabId = await getEstabelecimentoId();
         if (estabId) {
+          setEstabelecimentoId(estabId);
           const { data: estabData } = await supabase
             .from("estabelecimentos")
             .select("nome")
@@ -317,12 +321,15 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               )}
               {userName && (
-                <div className="flex flex-col items-center pt-1">
+                <button
+                  onClick={() => setShowUsuarioSelector(true)}
+                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
+                >
                   <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
                   <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
                     {userName}
                   </span>
-                </div>
+                </button>
               )}
             </div>
           </div>
@@ -471,6 +478,13 @@ export default function Layout({ children }: LayoutProps) {
           setShowEstabelecimentoSelector(false);
           window.location.reload(); // Recarrega a página para aplicar o novo estabelecimento
         }}
+        onClose={() => setShowEstabelecimentoSelector(false)}
+      />
+
+      <UsuarioSelector
+        open={showUsuarioSelector}
+        onClose={() => setShowUsuarioSelector(false)}
+        estabelecimentoId={estabelecimentoId}
       />
     </SidebarProvider>
     </LayoutContext.Provider>

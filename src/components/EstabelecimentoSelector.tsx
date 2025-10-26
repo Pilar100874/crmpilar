@@ -21,9 +21,10 @@ interface Estabelecimento {
 interface EstabelecimentoSelectorProps {
   open: boolean;
   onSelectEstabelecimento: (estabelecimentoId: string) => void;
+  onClose?: () => void;
 }
 
-export function EstabelecimentoSelector({ open, onSelectEstabelecimento }: EstabelecimentoSelectorProps) {
+export function EstabelecimentoSelector({ open, onSelectEstabelecimento, onClose }: EstabelecimentoSelectorProps) {
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [selectedEstabelecimento, setSelectedEstabelecimento] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -72,8 +73,8 @@ export function EstabelecimentoSelector({ open, onSelectEstabelecimento }: Estab
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-[500px]" onInteractOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose?.()}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5" />
