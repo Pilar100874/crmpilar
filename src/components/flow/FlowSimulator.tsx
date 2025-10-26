@@ -681,7 +681,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "list_buttons":
         const listText = interpolateVariables(config.text || "", context);
-        const buttonText = config.buttonText || "Ver opções";
+        const buttonText = config.buttonText || config.listHeader || "Ver opções";
         const sections = config.sections || [];
         
         if (listText) {
@@ -692,8 +692,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           addSystemMessage(`📋 ${buttonText}`);
           sections.forEach((section: any, idx: number) => {
             addSystemMessage(`\n${section.title || `Seção ${idx + 1}`}:`);
-            (section.rows || []).forEach((row: any) => {
-              addSystemMessage(`  ▶️ ${row.title}`);
+            (section.items || []).forEach((item: any) => {
+              const line = item.description ? `${item.label} — ${item.description}` : item.label;
+              addSystemMessage(`  ▶️ ${line}`);
             });
           });
         }, 500);

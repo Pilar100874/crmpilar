@@ -98,13 +98,10 @@ export const FlowNode = memo((props: any) => {
           label: item.label || `Item ${itemIdx + 1}`,
           description: item.description || ""
         }));
-        
-        if (sectionItems.length > 0) {
-          listSections.push({
-            title: section.title || `Seção ${sectionIdx + 1}`,
-            items: sectionItems
-          });
-        }
+        listSections.push({
+          title: section.title || `Seção ${sectionIdx + 1}`,
+          items: sectionItems
+        });
       });
       
       console.log("✅ List sections created:", listSections);
@@ -338,6 +335,9 @@ export const FlowNode = memo((props: any) => {
                 </div>
                 
                 {/* Section Items (com handles) */}
+                {section.items.length === 0 && (
+                  <div className="py-2 px-3 text-[11px] text-slate-400 ml-2">Sem itens</div>
+                )}
                 {section.items.map((item: any) => (
                   <div key={item.id} className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-pink-500 rounded-md group hover:bg-pink-600 transition-colors ml-2">
                     <div className="flex-1 min-w-0">

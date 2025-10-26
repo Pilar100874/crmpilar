@@ -364,7 +364,7 @@ export class FlowEngine {
       sections.forEach((section: any, sectionIdx: number) => {
         if (section.items && !itemFound) {
           section.items.forEach((item: any, itemIdx: number) => {
-            if (item.id === userChoice || item.title === userChoice) {
+            if (item.id === userChoice || item.label === userChoice || item.title === userChoice) {
               targetEdge = this.edges.find(
                 (e) => e.source === node.id && e.sourceHandle === `section_${sectionIdx}_item_${itemIdx}`
               );
