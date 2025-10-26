@@ -1693,27 +1693,128 @@ export default function Contatos() {
                 </div>
 
                 <div className="space-y-4">
+                  <h4 className="text-sm font-semibold">Campos Obrigatórios</h4>
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">CONTATO</p>
+                        <ul className="text-sm space-y-1">
+                          <li>• Nome de contato</li>
+                          <li>• WhatsApp</li>
+                          <li>• E-mail</li>
+                          <li>• Posição</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">EMPRESA</p>
+                        <ul className="text-sm space-y-1">
+                          <li>• Tipo (Pessoa Física ou Pessoa Jurídica)</li>
+                          <li>• CPF/CNPJ</li>
+                          <li>• Nome</li>
+                          <li>• Nome Fantasia</li>
+                          <li>• CEP</li>
+                          <li>• Endereço</li>
+                          <li>• Cidade</li>
+                          <li>• Bairro</li>
+                          <li>• UF</li>
+                          <li>• Inscrição</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
                   <h4 className="text-sm font-semibold">Instruções de Importação</h4>
                   <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
                     <div className="flex gap-2">
                       <span className="font-medium min-w-6">1.</span>
-                      <p>Prepare seu arquivo CSV ou Excel com as colunas: Nome, Telefone/WhatsApp, E-mail, Empresa</p>
+                      <p>Baixe o modelo de importação clicando no botão abaixo</p>
                     </div>
                     <div className="flex gap-2">
                       <span className="font-medium min-w-6">2.</span>
-                      <p>Certifique-se que a primeira linha contém os cabeçalhos das colunas</p>
+                      <p>Preencha todas as colunas obrigatórias (não deixe células vazias)</p>
                     </div>
                     <div className="flex gap-2">
                       <span className="font-medium min-w-6">3.</span>
-                      <p>Telefones devem estar no formato: (00) 00000-0000</p>
+                      <p>Tipo deve ser exatamente: "Pessoa Física" ou "Pessoa Jurídica"</p>
                     </div>
                     <div className="flex gap-2">
                       <span className="font-medium min-w-6">4.</span>
-                      <p>Contatos duplicados (mesmo telefone ou e-mail) serão automaticamente ignorados</p>
+                      <p>Telefones no formato: (00) 00000-0000 ou (00) 0000-0000</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">5.</span>
+                      <p>CPF/CNPJ no formato: 000.000.000-00 ou 00.000.000/0000-00</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">6.</span>
+                      <p>CEP no formato: 00000-000</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">7.</span>
+                      <p>Inscrição: número da IE ou "ISENTO" para pessoa física</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-medium min-w-6">8.</span>
+                      <p>Contatos duplicados (mesmo telefone ou e-mail) serão ignorados</p>
                     </div>
                   </div>
 
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      // Criar CSV com cabeçalhos dos campos obrigatórios
+                      const headers = [
+                        "Nome de contato",
+                        "WhatsApp",
+                        "E-mail",
+                        "Posição",
+                        "Tipo",
+                        "CPF/CNPJ",
+                        "Nome",
+                        "Nome Fantasia",
+                        "CEP",
+                        "Endereço",
+                        "Cidade",
+                        "Bairro",
+                        "UF",
+                        "Inscrição"
+                      ];
+                      
+                      // Adicionar linha de exemplo
+                      const exampleRow = [
+                        "João Silva",
+                        "(11) 99999-9999",
+                        "joao@exemplo.com",
+                        "Gerente",
+                        "Pessoa Jurídica",
+                        "12.345.678/0001-90",
+                        "Empresa Exemplo LTDA",
+                        "Empresa Exemplo",
+                        "01310-100",
+                        "Avenida Paulista, 1000",
+                        "São Paulo",
+                        "Bela Vista",
+                        "SP",
+                        "123456789"
+                      ];
+                      
+                      const csvContent = [
+                        headers.join(","),
+                        exampleRow.join(",")
+                      ].join("\n");
+                      
+                      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                      const link = document.createElement("a");
+                      link.href = URL.createObjectURL(blob);
+                      link.download = "modelo_importacao_contatos.csv";
+                      link.click();
+                      
+                      toast.success("Modelo baixado com sucesso!");
+                    }}
+                  >
                     <Download className="w-4 h-4 mr-2" />
                     Baixar Modelo de Importação
                   </Button>
