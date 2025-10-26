@@ -13,50 +13,10 @@ interface SqlConfig {
   username: string;
   password: string;
   query: string;
-  port?: string;
-  proxy_url?: string;
 }
 
 async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
-  // Get the SQL Server proxy URL from connection config or environment
-  const proxyUrl = config.proxy_url || Deno.env.get('SQL_SERVER_PROXY_URL');
-  
-  if (!proxyUrl) {
-    throw new Error('SQL Server proxy URL not configured. Please set proxy_url in the database connection or SQL_SERVER_PROXY_URL environment variable.');
-  }
-
-  console.log('Calling SQL Server proxy:', proxyUrl);
-  
-  try {
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        server: config.server,
-        database: config.database,
-        username: config.username,
-        password: config.password,
-        port: config.port || '1433',
-        query: config.query,
-        params: params,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`SQL Server proxy returned error: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('Query executed successfully via proxy, rows:', result.data?.length || 0);
-    
-    return result.data || result;
-  } catch (error: any) {
-    console.error('SQL Server proxy error:', error);
-    throw new Error(`Failed to execute SQL Server query via proxy: ${error.message}`);
-  }
+  throw new Error('SQL Server support temporarily disabled');
 }
 
 serve(async (req) => {
@@ -132,8 +92,6 @@ serve(async (req) => {
           sql_database: connData.sql_database,
           sql_username: connData.sql_username,
           sql_password: connData.sql_password,
-          sql_port: connData.sql_port,
-          proxy_url: connData.proxy_url,
         };
       }
     }
@@ -168,8 +126,6 @@ serve(async (req) => {
         username: connectionConfig.sql_username,
         password: connectionConfig.sql_password,
         query: apiConfig.query,
-        port: connectionConfig.sql_port,
-        proxy_url: connectionConfig.proxy_url,
       };
 
       const result = await executeSqlServerQuery(sqlConfig, params);

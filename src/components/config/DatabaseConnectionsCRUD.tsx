@@ -50,7 +50,6 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
     sql_username: "",
     sql_password: "",
     sql_port: "1433",
-    proxy_url: "",
   });
 
   useEffect(() => {
@@ -116,7 +115,6 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
         sql_username: "",
         sql_password: "",
         sql_port: "1433",
-        proxy_url: "",
       });
       loadConnections();
       onConnectionsChange?.();
@@ -135,7 +133,6 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
       sql_username: conn.sql_username,
       sql_password: conn.sql_password,
       sql_port: conn.sql_port,
-      proxy_url: conn.proxy_url || "",
     });
     setEditingId(conn.id);
     setShowForm(true);
@@ -359,22 +356,6 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
                     </Button>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="proxy_url">
-                  Proxy URL (Opcional)
-                  <span className="text-xs text-muted-foreground ml-2">
-                    Azure Function ou AWS Lambda URL para SQL Server
-                  </span>
-                </Label>
-                <Input
-                  id="proxy_url"
-                  type="url"
-                  value={formData.proxy_url}
-                  onChange={(e) => setFormData({ ...formData, proxy_url: e.target.value })}
-                  placeholder="https://sua-function.azurewebsites.net/api/sqlserver-query"
-                />
               </div>
 
               <Button type="submit" className="w-full">
