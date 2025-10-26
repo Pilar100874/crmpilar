@@ -31,7 +31,6 @@ interface BotManagerProps {
   onToggleActive: (botId: string, currentActive: boolean) => void;
   onDeleteBot: (botId: string) => void;
   onNameChange: (name: string) => void;
-  hasUnsavedChanges?: boolean;
 }
 
 export const BotManager = ({
@@ -43,7 +42,6 @@ export const BotManager = ({
   onToggleActive,
   onDeleteBot,
   onNameChange,
-  hasUnsavedChanges = false,
 }: BotManagerProps) => {
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(currentBotName);
@@ -77,11 +75,6 @@ export const BotManager = ({
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-900 flex items-center gap-2">
               Bot Atual
-              {hasUnsavedChanges && (
-                <Badge variant="outline" className="text-xs border-amber-300 bg-amber-50 text-amber-700">
-                  Não salvo *
-                </Badge>
-              )}
             </label>
             <div className="flex gap-2">
               {editingName ? (
@@ -101,7 +94,7 @@ export const BotManager = ({
               ) : (
                 <>
                   <Input 
-                    value={hasUnsavedChanges ? `${currentBotName} *` : currentBotName} 
+                    value={currentBotName} 
                     disabled 
                     className="flex-1 bg-slate-50 border-slate-200 text-slate-900" 
                   />
