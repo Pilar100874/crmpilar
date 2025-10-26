@@ -102,7 +102,10 @@ export function NewFunilDialog({ open, onOpenChange, onSuccess }: NewFunilDialog
         .from('funil_stages')
         .insert(stagesData);
 
-      if (stagesError) throw stagesError;
+      if (stagesError) {
+        console.error('Erro ao criar etapas:', stagesError);
+        throw stagesError;
+      }
 
       toast.success('Funil criado com sucesso!');
       
