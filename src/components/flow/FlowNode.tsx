@@ -94,7 +94,7 @@ export const FlowNode = memo((props: any) => {
           section.items.forEach((item: any, itemIdx: number) => {
             allItems.push({
               id: `section_${sectionIdx}_item_${itemIdx}`,
-              label: item.title || `Item ${allItems.length + 1}`,
+              label: item.label || `Item ${allItems.length + 1}`,
               color: "bg-indigo-500"
             });
           });
