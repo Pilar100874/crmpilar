@@ -13,10 +13,50 @@ interface SqlConfig {
   username: string;
   password: string;
   query: string;
+  port?: string;
 }
 
 async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
-  throw new Error('SQL Server support temporarily disabled');
+  // Import mssql from esm.sh
+  const { default: sql } = await import('https://esm.sh/mssql@10.0.1');
+  
+  const poolConfig = {
+    user: config.username,
+    password: config.password,
+    server: config.server,
+    database: config.database,
+    port: parseInt(config.port || '1433'),
+    options: {
+      encrypt: true,
+      trustServerCertificate: true,
+      enableArithAbort: true,
+      requestTimeout: 30000,
+    },
+    connectionTimeout: 30000,
+  };
+
+  let pool;
+  try {
+    console.log('Connecting to SQL Server:', config.server, config.database);
+    pool = await sql.connect(poolConfig);
+    
+    console.log('Executing query:', config.query);
+    const result = await pool.request().query(config.query);
+    
+    console.log('Query executed successfully, rows:', result.recordset?.length || 0);
+    return result.recordset || [];
+  } catch (error: any) {
+    console.error('SQL Server execution error:', error);
+    throw new Error(`Failed to execute SQL Server query: ${error.message}`);
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (closeError) {
+        console.error('Error closing pool:', closeError);
+      }
+    }
+  }
 }
 
 serve(async (req) => {
@@ -92,6 +132,7 @@ serve(async (req) => {
           sql_database: connData.sql_database,
           sql_username: connData.sql_username,
           sql_password: connData.sql_password,
+          sql_port: connData.sql_port,
         };
       }
     }
@@ -126,6 +167,7 @@ serve(async (req) => {
         username: connectionConfig.sql_username,
         password: connectionConfig.sql_password,
         query: apiConfig.query,
+        port: connectionConfig.sql_port,
       };
 
       const result = await executeSqlServerQuery(sqlConfig, params);
