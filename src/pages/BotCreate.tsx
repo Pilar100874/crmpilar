@@ -41,6 +41,14 @@ export default function BotCreate() {
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
 
+  // Fail-safe para fechar overlays caso algo fique preso
+  const closeOverlays = () => {
+    try {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' } as any));
+      (document.activeElement as HTMLElement)?.blur?.();
+    } catch {}
+  };
+
   useEffect(() => {
     loadBots();
   }, []);
@@ -203,6 +211,7 @@ export default function BotCreate() {
       setDuplicateDialogOpen(false);
       setDuplicateName("");
       setSelectedBot(null);
+      closeOverlays();
       await loadBots();
     } catch (error) {
       console.error("Error duplicating bot:", error);
@@ -256,6 +265,7 @@ export default function BotCreate() {
       setRenameDialogOpen(false);
       setRenameName("");
       setSelectedBot(null);
+      closeOverlays();
       await loadBots();
     } catch (error) {
       console.error("Error renaming bot:", error);
