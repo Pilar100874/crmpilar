@@ -107,6 +107,38 @@ function BotBuilderContent() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
 
+  const lastSavedSignatureRef = useRef<string | null>(null);
+  const getFlowSignature = useCallback(() => {
+    const sanitizeNodes = (arr: Node[]) =>
+      arr.map((n) => ({
+        id: n.id,
+        type: n.type,
+        position: n.position,
+        data: {
+          ...(n.data as any)?.label !== undefined ? { label: (n.data as any).label } : {},
+          ...(n.data as any)?.type !== undefined ? { type: (n.data as any).type } : {},
+          config: (n.data as any)?.config ?? {},
+        },
+      }));
+    const sanitizeEdges = (arr: Edge[]) =>
+      arr.map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        type: e.type,
+        data: e.data ?? undefined,
+      }));
+
+    const payload = {
+      nodes: sanitizeNodes(nodes),
+      edges: sanitizeEdges(edges),
+      variables: flowVariables,
+      name: currentBotName,
+      description: currentBotDescription,
+    };
+    return JSON.stringify(payload);
+  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription]);
+
   // Load saved bots on mount
   useEffect(() => {
     loadSavedBots();
@@ -129,13 +161,12 @@ function BotBuilderContent() {
       clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    // Marcar que há mudanças não salvas
-    if (!hasUnsavedChanges) {
-      setHasUnsavedChanges(true);
-    }
+    const currentSig = getFlowSignature();
+    const changed = lastSavedSignatureRef.current !== currentSig;
+    setHasUnsavedChanges(changed);
 
-    // Não salvar se for um bot novo sem ID ainda
-    if (!currentBotId) return;
+    // Não salvar se for um bot novo sem ID ainda ou se nada mudou
+    if (!currentBotId || !changed) return;
 
     autoSaveTimeoutRef.current = setTimeout(() => {
       // Salvar silenciosamente sem mostrar toast
@@ -147,7 +178,7 @@ function BotBuilderContent() {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, hasUnsavedChanges, currentBotId]);
+  }, [getFlowSignature, currentBotId]);
 
   // Salvar ao sair da página
   useEffect(() => {
@@ -560,6 +591,7 @@ function BotBuilderContent() {
             duration: 3000,
           });
         }
+        lastSavedSignatureRef.current = getFlowSignature();
         setHasUnsavedChanges(false);
         loadSavedBots();
         saved = true;
@@ -630,6 +662,11 @@ function BotBuilderContent() {
       setSelectedNode(null);
       
       toast.success(`Bot "${data.name}" carregado!`);
+      // Definir assinatura como estado salvo após carregar
+      setTimeout(() => {
+        lastSavedSignatureRef.current = getFlowSignature();
+        setHasUnsavedChanges(false);
+      }, 0);
     }
   }, [setNodes, setEdges]);
 
