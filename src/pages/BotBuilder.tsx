@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,8 @@ const getId = () => {
 };
 
 function BotBuilderContent() {
+  const [searchParams] = useSearchParams();
+  const botIdFromUrl = searchParams.get("id");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   
   // Criar bloco Start por padrão
@@ -642,6 +645,13 @@ function BotBuilderContent() {
       await loadBot();
     }
   }, [setNodes, setEdges, hasUnsavedChanges]);
+
+  // Carregar bot da URL automaticamente
+  useEffect(() => {
+    if (botIdFromUrl) {
+      handleLoadBot(botIdFromUrl);
+    }
+  }, [botIdFromUrl, handleLoadBot]);
 
   const handleToggleActive = useCallback(async (botId: string, currentActive: boolean) => {
     // If activating, deactivate all others first
