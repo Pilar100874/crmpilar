@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
 import {
   AlertDialog,
@@ -33,7 +34,7 @@ import { FlowNode } from "@/components/flow/FlowNode";
 import { BlockLibrary } from "@/components/flow/BlockLibrary";
 import { PropertiesPanel } from "@/components/flow/PropertiesPanel";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
-import { BotManager } from "@/components/flow/BotManager";
+import { NewBotDialog } from "@/components/flow/NewBotDialog";
 import { VariableManager, FlowVariable } from "@/components/flow/VariableManager";
 import { VariableMonitor } from "@/components/flow/VariableMonitor";
 import { BlockMonitor } from "@/components/flow/BlockMonitor";
@@ -404,9 +405,44 @@ function BotBuilderContent() {
     });
   }, [reactFlowInstance, setNodes]);
 
-  const handleNewBot = useCallback(() => {
+  const handleNewBot = useCallback(async (newBotName: string) => {
+    if (!newBotName.trim()) {
+      setErrorDialog({
+        open: true,
+        title: "Nome Obrigatório",
+        description: "Por favor, informe um nome para o bot.",
+      });
+      return false;
+    }
+
+    // Verificar se já existe um bot com este nome
+    const estabelecimentoId = await getEstabelecimentoId();
+    if (!estabelecimentoId) {
+      setErrorDialog({
+        open: true,
+        title: "Erro",
+        description: "Não foi possível identificar o estabelecimento.",
+      });
+      return false;
+    }
+
+    const { data: existingBots } = await supabase
+      .from("bot_flows")
+      .select("name")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .ilike("name", newBotName.trim());
+
+    if (existingBots && existingBots.length > 0) {
+      setErrorDialog({
+        open: true,
+        title: "Nome Duplicado",
+        description: "Já existe um bot com este nome. Por favor, escolha outro nome.",
+      });
+      return false;
+    }
+
     setCurrentBotId(null);
-    setCurrentBotName("Novo Bot");
+    setCurrentBotName(newBotName.trim());
     setSelectedNode(null);
     setEdges([]);
     setFlowVariables([]);
@@ -425,6 +461,7 @@ function BotBuilderContent() {
     setNodes([startNode]);
     
     toast.success("Novo bot criado!");
+    return true;
   }, [setNodes, setEdges]);
 
   const handleSave = useCallback(async () => {
@@ -783,6 +820,7 @@ function BotBuilderContent() {
             </div>
             
             <div className="flex gap-1 border-l border-border pl-6">
+              <NewBotDialog onCreateBot={handleNewBot} />
               <Button 
                 variant="outline" 
                 size="icon" 
@@ -845,20 +883,23 @@ function BotBuilderContent() {
                 context={simulatorContext}
                 allVariables={allVariables}
               />
+              
+              {/* Caixa de Nome do Bot */}
+              <div className="flex items-center gap-2 border-l border-border pl-4">
+                <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                  Nome do Bot:
+                </label>
+                <Input
+                  value={currentBotName}
+                  onChange={(e) => setCurrentBotName(e.target.value)}
+                  className="h-9 w-[200px]"
+                  placeholder="Nome do bot"
+                />
+              </div>
             </div>
           </div>
           
           <div className="flex gap-2">
-            <BotManager
-              savedBots={savedBots}
-              currentBotId={currentBotId}
-              currentBotName={currentBotName}
-              onNewBot={handleNewBot}
-              onLoadBot={handleLoadBot}
-              onToggleActive={handleToggleActive}
-              onDeleteBot={handleDeleteBot}
-              onNameChange={setCurrentBotName}
-            />
             <Button variant="outline" size="sm" onClick={handleImport}>
               <Upload className="w-4 h-4 mr-2" />
               Importar
