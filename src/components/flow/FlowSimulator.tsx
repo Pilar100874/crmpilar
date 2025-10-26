@@ -1015,6 +1015,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setContext((prev) => {
         const newContext = { ...prev, [cleanVarName]: input };
         console.log("📦 Context after save:", newContext);
+        // Atualiza imediatamente o contextRef para próxima interpolação
+        contextRef.current = newContext;
         
         // Execute next node with updated context
         if (currentNodeId) {
@@ -1050,6 +1052,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setContext((prev) => {
         const newContext = { ...prev, [cleanVarName]: button.value };
         console.log("Context updated:", newContext);
+        // Atualiza imediatamente o contextRef para próxima interpolação
+        contextRef.current = newContext;
         return newContext;
       });
       
