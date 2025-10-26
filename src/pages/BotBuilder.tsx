@@ -170,16 +170,18 @@ function BotBuilderContent() {
     if (!currentBotId || !changed) return;
 
     autoSaveTimeoutRef.current = setTimeout(() => {
+      console.log("[BotBuilder] Auto-save disparado");
       // Salvar silenciosamente sem mostrar toast
       handleSave(true);
-    }, 3000); // Auto-save após 3 segundos de inatividade
+    }, 2000); // Auto-save após 2 segundos de inatividade
 
     return () => {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [getFlowSignature, currentBotId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, getFlowSignature, currentBotId]);
 
   // Salvar ao sair da página
   useEffect(() => {
@@ -600,13 +602,20 @@ function BotBuilderContent() {
           });
         }
       } else {
+        // Aguardar próximo tick para estado atualizar
+        await new Promise(resolve => setTimeout(resolve, 0));
+        
+        const newSignature = getFlowSignature();
+        lastSavedSignatureRef.current = newSignature;
+        setHasUnsavedChanges(false);
+        
         if (!silent) {
           toast.success("✓ Bot salvo com sucesso!", {
             duration: 3000,
           });
         }
-        lastSavedSignatureRef.current = getFlowSignature();
-        setHasUnsavedChanges(false);
+        
+        console.log("[BotBuilder] Salvo com sucesso", { signature: newSignature });
         loadSavedBots();
         saved = true;
       }
