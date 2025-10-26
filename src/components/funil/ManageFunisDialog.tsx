@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Edit, GripVertical } from "lucide-react";
+import { Plus, Trash2, Edit, GripVertical, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { EditFunilDialog } from "./EditFunilDialog";
 
 interface Funil {
   id: string;
@@ -31,6 +32,8 @@ export function ManageFunisDialog({ open, onOpenChange, onFunilsUpdated }: Manag
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingFunilId, setEditingFunilId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -163,6 +166,18 @@ export function ManageFunisDialog({ open, onOpenChange, onFunilsUpdated }: Manag
     }
   };
 
+  const handleOpenEditDialog = (funilId: string) => {
+    setEditingFunilId(funilId);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditDialogSuccess = () => {
+    loadFunis();
+    onFunilsUpdated();
+    setEditDialogOpen(false);
+    setEditingFunilId(null);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -277,7 +292,16 @@ export function ManageFunisDialog({ open, onOpenChange, onFunilsUpdated }: Manag
                           <Button
                             size="icon"
                             variant="ghost"
+                            onClick={() => handleOpenEditDialog(funil.id)}
+                            title="Editar funil e etapas"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
                             onClick={() => handleEdit(funil)}
+                            title="Editar apenas dados do funil"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -285,6 +309,7 @@ export function ManageFunisDialog({ open, onOpenChange, onFunilsUpdated }: Manag
                             size="icon"
                             variant="ghost"
                             onClick={() => handleDelete(funil.id)}
+                            title="Excluir funil"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -298,6 +323,13 @@ export function ManageFunisDialog({ open, onOpenChange, onFunilsUpdated }: Manag
           </>
         )}
       </DialogContent>
+
+      <EditFunilDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        funilId={editingFunilId}
+        onSuccess={handleEditDialogSuccess}
+      />
     </Dialog>
   );
 }
