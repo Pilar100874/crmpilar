@@ -302,7 +302,7 @@ export default function BotCreate() {
           </p>
         </div>
 
-        <div className="grid gap-1 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-[10px] md:grid-cols-3 lg:grid-cols-4">
           <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 scale-[0.7] origin-top-left h-full flex flex-col" onClick={() => setNewBotDialogOpen(true)}>
               <CardHeader className="flex-1">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
