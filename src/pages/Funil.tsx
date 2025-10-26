@@ -83,6 +83,7 @@ export default function Funil() {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [stagesConfig, setStagesConfig] = useState<StageConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [funilSelectorKey, setFunilSelectorKey] = useState(0);
 
   // Carrega dados quando o funil é selecionado
   useEffect(() => {
@@ -347,9 +348,11 @@ export default function Funil() {
 
   const handleFunilCreated = (funilId: string) => {
     setSelectedFunilId(funilId);
+    setFunilSelectorKey(prev => prev + 1); // Força recarga do FunilSelector
   };
 
   const handleFunilsUpdated = () => {
+    setFunilSelectorKey(prev => prev + 1); // Força recarga do FunilSelector
     // Recarrega os dados
     if (selectedFunilId) {
       loadStages();
@@ -364,6 +367,7 @@ export default function Funil() {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Funil de Vendas</h1>
             <FunilSelector
+              key={funilSelectorKey}
               selectedFunilId={selectedFunilId}
               onFunilChange={handleFunilChange}
               onNewFunil={handleNewFunil}
@@ -396,6 +400,7 @@ export default function Funil() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Funil de Vendas</h1>
           <FunilSelector
+            key={funilSelectorKey}
             selectedFunilId={selectedFunilId}
             onFunilChange={handleFunilChange}
             onNewFunil={handleNewFunil}
