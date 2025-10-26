@@ -577,6 +577,196 @@ export type Database = {
           },
         ]
       }
+      funil_deals: {
+        Row: {
+          cliente_id: string | null
+          cliente_nome: string
+          created_at: string | null
+          custom_fields: Json | null
+          data_estimada: string | null
+          dias_parado: number | null
+          estabelecimento_id: string | null
+          funil_id: string
+          id: string
+          origem: string | null
+          prioridade: number | null
+          responsavel_id: string | null
+          saude: string | null
+          stage_id: string
+          status: string | null
+          tags: string[] | null
+          ultima_interacao: string | null
+          updated_at: string | null
+          valor: number | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          cliente_nome: string
+          created_at?: string | null
+          custom_fields?: Json | null
+          data_estimada?: string | null
+          dias_parado?: number | null
+          estabelecimento_id?: string | null
+          funil_id: string
+          id?: string
+          origem?: string | null
+          prioridade?: number | null
+          responsavel_id?: string | null
+          saude?: string | null
+          stage_id: string
+          status?: string | null
+          tags?: string[] | null
+          ultima_interacao?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Update: {
+          cliente_id?: string | null
+          cliente_nome?: string
+          created_at?: string | null
+          custom_fields?: Json | null
+          data_estimada?: string | null
+          dias_parado?: number | null
+          estabelecimento_id?: string | null
+          funil_id?: string
+          id?: string
+          origem?: string | null
+          prioridade?: number | null
+          responsavel_id?: string | null
+          saude?: string | null
+          stage_id?: string
+          status?: string | null
+          tags?: string[] | null
+          ultima_interacao?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funil_deals_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funil_deals_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funil_deals_funil_id_fkey"
+            columns: ["funil_id"]
+            isOneToOne: false
+            referencedRelation: "funis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funil_deals_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funil_deals_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "funil_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funil_stages: {
+        Row: {
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          funil_id: string
+          id: string
+          is_final: boolean | null
+          nome: string
+          ordem: number
+          playbook_automatico: Json | null
+        }
+        Insert: {
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          funil_id: string
+          id?: string
+          is_final?: boolean | null
+          nome: string
+          ordem?: number
+          playbook_automatico?: Json | null
+        }
+        Update: {
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          funil_id?: string
+          id?: string
+          is_final?: boolean | null
+          nome?: string
+          ordem?: number
+          playbook_automatico?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funil_stages_funil_id_fkey"
+            columns: ["funil_id"]
+            isOneToOne: false
+            referencedRelation: "funis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funis: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funis_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       global_variables: {
         Row: {
           created_at: string
