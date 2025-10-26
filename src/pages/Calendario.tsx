@@ -250,6 +250,27 @@ export default function Calendario() {
     })
   );
 
+  // Carregar tarefas do localStorage ao montar o componente
+  useEffect(() => {
+    const savedTasks = localStorage.getItem("calendar_tasks");
+    if (savedTasks) {
+      try {
+        const parsedTasks = JSON.parse(savedTasks);
+        // Converter strings de data para objetos Date e garantir tipos corretos
+        const tasksWithDates = parsedTasks.map((task: any) => ({
+          ...task,
+          date: new Date(task.date),
+          createdAt: new Date(task.createdAt),
+          status: (task.status === "completed" ? "completed" : "pending") as "pending" | "completed",
+        }));
+        setTasks(tasksWithDates);
+      } catch (error) {
+        console.error("Erro ao carregar tarefas:", error);
+        toast.error("Erro ao carregar tarefas salvas");
+      }
+    }
+  }, []);
+
   // Função para obter o próximo dia útil
   const getNextBusinessDay = (date: Date): Date => {
     let nextDay = addDays(date, 1);
@@ -282,6 +303,7 @@ export default function Calendario() {
 
     if (movedCount > 0) {
       setTasks(updatedTasks);
+      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       const nextDay = getNextBusinessDay(now);
       toast.info(
         `${movedCount} tarefa${movedCount > 1 ? 's' : ''} não realizada${movedCount > 1 ? 's' : ''} movida${movedCount > 1 ? 's' : ''} para ${format(nextDay, "dd/MM/yyyy", { locale: ptBR })}`
@@ -361,9 +383,11 @@ export default function Calendario() {
   };
 
   const handleToggleTaskStatus = (taskId: string) => {
-    setTasks(tasks.map(task =>
-      task.id === taskId ? { ...task, status: task.status === "pending" ? "completed" : "pending" } : task
-    ));
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId ? { ...task, status: task.status === "pending" ? "completed" as const : "pending" as const } : task
+    );
+    setTasks(updatedTasks);
+    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -404,9 +428,11 @@ export default function Calendario() {
         }
       }
       
-      setTasks(tasks.map(t =>
+      const updatedTasks = tasks.map(t =>
         t.id === taskId ? { ...t, date: newDate } : t
-      ));
+      );
+      setTasks(updatedTasks);
+      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       toast.success("Tarefa movida com sucesso");
     }
   };
@@ -607,6 +633,7 @@ export default function Calendario() {
     });
 
     setTasks(updatedTasks);
+    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
     setEditingCell(null);
     setEditingValue("");
     toast.success("Tarefa atualizada");
@@ -619,7 +646,9 @@ export default function Calendario() {
 
   const handleDeleteTask = (taskId: string) => {
     if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
-      setTasks(tasks.filter(t => t.id !== taskId));
+      const updatedTasks = tasks.filter(t => t.id !== taskId);
+      setTasks(updatedTasks);
+      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       toast.success("Tarefa excluída");
     }
   };
