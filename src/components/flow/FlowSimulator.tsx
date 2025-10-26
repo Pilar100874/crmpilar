@@ -123,10 +123,22 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const interpolateVariables = (text: string, context: Record<string, any>): string => {
     if (!text) return "";
-    return text.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
-      const value = context[variable.trim()];
+    console.log("🔄 Interpolating variables in text:", text);
+    console.log("📦 Current context:", context);
+    
+    const result = text.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
+      const cleanVar = variable.trim();
+      // Tentar com e sem @ no início
+      const varWithoutAt = cleanVar.replace(/^@/, "");
+      const value = context[cleanVar] !== undefined ? context[cleanVar] : context[varWithoutAt];
+      
+      console.log(`🔍 Looking for variable: "${cleanVar}" (or "${varWithoutAt}") = ${value !== undefined ? value : "NOT FOUND"}`);
+      
       return value !== undefined ? String(value) : match;
     });
+    
+    console.log("✅ Interpolation result:", result);
+    return result;
   };
 
   const normalizeVarName = (name?: string | null): string => {
@@ -971,10 +983,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
-      setContext((prev) => ({
-        ...prev,
-        [cleanVarName]: input,
-      }));
+      console.log("💾 Saving variable:", cleanVarName, "=", input);
+      console.log("📦 Context before save:", context);
+      setContext((prev) => {
+        const newContext = { ...prev, [cleanVarName]: input };
+        console.log("📦 Context after save:", newContext);
+        return newContext;
+      });
       
       addSuccessMessage(`Variável "${cleanVarName}" = "${input}"`);
       setPendingVariable(null);

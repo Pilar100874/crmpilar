@@ -82,8 +82,10 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
     case "ask_address":
     case "ask_url":
       if (config.variable) {
+        // Normalizar nome da variável (remover @ se houver)
+        const cleanVarName = config.variable.replace(/^@/, "");
         outputs.push({
-          name: config.variable,
+          name: cleanVarName,
           description: `Resposta: ${config.question || 'pergunta'}`,
           type: data.type === "ask_number" ? "number" : 
                 data.type === "ask_date" ? "datetime" : 
@@ -396,9 +398,20 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
               <span className="text-slate-600">Booleano</span>
             </div>
           </div>
-          <p className="text-xs text-slate-600">
-            💡 Use <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">{"{{"} variavel {"}"}</code> para inserir valores
-          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded p-2 space-y-1">
+            <p className="text-xs font-semibold text-blue-900">
+              💡 Como usar as variáveis:
+            </p>
+            <p className="text-xs text-blue-800">
+              Para inserir uma variável em mensagens, use o formato{" "}
+              <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono">
+                {"{{"} nome_variavel {"}"}
+              </code>
+            </p>
+            <p className="text-xs text-blue-700">
+              Exemplo: <code className="bg-blue-100 px-1 py-0.5 rounded">Olá {"{{"} nome {"}"}, bem-vindo!</code>
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
