@@ -302,9 +302,9 @@ export default function BotCreate() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 scale-[0.7] origin-top-left" onClick={() => setNewBotDialogOpen(true)}>
-            <CardHeader>
+        <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 scale-[0.7] origin-top-left h-full flex flex-col" onClick={() => setNewBotDialogOpen(true)}>
+              <CardHeader className="flex-1">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Workflow className="w-6 h-6 text-primary" />
               </div>
@@ -313,7 +313,7 @@ export default function BotCreate() {
                 Crie um bot usando o editor visual de fluxos. Ideal para automações complexas com múltiplas ramificações.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Novo Bot
@@ -324,7 +324,7 @@ export default function BotCreate() {
 
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="animate-pulse scale-[0.7] origin-top-left">
+              <Card key={i} className="animate-pulse scale-[0.7] origin-top-left h-full">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
                   <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
@@ -336,7 +336,7 @@ export default function BotCreate() {
             bots.map((bot) => (
               <Card 
                 key={bot.id} 
-                className="hover:shadow-lg transition-all cursor-pointer relative group scale-[0.7] origin-top-left"
+                className="hover:shadow-lg transition-all cursor-pointer relative group scale-[0.7] origin-top-left h-full flex flex-col"
                 onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
               >
                 <div className="absolute top-4 right-4 z-10">
@@ -400,7 +400,7 @@ export default function BotCreate() {
                   </DropdownMenu>
                 </div>
                 
-                <CardHeader>
+                <CardHeader className="flex-1">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                     <Workflow className="w-6 h-6 text-primary" />
                   </div>
@@ -423,7 +423,7 @@ export default function BotCreate() {
                     })}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="mt-auto">
                   <Button variant="outline" className="w-full">
                     <Edit className="w-4 h-4 mr-2" />
                     Abrir Editor
