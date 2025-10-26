@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface DatabaseConnection {
   id: string;
@@ -29,14 +30,17 @@ interface DatabaseConnection {
 
 interface DatabaseConnectionsCRUDProps {
   estabelecimentoId?: string;
+  onConnectionsChange?: () => void;
 }
 
-export function DatabaseConnectionsCRUD({ estabelecimentoId }: DatabaseConnectionsCRUDProps = {}) {
+export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange }: DatabaseConnectionsCRUDProps = {}) {
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [connectionToDelete, setConnectionToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -113,6 +117,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId }: DatabaseConnectio
         sql_port: "1433",
       });
       loadConnections();
+      onConnectionsChange?.();
     } catch (error: any) {
       toast.error("Erro ao salvar conexão: " + error.message);
     }
@@ -147,19 +152,28 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId }: DatabaseConnectio
       return;
     }
 
-    if (!confirm("Deseja realmente excluir esta conexão?")) return;
+    setConnectionToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteConnection = async () => {
+    if (!connectionToDelete) return;
 
     try {
       const { error } = await supabase
         .from("database_connections")
         .delete()
-        .eq("id", id);
+        .eq("id", connectionToDelete);
 
       if (error) throw error;
       toast.success("Conexão excluída!");
       loadConnections();
+      onConnectionsChange?.();
     } catch (error: any) {
       toast.error("Erro ao excluir: " + error.message);
+    } finally {
+      setDeleteConfirmOpen(false);
+      setConnectionToDelete(null);
     }
   };
 
@@ -173,6 +187,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId }: DatabaseConnectio
       if (error) throw error;
       toast.success(active ? "Conexão desativada" : "Conexão ativada");
       loadConnections();
+      onConnectionsChange?.();
     } catch (error: any) {
       toast.error("Erro ao atualizar: " + error.message);
     }
@@ -421,6 +436,14 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId }: DatabaseConnectio
           )}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={confirmDeleteConnection}
+        title="Confirmar exclusão"
+        description="Tem certeza que deseja excluir esta conexão? Esta ação não pode ser desfeita."
+      />
     </div>
   );
 }

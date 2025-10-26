@@ -992,7 +992,10 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
       </TabsContent>
 
       <TabsContent value="connections">
-        <DatabaseConnectionsCRUD estabelecimentoId={estabelecimentoId} />
+        <DatabaseConnectionsCRUD 
+          estabelecimentoId={estabelecimentoId}
+          onConnectionsChange={loadConnections}
+        />
       </TabsContent>
 
       <DeleteConfirmDialog
