@@ -358,10 +358,10 @@ export function APIImportDialog() {
                     <div>
                       <Label className="text-xs text-muted-foreground">Campo da API</Label>
                       <Select
-                        value={mapping.apiField}
+                        value={mapping.apiField || "none"}
                         onValueChange={(value) => {
                           const updated = [...fieldMappings];
-                          updated[index].apiField = value;
+                          updated[index].apiField = value === "none" ? "" : value;
                           setFieldMappings(updated);
                         }}
                       >
@@ -369,7 +369,7 @@ export function APIImportDialog() {
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhum</SelectItem>
+                          <SelectItem value="none">Nenhum</SelectItem>
                           {apiFields.map(field => (
                             <SelectItem key={field} value={field}>{field}</SelectItem>
                           ))}
