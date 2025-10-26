@@ -297,7 +297,18 @@ export default function Layout({ children }: LayoutProps) {
             />
             {/* Informações do usuário e estabelecimento */}
             <div className="w-full px-1 space-y-2">
-              {estabelecimentoName && (
+              {estabelecimentoName && isAdmin && (
+                <button
+                  onClick={() => setShowEstabelecimentoSelector(true)}
+                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
+                    {estabelecimentoName}
+                  </span>
+                </button>
+              )}
+              {estabelecimentoName && !isAdmin && (
                 <div className="flex flex-col items-center">
                   <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
                   <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
@@ -448,19 +459,6 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         <main className="flex-1 flex flex-col bg-background min-w-0">
-          {isAdmin && (
-            <header className="h-12 border-b border-border flex items-center justify-end px-6 bg-card">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEstabelecimentoSelector(true)}
-                className="gap-2"
-              >
-                <Building2 className="w-4 h-4" />
-                Trocar Estabelecimento
-              </Button>
-            </header>
-          )}
           <div className="flex-1 overflow-auto bg-background">
             {children}
           </div>
