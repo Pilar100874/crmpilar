@@ -845,17 +845,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
 
       case "set_field":
-        const operations = config.operations || [];
-        addSystemMessage("📝 Definindo campos...");
+        const setFieldMode = config.mode || "SET";
+        const setFieldField = config.field || "";
+        const setFieldValue = config.value || "";
         
-        operations.forEach((op: any) => {
-          const value = interpolateVariables(op.value || "", context);
-          setContext((prev) => ({
-            ...prev,
-            [op.field]: value,
-          }));
-          addSuccessMessage(`${op.field} = ${value}`);
-        });
+        addSystemMessage(`📝 ${setFieldMode === "UNSET" ? "Removendo" : "Definindo"} campo...`);
+        
+        if (setFieldMode === "SET") {
+          // SET: Define/sobrescreve o valor da variável
+          const interpolatedValue = interpolateVariables(setFieldValue, context);
+          const newContext = {
+            ...contextRef.current,
+            [setFieldField]: interpolatedValue,
+          };
+          contextRef.current = newContext;
+          setContext(newContext);
+          addSuccessMessage(`${setFieldField} = ${interpolatedValue}`);
+        } else {
+          // UNSET: Remove a variável do contexto
+          const newContext = { ...contextRef.current };
+          delete newContext[setFieldField];
+          contextRef.current = newContext;
+          setContext(newContext);
+          addSuccessMessage(`${setFieldField} foi removido`);
+        }
         
         safeSetTimeout(() => {
           const nextNode = getNextNode(node.id);
