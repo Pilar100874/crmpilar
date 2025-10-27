@@ -18,7 +18,10 @@ interface Message {
   nodeId?: string;
   mediaUrl?: string;
   mediaType?: "image" | "video" | "audio" | "file";
-  buttons?: Array<{ text: string; value: string }>;
+  buttons?: Array<{ text: string; value: string; buttonId?: string }>;
+  isListButton?: boolean;
+  listButtonText?: string;
+  listSections?: Array<{ title: string; items: Array<{ label: string; value: string; description?: string }> }>;
 }
 
 interface FlowSimulatorProps {
@@ -38,6 +41,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const [isWaitingInput, setIsWaitingInput] = useState(false);
   const [pendingVariable, setPendingVariable] = useState<string | null>(null);
   const [currentBlockType, setCurrentBlockType] = useState<string | null>(null);
+  const [expandedListId, setExpandedListId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
@@ -704,38 +708,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           addSystemMessage(`📌 ${listHeader}`);
         }
         
-        if (listText) {
-          addBotMessage(listText, node.id);
-        }
+        // Adicionar mensagem com botão de lista estilo WhatsApp
+        safeSetTimeout(() => {
+          setMessages((prev) => [...prev, {
+            id: Date.now().toString(),
+            sender: "bot",
+            text: listText,
+            timestamp: new Date(),
+            nodeId: node.id,
+            isListButton: true,
+            listButtonText: buttonText,
+            listSections: sections,
+          }]);
+        }, listHeader ? 300 : 0);
         
         if (listFooter) {
           safeSetTimeout(() => {
             addSystemMessage(`ℹ️ ${listFooter}`);
-          }, delay + 200);
+          }, (listHeader ? 300 : 0) + 300);
         }
-        
-        // Criar botões clicáveis para os itens
-        safeSetTimeout(() => {
-          const allButtons: any[] = [];
-          sections.forEach((section: any, sectionIdx: number) => {
-            (section.items || []).forEach((item: any, itemIdx: number) => {
-              allButtons.push({
-                text: item.label,
-                value: item.value || item.label,
-                buttonId: `section_${sectionIdx}_item_${itemIdx}`,
-              });
-            });
-          });
-          
-          setMessages((prev) => [...prev, {
-            id: Date.now().toString(),
-            sender: "system",
-            text: buttonText,
-            timestamp: new Date(),
-            buttons: allButtons,
-            nodeId: node.id,
-          }]);
-        }, delay + 400);
         
         setIsWaitingInput(true);
         setCurrentBlockType("list_buttons");
@@ -1521,7 +1512,69 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                       <div className="flex-1">
                         {msg.text && <p className="text-sm whitespace-pre-wrap">{formatText(msg.text)}</p>}
                         
-                        {msg.buttons && msg.buttons.length > 0 && (
+                        {msg.isListButton && msg.listSections && (
+                          <div className="mt-3">
+                            {expandedListId === msg.id ? (
+                              <div className="border border-border rounded-lg overflow-hidden bg-background">
+                                <div className="p-3 bg-muted border-b border-border flex items-center justify-between">
+                                  <span className="text-sm font-medium">Selecione uma opção</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setExpandedListId(null)}
+                                    className="h-6 px-2"
+                                  >
+                                    ✕
+                                  </Button>
+                                </div>
+                                <ScrollArea className="max-h-[300px]">
+                                  {msg.listSections.map((section, secIdx) => (
+                                    <div key={secIdx}>
+                                      {section.title && (
+                                        <div className="px-4 py-2 bg-muted/50 text-xs font-semibold text-muted-foreground">
+                                          {section.title}
+                                        </div>
+                                      )}
+                                      {section.items.map((item, itemIdx) => (
+                                        <button
+                                          key={itemIdx}
+                                          onClick={() => {
+                                            setExpandedListId(null);
+                                            handleButtonClick({ 
+                                              text: item.label, 
+                                              value: item.value || item.label,
+                                              buttonId: `section_${secIdx}_item_${itemIdx}`
+                                            }, msg.nodeId);
+                                          }}
+                                          disabled={!isWaitingInput}
+                                          className="w-full px-4 py-3 text-left hover:bg-accent/50 border-b border-border last:border-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          <div className="text-sm font-medium">{item.label}</div>
+                                          {item.description && (
+                                            <div className="text-xs text-muted-foreground mt-0.5">{item.description}</div>
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ))}
+                                </ScrollArea>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setExpandedListId(msg.id)}
+                                disabled={!isWaitingInput}
+                                className="w-full justify-between"
+                              >
+                                <span>{msg.listButtonText || "Ver opções"}</span>
+                                <span className="ml-2">▼</span>
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        
+                        {msg.buttons && msg.buttons.length > 0 && !msg.isListButton && (
                           <div className="mt-3 space-y-2">
                             {msg.buttons.map((button, idx) => (
                               <Button
