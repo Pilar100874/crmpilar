@@ -1051,6 +1051,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log("📎 Arquivo selecionado:", file.name, file.type, file.size);
+
     // Se estamos no bloco ask_file, validar o arquivo
     if (currentBlockType === "ask_file" && currentNodeId) {
       const currentNode = nodes.find((n) => n.id === currentNodeId);
@@ -1062,27 +1064,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const maxSizeMB = parseFloat(nodeConfig.maxSizeMB) || 10;
       const errorMessage = nodeConfig.errorMessage || "";
 
-      console.log("🔍 Validando arquivo:", { fileType, maxSizeMB, fileName: file.name, fileSize: file.size, mimeType: file.type });
+      console.log("🔍 Validando arquivo:", { fileType, maxSizeMB, fileName: file.name, fileSize: file.size, mimeType: file.type, nodeConfig });
 
       // Validar tipo de arquivo
       const validTypes: Record<string, string[]> = {
         image: ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
-        video: ["video/mp4", "video/mpeg", "video/quicktime"],
-        audio: ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg"],
-        document: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+        video: ["video/mp4", "video/mpeg", "video/quicktime", "video/avi"],
+        audio: ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"],
+        document: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"]
       };
 
       if (fileType !== "any" && validTypes[fileType]) {
+        console.log("🔍 Verificando tipo:", file.type, "está em", validTypes[fileType]);
         if (!validTypes[fileType].includes(file.type)) {
           const typeNames: Record<string, string> = {
             image: "imagem",
-            video: "vídeo",
+            video: "vídeo", 
             audio: "áudio",
             document: "documento"
           };
           const msg = errorMessage || `Por favor, envie apenas arquivos de ${typeNames[fileType]}.`;
+          console.log("❌ Tipo inválido:", msg);
           addSystemMessage(`⚠️ ${msg}`);
           if (fileInputRef.current) fileInputRef.current.value = "";
+          setSelectedFile(null);
+          setInput("");
           return;
         }
       }
@@ -1093,8 +1099,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       
       if (fileSizeMB > maxSizeMB) {
         const msg = errorMessage || `O arquivo não pode ser maior que ${maxSizeMB}MB.`;
+        console.log("❌ Tamanho inválido:", msg);
         addSystemMessage(`⚠️ ${msg}`);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        setSelectedFile(null);
+        setInput("");
         return;
       }
 
@@ -1331,9 +1340,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             // Validar número (SEMPRE obrigatório)
             if (nodeType === "ask_number") {
               const numValue = parseFloat(input.trim());
-              const acceptDecimals = nodeConfig.acceptDecimals !== false;
-              const minValue = nodeConfig.minValue;
-              const maxValue = nodeConfig.maxValue;
+              const acceptDecimals = nodeConfig.allowDecimals !== false; // Corrigido: allowDecimals ao invés de acceptDecimals
+              const minValue = nodeConfig.min; // Corrigido: min ao invés de minValue
+              const maxValue = nodeConfig.max; // Corrigido: max ao invés de maxValue
               
               console.log("🔢 Validando número:", { 
                 input: input.trim(), 
@@ -1341,8 +1350,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 acceptDecimals, 
                 minValue, 
                 maxValue,
-                minParsed: minValue ? parseFloat(minValue) : undefined,
-                maxParsed: maxValue ? parseFloat(maxValue) : undefined
+                nodeConfig
               });
               
               // Verificar se é um número válido (SEMPRE)

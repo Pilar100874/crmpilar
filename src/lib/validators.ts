@@ -79,23 +79,20 @@ export const validatePhone = (phone: string): boolean => {
 
 // Validação de Telefone por Formato
 export const validatePhoneFormat = (phone: string, format: string): boolean => {
+  const trimmed = phone.trim();
   switch (format) {
-    case "international":
-      // Formato internacional: +55 (11) 99999-9999 ou 55 (11) 99999-9999
-      // Aceita com ou sem espaços, parênteses e hífen
-      const internationalRegex = /^(\+?55)\s?\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
-      return internationalRegex.test(phone.trim());
-    
-    case "national":
-      // Formato nacional: (11) 99999-9999 ou (11) 9999-9999
-      // Aceita com ou sem espaços, parênteses e hífen
-      const nationalRegex = /^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
-      // Não pode começar com +55 ou 55
-      return nationalRegex.test(phone.trim()) && !phone.trim().startsWith('+55') && !phone.trim().startsWith('55');
-    
+    case "international": {
+      // +NN (NN) NNNN-NNNNN ou NN (NN) NNNN-NNNNN (aceita também NNNN-NNNN)
+      const internationalRegex = /^(\+\d{2}|\d{2})\s?\(\d{2}\)\s?\d{4}-\d{4,5}$/;
+      return internationalRegex.test(trimmed);
+    }
+    case "national": {
+      // (NN) NNNN-NNNNN ou (NN) NNNN-NNNN
+      const nationalRegex = /^\(\d{2}\)\s?\d{4}-\d{4,5}$/;
+      return nationalRegex.test(trimmed);
+    }
     case "any":
     default:
-      // Qualquer formato - aceita qualquer coisa
       return true;
   }
 };
