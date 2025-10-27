@@ -1193,15 +1193,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               }
             }
             
-            // Validar número
+            // Validar número (SEMPRE obrigatório)
             if (nodeType === "ask_number") {
               const numValue = parseFloat(input.trim());
               const acceptDecimals = nodeConfig.acceptDecimals !== false;
               const minValue = nodeConfig.minValue;
               const maxValue = nodeConfig.maxValue;
               
-              // Verificar se é um número válido
-              if (isNaN(numValue)) {
+              // Verificar se é um número válido (SEMPRE)
+              if (isNaN(numValue) || input.trim() === "") {
                 const errorMessage = nodeConfig.errorMessage || "Por favor, digite um número válido.";
                 addSystemMessage(`⚠️ ${errorMessage}`);
                 setInput("");
