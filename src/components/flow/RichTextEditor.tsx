@@ -223,11 +223,14 @@ export const RichTextEditor = ({
   const applyFormatting = (prefix: string, suffix: string) => {
     if (!inputRef.current) return;
     
-    const start = inputRef.current.selectionStart || 0;
-    const end = inputRef.current.selectionEnd || 0;
-    const selectedText = value.substring(start, end);
-    const before = value.substring(0, start);
-    const after = value.substring(end);
+    // Pega os valores atuais diretamente do input
+    const input = inputRef.current;
+    const start = input.selectionStart || 0;
+    const end = input.selectionEnd || 0;
+    const currentValue = input.value;
+    const selectedText = currentValue.substring(start, end);
+    const before = currentValue.substring(0, start);
+    const after = currentValue.substring(end);
     
     const newValue = `${before}${prefix}${selectedText}${suffix}${after}`;
     onChange(newValue);
@@ -385,23 +388,6 @@ export const RichTextEditor = ({
           </PopoverContent>
         </Popover>
       </div>
-      
-      {/* Preview of variables in text */}
-      {value && value.includes("{{") && (
-        <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-md">
-          <span className="font-medium">Preview:</span>{" "}
-          {value.split(/(\{\{[^}]+\}\})/).map((part, i) => {
-            if (part.startsWith("{{") && part.endsWith("}}")) {
-              return (
-                <Badge key={i} variant="secondary" className="text-xs mx-1">
-                  {part.slice(2, -2)}
-                </Badge>
-              );
-            }
-            return <span key={i}>{part}</span>;
-          })}
-        </div>
-      )}
     </div>
   );
 };
