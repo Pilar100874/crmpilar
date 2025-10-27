@@ -1228,7 +1228,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
-    console.log("Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
+    console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
     
     // Para keyword_options, extrair o texto sem o número
     let displayText = button.text;
@@ -1244,18 +1244,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
-      console.log("Saving variable:", cleanVarName, "with value:", saveValue);
-      setContext((prev) => {
-        const newContext = { ...prev, [cleanVarName]: saveValue };
-        console.log("Context updated:", newContext);
-        contextRef.current = newContext;
-        
-        if (onContextChange) {
-          onContextChange(newContext);
-        }
-        
-        return newContext;
-      });
+      console.log("💾 [BUTTON] Saving variable:", cleanVarName, "with value:", saveValue);
+      console.log("📦 [BUTTON] Context before save:", contextRef.current);
+      
+      // Atualizar contextRef.current IMEDIATAMENTE
+      const newContext = { ...contextRef.current, [cleanVarName]: saveValue };
+      contextRef.current = newContext;
+      console.log("📦 [BUTTON] Context after save:", contextRef.current);
+      console.log("✅ [BUTTON] Variable saved in contextRef:", cleanVarName, "→", contextRef.current[cleanVarName]);
+      
+      // Atualizar o estado também (para UI)
+      setContext(newContext);
+      
+      if (onContextChange) {
+        onContextChange(newContext);
+      }
       
       addSuccessMessage(`Variável "${cleanVarName}" = "${saveValue}"`);
       setPendingVariable(null);
@@ -1271,7 +1274,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         if (buttonEdge) {
           const nextNode = nodes.find((node) => node.id === buttonEdge.target);
           if (nextNode) {
-            console.log("Executing next node via button edge:", nextNode.id);
+            console.log("➡️ [BUTTON] Executing next node via button edge:", nextNode.id);
+            console.log("🚀 [BUTTON] Context available for next node:", contextRef.current);
             safeSetTimeout(() => {
               setCurrentNodeId(nextNode.id);
               executeNode(nextNode);
@@ -1282,20 +1286,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         
         // Fallback: usar índice do botão
         const buttonIndex = parseInt(button.buttonId?.split('_').pop() || '0');
-        console.log("Finding next node with index:", buttonIndex);
+        console.log("🔍 Finding next node with index:", buttonIndex);
         const nextNode = getNextNode(nodeId, buttonIndex);
         if (nextNode) {
-          console.log("Executing next node:", nextNode.id);
+          console.log("➡️ [BUTTON] Executing next node:", nextNode.id);
+          console.log("🚀 [BUTTON] Context available for next node:", contextRef.current);
           safeSetTimeout(() => {
             setCurrentNodeId(nextNode.id);
             executeNode(nextNode);
           }, 500);
         } else {
-          console.log("No next node found");
+          console.log("❌ No next node found");
         }
       }
     } else {
-      console.log("No pending variable to save");
+      console.log("⚠️ No pending variable to save");
     }
   };
 
