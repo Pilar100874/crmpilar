@@ -291,6 +291,7 @@ export const RichTextEditor = ({
   // Mantém o último range do cursor dentro do editor
   const lastRangeRef = useRef<Range | null>(null);
   const suppressSelectionSaveRef = useRef(false);
+  const selectedBadgeRef = useRef<HTMLElement | null>(null);
 
   const saveSelection = () => {
     if (suppressSelectionSaveRef.current) return;
@@ -452,13 +453,24 @@ export const RichTextEditor = ({
   const handleEditorClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const badge = target.closest('.variable-badge') as HTMLElement | null;
+
+    // Limpa seleção anterior
+    if (selectedBadgeRef.current && selectedBadgeRef.current !== badge) {
+      selectedBadgeRef.current.classList.remove('selected');
+      selectedBadgeRef.current = null;
+    }
+
     if (badge) {
+      selectedBadgeRef.current = badge;
+      badge.classList.add('selected');
+
       const range = document.createRange();
       range.selectNode(badge);
       const sel = window.getSelection();
       sel?.removeAllRanges();
       sel?.addRange(range);
-      // Salva a seleção do badge para permitir formatação via toolbar
+      // Salva explicitamente a seleção do badge
+      lastRangeRef.current = range.cloneRange();
       saveSelection();
     }
   };
@@ -589,8 +601,18 @@ export const RichTextEditor = ({
   const applyFormatting = (tag: string, extraProps?: Record<string, string>) => {
     if (!editorRef.current) return;
 
-    // Restaura a última seleção válida dentro do editor
-    restoreSelection();
+    // Se uma variável estiver selecionada, força a seleção ao redor dela
+    if (selectedBadgeRef.current) {
+      const r = document.createRange();
+      r.selectNode(selectedBadgeRef.current);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(r);
+      lastRangeRef.current = r.cloneRange();
+    } else {
+      // Restaura a última seleção válida dentro do editor
+      restoreSelection();
+    }
 
     const selection = window.getSelection();
     if (!selection || !selection.rangeCount) return;
@@ -662,6 +684,12 @@ export const RichTextEditor = ({
         selection.addRange(newRange);
         // Salva a nova seleção para futuras inserções
         lastRangeRef.current = newRange.cloneRange();
+      }
+      
+      // Limpa marcação de seleção do badge (se houver)
+      if (selectedBadgeRef.current) {
+        selectedBadgeRef.current.classList.remove('selected');
+        selectedBadgeRef.current = null;
       }
       
       handleInput();
@@ -780,6 +808,11 @@ export const RichTextEditor = ({
 }
           .variable-badge:hover {
             background: hsl(var(--primary) / 0.18);
+          }
+          .variable-badge.selected {
+            outline: 2px solid hsl(var(--primary));
+            outline-offset: 1px;
+            background: hsl(var(--primary) / 0.2);
           }
           [contenteditable] strong {
             font-weight: 600;
