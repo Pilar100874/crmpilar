@@ -92,7 +92,7 @@ const parseToEditor = (text: string): string => {
   // 3) Restaura variáveis no final (agora a formatação envolve o badge e herda estilos)
   html = html.replace(new RegExp(`${VAR_TOKEN_PREFIX}(\\d+)${VAR_TOKEN_SUFFIX}`, 'g'), (_m, idxStr) => {
     const idx = Number(idxStr);
-    const name = varStore[idx] || '';
+    const name = (varStore[idx] || '').replace(/\\_/g, '_');
     return `<span class="variable-badge" contenteditable="false" data-variable="${name}">${name}<\/span>`;
   });
   
@@ -110,7 +110,9 @@ const parseFromEditor = (element: HTMLElement): string => {
       const el = node as HTMLElement;
       
       if (el.classList.contains('variable-badge')) {
-        text += `{{${el.dataset.variable || el.textContent}}}`;
+        const raw = el.dataset.variable || el.textContent || '';
+        const escaped = raw.replace(/_/g, '\\_');
+        text += `{{${escaped}}}`;
       } else if (el.tagName === 'H1') {
         text += '# ';
         el.childNodes.forEach(processNode);
