@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,6 +35,77 @@ const getCategoryIcon = (category: string) => {
     case "System": return Database;
     default: return Globe;
   }
+};
+
+// Parse markdown + variables para elementos do editor
+const parseToEditor = (text: string): string => {
+  if (!text) return '';
+  
+  let html = text;
+  
+  // Variáveis primeiro (antes de qualquer formatação)
+  html = html.replace(/\{\{([^}]+)\}\}/g, '<span class="variable-badge" contenteditable="false" data-variable="$1">$1</span>');
+  
+  // Negrito: *texto*
+  html = html.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+  
+  // Itálico: _texto_
+  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+  
+  // Código: ```texto```
+  html = html.replace(/```([^`]+)```/g, '<code>$1</code>');
+  
+  // Tachado: ~texto~
+  html = html.replace(/~([^~]+)~/g, '<s>$1</s>');
+  
+  // Quebras de linha
+  html = html.replace(/\n/g, '<br>');
+  
+  return html;
+};
+
+// Converte conteúdo do editor de volta para markdown + variables
+const parseFromEditor = (element: HTMLElement): string => {
+  let text = '';
+  
+  const processNode = (node: Node): void => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.textContent || '';
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      
+      if (el.classList.contains('variable-badge')) {
+        text += `{{${el.dataset.variable || el.textContent}}}`;
+      } else if (el.tagName === 'STRONG' || el.tagName === 'B') {
+        text += '*';
+        el.childNodes.forEach(processNode);
+        text += '*';
+      } else if (el.tagName === 'EM' || el.tagName === 'I') {
+        text += '_';
+        el.childNodes.forEach(processNode);
+        text += '_';
+      } else if (el.tagName === 'CODE') {
+        text += '```';
+        el.childNodes.forEach(processNode);
+        text += '```';
+      } else if (el.tagName === 'S') {
+        text += '~';
+        el.childNodes.forEach(processNode);
+        text += '~';
+      } else if (el.tagName === 'BR') {
+        text += '\n';
+      } else if (el.tagName === 'DIV') {
+        el.childNodes.forEach(processNode);
+        text += '\n';
+      } else {
+        el.childNodes.forEach(processNode);
+      }
+    }
+  };
+  
+  element.childNodes.forEach(processNode);
+  
+  return text.trim();
 };
 
 const getBlockOutputVariables = (node: any): Variable[] => {
@@ -158,8 +229,75 @@ export const RichTextEditor = ({
 }: RichTextEditorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-  const [cursorPosition, setCursorPosition] = useState(0);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const isUpdatingRef = useRef(false);
+
+  // Atualiza o editor quando value muda externamente
+  useEffect(() => {
+    if (!editorRef.current || isUpdatingRef.current) return;
+    
+    const currentText = parseFromEditor(editorRef.current);
+    if (currentText !== value) {
+      const selection = window.getSelection();
+      const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+      let offset = 0;
+      
+      if (range && editorRef.current.contains(range.startContainer)) {
+        offset = range.startOffset;
+      }
+      
+      editorRef.current.innerHTML = parseToEditor(value);
+      
+      // Tenta restaurar o cursor
+      if (offset > 0 && editorRef.current.firstChild) {
+        try {
+          const textNode = editorRef.current.firstChild;
+          const newRange = document.createRange();
+          const sel = window.getSelection();
+          newRange.setStart(textNode, Math.min(offset, textNode.textContent?.length || 0));
+          newRange.collapse(true);
+          sel?.removeAllRanges();
+          sel?.addRange(newRange);
+        } catch (e) {
+          // Ignora erros de cursor
+        }
+      }
+    }
+  }, [value]);
+
+  const handleInput = () => {
+    if (!editorRef.current) return;
+    
+    isUpdatingRef.current = true;
+    const newValue = parseFromEditor(editorRef.current);
+    onChange(newValue);
+    setTimeout(() => {
+      isUpdatingRef.current = false;
+    }, 0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Previne edição de variáveis
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      let node = range.startContainer;
+      
+      if (node.nodeType === Node.TEXT_NODE) {
+        node = node.parentNode as Node;
+      }
+      
+      if ((node as HTMLElement).classList?.contains('variable-badge')) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+          e.preventDefault();
+          (node as HTMLElement).remove();
+          handleInput();
+        } else if (e.key.length === 1) {
+          e.preventDefault();
+        }
+      }
+    }
+  };
 
   // Get available variables from ancestor nodes
   const availableVariables: Variable[] = [];
@@ -195,82 +333,120 @@ export const RichTextEditor = ({
     return acc;
   }, {} as Record<string, Variable[]>);
 
-  const updateCursorPosition = () => {
-    if (inputRef.current) {
-      setCursorPosition(inputRef.current.selectionStart || 0);
-    }
-  };
-
   const insertVariable = (variableName: string) => {
-    if (!inputRef.current) return;
+    if (!editorRef.current) return;
     
-    const start = inputRef.current.selectionStart || 0;
-    const end = inputRef.current.selectionEnd || 0;
-    const currentValue = inputRef.current.value;
-    const before = currentValue.substring(0, start);
-    const after = currentValue.substring(end);
-    const newValue = `${before}{{${variableName}}}${after}`;
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) {
+      editorRef.current.focus();
+      return;
+    }
     
-    onChange(newValue);
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    
+    // Cria badge da variável
+    const varBadge = document.createElement('span');
+    varBadge.className = 'variable-badge';
+    varBadge.contentEditable = 'false';
+    varBadge.dataset.variable = variableName;
+    varBadge.textContent = variableName;
+    
+    range.insertNode(varBadge);
+    
+    // Adiciona espaço após a variável
+    const space = document.createTextNode(' ');
+    range.setStartAfter(varBadge);
+    range.insertNode(space);
+    range.setStartAfter(space);
+    range.collapse(true);
+    
+    selection.removeAllRanges();
+    selection.addRange(range);
+    
+    handleInput();
     setIsOpen(false);
     setSearchQuery("");
-    
-    setTimeout(() => {
-      if (inputRef.current) {
-        const newPosition = start + variableName.length + 4;
-        inputRef.current.focus();
-        inputRef.current.setSelectionRange(newPosition, newPosition);
-        setCursorPosition(newPosition);
-      }
-    }, 0);
+    editorRef.current.focus();
   };
 
-  const applyFormatting = (prefix: string, suffix: string) => {
-    if (!inputRef.current) return;
+  const applyFormatting = (tag: string) => {
+    if (!editorRef.current) return;
     
-    const start = inputRef.current.selectionStart || 0;
-    const end = inputRef.current.selectionEnd || 0;
-    const currentValue = inputRef.current.value;
-    const selectedText = currentValue.substring(start, end);
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    const selectedText = range.toString();
     
     if (!selectedText) return;
     
-    const before = currentValue.substring(0, start);
-    const after = currentValue.substring(end);
-    const newValue = `${before}${prefix}${selectedText}${suffix}${after}`;
+    const element = document.createElement(tag);
+    range.surroundContents(element);
     
-    onChange(newValue);
-    
-    setTimeout(() => {
-      if (inputRef.current) {
-        const newPosition = start + prefix.length + selectedText.length + suffix.length;
-        inputRef.current.focus();
-        inputRef.current.setSelectionRange(newPosition, newPosition);
-        setCursorPosition(newPosition);
-      }
-    }, 0);
+    handleInput();
+    editorRef.current.focus();
   };
-
-  const InputComponent = multiline ? "textarea" : "input";
 
   return (
     <div className="space-y-2">
       <div className="relative">
-        <InputComponent
-          ref={inputRef as any}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onSelect={updateCursorPosition}
-          onClick={updateCursorPosition}
-          onKeyUp={updateCursorPosition}
-          placeholder={placeholder}
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
           className={cn(
-            "flex w-full rounded-sm border-2 border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 transition-all",
-            multiline ? "min-h-[120px] resize-none" : "h-10",
+            "w-full rounded-sm border-2 border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 transition-all overflow-auto",
+            multiline ? "min-h-[120px]" : "h-10 flex items-center whitespace-nowrap",
+            !value && "empty-editor",
             className
           )}
-          {...(multiline ? { rows: 4 } : {})}
+          data-placeholder={placeholder}
+          style={{
+            whiteSpace: multiline ? 'pre-wrap' : 'nowrap',
+            wordWrap: 'break-word'
+          }}
         />
+        <style>{`
+          .empty-editor:empty:before {
+            content: attr(data-placeholder);
+            color: hsl(var(--muted-foreground));
+            pointer-events: none;
+          }
+          .variable-badge {
+            display: inline-flex;
+            align-items: center;
+            background: hsl(var(--primary) / 0.1);
+            color: hsl(var(--primary));
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin: 0 0.125rem;
+            cursor: default;
+            user-select: none;
+          }
+          .variable-badge:hover {
+            background: hsl(var(--primary) / 0.15);
+          }
+          [contenteditable] strong {
+            font-weight: 700;
+          }
+          [contenteditable] em {
+            font-style: italic;
+          }
+          [contenteditable] code {
+            background: hsl(var(--muted));
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-family: monospace;
+          }
+          [contenteditable] s {
+            text-decoration: line-through;
+          }
+        `}</style>
       </div>
       
       {/* Formatting Toolbar */}
@@ -279,9 +455,9 @@ export const RichTextEditor = ({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => applyFormatting("*", "*")}
+          onClick={() => applyFormatting('strong')}
           className="h-8 px-2"
-          title="Negrito"
+          title="Negrito (*texto*)"
         >
           <Bold className="w-3.5 h-3.5" />
         </Button>
@@ -289,9 +465,9 @@ export const RichTextEditor = ({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => applyFormatting("_", "_")}
+          onClick={() => applyFormatting('em')}
           className="h-8 px-2"
-          title="Itálico"
+          title="Itálico (_texto_)"
         >
           <Italic className="w-3.5 h-3.5" />
         </Button>
@@ -299,9 +475,9 @@ export const RichTextEditor = ({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => applyFormatting("```", "```")}
+          onClick={() => applyFormatting('code')}
           className="h-8 px-2"
-          title="Código"
+          title="Código (```texto```)"
         >
           <Code className="w-3.5 h-3.5" />
         </Button>
@@ -309,9 +485,9 @@ export const RichTextEditor = ({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => applyFormatting("~", "~")}
+          onClick={() => applyFormatting('s')}
           className="h-8 px-2"
-          title="Tachado"
+          title="Tachado (~texto~)"
         >
           <span className="text-xs font-semibold">S</span>
         </Button>
