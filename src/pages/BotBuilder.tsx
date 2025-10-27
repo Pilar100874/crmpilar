@@ -508,13 +508,14 @@ function BotBuilderContent() {
         return false;
       }
 
-      // Validar conexões antes de salvar
+      // Validar conexões antes de salvar (permitir salvar mesmo com blocos desconectados)
       const validation = validateConnections();
       if (!validation.isValid) {
         if (!silent) {
           highlightDisconnectedNodes(validation.disconnectedNodes);
+          toast.info("Existem blocos desconectados. Salvando mesmo assim.");
         }
-        return false;
+        // Continua o salvamento mesmo com blocos desconectados
       }
 
       // Obter estabelecimento_id
