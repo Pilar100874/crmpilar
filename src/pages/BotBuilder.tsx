@@ -532,9 +532,14 @@ function BotBuilderContent() {
         return false;
       }
 
+      // Preferir dados do React Flow (garante último estado do canvas)
+      const rfData = typeof reactFlowInstance?.toObject === 'function' ? reactFlowInstance.toObject() : null;
+      const nodesToSave = rfData?.nodes?.length ? rfData.nodes : nodes;
+      const edgesToSave = rfData?.edges?.length ? rfData.edges : edges;
+
       const flow = {
-        nodes,
-        edges,
+        nodes: nodesToSave,
+        edges: edgesToSave,
         viewport: reactFlowInstance?.getViewport(),
         variables: flowVariables,
       };
@@ -579,17 +584,36 @@ function BotBuilderContent() {
           });
         }
       } else {
-        // Aguardar próximo tick para estado atualizar
+        // Pequeno yield para garantir flush de atualizações pendentes no UI
         await new Promise(resolve => setTimeout(resolve, 0));
         
-        const newSignature = getFlowSignature();
+        // Recalcular assinatura com os dados efetivamente salvos
+        const sanitizeNodes = (arr: any[]) =>
+          arr.map((n) => ({
+            id: n.id,
+            type: n.type,
+            position: n.position,
+            data: {
+              ...(n.data?.label !== undefined ? { label: n.data.label } : {}),
+              ...(n.data?.type !== undefined ? { type: n.data.type } : {}),
+              config: n.data?.config ?? {},
+            },
+          }));
+        const sanitizeEdges = (arr: any[]) =>
+          arr.map((e) => ({ id: e.id, source: e.source, target: e.target, type: e.type, data: e.data ?? undefined }));
+
+        const newSignature = JSON.stringify({
+          nodes: sanitizeNodes(nodesToSave),
+          edges: sanitizeEdges(edgesToSave),
+          variables: flowVariables,
+          name: currentBotName,
+          description: currentBotDescription,
+        });
         lastSavedSignatureRef.current = newSignature;
         setHasUnsavedChanges(false);
         
         if (!silent) {
-          toast.success("✓ Bot salvo com sucesso!", {
-            duration: 3000,
-          });
+          toast.success("✓ Bot salvo com sucesso!", { duration: 3000 });
         }
         
         console.log("[BotBuilder] Salvo com sucesso", { signature: newSignature });
