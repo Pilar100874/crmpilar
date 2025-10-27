@@ -743,17 +743,35 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
 
       case "keyword_options":
-        const keywords = config.keywords || [];
-        addSystemMessage("🔑 Aguardando palavra-chave...");
+        const koQuestion = interpolateVariables(config.question || "Escolha uma opção:", context);
+        const koButtons = config.buttons || [];
+        const showValidation = config.showValidationError !== false;
         
-        if (keywords.length > 0) {
-          const keywordsList = keywords.map((kw: any) => `"${kw.keyword}"`).join(", ");
-          safeSetTimeout(() => {
-            addSystemMessage(`Palavras-chave disponíveis: ${keywordsList}`);
-          }, 500);
-        }
+        // Mostrar pergunta
+        addBotMessage(koQuestion, node.id);
+        
+        // Criar botões numerados clicáveis
+        safeSetTimeout(() => {
+          const numberedButtons = koButtons.map((btn: any, idx: number) => ({
+            text: `${idx + 1}. ${btn.label || `Opção ${idx + 1}`}`,
+            value: btn.label || `Opção ${idx + 1}`,
+            buttonId: `button_${idx}`,
+            keywords: btn.keywords || [],
+          }));
+          
+          setMessages((prev) => [...prev, {
+            id: Date.now().toString(),
+            sender: "system",
+            text: "",
+            timestamp: new Date(),
+            buttons: numberedButtons,
+            nodeId: node.id,
+          }]);
+        }, 500);
         
         setIsWaitingInput(true);
+        setCurrentBlockType("keyword_options");
+        setPendingVariable(normalizeVarName(config.variable || "opcao_escolhida"));
         break;
 
       case "message_template":
@@ -1047,9 +1065,110 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
       
+      // Tratamento especial para keyword_options
+      if (currentBlockType === "keyword_options" && currentNodeId) {
+        const currentNode = nodes.find((n) => n.id === currentNodeId);
+        if (currentNode) {
+          const nodeData = currentNode.data as any;
+          const koConfig = nodeData?.config || {};
+          const koButtons = koConfig.buttons || [];
+          const showValidation = koConfig.showValidationError !== false;
+          
+          // Verificar se o input contém alguma keyword ou número
+          let matchedButtonIndex = -1;
+          
+          // Primeiro, verificar se é um número (1, 2, 3...)
+          const inputNum = parseInt(input.trim());
+          if (!isNaN(inputNum) && inputNum >= 1 && inputNum <= koButtons.length) {
+            matchedButtonIndex = inputNum - 1;
+          } else {
+            // Se não é número, procurar keywords nos botões
+            const inputLower = input.toLowerCase();
+            koButtons.forEach((btn: any, idx: number) => {
+              if (matchedButtonIndex === -1 && btn.keywords) {
+                const keywords = Array.isArray(btn.keywords) ? btn.keywords : [];
+                // Verificar se alguma keyword está contida no input (sem pontuação grudada)
+                keywords.forEach((keyword: string) => {
+                  if (keyword && matchedButtonIndex === -1) {
+                    const keywordLower = keyword.toLowerCase();
+                    // Regex para verificar se keyword está no input com espaços ou no início/fim
+                    const regex = new RegExp(`(^|\\s)${keywordLower}($|\\s)`, 'i');
+                    if (regex.test(inputLower) || inputLower === keywordLower) {
+                      matchedButtonIndex = idx;
+                    }
+                  }
+                });
+              }
+            });
+          }
+          
+          if (matchedButtonIndex >= 0) {
+            // Keyword encontrada - salvar input do usuário e rotear
+            console.log("💾 Keyword matched at index:", matchedButtonIndex, "saving:", input);
+            setContext((prev) => {
+              const newContext = { ...prev, [cleanVarName]: input };
+              contextRef.current = newContext;
+              return newContext;
+            });
+            
+            addSuccessMessage(`Variável "${cleanVarName}" = "${input}"`);
+            setPendingVariable(null);
+            setIsWaitingInput(false);
+            setCurrentBlockType(null);
+            
+            // Rotear para o output do botão correspondente
+            const buttonEdge = edges.find(
+              (edge) => edge.source === currentNodeId && edge.sourceHandle === `button_${matchedButtonIndex}`
+            );
+            
+            if (buttonEdge) {
+              const nextNode = nodes.find((node) => node.id === buttonEdge.target);
+              if (nextNode) {
+                console.log("➡️ Routing to button output:", matchedButtonIndex);
+                safeSetTimeout(() => {
+                  setCurrentNodeId(nextNode.id);
+                  executeNode(nextNode);
+                }, 500);
+                setInput("");
+                return;
+              }
+            }
+          } else {
+            // Nenhuma keyword encontrada
+            if (showValidation) {
+              // Mostrar mensagem de erro e aguardar novamente
+              addSystemMessage("⚠️ Resposta inválida. Por favor, digite um número ou uma das palavras-chave destacadas.");
+              setInput("");
+              return; // Mantém isWaitingInput=true, aguarda nova tentativa
+            } else {
+              // Usar output default (não salva variável)
+              console.log("➡️ No keyword matched, routing to default output");
+              setPendingVariable(null);
+              setIsWaitingInput(false);
+              setCurrentBlockType(null);
+              
+              const defaultEdge = edges.find(
+                (edge) => edge.source === currentNodeId && edge.sourceHandle === "default"
+              );
+              
+              if (defaultEdge) {
+                const nextNode = nodes.find((node) => node.id === defaultEdge.target);
+                if (nextNode) {
+                  safeSetTimeout(() => {
+                    setCurrentNodeId(nextNode.id);
+                    executeNode(nextNode);
+                  }, 500);
+                  setInput("");
+                  return;
+                }
+              }
+            }
+          }
+        }
+      }
       // Para reply_buttons: sempre salva o input (seja texto digitado ou clique)
       // Para list_buttons: só salva se for clique de botão (não salva texto digitado)
-      if (currentBlockType !== "list_buttons") {
+      else if (currentBlockType !== "list_buttons") {
         console.log("💾 [CRITICAL] Saving variable:", cleanVarName, "=", input);
         console.log("📦 [CRITICAL] Context before save:", context);
         
@@ -1108,15 +1227,26 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     setInput("");
   };
 
-  const handleButtonClick = (button: { text: string; value: string; buttonId?: string }, nodeId?: string) => {
+  const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
-    addUserMessage(button.text);
+    
+    // Para keyword_options, extrair o texto sem o número
+    let displayText = button.text;
+    let saveValue = button.value;
+    
+    if (currentBlockType === "keyword_options") {
+      // Remover o número do início (ex: "1. Opção" -> "Opção")
+      displayText = button.text.replace(/^\d+\.\s*/, '');
+      saveValue = displayText;
+    }
+    
+    addUserMessage(displayText);
     
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
-      console.log("Saving variable:", cleanVarName, "with value:", button.value);
+      console.log("Saving variable:", cleanVarName, "with value:", saveValue);
       setContext((prev) => {
-        const newContext = { ...prev, [cleanVarName]: button.value };
+        const newContext = { ...prev, [cleanVarName]: saveValue };
         console.log("Context updated:", newContext);
         contextRef.current = newContext;
         
@@ -1127,7 +1257,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         return newContext;
       });
       
-      addSuccessMessage(`Variável "${cleanVarName}" = "${button.value}"`);
+      addSuccessMessage(`Variável "${cleanVarName}" = "${saveValue}"`);
       setPendingVariable(null);
       setIsWaitingInput(false);
       setCurrentBlockType(null);
