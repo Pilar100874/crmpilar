@@ -703,8 +703,46 @@ function BotBuilderContent() {
   }, [botIdFromUrl, handleLoadBot]);
 
   const handleToggleActive = useCallback(async (botId: string, currentActive: boolean) => {
-    // If activating, deactivate all others first
+    // Se está tentando ativar, validar conexões primeiro
     if (!currentActive) {
+      // Carregar o bot para validar
+      const { data: botData } = await supabase
+        .from("bot_flows")
+        .select("*")
+        .eq("id", botId)
+        .single();
+
+      if (botData?.flow_data) {
+        const flowData = botData.flow_data as any;
+        const botNodes = flowData.nodes || [];
+        const botEdges = flowData.edges || [];
+
+        // Validar conexões do bot
+        const connectedNodeIds = new Set<string>();
+        botEdges.forEach((edge: any) => {
+          connectedNodeIds.add(edge.source);
+          connectedNodeIds.add(edge.target);
+        });
+
+        const disconnectedNodes = botNodes.filter((node: any) => {
+          const nodeData = node.data as any;
+          if (nodeData.type === "start") {
+            return botNodes.length > 1 && !botEdges.some((e: any) => e.source === node.id);
+          }
+          return !connectedNodeIds.has(node.id);
+        });
+
+        if (disconnectedNodes.length > 0) {
+          setErrorDialog({
+            open: true,
+            title: "Blocos Desconectados",
+            description: `Não é possível ativar o bot "${botData.name}" pois existem ${disconnectedNodes.length} bloco(s) desconectado(s). Por favor, conecte todos os blocos antes de ativar.`,
+          });
+          return;
+        }
+      }
+
+      // Desativar todos os outros bots
       await supabase
         .from("bot_flows")
         .update({ active: false })
