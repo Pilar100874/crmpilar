@@ -39,13 +39,18 @@ const getCategoryIcon = (category: string) => {
 };
 
 // Parse markdown + variables para elementos do editor
-const parseToEditor = (text: string): string => {
+const parseToEditor = (text: string, variables?: Variable[]): string => {
   if (!text) return '';
   
   // 0) Normaliza placeholders legados (ex: "§§VAR0§§") para chaves visíveis
-  //    Mantemos um nome neutro (ex: VAR0) para não perder completamente a indicação
+  //    Tentamos mapear para variáveis disponíveis (quando fornecidas)
   let html = text;
-  html = html.replace(/§§VAR_?(\d+)§§/g, (_m, idx) => `{{VAR${idx}}}`);
+  const guessList = variables?.map(v => v.name) || [];
+  html = html.replace(/§§VAR_?(\d+)§§/g, (_m, idx) => {
+    const i = Number(idx);
+    const guess = guessList[i] || `VAR${i}`;
+    return `{{${guess}}}`;
+  });
   
   // 1) Protege variáveis com placeholders para não quebrar com markdown (ex: _ em nomes)
   const varStore: string[] = [];
@@ -359,9 +364,18 @@ export const RichTextEditor = ({
         offset = range.startOffset;
       }
       
-      editorRef.current.innerHTML = parseToEditor(value);
+      editorRef.current.innerHTML = parseToEditor(value, availableVariables);
       
-      // Tenta restaurar o cursor
+      // Segurança extra: se restar algum token legado, converte usando as variáveis disponíveis
+      if (editorRef.current.innerText.includes('§§VAR')) {
+        const legacyHtml = editorRef.current.innerHTML;
+        const mapped = legacyHtml.replace(/§§VAR_?(\d+)§§/g, (_m, idx) => {
+          const i = Number(idx);
+          const guess = (availableVariables[i]?.name) || `VAR${i}`;
+          return `<span class=\"variable-badge\" contenteditable=\"false\" data-variable=\"${guess}\">${guess}<\/span>`;
+        });
+        editorRef.current.innerHTML = mapped;
+      }
       if (offset > 0 && editorRef.current.firstChild) {
         try {
           const textNode = editorRef.current.firstChild;
