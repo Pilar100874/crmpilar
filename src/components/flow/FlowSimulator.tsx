@@ -1492,8 +1492,27 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     [fields.regimeTributario]: cnpjData.regime_tributario || '',
                     [fields.simplesOptante]: cnpjData.simples_optante || '',
                     [fields.simeiOptante]: cnpjData.simei_optante || '',
-                  };
-                  
+                  } as Record<string, any>;
+
+                  // Aliases com prefixo (compatível com variáveis do editor)
+                  const prefix = normalizeVarName(fields.cnpj || 'cnpj');
+                  const addressFull = [
+                    cnpjData.logradouro,
+                    cnpjData.numero,
+                    cnpjData.bairro,
+                    cnpjData.municipio,
+                    cnpjData.uf,
+                    cnpjData.cep,
+                  ]
+                    .filter(Boolean)
+                    .join(', ');
+                  cnpjContext[`${prefix}_cnpj`] = input.trim();
+                  cnpjContext[`${prefix}_name`] = cnpjData.razao_social || '';
+                  cnpjContext[`${prefix}_fantasy`] = cnpjData.nome_fantasia || '';
+                  cnpjContext[`${prefix}_address`] = addressFull.trim();
+                  cnpjContext[`${prefix}_phone`] = cnpjData.telefone || '';
+                  cnpjContext[`${prefix}_email`] = cnpjData.email || '';
+
                   contextRef.current = cnpjContext;
                   setContext(cnpjContext);
                   if (onContextChange) {
