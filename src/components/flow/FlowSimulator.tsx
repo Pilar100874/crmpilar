@@ -378,6 +378,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       case "ask_file":
       case "ask_address":
       case "ask_url":
+      case "ask_cnpj":
         const type = (node.data as any)?.type as string;
         const defaults: Record<string, string> = {
           ask_name: "nome",
@@ -389,6 +390,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           ask_file: "arquivo",
           ask_address: "endereco",
           ask_url: "url",
+          ask_cnpj: "cnpj",
         };
         const rawVar = config.variable || defaults[type] || "resposta";
         const variable = normalizeVarName(rawVar);

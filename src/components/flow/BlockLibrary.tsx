@@ -34,7 +34,7 @@ const blockCategories = [
   {
     name: "Perguntas",
     icon: "HelpCircle",
-    blocks: ["ask_name", "ask_question", "ask_email", "ask_number", "ask_phone", "ask_date", "ask_file", "ask_address", "ask_url"] as NodeType[],
+    blocks: ["ask_name", "ask_question", "ask_email", "ask_number", "ask_phone", "ask_date", "ask_file", "ask_address", "ask_url", "ask_cnpj"] as NodeType[],
   },
   {
     name: "Lógica",

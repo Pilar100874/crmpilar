@@ -20,6 +20,7 @@ export type NodeType =
   | "ask_file"
   | "ask_address"
   | "ask_url"
+  | "ask_cnpj"
   | "condition"
   | "set_field"
   | "keyword_jump"
@@ -221,6 +222,14 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "Globe",
     color: "text-primary",
     defaultData: { question: "Cole o link:", variable: "url_usuario" },
+  },
+  {
+    type: "ask_cnpj",
+    label: "Perguntar CNPJ",
+    description: "Capturar e consultar CNPJ",
+    icon: "Building2",
+    color: "text-primary",
+    defaultData: { question: "Digite o CNPJ da empresa:", variable: "cnpj" },
   },
   // Logic
   {

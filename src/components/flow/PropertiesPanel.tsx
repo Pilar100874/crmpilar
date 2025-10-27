@@ -285,6 +285,8 @@ export const PropertiesPanel = ({
         return <BlockConfigs.AskAddressConfig {...configProps} />;
       case "ask_url":
         return <BlockConfigs.AskUrlConfig {...configProps} />;
+      case "ask_cnpj":
+        return <BlockConfigs.AskCNPJConfig {...configProps} />;
 
       // Button Blocks
       case "reply_buttons":

@@ -17,6 +17,7 @@ export {
   AskFileConfig,
   AskAddressConfig,
   AskUrlConfig,
+  AskCNPJConfig,
 } from './QuestionBlocks';
 
 // Button Blocks
