@@ -728,6 +728,8 @@ export const RichTextEditor = ({
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           onClick={handleEditorClick}
+          onKeyUp={saveSelection}
+          onMouseUp={saveSelection}
           className={cn(
             "w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-primary transition-colors",
             multiline ? "min-h-[100px]" : "min-h-[36px]",
@@ -948,7 +950,7 @@ export const RichTextEditor = ({
         
         <Separator orientation="vertical" className="h-6 mx-1" />
         
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Popover open={isOpen} onOpenChange={(o) => { if (o) saveSelection(); setIsOpen(o); }}>
           <PopoverTrigger asChild>
             <Button
               type="button"
