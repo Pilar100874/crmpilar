@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,55 +35,6 @@ const getCategoryIcon = (category: string) => {
     case "System": return Database;
     default: return Globe;
   }
-};
-
-// Converte markdown para HTML
-const markdownToHtml = (text: string): string => {
-  let html = text;
-  
-  // Negrito: *texto* ou **texto**
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
-  
-  // Itálico: _texto_
-  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
-  
-  // Código: ```texto```
-  html = html.replace(/```([^`]+)```/g, '<code class="bg-muted px-1 py-0.5 rounded text-sm font-mono">$1</code>');
-  
-  // Tachado: ~texto~
-  html = html.replace(/~([^~]+)~/g, '<s>$1</s>');
-  
-  // Variáveis: {{variavel}}
-  html = html.replace(/\{\{([^}]+)\}\}/g, '<span class="inline-flex items-center bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-medium mx-0.5">$1</span>');
-  
-  // Quebras de linha
-  html = html.replace(/\n/g, '<br>');
-  
-  return html;
-};
-
-// Converte HTML de volta para markdown
-const htmlToMarkdown = (html: string): string => {
-  let text = html;
-  
-  // Remove tags HTML mantendo o conteúdo
-  text = text.replace(/<br\s*\/?>/gi, '\n');
-  text = text.replace(/<strong>([^<]+)<\/strong>/g, '*$1*');
-  text = text.replace(/<em>([^<]+)<\/em>/g, '_$1_');
-  text = text.replace(/<code[^>]*>([^<]+)<\/code>/g, '```$1```');
-  text = text.replace(/<s>([^<]+)<\/s>/g, '~$1~');
-  text = text.replace(/<span[^>]*>([^<]+)<\/span>/g, '{{$1}}');
-  
-  // Remove outras tags HTML
-  text = text.replace(/<[^>]+>/g, '');
-  
-  // Decodifica entidades HTML
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = text;
-  text = textarea.value;
-  
-  return text;
 };
 
 const getBlockOutputVariables = (node: any): Variable[] => {
@@ -207,40 +158,8 @@ export const RichTextEditor = ({
 }: RichTextEditorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const editorRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
-
-  // Atualiza o conteúdo do editor quando o value muda externamente
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== markdownToHtml(value)) {
-      const selection = window.getSelection();
-      const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
-      const startOffset = range?.startOffset || 0;
-      
-      editorRef.current.innerHTML = markdownToHtml(value || '');
-      
-      // Restaura o cursor
-      if (range && editorRef.current.firstChild) {
-        try {
-          const newRange = document.createRange();
-          const textNode = editorRef.current.firstChild;
-          newRange.setStart(textNode, Math.min(startOffset, textNode.textContent?.length || 0));
-          newRange.collapse(true);
-          selection?.removeAllRanges();
-          selection?.addRange(newRange);
-        } catch (e) {
-          // Ignora erros de posicionamento do cursor
-        }
-      }
-    }
-  }, [value]);
-
-  const handleInput = () => {
-    if (editorRef.current) {
-      const text = htmlToMarkdown(editorRef.current.innerHTML);
-      onChange(text);
-    }
-  };
 
   // Get available variables from ancestor nodes
   const availableVariables: Variable[] = [];
@@ -277,111 +196,81 @@ export const RichTextEditor = ({
   }, {} as Record<string, Variable[]>);
 
   const updateCursorPosition = () => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      setCursorPosition(range.startOffset);
+    if (inputRef.current) {
+      setCursorPosition(inputRef.current.selectionStart || 0);
     }
   };
 
   const insertVariable = (variableName: string) => {
-    if (!editorRef.current) return;
+    if (!inputRef.current) return;
     
-    const selection = window.getSelection();
-    if (!selection || !selection.rangeCount) return;
+    const start = inputRef.current.selectionStart || 0;
+    const end = inputRef.current.selectionEnd || 0;
+    const currentValue = inputRef.current.value;
+    const before = currentValue.substring(0, start);
+    const after = currentValue.substring(end);
+    const newValue = `${before}{{${variableName}}}${after}`;
     
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
-    
-    // Cria o elemento de variável
-    const varSpan = document.createElement('span');
-    varSpan.className = 'inline-flex items-center bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-medium mx-0.5';
-    varSpan.textContent = variableName;
-    varSpan.contentEditable = 'false';
-    
-    range.insertNode(varSpan);
-    
-    // Move o cursor após a variável
-    range.setStartAfter(varSpan);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    
-    handleInput();
+    onChange(newValue);
     setIsOpen(false);
     setSearchQuery("");
-    editorRef.current.focus();
+    
+    setTimeout(() => {
+      if (inputRef.current) {
+        const newPosition = start + variableName.length + 4;
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(newPosition, newPosition);
+        setCursorPosition(newPosition);
+      }
+    }, 0);
   };
 
   const applyFormatting = (prefix: string, suffix: string) => {
-    if (!editorRef.current) return;
+    if (!inputRef.current) return;
     
-    const selection = window.getSelection();
-    if (!selection || !selection.rangeCount) return;
-    
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
+    const start = inputRef.current.selectionStart || 0;
+    const end = inputRef.current.selectionEnd || 0;
+    const currentValue = inputRef.current.value;
+    const selectedText = currentValue.substring(start, end);
     
     if (!selectedText) return;
     
-    // Remove o conteúdo selecionado
-    range.deleteContents();
+    const before = currentValue.substring(0, start);
+    const after = currentValue.substring(end);
+    const newValue = `${before}${prefix}${selectedText}${suffix}${after}`;
     
-    // Cria o elemento formatado
-    let element: HTMLElement;
-    if (prefix === '*' && suffix === '*') {
-      element = document.createElement('strong');
-    } else if (prefix === '_' && suffix === '_') {
-      element = document.createElement('em');
-    } else if (prefix === '```' && suffix === '```') {
-      element = document.createElement('code');
-      element.className = 'bg-muted px-1 py-0.5 rounded text-sm font-mono';
-    } else if (prefix === '~' && suffix === '~') {
-      element = document.createElement('s');
-    } else {
-      element = document.createElement('span');
-    }
+    onChange(newValue);
     
-    element.textContent = selectedText;
-    range.insertNode(element);
-    
-    // Move o cursor após o elemento
-    range.setStartAfter(element);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    
-    handleInput();
-    editorRef.current.focus();
+    setTimeout(() => {
+      if (inputRef.current) {
+        const newPosition = start + prefix.length + selectedText.length + suffix.length;
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(newPosition, newPosition);
+        setCursorPosition(newPosition);
+      }
+    }, 0);
   };
+
+  const InputComponent = multiline ? "textarea" : "input";
 
   return (
     <div className="space-y-2">
       <div className="relative">
-        <div
-          ref={editorRef}
-          contentEditable
-          onInput={handleInput}
-          onMouseUp={updateCursorPosition}
-          onKeyUp={updateCursorPosition}
+        <InputComponent
+          ref={inputRef as any}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onSelect={updateCursorPosition}
           onClick={updateCursorPosition}
+          onKeyUp={updateCursorPosition}
+          placeholder={placeholder}
           className={cn(
-            "flex w-full rounded-sm border-2 border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 transition-all overflow-auto",
-            multiline ? "min-h-[120px]" : "h-10 whitespace-nowrap overflow-x-auto",
-            !value && "text-muted-foreground",
+            "flex w-full rounded-sm border-2 border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 transition-all",
+            multiline ? "min-h-[120px] resize-none" : "h-10",
             className
           )}
-          data-placeholder={placeholder}
-          style={{
-            whiteSpace: multiline ? 'pre-wrap' : 'nowrap'
-          }}
-          suppressContentEditableWarning
+          {...(multiline ? { rows: 4 } : {})}
         />
-        {!value && (
-          <div className="absolute left-4 top-2 text-muted-foreground pointer-events-none text-sm">
-            {placeholder}
-          </div>
-        )}
       </div>
       
       {/* Formatting Toolbar */}
