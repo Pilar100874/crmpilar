@@ -779,6 +779,9 @@ export const AskCNPJConfig = ({ config, handleConfigChange, inputRefs, openVaria
     { key: 'emailField', label: 'E-mail', placeholder: 'email', description: 'E-mail de contato' },
     { key: 'socioNomeField', label: 'Nome do Sócio', placeholder: 'socio_nome', description: 'Nome do sócio principal' },
     { key: 'socioQualificacaoField', label: 'Qualificação do Sócio', placeholder: 'socio_qualificacao', description: 'Qualificação do sócio' },
+    { key: 'regimeTributarioField', label: 'Regime Tributário', placeholder: 'regime_tributario', description: 'Regime tributário (Simples, SIMEI, etc)' },
+    { key: 'simplesOptanteField', label: 'Optante Simples', placeholder: 'simples_optante', description: 'Se é optante do Simples Nacional' },
+    { key: 'simeiOptanteField', label: 'Optante SIMEI', placeholder: 'simei_optante', description: 'Se é optante do SIMEI' },
   ];
 
   return (

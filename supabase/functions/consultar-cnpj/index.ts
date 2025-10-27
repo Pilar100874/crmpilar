@@ -50,6 +50,16 @@ serve(async (req) => {
     }
 
     // Mapear os dados retornados para variáveis mais amigáveis
+    const simplesOptante = data.simples?.optante || false;
+    const simeiOptante = data.simei?.optante || false;
+    
+    let regimeTributario = 'Lucro Presumido/Real';
+    if (simeiOptante) {
+      regimeTributario = 'SIMEI';
+    } else if (simplesOptante) {
+      regimeTributario = 'Simples Nacional';
+    }
+    
     const empresaData = {
       cnpj: data.cnpj,
       razao_social: data.nome || '',
@@ -79,6 +89,11 @@ serve(async (req) => {
       atividade_principal: data.atividade_principal?.[0]?.text || '',
       atividade_principal_codigo: data.atividade_principal?.[0]?.code || '',
       
+      // Regime Tributário
+      regime_tributario: regimeTributario,
+      simples_optante: simplesOptante ? 'Sim' : 'Não',
+      simei_optante: simeiOptante ? 'Sim' : 'Não',
+      
       // Dados extras
       efr: data.efr || '',
       motivo_situacao: data.motivo_situacao || '',
@@ -100,7 +115,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in consultar-cnpj function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Erro desconhecido' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

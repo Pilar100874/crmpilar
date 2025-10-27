@@ -1449,6 +1449,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     email: nodeConfig.emailField || 'email',
                     socioNome: nodeConfig.socioNomeField || 'socio_nome',
                     socioQualificacao: nodeConfig.socioQualificacaoField || 'socio_qualificacao',
+                    regimeTributario: nodeConfig.regimeTributarioField || 'regime_tributario',
+                    simplesOptante: nodeConfig.simplesOptanteField || 'simples_optante',
+                    simeiOptante: nodeConfig.simeiOptanteField || 'simei_optante',
                   };
                   
                   // Guardar cada variável no campo configurado
@@ -1473,6 +1476,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     [fields.email]: cnpjData.email || '',
                     [fields.socioNome]: cnpjData.socio_nome || '',
                     [fields.socioQualificacao]: cnpjData.socio_qualificacao || '',
+                    [fields.regimeTributario]: cnpjData.regime_tributario || '',
+                    [fields.simplesOptante]: cnpjData.simples_optante || '',
+                    [fields.simeiOptante]: cnpjData.simei_optante || '',
                   };
                   
                   contextRef.current = cnpjContext;

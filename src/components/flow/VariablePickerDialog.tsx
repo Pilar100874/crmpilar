@@ -78,6 +78,9 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
           email: config.emailField || 'email',
           socioNome: config.socioNomeField || 'socio_nome',
           socioQualificacao: config.socioQualificacaoField || 'socio_qualificacao',
+          regimeTributario: config.regimeTributarioField || 'regime_tributario',
+          simplesOptante: config.simplesOptanteField || 'simples_optante',
+          simeiOptante: config.simeiOptanteField || 'simei_optante',
         };
         
         outputs.push(
@@ -99,7 +102,10 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
           { name: fields.telefone, description: "Telefone", type: "string" },
           { name: fields.email, description: "E-mail", type: "string" },
           { name: fields.socioNome, description: "Nome do sócio principal", type: "string" },
-          { name: fields.socioQualificacao, description: "Qualificação do sócio", type: "string" }
+          { name: fields.socioQualificacao, description: "Qualificação do sócio", type: "string" },
+          { name: fields.regimeTributario, description: "Regime tributário", type: "string" },
+          { name: fields.simplesOptante, description: "Optante Simples Nacional", type: "string" },
+          { name: fields.simeiOptante, description: "Optante SIMEI", type: "string" }
         );
       }
       break;
