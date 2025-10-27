@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { validateEmail, validatePhone } from "@/lib/validators";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 
 interface Message {
@@ -1163,6 +1164,77 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       // Para reply_buttons: sempre salva o input (seja texto digitado ou clique)
       // Para list_buttons: só salva se for clique de botão (não salva texto digitado)
       else if (currentBlockType !== "list_buttons") {
+        // Validação antes de salvar
+        if (currentNodeId) {
+          const currentNode = nodes.find((n) => n.id === currentNodeId);
+          if (currentNode) {
+            const nodeData = currentNode.data as any;
+            const nodeConfig = nodeData?.config || {};
+            const nodeType = nodeData?.type;
+            
+            // Validar email
+            if (nodeType === "ask_email") {
+              if (!validateEmail(input.trim())) {
+                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um email válido.";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return; // Não avança, mantém isWaitingInput=true
+              }
+            }
+            
+            // Validar telefone
+            if (nodeType === "ask_phone") {
+              const validation = nodeConfig.validation || "none";
+              if (validation !== "none" && !validatePhone(input.trim())) {
+                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um telefone válido.";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return; // Não avança, mantém isWaitingInput=true
+              }
+            }
+            
+            // Validar número
+            if (nodeType === "ask_number") {
+              const numValue = parseFloat(input.trim());
+              const acceptDecimals = nodeConfig.acceptDecimals !== false;
+              const minValue = nodeConfig.minValue;
+              const maxValue = nodeConfig.maxValue;
+              
+              // Verificar se é um número válido
+              if (isNaN(numValue)) {
+                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um número válido.";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return;
+              }
+              
+              // Verificar se aceita decimais
+              if (!acceptDecimals && !Number.isInteger(numValue)) {
+                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um número inteiro.";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return;
+              }
+              
+              // Verificar valor mínimo
+              if (minValue !== undefined && minValue !== "" && numValue < parseFloat(minValue)) {
+                const errorMessage = nodeConfig.errorMessage || `O número deve ser maior ou igual a ${minValue}.`;
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return;
+              }
+              
+              // Verificar valor máximo
+              if (maxValue !== undefined && maxValue !== "" && numValue > parseFloat(maxValue)) {
+                const errorMessage = nodeConfig.errorMessage || `O número deve ser menor ou igual a ${maxValue}.`;
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return;
+              }
+            }
+          }
+        }
+        
         console.log("💾 [CRITICAL] Saving variable:", cleanVarName, "=", input);
         console.log("📦 [CRITICAL] Context before save:", context);
         
