@@ -290,8 +290,10 @@ export const RichTextEditor = ({
 
   // Mantém o último range do cursor dentro do editor
   const lastRangeRef = useRef<Range | null>(null);
+  const suppressSelectionSaveRef = useRef(false);
 
   const saveSelection = () => {
+    if (suppressSelectionSaveRef.current) return;
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
     const r = sel.getRangeAt(0);
@@ -497,13 +499,16 @@ export const RichTextEditor = ({
 
   const insertVariable = (variableName: string) => {
     if (!editorRef.current) return;
+
+    // Evita que seleção seja sobrescrita durante o foco
+    suppressSelectionSaveRef.current = true;
     
-    // Garante que o editor está focado
-    editorRef.current.focus();
-    
-    // Pequeno delay para garantir que o foco foi estabelecido
+    // Pequeno delay para aguardar estado do popover e eventos de foco
     setTimeout(() => {
-      if (!editorRef.current) return;
+      if (!editorRef.current) {
+        suppressSelectionSaveRef.current = false;
+        return;
+      }
 
       // Restaura a última posição do cursor dentro do editor
       restoreSelection();
@@ -539,6 +544,9 @@ export const RichTextEditor = ({
         sel?.addRange(range);
       }
       
+      // Foca o editor somente após restaurar a seleção
+      editorRef.current.focus();
+
       // Remove qualquer conteúdo selecionado
       range.deleteContents();
       
@@ -567,9 +575,12 @@ export const RichTextEditor = ({
       sel?.removeAllRanges();
       sel?.addRange(range);
       lastRangeRef.current = range.cloneRange();
+
+      // Libera o salvamento da seleção novamente
+      suppressSelectionSaveRef.current = false;
       
       handleInput();
-    }, 10);
+    }, 0);
     
     setIsOpen(false);
     setSearchQuery("");
