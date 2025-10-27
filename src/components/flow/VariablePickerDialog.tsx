@@ -51,7 +51,8 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
     case "ask_file":
     case "ask_address":
     case "ask_url":
-    case "ask_cnpj": {
+    case "ask_cnpj":
+    case "ask_cep": {
       const varName = (config.variable || "cnpj") as string | undefined;
       if (varName) {
         const cleanVarName = String(varName).replace(/^@/, "");
@@ -99,6 +100,33 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
           { name: fields.email, description: "E-mail", type: "string" },
           { name: fields.socioNome, description: "Nome do sócio principal", type: "string" },
           { name: fields.socioQualificacao, description: "Qualificação do sócio", type: "string" }
+        );
+      }
+      break;
+    }
+
+    case "ask_cep": {
+      const varName = (config.variable || "cep") as string | undefined;
+      if (varName) {
+        const cleanVarName = String(varName).replace(/^@/, "");
+        
+        // Usar campos configurados ou padrões
+        const fields = {
+          cep: config.variable || cleanVarName,
+          logradouro: config.logradouroField || 'logradouro',
+          bairro: config.bairroField || 'bairro',
+          localidade: config.localidadeField || 'localidade',
+          uf: config.ufField || 'uf',
+          complemento: config.complementoField || 'complemento',
+        };
+        
+        outputs.push(
+          { name: fields.cep, description: "CEP digitado", type: "string" },
+          { name: fields.logradouro, description: "Logradouro", type: "string" },
+          { name: fields.bairro, description: "Bairro", type: "string" },
+          { name: fields.localidade, description: "Cidade", type: "string" },
+          { name: fields.uf, description: "Estado (UF)", type: "string" },
+          { name: fields.complemento, description: "Complemento", type: "string" }
         );
       }
       break;

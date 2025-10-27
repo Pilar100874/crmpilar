@@ -21,6 +21,7 @@ export type NodeType =
   | "ask_address"
   | "ask_url"
   | "ask_cnpj"
+  | "ask_cep"
   | "condition"
   | "set_field"
   | "keyword_jump"
@@ -230,6 +231,14 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "Building2",
     color: "text-primary",
     defaultData: { question: "Digite o CNPJ da empresa:", variable: "cnpj" },
+  },
+  {
+    type: "ask_cep",
+    label: "Perguntar CEP",
+    description: "Capturar e consultar CEP",
+    icon: "MapPin",
+    color: "text-primary",
+    defaultData: { question: "Digite o CEP:", variable: "cep" },
   },
   // Logic
   {

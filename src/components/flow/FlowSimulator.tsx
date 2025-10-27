@@ -381,6 +381,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       case "ask_address":
       case "ask_url":
       case "ask_cnpj":
+      case "ask_cep":
         const type = (node.data as any)?.type as string;
         const defaults: Record<string, string> = {
           ask_name: "nome",
@@ -393,6 +394,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           ask_address: "endereco",
           ask_url: "url",
           ask_cnpj: "cnpj",
+          ask_cep: "cep",
         };
         const rawVar = config.variable || defaults[type] || "resposta";
         const variable = normalizeVarName(rawVar);
@@ -1508,6 +1510,91 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               } catch (error) {
                 console.error('Erro ao consultar CNPJ:', error);
                 const errorMessage = nodeConfig.errorMessage || "Erro ao consultar CNPJ. Por favor, verifique o número e tente novamente.";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setIsLoading(false);
+                setInput("");
+                return;
+              }
+            }
+            
+            // Validar CEP e buscar dados do ViaCEP
+            if (nodeType === "ask_cep") {
+              const cepRegex = /^\d{5}-?\d{3}$/;
+              console.log("📍 Validando CEP:", input.trim());
+              
+              if (!cepRegex.test(input.trim())) {
+                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um CEP válido no formato XXXXX-XXX";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return;
+              }
+              
+              // Consultar CEP no ViaCEP
+              try {
+                setIsLoading(true);
+                addSystemMessage("🔍 Consultando CEP...");
+                
+                const cleanCEP = input.trim().replace(/\D/g, '');
+                const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
+                const data = await response.json();
+
+                if (data.erro) {
+                  throw new Error('CEP não encontrado');
+                }
+                
+                // Usar os campos configurados ou valores padrão
+                const fields = {
+                  cep: nodeConfig.variable || cleanVarName || 'cep',
+                  logradouro: nodeConfig.logradouroField || 'logradouro',
+                  bairro: nodeConfig.bairroField || 'bairro',
+                  localidade: nodeConfig.localidadeField || 'localidade',
+                  uf: nodeConfig.ufField || 'uf',
+                  complemento: nodeConfig.complementoField || 'complemento',
+                };
+                
+                // Guardar cada variável no campo configurado
+                const cepContext = {
+                  ...contextRef.current,
+                  [fields.cep]: data.cep || input.trim(),
+                  [fields.logradouro]: data.logradouro || '',
+                  [fields.bairro]: data.bairro || '',
+                  [fields.localidade]: data.localidade || '',
+                  [fields.uf]: data.uf || '',
+                  [fields.complemento]: data.complemento || '',
+                };
+                
+                contextRef.current = cepContext;
+                setContext(cepContext);
+                if (onContextChange) {
+                  onContextChange(cepContext);
+                }
+
+                addSuccessMessage(`✅ CEP consultado com sucesso!\n📍 ${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`);
+                console.log("✅ CEP válido e dados salvos!");
+                setIsLoading(false);
+                
+                // Avançar para próximo bloco
+                setPendingVariable(null);
+                setIsWaitingInput(false);
+                setCurrentBlockType(null);
+                
+                if (currentNodeId) {
+                  const nextNode = getNextNode(currentNodeId);
+                  if (nextNode) {
+                    safeSetTimeout(() => {
+                      setCurrentNodeId(nextNode.id);
+                      executeNode(nextNode);
+                    }, 500);
+                    setInput("");
+                    return;
+                  }
+                }
+                
+                setInput("");
+                return;
+              } catch (error) {
+                console.error('Erro ao consultar CEP:', error);
+                const errorMessage = nodeConfig.errorMessage || "Erro ao consultar CEP. Por favor, verifique o número e tente novamente.";
                 addSystemMessage(`⚠️ ${errorMessage}`);
                 setIsLoading(false);
                 setInput("");

@@ -855,3 +855,88 @@ export const AskCNPJConfig = ({ config, handleConfigChange, inputRefs, openVaria
     </div>
   );
 };
+
+export const AskCEPConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+  const cepFields = [
+    { key: 'variable', label: 'CEP', placeholder: 'cep', description: 'CEP digitado' },
+    { key: 'logradouroField', label: 'Logradouro', placeholder: 'logradouro', description: 'Nome da rua/avenida' },
+    { key: 'bairroField', label: 'Bairro', placeholder: 'bairro', description: 'Bairro' },
+    { key: 'localidadeField', label: 'Cidade', placeholder: 'localidade', description: 'Nome da cidade' },
+    { key: 'ufField', label: 'UF', placeholder: 'uf', description: 'Estado (UF)' },
+    { key: 'complementoField', label: 'Complemento', placeholder: 'complemento', description: 'Complemento do endereço' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <ConfigSection title="Pergunta">
+        <div className="space-y-2">
+          <Label className="text-white text-sm font-semibold flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+            Texto da Pergunta
+          </Label>
+          <Textarea
+            ref={(el) => (inputRefs.current['question'] = el)}
+            value={config.question || "Digite o CEP:"}
+            onChange={(e) => handleConfigChange("question", e.target.value)}
+            placeholder="Digite o CEP:"
+            rows={3}
+            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          />
+          <FormattingToolbar
+            onFormat={(prefix, suffix) => insertFormatting(
+              inputRefs.current['question'],
+              prefix,
+              suffix,
+              config.question || "",
+              (val) => handleConfigChange("question", val)
+            )}
+            onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          />
+        </div>
+      </ConfigSection>
+
+      <ConfigSection title="Validação">
+        <ConfigTextarea
+          label="Mensagem de Erro"
+          value={config.errorMessage || ""}
+          onChange={(v) => handleConfigChange("errorMessage", v)}
+          placeholder="Por favor, insira um CEP válido"
+          rows={2}
+        />
+      </ConfigSection>
+
+      <ConfigSection title="Campos de Dados">
+        <div className="space-y-3">
+          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+            <p className="text-xs text-slate-600 mb-2">
+              Configure o nome de cada campo onde os dados serão salvos:
+            </p>
+          </div>
+          
+          {cepFields.map((field) => (
+            <div key={field.key} className="space-y-1">
+              <Label className="text-xs text-slate-600 flex items-center gap-1">
+                {field.label}
+                <span className="text-slate-400">({field.description})</span>
+              </Label>
+              <Input
+                value={config[field.key] || field.placeholder}
+                onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                placeholder={field.placeholder}
+                className="bg-white border-slate-200 text-slate-900 h-8 text-sm"
+              />
+            </div>
+          ))}
+        </div>
+      </ConfigSection>
+
+      <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-slate-700">
+          Este bloco valida o CEP e busca automaticamente todos os dados do endereço via ViaCEP. 
+          As informações são salvas nos campos configurados acima.
+        </p>
+      </div>
+    </div>
+  );
+};
