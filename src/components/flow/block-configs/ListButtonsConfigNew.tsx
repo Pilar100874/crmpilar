@@ -4,13 +4,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic } from "lucide-react";
+import { VariableInput } from "@/components/flow/VariableInput";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
+  inputRefs?: React.MutableRefObject<{ [key: string]: HTMLInputElement | HTMLTextAreaElement | null }>;
+  openVariablePicker?: (ref: HTMLInputElement | HTMLTextAreaElement) => void;
 }
 
-export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps) => {
+export const ListButtonsConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const sections = config.sections || [];
 
   const addSection = () => {
@@ -195,6 +198,26 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
             Maximum of 10 items reached
           </p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2">
+            Save user answer in the field
+            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+          </Label>
+        </div>
+        <VariableInput
+          ref={(el) => inputRefs && (inputRefs.current['variable'] = el)}
+          value={config.variable || ""}
+          onChange={(e) => handleConfigChange("variable", e.target.value)}
+          onVariableRequest={() => inputRefs?.current['variable'] && openVariablePicker?.(inputRefs.current['variable'])}
+          placeholder="Search or create"
+          className="bg-accent/50"
+        />
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          ⚠️ If a field is not set, the answer won't be saved.
+        </p>
       </div>
     </div>
   );
