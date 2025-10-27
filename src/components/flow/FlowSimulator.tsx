@@ -172,10 +172,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     });
   };
 
-  const getNextNode = (currentId: string, conditionIndex?: number) => {
+  const getNextNode = (currentId: string, conditionIndex?: number, sourceHandle?: string) => {
     const outgoingEdges = edges.filter((edge) => edge.source === currentId);
     
     if (outgoingEdges.length === 0) return null;
+    
+    // Se houver sourceHandle específico, busca por ele
+    if (sourceHandle) {
+      const specificEdge = outgoingEdges.find((edge) => edge.sourceHandle === sourceHandle);
+      if (specificEdge) {
+        return nodes.find((node) => node.id === specificEdge.target);
+      }
+    }
     
     // Se houver índice de condição, tenta encontrar a edge específica
     if (conditionIndex !== undefined && outgoingEdges[conditionIndex]) {
@@ -701,14 +709,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }
         
         safeSetTimeout(() => {
-          addSystemMessage(`📋 ${buttonText}`);
-          sections.forEach((section: any, idx: number) => {
-            addSystemMessage(`\n${section.title || `Seção ${idx + 1}`}:`);
-            (section.items || []).forEach((item: any) => {
-              const line = item.description ? `${item.label} — ${item.description}` : item.label;
-              addSystemMessage(`  ▶️ ${line}`);
+          // Criar botões clicáveis a partir das seções
+          const listButtons: Array<{ text: string; value: string; buttonId: string }> = [];
+          sections.forEach((section: any, sectionIdx: number) => {
+            (section.items || []).forEach((item: any, itemIdx: number) => {
+              const buttonText = item.description ? `${item.label} — ${item.description}` : item.label;
+              listButtons.push({
+                text: buttonText,
+                value: item.value || item.label || `Item ${itemIdx + 1}`,
+                buttonId: `section_${sectionIdx}_item_${itemIdx}`
+              });
             });
           });
+          
+          const msgWithButtons: Message = {
+            id: Date.now().toString(),
+            sender: "bot",
+            text: `📋 ${buttonText}`,
+            timestamp: new Date(),
+            nodeId: node.id,
+            buttons: listButtons
+          };
+          setMessages((prev) => [...prev, msgWithButtons]);
         }, 500);
         
         setIsWaitingInput(true);
@@ -1055,15 +1077,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string }, nodeId?: string) => {
-    console.log("Button clicked:", { button, nodeId, pendingVariable });
+    console.log("🔘 Button clicked:", { button, nodeId, pendingVariable });
     addUserMessage(button.text);
     
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
-      console.log("Saving variable:", cleanVarName, "with value:", button.value);
+      console.log("💾 Saving variable:", cleanVarName, "with value:", button.value);
       setContext((prev) => {
         const newContext = { ...prev, [cleanVarName]: button.value };
-        console.log("Context updated:", newContext);
+        console.log("📦 Context updated:", newContext);
         // Atualiza imediatamente o contextRef para próxima interpolação
         contextRef.current = newContext;
         return newContext;
@@ -1074,22 +1096,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setIsWaitingInput(false);
 
       if (nodeId) {
-        // Encontrar a edge correspondente ao botão clicado
-        const buttonIndex = parseInt(button.buttonId?.split('_')[1] || '0');
-        console.log("Finding next node with index:", buttonIndex);
-        const nextNode = getNextNode(nodeId, buttonIndex);
+        // Usar o sourceHandle do botão (buttonId) para encontrar a edge correta
+        console.log("🔍 Finding next node with sourceHandle:", button.buttonId);
+        const nextNode = getNextNode(nodeId, undefined, button.buttonId);
         if (nextNode) {
-          console.log("Executing next node:", nextNode.id);
+          console.log("✅ Executing next node:", nextNode.id);
           safeSetTimeout(() => {
             setCurrentNodeId(nextNode.id);
             executeNode(nextNode);
           }, 500);
         } else {
-          console.log("No next node found");
+          console.log("⚠️ No next node found for button, trying default path");
+          const defaultNext = getNextNode(nodeId);
+          if (defaultNext) {
+            safeSetTimeout(() => {
+              setCurrentNodeId(defaultNext.id);
+              executeNode(defaultNext);
+            }, 500);
+          }
         }
       }
     } else {
-      console.log("No pending variable to save");
+      console.log("⚠️ No pending variable to save");
     }
   };
 
