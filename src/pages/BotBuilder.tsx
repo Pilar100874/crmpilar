@@ -532,9 +532,6 @@ function BotBuilderContent() {
         return false;
       }
 
-      // Aguarda próximo tick para garantir estado mais recente do canvas
-      await new Promise(resolve => setTimeout(resolve, 0));
-
       // Preferir dados do React Flow (garante último estado do canvas)
       const rfData = typeof reactFlowInstance?.toObject === 'function' ? reactFlowInstance.toObject() : null;
       const nodesToSave = rfData?.nodes?.length ? rfData.nodes : nodes;
@@ -684,15 +681,15 @@ function BotBuilderContent() {
       const flowData = data.flow_data as any;
       let loadedNodes = flowData.nodes || [];
       
-      // Remover nós duplicados (com mesmo ID)
+      // Normalizar IDs de nós para evitar perdas por duplicidade
       const seenIds = new Set<string>();
-      loadedNodes = loadedNodes.filter((node: any) => {
-        if (seenIds.has(node.id)) {
-          console.warn(`Nó duplicado removido: ${node.id}`);
-          return false;
+      loadedNodes = loadedNodes.map((node: any) => {
+        let id = node.id || getId();
+        if (seenIds.has(id)) {
+          id = getId();
         }
-        seenIds.add(node.id);
-        return true;
+        seenIds.add(id);
+        return { ...node, id };
       });
       
       // Garantir que tem um bloco Start
