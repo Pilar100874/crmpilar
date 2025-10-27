@@ -629,6 +629,16 @@ export const RichTextEditor = ({
     if (range.collapsed && !['ul', 'ol', 'blockquote'].includes(tag.toLowerCase())) return;
     
     try {
+      // Verifica se o range contém uma variável badge inteira
+      const container = range.commonAncestorContainer;
+      let isBadgeSelected = false;
+      
+      if (container.nodeType === Node.ELEMENT_NODE && (container as HTMLElement).classList?.contains('variable-badge')) {
+        isBadgeSelected = true;
+      } else if (container.parentNode && (container.parentNode as HTMLElement).classList?.contains('variable-badge')) {
+        isBadgeSelected = true;
+      }
+
       // Verifica se já existe formatação do mesmo tipo
       let node: Node | null = range.commonAncestorContainer;
       let existingFormat: HTMLElement | null = null;
@@ -663,18 +673,36 @@ export const RichTextEditor = ({
           });
         }
         
-        // Para listas, cria também o LI
-        if (tag === 'ul' || tag === 'ol') {
-          const li = document.createElement('li');
-          const fragment = range.extractContents();
-          li.appendChild(fragment);
-          element.appendChild(li);
+        // Se estamos formatando uma badge, garantir que ela seja movida inteira
+        if (isBadgeSelected && selectedBadgeRef.current) {
+          const badge = selectedBadgeRef.current;
+          const parent = badge.parentNode;
+          const nextSibling = badge.nextSibling;
+          
+          // Move a badge para dentro do elemento de formatação
+          badge.remove();
+          element.appendChild(badge);
+          
+          // Insere o elemento formatado de volta
+          if (nextSibling) {
+            parent?.insertBefore(element, nextSibling);
+          } else {
+            parent?.appendChild(element);
+          }
         } else {
-          const fragment = range.extractContents();
-          element.appendChild(fragment);
+          // Para listas, cria também o LI
+          if (tag === 'ul' || tag === 'ol') {
+            const li = document.createElement('li');
+            const fragment = range.extractContents();
+            li.appendChild(fragment);
+            element.appendChild(li);
+          } else {
+            const fragment = range.extractContents();
+            element.appendChild(fragment);
+          }
+          
+          range.insertNode(element);
         }
-        
-        range.insertNode(element);
         
         // Seleciona o conteúdo formatado
         const newRange = document.createRange();
