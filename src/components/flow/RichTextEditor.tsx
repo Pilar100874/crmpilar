@@ -42,44 +42,59 @@ const getCategoryIcon = (category: string) => {
 const parseToEditor = (text: string): string => {
   if (!text) return '';
   
+  // 1) Protege variáveis com placeholders para não quebrar com markdown (ex: _ em nomes)
   let html = text;
+  const varStore: string[] = [];
+  const VAR_TOKEN_PREFIX = '§§VAR_';
+  const VAR_TOKEN_SUFFIX = '§§';
+
+  html = html.replace(/\{\{([^}]+)\}\}/g, (_m, p1) => {
+    const idx = varStore.length;
+    varStore.push(String(p1).trim());
+    return `${VAR_TOKEN_PREFIX}${idx}${VAR_TOKEN_SUFFIX}`;
+  });
   
+  // 2) Aplica markdown normalmente
   // Headings: # texto
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  html = html.replace(/^### (.+)$/gm, '<h3>$1<\/h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1<\/h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1<\/h1>');
   
   // Negrito: *texto* ou **texto**
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1<\/strong>');
+  html = html.replace(/\*([^*]+)\*/g, '<strong>$1<\/strong>');
   
   // Itálico: _texto_
-  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+  html = html.replace(/_([^_]+)_/g, '<em>$1<\/em>');
   
   // Código inline: `texto`
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1<\/code>');
   
   // Tachado: ~texto~
-  html = html.replace(/~([^~]+)~/g, '<s>$1</s>');
+  html = html.replace(/~([^~]+)~/g, '<s>$1<\/s>');
   
   // Links: [texto](url)
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1<\/a>');
   
   // Quote: > texto
-  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1<\/blockquote>');
   
   // Lista não ordenada: - item
-  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  html = html.replace(/^- (.+)$/gm, '<li>$1<\/li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&<\/ul>');
   
   // Lista ordenada: 1. item
-  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1<\/li>');
   
   // Quebras de linha
   html = html.replace(/\n/g, '<br>');
 
-  // Variáveis por último (para permitir formatação envolvendo {{var}})
-  html = html.replace(/\{\{([^}]+)\}\}/g, '<span class="variable-badge" contenteditable="false" data-variable="$1">$1</span>');
+  // 3) Restaura variáveis no final (agora a formatação envolve o badge e herda estilos)
+  html = html.replace(new RegExp(`${VAR_TOKEN_PREFIX}(\\d+)${VAR_TOKEN_SUFFIX}`, 'g'), (_m, idxStr) => {
+    const idx = Number(idxStr);
+    const name = varStore[idx] || '';
+    return `<span class="variable-badge" contenteditable="false" data-variable="${name}">${name}<\/span>`;
+  });
   
   return html;
 };
