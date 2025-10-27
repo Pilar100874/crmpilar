@@ -93,14 +93,21 @@ const parseToEditor = (text: string): string => {
   // Quebras de linha
   html = html.replace(/\n/g, '<br>');
 
-  // 3) Restaura variáveis no final (agora a formatação envolve o badge e herda estilos)
-  html = html.replace(new RegExp(`${VAR_TOKEN_PREFIX}(\\d+)${VAR_TOKEN_SUFFIX}`, 'g'), (_m, idxStr) => {
-    const idx = Number(idxStr);
-    const name = (varStore[idx] || '').replace(/\\_/g, '_');
-    return `<span class="variable-badge" contenteditable="false" data-variable="${name}">${name}<\/span>`;
-  });
-  
-  return html;
+// 3) Restaura variáveis no final (agora a formatação envolve o badge e herda estilos)
+html = html.replace(new RegExp(`${VAR_TOKEN_PREFIX}(\\d+)${VAR_TOKEN_SUFFIX}`, 'g'), (_m, idxStr) => {
+  const idx = Number(idxStr);
+  const name = (varStore[idx] || '').replace(/\\_/g, '_');
+  return `<span class="variable-badge" contenteditable="false" data-variable="${name}">${name}<\/span>`;
+});
+
+// 3.1) Compat: se ainda restarem tokens legados sem underscore (ex.: §§VAR0§§), renderiza como badge genérico
+html = html.replace(/§§VAR(\d+)§§/g, (_m, idxStr) => {
+  const idx = Number(idxStr);
+  const name = varStore[idx] ? varStore[idx].replace(/\\_/g, '_') : `VAR${idx}`;
+  return `<span class="variable-badge" contenteditable="false" data-variable="${name}">${name}<\/span>`;
+});
+
+return html;
 };
 
 // Converte conteúdo do editor de volta para markdown + variables
