@@ -377,12 +377,29 @@ export const RichTextEditor = ({
     if (!selection || !selection.rangeCount) return;
     
     const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
     
-    if (!selectedText) return;
+    // Se não há texto selecionado, não faz nada
+    if (range.collapsed) return;
     
-    const element = document.createElement(tag);
-    range.surroundContents(element);
+    try {
+      // Cria o elemento de formatação
+      const element = document.createElement(tag);
+      
+      // Tenta envolver o conteúdo selecionado
+      const contents = range.extractContents();
+      element.appendChild(contents);
+      range.insertNode(element);
+      
+      // Move o cursor para depois do elemento formatado
+      range.setStartAfter(element);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (e) {
+      // Se falhar, tenta uma abordagem alternativa
+      console.error('Formatting error:', e);
+      document.execCommand(tag === 'strong' ? 'bold' : tag === 'em' ? 'italic' : 'strikethrough', false);
+    }
     
     handleInput();
     editorRef.current.focus();

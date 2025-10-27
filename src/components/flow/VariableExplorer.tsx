@@ -4,7 +4,7 @@ import { FlowVariable, VariableType } from "@/components/flow/VariableManager";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Database, Copy, CheckCircle2, Variable, Type, Hash, Calendar, List, ToggleLeft, FileText } from "lucide-react";
+import { Database, Variable, Type, Hash, Calendar, List, ToggleLeft, FileText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -400,13 +400,6 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
     }
   });
 
-  const copyToClipboard = (varName: string) => {
-    const formatted = `{{${varName}}}`;
-    navigator.clipboard.writeText(formatted);
-    setCopiedVar(varName);
-    toast.success(`Variável copiada: ${formatted}`);
-    setTimeout(() => setCopiedVar(null), 2000);
-  };
 
   if (availableVariables.length === 0) {
     return (
@@ -493,18 +486,6 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
                             {variable.description}
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
-                          onClick={() => copyToClipboard(variable.name)}
-                        >
-                          {copiedVar === variable.name ? (
-                            <CheckCircle2 className="w-3 h-3 text-green-600" />
-                          ) : (
-                            <Copy className="w-3 h-3 text-slate-600" />
-                          )}
-                        </Button>
                       </div>
                     );
                   })}
