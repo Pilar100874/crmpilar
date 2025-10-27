@@ -1837,43 +1837,43 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           />
           
           <div className="flex gap-2">
+            {/* Botão de anexar arquivo - sempre visível */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!isWaitingInput}
+              title="Anexar arquivo"
+              className="flex-shrink-0"
+            >
+              📎
+            </Button>
+            
             <Input
               placeholder={
                 isWaitingInput
-                  ? currentBlockType === "ask_file" 
-                    ? "Clique em 📎 para anexar um arquivo..."
+                  ? selectedFile
+                    ? `📎 ${selectedFile.name}`
                     : "Digite sua resposta..."
                   : "Aguardando próximo passo..."
               }
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => {
-                // Bloquear Enter se for ask_file sem arquivo
-                if (currentBlockType === "ask_file" && !selectedFile) return;
-                if (e.key === "Enter") handleSendMessage();
+              value={selectedFile ? `📎 ${selectedFile.name}` : input}
+              onChange={(e) => {
+                if (!selectedFile) setInput(e.target.value);
               }}
-              disabled={!isWaitingInput || currentBlockType === "ask_file"}
-              readOnly={currentBlockType === "ask_file"}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !selectedFile) handleSendMessage();
+              }}
+              disabled={!isWaitingInput}
+              readOnly={!!selectedFile}
             />
-            
-            {currentBlockType === "ask_file" && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={!isWaitingInput}
-                title="Anexar arquivo"
-              >
-                📎
-              </Button>
-            )}
             
             <Button
               size="icon"
               onClick={handleSendMessage}
               disabled={
                 !isWaitingInput || 
-                (currentBlockType === "ask_file" ? !selectedFile : !input.trim())
+                (!selectedFile && !input.trim())
               }
             >
               <Send className="w-4 h-4" />
