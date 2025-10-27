@@ -760,21 +760,24 @@ export const RichTextEditor = ({
             color: hsl(var(--muted-foreground));
             pointer-events: none;
           }
-          .variable-badge {
-            display: inline-flex;
-            align-items: center;
-            background: hsl(var(--primary) / 0.12);
-            color: hsl(var(--primary));
-            padding: 0.15rem 0.45rem;
-            border-radius: 4px;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            margin: 0 2px;
-            cursor: pointer;
-            user-select: none;
-            vertical-align: middle;
-            transition: background 0.15s ease;
-          }
+.variable-badge {
+  display: inline-flex;
+  align-items: center;
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: inherit; /* allow bold from parent */
+  font-style: inherit;  /* allow italic from parent */
+  text-decoration: inherit; /* allow strike/underline from parent */
+  font-family: inherit; /* allow code font from parent */
+  margin: 0 2px;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  transition: background 0.15s ease;
+}
           .variable-badge:hover {
             background: hsl(var(--primary) / 0.18);
           }
