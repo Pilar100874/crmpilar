@@ -111,8 +111,7 @@ const parseFromEditor = (element: HTMLElement): string => {
       
       if (el.classList.contains('variable-badge')) {
         const raw = el.dataset.variable || el.textContent || '';
-        const escaped = raw.replace(/_/g, '\\_');
-        text += `{{${escaped}}}`;
+        text += `{{${raw}}}`;
       } else if (el.tagName === 'H1') {
         text += '# ';
         el.childNodes.forEach(processNode);
