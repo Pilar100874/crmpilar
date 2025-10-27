@@ -159,24 +159,7 @@ function BotBuilderContent() {
   // Auto-save movido abaixo (após handleSave) para evitar closures desatualizadas.
 
 
-  // Salvar ao sair da página
-  useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (currentBotId) {
-        await handleSave();
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      // Salvar ao desmontar o componente
-      if (currentBotId) {
-        handleSave();
-      }
-    };
-  }, [currentBotId]);
+  // Salvamento no unload movido abaixo de handleSave
 
 
   const loadSavedBots = async () => {
@@ -635,6 +618,24 @@ function BotBuilderContent() {
 
     return saved;
   }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, botIdFromUrl, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables, getFlowSignature]);
+
+  // Salvar ao sair/desmontar apenas se houver mudanças
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (currentBotId && hasUnsavedChanges) {
+        await handleSave(true);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (currentBotId && hasUnsavedChanges) {
+        handleSave(true);
+      }
+    };
+  }, [currentBotId, hasUnsavedChanges, handleSave]);
 
   // Auto-save quando houver mudanças (posicionado após handleSave para usar a versão mais recente)
   useEffect(() => {
