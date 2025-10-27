@@ -62,7 +62,6 @@ function BotBuilderContent() {
   const botNameFromUrl = searchParams.get("name");
   const botDescriptionFromUrl = searchParams.get("description");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const savingRef = useRef(false);
   
   // Criar bloco Start por padrão
@@ -466,12 +465,6 @@ function BotBuilderContent() {
     }
     savingRef.current = true;
 
-    // evitar auto-save concorrente
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-      autoSaveTimeoutRef.current = null;
-    }
-
     let saved = false;
     if (!silent) {
       setIsSaving(true);
@@ -619,47 +612,12 @@ function BotBuilderContent() {
     return saved;
   }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, botIdFromUrl, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables, getFlowSignature]);
 
-  // Salvar ao sair/desmontar apenas se houver mudanças
+  // Detectar mudanças não salvas (sem auto-save)
   useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (currentBotId && hasUnsavedChanges) {
-        await handleSave(true);
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      if (currentBotId && hasUnsavedChanges) {
-        handleSave(true);
-      }
-    };
-  }, [currentBotId, hasUnsavedChanges, handleSave]);
-
-  // Auto-save quando houver mudanças (posicionado após handleSave para usar a versão mais recente)
-  useEffect(() => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
     const currentSig = getFlowSignature();
     const changed = lastSavedSignatureRef.current !== currentSig;
     setHasUnsavedChanges(changed);
-
-    if (!currentBotId || !changed) return;
-
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      console.log("[BotBuilder] Auto-save disparado");
-      handleSave(true);
-    }, 2000);
-
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, currentBotId, getFlowSignature, handleSave]);
+  }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, getFlowSignature]);
 
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
