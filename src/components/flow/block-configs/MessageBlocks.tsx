@@ -124,17 +124,6 @@ export const SendMessageConfig = ({ config, handleConfigChange, nodes = [], edge
         </ConfigSection>
       ))}
 
-      <ConfigInfo variant="info">
-        <p className="font-semibold mb-1">💡 Usando Variáveis</p>
-        <p className="mb-2">Use <code className="bg-blue-900/50 px-1.5 py-0.5 rounded text-xs">{"{{nome_variavel}}"}</code> ou clique no botão de variável para inserir qualquer tipo de dado:</p>
-        <ul className="list-disc list-inside space-y-1 text-xs ml-2">
-          <li><strong>Texto:</strong> {"{{nome}}"} → "João Silva"</li>
-          <li><strong>Números:</strong> {"{{idade}}"} → "25"</li>
-          <li><strong>Telefone:</strong> {"{{telefone}}"} → "+55 11 99999-9999"</li>
-          <li><strong>Email:</strong> {"{{email}}"} → "joao@email.com"</li>
-          <li><strong>Qualquer campo:</strong> Todas as variáveis salvas em blocos anteriores podem ser usadas</li>
-        </ul>
-      </ConfigInfo>
 
       {/* Action Buttons */}
       <div className="flex gap-2">
