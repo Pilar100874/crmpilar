@@ -77,6 +77,29 @@ export const validatePhone = (phone: string): boolean => {
   return cleanPhone.length >= 10 && cleanPhone.length <= 11;
 };
 
+// Validação de Telefone por Formato
+export const validatePhoneFormat = (phone: string, format: string): boolean => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  
+  // Verifica comprimento básico primeiro
+  if (cleanPhone.length < 10 || cleanPhone.length > 13) return false;
+  
+  switch (format) {
+    case "international":
+      // Formato internacional: +55 11 99999-9999 (deve ter 13 dígitos com +55)
+      return /^\+?55\d{10,11}$/.test(cleanPhone) || /^55\d{10,11}$/.test(cleanPhone);
+    
+    case "national":
+      // Formato nacional: 11 99999-9999 (10 ou 11 dígitos sem +55)
+      return cleanPhone.length >= 10 && cleanPhone.length <= 11 && !cleanPhone.startsWith("55");
+    
+    case "any":
+    default:
+      // Qualquer formato válido
+      return cleanPhone.length >= 10 && cleanPhone.length <= 13;
+  }
+};
+
 // Validação de CEP
 export const validateCEP = (cep: string): boolean => {
   const cleanCEP = cep.replace(/\D/g, '');

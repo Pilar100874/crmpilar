@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { validateEmail, validatePhone } from "@/lib/validators";
+import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 
 interface Message {
@@ -45,6 +45,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const [expandedListId, setExpandedListId] = useState<string | null>(null);
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
 
@@ -1045,7 +1047,125 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!currentNodeId) return;
+    
+    const currentNode = nodes.find((n) => n.id === currentNodeId);
+    if (!currentNode) return;
+    
+    const nodeData = currentNode.data as any;
+    const nodeConfig = nodeData?.config || {};
+    const fileType = nodeConfig.fileType || "any";
+    const maxSizeMB = nodeConfig.maxSizeMB || 10;
+    const errorMessage = nodeConfig.errorMessage || "";
+
+    // Validar tipo de arquivo
+    const validTypes: Record<string, string[]> = {
+      image: ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
+      video: ["video/mp4", "video/mpeg", "video/quicktime"],
+      audio: ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg"],
+      document: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+    };
+
+    if (fileType !== "any" && validTypes[fileType]) {
+      if (!validTypes[fileType].includes(file.type)) {
+        const typeNames: Record<string, string> = {
+          image: "imagem",
+          video: "vídeo",
+          audio: "áudio",
+          document: "documento"
+        };
+        const msg = errorMessage || `Por favor, envie apenas arquivos de ${typeNames[fileType]}.`;
+        addSystemMessage(`⚠️ ${msg}`);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+    }
+
+    // Validar tamanho do arquivo
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > maxSizeMB) {
+      const msg = errorMessage || `O arquivo não pode ser maior que ${maxSizeMB}MB.`;
+      addSystemMessage(`⚠️ ${msg}`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // Arquivo válido
+    setSelectedFile(file);
+    setInput(`📎 ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
+  };
+
+  const handleFileUpload = () => {
+    if (!selectedFile || !pendingVariable) return;
+
+    const cleanVarName = normalizeVarName(pendingVariable);
+    
+    // Simular URL do arquivo (em produção, seria upload para servidor)
+    const fileUrl = `https://storage.example.com/files/${selectedFile.name}`;
+    const fileInfo = {
+      name: selectedFile.name,
+      size: selectedFile.size,
+      type: selectedFile.type,
+      url: fileUrl
+    };
+
+    console.log("📎 [FILE] Saving file:", cleanVarName, "=", fileInfo);
+    
+    const newContext = { 
+      ...contextRef.current, 
+      [cleanVarName]: fileUrl,
+      ['@' + cleanVarName]: fileUrl,
+      [`${cleanVarName}_info`]: fileInfo
+    };
+    contextRef.current = newContext;
+    setContext(newContext);
+    if (onContextChange) {
+      onContextChange(newContext);
+    }
+    
+    addSuccessMessage(`Arquivo "${selectedFile.name}" recebido`);
+    
+    // Limpar estado do arquivo
+    setSelectedFile(null);
+    setInput("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    
+    setPendingVariable(null);
+    setIsWaitingInput(false);
+    setCurrentBlockType(null);
+    
+    // Buscar próximo nó
+    if (currentNodeId) {
+      const defaultEdge = edges.find(
+        (edge) => edge.source === currentNodeId && edge.sourceHandle === "default"
+      );
+      
+      if (defaultEdge) {
+        const nextNode = nodes.find((node) => node.id === defaultEdge.target);
+        if (nextNode) {
+          safeSetTimeout(() => {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }, 500);
+          return;
+        }
+      }
+      
+      addSuccessMessage("Fluxo concluído!");
+    }
+  };
+
   const handleSendMessage = () => {
+    // Para ask_file, processar o arquivo
+    if (currentBlockType === "ask_file" && selectedFile) {
+      handleFileUpload();
+      return;
+    }
+    
     if (!input.trim()) return;
 
     console.log("📨 handleSendMessage called with:", { 
@@ -1184,9 +1304,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             
             // Validar telefone
             if (nodeType === "ask_phone") {
-              const validation = nodeConfig.validation || "none";
-              if (validation !== "none" && !validatePhone(input.trim())) {
-                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um telefone válido.";
+              const validateFormat = nodeConfig.validateFormat !== false;
+              const format = nodeConfig.format || "any";
+              
+              if (validateFormat && !validatePhoneFormat(input.trim(), format)) {
+                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um telefone válido no formato especificado.";
                 addSystemMessage(`⚠️ ${errorMessage}`);
                 setInput("");
                 return; // Não avança, mantém isWaitingInput=true
@@ -1487,6 +1609,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     onContextChange?.(emptyContext); // Notifica imediatamente o reset
     setIsWaitingInput(false);
     setPendingVariable(null);
+    setSelectedFile(null);
+    setInput("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
     
     const startNode = findStartNode();
     if (startNode) {
@@ -1705,24 +1830,53 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         <div className="p-4 border-t">
           <div className="flex gap-2">
-            <Input
-              placeholder={
-                isWaitingInput
-                  ? "Digite sua resposta..."
-                  : "Aguardando próximo passo..."
-              }
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              disabled={!isWaitingInput}
-            />
-            <Button
-              size="icon"
-              onClick={handleSendMessage}
-              disabled={!isWaitingInput || !input.trim()}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            {currentBlockType === "ask_file" ? (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  disabled={!isWaitingInput}
+                />
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!isWaitingInput}
+                >
+                  {selectedFile ? `📎 ${selectedFile.name}` : "📎 Selecionar Arquivo"}
+                </Button>
+                <Button
+                  size="icon"
+                  onClick={handleSendMessage}
+                  disabled={!isWaitingInput || !selectedFile}
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Input
+                  placeholder={
+                    isWaitingInput
+                      ? "Digite sua resposta..."
+                      : "Aguardando próximo passo..."
+                  }
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  disabled={!isWaitingInput}
+                />
+                <Button
+                  size="icon"
+                  onClick={handleSendMessage}
+                  disabled={!isWaitingInput || !input.trim()}
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </CardContent>
