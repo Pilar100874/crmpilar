@@ -79,24 +79,24 @@ export const validatePhone = (phone: string): boolean => {
 
 // Validação de Telefone por Formato
 export const validatePhoneFormat = (phone: string, format: string): boolean => {
-  const cleanPhone = phone.replace(/\D/g, '');
-  
-  // Verifica comprimento básico primeiro
-  if (cleanPhone.length < 10 || cleanPhone.length > 13) return false;
-  
   switch (format) {
     case "international":
-      // Formato internacional: +55 11 99999-9999 (deve ter 13 dígitos com +55)
-      return /^\+?55\d{10,11}$/.test(cleanPhone) || /^55\d{10,11}$/.test(cleanPhone);
+      // Formato internacional: +55 (11) 99999-9999 ou 55 (11) 99999-9999
+      // Aceita com ou sem espaços, parênteses e hífen
+      const internationalRegex = /^(\+?55)\s?\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
+      return internationalRegex.test(phone.trim());
     
     case "national":
-      // Formato nacional: 11 99999-9999 (10 ou 11 dígitos sem +55)
-      return cleanPhone.length >= 10 && cleanPhone.length <= 11 && !cleanPhone.startsWith("55");
+      // Formato nacional: (11) 99999-9999 ou (11) 9999-9999
+      // Aceita com ou sem espaços, parênteses e hífen
+      const nationalRegex = /^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
+      // Não pode começar com +55 ou 55
+      return nationalRegex.test(phone.trim()) && !phone.trim().startsWith('+55') && !phone.trim().startsWith('55');
     
     case "any":
     default:
-      // Qualquer formato válido
-      return cleanPhone.length >= 10 && cleanPhone.length <= 13;
+      // Qualquer formato - aceita qualquer coisa
+      return true;
   }
 };
 
