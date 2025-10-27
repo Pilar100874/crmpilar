@@ -1300,7 +1300,48 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }
       }
     } else {
-      console.log("⚠️ No pending variable to save");
+      console.log("⚠️ No pending variable to save; trying to infer from node config.");
+      if (nodeId) {
+        const currentNode = nodes.find((n) => n.id === nodeId);
+        const nodeVar = normalizeVarName(((currentNode?.data as any)?.config?.variable) || "");
+        if (nodeVar) {
+          const newContext = { ...contextRef.current, [nodeVar]: saveValue, ['@' + nodeVar]: saveValue };
+          contextRef.current = newContext;
+          setContext(newContext);
+          onContextChange?.(newContext);
+          addSuccessMessage(`Variável "${nodeVar}" = "${saveValue}"`);
+        }
+
+        const buttonEdge = edges.find(
+          (edge) => edge.source === nodeId && edge.sourceHandle === button.buttonId
+        );
+        if (buttonEdge) {
+          const nextNode = nodes.find((node) => node.id === buttonEdge.target);
+          if (nextNode) {
+            console.log("➡️ [BUTTON] Executing next node via button edge:", nextNode.id);
+            console.log("🚀 [BUTTON] Context available for next node:", contextRef.current);
+            safeSetTimeout(() => {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }, 500);
+            return;
+          }
+        }
+
+        const buttonIndex = parseInt(button.buttonId?.split('_').pop() || '0');
+        console.log("🔍 Finding next node with index:", buttonIndex);
+        const nextNode = getNextNode(nodeId, buttonIndex);
+        if (nextNode) {
+          console.log("➡️ [BUTTON] Executing next node:", nextNode.id);
+          console.log("🚀 [BUTTON] Context available for next node:", contextRef.current);
+          safeSetTimeout(() => {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }, 500);
+        } else {
+          console.log("❌ No next node found");
+        }
+      }
     }
   };
 
@@ -1487,7 +1528,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                 key={idx}
                                 variant="outline"
                                 size="sm"
-                                className="w-full justify-start bg-pink-500 hover:bg-pink-600 text-white border-pink-500"
+                              className="w-full justify-start"
                                 onClick={() => handleButtonClick(button, msg.nodeId)}
                                 disabled={!isWaitingInput}
                               >

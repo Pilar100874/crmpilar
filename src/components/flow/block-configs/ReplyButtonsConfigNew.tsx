@@ -164,7 +164,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           onVariableRequest={() => inputRefs?.current['variable'] && openVariablePicker?.(inputRefs.current['variable'])}
           placeholder="Pesquisar ou criar"
-          className="bg-accent/50"
+          className="bg-background"
         />
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           ⚠️ Se um campo não for definido, a resposta não será salva.
