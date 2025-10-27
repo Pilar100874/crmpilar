@@ -281,47 +281,98 @@ export const RichTextEditor = ({
     if (!selection || !selection.rangeCount) return;
     
     const range = selection.getRangeAt(0);
-    let node: Node | null = range.startContainer;
-    
-    // Navega até encontrar o elemento que pode ser uma variável
-    while (node && node !== editorRef.current) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement;
-        if (el.classList?.contains('variable-badge')) {
-          // Se pressionar Backspace ou Delete, remove a variável inteira
-          if (e.key === 'Backspace' || e.key === 'Delete') {
-            e.preventDefault();
-            const parent = el.parentNode;
-            const nextSibling = el.nextSibling;
-            el.remove();
-            
-            // Reposiciona o cursor
-            if (parent) {
-              const newRange = document.createRange();
-              const sel = window.getSelection();
-              if (nextSibling) {
-                newRange.setStartBefore(nextSibling);
-              } else if (parent.lastChild) {
-                newRange.setStartAfter(parent.lastChild);
-              } else {
-                newRange.selectNodeContents(parent as Node);
-              }
-              newRange.collapse(true);
-              sel?.removeAllRanges();
-              sel?.addRange(newRange);
-            }
-            
-            handleInput();
-            return;
+
+    const isBadge = (n: Node | null): n is HTMLElement => !!n && n.nodeType === Node.ELEMENT_NODE && (n as HTMLElement).classList?.contains('variable-badge');
+
+    // Casos de exclusão quando o cursor está adjacente a uma variável
+    if (range.collapsed) {
+      const container = range.startContainer;
+      const offset = range.startOffset;
+
+      // Backspace remove variável anterior
+      if (e.key === 'Backspace') {
+        let prev: Node | null = null;
+        if (container.nodeType === Node.TEXT_NODE) {
+          if (offset === 0) {
+            prev = (container.previousSibling) || container.parentNode?.previousSibling || null;
           }
-          // Previne edição de texto dentro da variável
-          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault();
-            return;
-          }
+        } else {
+          // container é elemento
+          if (offset > 0) prev = (container as Element).childNodes[offset - 1] || null;
+        }
+        // Ignora espaços imediatamente antes
+        if (prev && prev.nodeType === Node.TEXT_NODE && ((prev as Text).textContent || '') === ' ') {
+          prev = prev.previousSibling;
+        }
+        if (isBadge(prev)) {
+          e.preventDefault();
+          (prev as HTMLElement).remove();
+          handleInput();
+          return;
         }
       }
-      node = node.parentNode;
+
+      // Delete remove variável seguinte
+      if (e.key === 'Delete') {
+        let next: Node | null = null;
+        if (container.nodeType === Node.TEXT_NODE) {
+          const text = container.textContent || '';
+          if (offset === text.length) {
+            next = container.nextSibling || container.parentNode?.nextSibling || null;
+          }
+        } else {
+          next = (container as Element).childNodes[offset] || null;
+        }
+        // Ignora espaços imediatamente depois
+        if (next && next.nodeType === Node.TEXT_NODE && ((next as Text).textContent || '').startsWith(' ')) {
+          next = next.nextSibling;
+        }
+        if (isBadge(next)) {
+          e.preventDefault();
+          (next as HTMLElement).remove();
+          handleInput();
+          return;
+        }
+      }
+    }
+
+    // Previne digitação dentro da variável e permite exclusão quando dentro dela
+    let node: Node | null = range.startContainer;
+    while (node && node !== editorRef.current) {
+      if (isBadge(node)) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+          e.preventDefault();
+          const badgeEl = node as HTMLElement;
+          const parent = badgeEl.parentNode;
+          const after = badgeEl.nextSibling;
+          badgeEl.remove();
+          // Reposiciona o cursor onde a variável estava
+          const newRange = document.createRange();
+          const sel = window.getSelection();
+          if (after) newRange.setStartBefore(after);
+          else if (parent) newRange.selectNodeContents(parent);
+          newRange.collapse(true);
+          sel?.removeAllRanges();
+          sel?.addRange(newRange);
+          handleInput();
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+        }
+        return;
+      }
+      node = node.parentNode as Node | null;
+    }
+  };
+
+  const handleEditorClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const badge = target.closest('.variable-badge') as HTMLElement | null;
+    if (badge) {
+      const range = document.createRange();
+      range.selectNode(badge);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
   };
 
@@ -495,6 +546,7 @@ export const RichTextEditor = ({
           contentEditable
           onInput={handleInput}
           onKeyDown={handleKeyDown}
+          onClick={handleEditorClick}
           className={cn(
             "w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-primary transition-colors",
             multiline ? "min-h-[100px]" : "min-h-[36px]",
