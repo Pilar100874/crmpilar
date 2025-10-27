@@ -1051,50 +1051,58 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!currentNodeId) return;
-    
-    const currentNode = nodes.find((n) => n.id === currentNodeId);
-    if (!currentNode) return;
-    
-    const nodeData = currentNode.data as any;
-    const nodeConfig = nodeData?.config || {};
-    const fileType = nodeConfig.fileType || "any";
-    const maxSizeMB = nodeConfig.maxSizeMB || 10;
-    const errorMessage = nodeConfig.errorMessage || "";
+    // Se estamos no bloco ask_file, validar o arquivo
+    if (currentBlockType === "ask_file" && currentNodeId) {
+      const currentNode = nodes.find((n) => n.id === currentNodeId);
+      if (!currentNode) return;
+      
+      const nodeData = currentNode.data as any;
+      const nodeConfig = nodeData?.config || {};
+      const fileType = nodeConfig.fileType || "any";
+      const maxSizeMB = parseFloat(nodeConfig.maxSizeMB) || 10;
+      const errorMessage = nodeConfig.errorMessage || "";
 
-    // Validar tipo de arquivo
-    const validTypes: Record<string, string[]> = {
-      image: ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
-      video: ["video/mp4", "video/mpeg", "video/quicktime"],
-      audio: ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg"],
-      document: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
-    };
+      console.log("🔍 Validando arquivo:", { fileType, maxSizeMB, fileName: file.name, fileSize: file.size, mimeType: file.type });
 
-    if (fileType !== "any" && validTypes[fileType]) {
-      if (!validTypes[fileType].includes(file.type)) {
-        const typeNames: Record<string, string> = {
-          image: "imagem",
-          video: "vídeo",
-          audio: "áudio",
-          document: "documento"
-        };
-        const msg = errorMessage || `Por favor, envie apenas arquivos de ${typeNames[fileType]}.`;
+      // Validar tipo de arquivo
+      const validTypes: Record<string, string[]> = {
+        image: ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
+        video: ["video/mp4", "video/mpeg", "video/quicktime"],
+        audio: ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg"],
+        document: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+      };
+
+      if (fileType !== "any" && validTypes[fileType]) {
+        if (!validTypes[fileType].includes(file.type)) {
+          const typeNames: Record<string, string> = {
+            image: "imagem",
+            video: "vídeo",
+            audio: "áudio",
+            document: "documento"
+          };
+          const msg = errorMessage || `Por favor, envie apenas arquivos de ${typeNames[fileType]}.`;
+          addSystemMessage(`⚠️ ${msg}`);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+      }
+
+      // Validar tamanho do arquivo
+      const fileSizeMB = file.size / (1024 * 1024);
+      console.log("📏 Tamanho do arquivo:", fileSizeMB, "MB, máximo:", maxSizeMB);
+      
+      if (fileSizeMB > maxSizeMB) {
+        const msg = errorMessage || `O arquivo não pode ser maior que ${maxSizeMB}MB.`;
         addSystemMessage(`⚠️ ${msg}`);
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
+
+      console.log("✅ Arquivo válido!");
     }
 
-    // Validar tamanho do arquivo
+    // Arquivo válido ou não é bloco ask_file
     const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > maxSizeMB) {
-      const msg = errorMessage || `O arquivo não pode ser maior que ${maxSizeMB}MB.`;
-      addSystemMessage(`⚠️ ${msg}`);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-
-    // Arquivo válido
     setSelectedFile(file);
     setInput(`📎 ${file.name} (${fileSizeMB.toFixed(2)}MB)`);
   };
@@ -1322,6 +1330,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               const minValue = nodeConfig.minValue;
               const maxValue = nodeConfig.maxValue;
               
+              console.log("🔢 Validando número:", { 
+                input: input.trim(), 
+                numValue, 
+                acceptDecimals, 
+                minValue, 
+                maxValue,
+                minParsed: minValue ? parseFloat(minValue) : undefined,
+                maxParsed: maxValue ? parseFloat(maxValue) : undefined
+              });
+              
               // Verificar se é um número válido (SEMPRE)
               if (isNaN(numValue) || input.trim() === "") {
                 const errorMessage = nodeConfig.errorMessage || "Por favor, digite um número válido.";
@@ -1339,20 +1357,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               }
               
               // Verificar valor mínimo
-              if (minValue !== undefined && minValue !== "" && numValue < parseFloat(minValue)) {
-                const errorMessage = nodeConfig.errorMessage || `O número deve ser maior ou igual a ${minValue}.`;
-                addSystemMessage(`⚠️ ${errorMessage}`);
-                setInput("");
-                return;
+              if (minValue !== undefined && minValue !== null && minValue !== "") {
+                const min = parseFloat(minValue);
+                console.log("⬇️ Verificando mínimo:", numValue, "<", min, "?", numValue < min);
+                if (!isNaN(min) && numValue < min) {
+                  const errorMessage = nodeConfig.errorMessage || `O número deve ser maior ou igual a ${min}.`;
+                  addSystemMessage(`⚠️ ${errorMessage}`);
+                  setInput("");
+                  return;
+                }
               }
               
               // Verificar valor máximo
-              if (maxValue !== undefined && maxValue !== "" && numValue > parseFloat(maxValue)) {
-                const errorMessage = nodeConfig.errorMessage || `O número deve ser menor ou igual a ${maxValue}.`;
-                addSystemMessage(`⚠️ ${errorMessage}`);
-                setInput("");
-                return;
+              if (maxValue !== undefined && maxValue !== null && maxValue !== "") {
+                const max = parseFloat(maxValue);
+                console.log("⬆️ Verificando máximo:", numValue, ">", max, "?", numValue > max);
+                if (!isNaN(max) && numValue > max) {
+                  const errorMessage = nodeConfig.errorMessage || `O número deve ser menor ou igual a ${max}.`;
+                  addSystemMessage(`⚠️ ${errorMessage}`);
+                  setInput("");
+                  return;
+                }
               }
+              
+              console.log("✅ Número válido!");
             }
           }
         }
