@@ -42,6 +42,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const [pendingVariable, setPendingVariable] = useState<string | null>(null);
   const [currentBlockType, setCurrentBlockType] = useState<string | null>(null);
   const [expandedListId, setExpandedListId] = useState<string | null>(null);
+  const [activeListId, setActiveListId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
@@ -710,8 +711,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         
         // Adicionar mensagem com botão de lista estilo WhatsApp
         safeSetTimeout(() => {
+          const newListId = Date.now().toString();
+          setActiveListId(newListId);
           setMessages((prev) => [...prev, {
-            id: Date.now().toString(),
+            id: newListId,
             sender: "bot",
             text: listText,
             timestamp: new Date(),
@@ -1546,7 +1549,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                               buttonId: `section_${secIdx}_item_${itemIdx}`
                                             }, msg.nodeId);
                                           }}
-                                          disabled={!isWaitingInput}
+                                          disabled={!isWaitingInput || msg.id !== activeListId}
                                           className="w-full px-4 py-3 text-left hover:bg-accent/50 border-b border-border last:border-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                           <div className="text-sm font-medium">{item.label}</div>
@@ -1564,7 +1567,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setExpandedListId(msg.id)}
-                                disabled={!isWaitingInput}
+                                disabled={!isWaitingInput || msg.id !== activeListId}
                                 className="w-full justify-between"
                               >
                                 <span>{msg.listButtonText || "Ver opções"}</span>
