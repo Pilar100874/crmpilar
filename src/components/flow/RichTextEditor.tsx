@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { X, Plus, Search, User, MapPin, Building2, Hash, Globe, Database, Bold, Italic, Code, Link, List, ListOrdered } from "lucide-react";
+import { Plus, Search, User, MapPin, Building2, Hash, Globe, Database, Bold, Italic, Code, Strikethrough } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Variable {
@@ -277,24 +277,30 @@ export const RichTextEditor = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Previne edição de variáveis
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      let node = range.startContainer;
+    if (!selection || !selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    let node = range.startContainer;
+    
+    // Se estiver em um text node, pega o pai
+    if (node.nodeType === Node.TEXT_NODE) {
+      node = node.parentNode as Node;
+    }
+    
+    const element = node as HTMLElement;
+    
+    // Se o cursor está dentro ou adjacente a uma variável
+    if (element.classList?.contains('variable-badge') || 
+        element.parentElement?.classList?.contains('variable-badge')) {
+      const badge = element.classList?.contains('variable-badge') ? element : element.parentElement;
       
-      if (node.nodeType === Node.TEXT_NODE) {
-        node = node.parentNode as Node;
-      }
-      
-      if ((node as HTMLElement).classList?.contains('variable-badge')) {
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-          e.preventDefault();
-          (node as HTMLElement).remove();
-          handleInput();
-        } else if (e.key.length === 1) {
-          e.preventDefault();
-        }
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+        badge?.remove();
+        handleInput();
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault(); // Previne digitação dentro da variável
       }
     }
   };
@@ -336,38 +342,50 @@ export const RichTextEditor = ({
   const insertVariable = (variableName: string) => {
     if (!editorRef.current) return;
     
+    editorRef.current.focus();
+    
     const selection = window.getSelection();
-    if (!selection || !selection.rangeCount) {
-      editorRef.current.focus();
-      return;
+    if (!selection) return;
+    
+    let range: Range;
+    if (selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+    } else {
+      range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false);
     }
     
-    const range = selection.getRangeAt(0);
+    // Remove qualquer conteúdo selecionado
     range.deleteContents();
     
-    // Cria badge da variável
+    // Cria o badge da variável
     const varBadge = document.createElement('span');
     varBadge.className = 'variable-badge';
     varBadge.contentEditable = 'false';
     varBadge.dataset.variable = variableName;
     varBadge.textContent = variableName;
     
+    // Insere a variável
     range.insertNode(varBadge);
     
-    // Adiciona espaço após a variável
-    const space = document.createTextNode(' ');
-    range.setStartAfter(varBadge);
-    range.insertNode(space);
+    // Cria um espaço após a variável
+    const space = document.createTextNode('\u00A0'); // Non-breaking space
+    if (varBadge.nextSibling) {
+      varBadge.parentNode?.insertBefore(space, varBadge.nextSibling);
+    } else {
+      varBadge.parentNode?.appendChild(space);
+    }
+    
+    // Posiciona o cursor após o espaço
     range.setStartAfter(space);
     range.collapse(true);
-    
     selection.removeAllRanges();
     selection.addRange(range);
     
     handleInput();
     setIsOpen(false);
     setSearchQuery("");
-    editorRef.current.focus();
   };
 
   const applyFormatting = (tag: string) => {
@@ -377,31 +395,26 @@ export const RichTextEditor = ({
     if (!selection || !selection.rangeCount) return;
     
     const range = selection.getRangeAt(0);
-    
-    // Se não há texto selecionado, não faz nada
     if (range.collapsed) return;
     
     try {
-      // Cria o elemento de formatação
       const element = document.createElement(tag);
-      
-      // Tenta envolver o conteúdo selecionado
-      const contents = range.extractContents();
-      element.appendChild(contents);
+      const fragment = range.extractContents();
+      element.appendChild(fragment);
       range.insertNode(element);
       
-      // Move o cursor para depois do elemento formatado
-      range.setStartAfter(element);
-      range.collapse(true);
+      // Seleciona o texto formatado
+      const newRange = document.createRange();
+      newRange.selectNodeContents(element);
+      newRange.collapse(false);
       selection.removeAllRanges();
-      selection.addRange(range);
+      selection.addRange(newRange);
+      
+      handleInput();
     } catch (e) {
-      // Se falhar, tenta uma abordagem alternativa
       console.error('Formatting error:', e);
-      document.execCommand(tag === 'strong' ? 'bold' : tag === 'em' ? 'italic' : 'strikethrough', false);
     }
     
-    handleInput();
     editorRef.current.focus();
   };
 
@@ -414,15 +427,16 @@ export const RichTextEditor = ({
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           className={cn(
-            "w-full rounded-sm border-2 border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 transition-all overflow-auto",
-            multiline ? "min-h-[120px]" : "h-10 flex items-center whitespace-nowrap",
+            "w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-primary transition-colors",
+            multiline ? "min-h-[100px]" : "min-h-[36px]",
             !value && "empty-editor",
             className
           )}
           data-placeholder={placeholder}
           style={{
-            whiteSpace: multiline ? 'pre-wrap' : 'nowrap',
-            wordWrap: 'break-word'
+            whiteSpace: multiline ? 'pre-wrap' : 'pre-wrap',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word'
           }}
         />
         <style>{`
@@ -434,90 +448,93 @@ export const RichTextEditor = ({
           .variable-badge {
             display: inline-flex;
             align-items: center;
-            background: hsl(var(--primary) / 0.1);
+            background: hsl(var(--primary) / 0.12);
             color: hsl(var(--primary));
-            padding: 0.125rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-size: 0.8125rem;
             font-weight: 500;
-            margin: 0 0.125rem;
-            cursor: default;
+            margin: 0 2px;
+            cursor: pointer;
             user-select: none;
+            vertical-align: middle;
+            transition: background 0.15s ease;
           }
           .variable-badge:hover {
-            background: hsl(var(--primary) / 0.15);
+            background: hsl(var(--primary) / 0.18);
           }
           [contenteditable] strong {
-            font-weight: 700;
+            font-weight: 600;
           }
           [contenteditable] em {
             font-style: italic;
           }
           [contenteditable] code {
             background: hsl(var(--muted));
-            padding: 0.125rem 0.25rem;
-            border-radius: 0.25rem;
-            font-size: 0.875rem;
-            font-family: monospace;
+            padding: 0.15rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-family: 'Monaco', 'Menlo', monospace;
           }
           [contenteditable] s {
             text-decoration: line-through;
+            opacity: 0.75;
           }
         `}</style>
       </div>
       
       {/* Formatting Toolbar */}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-1">
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => applyFormatting('strong')}
-          className="h-8 px-2"
-          title="Negrito (*texto*)"
+          className="h-7 w-7 p-0"
+          title="Negrito"
         >
           <Bold className="w-3.5 h-3.5" />
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => applyFormatting('em')}
-          className="h-8 px-2"
-          title="Itálico (_texto_)"
+          className="h-7 w-7 p-0"
+          title="Itálico"
         >
           <Italic className="w-3.5 h-3.5" />
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => applyFormatting('code')}
-          className="h-8 px-2"
-          title="Código (```texto```)"
+          className="h-7 w-7 p-0"
+          title="Código"
         >
           <Code className="w-3.5 h-3.5" />
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => applyFormatting('s')}
-          className="h-8 px-2"
-          title="Tachado (~texto~)"
+          className="h-7 w-7 p-0"
+          title="Tachado"
         >
-          <span className="text-xs font-semibold">S</span>
+          <Strikethrough className="w-3.5 h-3.5" />
         </Button>
         
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-5 mx-1" />
         
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="h-8"
+              className="h-7 text-xs"
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
               Variável
