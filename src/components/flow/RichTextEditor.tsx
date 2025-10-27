@@ -44,12 +44,9 @@ const parseToEditor = (text: string): string => {
   
   let html = text;
   
-  // Variáveis primeiro (antes de qualquer formatação)
-  html = html.replace(/\{\{([^}]+)\}\}/g, '<span class="variable-badge" contenteditable="false" data-variable="$1">$1</span>');
-  
   // Headings: # texto
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$2</h2>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
   html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
   
   // Negrito: *texto* ou **texto**
@@ -80,6 +77,9 @@ const parseToEditor = (text: string): string => {
   
   // Quebras de linha
   html = html.replace(/\n/g, '<br>');
+
+  // Variáveis por último (para permitir formatação envolvendo {{var}})
+  html = html.replace(/\{\{([^}]+)\}\}/g, '<span class="variable-badge" contenteditable="false" data-variable="$1">$1</span>');
   
   return html;
 };

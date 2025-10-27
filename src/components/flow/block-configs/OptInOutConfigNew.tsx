@@ -57,7 +57,7 @@ export const OptInOutConfigNew = ({ config, handleConfigChange, inputRefs, openV
             className="ml-auto"
             onClick={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
           >
-            Use field
+            usar variavel
           </Button>
         </div>
       </div>

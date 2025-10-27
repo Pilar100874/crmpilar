@@ -67,7 +67,7 @@ export const DynamicDataConfig = ({ config, handleConfigChange, inputRefs, openV
           onClick={() => openVariablePicker(inputRefs.current['question'])}
           className="w-full"
         >
-          Use field
+          usar variavel
         </Button>
       </div>
 
