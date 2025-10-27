@@ -758,71 +758,100 @@ export const AskUrlConfig = ({ config, handleConfigChange, inputRefs, openVariab
   </div>
 );
 
-export const AskCNPJConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
-  <div className="space-y-4">
-    <ConfigSection title="Pergunta">
-      <div className="space-y-2">
-        <Label className="text-white text-sm font-semibold flex items-center gap-2">
-          <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
-          Texto da Pergunta
-        </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
-          value={config.question || "Digite o CNPJ da empresa:"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
-          placeholder="Digite o CNPJ da empresa:"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
-        />
-      </div>
-    </ConfigSection>
+export const AskCNPJConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+  const cnpjFields = [
+    { key: 'variable', label: 'CNPJ', placeholder: 'cnpj', description: 'Número do CNPJ' },
+    { key: 'razaoSocialField', label: 'Razão Social', placeholder: 'razao_social', description: 'Nome empresarial' },
+    { key: 'nomeFantasiaField', label: 'Nome Fantasia', placeholder: 'nome_fantasia', description: 'Nome fantasia' },
+    { key: 'naturezaJuridicaField', label: 'Natureza Jurídica', placeholder: 'natureza_juridica', description: 'Natureza jurídica' },
+    { key: 'dataAberturaField', label: 'Data de Abertura', placeholder: 'data_abertura', description: 'Data de início das atividades' },
+    { key: 'situacaoField', label: 'Situação Cadastral', placeholder: 'situacao', description: 'Situação (ativa, inativa, etc)' },
+    { key: 'porteField', label: 'Porte da Empresa', placeholder: 'porte', description: 'Porte (micro, pequeno, etc)' },
+    { key: 'atividadePrincipalField', label: 'Atividade Principal', placeholder: 'atividade_principal', description: 'CNAE principal' },
+    { key: 'logradouroField', label: 'Logradouro', placeholder: 'logradouro', description: 'Endereço - logradouro' },
+    { key: 'numeroField', label: 'Número', placeholder: 'numero', description: 'Endereço - número' },
+    { key: 'complementoField', label: 'Complemento', placeholder: 'complemento', description: 'Endereço - complemento' },
+    { key: 'bairroField', label: 'Bairro', placeholder: 'bairro', description: 'Endereço - bairro' },
+    { key: 'municipioField', label: 'Município', placeholder: 'municipio', description: 'Endereço - município' },
+    { key: 'ufField', label: 'UF', placeholder: 'uf', description: 'Endereço - UF' },
+    { key: 'cepField', label: 'CEP', placeholder: 'cep', description: 'Endereço - CEP' },
+    { key: 'telefoneField', label: 'Telefone', placeholder: 'telefone', description: 'Telefone de contato' },
+    { key: 'emailField', label: 'E-mail', placeholder: 'email', description: 'E-mail de contato' },
+    { key: 'socioNomeField', label: 'Nome do Sócio', placeholder: 'socio_nome', description: 'Nome do sócio principal' },
+    { key: 'socioQualificacaoField', label: 'Qualificação do Sócio', placeholder: 'socio_qualificacao', description: 'Qualificação do sócio' },
+  ];
 
-    <ConfigSection title="Validação">
-      <ConfigTextarea
-        label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira um CNPJ válido"
-        rows={2}
-      />
-    </ConfigSection>
+  return (
+    <div className="space-y-4">
+      <ConfigSection title="Pergunta">
+        <div className="space-y-2">
+          <Label className="text-white text-sm font-semibold flex items-center gap-2">
+            <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
+            Texto da Pergunta
+          </Label>
+          <Textarea
+            ref={(el) => (inputRefs.current['question'] = el)}
+            value={config.question || "Digite o CNPJ da empresa:"}
+            onChange={(e) => handleConfigChange("question", e.target.value)}
+            placeholder="Digite o CNPJ da empresa:"
+            rows={3}
+            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          />
+          <FormattingToolbar
+            onFormat={(prefix, suffix) => insertFormatting(
+              inputRefs.current['question'],
+              prefix,
+              suffix,
+              config.question || "",
+              (val) => handleConfigChange("question", val)
+            )}
+            onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          />
+        </div>
+      </ConfigSection>
 
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
-          Salvar CNPJ no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
-        </Label>
-      </div>
-      <div className="relative">
-        <Input
-          value={config.variable || "cnpj"}
-          onChange={(e) => handleConfigChange("variable", e.target.value)}
-          placeholder="cnpj"
-          className="bg-white border-slate-200 text-slate-900"
+      <ConfigSection title="Validação">
+        <ConfigTextarea
+          label="Mensagem de Erro"
+          value={config.errorMessage || ""}
+          onChange={(v) => handleConfigChange("errorMessage", v)}
+          placeholder="Por favor, insira um CNPJ válido"
+          rows={2}
         />
-        <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
-          CNPJ
-        </span>
+      </ConfigSection>
+
+      <ConfigSection title="Campos de Dados">
+        <div className="space-y-3">
+          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+            <p className="text-xs text-slate-600 mb-2">
+              Configure o nome de cada campo onde os dados serão salvos:
+            </p>
+          </div>
+          
+          {cnpjFields.map((field) => (
+            <div key={field.key} className="space-y-1">
+              <Label className="text-xs text-slate-600 flex items-center gap-1">
+                {field.label}
+                <span className="text-slate-400">({field.description})</span>
+              </Label>
+              <Input
+                value={config[field.key] || field.placeholder}
+                onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                placeholder={field.placeholder}
+                className="bg-white border-slate-200 text-slate-900 h-8 text-sm"
+              />
+            </div>
+          ))}
+        </div>
+      </ConfigSection>
+
+      <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
+        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-slate-700">
+          Este bloco valida o CNPJ e busca automaticamente todos os dados da empresa na Receita Federal. 
+          As informações são salvas nos campos configurados acima.
+        </p>
       </div>
     </div>
-
-    <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
-      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
-        Este bloco valida o CNPJ e busca automaticamente todos os dados da empresa na Receita Federal. 
-        As informações são salvas em variáveis separadas para uso no fluxo.
-      </p>
-    </div>
-  </div>
-);
+  );
+};

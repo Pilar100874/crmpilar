@@ -1426,28 +1426,51 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 if (data?.success && data?.data) {
                   const cnpjData = data.data;
                   
-                  // Guardar cada variável separadamente
+                  // Usar os campos configurados ou valores padrão
+                  const fields = {
+                    cnpj: nodeConfig.variable || cleanVarName || 'cnpj',
+                    razaoSocial: nodeConfig.razaoSocialField || 'razao_social',
+                    nomeFantasia: nodeConfig.nomeFantasiaField || 'nome_fantasia',
+                    naturezaJuridica: nodeConfig.naturezaJuridicaField || 'natureza_juridica',
+                    dataAbertura: nodeConfig.dataAberturaField || 'data_abertura',
+                    situacao: nodeConfig.situacaoField || 'situacao',
+                    porte: nodeConfig.porteField || 'porte',
+                    atividadePrincipal: nodeConfig.atividadePrincipalField || 'atividade_principal',
+                    logradouro: nodeConfig.logradouroField || 'logradouro',
+                    numero: nodeConfig.numeroField || 'numero',
+                    complemento: nodeConfig.complementoField || 'complemento',
+                    bairro: nodeConfig.bairroField || 'bairro',
+                    municipio: nodeConfig.municipioField || 'municipio',
+                    uf: nodeConfig.ufField || 'uf',
+                    cep: nodeConfig.cepField || 'cep',
+                    telefone: nodeConfig.telefoneField || 'telefone',
+                    email: nodeConfig.emailField || 'email',
+                    socioNome: nodeConfig.socioNomeField || 'socio_nome',
+                    socioQualificacao: nodeConfig.socioQualificacaoField || 'socio_qualificacao',
+                  };
+                  
+                  // Guardar cada variável no campo configurado
                   const cnpjContext = {
                     ...contextRef.current,
-                    [cleanVarName]: input.trim(),
-                    [`${cleanVarName}_razao_social`]: cnpjData.razao_social || '',
-                    [`${cleanVarName}_nome_fantasia`]: cnpjData.nome_fantasia || '',
-                    [`${cleanVarName}_natureza_juridica`]: cnpjData.natureza_juridica || '',
-                    [`${cleanVarName}_data_abertura`]: cnpjData.abertura || '',
-                    [`${cleanVarName}_situacao`]: cnpjData.situacao || '',
-                    [`${cleanVarName}_porte`]: cnpjData.porte || '',
-                    [`${cleanVarName}_atividade_principal`]: cnpjData.atividade_principal || '',
-                    [`${cleanVarName}_logradouro`]: cnpjData.logradouro || '',
-                    [`${cleanVarName}_numero`]: cnpjData.numero || '',
-                    [`${cleanVarName}_complemento`]: cnpjData.complemento || '',
-                    [`${cleanVarName}_bairro`]: cnpjData.bairro || '',
-                    [`${cleanVarName}_municipio`]: cnpjData.municipio || '',
-                    [`${cleanVarName}_uf`]: cnpjData.uf || '',
-                    [`${cleanVarName}_cep`]: cnpjData.cep || '',
-                    [`${cleanVarName}_telefone`]: cnpjData.telefone || '',
-                    [`${cleanVarName}_email`]: cnpjData.email || '',
-                    [`${cleanVarName}_socio_nome`]: cnpjData.socio_nome || '',
-                    [`${cleanVarName}_socio_qualificacao`]: cnpjData.socio_qualificacao || '',
+                    [fields.cnpj]: input.trim(),
+                    [fields.razaoSocial]: cnpjData.razao_social || '',
+                    [fields.nomeFantasia]: cnpjData.nome_fantasia || '',
+                    [fields.naturezaJuridica]: cnpjData.natureza_juridica || '',
+                    [fields.dataAbertura]: cnpjData.abertura || '',
+                    [fields.situacao]: cnpjData.situacao || '',
+                    [fields.porte]: cnpjData.porte || '',
+                    [fields.atividadePrincipal]: cnpjData.atividade_principal || '',
+                    [fields.logradouro]: cnpjData.logradouro || '',
+                    [fields.numero]: cnpjData.numero || '',
+                    [fields.complemento]: cnpjData.complemento || '',
+                    [fields.bairro]: cnpjData.bairro || '',
+                    [fields.municipio]: cnpjData.municipio || '',
+                    [fields.uf]: cnpjData.uf || '',
+                    [fields.cep]: cnpjData.cep || '',
+                    [fields.telefone]: cnpjData.telefone || '',
+                    [fields.email]: cnpjData.email || '',
+                    [fields.socioNome]: cnpjData.socio_nome || '',
+                    [fields.socioQualificacao]: cnpjData.socio_qualificacao || '',
                   };
                   
                   contextRef.current = cnpjContext;

@@ -55,26 +55,50 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
       const varName = (config.variable || "cnpj") as string | undefined;
       if (varName) {
         const cleanVarName = String(varName).replace(/^@/, "");
+        
+        // Usar campos configurados ou padrões
+        const fields = {
+          cnpj: config.variable || cleanVarName,
+          razaoSocial: config.razaoSocialField || 'razao_social',
+          nomeFantasia: config.nomeFantasiaField || 'nome_fantasia',
+          naturezaJuridica: config.naturezaJuridicaField || 'natureza_juridica',
+          dataAbertura: config.dataAberturaField || 'data_abertura',
+          situacao: config.situacaoField || 'situacao',
+          porte: config.porteField || 'porte',
+          atividadePrincipal: config.atividadePrincipalField || 'atividade_principal',
+          logradouro: config.logradouroField || 'logradouro',
+          numero: config.numeroField || 'numero',
+          complemento: config.complementoField || 'complemento',
+          bairro: config.bairroField || 'bairro',
+          municipio: config.municipioField || 'municipio',
+          uf: config.ufField || 'uf',
+          cep: config.cepField || 'cep',
+          telefone: config.telefoneField || 'telefone',
+          email: config.emailField || 'email',
+          socioNome: config.socioNomeField || 'socio_nome',
+          socioQualificacao: config.socioQualificacaoField || 'socio_qualificacao',
+        };
+        
         outputs.push(
-          { name: cleanVarName, description: "CNPJ digitado", type: "string" },
-          { name: `${cleanVarName}_razao_social`, description: "Razão social", type: "string" },
-          { name: `${cleanVarName}_nome_fantasia`, description: "Nome fantasia", type: "string" },
-          { name: `${cleanVarName}_natureza_juridica`, description: "Natureza jurídica", type: "string" },
-          { name: `${cleanVarName}_data_abertura`, description: "Data de abertura", type: "string" },
-          { name: `${cleanVarName}_situacao`, description: "Situação cadastral", type: "string" },
-          { name: `${cleanVarName}_porte`, description: "Porte da empresa", type: "string" },
-          { name: `${cleanVarName}_atividade_principal`, description: "Atividade principal (CNAE)", type: "string" },
-          { name: `${cleanVarName}_logradouro`, description: "Logradouro", type: "string" },
-          { name: `${cleanVarName}_numero`, description: "Número", type: "string" },
-          { name: `${cleanVarName}_complemento`, description: "Complemento", type: "string" },
-          { name: `${cleanVarName}_bairro`, description: "Bairro", type: "string" },
-          { name: `${cleanVarName}_municipio`, description: "Município", type: "string" },
-          { name: `${cleanVarName}_uf`, description: "UF", type: "string" },
-          { name: `${cleanVarName}_cep`, description: "CEP", type: "string" },
-          { name: `${cleanVarName}_telefone`, description: "Telefone", type: "string" },
-          { name: `${cleanVarName}_email`, description: "E-mail", type: "string" },
-          { name: `${cleanVarName}_socio_nome`, description: "Nome do sócio principal", type: "string" },
-          { name: `${cleanVarName}_socio_qualificacao`, description: "Qualificação do sócio", type: "string" }
+          { name: fields.cnpj, description: "CNPJ digitado", type: "string" },
+          { name: fields.razaoSocial, description: "Razão social", type: "string" },
+          { name: fields.nomeFantasia, description: "Nome fantasia", type: "string" },
+          { name: fields.naturezaJuridica, description: "Natureza jurídica", type: "string" },
+          { name: fields.dataAbertura, description: "Data de abertura", type: "string" },
+          { name: fields.situacao, description: "Situação cadastral", type: "string" },
+          { name: fields.porte, description: "Porte da empresa", type: "string" },
+          { name: fields.atividadePrincipal, description: "Atividade principal", type: "string" },
+          { name: fields.logradouro, description: "Logradouro", type: "string" },
+          { name: fields.numero, description: "Número", type: "string" },
+          { name: fields.complemento, description: "Complemento", type: "string" },
+          { name: fields.bairro, description: "Bairro", type: "string" },
+          { name: fields.municipio, description: "Município", type: "string" },
+          { name: fields.uf, description: "UF", type: "string" },
+          { name: fields.cep, description: "CEP", type: "string" },
+          { name: fields.telefone, description: "Telefone", type: "string" },
+          { name: fields.email, description: "E-mail", type: "string" },
+          { name: fields.socioNome, description: "Nome do sócio principal", type: "string" },
+          { name: fields.socioQualificacao, description: "Qualificação do sócio", type: "string" }
         );
       }
       break;
