@@ -1829,54 +1829,55 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         )}
 
         <div className="p-4 border-t">
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          
           <div className="flex gap-2">
-            {currentBlockType === "ask_file" ? (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  disabled={!isWaitingInput}
-                />
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!isWaitingInput}
-                >
-                  {selectedFile ? `📎 ${selectedFile.name}` : "📎 Selecionar Arquivo"}
-                </Button>
-                <Button
-                  size="icon"
-                  onClick={handleSendMessage}
-                  disabled={!isWaitingInput || !selectedFile}
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </>
-            ) : (
-              <>
-                <Input
-                  placeholder={
-                    isWaitingInput
-                      ? "Digite sua resposta..."
-                      : "Aguardando próximo passo..."
-                  }
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                  disabled={!isWaitingInput}
-                />
-                <Button
-                  size="icon"
-                  onClick={handleSendMessage}
-                  disabled={!isWaitingInput || !input.trim()}
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </>
+            <Input
+              placeholder={
+                isWaitingInput
+                  ? currentBlockType === "ask_file" 
+                    ? "Clique em 📎 para anexar um arquivo..."
+                    : "Digite sua resposta..."
+                  : "Aguardando próximo passo..."
+              }
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => {
+                // Bloquear Enter se for ask_file sem arquivo
+                if (currentBlockType === "ask_file" && !selectedFile) return;
+                if (e.key === "Enter") handleSendMessage();
+              }}
+              disabled={!isWaitingInput || currentBlockType === "ask_file"}
+              readOnly={currentBlockType === "ask_file"}
+            />
+            
+            {currentBlockType === "ask_file" && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!isWaitingInput}
+                title="Anexar arquivo"
+              >
+                📎
+              </Button>
             )}
+            
+            <Button
+              size="icon"
+              onClick={handleSendMessage}
+              disabled={
+                !isWaitingInput || 
+                (currentBlockType === "ask_file" ? !selectedFile : !input.trim())
+              }
+            >
+              <Send className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </CardContent>
