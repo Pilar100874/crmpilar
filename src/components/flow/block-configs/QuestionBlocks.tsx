@@ -7,14 +7,18 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bold, Italic, Smile, Code, Heading, List, ListOrdered, Link, Quote, Info } from "lucide-react";
+import { RichTextEditor } from "../RichTextEditor";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
-  inputRefs: any;
-  openVariablePicker: (ref: any) => void;
+  inputRefs?: any;
+  openVariablePicker?: (ref: any) => void;
+  nodes?: any[];
+  edges?: any[];
+  selectedNode?: any;
 }
 
 const insertFormatting = (

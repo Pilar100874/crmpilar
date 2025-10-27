@@ -255,6 +255,9 @@ export const PropertiesPanel = ({
       handleConfigChange,
       inputRefs,
       openVariablePicker,
+      nodes,
+      edges,
+      selectedNode,
     };
 
     switch (nodeData.type) {

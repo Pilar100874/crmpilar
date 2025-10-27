@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { VariableTextarea } from "../VariableInput";
+import { RichTextEditor } from "../RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Upload, Loader2 } from "lucide-react";
@@ -16,11 +16,14 @@ import { FormattingToolbar } from "./FormattingToolbar";
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
-  inputRefs: any;
-  openVariablePicker: (ref: any) => void;
+  inputRefs?: any;
+  openVariablePicker?: (ref: any) => void;
+  nodes?: any[];
+  edges?: any[];
+  selectedNode?: any;
 }
 
-export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+export const SendMessageConfig = ({ config, handleConfigChange, nodes = [], edges = [], selectedNode }: ConfigProps) => {
   const messages = Array.isArray(config.messages) ? config.messages : [{ text: config.text || "" }];
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
@@ -39,25 +42,6 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
     handleConfigChange("messages", updated);
   };
 
-  const insertFormatting = (index: number, prefix: string, suffix: string) => {
-    const textarea = inputRefs.current[`text_${index}`];
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = messages[index].text || "";
-    const selectedText = text.substring(start, end);
-
-    const newText = text.substring(0, start) + prefix + selectedText + suffix + text.substring(end);
-    updateMessage(index, newText);
-
-    // Restaurar o cursor
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  };
 
   const addMedia = () => {
     handleConfigChange("media", {
@@ -126,19 +110,14 @@ export const SendMessageConfig = ({ config, handleConfigChange, inputRefs, openV
               <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
               Texto da Mensagem
             </Label>
-            <VariableTextarea
-              name={`text_${index}`}
-              ref={(el) => (inputRefs.current[`text_${index}`] = el)}
+            <RichTextEditor
               value={message.text || ""}
-              onChange={(e) => updateMessage(index, e.target.value)}
-              onVariableRequest={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+              onChange={(text) => updateMessage(index, text)}
               placeholder="Clique para editar..."
-              rows={4}
-              className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-            />
-            <FormattingToolbar
-              onFormat={(prefix, suffix) => insertFormatting(index, prefix, suffix)}
-              onVariableClick={() => openVariablePicker(inputRefs.current[`text_${index}`])}
+              multiline={true}
+              nodes={nodes}
+              edges={edges}
+              selectedNode={selectedNode}
             />
           </div>
           </div>

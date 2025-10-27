@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { VariableTextarea } from "../VariableInput";
+import { RichTextEditor } from "../RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -10,8 +10,11 @@ import { Card } from "@/components/ui/card";
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
-  inputRefs: any;
-  openVariablePicker: (ref: any) => void;
+  inputRefs?: any;
+  openVariablePicker?: (ref: any) => void;
+  nodes?: any[];
+  edges?: any[];
+  selectedNode?: any;
 }
 
 // Webhook - API Externa
@@ -56,14 +59,11 @@ export const WebhookConfig = ({ config, handleConfigChange, inputRefs, openVaria
 
       <div className="space-y-2">
         <Label>URL *</Label>
-        <VariableTextarea
-          name="url"
-          ref={(el) => (inputRefs.current['url'] = el)}
+        <RichTextEditor
           value={config.url || ""}
-          onChange={(e) => handleConfigChange("url", e.target.value)}
-          onVariableRequest={() => openVariablePicker(inputRefs.current['url'])}
+          onChange={(text) => handleConfigChange("url", text)}
           placeholder="https://api.exemplo.com/endpoint"
-          rows={2}
+          multiline={true}
         />
       </div>
 
@@ -104,14 +104,11 @@ export const WebhookConfig = ({ config, handleConfigChange, inputRefs, openVaria
       {(config.method === "POST" || config.method === "PUT" || config.method === "PATCH") && (
         <div className="space-y-2">
           <Label>Body (JSON)</Label>
-          <VariableTextarea
-            name="body"
-            ref={(el) => (inputRefs.current['body'] = el)}
+          <RichTextEditor
             value={config.body || '{\n  "key": "{{variavel}}"\n}'}
-            onChange={(e) => handleConfigChange("body", e.target.value)}
-            onVariableRequest={() => openVariablePicker(inputRefs.current['body'])}
+            onChange={(text) => handleConfigChange("body", text)}
             placeholder='{"key": "value"}'
-            rows={8}
+            multiline={true}
             className="font-mono text-xs"
           />
         </div>
@@ -187,14 +184,11 @@ export const TriggerAutomationConfig = ({ config, handleConfigChange, inputRefs,
 
     <div className="space-y-2">
       <Label>Parâmetros (JSON)</Label>
-      <VariableTextarea
-        name="parameters"
-        ref={(el) => (inputRefs.current['parameters'] = el)}
+      <RichTextEditor
         value={config.parameters || '{\n  "email": "{{email}}",\n  "name": "{{name}}"\n}'}
-        onChange={(e) => handleConfigChange("parameters", e.target.value)}
-        onVariableRequest={() => openVariablePicker(inputRefs.current['parameters'])}
+        onChange={(text) => handleConfigChange("parameters", text)}
         placeholder='{"key": "{{variavel}}"}'
-        rows={6}
+        multiline={true}
         className="font-mono text-xs"
       />
     </div>
@@ -233,14 +227,11 @@ export const DynamicDataConfig = ({ config, handleConfigChange, inputRefs, openV
 
     <div className="space-y-2">
       <Label>URL/Endpoint *</Label>
-      <VariableTextarea
-        name="endpoint"
-        ref={(el) => (inputRefs.current['endpoint'] = el)}
+      <RichTextEditor
         value={config.endpoint || ""}
-        onChange={(e) => handleConfigChange("endpoint", e.target.value)}
-        onVariableRequest={() => openVariablePicker(inputRefs.current['endpoint'])}
+        onChange={(text) => handleConfigChange("endpoint", text)}
         placeholder="https://api.exemplo.com/data"
-        rows={2}
+        multiline={true}
       />
     </div>
 
@@ -327,14 +318,11 @@ export const AIAgentConfig = ({ config, handleConfigChange, inputRefs, openVaria
 
     <div className="space-y-2">
       <Label>Contexto Adicional (opcional)</Label>
-      <VariableTextarea
-        name="context"
-        ref={(el) => (inputRefs.current['context'] = el)}
+      <RichTextEditor
         value={config.context || ""}
-        onChange={(e) => handleConfigChange("context", e.target.value)}
-        onVariableRequest={() => openVariablePicker(inputRefs.current['context'])}
+        onChange={(text) => handleConfigChange("context", text)}
         placeholder="Nome do usuário: {{name}}\nEmail: {{email}}"
-        rows={4}
+        multiline={true}
       />
     </div>
 

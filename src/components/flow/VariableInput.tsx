@@ -1,30 +1,25 @@
-import { useState, useRef, forwardRef } from "react";
+// This file is deprecated - use RichTextEditor instead
+import { forwardRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Variable } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VariableInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  onVariableRequest: () => void;
+  onVariableRequest?: () => void;
 }
 
 interface VariableTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  onVariableRequest: () => void;
+  onVariableRequest?: () => void;
 }
 
 export const VariableInput = forwardRef<HTMLInputElement, VariableInputProps>(
   ({ onVariableRequest, className, ...props }, ref) => {
     return (
-      <div className="relative">
-        <Input
-          ref={ref}
-          className={cn("pr-10", className)}
-          {...props}
-        />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-          <Variable className="w-4 h-4 text-muted-foreground" />
-        </div>
-      </div>
+      <Input
+        ref={ref}
+        className={className}
+        {...props}
+      />
     );
   }
 );
@@ -33,17 +28,12 @@ VariableInput.displayName = "VariableInput";
 export const VariableTextarea = forwardRef<HTMLTextAreaElement, VariableTextareaProps>(
   ({ onVariableRequest, className, rows = 3, ...props }, ref) => {
     return (
-      <div className="relative">
-        <Textarea
-          ref={ref}
-          className={cn("pr-10", className)}
-          rows={rows}
-          {...props}
-        />
-        <div className="absolute right-2 top-2 pointer-events-none">
-          <Variable className="w-4 h-4 text-muted-foreground" />
-        </div>
-      </div>
+      <Textarea
+        ref={ref}
+        className={className}
+        rows={rows}
+        {...props}
+      />
     );
   }
 );

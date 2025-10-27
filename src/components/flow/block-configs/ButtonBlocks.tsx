@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { VariableTextarea } from "../VariableInput";
+import { RichTextEditor } from "../RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Image as ImageIcon } from "lucide-react";
@@ -13,8 +13,11 @@ import { FormattingToolbar } from "./FormattingToolbar";
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
-  inputRefs: any;
-  openVariablePicker: (ref: any) => void;
+  inputRefs?: any;
+  openVariablePicker?: (ref: any) => void;
+  nodes?: any[];
+  edges?: any[];
+  selectedNode?: any;
 }
 
 const insertFormatting = (
@@ -41,7 +44,7 @@ const insertFormatting = (
 };
 
 // Botões de Resposta Rápida
-export const ReplyButtonsConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
   const addButton = () => {
     const buttons = config.buttons || [];
     handleConfigChange("buttons", [...buttons, { text: "", value: "", imageUrl: "" }]);
@@ -67,15 +70,14 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, inputRefs, open
             <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
             Texto da Mensagem
           </Label>
-          <VariableTextarea
-            name="text"
-            ref={(el) => (inputRefs.current['text'] = el)}
+          <RichTextEditor
             value={config.text || ""}
-            onChange={(e) => handleConfigChange("text", e.target.value)}
-            onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
+            onChange={(text) => handleConfigChange("text", text)}
             placeholder="Digite a mensagem antes dos botões..."
-            rows={4}
-            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            multiline={true}
+            nodes={nodes}
+            edges={edges}
+            selectedNode={selectedNode}
           />
           <FormattingToolbar
             onFormat={(prefix, suffix) => insertFormatting(
@@ -214,7 +216,7 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, inputRefs, open
 };
 
 // Lista de Botões (Menu estilo WhatsApp)
-export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
   const addSection = () => {
     const sections = config.sections || [];
     handleConfigChange("sections", [...sections, { title: "", items: [] }]);
@@ -263,15 +265,14 @@ export const ListButtonsConfig = ({ config, handleConfigChange, inputRefs, openV
             <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
             Texto da Mensagem
           </Label>
-          <VariableTextarea
-            name="text"
-            ref={(el) => (inputRefs.current['text'] = el)}
+          <RichTextEditor
             value={config.text || ""}
-            onChange={(e) => handleConfigChange("text", e.target.value)}
-            onVariableRequest={() => openVariablePicker(inputRefs.current['text'])}
+            onChange={(text) => handleConfigChange("text", text)}
             placeholder="Mensagem antes do menu..."
-            rows={3}
-            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            multiline={true}
+            nodes={nodes}
+            edges={edges}
+            selectedNode={selectedNode}
           />
           <FormattingToolbar
             onFormat={(prefix, suffix) => insertFormatting(

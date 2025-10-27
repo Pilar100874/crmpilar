@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { VariableTextarea } from "../VariableInput";
+import { RichTextEditor } from "../RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -11,8 +11,11 @@ import { Badge } from "@/components/ui/badge";
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
-  inputRefs: any;
-  openVariablePicker: (ref: any) => void;
+  inputRefs?: any;
+  openVariablePicker?: (ref: any) => void;
+  nodes?: any[];
+  edges?: any[];
+  selectedNode?: any;
 }
 
 // Conditions - Lógica Condicional (seção 14 do manual)
@@ -239,14 +242,11 @@ export const SetFieldConfig = ({ config, handleConfigChange, inputRefs, openVari
               {operation.operation !== "unset" && (
                 <div className="space-y-2">
                   <Label className="text-xs">Valor</Label>
-                  <VariableTextarea
-                    name={`operation_value_${index}`}
-                    ref={(el) => (inputRefs.current[`operation_value_${index}`] = el)}
+                  <RichTextEditor
                     value={operation.value || ""}
-                    onChange={(e) => updateOperation(index, "value", e.target.value)}
-                    onVariableRequest={() => openVariablePicker(inputRefs.current[`operation_value_${index}`])}
+                    onChange={(text) => updateOperation(index, "value", text)}
                     placeholder="valor ou {{outra_variavel}}"
-                    rows={2}
+                    multiline={true}
                   />
                 </div>
               )}
@@ -396,14 +396,11 @@ export const FormulasConfig = ({ config, handleConfigChange, inputRefs, openVari
   <div className="space-y-4">
     <div className="space-y-2">
       <Label>Fórmula</Label>
-      <VariableTextarea
-        name="formula"
-        ref={(el) => (inputRefs.current['formula'] = el)}
+      <RichTextEditor
         value={config.formula || ""}
-        onChange={(e) => handleConfigChange("formula", e.target.value)}
-        onVariableRequest={() => openVariablePicker(inputRefs.current['formula'])}
+        onChange={(text) => handleConfigChange("formula", text)}
         placeholder="{{price}} * 1.1"
-        rows={3}
+        multiline={true}
       />
       <p className="text-xs text-muted-foreground">
         Exemplos: {"{{"} num1 {"}"} + {"{{"} num2 {"}"}, {"{{"} price {"}"} * 0.9, Math.round({"{{"} value {"}}"})
