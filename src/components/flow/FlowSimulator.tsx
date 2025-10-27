@@ -1302,12 +1302,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             
             // Validar email
             if (nodeType === "ask_email") {
+              console.log("📧 Validando email:", input.trim());
               if (!validateEmail(input.trim())) {
                 const errorMessage = nodeConfig.errorMessage || "Por favor, digite um email válido.";
                 addSystemMessage(`⚠️ ${errorMessage}`);
                 setInput("");
                 return; // Não avança, mantém isWaitingInput=true
               }
+              console.log("✅ Email válido!");
             }
             
             // Validar telefone
@@ -1315,12 +1317,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               const validateFormat = nodeConfig.validateFormat !== false;
               const format = nodeConfig.format || "any";
               
+              console.log("📞 Validando telefone:", { input: input.trim(), validateFormat, format });
+              
               if (validateFormat && !validatePhoneFormat(input.trim(), format)) {
                 const errorMessage = nodeConfig.errorMessage || "Por favor, digite um telefone válido no formato especificado.";
                 addSystemMessage(`⚠️ ${errorMessage}`);
                 setInput("");
                 return; // Não avança, mantém isWaitingInput=true
               }
+              console.log("✅ Telefone válido!");
             }
             
             // Validar número (SEMPRE obrigatório)
