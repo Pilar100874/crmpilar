@@ -272,12 +272,12 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
         </div>
       )}
 
-      {/* Opções avançadas - apenas se houver webhook selecionado */}
+        {/* Opções avançadas - apenas se houver webhook selecionado */}
       {selectedWebhook && (
         <>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Save Responses as Fields</Label>
+              <Label>Salvar Respostas como Campos</Label>
               <Switch 
                 checked={config.saveResponses || false}
                 onCheckedChange={(checked) => handleConfigChange("saveResponses", checked)}
@@ -287,14 +287,14 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Response Routing</Label>
+              <Label>Roteamento por Resposta</Label>
               <Switch 
                 checked={config.responseRouting || false}
                 onCheckedChange={(checked) => handleConfigChange("responseRouting", checked)}
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Split your flow based on response status codes (200, 400, 500, etc)
+              Dividir o fluxo com base nos códigos de status da resposta (200, 400, 500, etc)
             </p>
           </div>
         </>

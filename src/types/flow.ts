@@ -99,7 +99,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Botões de resposta rápida",
     icon: "SquareStack",
     color: "text-success",
-    defaultData: { text: "", buttons: [] },
+    defaultData: { text: "", buttons: [], variable: "resposta_botao" },
   },
   {
     type: "list_buttons",
@@ -107,7 +107,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Menu de lista",
     icon: "List",
     color: "text-success",
-    defaultData: { text: "", buttonText: "Ver opções", sections: [] },
+    defaultData: { text: "", buttonText: "Ver opções", sections: [], variable: "opcao_lista" },
   },
   {
     type: "keyword_options",
@@ -115,7 +115,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Opções por palavra-chave",
     icon: "Hash",
     color: "text-accent",
-    defaultData: { keywords: [] },
+    defaultData: { keywords: [], variable: "opcao_escolhida" },
   },
   {
     type: "message_template",
@@ -156,7 +156,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Capturar nome do usuário",
     icon: "User",
     color: "text-warning",
-    defaultData: { question: "Qual é o seu nome?", variable: "user_name" },
+    defaultData: { question: "Qual é o seu nome?", variable: "nome_usuario" },
   },
   {
     type: "ask_question",
@@ -164,7 +164,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Pergunta aberta",
     icon: "HelpCircle",
     color: "text-accent",
-    defaultData: { question: "", variable: "", required: true },
+    defaultData: { question: "", variable: "resposta", required: true },
   },
   {
     type: "ask_email",
@@ -172,7 +172,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Capturar email",
     icon: "Mail",
     color: "text-primary",
-    defaultData: { question: "Qual é o seu email?", variable: "user_email" },
+    defaultData: { question: "Qual é o seu email?", variable: "usuario_email" },
   },
   {
     type: "ask_number",
@@ -180,7 +180,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Capturar número",
     icon: "Hash",
     color: "text-primary",
-    defaultData: { question: "Digite um número:", variable: "user_number" },
+    defaultData: { question: "Digite um número:", variable: "numero_usuario" },
   },
   {
     type: "ask_phone",
@@ -188,7 +188,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Capturar telefone",
     icon: "Phone",
     color: "text-success",
-    defaultData: { question: "Qual é o seu telefone?", variable: "user_phone" },
+    defaultData: { question: "Qual é o seu telefone?", variable: "telefone_usuario" },
   },
   {
     type: "ask_date",
@@ -196,7 +196,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Capturar data",
     icon: "Calendar",
     color: "text-destructive",
-    defaultData: { question: "Selecione uma data:", variable: "user_date" },
+    defaultData: { question: "Selecione uma data:", variable: "data_usuario" },
   },
   {
     type: "ask_file",
@@ -204,7 +204,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Solicitar upload de arquivo",
     icon: "Folder",
     color: "text-primary",
-    defaultData: { question: "Envie o arquivo:", variable: "user_file", allowedTypes: [] },
+    defaultData: { question: "Envie o arquivo:", variable: "arquivo_usuario", allowedTypes: [] },
   },
   {
     type: "ask_address",
@@ -212,7 +212,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Capturar endereço",
     icon: "MapPin",
     color: "text-destructive",
-    defaultData: { question: "Qual é o seu endereço?", variable: "user_address" },
+    defaultData: { question: "Qual é o seu endereço?", variable: "endereco_usuario" },
   },
   {
     type: "ask_url",
@@ -220,7 +220,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Capturar URL",
     icon: "Globe",
     color: "text-primary",
-    defaultData: { question: "Cole o link:", variable: "user_url" },
+    defaultData: { question: "Cole o link:", variable: "url_usuario" },
   },
   // Logic
   {
@@ -237,7 +237,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Definir/atualizar variável",
     icon: "Variable",
     color: "text-accent",
-    defaultData: { operations: [] },
+    defaultData: { operations: [], field: "campo", value: "valor" },
   },
   {
     type: "keyword_jump",
@@ -261,7 +261,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Cálculos e transformações",
     icon: "Calculator",
     color: "text-warning",
-    defaultData: { formula: "", outputVariable: "" },
+    defaultData: { formula: "", outputVariable: "resultado" },
   },
   {
     type: "jump_to",
@@ -277,7 +277,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Pontuação de leads",
     icon: "TrendingUp",
     color: "text-success",
-    defaultData: { scoreField: "lead_score", points: 0, action: "add" },
+    defaultData: { scoreField: "pontuacao_lead", points: 0, action: "add" },
   },
   {
     type: "goal",
@@ -285,7 +285,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Meta de conversão",
     icon: "Flag",
     color: "text-destructive",
-    defaultData: { goalName: "", value: 0 },
+    defaultData: { goalName: "conversao", value: 0 },
   },
   // Low code
   {
@@ -310,6 +310,6 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     description: "Dados dinâmicos",
     icon: "Database",
     color: "text-accent",
-    defaultData: { source: "", query: "", outputVariable: "" },
+    defaultData: { source: "api", query: "", outputVariable: "dados_dinamicos" },
   },
 ];

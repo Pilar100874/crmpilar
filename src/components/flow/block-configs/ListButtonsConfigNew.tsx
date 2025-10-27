@@ -62,37 +62,37 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label>Header (optional)</Label>
+        <Label>Cabeçalho (opcional)</Label>
         <Textarea
           value={config.header || ""}
           onChange={(e) => handleConfigChange("header", e.target.value)}
-          placeholder="Header"
+          placeholder="Cabeçalho"
           rows={2}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Text (max. 1024 characters) *</Label>
+        <Label>Texto (máx. 1024 caracteres) *</Label>
         <Textarea
           value={config.text || ""}
           onChange={(e) => handleConfigChange("text", e.target.value)}
-          placeholder="Body text"
+          placeholder="Texto do corpo"
           rows={3}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Footer (optional)</Label>
+        <Label>Rodapé (opcional)</Label>
         <Textarea
           value={config.footer || ""}
           onChange={(e) => handleConfigChange("footer", e.target.value)}
-          placeholder="Footer"
+          placeholder="Rodapé"
           rows={2}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>List header / CTA *</Label>
+        <Label>Título da Lista / CTA *</Label>
         <Input
           value={config.listHeader || ""}
           onChange={(e) => handleConfigChange("listHeader", e.target.value)}
@@ -102,8 +102,8 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Sections & Items</Label>
-          <span className="text-sm text-muted-foreground">{totalItems}/10 items</span>
+          <Label>Seções e Itens</Label>
+          <span className="text-sm text-muted-foreground">{totalItems}/10 itens</span>
         </div>
         
         {sections.map((section: any, sIndex: number) => (
@@ -113,7 +113,7 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
               <Input
                 value={section.title || ""}
                 onChange={(e) => updateSection(sIndex, "title", e.target.value)}
-                placeholder={`Section ${sIndex + 1} title (optional)`}
+                placeholder={`Título da Seção ${sIndex + 1} (opcional)`}
                 className="flex-1"
               />
               <Button 
@@ -136,19 +136,19 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
                       <Input
                         value={item.label || ""}
                         onChange={(e) => updateItem(sIndex, iIndex, "label", e.target.value)}
-                        placeholder="Item name (max 24 chars) *"
+                        placeholder="Nome do item (máx 24 caracteres) *"
                         maxLength={24}
                       />
                       <Input
                         value={item.description || ""}
                         onChange={(e) => updateItem(sIndex, iIndex, "description", e.target.value)}
-                        placeholder="Description (max 72 chars, optional)"
+                        placeholder="Descrição (máx 72 caracteres, opcional)"
                         maxLength={72}
                       />
                       <Input
                         value={item.value || ""}
                         onChange={(e) => updateItem(sIndex, iIndex, "value", e.target.value)}
-                        placeholder="Value to save (optional)"
+                        placeholder="Valor a salvar (opcional)"
                       />
                     </div>
                     <Button 
@@ -172,7 +172,7 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
                 className="w-full"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add item
+                Adicionar item
               </Button>
             </div>
           </div>
@@ -186,13 +186,13 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
           className="w-full"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add new section
+          Adicionar nova seção
         </Button>
 
         {totalItems >= 10 && (
           <p className="text-sm text-amber-600 flex items-center gap-1">
             <Info className="h-4 w-4" />
-            Maximum of 10 items reached
+            Máximo de 10 itens atingido
           </p>
         )}
       </div>

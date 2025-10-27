@@ -35,7 +35,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label>Image (optional)</Label>
+        <Label>Imagem (opcional)</Label>
         <VariableInput
           ref={(el) => inputRefs && (inputRefs.current['image'] = el)}
           value={config.image || ""}
@@ -49,26 +49,26 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
       </div>
 
       <div className="space-y-2">
-        <Label>Header (optional)</Label>
+        <Label>Cabeçalho (opcional)</Label>
         <VariableTextarea
           ref={(el) => inputRefs && (inputRefs.current['header'] = el)}
           value={config.header || ""}
           onChange={(e) => handleConfigChange("header", e.target.value)}
           onVariableRequest={() => inputRefs?.current['header'] && openVariablePicker?.(inputRefs.current['header'])}
-          placeholder="Max. 20 characters"
+          placeholder="Máx. 20 caracteres"
           rows={3}
           maxLength={20}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Text (max. 1024 characters)</Label>
+        <Label>Texto (máx. 1024 caracteres)</Label>
         <VariableTextarea
           ref={(el) => inputRefs && (inputRefs.current['text'] = el)}
           value={config.text || ""}
           onChange={(e) => handleConfigChange("text", e.target.value)}
           onVariableRequest={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
-          placeholder="Text body"
+          placeholder="Texto do corpo"
           rows={3}
           maxLength={1024}
         />
@@ -85,26 +85,26 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
             className="ml-auto"
             onClick={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
           >
-            Use field
+            Usar campo
           </Button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Footer (optional)</Label>
+        <Label>Rodapé (opcional)</Label>
         <VariableTextarea
           ref={(el) => inputRefs && (inputRefs.current['footer'] = el)}
           value={config.footer || ""}
           onChange={(e) => handleConfigChange("footer", e.target.value)}
           onVariableRequest={() => inputRefs?.current['footer'] && openVariablePicker?.(inputRefs.current['footer'])}
-          placeholder="Max. 60 characters"
+          placeholder="Máx. 60 caracteres"
           rows={3}
           maxLength={60}
         />
       </div>
 
       <div className="space-y-3">
-        <Label>Buttons (up to 3)</Label>
+        <Label>Botões (até 3)</Label>
         
         {buttons.map((button: any, index: number) => (
           <div key={button.id || index} className="space-y-2">
@@ -137,24 +137,24 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
           disabled={buttons.length >= 3}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add another button
+          Adicionar outro botão
         </Button>
       </div>
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex gap-3">
         <span className="text-xl">⚠️</span>
         <div className="text-sm space-y-1">
-          <p className="font-semibold">Button's text restrictions</p>
-          <p>- Buttons: max. 20 characters</p>
-          <p>- Formatted text not allowed in buttons (example *this* for bold)</p>
-          <p>- Body text: max. 1024 characters. If you use fields, the content of the field will count as additional characters and the text will be truncated.</p>
+          <p className="font-semibold">Restrições de texto dos botões</p>
+          <p>- Botões: máx. 20 caracteres</p>
+          <p>- Texto formatado não permitido nos botões (exemplo *isso* para negrito)</p>
+          <p>- Texto do corpo: máx. 1024 caracteres. Se você usar campos, o conteúdo do campo contará como caracteres adicionais e o texto será truncado.</p>
         </div>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="flex items-center gap-2">
-            Save user answer in the field
+            Salvar resposta do usuário no campo
             <Info className="h-4 w-4 text-muted-foreground cursor-help" />
           </Label>
         </div>
@@ -163,11 +163,11 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
           value={config.variable || ""}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           onVariableRequest={() => inputRefs?.current['variable'] && openVariablePicker?.(inputRefs.current['variable'])}
-          placeholder="Search or create"
+          placeholder="Pesquisar ou criar"
           className="bg-accent/50"
         />
         <p className="text-xs text-muted-foreground flex items-center gap-1">
-          ⚠️ If a field is not set, the answer won't be saved.
+          ⚠️ Se um campo não for definido, a resposta não será salva.
         </p>
       </div>
     </div>

@@ -82,12 +82,12 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label>Question text</Label>
+        <Label>Texto da pergunta</Label>
         <Textarea
           ref={(el) => (inputRefs.current['question'] = el)}
-          value={config.question || "Number & word choices"}
+          value={config.question || "Escolhas por número e palavra"}
           onChange={(e) => handleConfigChange("question", e.target.value)}
-          placeholder="Number & word choices"
+          placeholder="Escolhas por número e palavra"
           rows={2}
           className="resize-none"
         />
@@ -98,12 +98,12 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
           onClick={() => openVariablePicker(inputRefs.current['question'])}
           className="w-full"
         >
-          Use field
+          Usar campo
         </Button>
       </div>
 
       <div className="space-y-3">
-        <Label>Buttons</Label>
+        <Label>Botões</Label>
         
         {buttons.map((button: any, index: number) => (
           <div key={button.id || index} className="space-y-3 p-4 bg-pink-500/10 border-2 border-pink-500 rounded-lg">
@@ -113,7 +113,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
                 variant="ghost" 
                 className="flex-1 bg-pink-500 text-white hover:bg-pink-600"
               >
-                Click to edit
+                Clique para editar
               </Button>
               <Button variant="ghost" size="icon">
                 <GripVertical className="h-4 w-4" />
@@ -137,7 +137,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
                   key={kIndex}
                   value={keyword}
                   onChange={(e) => updateKeyword(index, kIndex, e.target.value)}
-                  placeholder="Type the keyword"
+                  placeholder="Digite a palavra-chave"
                   className="bg-slate-600 border-slate-500 text-white placeholder:text-slate-400"
                 />
               ))}
@@ -149,7 +149,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
                 className="w-full text-white hover:bg-slate-600"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add keyword
+                Adicionar palavra-chave
               </Button>
             </div>
           </div>
@@ -162,12 +162,12 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
           className="w-full bg-slate-700 hover:bg-slate-800 text-white"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add another button
+          Adicionar outro botão
         </Button>
       </div>
 
       <div className="flex items-center justify-between">
-        <Label>Validation error message</Label>
+        <Label>Mensagem de erro de validação</Label>
         <Switch 
           checked={config.showValidationError !== false}
           onCheckedChange={(checked) => handleConfigChange("showValidationError", checked)}
