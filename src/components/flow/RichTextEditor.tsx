@@ -266,14 +266,14 @@ export const RichTextEditor = ({
   }, [value]);
 
   const handleInput = () => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || isUpdatingRef.current) return;
     
     isUpdatingRef.current = true;
     const newValue = parseFromEditor(editorRef.current);
     onChange(newValue);
     setTimeout(() => {
       isUpdatingRef.current = false;
-    }, 0);
+    }, 10);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -281,27 +281,47 @@ export const RichTextEditor = ({
     if (!selection || !selection.rangeCount) return;
     
     const range = selection.getRangeAt(0);
-    let node = range.startContainer;
+    let node: Node | null = range.startContainer;
     
-    // Se estiver em um text node, pega o pai
-    if (node.nodeType === Node.TEXT_NODE) {
-      node = node.parentNode as Node;
-    }
-    
-    const element = node as HTMLElement;
-    
-    // Se o cursor está dentro ou adjacente a uma variável
-    if (element.classList?.contains('variable-badge') || 
-        element.parentElement?.classList?.contains('variable-badge')) {
-      const badge = element.classList?.contains('variable-badge') ? element : element.parentElement;
-      
-      if (e.key === 'Backspace' || e.key === 'Delete') {
-        e.preventDefault();
-        badge?.remove();
-        handleInput();
-      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault(); // Previne digitação dentro da variável
+    // Navega até encontrar o elemento que pode ser uma variável
+    while (node && node !== editorRef.current) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        if (el.classList?.contains('variable-badge')) {
+          // Se pressionar Backspace ou Delete, remove a variável inteira
+          if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault();
+            const parent = el.parentNode;
+            const nextSibling = el.nextSibling;
+            el.remove();
+            
+            // Reposiciona o cursor
+            if (parent) {
+              const newRange = document.createRange();
+              const sel = window.getSelection();
+              if (nextSibling) {
+                newRange.setStartBefore(nextSibling);
+              } else if (parent.lastChild) {
+                newRange.setStartAfter(parent.lastChild);
+              } else {
+                newRange.selectNodeContents(parent as Node);
+              }
+              newRange.collapse(true);
+              sel?.removeAllRanges();
+              sel?.addRange(newRange);
+            }
+            
+            handleInput();
+            return;
+          }
+          // Previne edição de texto dentro da variável
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            return;
+          }
+        }
       }
+      node = node.parentNode;
     }
   };
 
@@ -342,48 +362,69 @@ export const RichTextEditor = ({
   const insertVariable = (variableName: string) => {
     if (!editorRef.current) return;
     
+    // Garante que o editor está focado
     editorRef.current.focus();
     
-    const selection = window.getSelection();
-    if (!selection) return;
+    // Pequeno delay para garantir que o foco foi estabelecido
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      
+      const selection = window.getSelection();
+      if (!selection) return;
+      
+      let range: Range;
+      if (selection.rangeCount > 0) {
+        range = selection.getRangeAt(0);
+        // Se o range não está dentro do editor, cria um novo no final
+        if (!editorRef.current.contains(range.commonAncestorContainer)) {
+          range = document.createRange();
+          if (editorRef.current.lastChild) {
+            range.setStartAfter(editorRef.current.lastChild);
+          } else {
+            range.selectNodeContents(editorRef.current);
+          }
+          range.collapse(false);
+        }
+      } else {
+        range = document.createRange();
+        if (editorRef.current.lastChild) {
+          range.setStartAfter(editorRef.current.lastChild);
+        } else {
+          range.selectNodeContents(editorRef.current);
+        }
+        range.collapse(false);
+      }
+      
+      // Remove qualquer conteúdo selecionado
+      range.deleteContents();
+      
+      // Cria o badge da variável
+      const varBadge = document.createElement('span');
+      varBadge.className = 'variable-badge';
+      varBadge.contentEditable = 'false';
+      varBadge.dataset.variable = variableName;
+      varBadge.textContent = variableName;
+      
+      // Insere a variável
+      range.insertNode(varBadge);
+      
+      // Cria um espaço após a variável para continuar digitando
+      const space = document.createTextNode(' ');
+      if (varBadge.nextSibling) {
+        varBadge.parentNode?.insertBefore(space, varBadge.nextSibling);
+      } else {
+        varBadge.parentNode?.appendChild(space);
+      }
+      
+      // Posiciona o cursor após o espaço
+      range.setStartAfter(space);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      handleInput();
+    }, 50);
     
-    let range: Range;
-    if (selection.rangeCount > 0) {
-      range = selection.getRangeAt(0);
-    } else {
-      range = document.createRange();
-      range.selectNodeContents(editorRef.current);
-      range.collapse(false);
-    }
-    
-    // Remove qualquer conteúdo selecionado
-    range.deleteContents();
-    
-    // Cria o badge da variável
-    const varBadge = document.createElement('span');
-    varBadge.className = 'variable-badge';
-    varBadge.contentEditable = 'false';
-    varBadge.dataset.variable = variableName;
-    varBadge.textContent = variableName;
-    
-    // Insere a variável
-    range.insertNode(varBadge);
-    
-    // Cria um espaço após a variável
-    const space = document.createTextNode('\u00A0'); // Non-breaking space
-    if (varBadge.nextSibling) {
-      varBadge.parentNode?.insertBefore(space, varBadge.nextSibling);
-    } else {
-      varBadge.parentNode?.appendChild(space);
-    }
-    
-    // Posiciona o cursor após o espaço
-    range.setStartAfter(space);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    
-    handleInput();
     setIsOpen(false);
     setSearchQuery("");
   };
@@ -395,20 +436,48 @@ export const RichTextEditor = ({
     if (!selection || !selection.rangeCount) return;
     
     const range = selection.getRangeAt(0);
+    
+    // Se não há seleção, não faz nada
     if (range.collapsed) return;
     
     try {
-      const element = document.createElement(tag);
-      const fragment = range.extractContents();
-      element.appendChild(fragment);
-      range.insertNode(element);
+      // Verifica se já existe formatação do mesmo tipo
+      let node: Node | null = range.commonAncestorContainer;
+      let existingFormat: HTMLElement | null = null;
       
-      // Seleciona o texto formatado
-      const newRange = document.createRange();
-      newRange.selectNodeContents(element);
-      newRange.collapse(false);
-      selection.removeAllRanges();
-      selection.addRange(newRange);
+      // Procura por formatação existente
+      while (node && node !== editorRef.current) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          if (el.tagName.toLowerCase() === tag.toLowerCase()) {
+            existingFormat = el;
+            break;
+          }
+        }
+        node = node.parentNode;
+      }
+      
+      if (existingFormat) {
+        // Remove a formatação existente
+        const parent = existingFormat.parentNode;
+        while (existingFormat.firstChild) {
+          parent?.insertBefore(existingFormat.firstChild, existingFormat);
+        }
+        parent?.removeChild(existingFormat);
+      } else {
+        // Aplica nova formatação
+        const element = document.createElement(tag);
+        const fragment = range.extractContents();
+        element.appendChild(fragment);
+        range.insertNode(element);
+        
+        // Seleciona o conteúdo formatado
+        const newRange = document.createRange();
+        newRange.selectNodeContents(element);
+        newRange.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }
       
       handleInput();
     } catch (e) {
