@@ -37,6 +37,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const [context, setContext] = useState<Record<string, any>>({});
   const [isWaitingInput, setIsWaitingInput] = useState(false);
   const [pendingVariable, setPendingVariable] = useState<string | null>(null);
+  const [currentBlockType, setCurrentBlockType] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
@@ -687,31 +688,57 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }
         
         setIsWaitingInput(true);
+        setCurrentBlockType("reply_buttons");
         setPendingVariable(normalizeVarName(config.variable || "button_response"));
         console.log("Waiting for button input, pendingVariable:", normalizeVarName(config.variable || "button_response"));
         break;
 
       case "list_buttons":
         const listText = interpolateVariables(config.text || "", context);
+        const listHeader = config.header ? interpolateVariables(config.header, context) : null;
+        const listFooter = config.footer ? interpolateVariables(config.footer, context) : null;
         const buttonText = config.buttonText || config.listHeader || "Ver opções";
         const sections = config.sections || [];
+        
+        if (listHeader) {
+          addSystemMessage(`📌 ${listHeader}`);
+        }
         
         if (listText) {
           addBotMessage(listText, node.id);
         }
         
+        if (listFooter) {
+          safeSetTimeout(() => {
+            addSystemMessage(`ℹ️ ${listFooter}`);
+          }, delay + 200);
+        }
+        
+        // Criar botões clicáveis para os itens
         safeSetTimeout(() => {
-          addSystemMessage(`📋 ${buttonText}`);
-          sections.forEach((section: any, idx: number) => {
-            addSystemMessage(`\n${section.title || `Seção ${idx + 1}`}:`);
-            (section.items || []).forEach((item: any) => {
-              const line = item.description ? `${item.label} — ${item.description}` : item.label;
-              addSystemMessage(`  ▶️ ${line}`);
+          const allButtons: any[] = [];
+          sections.forEach((section: any, sectionIdx: number) => {
+            (section.items || []).forEach((item: any, itemIdx: number) => {
+              allButtons.push({
+                text: item.label,
+                value: item.value || item.label,
+                buttonId: `section_${sectionIdx}_item_${itemIdx}`,
+              });
             });
           });
-        }, 500);
+          
+          setMessages((prev) => [...prev, {
+            id: Date.now().toString(),
+            sender: "system",
+            text: buttonText,
+            timestamp: new Date(),
+            buttons: allButtons,
+            nodeId: node.id,
+          }]);
+        }, delay + 400);
         
         setIsWaitingInput(true);
+        setCurrentBlockType("list_buttons");
         setPendingVariable(normalizeVarName(config.variable || "list_response"));
         break;
 
@@ -1011,6 +1038,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     console.log("📨 handleSendMessage called with:", { 
       input, 
       pendingVariable,
+      currentBlockType,
       currentContext: context 
     });
 
@@ -1018,44 +1046,70 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
-      console.log("💾 [CRITICAL] Saving variable:", cleanVarName, "=", input);
-      console.log("📦 [CRITICAL] Context before save:", context);
-      console.log("🔍 [CRITICAL] pendingVariable raw value:", pendingVariable);
-      console.log("🧹 [CRITICAL] cleanVarName after normalize:", cleanVarName);
       
-      setContext((prev) => {
-        const newContext = { ...prev, [cleanVarName]: input };
-        console.log("📦 [CRITICAL] Context after save:", newContext);
-        console.log("✅ [CRITICAL] Variable saved successfully:", cleanVarName, "→", newContext[cleanVarName]);
-        // Atualiza imediatamente o contextRef para próxima interpolação
-        contextRef.current = newContext;
+      // Para reply_buttons: sempre salva o input (seja texto digitado ou clique)
+      // Para list_buttons: só salva se for clique de botão (não salva texto digitado)
+      if (currentBlockType !== "list_buttons") {
+        console.log("💾 [CRITICAL] Saving variable:", cleanVarName, "=", input);
+        console.log("📦 [CRITICAL] Context before save:", context);
         
-        // Execute next node with updated context
-        if (currentNodeId) {
-          const nextNode = getNextNode(currentNodeId);
-          console.log("➡️ [CRITICAL] Next node after saving variable:", nextNode?.id);
+        setContext((prev) => {
+          const newContext = { ...prev, [cleanVarName]: input };
+          console.log("📦 [CRITICAL] Context after save:", newContext);
+          console.log("✅ [CRITICAL] Variable saved successfully:", cleanVarName, "→", newContext[cleanVarName]);
+          contextRef.current = newContext;
+          
+          return newContext;
+        });
+        
+        addSuccessMessage(`Variável "${cleanVarName}" = "${input}"`);
+      } else {
+        console.log("⚠️ List buttons - not saving typed text to variable");
+      }
+      
+      setPendingVariable(null);
+      setIsWaitingInput(false);
+      setCurrentBlockType(null);
+      
+      // Buscar o próximo nó - rota para "Any of the above" quando texto é digitado
+      if (currentNodeId) {
+        // Procurar edge "any_of_above" para texto digitado
+        const anyOfAboveEdge = edges.find(
+          (edge) => edge.source === currentNodeId && edge.sourceHandle === "any_of_above"
+        );
+        
+        if (anyOfAboveEdge) {
+          const nextNode = nodes.find((node) => node.id === anyOfAboveEdge.target);
           if (nextNode) {
+            console.log("➡️ Routing to 'Any of the above' output");
             safeSetTimeout(() => {
-              console.log("🚀 [CRITICAL] Executing next node with context:", contextRef.current);
+              console.log("🚀 Executing 'Any of the above' node with context:", contextRef.current);
               setCurrentNodeId(nextNode.id);
               executeNode(nextNode);
             }, 500);
+            setInput("");
+            return;
           }
         }
         
-        return newContext;
-      });
-      
-      addSuccessMessage(`Variável "${cleanVarName}" = "${input}"`);
-      setPendingVariable(null);
-      setIsWaitingInput(false);
+        // Fallback: próximo nó padrão
+        const nextNode = getNextNode(currentNodeId);
+        console.log("➡️ [CRITICAL] Next node after saving variable:", nextNode?.id);
+        if (nextNode) {
+          safeSetTimeout(() => {
+            console.log("🚀 [CRITICAL] Executing next node with context:", contextRef.current);
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }, 500);
+        }
+      }
     }
 
     setInput("");
   };
 
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string }, nodeId?: string) => {
-    console.log("Button clicked:", { button, nodeId, pendingVariable });
+    console.log("Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
     addUserMessage(button.text);
     
     if (pendingVariable) {
@@ -1064,18 +1118,40 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setContext((prev) => {
         const newContext = { ...prev, [cleanVarName]: button.value };
         console.log("Context updated:", newContext);
-        // Atualiza imediatamente o contextRef para próxima interpolação
         contextRef.current = newContext;
+        
+        if (onContextChange) {
+          onContextChange(newContext);
+        }
+        
         return newContext;
       });
       
       addSuccessMessage(`Variável "${cleanVarName}" = "${button.value}"`);
       setPendingVariable(null);
       setIsWaitingInput(false);
+      setCurrentBlockType(null);
 
       if (nodeId) {
-        // Encontrar a edge correspondente ao botão clicado
-        const buttonIndex = parseInt(button.buttonId?.split('_')[1] || '0');
+        // Procurar edge específica do botão usando o buttonId como sourceHandle
+        const buttonEdge = edges.find(
+          (edge) => edge.source === nodeId && edge.sourceHandle === button.buttonId
+        );
+        
+        if (buttonEdge) {
+          const nextNode = nodes.find((node) => node.id === buttonEdge.target);
+          if (nextNode) {
+            console.log("Executing next node via button edge:", nextNode.id);
+            safeSetTimeout(() => {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }, 500);
+            return;
+          }
+        }
+        
+        // Fallback: usar índice do botão
+        const buttonIndex = parseInt(button.buttonId?.split('_').pop() || '0');
         console.log("Finding next node with index:", buttonIndex);
         const nextNode = getNextNode(nodeId, buttonIndex);
         if (nextNode) {
