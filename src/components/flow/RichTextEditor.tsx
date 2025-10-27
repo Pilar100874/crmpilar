@@ -5,8 +5,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Search, User, MapPin, Building2, Hash, Globe, Database, Bold, Italic, Code, Strikethrough } from "lucide-react";
+import { ChevronDown, Search, User, MapPin, Building2, Hash, Globe, Database, Bold, Italic, Code, Strikethrough, Heading, Link as LinkIcon, List, ListOrdered, Quote, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Variable {
   name: string;
@@ -46,17 +47,36 @@ const parseToEditor = (text: string): string => {
   // Variáveis primeiro (antes de qualquer formatação)
   html = html.replace(/\{\{([^}]+)\}\}/g, '<span class="variable-badge" contenteditable="false" data-variable="$1">$1</span>');
   
-  // Negrito: *texto*
+  // Headings: # texto
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$2</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  
+  // Negrito: *texto* ou **texto**
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
   
   // Itálico: _texto_
   html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
   
-  // Código: ```texto```
-  html = html.replace(/```([^`]+)```/g, '<code>$1</code>');
+  // Código inline: `texto`
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   
   // Tachado: ~texto~
   html = html.replace(/~([^~]+)~/g, '<s>$1</s>');
+  
+  // Links: [texto](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  
+  // Quote: > texto
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  
+  // Lista não ordenada: - item
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  
+  // Lista ordenada: 1. item
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
   
   // Quebras de linha
   html = html.replace(/\n/g, '<br>');
@@ -76,6 +96,18 @@ const parseFromEditor = (element: HTMLElement): string => {
       
       if (el.classList.contains('variable-badge')) {
         text += `{{${el.dataset.variable || el.textContent}}}`;
+      } else if (el.tagName === 'H1') {
+        text += '# ';
+        el.childNodes.forEach(processNode);
+        text += '\n';
+      } else if (el.tagName === 'H2') {
+        text += '## ';
+        el.childNodes.forEach(processNode);
+        text += '\n';
+      } else if (el.tagName === 'H3') {
+        text += '### ';
+        el.childNodes.forEach(processNode);
+        text += '\n';
       } else if (el.tagName === 'STRONG' || el.tagName === 'B') {
         text += '*';
         el.childNodes.forEach(processNode);
@@ -85,13 +117,37 @@ const parseFromEditor = (element: HTMLElement): string => {
         el.childNodes.forEach(processNode);
         text += '_';
       } else if (el.tagName === 'CODE') {
-        text += '```';
+        text += '`';
         el.childNodes.forEach(processNode);
-        text += '```';
+        text += '`';
       } else if (el.tagName === 'S') {
         text += '~';
         el.childNodes.forEach(processNode);
         text += '~';
+      } else if (el.tagName === 'A') {
+        text += '[';
+        el.childNodes.forEach(processNode);
+        text += `](${el.getAttribute('href') || ''})`;
+      } else if (el.tagName === 'BLOCKQUOTE') {
+        text += '> ';
+        el.childNodes.forEach(processNode);
+        text += '\n';
+      } else if (el.tagName === 'UL') {
+        el.childNodes.forEach(processNode);
+      } else if (el.tagName === 'OL') {
+        let index = 1;
+        el.childNodes.forEach(child => {
+          if ((child as HTMLElement).tagName === 'LI') {
+            text += `${index}. `;
+            (child as HTMLElement).childNodes.forEach(processNode);
+            text += '\n';
+            index++;
+          }
+        });
+      } else if (el.tagName === 'LI' && el.parentElement?.tagName === 'UL') {
+        text += '- ';
+        el.childNodes.forEach(processNode);
+        text += '\n';
       } else if (el.tagName === 'BR') {
         text += '\n';
       } else if (el.tagName === 'DIV') {
@@ -480,7 +536,7 @@ export const RichTextEditor = ({
     setSearchQuery("");
   };
 
-  const applyFormatting = (tag: string) => {
+  const applyFormatting = (tag: string, extraProps?: Record<string, string>) => {
     if (!editorRef.current) return;
     
     const selection = window.getSelection();
@@ -488,8 +544,8 @@ export const RichTextEditor = ({
     
     const range = selection.getRangeAt(0);
     
-    // Se não há seleção, não faz nada
-    if (range.collapsed) return;
+    // Se não há seleção, não faz nada (exceto para listas e blockquote que podem criar novo bloco)
+    if (range.collapsed && !['ul', 'ol', 'blockquote'].includes(tag.toLowerCase())) return;
     
     try {
       // Verifica se já existe formatação do mesmo tipo
@@ -518,8 +574,23 @@ export const RichTextEditor = ({
       } else {
         // Aplica nova formatação
         const element = document.createElement(tag);
-        const fragment = range.extractContents();
-        element.appendChild(fragment);
+        if (extraProps) {
+          Object.entries(extraProps).forEach(([key, value]) => {
+            element.setAttribute(key, value);
+          });
+        }
+        
+        // Para listas, cria também o LI
+        if (tag === 'ul' || tag === 'ol') {
+          const li = document.createElement('li');
+          const fragment = range.extractContents();
+          li.appendChild(fragment);
+          element.appendChild(li);
+        } else {
+          const fragment = range.extractContents();
+          element.appendChild(fragment);
+        }
+        
         range.insertNode(element);
         
         // Seleciona o conteúdo formatado
@@ -535,6 +606,45 @@ export const RichTextEditor = ({
       console.error('Formatting error:', e);
     }
     
+    editorRef.current.focus();
+  };
+
+  const insertLink = () => {
+    const url = prompt('Digite a URL:');
+    if (!url) return;
+    
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    const selectedText = range.toString() || 'link';
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = selectedText;
+    
+    range.deleteContents();
+    range.insertNode(link);
+    
+    handleInput();
+    editorRef.current?.focus();
+  };
+
+  const insertEmoji = (emoji: string) => {
+    if (!editorRef.current) return;
+    
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    const textNode = document.createTextNode(emoji);
+    range.insertNode(textNode);
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    
+    handleInput();
     editorRef.current.focus();
   };
 
@@ -601,53 +711,171 @@ export const RichTextEditor = ({
             text-decoration: line-through;
             opacity: 0.75;
           }
+          [contenteditable] h1 {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 0.5em 0;
+          }
+          [contenteditable] h2 {
+            font-size: 1.25em;
+            font-weight: 600;
+            margin: 0.5em 0;
+          }
+          [contenteditable] h3 {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0.5em 0;
+          }
+          [contenteditable] ul, [contenteditable] ol {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+          }
+          [contenteditable] li {
+            margin: 0.25em 0;
+          }
+          [contenteditable] blockquote {
+            border-left: 3px solid hsl(var(--primary));
+            padding-left: 1em;
+            margin: 0.5em 0;
+            color: hsl(var(--muted-foreground));
+            font-style: italic;
+          }
+          [contenteditable] a {
+            color: hsl(var(--primary));
+            text-decoration: underline;
+          }
         `}</style>
       </div>
       
       {/* Formatting Toolbar */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 flex-wrap">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => applyFormatting('strong')}
-          className="h-7 w-7 p-0"
+          className="h-8 w-8 p-0 hover:bg-accent"
           title="Negrito"
         >
-          <Bold className="w-3.5 h-3.5" />
+          <Bold className="w-4 h-4" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => applyFormatting('em')}
-          className="h-7 w-7 p-0"
+          className="h-8 w-8 p-0 hover:bg-accent"
           title="Itálico"
         >
-          <Italic className="w-3.5 h-3.5" />
+          <Italic className="w-4 h-4" />
         </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-accent"
+              title="Emoji"
+            >
+              <Smile className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64">
+            <div className="grid grid-cols-8 gap-1 p-2">
+              {['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒'].map(emoji => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => insertEmoji(emoji)}
+                  className="h-8 w-8 hover:bg-accent rounded text-lg flex items-center justify-center"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => applyFormatting('code')}
-          className="h-7 w-7 p-0"
+          className="h-8 w-8 p-0 hover:bg-accent"
           title="Código"
         >
-          <Code className="w-3.5 h-3.5" />
+          <Code className="w-4 h-4" />
+        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-accent"
+              title="Título"
+            >
+              <Heading className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => applyFormatting('h1')}>
+              <span className="font-bold text-lg">Título 1</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => applyFormatting('h2')}>
+              <span className="font-bold text-base">Título 2</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => applyFormatting('h3')}>
+              <span className="font-bold text-sm">Título 3</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => applyFormatting('ul')}
+          className="h-8 w-8 p-0 hover:bg-accent"
+          title="Lista não ordenada"
+        >
+          <List className="w-4 h-4" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => applyFormatting('s')}
-          className="h-7 w-7 p-0"
-          title="Tachado"
+          onClick={() => applyFormatting('ol')}
+          className="h-8 w-8 p-0 hover:bg-accent"
+          title="Lista ordenada"
         >
-          <Strikethrough className="w-3.5 h-3.5" />
+          <ListOrdered className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={insertLink}
+          className="h-8 w-8 p-0 hover:bg-accent"
+          title="Inserir link"
+        >
+          <LinkIcon className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => applyFormatting('blockquote')}
+          className="h-8 w-8 p-0 hover:bg-accent"
+          title="Citação"
+        >
+          <Quote className="w-4 h-4" />
         </Button>
         
-        <Separator orientation="vertical" className="h-5 mx-1" />
+        <Separator orientation="vertical" className="h-6 mx-1" />
         
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
@@ -655,10 +883,10 @@ export const RichTextEditor = ({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7 text-xs"
+              className="h-8 text-xs px-2 hover:bg-accent"
             >
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              Variável
+              Use field
+              <ChevronDown className="w-3 h-3 ml-1" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[400px] p-0" align="start">
