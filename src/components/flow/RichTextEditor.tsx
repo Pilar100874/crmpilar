@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Search, User, MapPin, Building2, Hash, Globe, Database } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { X, Plus, Search, User, MapPin, Building2, Hash, Globe, Database, Bold, Italic, Code, Link, List, ListOrdered } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Variable {
@@ -214,6 +215,30 @@ export const RichTextEditor = ({
         const newPosition = cursorPosition + variableName.length + 4; // +4 for {{}}
         inputRef.current.focus();
         inputRef.current.setSelectionRange(newPosition, newPosition);
+        setCursorPosition(newPosition);
+      }
+    }, 0);
+  };
+
+  const applyFormatting = (prefix: string, suffix: string) => {
+    if (!inputRef.current) return;
+    
+    const start = inputRef.current.selectionStart || 0;
+    const end = inputRef.current.selectionEnd || 0;
+    const selectedText = value.substring(start, end);
+    const before = value.substring(0, start);
+    const after = value.substring(end);
+    
+    const newValue = `${before}${prefix}${selectedText}${suffix}${after}`;
+    onChange(newValue);
+    
+    // Focus back and set cursor after formatted text
+    setTimeout(() => {
+      if (inputRef.current) {
+        const newPosition = start + prefix.length + selectedText.length + suffix.length;
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(newPosition, newPosition);
+        setCursorPosition(newPosition);
       }
     }, 0);
   };
@@ -240,80 +265,126 @@ export const RichTextEditor = ({
         />
       </div>
       
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Inserir Variável
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="start">
-          <div className="p-3 border-b">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por nome do bloco ou variável..."
-                className="pl-9"
-              />
+      {/* Formatting Toolbar */}
+      <div className="flex items-center gap-1 flex-wrap">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => applyFormatting("*", "*")}
+          className="h-8 px-2"
+          title="Negrito"
+        >
+          <Bold className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => applyFormatting("_", "_")}
+          className="h-8 px-2"
+          title="Itálico"
+        >
+          <Italic className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => applyFormatting("```", "```")}
+          className="h-8 px-2"
+          title="Código"
+        >
+          <Code className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => applyFormatting("~", "~")}
+          className="h-8 px-2"
+          title="Tachado"
+        >
+          <span className="text-xs font-semibold">S</span>
+        </Button>
+        
+        <Separator orientation="vertical" className="h-6 mx-1" />
+        
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Variável
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[400px] p-0" align="start">
+            <div className="p-3 border-b">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por nome do bloco ou variável..."
+                  className="pl-9"
+                />
+              </div>
             </div>
-          </div>
-          
-          <ScrollArea className="h-[400px]">
-            {Object.keys(filteredBlocks).length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                {availableVariables.length === 0 
-                  ? "Nenhuma variável disponível. Adicione blocos antes deste para coletar dados."
-                  : "Nenhuma variável encontrada."}
-              </div>
-            ) : (
-              <div className="p-2 space-y-4">
-                {Object.entries(filteredBlocks).map(([blockName, vars]) => (
-                  <div key={blockName} className="space-y-2">
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {blockName}
-                    </div>
-                    <div className="space-y-1">
-                      {vars.map((variable) => {
-                        const Icon = getCategoryIcon(variable.category);
-                        return (
-                          <button
-                            key={variable.name}
-                            type="button"
-                            onClick={() => insertVariable(variable.name)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent transition-colors text-left group"
-                          >
-                            <div className="flex-shrink-0 w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
-                              <Icon className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                                {variable.name}
+            
+            <ScrollArea className="h-[400px]">
+              {Object.keys(filteredBlocks).length === 0 ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  {availableVariables.length === 0 
+                    ? "Nenhuma variável disponível. Adicione blocos antes deste para coletar dados."
+                    : "Nenhuma variável encontrada."}
+                </div>
+              ) : (
+                <div className="p-2 space-y-4">
+                  {Object.entries(filteredBlocks).map(([blockName, vars]) => (
+                    <div key={blockName} className="space-y-2">
+                      <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {blockName}
+                      </div>
+                      <div className="space-y-1">
+                        {vars.map((variable) => {
+                          const Icon = getCategoryIcon(variable.category);
+                          return (
+                            <button
+                              key={variable.name}
+                              type="button"
+                              onClick={() => insertVariable(variable.name)}
+                              className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent transition-colors text-left group"
+                            >
+                              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+                                <Icon className="w-4 h-4 text-primary" />
                               </div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {variable.description}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                                  {variable.name}
+                                </div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {variable.description}
+                                </div>
                               </div>
-                            </div>
-                            <Badge variant="secondary" className="text-xs">
-                              {variable.category}
-                            </Badge>
-                          </button>
-                        );
-                      })}
+                              <Badge variant="secondary" className="text-xs">
+                                {variable.category}
+                              </Badge>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </PopoverContent>
-      </Popover>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </PopoverContent>
+        </Popover>
+      </div>
       
       {/* Preview of variables in text */}
       {value && value.includes("{{") && (

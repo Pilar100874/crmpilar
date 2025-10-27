@@ -20,28 +20,8 @@ interface ConfigProps {
   selectedNode?: any;
 }
 
-const insertFormatting = (
-  textareaRef: HTMLTextAreaElement | null,
-  prefix: string,
-  suffix: string,
-  currentValue: string,
-  onChange: (value: string) => void
-) => {
-  if (!textareaRef) return;
-
-  const start = textareaRef.selectionStart;
-  const end = textareaRef.selectionEnd;
-  const selectedText = currentValue.substring(start, end);
-  const newText = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
-  
-  onChange(newText);
-
-  setTimeout(() => {
-    textareaRef.focus();
-    const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
-    textareaRef.setSelectionRange(newCursorPos, newCursorPos);
-  }, 0);
-};
+// Remove unused function
+// insertFormatting is no longer needed as it's built into RichTextEditor
 
 // Botões de Resposta Rápida
 export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
@@ -79,19 +59,6 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
             edges={edges}
             selectedNode={selectedNode}
           />
-          <FormattingToolbar
-            onFormat={(prefix, suffix) => insertFormatting(
-              inputRefs.current['text'],
-              prefix,
-              suffix,
-              config.text || "",
-              (val) => handleConfigChange("text", val)
-            )}
-            onVariableClick={() => openVariablePicker(inputRefs.current['text'])}
-          />
-          <ConfigInfo variant="info">
-            <p>💡 Use variáveis para personalizar: {"{{"} nome {"}}"}</p>
-          </ConfigInfo>
         </div>
       </ConfigSection>
 
@@ -273,16 +240,6 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
             nodes={nodes}
             edges={edges}
             selectedNode={selectedNode}
-          />
-          <FormattingToolbar
-            onFormat={(prefix, suffix) => insertFormatting(
-              inputRefs.current['text'],
-              prefix,
-              suffix,
-              config.text || "",
-              (val) => handleConfigChange("text", val)
-            )}
-            onVariableClick={() => openVariablePicker(inputRefs.current['text'])}
           />
         </div>
       </ConfigSection>

@@ -21,30 +21,9 @@ interface ConfigProps {
   selectedNode?: any;
 }
 
-const insertFormatting = (
-  textareaRef: HTMLTextAreaElement | null,
-  prefix: string,
-  suffix: string,
-  currentValue: string,
-  onChange: (value: string) => void
-) => {
-  if (!textareaRef) return;
+// Remove unused function - now built into RichTextEditor
 
-  const start = textareaRef.selectionStart;
-  const end = textareaRef.selectionEnd;
-  const selectedText = currentValue.substring(start, end);
-  const newText = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
-  
-  onChange(newText);
-
-  setTimeout(() => {
-    textareaRef.focus();
-    const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
-    textareaRef.setSelectionRange(newCursorPos, newCursorPos);
-  }, 0);
-};
-
-export const AskNameConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskNameConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -52,23 +31,14 @@ export const AskNameConfig = ({ config, handleConfigChange, inputRefs, openVaria
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Qual é o seu nome?"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Qual é o seu nome?"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -107,7 +77,7 @@ export const AskNameConfig = ({ config, handleConfigChange, inputRefs, openVaria
   </div>
 );
 
-export const AskQuestionConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+export const AskQuestionConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
   const [showSettings, setShowSettings] = useState(true);
 
   return (
@@ -118,23 +88,14 @@ export const AskQuestionConfig = ({ config, handleConfigChange, inputRefs, openV
             <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
             Texto da Pergunta
           </Label>
-          <Textarea
-            ref={(el) => (inputRefs.current['question'] = el)}
+          <RichTextEditor
             value={config.question || "Faça sua pergunta"}
-            onChange={(e) => handleConfigChange("question", e.target.value)}
+            onChange={(text) => handleConfigChange("question", text)}
             placeholder="Faça sua pergunta"
-            rows={3}
-            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-          />
-          <FormattingToolbar
-            onFormat={(prefix, suffix) => insertFormatting(
-              inputRefs.current['question'],
-              prefix,
-              suffix,
-              config.question || "",
-              (val) => handleConfigChange("question", val)
-            )}
-            onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+            multiline={true}
+            nodes={nodes}
+            edges={edges}
+            selectedNode={selectedNode}
           />
         </div>
       </ConfigSection>
@@ -212,7 +173,7 @@ export const AskQuestionConfig = ({ config, handleConfigChange, inputRefs, openV
   );
 };
 
-export const AskEmailConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskEmailConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -220,23 +181,14 @@ export const AskEmailConfig = ({ config, handleConfigChange, inputRefs, openVari
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Qual é o seu e-mail?"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Qual é o seu e-mail?"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -287,7 +239,7 @@ export const AskEmailConfig = ({ config, handleConfigChange, inputRefs, openVari
   </div>
 );
 
-export const AskNumberConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskNumberConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -295,23 +247,14 @@ export const AskNumberConfig = ({ config, handleConfigChange, inputRefs, openVar
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Digite um número"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Digite um número"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -378,7 +321,7 @@ export const AskNumberConfig = ({ config, handleConfigChange, inputRefs, openVar
   </div>
 );
 
-export const AskPhoneConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskPhoneConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -386,23 +329,14 @@ export const AskPhoneConfig = ({ config, handleConfigChange, inputRefs, openVari
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Qual é o seu telefone?"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Qual é o seu telefone?"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -463,7 +397,7 @@ export const AskPhoneConfig = ({ config, handleConfigChange, inputRefs, openVari
   </div>
 );
 
-export const AskDateConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskDateConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -471,23 +405,14 @@ export const AskDateConfig = ({ config, handleConfigChange, inputRefs, openVaria
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Qual é a data?"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Qual é a data?"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -548,7 +473,7 @@ export const AskDateConfig = ({ config, handleConfigChange, inputRefs, openVaria
   </div>
 );
 
-export const AskFileConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskFileConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -556,23 +481,14 @@ export const AskFileConfig = ({ config, handleConfigChange, inputRefs, openVaria
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Envie um arquivo"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Envie um arquivo"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -629,7 +545,7 @@ export const AskFileConfig = ({ config, handleConfigChange, inputRefs, openVaria
   </div>
 );
 
-export const AskAddressConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskAddressConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -637,23 +553,14 @@ export const AskAddressConfig = ({ config, handleConfigChange, inputRefs, openVa
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Qual é o seu endereço?"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Qual é o seu endereço?"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -687,7 +594,7 @@ export const AskAddressConfig = ({ config, handleConfigChange, inputRefs, openVa
   </div>
 );
 
-export const AskUrlConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => (
+export const AskUrlConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => (
   <div className="space-y-4">
     <ConfigSection title="Pergunta">
       <div className="space-y-2">
@@ -695,23 +602,14 @@ export const AskUrlConfig = ({ config, handleConfigChange, inputRefs, openVariab
           <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
           Texto da Pergunta
         </Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <RichTextEditor
           value={config.question || "Digite uma URL"}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(text) => handleConfigChange("question", text)}
           placeholder="Digite uma URL"
-          rows={3}
-          className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
-        <FormattingToolbar
-          onFormat={(prefix, suffix) => insertFormatting(
-            inputRefs.current['question'],
-            prefix,
-            suffix,
-            config.question || "",
-            (val) => handleConfigChange("question", val)
-          )}
-          onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+          multiline={true}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
       </div>
     </ConfigSection>
@@ -762,7 +660,7 @@ export const AskUrlConfig = ({ config, handleConfigChange, inputRefs, openVariab
   </div>
 );
 
-export const AskCNPJConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
   const cnpjFields = [
     { key: 'variable', label: 'CNPJ', placeholder: 'cnpj', description: 'Número do CNPJ' },
     { key: 'razaoSocialField', label: 'Razão Social', placeholder: 'razao_social', description: 'Nome empresarial' },
@@ -796,23 +694,14 @@ export const AskCNPJConfig = ({ config, handleConfigChange, inputRefs, openVaria
             <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
             Texto da Pergunta
           </Label>
-          <Textarea
-            ref={(el) => (inputRefs.current['question'] = el)}
+          <RichTextEditor
             value={config.question || "Digite o CNPJ da empresa:"}
-            onChange={(e) => handleConfigChange("question", e.target.value)}
+            onChange={(text) => handleConfigChange("question", text)}
             placeholder="Digite o CNPJ da empresa:"
-            rows={3}
-            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-          />
-          <FormattingToolbar
-            onFormat={(prefix, suffix) => insertFormatting(
-              inputRefs.current['question'],
-              prefix,
-              suffix,
-              config.question || "",
-              (val) => handleConfigChange("question", val)
-            )}
-            onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+            multiline={true}
+            nodes={nodes}
+            edges={edges}
+            selectedNode={selectedNode}
           />
         </div>
       </ConfigSection>
@@ -863,7 +752,7 @@ export const AskCNPJConfig = ({ config, handleConfigChange, inputRefs, openVaria
   );
 };
 
-export const AskCEPConfig = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
+export const AskCEPConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
   const cepFields = [
     { key: 'variable', label: 'CEP', placeholder: 'cep', description: 'CEP digitado' },
     { key: 'logradouroField', label: 'Logradouro', placeholder: 'logradouro', description: 'Nome da rua/avenida' },
@@ -881,23 +770,14 @@ export const AskCEPConfig = ({ config, handleConfigChange, inputRefs, openVariab
             <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
             Texto da Pergunta
           </Label>
-          <Textarea
-            ref={(el) => (inputRefs.current['question'] = el)}
+          <RichTextEditor
             value={config.question || "Digite o CEP:"}
-            onChange={(e) => handleConfigChange("question", e.target.value)}
+            onChange={(text) => handleConfigChange("question", text)}
             placeholder="Digite o CEP:"
-            rows={3}
-            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-          />
-          <FormattingToolbar
-            onFormat={(prefix, suffix) => insertFormatting(
-              inputRefs.current['question'],
-              prefix,
-              suffix,
-              config.question || "",
-              (val) => handleConfigChange("question", val)
-            )}
-            onVariableClick={() => openVariablePicker(inputRefs.current['question'])}
+            multiline={true}
+            nodes={nodes}
+            edges={edges}
+            selectedNode={selectedNode}
           />
         </div>
       </ConfigSection>
