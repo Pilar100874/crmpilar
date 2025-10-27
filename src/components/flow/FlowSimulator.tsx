@@ -1172,14 +1172,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         console.log("💾 [CRITICAL] Saving variable:", cleanVarName, "=", input);
         console.log("📦 [CRITICAL] Context before save:", context);
         
-        setContext((prev) => {
-          const newContext = { ...prev, [cleanVarName]: input };
-          console.log("📦 [CRITICAL] Context after save:", newContext);
-          console.log("✅ [CRITICAL] Variable saved successfully:", cleanVarName, "→", newContext[cleanVarName]);
-          contextRef.current = newContext;
-          
-          return newContext;
-        });
+        const newContext = { ...contextRef.current, [cleanVarName]: input, ['@' + cleanVarName]: input };
+        contextRef.current = newContext;
+        console.log("📦 [CRITICAL] Context after save:", newContext);
+        console.log("✅ [CRITICAL] Variable saved successfully:", cleanVarName, "→", newContext[cleanVarName]);
+        setContext(newContext);
+        if (onContextChange) {
+          onContextChange(newContext);
+        }
         
         addSuccessMessage(`Variável "${cleanVarName}" = "${input}"`);
       } else {
@@ -1248,7 +1248,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       console.log("📦 [BUTTON] Context before save:", contextRef.current);
       
       // Atualizar contextRef.current IMEDIATAMENTE
-      const newContext = { ...contextRef.current, [cleanVarName]: saveValue };
+      const newContext = { ...contextRef.current, [cleanVarName]: saveValue, ['@' + cleanVarName]: saveValue };
       contextRef.current = newContext;
       console.log("📦 [BUTTON] Context after save:", contextRef.current);
       console.log("✅ [BUTTON] Variable saved in contextRef:", cleanVarName, "→", contextRef.current[cleanVarName]);
