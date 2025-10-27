@@ -10,6 +10,7 @@ import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle } from "lucide-rea
 import { toast } from "sonner";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -46,6 +47,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
@@ -1178,7 +1180,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     // Para ask_file, processar o arquivo
     if (currentBlockType === "ask_file" && selectedFile) {
       handleFileUpload();
@@ -1396,6 +1398,98 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               }
               
               console.log("✅ Número válido!");
+            }
+            
+            // Validar CNPJ e buscar dados da Receita Federal
+            if (nodeType === "ask_cnpj") {
+              const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+              console.log("🏢 Validando CNPJ:", input.trim());
+              
+              if (!cnpjRegex.test(input.trim())) {
+                const errorMessage = nodeConfig.errorMessage || "Por favor, digite um CNPJ válido no formato XX.XXX.XXX/XXXX-XX";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setInput("");
+                return;
+              }
+              
+              // Consultar CNPJ na Receita Federal via edge function
+              try {
+                setIsLoading(true);
+                addSystemMessage("🔍 Consultando CNPJ na Receita Federal...");
+                
+                const { data, error } = await supabase.functions.invoke('consultar-cnpj', {
+                  body: { cnpj: input.trim() }
+                });
+
+                if (error) throw error;
+                
+                if (data?.success && data?.data) {
+                  const cnpjData = data.data;
+                  
+                  // Guardar cada variável separadamente
+                  const cnpjContext = {
+                    ...contextRef.current,
+                    [cleanVarName]: input.trim(),
+                    [`${cleanVarName}_razao_social`]: cnpjData.razao_social || '',
+                    [`${cleanVarName}_nome_fantasia`]: cnpjData.nome_fantasia || '',
+                    [`${cleanVarName}_natureza_juridica`]: cnpjData.natureza_juridica || '',
+                    [`${cleanVarName}_data_abertura`]: cnpjData.abertura || '',
+                    [`${cleanVarName}_situacao`]: cnpjData.situacao || '',
+                    [`${cleanVarName}_porte`]: cnpjData.porte || '',
+                    [`${cleanVarName}_atividade_principal`]: cnpjData.atividade_principal || '',
+                    [`${cleanVarName}_logradouro`]: cnpjData.logradouro || '',
+                    [`${cleanVarName}_numero`]: cnpjData.numero || '',
+                    [`${cleanVarName}_complemento`]: cnpjData.complemento || '',
+                    [`${cleanVarName}_bairro`]: cnpjData.bairro || '',
+                    [`${cleanVarName}_municipio`]: cnpjData.municipio || '',
+                    [`${cleanVarName}_uf`]: cnpjData.uf || '',
+                    [`${cleanVarName}_cep`]: cnpjData.cep || '',
+                    [`${cleanVarName}_telefone`]: cnpjData.telefone || '',
+                    [`${cleanVarName}_email`]: cnpjData.email || '',
+                    [`${cleanVarName}_socio_nome`]: cnpjData.socio_nome || '',
+                    [`${cleanVarName}_socio_qualificacao`]: cnpjData.socio_qualificacao || '',
+                  };
+                  
+                  contextRef.current = cnpjContext;
+                  setContext(cnpjContext);
+                  if (onContextChange) {
+                    onContextChange(cnpjContext);
+                  }
+
+                  addSuccessMessage(`✅ CNPJ consultado com sucesso!\n📋 ${cnpjData.razao_social || cnpjData.nome_fantasia}`);
+                  console.log("✅ CNPJ válido e dados salvos!");
+                  setIsLoading(false);
+                  
+                  // Avançar para próximo bloco
+                  setPendingVariable(null);
+                  setIsWaitingInput(false);
+                  setCurrentBlockType(null);
+                  
+                  if (currentNodeId) {
+                    const nextNode = getNextNode(currentNodeId);
+                    if (nextNode) {
+                      safeSetTimeout(() => {
+                        setCurrentNodeId(nextNode.id);
+                        executeNode(nextNode);
+                      }, 500);
+                      setInput("");
+                      return;
+                    }
+                  }
+                  
+                  setInput("");
+                  return;
+                } else {
+                  throw new Error(data?.error || 'Erro ao consultar CNPJ');
+                }
+              } catch (error) {
+                console.error('Erro ao consultar CNPJ:', error);
+                const errorMessage = nodeConfig.errorMessage || "Erro ao consultar CNPJ. Por favor, verifique o número e tente novamente.";
+                addSystemMessage(`⚠️ ${errorMessage}`);
+                setIsLoading(false);
+                setInput("");
+                return;
+              }
             }
           }
         }

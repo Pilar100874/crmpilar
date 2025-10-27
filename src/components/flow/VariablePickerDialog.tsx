@@ -52,28 +52,30 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
     case "ask_address":
     case "ask_url":
     case "ask_cnpj": {
-      const defaults: Record<string, string> = {
-        ask_name: "nome",
-        ask_question: "resposta",
-        ask_email: "email",
-        ask_number: "numero",
-        ask_phone: "telefone",
-        ask_date: "data",
-        ask_file: "arquivo",
-        ask_address: "endereco",
-        ask_url: "url",
-        ask_cnpj: "cnpj",
-      };
-      const varName = (config.variable || defaults[data.type]) as string | undefined;
+      const varName = (config.variable || "cnpj") as string | undefined;
       if (varName) {
         const cleanVarName = String(varName).replace(/^@/, "");
-        outputs.push({
-          name: cleanVarName,
-          description: `Resposta: ${config.question || 'pergunta'}`,
-          type: data.type === "ask_number" ? "number" : 
-                data.type === "ask_date" ? "datetime" : 
-                data.type === "ask_file" ? "file" : "string"
-        });
+        outputs.push(
+          { name: cleanVarName, description: "CNPJ digitado", type: "string" },
+          { name: `${cleanVarName}_razao_social`, description: "Razão social", type: "string" },
+          { name: `${cleanVarName}_nome_fantasia`, description: "Nome fantasia", type: "string" },
+          { name: `${cleanVarName}_natureza_juridica`, description: "Natureza jurídica", type: "string" },
+          { name: `${cleanVarName}_data_abertura`, description: "Data de abertura", type: "string" },
+          { name: `${cleanVarName}_situacao`, description: "Situação cadastral", type: "string" },
+          { name: `${cleanVarName}_porte`, description: "Porte da empresa", type: "string" },
+          { name: `${cleanVarName}_atividade_principal`, description: "Atividade principal (CNAE)", type: "string" },
+          { name: `${cleanVarName}_logradouro`, description: "Logradouro", type: "string" },
+          { name: `${cleanVarName}_numero`, description: "Número", type: "string" },
+          { name: `${cleanVarName}_complemento`, description: "Complemento", type: "string" },
+          { name: `${cleanVarName}_bairro`, description: "Bairro", type: "string" },
+          { name: `${cleanVarName}_municipio`, description: "Município", type: "string" },
+          { name: `${cleanVarName}_uf`, description: "UF", type: "string" },
+          { name: `${cleanVarName}_cep`, description: "CEP", type: "string" },
+          { name: `${cleanVarName}_telefone`, description: "Telefone", type: "string" },
+          { name: `${cleanVarName}_email`, description: "E-mail", type: "string" },
+          { name: `${cleanVarName}_socio_nome`, description: "Nome do sócio principal", type: "string" },
+          { name: `${cleanVarName}_socio_qualificacao`, description: "Qualificação do sócio", type: "string" }
+        );
       }
       break;
     }
