@@ -42,8 +42,12 @@ const getCategoryIcon = (category: string) => {
 const parseToEditor = (text: string): string => {
   if (!text) return '';
   
-  // 1) Protege variáveis com placeholders para não quebrar com markdown (ex: _ em nomes)
+  // 0) Normaliza placeholders legados (ex: "§§VAR0§§") para chaves visíveis
+  //    Mantemos um nome neutro (ex: VAR0) para não perder completamente a indicação
   let html = text;
+  html = html.replace(/§§VAR_?(\d+)§§/g, (_m, idx) => `{{VAR${idx}}}`);
+  
+  // 1) Protege variáveis com placeholders para não quebrar com markdown (ex: _ em nomes)
   const varStore: string[] = [];
   const VAR_TOKEN_PREFIX = '§§VAR_';
   const VAR_TOKEN_SUFFIX = '§§';
