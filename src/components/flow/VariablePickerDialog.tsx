@@ -171,6 +171,45 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
         type: "number"
       });
       break;
+
+    case "reply_buttons": {
+      const varName = config.variable as string | undefined;
+      if (varName) {
+        const cleanVarName = String(varName).replace(/^@/, "");
+        outputs.push({
+          name: cleanVarName,
+          description: "Resposta do botão selecionado",
+          type: "string"
+        });
+      }
+      break;
+    }
+
+    case "list_buttons": {
+      const varName = config.variable as string | undefined;
+      if (varName) {
+        const cleanVarName = String(varName).replace(/^@/, "");
+        outputs.push({
+          name: cleanVarName,
+          description: "Opção de lista selecionada",
+          type: "string"
+        });
+      }
+      break;
+    }
+
+    case "keyword_options": {
+      const varName = config.variable as string | undefined;
+      if (varName) {
+        const cleanVarName = String(varName).replace(/^@/, "");
+        outputs.push({
+          name: cleanVarName,
+          description: "Opção selecionada por palavra-chave",
+          type: "string"
+        });
+      }
+      break;
+    }
   }
 
   return outputs;
