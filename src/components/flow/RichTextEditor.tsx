@@ -288,6 +288,33 @@ export const RichTextEditor = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
 
+  // Mantém o último range do cursor dentro do editor
+  const lastRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const r = sel.getRangeAt(0);
+    if (editorRef.current && editorRef.current.contains(r.commonAncestorContainer)) {
+      lastRangeRef.current = r.cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    if (!lastRangeRef.current) return;
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(lastRangeRef.current);
+  };
+
+  useEffect(() => {
+    const handler = () => {
+      saveSelection();
+    };
+    document.addEventListener('selectionchange', handler);
+    return () => document.removeEventListener('selectionchange', handler);
+  }, []);
+
   // Atualiza o editor quando value muda externamente
   useEffect(() => {
     if (!editorRef.current || isUpdatingRef.current) return;
@@ -429,6 +456,8 @@ export const RichTextEditor = ({
       const sel = window.getSelection();
       sel?.removeAllRanges();
       sel?.addRange(range);
+      // Salva a seleção do badge para permitir formatação via toolbar
+      saveSelection();
     }
   };
 
@@ -475,24 +504,29 @@ export const RichTextEditor = ({
     // Pequeno delay para garantir que o foco foi estabelecido
     setTimeout(() => {
       if (!editorRef.current) return;
+
+      // Restaura a última posição do cursor dentro do editor
+      restoreSelection();
       
       const selection = window.getSelection();
-      if (!selection) return;
-      
-      let range: Range;
-      if (selection.rangeCount > 0) {
-        range = selection.getRangeAt(0);
-        // Se o range não está dentro do editor, cria um novo no final
-        if (!editorRef.current.contains(range.commonAncestorContainer)) {
-          range = document.createRange();
-          if (editorRef.current.lastChild) {
-            range.setStartAfter(editorRef.current.lastChild);
-          } else {
-            range.selectNodeContents(editorRef.current);
-          }
-          range.collapse(false);
+      let range: Range | null = null;
+
+      if (selection && selection.rangeCount) {
+        const current = selection.getRangeAt(0);
+        if (editorRef.current.contains(current.commonAncestorContainer)) {
+          range = current;
         }
-      } else {
+      }
+
+      if (!range && lastRangeRef.current && editorRef.current.contains(lastRangeRef.current.commonAncestorContainer)) {
+        range = lastRangeRef.current;
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+
+      if (!range) {
+        // Fallback: insere ao final
         range = document.createRange();
         if (editorRef.current.lastChild) {
           range.setStartAfter(editorRef.current.lastChild);
@@ -500,6 +534,9 @@ export const RichTextEditor = ({
           range.selectNodeContents(editorRef.current);
         }
         range.collapse(false);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
       }
       
       // Remove qualquer conteúdo selecionado
@@ -523,14 +560,16 @@ export const RichTextEditor = ({
         varBadge.parentNode?.appendChild(space);
       }
       
-      // Posiciona o cursor após o espaço
+      // Posiciona o cursor após o espaço e salva seleção
       range.setStartAfter(space);
       range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      lastRangeRef.current = range.cloneRange();
       
       handleInput();
-    }, 50);
+    }, 10);
     
     setIsOpen(false);
     setSearchQuery("");
@@ -538,11 +577,20 @@ export const RichTextEditor = ({
 
   const applyFormatting = (tag: string, extraProps?: Record<string, string>) => {
     if (!editorRef.current) return;
-    
+
+    // Restaura a última seleção válida dentro do editor
+    restoreSelection();
+
     const selection = window.getSelection();
     if (!selection || !selection.rangeCount) return;
-    
-    const range = selection.getRangeAt(0);
+
+    let range = selection.getRangeAt(0);
+    if (!editorRef.current.contains(range.commonAncestorContainer) && lastRangeRef.current) {
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(lastRangeRef.current);
+      range = lastRangeRef.current;
+    }
     
     // Se não há seleção, não faz nada (exceto para listas e blockquote que podem criar novo bloco)
     if (range.collapsed && !['ul', 'ol', 'blockquote'].includes(tag.toLowerCase())) return;
@@ -571,6 +619,8 @@ export const RichTextEditor = ({
           parent?.insertBefore(existingFormat.firstChild, existingFormat);
         }
         parent?.removeChild(existingFormat);
+        // Atualiza a seleção após remover a formatação
+        saveSelection();
       } else {
         // Aplica nova formatação
         const element = document.createElement(tag);
@@ -599,6 +649,8 @@ export const RichTextEditor = ({
         newRange.collapse(false);
         selection.removeAllRanges();
         selection.addRange(newRange);
+        // Salva a nova seleção para futuras inserções
+        lastRangeRef.current = newRange.cloneRange();
       }
       
       handleInput();
@@ -612,6 +664,9 @@ export const RichTextEditor = ({
   const insertLink = () => {
     const url = prompt('Digite a URL:');
     if (!url) return;
+    
+    // Restaura a seleção para inserir o link no local correto
+    restoreSelection();
     
     const selection = window.getSelection();
     if (!selection || !selection.rangeCount) return;
@@ -627,6 +682,14 @@ export const RichTextEditor = ({
     
     range.deleteContents();
     range.insertNode(link);
+
+    // posiciona cursor após o link e salva seleção
+    const newRange = document.createRange();
+    newRange.setStartAfter(link);
+    newRange.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+    lastRangeRef.current = newRange.cloneRange();
     
     handleInput();
     editorRef.current?.focus();
@@ -634,6 +697,9 @@ export const RichTextEditor = ({
 
   const insertEmoji = (emoji: string) => {
     if (!editorRef.current) return;
+
+    // Restaura a seleção para inserir o emoji no local correto
+    restoreSelection();
     
     const selection = window.getSelection();
     if (!selection || !selection.rangeCount) return;
@@ -643,6 +709,11 @@ export const RichTextEditor = ({
     range.insertNode(textNode);
     range.setStartAfter(textNode);
     range.collapse(true);
+
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    lastRangeRef.current = range.cloneRange();
     
     handleInput();
     editorRef.current.focus();
@@ -883,9 +954,10 @@ export const RichTextEditor = ({
               type="button"
               variant="ghost"
               size="sm"
+              onMouseDown={() => saveSelection()}
               className="h-8 text-xs px-2 hover:bg-accent"
             >
-              Use field
+              usar variavel
               <ChevronDown className="w-3 h-3 ml-1" />
             </Button>
           </PopoverTrigger>
