@@ -532,6 +532,9 @@ function BotBuilderContent() {
         return false;
       }
 
+      // Aguarda próximo tick para garantir estado mais recente do canvas
+      await new Promise(resolve => setTimeout(resolve, 0));
+
       // Preferir dados do React Flow (garante último estado do canvas)
       const rfData = typeof reactFlowInstance?.toObject === 'function' ? reactFlowInstance.toObject() : null;
       const nodesToSave = rfData?.nodes?.length ? rfData.nodes : nodes;
@@ -553,14 +556,20 @@ function BotBuilderContent() {
       };
 
       let error: any, data: any;
-      if (currentBotId) {
-        // Update existing bot
+      const targetId = currentBotId || botIdFromUrl;
+      if (targetId) {
+        // Update existing bot (use id from state or URL to avoid race while carregando)
         ({ error, data } = await supabase
           .from("bot_flows")
           .update(botData)
-          .eq("id", currentBotId)
+          .eq("id", targetId)
           .select()
           .single());
+
+        // Garantir que currentBotId esteja setado após update
+        if (!currentBotId && data?.id) {
+          setCurrentBotId(data.id);
+        }
       } else {
         // Create new bot
         ({ error, data } = await supabase
@@ -628,7 +637,7 @@ function BotBuilderContent() {
     }
 
     return saved;
-  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables, getFlowSignature]);
+  }, [nodes, edges, reactFlowInstance, currentBotName, currentBotId, botIdFromUrl, currentBotDescription, validateConnections, highlightDisconnectedNodes, flowVariables, getFlowSignature]);
 
   // Auto-save quando houver mudanças (posicionado após handleSave para usar a versão mais recente)
   useEffect(() => {
