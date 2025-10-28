@@ -46,7 +46,7 @@ const parseToEditor = (text: string, variables?: Variable[]): string => {
   //    Tentamos mapear para variáveis disponíveis (quando fornecidas)
   let html = text;
   const guessList = variables?.map(v => v.name) || [];
-  html = html.replace(/§§VAR_?(\d+)§§/g, (_m, idx) => {
+  html = html.replace(/§§\s*VAR_?(\d+)\s*§§/g, (_m, idx) => {
     const i = Number(idx);
     const guess = guessList[i] || `VAR${i}`;
     return `{{${guess}}}`;
@@ -106,7 +106,7 @@ html = html.replace(new RegExp(`${VAR_TOKEN_PREFIX}(\\d+)${VAR_TOKEN_SUFFIX}`, '
 });
 
 // 3.1) Compat: se ainda restarem tokens legados sem underscore (ex.: §§VAR0§§), renderiza como badge genérico
-html = html.replace(/§§VAR(\d+)§§/g, (_m, idxStr) => {
+html = html.replace(/§§\s*VAR(\d+)\s*§§/g, (_m, idxStr) => {
   const idx = Number(idxStr);
   const name = varStore[idx] ? varStore[idx].replace(/\\_/g, '_') : `VAR${idx}`;
   return `<span class="variable-badge" contenteditable="false" data-variable="${name}">${name}<\/span>`;
@@ -369,7 +369,7 @@ export const RichTextEditor = ({
       // Segurança extra: se restar algum token legado, converte usando as variáveis disponíveis
       if (editorRef.current.innerText.includes('§§VAR')) {
         const legacyHtml = editorRef.current.innerHTML;
-        const mapped = legacyHtml.replace(/§§VAR_?(\d+)§§/g, (_m, idx) => {
+        const mapped = legacyHtml.replace(/§§\s*VAR_?(\d+)\s*§§/g, (_m, idx) => {
           const i = Number(idx);
           const guess = (availableVariables[i]?.name) || `VAR${i}`;
           return `<span class=\"variable-badge\" contenteditable=\"false\" data-variable=\"${guess}\">${guess}<\/span>`;
