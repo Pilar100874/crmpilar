@@ -2319,6 +2319,7 @@ export type Database = {
         Returns: string
       }
       admins_present: { Args: never; Returns: boolean }
+      generate_orcamento_token: { Args: never; Returns: string }
       get_user_estabelecimento_id: {
         Args: { _user_id: string }
         Returns: string
