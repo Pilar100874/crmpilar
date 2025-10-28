@@ -1537,6 +1537,12 @@ export default function Contatos() {
                 Principal
               </TabsTrigger>
               <TabsTrigger 
+                value="empresa"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              >
+                Empresa
+              </TabsTrigger>
+              <TabsTrigger 
                 value="leads"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
               >
@@ -1589,10 +1595,20 @@ export default function Contatos() {
               </div>
             </Card>
 
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowForm(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveContact}>
+                Salvar
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="empresa" className="p-6 space-y-6">
             <Card className="p-6 space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-5 h-5 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-foreground/70">Adicionar empresa</h3>
+                <h3 className="text-sm font-medium text-foreground/70">INFORMAÇÕES DA EMPRESA</h3>
               </div>
 
               <div className="space-y-4">
