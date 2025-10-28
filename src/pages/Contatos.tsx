@@ -15,8 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
-import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from "@/lib/masks";
+import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual, validateWhatsApp } from "@/lib/validators";
+import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask, maskWhatsApp } from "@/lib/masks";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { supabase } from "@/integrations/supabase/client";
@@ -561,7 +561,7 @@ export default function Contatos() {
       } else if (field.id === "cep") {
         processedValue = maskCEP(newValue);
       } else if (field.id === "phone" || field.type === "phone") {
-        processedValue = maskPhone(newValue);
+        processedValue = maskWhatsApp(newValue);
       }
       
       // Auto-preencher inscrição como "isento" para pessoa física
@@ -609,14 +609,16 @@ export default function Contatos() {
       // Validar email ao sair do campo
       if (field.type === "email" && value) {
         if (!validateEmail(value)) {
-          toast.error("E-mail inválido");
+          setFieldErrors(prev => ({ ...prev, [field.id]: "E-mail inválido" }));
+          toast.error("E-mail inválido. Verifique o formato (exemplo@dominio.com)");
         }
       }
       
-      // Validar telefone ao sair do campo
+      // Validar telefone/WhatsApp ao sair do campo
       if ((field.id === "phone" || field.type === "phone") && value) {
-        if (!validatePhone(value)) {
-          toast.error("Telefone inválido");
+        if (!validateWhatsApp(value)) {
+          setFieldErrors(prev => ({ ...prev, [field.id]: "WhatsApp inválido" }));
+          toast.error("WhatsApp deve estar no formato +55 (XX) XXXXX-XXXX");
         }
       }
       
@@ -759,21 +761,27 @@ export default function Contatos() {
 
     // Validar cada contato
     contatosDaEmpresa.forEach((contato, index) => {
-      if (!contato.name) {
+      if (!contato.name?.trim()) {
         errors[`contato_${index}_name`] = "Nome obrigatório";
+        toast.error(`Contato #${index + 1}: Nome é obrigatório`);
       }
-      if (!contato.phone) {
+      if (!contato.phone?.trim()) {
         errors[`contato_${index}_phone`] = "WhatsApp obrigatório";
-      } else if (!validatePhone(contato.phone)) {
+        toast.error(`Contato #${index + 1}: WhatsApp é obrigatório`);
+      } else if (!validateWhatsApp(contato.phone)) {
         errors[`contato_${index}_phone`] = "WhatsApp inválido";
+        toast.error(`Contato #${index + 1}: WhatsApp deve estar no formato +55 (XX) XXXXX-XXXX`);
       }
-      if (!contato.email) {
+      if (!contato.email?.trim()) {
         errors[`contato_${index}_email`] = "E-mail obrigatório";
+        toast.error(`Contato #${index + 1}: E-mail é obrigatório`);
       } else if (!validateEmail(contato.email)) {
         errors[`contato_${index}_email`] = "E-mail inválido";
+        toast.error(`Contato #${index + 1}: E-mail inválido. Verifique o formato (exemplo@dominio.com)`);
       }
-      if (!contato.position) {
+      if (!contato.position?.trim()) {
         errors[`contato_${index}_position`] = "Cargo obrigatório";
+        toast.error(`Contato #${index + 1}: Cargo é obrigatório`);
       }
     });
 
@@ -1788,23 +1796,39 @@ export default function Contatos() {
                           <Label>WhatsApp *</Label>
                           <Input
                             value={contato.phone}
+                            placeholder="+55 (XX) XXXXX-XXXX"
                             onChange={(e) => {
+                              const masked = maskWhatsApp(e.target.value);
                               const updated = contatosDaEmpresa.map(c =>
-                                c.id === contato.id ? { ...c, phone: e.target.value } : c
+                                c.id === contato.id ? { ...c, phone: masked } : c
                               );
                               setContatosDaEmpresa(updated);
+                            }}
+                            onBlur={(e) => {
+                              const value = e.target.value;
+                              if (value && !validateWhatsApp(value)) {
+                                toast.error(`Contato #${index + 1}: WhatsApp deve estar no formato +55 (XX) XXXXX-XXXX`);
+                              }
                             }}
                           />
                         </div>
                         <div>
                           <Label>E-mail *</Label>
                           <Input
+                            type="email"
                             value={contato.email}
+                            placeholder="exemplo@dominio.com"
                             onChange={(e) => {
                               const updated = contatosDaEmpresa.map(c =>
-                                c.id === contato.id ? { ...c, email: e.target.value } : c
+                                c.id === contato.id ? { ...c, email: e.target.value.toLowerCase().trim() } : c
                               );
                               setContatosDaEmpresa(updated);
+                            }}
+                            onBlur={(e) => {
+                              const value = e.target.value;
+                              if (value && !validateEmail(value)) {
+                                toast.error(`Contato #${index + 1}: E-mail inválido. Verifique o formato (exemplo@dominio.com)`);
+                              }
                             }}
                           />
                         </div>

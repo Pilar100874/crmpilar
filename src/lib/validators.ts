@@ -65,16 +65,74 @@ export const validateCNPJ = (cnpj: string): boolean => {
   return true;
 };
 
-// Validação de Email
+// Validação de Email (RFC 5322 simplificada + verificações extras)
 export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  if (!email || typeof email !== 'string') return false;
+  
+  const trimmedEmail = email.trim();
+  
+  // Verificações básicas de formato
+  if (trimmedEmail.length === 0) return false;
+  if (trimmedEmail.length > 254) return false; // RFC 5321
+  if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.')) return false;
+  if (trimmedEmail.includes('..')) return false; // Pontos consecutivos não são permitidos
+  
+  // Regex mais rigorosa baseada em RFC 5322
+  const emailRegex = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+  
+  if (!emailRegex.test(trimmedEmail)) return false;
+  
+  // Verificar se tem @ e apenas um @
+  const atCount = (trimmedEmail.match(/@/g) || []).length;
+  if (atCount !== 1) return false;
+  
+  // Dividir em local part e domain
+  const [localPart, domain] = trimmedEmail.split('@');
+  
+  // Verificar tamanhos
+  if (localPart.length === 0 || localPart.length > 64) return false; // RFC 5321
+  if (domain.length === 0 || domain.length > 253) return false;
+  
+  // Verificar se o domínio tem pelo menos um ponto
+  if (!domain.includes('.')) return false;
+  
+  // Verificar se o domínio não termina ou começa com hífen
+  const domainParts = domain.split('.');
+  for (const part of domainParts) {
+    if (part.length === 0) return false;
+    if (part.startsWith('-') || part.endsWith('-')) return false;
+  }
+  
+  return true;
 };
 
-// Validação de Telefone (formato brasileiro)
+// Validação de Telefone/WhatsApp (formato brasileiro com código do país)
 export const validatePhone = (phone: string): boolean => {
+  if (!phone || typeof phone !== 'string') return false;
+  
   const cleanPhone = phone.replace(/\D/g, '');
+  
+  // Aceita com ou sem código do país (55)
+  // Com código: 5511999999999 (13 dígitos)
+  // Sem código: 11999999999 (10 ou 11 dígitos)
+  if (cleanPhone.startsWith('55')) {
+    return cleanPhone.length === 12 || cleanPhone.length === 13; // 55 + 10 ou 11 dígitos
+  }
+  
   return cleanPhone.length >= 10 && cleanPhone.length <= 11;
+};
+
+// Validação de WhatsApp (sempre deve ter código do país)
+export const validateWhatsApp = (phone: string): boolean => {
+  if (!phone || typeof phone !== 'string') return false;
+  
+  const cleanPhone = phone.replace(/\D/g, '');
+  
+  // Deve começar com 55 (Brasil) e ter 13 dígitos no total
+  // Formato: 55 + DDD (2 dígitos) + número (9 dígitos para celular)
+  if (!cleanPhone.startsWith('55')) return false;
+  
+  return cleanPhone.length === 13; // 55 + 2 (DDD) + 9 (número celular com 9)
 };
 
 // Validação de Telefone por Formato

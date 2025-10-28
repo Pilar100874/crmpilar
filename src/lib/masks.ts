@@ -37,6 +37,29 @@ export const maskPhone = (value: string): string => {
   return cleanValue.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
 };
 
+// Aplicar máscara de WhatsApp com código do país
+export const maskWhatsApp = (value: string): string => {
+  // Remove tudo que não é número
+  let cleanValue = value.replace(/\D/g, '');
+  
+  // Se não começa com 55, adiciona
+  if (!cleanValue.startsWith('55') && cleanValue.length > 0) {
+    cleanValue = '55' + cleanValue;
+  }
+  
+  // Limita a 13 dígitos (55 + 11 dígitos)
+  cleanValue = cleanValue.substring(0, 13);
+  
+  // Aplica a máscara: +55 (XX) XXXXX-XXXX
+  if (cleanValue.length <= 2) return cleanValue ? `+${cleanValue}` : '';
+  if (cleanValue.length <= 4) return cleanValue.replace(/^(\d{2})(\d{0,2})/, '+$1 ($2');
+  if (cleanValue.length <= 9) return cleanValue.replace(/^(\d{2})(\d{2})(\d{0,5})/, '+$1 ($2) $3');
+  if (cleanValue.length <= 13) {
+    return cleanValue.replace(/^(\d{2})(\d{2})(\d{5})(\d{0,4})/, '+$1 ($2) $3-$4');
+  }
+  return cleanValue.replace(/^(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4');
+};
+
 // Aplicar máscara de Data
 export const maskDate = (value: string): string => {
   const cleanValue = value.replace(/\D/g, '').substring(0, 8);
