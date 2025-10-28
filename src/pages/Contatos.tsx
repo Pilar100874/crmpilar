@@ -24,6 +24,7 @@ import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskCo
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { APIImportDialog } from "@/components/config/APIImportDialog";
+import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import {
   DndContext,
   closestCenter,
@@ -1442,6 +1443,12 @@ export default function Contatos() {
                 Leads
               </TabsTrigger>
               <TabsTrigger 
+                value="segmentos"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              >
+                Segmentos
+              </TabsTrigger>
+              <TabsTrigger 
                 value="configuracoes"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
               >
@@ -1552,6 +1559,20 @@ export default function Contatos() {
             <div className="text-center text-muted-foreground py-12">
               Nenhum lead associado a este contato
             </div>
+          </TabsContent>
+
+          <TabsContent value="segmentos" className="p-6">
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Cadastro de Segmentos</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Gerencie os segmentos disponíveis para categorizar seus contatos.
+                  </p>
+                </div>
+                {estabelecimentoId && <SegmentosCRUD estabelecimentoId={estabelecimentoId} />}
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="configuracoes" className="p-6">
