@@ -232,16 +232,28 @@ export default function Contatos() {
   useEffect(() => {
     const fetchEstabelecimentoAndSegmentos = async () => {
       const estabId = localStorage.getItem("estabelecimentoId");
+      console.log("🔍 Contatos - estabelecimentoId do localStorage:", estabId);
       setEstabelecimentoId(estabId);
       
       if (estabId) {
-        const { data } = await supabase
+        console.log("🔍 Contatos - Buscando segmentos para estabelecimento:", estabId);
+        const { data, error } = await supabase
           .from("segmentos")
           .select("*")
           .eq("estabelecimento_id", estabId)
           .order("nome");
         
+        console.log("🔍 Contatos - Segmentos retornados:", data);
+        console.log("🔍 Contatos - Erro na busca:", error);
+        
+        if (error) {
+          console.error("❌ Erro ao buscar segmentos:", error);
+          toast.error("Erro ao carregar segmentos: " + error.message);
+        }
+        
         setSegmentos(data || []);
+      } else {
+        console.warn("⚠️ estabelecimentoId não encontrado no localStorage");
       }
     };
     
