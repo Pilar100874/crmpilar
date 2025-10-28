@@ -1,20 +1,35 @@
 import { useState, useEffect } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Trash2, X, Loader2, ArrowUpDown } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
 import { toast } from "sonner";
-import { validateCPF, validateCNPJ, validateEmail, validateCEP } from "@/lib/validators";
-import { maskCPF, maskCNPJ, maskCEP, maskPhone } from "@/lib/masks";
+import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
+import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
+
+interface CustomField {
+  id: string;
+  label: string;
+  type: "text" | "email" | "phone" | "textarea" | "select" | "checkbox" | "date" | "number";
+  category: "company" | "contact";
+  options?: string[];
+  required?: boolean;
+  locked?: boolean;
+}
 
 interface Empresa {
   id: string;
@@ -28,6 +43,7 @@ interface Empresa {
   estado: string | null;
   cep: string | null;
   custom_fields: any;
+  created_at?: string;
 }
 
 interface Contato {
@@ -40,14 +56,64 @@ interface Contato {
 
 export default function Empresas() {
   const [showForm, setShowForm] = useState(false);
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Gerenciamento de colunas da tabela
+  const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
+    const saved = localStorage.getItem("empresasTableColumns");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return [
+      { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
+      { id: "nome_fantasia", label: "Nome Fantasia", visible: true, width: 250, locked: true },
+      { id: "razao_social", label: "Razão Social", visible: true, width: 250 },
+      { id: "cnpj", label: "CNPJ", visible: true, width: 180 },
+      { id: "telefone", label: "Telefone", visible: true, width: 150 },
+      { id: "email", label: "E-mail", visible: true, width: 250 },
+      { id: "cidade", label: "Cidade", visible: false, width: 150 },
+      { id: "estado", label: "UF", visible: false, width: 80 },
+    ];
+  });
+
+  // Estado de ordenação
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem("empresasTableColumns", JSON.stringify(tableColumns));
+  }, [tableColumns]);
+
   // Estados do formulário
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Campos obrigatórios fixos de empresa
+  const [companyFields] = useState<CustomField[]>([
+    { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: true },
+    { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: true },
+    { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
+    { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: true },
+    { id: "cep", label: "CEP", type: "text", category: "company", required: true, locked: true },
+    { id: "address", label: "Endereço", type: "text", category: "company", required: true, locked: true },
+    { id: "city", label: "Cidade", type: "text", category: "company", required: true, locked: true },
+    { id: "neighborhood", label: "Bairro", type: "text", category: "company", required: true, locked: true },
+    { id: "state", label: "UF", type: "text", category: "company", required: true, locked: true },
+    { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: true, locked: true },
+  ]);
+
+  // Campos de contato
+  const [contactFields] = useState<CustomField[]>([
+    { id: "contact_name", label: "Nome", type: "text", category: "contact", required: true, locked: true },
+    { id: "contact_phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
+    { id: "contact_email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
+    { id: "contact_position", label: "Cargo", type: "text", category: "contact", required: false, locked: true },
+  ]);
 
   // Estados para vincular contatos
   const [contatos, setContatos] = useState<Contato[]>([]);
@@ -150,7 +216,8 @@ export default function Empresas() {
           id,
           nome,
           telefone,
-          email
+          email,
+          custom_fields
         )
       `)
       .eq('empresa_id', empresa.id);
@@ -229,7 +296,6 @@ export default function Empresas() {
       return;
     }
 
-    // Se editando empresa, salvar vínculo no banco
     if (editingEmpresa) {
       const { error } = await supabase
         .from('customer_empresas')
@@ -244,7 +310,6 @@ export default function Empresas() {
         return;
       }
 
-      // Atualizar tipo_operador do contato para cliente (true)
       await supabase
         .from('customers')
         .update({ tipo_operador: true })
@@ -265,13 +330,11 @@ export default function Empresas() {
         .delete()
         .eq('id', vinculo.id);
 
-      // Verificar se contato tem outras empresas vinculadas
       const { data: outrosVinculos } = await supabase
         .from('customer_empresas')
         .select('id')
         .eq('customer_id', vinculo.contato.id);
 
-      // Se não tem mais empresas, volta para prospect (false)
       if (!outrosVinculos || outrosVinculos.length === 0) {
         await supabase
           .from('customers')
@@ -287,7 +350,7 @@ export default function Empresas() {
   const handleSaveEmpresa = async () => {
     const errors: Record<string, string> = {};
 
-    // Validar campos obrigatórios
+    // Validar campos obrigatórios da empresa
     const requiredFields = ['company_type', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'state', 'inscricao'];
     requiredFields.forEach(field => {
       if (!formData[field]?.toString().trim()) {
@@ -295,7 +358,6 @@ export default function Empresas() {
       }
     });
 
-    // Validar CPF ou CNPJ
     if (formData.cpf_cnpj) {
       if (formData.company_type === "Pessoa Física" && !validateCPF(formData.cpf_cnpj)) {
         errors.cpf_cnpj = "CPF inválido";
@@ -305,12 +367,10 @@ export default function Empresas() {
       }
     }
 
-    // Validar CEP
     if (formData.cep && !validateCEP(formData.cep)) {
       errors.cep = "CEP inválido";
     }
 
-    // Validar email se preenchido
     if (formData.email && !validateEmail(formData.email)) {
       errors.email = "E-mail inválido";
     }
@@ -322,6 +382,9 @@ export default function Empresas() {
       if (!formData.contact_email?.trim()) errors.contact_email = "E-mail obrigatório";
       if (formData.contact_email && !validateEmail(formData.contact_email)) {
         errors.contact_email = "E-mail inválido";
+      }
+      if (formData.contact_phone && !validateWhatsApp(formData.contact_phone)) {
+        errors.contact_phone = "WhatsApp inválido";
       }
     }
 
@@ -359,7 +422,6 @@ export default function Empresas() {
       let empresaId: string;
 
       if (editingEmpresa) {
-        // Atualizar empresa
         empresaId = editingEmpresa.id;
         await supabase
           .from('empresas')
@@ -368,7 +430,6 @@ export default function Empresas() {
 
         toast.success("Empresa atualizada!");
       } else {
-        // Criar nova empresa
         const { data: inserted, error } = await supabase
           .from('empresas')
           .insert([empresaPayload])
@@ -378,7 +439,6 @@ export default function Empresas() {
         if (error) throw error;
         empresaId = inserted!.id;
 
-        // Se tiver contatos vinculados, criar vínculos
         if (contatosVinculados.length > 0) {
           await supabase
             .from('customer_empresas')
@@ -392,7 +452,6 @@ export default function Empresas() {
               }))
             );
 
-          // Atualizar tipo_operador dos contatos para cliente
           await Promise.all(
             contatosVinculados.map(v =>
               supabase
@@ -415,7 +474,7 @@ export default function Empresas() {
             nome: formData.contact_name,
             telefone: formData.contact_phone,
             email: formData.contact_email,
-            tipo_operador: true, // Cliente pois está vinculado a empresa
+            tipo_operador: true,
             custom_fields: {
               position: formData.contact_position || ""
             }
@@ -425,7 +484,6 @@ export default function Empresas() {
 
         if (contatoErr) throw contatoErr;
 
-        // Vincular novo contato à empresa
         await supabase
           .from('customer_empresas')
           .insert([{
@@ -439,11 +497,131 @@ export default function Empresas() {
       setFormData({});
       setContatosVinculados([]);
       setEditingEmpresa(null);
+      setCriarNovoContato(false);
       if (estabId) fetchEmpresas(estabId);
       if (estabId) fetchContatos(estabId);
     } catch (error) {
       console.error('Erro ao salvar empresa:', error);
       toast.error("Erro ao salvar empresa");
+    }
+  };
+
+  const handleColumnsChange = (newColumns: TableColumn[]) => {
+    setTableColumns(newColumns);
+  };
+
+  const handleSort = (columnId: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig && sortConfig.key === columnId) {
+      if (sortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else {
+        setSortConfig(null);
+        return;
+      }
+    }
+    
+    setSortConfig({ key: columnId, direction });
+  };
+
+  const getSortIcon = (columnId: string) => {
+    if (!sortConfig || sortConfig.key !== columnId) {
+      return <ArrowUpDown className="w-3 h-3 text-muted-foreground" />;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="w-3 h-3 text-primary" />
+      : <ArrowDown className="w-3 h-3 text-primary" />;
+  };
+
+  const renderField = (field: CustomField) => {
+    const displayValue = formData[field.id] || "";
+
+    const handleFieldBlur = () => {
+      if (field.id === "cep" && formData.cep?.length === 9) {
+        handleCEPLookup(formData.cep);
+      }
+      if (field.id === "cpf_cnpj" && formData.company_type === "Pessoa Jurídica" && formData.cpf_cnpj?.length === 18) {
+        handleCNPJLookup(formData.cpf_cnpj);
+      }
+    };
+
+    const handleFieldChange = (value: any) => {
+      let maskedValue = value;
+
+      if (field.id === "cpf_cnpj") {
+        maskedValue = formData.company_type === "Pessoa Física" ? maskCPF(value) : maskCNPJ(value);
+      } else if (field.id === "cep") {
+        maskedValue = maskCEP(value);
+      } else if (field.type === "phone") {
+        maskedValue = maskPhone(value);
+      }
+
+      setFormData(prev => ({ ...prev, [field.id]: maskedValue }));
+      setFieldErrors(prev => ({ ...prev, [field.id]: '' }));
+    };
+
+    switch (field.type) {
+      case "select":
+        return (
+          <Select
+            value={displayValue}
+            onValueChange={(value) => handleFieldChange(value)}
+          >
+            <SelectTrigger className={fieldErrors[field.id] ? "border-red-500" : ""}>
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map(opt => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "textarea":
+        return (
+          <Textarea
+            value={displayValue}
+            onChange={(e) => handleFieldChange(e.target.value)}
+            placeholder="..."
+            className={fieldErrors[field.id] ? "border-red-500" : ""}
+          />
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={field.id}
+              checked={!!displayValue}
+              onCheckedChange={(checked) => handleFieldChange(checked)}
+            />
+            <label htmlFor={field.id} className="text-sm cursor-pointer">
+              {field.label}
+            </label>
+          </div>
+        );
+      default:
+        return (
+          <div className="relative">
+            <Input
+              id={field.id}
+              type={field.type === "email" ? "email" : field.type === "number" ? "number" : "text"}
+              placeholder="..."
+              value={displayValue}
+              onChange={(e) => handleFieldChange(e.target.value)}
+              onBlur={handleFieldBlur}
+              required={field.required}
+              className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}
+            />
+            {fieldErrors[field.id] && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
+            )}
+            {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+            ) : null}
+          </div>
+        );
     }
   };
 
@@ -454,297 +632,210 @@ export default function Empresas() {
     e.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (showForm) {
+  const sortedEmpresas = React.useMemo(() => {
+    if (!sortConfig) return filteredEmpresas;
+
+    return [...filteredEmpresas].sort((a, b) => {
+      let aValue: any = '';
+      let bValue: any = '';
+
+      switch (sortConfig.key) {
+        case 'nome_fantasia':
+          aValue = a.nome_fantasia || '';
+          bValue = b.nome_fantasia || '';
+          break;
+        case 'razao_social':
+          aValue = a.razao_social || '';
+          bValue = b.razao_social || '';
+          break;
+        case 'cnpj':
+          aValue = a.cnpj || '';
+          bValue = b.cnpj || '';
+          break;
+        case 'telefone':
+          aValue = a.telefone || '';
+          bValue = b.telefone || '';
+          break;
+        case 'email':
+          aValue = a.email || '';
+          bValue = b.email || '';
+          break;
+        case 'cidade':
+          aValue = a.cidade || '';
+          bValue = b.cidade || '';
+          break;
+        case 'estado':
+          aValue = a.estado || '';
+          bValue = b.estado || '';
+          break;
+        default:
+          aValue = '';
+          bValue = '';
+      }
+
+      aValue = String(aValue || '').toLowerCase();
+      bValue = String(bValue || '').toLowerCase();
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredEmpresas, sortConfig]);
+
+  if (!showForm) {
     return (
       <div className="flex-1 flex flex-col h-full bg-background">
-        <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">
-            {editingEmpresa ? "Editar Empresa" : "Nova Empresa"}
-          </h2>
-          <Button variant="ghost" size="sm" onClick={() => {
-            setShowForm(false);
-            setFormData({});
-            setEditingEmpresa(null);
-            setContatosVinculados([]);
-            setCriarNovoContato(false);
-          }}>
-            <X className="w-4 h-4" />
-          </Button>
+        <div className="border-b border-border bg-card px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-foreground">TODAS AS EMPRESAS</h1>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfigPanel(true)} 
+                className="gap-2"
+              >
+                <Settings2 className="w-4 h-4" />
+                Configurações
+              </Button>
+              <Button onClick={() => {
+                setShowForm(true);
+                setEditingEmpresa(null);
+                setFormData({});
+                setContatosVinculados([]);
+                setCriarNovoContato(false);
+              }} className="gap-2">
+                <Plus className="w-4 h-4" />
+                ADICIONAR EMPRESA
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 bg-primary/10 text-primary border-primary/20"
+            >
+              Lista completa
+            </Button>
+            
+            <TableColumnsConfig 
+              columns={tableColumns} 
+              onColumnsChange={handleColumnsChange}
+            />
+            
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome fantasia, razão social, CNPJ ou e-mail..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-9"
+                />
+              </div>
+            </div>
+            
+            <div className="ml-auto text-sm text-muted-foreground">
+              {sortedEmpresas.length} elementos
+            </div>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
-          <Tabs defaultValue="empresa" className="w-full">
-            <TabsList>
-              <TabsTrigger value="empresa">Empresa</TabsTrigger>
-              <TabsTrigger value="contatos">Contatos</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="empresa" className="space-y-4 mt-4">
-              <Card className="p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Tipo</Label>
-                    <Select
-                      value={formData.company_type || "Pessoa Jurídica"}
-                      onValueChange={(v) => handleFieldChange('company_type', v)}
+        <div className="flex-1 overflow-auto">
+          {sortedEmpresas.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-muted-foreground">
+                <p className="text-lg font-medium mb-2">Nenhuma empresa encontrada</p>
+                <p className="text-sm">Clique em "ADICIONAR EMPRESA" para começar</p>
+              </div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {tableColumns.filter(col => col.visible).map(column => (
+                    <TableHead 
+                      key={column.id} 
+                      style={{ width: column.width }}
+                      className={column.id !== 'actions' ? 'cursor-pointer select-none' : ''}
+                      onClick={() => column.id !== 'actions' && handleSort(column.id)}
                     >
-                      <SelectTrigger className={fieldErrors.company_type ? "border-red-500" : ""}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pessoa Jurídica">Pessoa Jurídica</SelectItem>
-                        <SelectItem value="Pessoa Física">Pessoa Física</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label>CPF/CNPJ *</Label>
-                    <div className="relative">
-                      <Input
-                        value={formData.cpf_cnpj || ""}
-                        onChange={(e) => {
-                          const masked = formData.company_type === "Pessoa Física" 
-                            ? maskCPF(e.target.value)
-                            : maskCNPJ(e.target.value);
-                          handleFieldChange('cpf_cnpj', masked);
-                        }}
-                        onBlur={(e) => {
-                          if (formData.company_type === "Pessoa Jurídica" && e.target.value.length === 18) {
-                            handleCNPJLookup(e.target.value);
-                          }
-                        }}
-                        className={fieldErrors.cpf_cnpj ? "border-red-500" : ""}
-                      />
-                      {cnpjLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />}
-                    </div>
-                    {fieldErrors.cpf_cnpj && <p className="text-sm text-red-500 mt-1">{fieldErrors.cpf_cnpj}</p>}
-                  </div>
-
-                  <div>
-                    <Label>Razão Social *</Label>
-                    <Input
-                      value={formData.company_name || ""}
-                      onChange={(e) => handleFieldChange('company_name', e.target.value)}
-                      className={fieldErrors.company_name ? "border-red-500" : ""}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Nome Fantasia *</Label>
-                    <Input
-                      value={formData.company_fantasia || ""}
-                      onChange={(e) => handleFieldChange('company_fantasia', e.target.value)}
-                      className={fieldErrors.company_fantasia ? "border-red-500" : ""}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Telefone</Label>
-                    <Input
-                      value={formData.phone || ""}
-                      onChange={(e) => handleFieldChange('phone', maskPhone(e.target.value))}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>E-mail</Label>
-                    <Input
-                      type="email"
-                      value={formData.email || ""}
-                      onChange={(e) => handleFieldChange('email', e.target.value)}
-                      className={fieldErrors.email ? "border-red-500" : ""}
-                    />
-                    {fieldErrors.email && <p className="text-sm text-red-500 mt-1">{fieldErrors.email}</p>}
-                  </div>
-
-                  <div>
-                    <Label>CEP *</Label>
-                    <div className="relative">
-                      <Input
-                        value={formData.cep || ""}
-                        onChange={(e) => handleFieldChange('cep', maskCEP(e.target.value))}
-                        onBlur={(e) => {
-                          if (e.target.value.length === 9) {
-                            handleCEPLookup(e.target.value);
-                          }
-                        }}
-                        className={fieldErrors.cep ? "border-red-500" : ""}
-                      />
-                      {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />}
-                    </div>
-                    {fieldErrors.cep && <p className="text-sm text-red-500 mt-1">{fieldErrors.cep}</p>}
-                  </div>
-
-                  <div>
-                    <Label>Endereço *</Label>
-                    <Input
-                      value={formData.address || ""}
-                      onChange={(e) => handleFieldChange('address', e.target.value)}
-                      className={fieldErrors.address ? "border-red-500" : ""}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Bairro</Label>
-                    <Input
-                      value={formData.neighborhood || ""}
-                      onChange={(e) => handleFieldChange('neighborhood', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Cidade *</Label>
-                    <Input
-                      value={formData.city || ""}
-                      onChange={(e) => handleFieldChange('city', e.target.value)}
-                      className={fieldErrors.city ? "border-red-500" : ""}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Estado *</Label>
-                    <Input
-                      value={formData.state || ""}
-                      onChange={(e) => handleFieldChange('state', e.target.value)}
-                      className={fieldErrors.state ? "border-red-500" : ""}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Inscrição Estadual *</Label>
-                    <Input
-                      value={formData.inscricao || ""}
-                      onChange={(e) => handleFieldChange('inscricao', e.target.value)}
-                      className={fieldErrors.inscricao ? "border-red-500" : ""}
-                    />
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="contatos" className="space-y-4 mt-4">
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">Contatos Vinculados</h3>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setCriarNovoContato(!criarNovoContato)}
-                    >
-                      {criarNovoContato ? "Cancelar" : "Criar Novo Contato"}
-                    </Button>
-                  </div>
-
-                  {criarNovoContato && (
-                    <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
-                      <h4 className="font-medium text-sm">Novo Contato</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label>Nome *</Label>
-                          <Input
-                            value={formData.contact_name || ""}
-                            onChange={(e) => handleFieldChange('contact_name', e.target.value)}
-                            className={fieldErrors.contact_name ? "border-red-500" : ""}
-                          />
-                        </div>
-                        <div>
-                          <Label>Cargo</Label>
-                          <Input
-                            value={formData.contact_position || ""}
-                            onChange={(e) => handleFieldChange('contact_position', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <Label>Telefone *</Label>
-                          <Input
-                            value={formData.contact_phone || ""}
-                            onChange={(e) => handleFieldChange('contact_phone', maskPhone(e.target.value))}
-                            className={fieldErrors.contact_phone ? "border-red-500" : ""}
-                          />
-                        </div>
-                        <div>
-                          <Label>E-mail *</Label>
-                          <Input
-                            value={formData.contact_email || ""}
-                            onChange={(e) => handleFieldChange('contact_email', e.target.value)}
-                            className={fieldErrors.contact_email ? "border-red-500" : ""}
-                          />
-                        </div>
+                      <div className="flex items-center gap-2">
+                        {column.label}
+                        {column.id !== 'actions' && getSortIcon(column.id)}
                       </div>
-                    </div>
-                  )}
-
-                  {!criarNovoContato && (
-                    <div className="space-y-2">
-                      <Label>Buscar Contato Existente</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Nome, e-mail ou telefone..."
-                          value={buscaContato}
-                          onChange={(e) => setBuscaContato(e.target.value)}
-                          className="pl-9"
-                        />
-                      </div>
-                      {contatosFiltrados.length > 0 && (
-                        <div className="border rounded-lg max-h-48 overflow-auto">
-                          {contatosFiltrados.map(contato => (
-                            <div
-                              key={contato.id}
-                              className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                              onClick={() => handleAddContatoVinculado(contato.id)}
-                            >
-                              <div className="font-medium">{contato.nome}</div>
-                              <div className="text-sm text-muted-foreground">{contato.email}</div>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedEmpresas.map(empresa => (
+                  <TableRow key={empresa.id}>
+                    {tableColumns.filter(col => col.visible).map(column => {
+                      if (column.id === 'actions') {
+                        return (
+                          <TableCell key={column.id}>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditEmpresa(empresa)}
+                                className="h-8 px-2"
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteEmpresa(empresa.id)}
+                                className="h-8 px-2"
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {contatosVinculados.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Contatos</Label>
-                      <div className="border rounded-lg divide-y">
-                        {contatosVinculados.map((vinculo, idx) => (
-                          <div key={idx} className="p-3 flex items-center justify-between">
-                            <div>
-                              <div className="font-medium">{vinculo.contato?.nome}</div>
-                              <div className="text-sm text-muted-foreground">{vinculo.contato?.email}</div>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleRemoveContatoVinculado(idx)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => {
-              setShowForm(false);
-              setFormData({});
-              setEditingEmpresa(null);
-              setContatosVinculados([]);
-            }}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveEmpresa}>
-              Salvar Empresa
-            </Button>
-          </div>
+                          </TableCell>
+                        );
+                      }
+                      
+                      let cellValue = "";
+                      switch (column.id) {
+                        case 'nome_fantasia':
+                          cellValue = empresa.nome_fantasia || "-";
+                          break;
+                        case 'razao_social':
+                          cellValue = empresa.razao_social || "-";
+                          break;
+                        case 'cnpj':
+                          cellValue = empresa.cnpj || "-";
+                          break;
+                        case 'telefone':
+                          cellValue = empresa.telefone || "-";
+                          break;
+                        case 'email':
+                          cellValue = empresa.email || "-";
+                          break;
+                        case 'cidade':
+                          cellValue = empresa.cidade || "-";
+                          break;
+                        case 'estado':
+                          cellValue = empresa.estado || "-";
+                          break;
+                        default:
+                          cellValue = "-";
+                      }
+                      
+                      return (
+                        <TableCell key={column.id} className={column.id === 'nome_fantasia' ? "font-medium" : ""}>
+                          {cellValue}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </div>
     );
@@ -753,80 +844,173 @@ export default function Empresas() {
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
       <div className="border-b border-border bg-card px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-foreground">Empresas</h1>
-          <Button onClick={() => {
-            setShowForm(true);
-            setEditingEmpresa(null);
-            setFormData({});
-            setContatosVinculados([]);
-            setCriarNovoContato(false);
-          }} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Nova Empresa
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-foreground">
+            {editingEmpresa ? "Editar Empresa" : "Nova Empresa"}
+          </h1>
+          <Button variant="ghost" size="sm" className="gap-2 ml-auto">
+            #ADICIONAR TAGS
           </Button>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome fantasia, razão social, CNPJ ou e-mail..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
-        {filteredEmpresas.length === 0 ? (
-          <div className="text-center text-muted-foreground py-12">
-            Nenhuma empresa cadastrada. Clique em "Nova Empresa" para começar.
+      <div className="flex-1 overflow-auto">
+        <Tabs defaultValue="empresa" className="w-full">
+          <div className="border-b border-border bg-card px-6">
+            <TabsList className="bg-transparent h-auto p-0">
+              <TabsTrigger 
+                value="empresa"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              >
+                Empresa
+              </TabsTrigger>
+              <TabsTrigger 
+                value="contatos" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              >
+                Contatos
+              </TabsTrigger>
+            </TabsList>
           </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome Fantasia</TableHead>
-                <TableHead>Razão Social</TableHead>
-                <TableHead>CNPJ</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Cidade</TableHead>
-                <TableHead className="w-[100px]">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEmpresas.map(empresa => (
-                <TableRow key={empresa.id}>
-                  <TableCell className="font-medium">{empresa.nome_fantasia}</TableCell>
-                  <TableCell>{empresa.razao_social || "-"}</TableCell>
-                  <TableCell>{empresa.cnpj || "-"}</TableCell>
-                  <TableCell>{empresa.telefone || "-"}</TableCell>
-                  <TableCell>{empresa.email || "-"}</TableCell>
-                  <TableCell>{empresa.cidade || "-"}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEditEmpresa(empresa)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteEmpresa(empresa.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+
+          <TabsContent value="empresa" className="p-6 space-y-6">
+            <Card className="p-6">
+              <h3 className="text-sm font-semibold mb-4 text-foreground uppercase tracking-wide">
+                DADOS DA EMPRESA
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {companyFields.map((field) => (
+                  <div key={field.id} className={field.type === "textarea" ? "col-span-2" : ""}>
+                    <Label htmlFor={field.id}>
+                      {field.label}
+                      {field.required && <span className="text-destructive ml-1">*</span>}
+                    </Label>
+                    {renderField(field)}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="contatos" className="p-6 space-y-6">
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                    CONTATOS VINCULADOS
+                  </h3>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setCriarNovoContato(!criarNovoContato)}
+                  >
+                    {criarNovoContato ? "Cancelar" : "Criar Novo Contato"}
+                  </Button>
+                </div>
+
+                {criarNovoContato && (
+                  <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
+                    <h4 className="font-medium text-sm">Novo Contato</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {contactFields.map((field) => (
+                        <div key={field.id}>
+                          <Label htmlFor={field.id}>
+                            {field.label}
+                            {field.required && <span className="text-destructive ml-1">*</span>}
+                          </Label>
+                          {renderField(field)}
+                        </div>
+                      ))}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+                  </div>
+                )}
+
+                {!criarNovoContato && (
+                  <div className="space-y-2">
+                    <Label>Buscar Contato Existente</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Nome, e-mail ou telefone..."
+                        value={buscaContato}
+                        onChange={(e) => setBuscaContato(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    {contatosFiltrados.length > 0 && (
+                      <div className="border rounded-lg max-h-48 overflow-auto">
+                        {contatosFiltrados.map(contato => (
+                          <div
+                            key={contato.id}
+                            className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                            onClick={() => handleAddContatoVinculado(contato.id)}
+                          >
+                            <div className="font-medium">{contato.nome}</div>
+                            <div className="text-sm text-muted-foreground">{contato.email}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {contatosVinculados.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Contatos</Label>
+                    <div className="border rounded-lg divide-y">
+                      {contatosVinculados.map((vinculo, idx) => (
+                        <div key={idx} className="p-3 flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{vinculo.contato?.nome}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {vinculo.contato?.email} • {vinculo.contato?.telefone}
+                            </div>
+                            {vinculo.contato?.custom_fields?.position && (
+                              <div className="text-sm text-muted-foreground">
+                                {vinculo.contato.custom_fields.position}
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveContatoVinculado(idx)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <div className="border-t border-border bg-card px-6 py-4">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setShowForm(false);
+              setFormData({});
+              setEditingEmpresa(null);
+              setContatosVinculados([]);
+              setCriarNovoContato(false);
+              setFieldErrors({});
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button onClick={handleSaveEmpresa}>
+            {editingEmpresa ? "Salvar Alterações" : "Salvar Empresa"}
+          </Button>
+        </div>
       </div>
     </div>
   );
