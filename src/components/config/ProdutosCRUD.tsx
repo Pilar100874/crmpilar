@@ -341,14 +341,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             <div>
               <Label>Categoria</Label>
               <Select
-                value={formData.categoria_id}
-                onValueChange={(value) => setFormData({ ...formData, categoria_id: value })}
+                value={formData.categoria_id || "none"}
+                onValueChange={(value) => setFormData({ ...formData, categoria_id: value === "none" ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma</SelectItem>
+                  <SelectItem value="none">Nenhuma</SelectItem>
                   {categorias.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.nome}
@@ -361,14 +361,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             <div>
               <Label>Grupo</Label>
               <Select
-                value={formData.grupo_id}
-                onValueChange={(value) => setFormData({ ...formData, grupo_id: value })}
+                value={formData.grupo_id || "none"}
+                onValueChange={(value) => setFormData({ ...formData, grupo_id: value === "none" ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {grupos.map((grupo) => (
                     <SelectItem key={grupo.id} value={grupo.id}>
                       {grupo.nome}

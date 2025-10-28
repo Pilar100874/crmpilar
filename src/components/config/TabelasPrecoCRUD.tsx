@@ -285,14 +285,14 @@ export function TabelasPrecoCRUD({ estabelecimentoId }: TabelasPrecoCRUDProps) {
             <div>
               <Label>Unidade (opcional)</Label>
               <Select
-                value={formData.unidade_id}
-                onValueChange={(value) => setFormData({ ...formData, unidade_id: value })}
+                value={formData.unidade_id || "all"}
+                onValueChange={(value) => setFormData({ ...formData, unidade_id: value === "all" ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todas as unidades" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as unidades</SelectItem>
+                  <SelectItem value="all">Todas as unidades</SelectItem>
                   {unidades.map((unidade) => (
                     <SelectItem key={unidade.id} value={unidade.id}>
                       {unidade.nome}
