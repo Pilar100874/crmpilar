@@ -173,13 +173,13 @@ export default function Orcamentos() {
               </div>
             </div>
 
-            <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+            <Select value={filterEtapa || "all"} onValueChange={(value) => setFilterEtapa(value === "all" ? "" : value)}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Todas as etapas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as etapas</SelectItem>
+                <SelectItem value="all">Todas as etapas</SelectItem>
                 {ETAPAS_CONFIG.map(etapa => (
                   <SelectItem key={etapa.id} value={etapa.id}>
                     {etapa.title}
