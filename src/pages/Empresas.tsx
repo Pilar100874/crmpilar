@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
@@ -877,124 +877,148 @@ export default function Empresas() {
             </TabsList>
           </div>
 
-          <TabsContent value="empresa" className="p-6 space-y-6">
-            <Card className="p-6 space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-foreground/70">DADOS DA EMPRESA</h3>
-              </div>
-
-              <div className="space-y-4">
+          <TabsContent value="empresa" className="p-6">
+            <Card className="p-4">
+              <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+                Dados da Empresa
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
                 {companyFields.map((field) => (
                   <div key={field.id}>
-                    <Label htmlFor={field.id}>{field.label} {field.required && '*'}</Label>
+                    <Label htmlFor={field.id} className="text-xs">
+                      {field.label} {field.required && '*'}
+                    </Label>
                     {renderField(field)}
                   </div>
                 ))}
               </div>
             </Card>
 
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowForm(false)}>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSaveEmpresa}>
+              <Button size="sm" onClick={handleSaveEmpresa}>
                 Salvar Empresa
               </Button>
             </div>
           </TabsContent>
 
-          <TabsContent value="contatos" className="p-6 space-y-6">
+          <TabsContent value="contatos" className="p-6">
             {/* Lista de Contatos Vinculados */}
             {contatosVinculados.length > 0 && (
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-foreground/70">CONTATOS VINCULADOS</h3>
-                  <div className="space-y-2">
-                    {contatosVinculados.map((vinculo, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <div className="font-medium">{vinculo.contato?.nome}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {vinculo.contato?.email} • {vinculo.contato?.telefone}
-                          </div>
-                          {vinculo.contato?.custom_fields?.position && (
-                            <div className="text-sm text-muted-foreground">
-                              {vinculo.contato.custom_fields.position}
-                            </div>
-                          )}
-                          {vinculo.is_primary && (
-                            <Badge variant="secondary" className="mt-1">Principal</Badge>
-                          )}
+              <Card className="p-4 mb-4">
+                <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+                  Contatos Vinculados
+                </h3>
+                <div className="space-y-2">
+                  {contatosVinculados.map((vinculo, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{vinculo.contato?.nome}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {vinculo.contato?.email}
                         </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {vinculo.is_primary && (
+                          <Badge variant="secondary" className="text-xs">Principal</Badge>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-7 px-2"
+                          onClick={() => {
+                            // Editar contato
+                            const contatoCompleto = contatos.find(c => c.id === vinculo.contato?.id);
+                            if (contatoCompleto) {
+                              const data: Record<string, any> = {
+                                contact_name: contatoCompleto.nome,
+                                contact_phone: contatoCompleto.telefone,
+                                contact_email: contatoCompleto.email,
+                                contact_position: contatoCompleto.custom_fields?.position || "",
+                              };
+                              setFormData(data);
+                              setCriarNovoContato(true);
+                            }
+                          }}
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2"
                           onClick={() => handleRemoveContatoVinculado(idx)}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 h-3" />
                         </Button>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </Card>
             )}
 
             {/* Busca e Seleção de Contato */}
-            <Card className="p-6 space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <Label>Vincular Novo Contato</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      placeholder="Buscar por nome, e-mail ou telefone..."
-                      value={buscaContato}
-                      onChange={(e) => setBuscaContato(e.target.value)}
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setCriarNovoContato(true);
-                        setBuscaContato("");
-                        setContatosFiltrados([]);
-                      }}
-                    >
-                      + Criar Novo
-                    </Button>
-                  </div>
+            {!criarNovoContato && (
+              <Card className="p-4 mb-4">
+                <Label className="text-xs">Vincular Contato</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Buscar por nome, e-mail..."
+                    value={buscaContato}
+                    className="h-9 text-sm"
+                    onChange={(e) => setBuscaContato(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setCriarNovoContato(true);
+                      setBuscaContato("");
+                      setContatosFiltrados([]);
+                    }}
+                  >
+                    + Novo
+                  </Button>
                 </div>
 
                 {/* Lista de contatos filtrados */}
                 {contatosFiltrados.length > 0 && (
-                  <div className="border rounded-lg max-h-[200px] overflow-y-auto">
+                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
                     {contatosFiltrados.map((contato) => (
                       <button
                         key={contato.id}
-                        className="w-full text-left p-3 hover:bg-accent transition-colors border-b last:border-b-0"
+                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
                         onClick={() => {
                           handleAddContatoVinculado(contato.id);
                           setContatosFiltrados([]);
+                          setBuscaContato("");
                         }}
                       >
-                        <div className="font-medium">{contato.nome}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {contato.email} • {contato.telefone}
+                        <div className="font-medium text-sm">{contato.nome}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {contato.email}
                         </div>
                       </button>
                     ))}
                   </div>
                 )}
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Formulário de Novo Contato */}
             {criarNovoContato && (
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-foreground/70">NOVO CONTATO</h3>
+              <Card className="p-4 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Novo Contato
+                  </h3>
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-7 px-2"
                     onClick={() => {
                       setCriarNovoContato(false);
                       setFormData(prev => {
@@ -1006,14 +1030,16 @@ export default function Empresas() {
                       });
                     }}
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3" />
                   </Button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                   {contactFields.map((field) => (
                     <div key={field.id}>
-                      <Label htmlFor={field.id}>{field.label} {field.required && '*'}</Label>
+                      <Label htmlFor={field.id} className="text-xs">
+                        {field.label} {field.required && '*'}
+                      </Label>
                       {renderField(field)}
                     </div>
                   ))}
@@ -1021,11 +1047,11 @@ export default function Empresas() {
               </Card>
             )}
 
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowForm(false)}>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSaveEmpresa}>
+              <Button size="sm" onClick={handleSaveEmpresa}>
                 Salvar
               </Button>
             </div>

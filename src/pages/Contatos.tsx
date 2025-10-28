@@ -1826,159 +1826,198 @@ export default function Contatos() {
             </TabsList>
           </div>
 
-          <TabsContent value="contato" className="p-6 space-y-6">
-            <Card className="p-6 space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-foreground/70">DADOS DO CONTATO</h3>
-              </div>
-
-              <div className="space-y-4">
+          <TabsContent value="contato" className="p-6">
+            <Card className="p-4">
+              <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+                Dados do Contato
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
                 {contactFields.map((field) => (
                   <div key={field.id}>
-                    <Label htmlFor={field.id}>{field.label} {field.required && '*'}</Label>
+                    <Label htmlFor={field.id} className="text-xs">
+                      {field.label} {field.required && '*'}
+                    </Label>
                     {renderField(field)}
                   </div>
                 ))}
               </div>
             </Card>
 
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowForm(false)}>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSaveContact}>
+              <Button size="sm" onClick={handleSaveContact}>
                 {empresaSelecionada ? "Salvar Contato" : "Salvar Prospect"}
               </Button>
             </div>
           </TabsContent>
 
-          <TabsContent value="empresa" className="p-6 space-y-6">
+          <TabsContent value="empresa" className="p-6">
             {/* Lista de Empresas Vinculadas */}
             {empresasVinculadas.length > 0 && (
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-foreground/70">EMPRESAS VINCULADAS</h3>
-                  <div className="space-y-2">
-                    {empresasVinculadas.map((empresa) => (
-                      <div key={empresa.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <div className="font-medium">{empresa.nome_fantasia}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {empresa.razao_social} - {empresa.cnpj || empresa.custom_fields?.cpf_cnpj}
-                          </div>
-                          {empresa.is_primary && (
-                            <Badge variant="secondary" className="mt-1">Principal</Badge>
-                          )}
+              <Card className="p-4 mb-4">
+                <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+                  Empresas Vinculadas
+                </h3>
+                <div className="space-y-2">
+                  {empresasVinculadas.map((empresa) => (
+                    <div key={empresa.id} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {empresa.cnpj || empresa.custom_fields?.cpf_cnpj}
                         </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {empresa.is_primary && (
+                          <Badge variant="secondary" className="text-xs">Principal</Badge>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-7 px-2"
+                          onClick={() => {
+                            // Editar empresa
+                            const empresaCompleta = empresas.find(e => e.id === empresa.id);
+                            if (empresaCompleta) {
+                              const data: Record<string, any> = {
+                                company_type: empresaCompleta.custom_fields?.company_type || "Pessoa Jurídica",
+                                cpf_cnpj: empresaCompleta.cnpj || "",
+                                company_name: empresaCompleta.razao_social || "",
+                                company_fantasia: empresaCompleta.nome_fantasia || "",
+                                phone: empresaCompleta.telefone || "",
+                                email: empresaCompleta.email || "",
+                                cep: empresaCompleta.cep || "",
+                                address: empresaCompleta.endereco || "",
+                                city: empresaCompleta.cidade || "",
+                                state: empresaCompleta.estado || "",
+                                neighborhood: empresaCompleta.custom_fields?.neighborhood || "",
+                                inscricao: empresaCompleta.custom_fields?.inscricao || "",
+                              };
+                              setFormData(data);
+                              setCriarNovaEmpresa(true);
+                            }
+                          }}
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2"
                           onClick={() => handleRemoveEmpresaVinculada(empresa.id, empresa.vinculo_id)}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 h-3" />
                         </Button>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </Card>
             )}
 
             {/* Busca e Seleção de Empresa */}
-            <Card className="p-6 space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <Label>Vincular Nova Empresa</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      placeholder="Buscar por nome, fantasia, CNPJ ou CPF..."
-                      value={buscaEmpresa}
-                      onChange={(e) => {
-                        const valor = e.target.value;
-                        setBuscaEmpresa(valor);
-                        
-                        if (valor.trim()) {
-                          const termo = valor.toLowerCase();
-                          const filtradas = empresas.filter(emp => 
-                            !empresasVinculadas.some(ev => ev.id === emp.id) &&
-                            (emp.nome_fantasia?.toLowerCase().includes(termo) ||
-                            emp.razao_social?.toLowerCase().includes(termo) ||
-                            emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
-                            emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, '')))
-                          );
-                          setEmpresasFiltradas(filtradas);
-                        } else {
-                          setEmpresasFiltradas([]);
-                        }
-                      }}
-                      onBlur={async () => {
-                        const clean = buscaEmpresa.replace(/\D/g, '');
-                        if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
-                          if (clean.length === 14) {
-                            await handleCNPJLookup(buscaEmpresa);
-                          }
-                        }
-                      }}
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setEmpresaSelecionada("");
-                        setCriarNovaEmpresa(true);
-                        setBuscaEmpresa("");
+            {!criarNovaEmpresa && (
+              <Card className="p-4 mb-4">
+                <Label className="text-xs">Vincular Empresa</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Buscar por nome, CNPJ..."
+                    value={buscaEmpresa}
+                    className="h-9 text-sm"
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      setBuscaEmpresa(valor);
+                      
+                      if (valor.trim()) {
+                        const termo = valor.toLowerCase();
+                        const filtradas = empresas.filter(emp => 
+                          !empresasVinculadas.some(ev => ev.id === emp.id) &&
+                          (emp.nome_fantasia?.toLowerCase().includes(termo) ||
+                          emp.razao_social?.toLowerCase().includes(termo) ||
+                          emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
+                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, '')))
+                        );
+                        setEmpresasFiltradas(filtradas);
+                      } else {
                         setEmpresasFiltradas([]);
-                        setFormData({});
-                      }}
-                    >
-                      + Criar Nova
-                    </Button>
-                  </div>
+                      }
+                    }}
+                    onBlur={async () => {
+                      const clean = buscaEmpresa.replace(/\D/g, '');
+                      if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
+                        if (clean.length === 14) {
+                          await handleCNPJLookup(buscaEmpresa);
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEmpresaSelecionada("");
+                      setCriarNovaEmpresa(true);
+                      setBuscaEmpresa("");
+                      setEmpresasFiltradas([]);
+                      setFormData({});
+                    }}
+                  >
+                    + Nova
+                  </Button>
                 </div>
 
                 {/* Lista de empresas filtradas */}
                 {empresasFiltradas.length > 0 && (
-                  <div className="border rounded-lg max-h-[200px] overflow-y-auto">
+                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
                     {empresasFiltradas.map((empresa) => (
                       <button
                         key={empresa.id}
-                        className="w-full text-left p-3 hover:bg-accent transition-colors border-b last:border-b-0"
+                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
                         onClick={() => {
                           handleAddEmpresaVinculada(empresa.id);
                           setEmpresasFiltradas([]);
+                          setBuscaEmpresa("");
                         }}
                       >
-                        <div className="font-medium">{empresa.nome_fantasia}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {empresa.razao_social} - {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
+                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
                         </div>
                       </button>
                     ))}
                   </div>
                 )}
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Formulário de Nova Empresa */}
             {criarNovaEmpresa && (
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-foreground/70">NOVA EMPRESA</h3>
+              <Card className="p-4 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Nova Empresa
+                  </h3>
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-7 px-2"
                     onClick={() => {
                       setCriarNovaEmpresa(false);
                       setFormData({});
                     }}
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3" />
                   </Button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                   {companyFields.map((field) => (
                     <div key={field.id}>
-                      <Label htmlFor={field.id}>{field.label} {field.required && '*'}</Label>
+                      <Label htmlFor={field.id} className="text-xs">
+                        {field.label} {field.required && '*'}
+                      </Label>
                       {renderField(field)}
                     </div>
                   ))}
@@ -1986,11 +2025,11 @@ export default function Contatos() {
               </Card>
             )}
 
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowForm(false)}>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSaveContact}>
+              <Button size="sm" onClick={handleSaveContact}>
                 Salvar
               </Button>
             </div>
