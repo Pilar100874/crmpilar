@@ -127,7 +127,7 @@ export default function Contatos() {
       { id: "company", label: "Empresa", visible: true, width: 200 },
       { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
       { id: "email", label: "E-mail", visible: true, width: 250 },
-      { id: "position", label: "Posição", visible: false, width: 150 },
+      { id: "position", label: "Cargo", visible: false, width: 150 },
       { id: "cpf_cnpj", label: "CPF/CNPJ", visible: false, width: 180 },
       { id: "company_fantasia", label: "Nome Fantasia", visible: false, width: 200 },
       { id: "city", label: "Cidade", visible: false, width: 150 },
@@ -182,7 +182,7 @@ export default function Contatos() {
     { id: "name", label: "Nome de contato", type: "text", category: "contact", required: true, locked: true },
     { id: "phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
     { id: "email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
-    { id: "position", label: "Posição", type: "text", category: "contact", required: true, locked: true },
+    { id: "position", label: "Cargo", type: "text", category: "contact", required: true, locked: true },
   ]);
   
   // Campos obrigatórios fixos de empresa (não podem ser removidos)
