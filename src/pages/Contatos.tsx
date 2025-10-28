@@ -1734,6 +1734,40 @@ export default function Contatos() {
           </div>
 
           <TabsContent value="empresa" className="p-6 space-y-6">
+            {/* Seletor de Empresa */}
+            <Card className="p-6 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <Label>Vincular à Empresa</Label>
+                  <Select
+                    value={empresaSelecionada || "nova"}
+                    onValueChange={(value) => {
+                      if (value === "nova") {
+                        setEmpresaSelecionada("");
+                        setCriarNovaEmpresa(true);
+                        setFormData({});
+                      } else {
+                        setEmpresaSelecionada(value);
+                        setCriarNovaEmpresa(false);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma empresa ou crie nova" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nova">+ Criar Nova Empresa</SelectItem>
+                      {empresas.map((empresa) => (
+                        <SelectItem key={empresa.id} value={empresa.id}>
+                          {empresa.nome_fantasia} {empresa.cnpj ? `- ${empresa.cnpj}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </Card>
+
             <Card className="p-6 space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium text-foreground/70">DADOS DA EMPRESA</h3>
