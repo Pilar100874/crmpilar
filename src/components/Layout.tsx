@@ -25,6 +25,7 @@ import {
   ChevronDown,
   Plus,
   TestTube2,
+  FileBarChart,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -63,8 +64,9 @@ const menuItems: MenuItem[] = [
   { id: "Atendimento", title: "Chats", url: "/atendimento", icon: MessageSquare },
   { id: "WhatsApp Config", title: "WhatsApp", url: "/whatsapp-config", icon: Smartphone },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },
+  { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: FileBarChart },
   { 
-    id: "Conteúdos", 
+    id: "Conteúdos",
     title: "Listas", 
     icon: FileText,
     subItems: [

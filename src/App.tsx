@@ -25,6 +25,7 @@ import Desenho from "./pages/Desenho";
 import ChatWebhook from "./pages/ChatWebhook";
 import MeusTextosProntos from "./pages/MeusTextosProntos";
 import MeusAnexos from "./pages/MeusAnexos";
+import Orcamentos from "./pages/Orcamentos";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/campanhas" element={<Campanhas />} />
             <Route path="/calendario" element={<Calendario />} />
             <Route path="/funil" element={<Funil />} />
+            <Route path="/orcamentos" element={<Orcamentos />} />
             <Route path="/conteudos" element={<Conteudos />} />
             <Route path="/contatos" element={<Contatos />} />
             <Route path="/empresas" element={<Empresas />} />

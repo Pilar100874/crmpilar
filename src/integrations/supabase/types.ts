@@ -266,6 +266,50 @@ export type Database = {
         }
         Relationships: []
       }
+      condicoes_pagamento: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+          valor_maximo: number | null
+          valor_minimo: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condicoes_pagamento_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contents: {
         Row: {
           blob_ref: string | null
@@ -914,6 +958,392 @@ export type Database = {
           },
         ]
       }
+      orcamento_historico: {
+        Row: {
+          acao: string
+          created_at: string | null
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          id: string
+          orcamento_id: string | null
+          tipo_usuario: string
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          orcamento_id?: string | null
+          tipo_usuario: string
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          orcamento_id?: string | null
+          tipo_usuario?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_historico_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamento_itens: {
+        Row: {
+          created_at: string | null
+          desconto: number | null
+          id: string
+          orcamento_id: string | null
+          preco_original: number
+          preco_unitario: number
+          produto_id: string | null
+          quantidade: number
+          subtotal: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          desconto?: number | null
+          id?: string
+          orcamento_id?: string | null
+          preco_original: number
+          preco_unitario: number
+          produto_id?: string | null
+          quantidade: number
+          subtotal: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          desconto?: number | null
+          id?: string
+          orcamento_id?: string | null
+          preco_original?: number
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          subtotal?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_itens_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamento_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamentos: {
+        Row: {
+          cliente_id: string | null
+          condicao_pagamento_id: string | null
+          created_at: string | null
+          data_envio: string | null
+          data_modificacao_cliente: string | null
+          data_visualizacao: string | null
+          estabelecimento_id: string | null
+          etapa: string
+          id: string
+          motivo_perda: string | null
+          observacoes: string | null
+          orcamento_origem_id: string | null
+          percentual_desconto: number | null
+          status: string
+          token_compartilhamento: string | null
+          unidade_id: string | null
+          updated_at: string | null
+          valor_desconto: number | null
+          valor_total: number | null
+          vendedor_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          condicao_pagamento_id?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          data_modificacao_cliente?: string | null
+          data_visualizacao?: string | null
+          estabelecimento_id?: string | null
+          etapa?: string
+          id?: string
+          motivo_perda?: string | null
+          observacoes?: string | null
+          orcamento_origem_id?: string | null
+          percentual_desconto?: number | null
+          status?: string
+          token_compartilhamento?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+          valor_desconto?: number | null
+          valor_total?: number | null
+          vendedor_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          condicao_pagamento_id?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          data_modificacao_cliente?: string | null
+          data_visualizacao?: string | null
+          estabelecimento_id?: string | null
+          etapa?: string
+          id?: string
+          motivo_perda?: string | null
+          observacoes?: string | null
+          orcamento_origem_id?: string | null
+          percentual_desconto?: number | null
+          status?: string
+          token_compartilhamento?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+          valor_desconto?: number | null
+          valor_total?: number | null
+          vendedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_condicao_pagamento_id_fkey"
+            columns: ["condicao_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "condicoes_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_orcamento_origem_id_fkey"
+            columns: ["orcamento_origem_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produto_categorias: {
+        Row: {
+          created_at: string | null
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_categorias_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produto_grupos: {
+        Row: {
+          created_at: string | null
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          percentual_comissao: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          percentual_comissao?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          percentual_comissao?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_grupos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtos: {
+        Row: {
+          ativo: boolean | null
+          categoria_id: string | null
+          comprimento: number | null
+          created_at: string | null
+          estabelecimento_id: string | null
+          foto_url: string | null
+          gramatura: number | null
+          grupo_id: string | null
+          id: string
+          largura: number | null
+          nome: string
+          peso_unitario: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria_id?: string | null
+          comprimento?: number | null
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          foto_url?: string | null
+          gramatura?: number | null
+          grupo_id?: string | null
+          id?: string
+          largura?: number | null
+          nome: string
+          peso_unitario?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria_id?: string | null
+          comprimento?: number | null
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          foto_url?: string | null
+          gramatura?: number | null
+          grupo_id?: string | null
+          id?: string
+          largura?: number | null
+          nome?: string
+          peso_unitario?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "produto_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "produto_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtos_sugeridos: {
+        Row: {
+          aceito: boolean | null
+          created_at: string | null
+          enviado: boolean | null
+          id: string
+          orcamento_id: string | null
+          produto_id: string | null
+        }
+        Insert: {
+          aceito?: boolean | null
+          created_at?: string | null
+          enviado?: boolean | null
+          id?: string
+          orcamento_id?: string | null
+          produto_id?: string | null
+        }
+        Update: {
+          aceito?: boolean | null
+          created_at?: string | null
+          enviado?: boolean | null
+          id?: string
+          orcamento_id?: string | null
+          produto_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtos_sugeridos_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtos_sugeridos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quick_attachments: {
         Row: {
           created_at: string | null
@@ -1170,6 +1600,64 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: true
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tabelas_preco: {
+        Row: {
+          ativo: boolean | null
+          categoria_id: string | null
+          created_at: string | null
+          estabelecimento_id: string | null
+          id: string
+          preco_minimo: number
+          preco_tabela: number
+          unidade_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria_id?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          preco_minimo: number
+          preco_tabela: number
+          unidade_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria_id?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          preco_minimo?: number
+          preco_tabela?: number
+          unidade_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tabelas_preco_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "produto_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tabelas_preco_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tabelas_preco_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]

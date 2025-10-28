@@ -1,0 +1,273 @@
+import { useState, useEffect, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { toast } from "sonner";
+import { Orcamento, OrcamentoEtapa } from "@/types/orcamento";
+import { Plus, Search, Filter, LayoutGrid, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import OrcamentoBoard from "@/components/orcamento/OrcamentoBoard";
+import OrcamentoListView from "@/components/orcamento/OrcamentoListView";
+import NewOrcamentoDialog from "@/components/orcamento/NewOrcamentoDialog";
+import OrcamentoDetailsDialog from "@/components/orcamento/OrcamentoDetailsDialog";
+
+const ETAPAS_CONFIG = [
+  { id: 'orcamento', title: 'Orçamento', color: '#3b82f6' },
+  { id: 'negociacao', title: 'Negociação', color: '#f59e0b' },
+  { id: 'aprovacao_gerencia', title: 'Aprovação Gerência', color: '#8b5cf6' },
+  { id: 'perdido', title: 'Perdido', color: '#ef4444' },
+  { id: 'finalizado', title: 'Finalizado', color: '#10b981' },
+];
+
+export default function Orcamentos() {
+  const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterVendedor, setFilterVendedor] = useState<string>("");
+  const [filterEtapa, setFilterEtapa] = useState<string>("");
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
+
+  useEffect(() => {
+    loadOrcamentos();
+  }, []);
+
+  const loadOrcamentos = async () => {
+    try {
+      setLoading(true);
+      const estabelecimentoId = await getEstabelecimentoId();
+      
+      if (!estabelecimentoId) {
+        toast.error("Selecione um estabelecimento");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .select(`
+          *,
+          cliente:customers(id, nome, email, telefone),
+          vendedor:usuarios(id, nome),
+          condicao_pagamento:condicoes_pagamento(id, nome),
+          itens:orcamento_itens(
+            *,
+            produto:produtos(id, nome, foto_url)
+          )
+        `)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrcamentos((data as any) || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar orçamentos:', error);
+      toast.error("Erro ao carregar orçamentos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = useMemo(() => {
+    let filtered = orcamentos;
+
+    if (searchQuery) {
+      filtered = filtered.filter(o => 
+        o.cliente?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        o.id.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (filterVendedor) {
+      filtered = filtered.filter(o => o.vendedor_id === filterVendedor);
+    }
+
+    if (filterEtapa) {
+      filtered = filtered.filter(o => o.etapa === filterEtapa);
+    }
+
+    return ETAPAS_CONFIG.map(etapa => ({
+      id: etapa.id as OrcamentoEtapa,
+      title: etapa.title,
+      color: etapa.color,
+      orcamentos: filtered.filter(o => o.etapa === etapa.id),
+    }));
+  }, [orcamentos, searchQuery, filterVendedor, filterEtapa]);
+
+  const flatOrcamentos = useMemo(() => {
+    return columns.flatMap(col => col.orcamentos);
+  }, [columns]);
+
+  const handleOrcamentoMove = async (orcamentoId: string, newEtapa: OrcamentoEtapa) => {
+    try {
+      const { error } = await supabase
+        .from('orcamentos')
+        .update({ etapa: newEtapa })
+        .eq('id', orcamentoId);
+
+      if (error) throw error;
+
+      setOrcamentos(prev => prev.map(o => 
+        o.id === orcamentoId ? { ...o, etapa: newEtapa } : o
+      ));
+
+      toast.success("Orçamento movido com sucesso");
+    } catch (error: any) {
+      console.error('Erro ao mover orçamento:', error);
+      toast.error("Erro ao mover orçamento");
+    }
+  };
+
+  const handleOrcamentoClick = (orcamento: Orcamento) => {
+    setSelectedOrcamento(orcamento);
+  };
+
+  const handleOrcamentoSaved = () => {
+    loadOrcamentos();
+    setShowNewDialog(false);
+    setSelectedOrcamento(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header */}
+      <div className="border-b bg-card">
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Orçamentos</h1>
+            <Button onClick={() => setShowNewDialog(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Orçamento
+            </Button>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por cliente ou ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+              <SelectTrigger className="w-[180px]">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Todas as etapas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as etapas</SelectItem>
+                {ETAPAS_CONFIG.map(etapa => (
+                  <SelectItem key={etapa.id} value={etapa.id}>
+                    {etapa.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex gap-1 border rounded-md">
+              <Button
+                variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('kanban')}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {ETAPAS_CONFIG.map(etapa => {
+              const count = columns.find(c => c.id === etapa.id)?.orcamentos.length || 0;
+              const total = columns.find(c => c.id === etapa.id)?.orcamentos
+                .reduce((sum, o) => sum + (o.valor_total || 0), 0) || 0;
+              
+              return (
+                <Card key={etapa.id} className="p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium">{etapa.title}</span>
+                    <Badge 
+                      variant="secondary" 
+                      style={{ backgroundColor: `${etapa.color}20`, color: etapa.color }}
+                    >
+                      {count}
+                    </Badge>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(total)}
+                  </p>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-hidden">
+        {viewMode === 'kanban' ? (
+          <OrcamentoBoard
+            columns={columns}
+            onOrcamentoMove={handleOrcamentoMove}
+            onOrcamentoClick={handleOrcamentoClick}
+          />
+        ) : (
+          <OrcamentoListView
+            orcamentos={flatOrcamentos}
+            onOrcamentoClick={handleOrcamentoClick}
+          />
+        )}
+      </div>
+
+      {/* Dialogs */}
+      <NewOrcamentoDialog
+        open={showNewDialog}
+        onOpenChange={setShowNewDialog}
+        onSave={handleOrcamentoSaved}
+      />
+
+      {selectedOrcamento && (
+        <OrcamentoDetailsDialog
+          orcamento={selectedOrcamento}
+          open={!!selectedOrcamento}
+          onOpenChange={(open) => !open && setSelectedOrcamento(null)}
+          onSave={handleOrcamentoSaved}
+        />
+      )}
+    </div>
+  );
+}
