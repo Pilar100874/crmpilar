@@ -51,6 +51,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
+  const uid = () => `${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
 
   useEffect(() => {
     // Garantir que isActive está true quando o componente monta
@@ -679,7 +680,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const delay = (replyImage ? 500 : 0) + (replyHeader ? 500 : 0);
         safeSetTimeout(() => {
           const msgWithButtons: Message = {
-            id: Date.now().toString(),
+            id: uid(),
             sender: "bot",
             text: replyText,
             timestamp: new Date(),
@@ -763,7 +764,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }));
           
           setMessages((prev) => [...prev, {
-            id: Date.now().toString(),
+            id: uid(),
             sender: "system",
             text: "",
             timestamp: new Date(),
@@ -1820,7 +1821,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const addUserMessage = (text: string) => {
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "user",
       text,
       timestamp: new Date(),

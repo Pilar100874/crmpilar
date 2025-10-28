@@ -51,6 +51,8 @@ const parseToEditor = (text: string, variables?: Variable[]): string => {
     const guess = guessList[i] || `VAR${i}`;
     return `{{${guess}}}`;
   });
+  // Também lida com tokens nomeados antigos: §§nome_var§§
+  html = html.replace(/§§\s*([A-Za-z0-9_]+)\s*§§/g, (_m, name) => `{{${name}}}`);
   
   // 1) Protege variáveis com placeholders para não quebrar com markdown (ex: _ em nomes)
   const varStore: string[] = [];
@@ -110,6 +112,11 @@ html = html.replace(/§§\s*VAR(\d+)\s*§§/g, (_m, idxStr) => {
   const idx = Number(idxStr);
   const name = varStore[idx] ? varStore[idx].replace(/\\_/g, '_') : `VAR${idx}`;
   return `<span class="variable-badge" contenteditable="false" data-variable="${name}">${name}<\/span>`;
+});
+// 3.2) Compat geral: qualquer token §§nome§§ vira badge com esse nome
+html = html.replace(/§§\s*([A-Za-z0-9_]+)\s*§§/g, (_m, name) => {
+  const clean = String(name).replace(/\\_/g, '_');
+  return `<span class=\"variable-badge\" contenteditable=\"false\" data-variable=\"${clean}\">${clean}<\/span>`;
 });
 
 return html;
@@ -367,12 +374,17 @@ export const RichTextEditor = ({
       editorRef.current.innerHTML = parseToEditor(value, availableVariables);
       
       // Segurança extra: se restar algum token legado, converte usando as variáveis disponíveis
-      if (editorRef.current.innerText.includes('§§VAR')) {
+      if (editorRef.current.innerText.includes('§§')) {
         const legacyHtml = editorRef.current.innerHTML;
-        const mapped = legacyHtml.replace(/§§\s*VAR_?(\d+)\s*§§/g, (_m, idx) => {
+        let mapped = legacyHtml.replace(/§§\s*VAR_?(\d+)\s*§§/g, (_m, idx) => {
           const i = Number(idx);
           const guess = (availableVariables[i]?.name) || `VAR${i}`;
           return `<span class=\"variable-badge\" contenteditable=\"false\" data-variable=\"${guess}\">${guess}<\/span>`;
+        });
+        // Mapeia também tokens nomeados diretamente
+        mapped = mapped.replace(/§§\s*([A-Za-z0-9_]+)\s*§§/g, (_m, name) => {
+          const clean = String(name);
+          return `<span class=\"variable-badge\" contenteditable=\"false\" data-variable=\"${clean}\">${clean}<\/span>`;
         });
         editorRef.current.innerHTML = mapped;
       }
