@@ -119,7 +119,7 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
       grupo_acesso_id: formData.grupo_acesso_id || null,
       is_global: true,
       user_id: user.id,
-      shortcut: formData.shortcut || null,
+      shortcut: formData.shortcut?.trim() || null,
       estabelecimento_id: estabId,
     };
 
