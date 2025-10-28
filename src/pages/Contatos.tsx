@@ -217,6 +217,8 @@ export default function Contatos() {
   const [empresaSelecionada, setEmpresaSelecionada] = useState<string>("");
   const [criarNovaEmpresa, setCriarNovaEmpresa] = useState(false);
   const [contatosDaEmpresa, setContatosDaEmpresa] = useState<Contact[]>([]);
+  const [buscaEmpresa, setBuscaEmpresa] = useState<string>("");
+  const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
   
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -743,73 +745,53 @@ export default function Contatos() {
   const handleSaveContact = async () => {
     const errors: Record<string, string> = {};
     
-    // Validar campos obrigatórios de empresa
-    const requiredCompanyFields = [
-      { id: "company_type", label: "Tipo" },
-      { id: "cpf_cnpj", label: "CPF/CNPJ" },
-      { id: "company_name", label: "Nome" },
-      { id: "company_fantasia", label: "Nome Fantasia" },
-      { id: "cep", label: "CEP" },
-      { id: "address", label: "Endereço" },
-      { id: "city", label: "Cidade" },
-      { id: "neighborhood", label: "Bairro" },
-      { id: "state", label: "UF" },
-      { id: "inscricao", label: "Inscrição" }
-    ];
-    
-    requiredCompanyFields.forEach(field => {
-      if (!formData[field.id]) {
-        errors[field.id] = "Campo obrigatório";
+    // Validar campos obrigatórios de contato
+    const requiredContactFields = ['name', 'phone', 'email', 'position'];
+    requiredContactFields.forEach(field => {
+      if (!formData[field]?.trim()) {
+        errors[field] = "Campo obrigatório";
       }
     });
 
-    // Validar CPF ou CNPJ
-    if (formData.cpf_cnpj) {
-      const companyType = formData.company_type;
-      if (companyType === "Pessoa Física" && !validateCPF(formData.cpf_cnpj)) {
-        errors.cpf_cnpj = "CPF inválido";
-      }
-      if (companyType === "Pessoa Jurídica" && !validateCNPJ(formData.cpf_cnpj)) {
-        errors.cpf_cnpj = "CNPJ inválido";
-      }
+    // Validar formato de email
+    if (formData.email && !validateEmail(formData.email)) {
+      errors.email = "E-mail inválido";
     }
 
-    // Validar CEP
-    if (formData.cep && !validateCEP(formData.cep)) {
-      errors.cep = "CEP inválido";
+    // Validar formato de WhatsApp
+    if (formData.phone && !validateWhatsApp(formData.phone)) {
+      errors.phone = "WhatsApp inválido";
     }
 
-    // Validar que tem pelo menos um contato
-    if (contatosDaEmpresa.length === 0) {
-      toast.error("Adicione pelo menos um contato para a empresa");
-      return;
-    }
+    // Se tem empresa selecionada ou está criando nova, validar campos da empresa
+    if (empresaSelecionada || criarNovaEmpresa) {
+      const requiredCompanyFields = [
+        'company_type', 'cpf_cnpj', 'company_name', 'company_fantasia',
+        'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao'
+      ];
+      
+      requiredCompanyFields.forEach(field => {
+        if (!formData[field]?.toString().trim()) {
+          errors[field] = "Campo obrigatório";
+        }
+      });
 
-    // Validar cada contato
-    contatosDaEmpresa.forEach((contato, index) => {
-      if (!contato.name?.trim()) {
-        errors[`contato_${index}_name`] = "Nome obrigatório";
-        toast.error(`Contato #${index + 1}: Nome é obrigatório`);
+      // Validar CPF ou CNPJ
+      if (formData.cpf_cnpj) {
+        const companyType = formData.company_type;
+        if (companyType === "Pessoa Física" && !validateCPF(formData.cpf_cnpj)) {
+          errors.cpf_cnpj = "CPF inválido";
+        }
+        if (companyType === "Pessoa Jurídica" && !validateCNPJ(formData.cpf_cnpj)) {
+          errors.cpf_cnpj = "CNPJ inválido";
+        }
       }
-      if (!contato.phone?.trim()) {
-        errors[`contato_${index}_phone`] = "WhatsApp obrigatório";
-        toast.error(`Contato #${index + 1}: WhatsApp é obrigatório`);
-      } else if (!validateWhatsApp(contato.phone)) {
-        errors[`contato_${index}_phone`] = "WhatsApp inválido";
-        toast.error(`Contato #${index + 1}: WhatsApp deve estar no formato +55 (XX) XXXXX-XXXX`);
+
+      // Validar CEP
+      if (formData.cep && !validateCEP(formData.cep)) {
+        errors.cep = "CEP inválido";
       }
-      if (!contato.email?.trim()) {
-        errors[`contato_${index}_email`] = "E-mail obrigatório";
-        toast.error(`Contato #${index + 1}: E-mail é obrigatório`);
-      } else if (!validateEmail(contato.email)) {
-        errors[`contato_${index}_email`] = "E-mail inválido";
-        toast.error(`Contato #${index + 1}: E-mail inválido. Verifique o formato (exemplo@dominio.com)`);
-      }
-      if (!contato.position?.trim()) {
-        errors[`contato_${index}_position`] = "Cargo obrigatório";
-        toast.error(`Contato #${index + 1}: Cargo é obrigatório`);
-      }
-    });
+    }
 
     // Se houver erros, mostrar e retornar
     if (Object.keys(errors).length > 0) {
@@ -825,116 +807,118 @@ export default function Contatos() {
         return;
       }
 
-      // Criar ou atualizar empresa
-      const empresaPayload: any = {
+      let empresaId = empresaSelecionada;
+
+      // Criar ou atualizar empresa se necessário
+      if (criarNovaEmpresa || empresaSelecionada) {
+        const empresaPayload: any = {
+          estabelecimento_id: estabId,
+          nome_fantasia: formData.company_fantasia || formData.company_name,
+          razao_social: formData.company_name,
+          cnpj: formData.company_type === "Pessoa Jurídica" ? formData.cpf_cnpj : null,
+          telefone: formData.phone || '',
+          email: formData.email || '',
+          endereco: formData.address,
+          cidade: formData.city,
+          estado: formData.state,
+          cep: formData.cep,
+          custom_fields: {}
+        };
+
+        // Preencher todos os campos personalizados da empresa no custom_fields
+        companyFields.forEach((field) => {
+          const value = formData[field.id];
+          if (value !== undefined && value !== '') {
+            if (['company_type', 'cpf_cnpj', 'neighborhood', 'inscricao'].includes(field.id)) {
+              empresaPayload.custom_fields[field.id] = value;
+            } else if (!['nome_fantasia', 'razao_social', 'cnpj', 'telefone', 'email', 'endereco', 'cidade', 'estado', 'cep', 'company_name', 'company_fantasia', 'address', 'city', 'state'].includes(field.id)) {
+              empresaPayload.custom_fields[field.id] = value;
+            }
+          }
+        });
+
+        if (editingContact && empresaSelecionada) {
+          // Atualizar empresa existente
+          const { error: empresaErr } = await supabase
+            .from('empresas')
+            .update(empresaPayload)
+            .eq('id', empresaSelecionada);
+
+          if (empresaErr) throw empresaErr;
+        } else if (criarNovaEmpresa) {
+          // Criar nova empresa
+          const { data: novaEmpresa, error: empresaErr } = await supabase
+            .from('empresas')
+            .insert([empresaPayload])
+            .select('id')
+            .maybeSingle();
+
+          if (empresaErr) throw empresaErr;
+          empresaId = novaEmpresa?.id;
+        }
+      }
+
+      // Preparar dados do contato
+      const contatoPayload: any = {
         estabelecimento_id: estabId,
-        nome_fantasia: formData.company_fantasia || formData.company_name,
-        razao_social: formData.company_name,
-        cnpj: formData.company_type === "Pessoa Jurídica" ? formData.cpf_cnpj : null,
-        telefone: contatosDaEmpresa[0]?.phone || '',
-        email: contatosDaEmpresa[0]?.email || '',
-        endereco: formData.address,
-        cidade: formData.city,
-        estado: formData.state,
-        cep: formData.cep,
-        custom_fields: {}
+        nome: formData.name,
+        telefone: formData.phone,
+        email: formData.email,
+        empresa_id: empresaId || null,
+        tipo_operador: empresaId ? true : false, // true = cliente, false = prospect
+        custom_fields: {
+          position: formData.position,
+        },
+        tags: [],
       };
 
-      // Preencher todos os campos personalizados da empresa no custom_fields
-      companyFields.forEach((field) => {
-        const value = formData[field.id];
-        if (value !== undefined && value !== '') {
-          if (['company_type', 'cpf_cnpj', 'neighborhood', 'inscricao'].includes(field.id)) {
-            // Campos já incluídos por compatibilidade
-            empresaPayload.custom_fields[field.id] = value;
-          } else if (!['nome_fantasia', 'razao_social', 'cnpj', 'telefone', 'email', 'endereco', 'cidade', 'estado', 'cep', 'company_name', 'company_fantasia', 'address', 'city', 'state'].includes(field.id)) {
-            // Outros campos personalizados
-            empresaPayload.custom_fields[field.id] = value;
+      // Adicionar campos personalizados do contato
+      contactFields.forEach((field) => {
+        if (!['name', 'phone', 'email', 'position'].includes(field.id)) {
+          const value = formData[field.id];
+          if (value !== undefined && value !== '') {
+            contatoPayload.custom_fields[field.id] = value;
           }
         }
       });
 
-      let empresaId = empresaSelecionada;
+      if (editingContact) {
+        // Atualizar contato existente
+        await supabase
+          .from('customers')
+          .update(contatoPayload)
+          .eq('id', editingContact.id);
 
-      if (editingContact && empresaSelecionada) {
-        // Atualizar empresa existente
-        const { error: empresaErr } = await supabase
-          .from('empresas')
-          .update(empresaPayload)
-          .eq('id', empresaSelecionada);
-
-        if (empresaErr) throw empresaErr;
+        // Atualizar segmentos
+        await supabase.from('customer_segmentos').delete().eq('customer_id', editingContact.id);
+        if (segmentosSelecionados.length > 0) {
+          await supabase.from('customer_segmentos').insert(
+            segmentosSelecionados.map((sid) => ({ customer_id: editingContact.id, segmento_id: sid }))
+          );
+        }
+        
+        toast.success(empresaId ? "Cliente atualizado com sucesso!" : "Prospect atualizado com sucesso!");
       } else {
-        // Criar nova empresa
-        const { data: novaEmpresa, error: empresaErr } = await supabase
-          .from('empresas')
-          .insert([empresaPayload])
+        // Criar novo contato
+        const { data: inserted, error: insErr } = await supabase
+          .from('customers')
+          .insert([contatoPayload])
           .select('id')
           .maybeSingle();
+        
+        if (insErr) throw insErr;
 
-        if (empresaErr) throw empresaErr;
-        empresaId = novaEmpresa?.id;
-      }
-
-      // Salvar todos os contatos
-      for (const contato of contatosDaEmpresa) {
-        const contatoPayload: any = {
-          estabelecimento_id: estabId,
-          nome: contato.name,
-          telefone: contato.phone,
-          email: contato.email,
-          empresa_id: empresaId,
-          custom_fields: {
-            position: contato.position,
-            responsible: contato.responsible || formData.responsible,
-          },
-          tags: [],
-        };
-
-        if (contato.id && !contato.id.startsWith('temp-')) {
-          // Atualizar contato existente
-          await supabase
-            .from('customers')
-            .update(contatoPayload)
-            .eq('id', contato.id);
-
-          // Atualizar segmentos
-          await supabase.from('customer_segmentos').delete().eq('customer_id', contato.id);
-          if (segmentosSelecionados.length > 0) {
-            await supabase.from('customer_segmentos').insert(
-              segmentosSelecionados.map((sid) => ({ customer_id: contato.id, segmento_id: sid }))
-            );
-          }
-        } else {
-          // Criar novo contato
-          const { data: inserted, error: insErr } = await supabase
-            .from('customers')
-            .insert([contatoPayload])
-            .select('id')
-            .maybeSingle();
-          
-          if (insErr) throw insErr;
-
-          const newId = inserted?.id;
-          if (newId && segmentosSelecionados.length > 0) {
-            await supabase.from('customer_segmentos').insert(
-              segmentosSelecionados.map((sid) => ({ customer_id: newId, segmento_id: sid }))
-            );
-          }
+        const newId = inserted?.id;
+        if (newId && segmentosSelecionados.length > 0) {
+          await supabase.from('customer_segmentos').insert(
+            segmentosSelecionados.map((sid) => ({ customer_id: newId, segmento_id: sid }))
+          );
         }
+        
+        toast.success(empresaId ? "Cliente criado com sucesso!" : "Prospect criado com sucesso!");
       }
-
-      // Recarregar empresas
-      const { data: empresasData } = await supabase
-        .from("empresas")
-        .select("*")
-        .eq("estabelecimento_id", estabId)
-        .order("nome_fantasia");
-      setEmpresas(empresasData || []);
 
       await loadContacts();
-
-      toast.success("Empresa e contatos salvos com sucesso");
 
       setShowForm(false);
       setFormData({});
@@ -944,16 +928,33 @@ export default function Contatos() {
       setEmpresaSelecionada("");
       setCriarNovaEmpresa(false);
       setContatosDaEmpresa([]);
+      setBuscaEmpresa("");
+      setEmpresasFiltradas([]);
     } catch (e: any) {
       console.error('Erro ao salvar:', e);
-      toast.error(e?.message || "Erro ao salvar empresa e contatos");
+      toast.error(e?.message || "Erro ao salvar contato");
     }
   };
 
   const handleEditContact = async (contact: Contact) => {
     setEditingContact(contact);
     
-    // Se o contato tem empresa vinculada, carregar dados da empresa e todos os contatos
+    // Carregar dados do contato no formData
+    const baseFormData: Record<string, any> = {
+      name: contact.name,
+      phone: contact.phone,
+      email: contact.email,
+      position: contact.position,
+    };
+
+    // Adicionar campos personalizados do contato
+    contactFields.forEach(f => {
+      if (!['name', 'phone', 'email', 'position'].includes(f.id)) {
+        baseFormData[f.id] = contact.customFields?.[f.id] || '';
+      }
+    });
+    
+    // Se o contato tem empresa vinculada, carregar dados da empresa
     if (contact.customFields?.empresa_id) {
       const empresaId = contact.customFields.empresa_id;
       setEmpresaSelecionada(empresaId);
@@ -962,35 +963,32 @@ export default function Contatos() {
       // Buscar dados da empresa
       const empresa = empresas.find(e => e.id === empresaId);
       if (empresa) {
-        setFormData({
-          company_type: empresa.custom_fields?.company_type || (empresa.cnpj ? "Pessoa Jurídica" : "Pessoa Física"),
-          cpf_cnpj: empresa.cnpj || empresa.custom_fields?.cpf_cnpj || '',
-          company_name: empresa.razao_social || '',
-          company_fantasia: empresa.nome_fantasia || '',
-          cep: empresa.cep || '',
-          address: empresa.endereco || '',
-          city: empresa.cidade || '',
-          neighborhood: empresa.custom_fields?.neighborhood || '',
-          state: empresa.estado || '',
-          inscricao: empresa.custom_fields?.inscricao || ''
+        baseFormData.company_type = empresa.custom_fields?.company_type || (empresa.cnpj ? "Pessoa Jurídica" : "Pessoa Física");
+        baseFormData.cpf_cnpj = empresa.cnpj || empresa.custom_fields?.cpf_cnpj || '';
+        baseFormData.company_name = empresa.razao_social || '';
+        baseFormData.company_fantasia = empresa.nome_fantasia || '';
+        baseFormData.cep = empresa.cep || '';
+        baseFormData.address = empresa.endereco || '';
+        baseFormData.city = empresa.cidade || '';
+        baseFormData.neighborhood = empresa.custom_fields?.neighborhood || '';
+        baseFormData.state = empresa.estado || '';
+        baseFormData.inscricao = empresa.custom_fields?.inscricao || '';
+
+        // Preencher campos personalizados adicionais da empresa
+        companyFields.forEach((f) => {
+          if (!(f.id in baseFormData)) {
+            baseFormData[f.id] = empresa.custom_fields?.[f.id] ?? '';
+          }
         });
       }
-      
-      // Carregar todos os contatos da empresa
-      const empresaContatos = contacts.filter(c => c.customFields?.empresa_id === empresaId);
-      setContatosDaEmpresa(empresaContatos);
-      
-      // Carregar segmentos (usar os do primeiro contato ou do contato atual)
-      setSegmentosSelecionados(contact.segmentos || []);
     } else {
-      // Sem empresa vinculada - criar nova
+      // Sem empresa vinculada - prospect
       setEmpresaSelecionada("");
-      setCriarNovaEmpresa(true);
-      setFormData({});
-      setContatosDaEmpresa([contact]);
-      setSegmentosSelecionados(contact.segmentos || []);
+      setCriarNovaEmpresa(false);
     }
-    
+
+    setFormData(baseFormData);
+    setSegmentosSelecionados(contact.segmentos || []);
     setShowForm(true);
   };
 
@@ -1276,11 +1274,13 @@ export default function Contatos() {
                 setFormData({});
                 setSegmentosSelecionados([]);
                 setEmpresaSelecionada("");
-                setCriarNovaEmpresa(true);
+                setCriarNovaEmpresa(false);
                 setContatosDaEmpresa([]);
+                setBuscaEmpresa("");
+                setEmpresasFiltradas([]);
               }} className="gap-2">
                 <Plus className="w-4 h-4" />
-                ADICIONAR EMPRESA
+                ADICIONAR CONTATO
               </Button>
             </div>
           </div>
@@ -1717,7 +1717,7 @@ export default function Contatos() {
       <div className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-foreground">
-            {editingContact ? "Editar Empresa" : "Nova Empresa"}
+            {editingContact ? "Editar Contato" : "Novo Contato"}
           </h1>
           <Button variant="ghost" size="sm" className="gap-2 ml-auto">
             #ADICIONAR TAGS
@@ -1729,20 +1729,20 @@ export default function Contatos() {
       </div>
 
       <div className="flex-1 overflow-auto">
-        <Tabs defaultValue="empresa" className="w-full">
+        <Tabs defaultValue="contato" className="w-full">
           <div className="border-b border-border bg-card px-6">
             <TabsList className="bg-transparent h-auto p-0">
               <TabsTrigger 
-                value="empresa"
+                value="contato"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              >
+                Contato
+              </TabsTrigger>
+              <TabsTrigger 
+                value="empresa" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
               >
                 Empresa
-              </TabsTrigger>
-              <TabsTrigger 
-                value="contatos" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Contatos
               </TabsTrigger>
               <TabsTrigger 
                 value="segmentos"
@@ -1753,50 +1753,16 @@ export default function Contatos() {
             </TabsList>
           </div>
 
-          <TabsContent value="empresa" className="p-6 space-y-6">
-            {/* Seletor de Empresa */}
-            <Card className="p-6 space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <Label>Vincular à Empresa</Label>
-                  <Select
-                    value={empresaSelecionada || "nova"}
-                    onValueChange={(value) => {
-                      if (value === "nova") {
-                        setEmpresaSelecionada("");
-                        setCriarNovaEmpresa(true);
-                        setFormData({});
-                      } else {
-                        setEmpresaSelecionada(value);
-                        setCriarNovaEmpresa(false);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma empresa ou crie nova" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nova">+ Criar Nova Empresa</SelectItem>
-                      {empresas.map((empresa) => (
-                        <SelectItem key={empresa.id} value={empresa.id}>
-                          {empresa.nome_fantasia} {empresa.cnpj ? `- ${empresa.cnpj}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </Card>
-
+          <TabsContent value="contato" className="p-6 space-y-6">
             <Card className="p-6 space-y-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-foreground/70">DADOS DA EMPRESA</h3>
+                <h3 className="text-sm font-medium text-foreground/70">DADOS DO CONTATO</h3>
               </div>
 
               <div className="space-y-4">
-                {companyFields.map((field) => (
+                {contactFields.map((field) => (
                   <div key={field.id}>
-                    <Label htmlFor={field.id}>{field.label}</Label>
+                    <Label htmlFor={field.id}>{field.label} {field.required && '*'}</Label>
                     {renderField(field)}
                   </div>
                 ))}
@@ -1808,156 +1774,146 @@ export default function Contatos() {
                 Cancelar
               </Button>
               <Button onClick={handleSaveContact}>
-                Salvar Empresa
+                {empresaSelecionada ? "Salvar Contato" : "Salvar Prospect"}
               </Button>
             </div>
           </TabsContent>
 
-          <TabsContent value="contatos" className="p-6 space-y-6">
+          <TabsContent value="empresa" className="p-6 space-y-6">
+            {/* Busca e Seleção de Empresa */}
             <Card className="p-6 space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-foreground/70">CONTATOS DA EMPRESA</h3>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    // Adicionar novo contato à lista
-                    const novoContato = {
-                      id: `temp-${Date.now()}`,
-                      name: '',
-                      phone: '',
-                      email: '',
-                      position: '',
-                      responsible: ''
-                    };
-                    setContatosDaEmpresa([...contatosDaEmpresa, novoContato as Contact]);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Contato
-                </Button>
-              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label>Buscar Empresa Existente ou Criar Nova</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Buscar por nome, fantasia, CNPJ ou CPF..."
+                      value={buscaEmpresa}
+                      onChange={(e) => {
+                        const valor = e.target.value;
+                        setBuscaEmpresa(valor);
+                        
+                        // Filtrar empresas
+                        if (valor.trim()) {
+                          const termo = valor.toLowerCase();
+                          const filtradas = empresas.filter(emp => 
+                            emp.nome_fantasia?.toLowerCase().includes(termo) ||
+                            emp.razao_social?.toLowerCase().includes(termo) ||
+                            emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
+                            emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
+                          );
+                          setEmpresasFiltradas(filtradas);
+                        } else {
+                          setEmpresasFiltradas([]);
+                        }
+                      }}
+                      onBlur={async () => {
+                        // Auto-buscar por CPF/CNPJ se tiver 11 ou 14 dígitos
+                        const clean = buscaEmpresa.replace(/\D/g, '');
+                        if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
+                          // Se não encontrou empresa existente, buscar na API
+                          if (clean.length === 14) {
+                            await handleCNPJLookup(buscaEmpresa);
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEmpresaSelecionada("");
+                        setCriarNovaEmpresa(true);
+                        setBuscaEmpresa("");
+                        setEmpresasFiltradas([]);
+                        setFormData({});
+                      }}
+                    >
+                      + Criar Nova
+                    </Button>
+                  </div>
+                </div>
 
-              {contatosDaEmpresa.length > 0 ? (
+                {/* Lista de empresas filtradas */}
+                {empresasFiltradas.length > 0 && (
+                  <div className="border rounded-lg max-h-[200px] overflow-y-auto">
+                    {empresasFiltradas.map((empresa) => (
+                      <button
+                        key={empresa.id}
+                        className="w-full text-left p-3 hover:bg-accent transition-colors border-b last:border-b-0"
+                        onClick={() => {
+                          setEmpresaSelecionada(empresa.id);
+                          setCriarNovaEmpresa(false);
+                          setBuscaEmpresa("");
+                          setEmpresasFiltradas([]);
+                        }}
+                      >
+                        <div className="font-medium">{empresa.nome_fantasia}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {empresa.razao_social} - {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Empresa selecionada */}
+                {empresaSelecionada && !criarNovaEmpresa && (
+                  <div className="p-4 bg-accent rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">
+                          {empresas.find(e => e.id === empresaSelecionada)?.nome_fantasia}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {empresas.find(e => e.id === empresaSelecionada)?.cnpj || 
+                           empresas.find(e => e.id === empresaSelecionada)?.custom_fields?.cpf_cnpj}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEmpresaSelecionada("");
+                          setFormData({});
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Formulário de Nova Empresa ou Edição */}
+            {(criarNovaEmpresa || empresaSelecionada) && (
+              <Card className="p-6 space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-foreground/70">
+                    {criarNovaEmpresa ? "NOVA EMPRESA" : "DADOS DA EMPRESA"}
+                  </h3>
+                </div>
+
                 <div className="space-y-4">
-                  {contatosDaEmpresa.map((contato, index) => (
-                    <Card key={contato.id} className="p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Contato #{index + 1}</h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setContatosDaEmpresa(contatosDaEmpresa.filter(c => c.id !== contato.id));
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Nome de contato *</Label>
-                          <Input
-                            value={contato.name}
-                            onChange={(e) => {
-                              const updated = contatosDaEmpresa.map(c =>
-                                c.id === contato.id ? { ...c, name: e.target.value } : c
-                              );
-                              setContatosDaEmpresa(updated);
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Label>WhatsApp *</Label>
-                          <Input
-                            value={contato.phone}
-                            placeholder="+55 (XX) XXXXX-XXXX"
-                            onChange={(e) => {
-                              const masked = maskWhatsApp(e.target.value);
-                              const updated = contatosDaEmpresa.map(c =>
-                                c.id === contato.id ? { ...c, phone: masked } : c
-                              );
-                              setContatosDaEmpresa(updated);
-                            }}
-                            onBlur={(e) => {
-                              const value = e.target.value;
-                              if (value && !validateWhatsApp(value)) {
-                                toast.error(`Contato #${index + 1}: WhatsApp deve estar no formato +55 (XX) XXXXX-XXXX`);
-                              }
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Label>E-mail *</Label>
-                          <Input
-                            type="email"
-                            value={contato.email}
-                            placeholder="exemplo@dominio.com"
-                            onChange={(e) => {
-                              const updated = contatosDaEmpresa.map(c =>
-                                c.id === contato.id ? { ...c, email: e.target.value.toLowerCase().trim() } : c
-                              );
-                              setContatosDaEmpresa(updated);
-                            }}
-                            onBlur={(e) => {
-                              const value = e.target.value;
-                              if (value && !validateEmail(value)) {
-                                toast.error(`Contato #${index + 1}: E-mail inválido. Verifique o formato (exemplo@dominio.com)`);
-                              }
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Label>Cargo *</Label>
-                          <Input
-                            value={contato.position}
-                            onChange={(e) => {
-                              const updated = contatosDaEmpresa.map(c =>
-                                c.id === contato.id ? { ...c, position: e.target.value } : c
-                              );
-                              setContatosDaEmpresa(updated);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </Card>
+                  {companyFields.map((field) => (
+                    <div key={field.id}>
+                      <Label htmlFor={field.id}>{field.label} {field.required && '*'}</Label>
+                      {renderField(field)}
+                    </div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                  <p className="text-muted-foreground mb-4">
-                    Nenhum contato adicionado ainda.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      const novoContato = {
-                        id: `temp-${Date.now()}`,
-                        name: '',
-                        phone: '',
-                        email: '',
-                        position: '',
-                        responsible: ''
-                      };
-                      setContatosDaEmpresa([novoContato as Contact]);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Primeiro Contato
-                  </Button>
-                </div>
-              )}
-            </Card>
+              </Card>
+            )}
 
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowForm(false)}>
                 Cancelar
               </Button>
               <Button onClick={handleSaveContact}>
-                Salvar Empresa e Contatos
+                Salvar
               </Button>
             </div>
           </TabsContent>
-
           <TabsContent value="segmentos" className="p-6">
             <Card className="p-6">
               <div className="space-y-6">
