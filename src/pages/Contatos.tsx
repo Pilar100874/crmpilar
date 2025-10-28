@@ -1565,12 +1565,64 @@ export default function Contatos() {
             <Card className="p-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Cadastro de Segmentos</h3>
+                  <h3 className="text-lg font-semibold mb-2">Segmentos do Contato</h3>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Gerencie os segmentos disponíveis para categorizar seus contatos.
+                    Selecione um ou mais segmentos para categorizar este contato.
                   </p>
                 </div>
-                {estabelecimentoId && <SegmentosCRUD estabelecimentoId={estabelecimentoId} />}
+
+                {segmentos.length > 0 ? (
+                  <div className="space-y-2">
+                    {segmentos.map((segmento) => (
+                      <div key={segmento.id} className="flex items-center space-x-3 p-3 border rounded-md hover:bg-accent transition-colors">
+                        <Checkbox
+                          id={`seg-tab-${segmento.id}`}
+                          checked={segmentosSelecionados.includes(segmento.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSegmentosSelecionados([...segmentosSelecionados, segmento.id]);
+                            } else {
+                              setSegmentosSelecionados(segmentosSelecionados.filter(id => id !== segmento.id));
+                            }
+                          }}
+                        />
+                        <Label
+                          htmlFor={`seg-tab-${segmento.id}`}
+                          className="text-base font-normal cursor-pointer flex-1"
+                        >
+                          {segmento.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground mb-4">
+                      Nenhum segmento cadastrado
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Configure segmentos nas configurações do estabelecimento para poder categorizar seus contatos.
+                    </p>
+                  </div>
+                )}
+
+                {segmentosSelecionados.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Segmentos selecionados: <span className="font-semibold">{segmentosSelecionados.length}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {segmentosSelecionados.map((segId) => {
+                        const seg = segmentos.find(s => s.id === segId);
+                        return seg ? (
+                          <Badge key={segId} variant="secondary">
+                            {seg.nome}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>
