@@ -92,6 +92,8 @@ interface SearchFilters {
 export default function Contatos() {
   const [showForm, setShowForm] = useState(false);
   const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [editingCell, setEditingCell] = useState<{ contactId: string; field: string } | null>(null);
@@ -1231,18 +1233,36 @@ export default function Contatos() {
         <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground">TODAS AS EMPRESAS</h1>
-            <Button onClick={() => {
-              setShowForm(true);
-              setEditingContact(null);
-              setFormData({});
-              setSegmentosSelecionados([]);
-              setEmpresaSelecionada("");
-              setCriarNovaEmpresa(true);
-              setContatosDaEmpresa([]);
-            }} className="gap-2">
-              <Plus className="w-4 h-4" />
-              ADICIONAR EMPRESA
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfigPanel(true)} 
+                className="gap-2"
+              >
+                <Settings2 className="w-4 h-4" />
+                Configurações
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowImportPanel(true)} 
+                className="gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Importação
+              </Button>
+              <Button onClick={() => {
+                setShowForm(true);
+                setEditingContact(null);
+                setFormData({});
+                setSegmentosSelecionados([]);
+                setEmpresaSelecionada("");
+                setCriarNovaEmpresa(true);
+                setContatosDaEmpresa([]);
+              }} className="gap-2">
+                <Plus className="w-4 h-4" />
+                ADICIONAR EMPRESA
+              </Button>
+            </div>
           </div>
           
           <div className="flex items-center gap-3">
@@ -1710,18 +1730,6 @@ export default function Contatos() {
               >
                 Segmentos
               </TabsTrigger>
-              <TabsTrigger 
-                value="configuracoes"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Configurações
-              </TabsTrigger>
-              <TabsTrigger 
-                value="importacao"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Importação
-              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -1961,94 +1969,100 @@ export default function Contatos() {
               </div>
             </Card>
           </TabsContent>
+        </Tabs>
+      </div>
 
-          <TabsContent value="configuracoes" className="p-6">
+      {/* Panel de Configurações */}
+      <Sheet open={showConfigPanel} onOpenChange={setShowConfigPanel}>
+        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto">
+          <SheetHeader>
+            <SheetTitle>Configurações de Campos</SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6">
             <Card className="p-6">
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Campos e grupos</h3>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Adicione seus próprios campos personalizados. Eles são ótimos para filtrar dados e compilar relatórios.
-                  </p>
-                </div>
-
-                <Tabs value={activeFieldTab} onValueChange={(v) => setActiveFieldTab(v as "contact" | "company")} className="w-full">
-                  <TabsList className="w-full grid grid-cols-2">
+                <Tabs defaultValue="contact" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="contact">Campos de Contato</TabsTrigger>
                     <TabsTrigger value="company">Campos de Empresa</TabsTrigger>
                   </TabsList>
+                  
+                  <TabsContent value="contact" className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium mb-4">Campos Obrigatórios</h3>
+                      <div className="space-y-2 bg-muted/30 rounded-lg p-4">
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(event: DragEndEvent) => {
+                            const { active, over } = event;
+                            if (over && active.id !== over.id) {
+                              setContactFields((items) => {
+                                const oldIndex = items.findIndex((item) => item.id === active.id);
+                                const newIndex = items.findIndex((item) => item.id === over.id);
+                                return arrayMove(items, oldIndex, newIndex);
+                              });
+                            }
+                          }}
+                        >
+                          <SortableContext items={contactFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                            {contactFields.map((field) => (
+                              <SortableFieldItem
+                                key={field.id}
+                                field={field}
+                                onRemove={(id) => setContactFields(contactFields.filter(f => f.id !== id))}
+                                onToggleSearchable={(id) => {
+                                  setContactFields(contactFields.map(f => 
+                                    f.id === id ? { ...f, searchable: !f.searchable } : f
+                                  ));
+                                }}
+                              />
+                            ))}
+                          </SortableContext>
+                        </DndContext>
+                      </div>
+                    </div>
 
-                  <TabsContent value="contact" className="space-y-4 mt-6">
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEndContact}
-                    >
-                      <SortableContext
-                        items={contactFields.map(f => f.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-3">
-                          {contactFields.map((field) => (
-                            <SortableFieldItem
-                              key={field.id}
-                              field={field}
-                              onRemove={(id) => handleRemoveField(id, "contact")}
-                              onToggleSearchable={(id) => handleToggleSearchable(id, "contact")}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-
-                    <div className="border-t pt-6 space-y-4">
-                      <h4 className="text-sm font-semibold">Adicionar novo campo</h4>
-                      <div className="grid gap-4">
-                        <div>
-                          <Label htmlFor="newFieldLabel">Nome do campo</Label>
-                          <Input
-                            id="newFieldLabel"
-                            placeholder="Ex: Cargo, Departamento..."
-                            value={newFieldLabel}
-                            onChange={(e) => setNewFieldLabel(e.target.value)}
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="newFieldType">Tipo de campo</Label>
-                          <Select value={newFieldType} onValueChange={(val: any) => setNewFieldType(val)}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o tipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text">Texto</SelectItem>
-                              <SelectItem value="email">E-mail</SelectItem>
-                              <SelectItem value="phone">Telefone</SelectItem>
-                              <SelectItem value="number">Número</SelectItem>
-                              <SelectItem value="date">Data</SelectItem>
-                              <SelectItem value="textarea">Texto longo</SelectItem>
-                              <SelectItem value="select">Lista de opções</SelectItem>
-                              <SelectItem value="checkbox">Checkbox</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {newFieldType === "select" && (
-                          <div>
-                            <Label htmlFor="newFieldOptions">Opções (separadas por vírgula)</Label>
-                            <Input
-                              id="newFieldOptions"
-                              placeholder="Opção 1, Opção 2, Opção 3"
-                              value={newFieldOptions}
-                              onChange={(e) => setNewFieldOptions(e.target.value)}
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Digite as opções separadas por vírgula
-                            </p>
-                          </div>
-                        )}
-
-                        <Button onClick={handleAddField} className="w-full">
+                    <div className="pt-4 border-t">
+                      <h3 className="text-sm font-medium mb-4">Adicionar Novo Campo</h3>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome do campo"
+                          value={newFieldLabel}
+                          onChange={(e) => setNewFieldLabel(e.target.value)}
+                        />
+                        <Select value={newFieldType} onValueChange={(val) => setNewFieldType(val as CustomField["type"])}>
+                          <SelectTrigger className="w-[200px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text">Texto</SelectItem>
+                            <SelectItem value="email">E-mail</SelectItem>
+                            <SelectItem value="phone">Telefone</SelectItem>
+                            <SelectItem value="textarea">Texto Longo</SelectItem>
+                            <SelectItem value="select">Seleção</SelectItem>
+                            <SelectItem value="checkbox">Checkbox</SelectItem>
+                            <SelectItem value="date">Data</SelectItem>
+                            <SelectItem value="number">Número</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={() => {
+                            if (newFieldLabel.trim()) {
+                              const newField: CustomField = {
+                                id: newFieldLabel.toLowerCase().replace(/\s+/g, '_'),
+                                label: newFieldLabel,
+                                type: newFieldType,
+                                category: "contact",
+                                required: false,
+                              };
+                              setContactFields([...contactFields, newField]);
+                              setNewFieldLabel("");
+                              setNewFieldType("text");
+                            }
+                          }}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Adicionar campo
                         </Button>
@@ -2056,77 +2070,81 @@ export default function Contatos() {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="company" className="space-y-4 mt-6">
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEndCompany}
-                    >
-                      <SortableContext
-                        items={companyFields.map(f => f.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-3">
-                          {companyFields.map((field) => (
-                            <SortableFieldItem
-                              key={field.id}
-                              field={field}
-                              onRemove={(id) => handleRemoveField(id, "company")}
-                              onToggleSearchable={(id) => handleToggleSearchable(id, "company")}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
+                  <TabsContent value="company" className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium mb-4">Campos Obrigatórios</h3>
+                      <div className="space-y-2 bg-muted/30 rounded-lg p-4">
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(event: DragEndEvent) => {
+                            const { active, over } = event;
+                            if (over && active.id !== over.id) {
+                              setCompanyFields((items) => {
+                                const oldIndex = items.findIndex((item) => item.id === active.id);
+                                const newIndex = items.findIndex((item) => item.id === over.id);
+                                return arrayMove(items, oldIndex, newIndex);
+                              });
+                            }
+                          }}
+                        >
+                          <SortableContext items={companyFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                            {companyFields.map((field) => (
+                              <SortableFieldItem
+                                key={field.id}
+                                field={field}
+                                onRemove={(id) => setCompanyFields(companyFields.filter(f => f.id !== id))}
+                                onToggleSearchable={(id) => {
+                                  setCompanyFields(companyFields.map(f => 
+                                    f.id === id ? { ...f, searchable: !f.searchable } : f
+                                  ));
+                                }}
+                              />
+                            ))}
+                          </SortableContext>
+                        </DndContext>
+                      </div>
+                    </div>
 
-                    <div className="border-t pt-6 space-y-4">
-                      <h4 className="text-sm font-semibold">Adicionar novo campo</h4>
-                      <div className="grid gap-4">
-                        <div>
-                          <Label htmlFor="newFieldLabel">Nome do campo</Label>
-                          <Input
-                            id="newFieldLabel"
-                            placeholder="Ex: CNPJ, Setor..."
-                            value={newFieldLabel}
-                            onChange={(e) => setNewFieldLabel(e.target.value)}
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="newFieldType">Tipo de campo</Label>
-                          <Select value={newFieldType} onValueChange={(val: any) => setNewFieldType(val)}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o tipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text">Texto</SelectItem>
-                              <SelectItem value="email">E-mail</SelectItem>
-                              <SelectItem value="phone">Telefone</SelectItem>
-                              <SelectItem value="number">Número</SelectItem>
-                              <SelectItem value="date">Data</SelectItem>
-                              <SelectItem value="textarea">Texto longo</SelectItem>
-                              <SelectItem value="select">Lista de opções</SelectItem>
-                              <SelectItem value="checkbox">Checkbox</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {newFieldType === "select" && (
-                          <div>
-                            <Label htmlFor="newFieldOptions">Opções (separadas por vírgula)</Label>
-                            <Input
-                              id="newFieldOptions"
-                              placeholder="Opção 1, Opção 2, Opção 3"
-                              value={newFieldOptions}
-                              onChange={(e) => setNewFieldOptions(e.target.value)}
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Digite as opções separadas por vírgula
-                            </p>
-                          </div>
-                        )}
-
-                        <Button onClick={handleAddField} className="w-full">
+                    <div className="pt-4 border-t">
+                      <h3 className="text-sm font-medium mb-4">Adicionar Novo Campo</h3>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome do campo"
+                          value={newFieldLabel}
+                          onChange={(e) => setNewFieldLabel(e.target.value)}
+                        />
+                        <Select value={newFieldType} onValueChange={(val) => setNewFieldType(val as CustomField["type"])}>
+                          <SelectTrigger className="w-[200px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text">Texto</SelectItem>
+                            <SelectItem value="email">E-mail</SelectItem>
+                            <SelectItem value="phone">Telefone</SelectItem>
+                            <SelectItem value="textarea">Texto Longo</SelectItem>
+                            <SelectItem value="select">Seleção</SelectItem>
+                            <SelectItem value="checkbox">Checkbox</SelectItem>
+                            <SelectItem value="date">Data</SelectItem>
+                            <SelectItem value="number">Número</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={() => {
+                            if (newFieldLabel.trim()) {
+                              const newField: CustomField = {
+                                id: newFieldLabel.toLowerCase().replace(/\s+/g, '_'),
+                                label: newFieldLabel,
+                                type: newFieldType,
+                                category: "company",
+                                required: false,
+                              };
+                              setCompanyFields([...companyFields, newField]);
+                              setNewFieldLabel("");
+                              setNewFieldType("text");
+                            }
+                          }}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Adicionar campo
                         </Button>
@@ -2135,7 +2153,6 @@ export default function Contatos() {
                   </TabsContent>
                 </Tabs>
                 
-                {/* Configuração de Máscaras */}
                 <div className="mt-6">
                   <FieldMaskConfig
                     availableFields={[...contactFields, ...companyFields].map(f => ({ id: f.id, label: f.label }))}
@@ -2145,9 +2162,18 @@ export default function Contatos() {
                 </div>
               </div>
             </Card>
-          </TabsContent>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-          <TabsContent value="importacao" className="p-6">
+      {/* Panel de Importação */}
+      <Sheet open={showImportPanel} onOpenChange={setShowImportPanel}>
+        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto">
+          <SheetHeader>
+            <SheetTitle>Importar Empresas e Contatos</SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6">
             <Tabs defaultValue="arquivo" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="arquivo">Por Arquivo</TabsTrigger>
@@ -2232,7 +2258,7 @@ export default function Contatos() {
                     </div>
                     <div className="flex gap-2">
                       <span className="font-medium min-w-6">4.</span>
-                      <p>Telefones no formato: (00) 00000-0000 ou (00) 0000-0000</p>
+                      <p>Telefones no formato: +55 (00) 00000-0000</p>
                     </div>
                     <div className="flex gap-2">
                       <span className="font-medium min-w-6">5.</span>
@@ -2256,10 +2282,8 @@ export default function Contatos() {
                     variant="outline" 
                     className="w-full"
                     onClick={() => {
-                      // Criar workbook Excel
                       const wb = XLSX.utils.book_new();
                       
-                      // Definir cabeçalhos
                       const headers = [
                         "Nome de contato",
                         "WhatsApp",
@@ -2277,10 +2301,9 @@ export default function Contatos() {
                         "Inscrição"
                       ];
                       
-                      // Linha de exemplo
                       const exampleRow = [
                         "João Silva",
-                        "(11) 99999-9999",
+                        "+55 (11) 99999-9999",
                         "joao@exemplo.com",
                         "Gerente",
                         "Pessoa Jurídica",
@@ -2295,18 +2318,13 @@ export default function Contatos() {
                         "123456789"
                       ];
                       
-                      // Criar worksheet com cabeçalhos e exemplo
                       const wsData = [headers, exampleRow];
                       const ws = XLSX.utils.aoa_to_sheet(wsData);
                       
-                      // Definir largura das colunas
                       const colWidths = headers.map(() => ({ wch: 20 }));
                       ws['!cols'] = colWidths;
                       
-                      // Adicionar worksheet ao workbook
                       XLSX.utils.book_append_sheet(wb, ws, "Contatos");
-                      
-                      // Gerar arquivo Excel e baixar
                       XLSX.writeFile(wb, "modelo_importacao_contatos.xlsx");
                       
                       toast.success("Modelo Excel baixado com sucesso!");
@@ -2324,9 +2342,9 @@ export default function Contatos() {
                 <APIImportDialog />
               </TabsContent>
             </Tabs>
-          </TabsContent>
-        </Tabs>
-      </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
