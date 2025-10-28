@@ -33,10 +33,12 @@ export default function NewOrcamentoDialog({
   onSave,
   orcamentoOrigemId 
 }: NewOrcamentoDialogProps) {
+  const [empresas, setEmpresas] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [vendedores, setVendedores] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    empresa_id: "",
     cliente_id: "",
     vendedor_id: "",
     observacoes: "",
@@ -44,25 +46,62 @@ export default function NewOrcamentoDialog({
 
   useEffect(() => {
     if (open) {
-      loadClientes();
+      loadEmpresas();
       loadVendedores();
       loadCurrentUser();
     }
   }, [open]);
 
-  const loadClientes = async () => {
+  useEffect(() => {
+    if (formData.empresa_id) {
+      loadClientesPorEmpresa(formData.empresa_id);
+    } else {
+      setClientes([]);
+      setFormData(prev => ({ ...prev, cliente_id: "" }));
+    }
+  }, [formData.empresa_id]);
+
+  const loadEmpresas = async () => {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
       const { data, error } = await supabase
-        .from('customers')
-        .select('id, nome, email')
+        .from('empresas')
+        .select('id, nome_fantasia, razao_social, cnpj')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('nome');
+        .order('nome_fantasia');
 
       if (error) throw error;
-      setClientes(data || []);
+      setEmpresas(data || []);
     } catch (error: any) {
-      console.error('Erro ao carregar clientes:', error);
+      console.error('Erro ao carregar empresas:', error);
+    }
+  };
+
+  const loadClientesPorEmpresa = async (empresaId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('customer_empresas')
+        .select(`
+          customer_id,
+          customers:customer_id (
+            id,
+            nome,
+            email,
+            telefone
+          )
+        `)
+        .eq('empresa_id', empresaId);
+
+      if (error) throw error;
+      
+      const clientesFormatados = (data || [])
+        .map(item => item.customers)
+        .filter(Boolean);
+      
+      setClientes(clientesFormatados);
+    } catch (error: any) {
+      console.error('Erro ao carregar clientes da empresa:', error);
+      setClientes([]);
     }
   };
 
@@ -96,8 +135,13 @@ export default function NewOrcamentoDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.empresa_id) {
+      toast.error("Selecione uma empresa");
+      return;
+    }
+
     if (!formData.cliente_id) {
-      toast.error("Selecione um cliente");
+      toast.error("Selecione um contato da empresa");
       return;
     }
 
@@ -152,6 +196,7 @@ export default function NewOrcamentoDialog({
       toast.success("Orçamento criado com sucesso!");
       onSave();
       setFormData({
+        empresa_id: "",
         cliente_id: "",
         vendedor_id: "",
         observacoes: "",
@@ -175,18 +220,38 @@ export default function NewOrcamentoDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="cliente">Cliente *</Label>
+            <Label htmlFor="empresa">Empresa *</Label>
+            <Select
+              value={formData.empresa_id}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, empresa_id: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                {empresas.map((empresa) => (
+                  <SelectItem key={empresa.id} value={empresa.id}>
+                    {empresa.nome_fantasia} {empresa.cnpj && `(${empresa.cnpj})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cliente">Contato *</Label>
             <Select
               value={formData.cliente_id}
               onValueChange={(value) => setFormData(prev => ({ ...prev, cliente_id: value }))}
+              disabled={!formData.empresa_id}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o cliente" />
+                <SelectValue placeholder={formData.empresa_id ? "Selecione o contato" : "Selecione a empresa primeiro"} />
               </SelectTrigger>
               <SelectContent>
                 {clientes.map((cliente) => (
                   <SelectItem key={cliente.id} value={cliente.id}>
-                    {cliente.nome} {cliente.email && `(${cliente.email})`}
+                    {cliente.nome} {cliente.telefone && `- ${cliente.telefone}`}
                   </SelectItem>
                 ))}
               </SelectContent>
