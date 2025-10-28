@@ -13,6 +13,14 @@ import { toast } from "sonner";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 
+// Normaliza placeholders legados para o formato {{...}}
+const normalizeLegacyTokens = (value?: string) => {
+  if (!value) return value as any;
+  return value
+    .replace(/§§\s*VAR_?(\d+)\s*§§/g, (_m, idx) => `{{VAR${idx}}}`)
+    .replace(/§§\s*([A-Za-z0-9_]+)\s*§§/g, (_m, name) => `{{${name}}}`);
+};
+
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
@@ -32,8 +40,9 @@ export const SendMessageConfig = ({ config, handleConfigChange, nodes = [], edge
   };
 
   const updateMessage = (index: number, text: string) => {
+    const normalized = normalizeLegacyTokens(text || "");
     const updated = [...messages];
-    updated[index] = { ...updated[index], text };
+    updated[index] = { ...updated[index], text: normalized };
     handleConfigChange("messages", updated);
   };
 
@@ -111,7 +120,7 @@ export const SendMessageConfig = ({ config, handleConfigChange, nodes = [], edge
               Texto da Mensagem
             </Label>
             <RichTextEditor
-              value={message.text || ""}
+              value={normalizeLegacyTokens(message.text || "")}
               onChange={(text) => updateMessage(index, text)}
               placeholder="Clique para editar..."
               multiline={true}
