@@ -1662,6 +1662,44 @@ export type Database = {
           },
         ]
       }
+      tipos_pagamento: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          taxa_percentual: number
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          taxa_percentual?: number
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          taxa_percentual?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tipos_pagamento_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       twilio_config: {
         Row: {
           account_sid: string | null

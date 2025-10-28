@@ -45,6 +45,16 @@ export interface CondicaoPagamento {
   updated_at: string;
 }
 
+export interface TipoPagamento {
+  id: string;
+  estabelecimento_id: string;
+  nome: string;
+  taxa_percentual: number;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TabelaPreco {
   id: string;
   estabelecimento_id: string;
