@@ -364,19 +364,30 @@ export default function Contatos() {
       if (empresaSelecionada && !criarNovaEmpresa) {
         const empresa = empresas.find(e => e.id === empresaSelecionada);
         if (empresa) {
-          setFormData(prev => ({
-            ...prev,
-            company_type: empresa.custom_fields?.company_type || (empresa.cnpj ? "Pessoa Jurídica" : "Pessoa Física"),
-            cpf_cnpj: empresa.cnpj || empresa.custom_fields?.cpf_cnpj || '',
-            company_name: empresa.razao_social || '',
-            company_fantasia: empresa.nome_fantasia || '',
-            cep: empresa.cep || '',
-            address: empresa.endereco || '',
-            city: empresa.cidade || '',
-            neighborhood: empresa.custom_fields?.neighborhood || '',
-            state: empresa.estado || '',
-            inscricao: empresa.custom_fields?.inscricao || ''
-          }));
+          setFormData(prev => {
+            const base: Record<string, any> = {
+              ...prev,
+              company_type: empresa.custom_fields?.company_type || (empresa.cnpj ? "Pessoa Jurídica" : "Pessoa Física"),
+              cpf_cnpj: empresa.cnpj || empresa.custom_fields?.cpf_cnpj || '',
+              company_name: empresa.razao_social || '',
+              company_fantasia: empresa.nome_fantasia || '',
+              cep: empresa.cep || '',
+              address: empresa.endereco || '',
+              city: empresa.cidade || '',
+              neighborhood: empresa.custom_fields?.neighborhood || '',
+              state: empresa.estado || '',
+              inscricao: empresa.custom_fields?.inscricao || ''
+            };
+
+            // Preencher campos personalizados adicionais desta empresa
+            const merged: Record<string, any> = { ...base };
+            companyFields.forEach((f) => {
+              if (!(f.id in merged)) {
+                merged[f.id] = empresa.custom_fields?.[f.id] ?? '';
+              }
+            });
+            return merged;
+          });
         }
       }
     };
@@ -815,7 +826,7 @@ export default function Contatos() {
       }
 
       // Criar ou atualizar empresa
-      const empresaPayload = {
+      const empresaPayload: any = {
         estabelecimento_id: estabId,
         nome_fantasia: formData.company_fantasia || formData.company_name,
         razao_social: formData.company_name,
@@ -826,13 +837,22 @@ export default function Contatos() {
         cidade: formData.city,
         estado: formData.state,
         cep: formData.cep,
-        custom_fields: {
-          company_type: formData.company_type,
-          cpf_cnpj: formData.cpf_cnpj,
-          neighborhood: formData.neighborhood,
-          inscricao: formData.inscricao
-        }
+        custom_fields: {}
       };
+
+      // Preencher todos os campos personalizados da empresa no custom_fields
+      companyFields.forEach((field) => {
+        const value = formData[field.id];
+        if (value !== undefined && value !== '') {
+          if (['company_type', 'cpf_cnpj', 'neighborhood', 'inscricao'].includes(field.id)) {
+            // Campos já incluídos por compatibilidade
+            empresaPayload.custom_fields[field.id] = value;
+          } else if (!['nome_fantasia', 'razao_social', 'cnpj', 'telefone', 'email', 'endereco', 'cidade', 'estado', 'cep', 'company_name', 'company_fantasia', 'address', 'city', 'state'].includes(field.id)) {
+            // Outros campos personalizados
+            empresaPayload.custom_fields[field.id] = value;
+          }
+        }
+      });
 
       let empresaId = empresaSelecionada;
 
