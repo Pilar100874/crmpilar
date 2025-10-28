@@ -27,8 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Pencil, Plus, Image } from "lucide-react";
+import { Trash2, Pencil, Plus, Image, Upload } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
+import { createThumbnail } from "@/lib/imageUtils";
 
 interface ProdutosCRUDProps {
   estabelecimentoId: string;
@@ -47,11 +48,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     gramatura: "",
     comprimento: "",
     peso_unitario: "",
+    numero_folhas: "",
     foto_url: "",
     categoria_id: "",
     grupo_id: "",
     ativo: true,
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -96,6 +100,42 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Por favor selecione um arquivo de imagem");
+        return;
+      }
+      setSelectedFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setFormData({ ...formData, foto_url: previewUrl });
+    }
+  };
+
+  const uploadFile = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${estabelecimentoId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('produtos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('produtos')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error("Erro ao fazer upload da foto");
+      return null;
+    }
+  };
+
   const handleSave = async () => {
     if (!formData.nome.trim()) {
       toast.error("Nome do produto é obrigatório");
@@ -103,6 +143,17 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
 
     try {
+      setUploading(true);
+      let fotoUrl = formData.foto_url;
+
+      // Upload new file if selected
+      if (selectedFile) {
+        const uploadedUrl = await uploadFile(selectedFile);
+        if (uploadedUrl) {
+          fotoUrl = uploadedUrl;
+        }
+      }
+
       const produtoData = {
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome,
@@ -110,7 +161,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         gramatura: formData.gramatura ? parseFloat(formData.gramatura) : null,
         comprimento: formData.comprimento ? parseFloat(formData.comprimento) : null,
         peso_unitario: formData.peso_unitario ? parseFloat(formData.peso_unitario) : null,
-        foto_url: formData.foto_url || null,
+        numero_folhas: formData.numero_folhas ? parseInt(formData.numero_folhas) : null,
+        foto_url: fotoUrl || null,
         categoria_id: formData.categoria_id || null,
         grupo_id: formData.grupo_id || null,
         ativo: formData.ativo,
@@ -143,12 +195,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
       setShowDialog(false);
       setEditingProduto(null);
+      setSelectedFile(null);
       setFormData({
         nome: "",
         largura: "",
         gramatura: "",
         comprimento: "",
         peso_unitario: "",
+        numero_folhas: "",
         foto_url: "",
         categoria_id: "",
         grupo_id: "",
@@ -158,17 +212,21 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     } catch (error: any) {
       console.error('Erro ao salvar produto:', error);
       toast.error("Erro ao salvar produto");
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleEdit = (produto: Produto) => {
     setEditingProduto(produto);
+    setSelectedFile(null);
     setFormData({
       nome: produto.nome,
       largura: produto.largura?.toString() || "",
       gramatura: produto.gramatura?.toString() || "",
       comprimento: produto.comprimento?.toString() || "",
       peso_unitario: produto.peso_unitario?.toString() || "",
+      numero_folhas: (produto as any).numero_folhas?.toString() || "",
       foto_url: produto.foto_url || "",
       categoria_id: produto.categoria_id || "",
       grupo_id: produto.grupo_id || "",
@@ -205,12 +263,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         <h3 className="text-lg font-semibold">Produtos</h3>
         <Button onClick={() => {
           setEditingProduto(null);
+          setSelectedFile(null);
           setFormData({
             nome: "",
             largura: "",
             gramatura: "",
             comprimento: "",
             peso_unitario: "",
+            numero_folhas: "",
             foto_url: "",
             categoria_id: "",
             grupo_id: "",
@@ -230,7 +290,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             <TableHead>Nome</TableHead>
             <TableHead>Categoria</TableHead>
             <TableHead>Grupo</TableHead>
-            <TableHead>Peso Unit.</TableHead>
+            <TableHead>Nº Folhas</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -240,9 +300,9 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             <TableRow key={produto.id}>
               <TableCell>
                 {produto.foto_url ? (
-                  <img src={produto.foto_url} alt={produto.nome} className="w-10 h-10 object-cover rounded" />
+                  <img src={produto.foto_url} alt={produto.nome} className="w-12 h-12 object-cover rounded" />
                 ) : (
-                  <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                  <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
                     <Image className="w-5 h-5 text-muted-foreground" />
                   </div>
                 )}
@@ -250,7 +310,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               <TableCell className="font-medium">{produto.nome}</TableCell>
               <TableCell>{produto.categoria?.nome || "-"}</TableCell>
               <TableCell>{produto.grupo?.nome || "-"}</TableCell>
-              <TableCell>{produto.peso_unitario || "-"}</TableCell>
+              <TableCell>{(produto as any).numero_folhas || "-"}</TableCell>
               <TableCell>
                 <span className={`px-2 py-1 rounded-full text-xs ${produto.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                   {produto.ativo ? 'Ativo' : 'Inativo'}
@@ -347,6 +407,16 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             </div>
 
             <div>
+              <Label>Número de Folhas</Label>
+              <Input
+                type="number"
+                value={formData.numero_folhas}
+                onChange={(e) => setFormData({ ...formData, numero_folhas: e.target.value })}
+                placeholder="0"
+              />
+            </div>
+
+            <div>
               <Label>Categoria</Label>
               <Select
                 value={formData.categoria_id || "none"}
@@ -387,11 +457,31 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             </div>
 
             <div className="col-span-2">
-              <Label>URL da Foto</Label>
-              <Input
-                value={formData.foto_url}
-                onChange={(e) => setFormData({ ...formData, foto_url: e.target.value })}
-                placeholder="https://..."
+              <Label>Foto do Produto</Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  disabled={uploading}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {selectedFile ? 'Trocar foto' : 'Selecionar foto'}
+                </Button>
+                {(formData.foto_url || selectedFile) && (
+                  <img 
+                    src={formData.foto_url} 
+                    alt="Preview" 
+                    className="w-16 h-16 object-cover rounded border"
+                  />
+                )}
+              </div>
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
               />
             </div>
 
@@ -405,11 +495,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
+            <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
-              Salvar
+            <Button onClick={handleSave} disabled={uploading}>
+              {uploading ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </DialogContent>

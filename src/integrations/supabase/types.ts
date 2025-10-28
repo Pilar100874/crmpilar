@@ -1255,6 +1255,7 @@ export type Database = {
           id: string
           largura: number | null
           nome: string
+          numero_folhas: number | null
           peso_unitario: number | null
           updated_at: string | null
         }
@@ -1270,6 +1271,7 @@ export type Database = {
           id?: string
           largura?: number | null
           nome: string
+          numero_folhas?: number | null
           peso_unitario?: number | null
           updated_at?: string | null
         }
@@ -1285,6 +1287,7 @@ export type Database = {
           id?: string
           largura?: number | null
           nome?: string
+          numero_folhas?: number | null
           peso_unitario?: number | null
           updated_at?: string | null
         }
