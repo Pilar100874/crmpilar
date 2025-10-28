@@ -210,6 +210,12 @@ export default function Contatos() {
   const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   
+  // Estados para gerenciar empresas
+  const [empresas, setEmpresas] = useState<any[]>([]);
+  const [empresaSelecionada, setEmpresaSelecionada] = useState<string>("");
+  const [criarNovaEmpresa, setCriarNovaEmpresa] = useState(false);
+  const [contatosDaEmpresa, setContatosDaEmpresa] = useState<Contact[]>([]);
+  
   // Sensores para drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -250,6 +256,19 @@ export default function Contatos() {
           toast.error("Erro ao carregar segmentos: " + error.message);
         }
         setSegmentos(data || []);
+
+        // Carregar empresas
+        const { data: empresasData, error: empresasError } = await supabase
+          .from("empresas")
+          .select("*")
+          .eq("estabelecimento_id", estabId)
+          .order("nome_fantasia");
+        
+        if (empresasError) {
+          console.error("❌ Erro ao buscar empresas:", empresasError);
+        } else {
+          setEmpresas(empresasData || []);
+        }
       } else {
         console.warn("⚠️ estabelecimentoId não disponível. Selecione um estabelecimento.");
       }
@@ -269,7 +288,15 @@ export default function Contatos() {
 
       const { data: rows, error } = await supabase
         .from('customers')
-        .select('*')
+        .select(`
+          *,
+          empresas (
+            id,
+            nome_fantasia,
+            razao_social,
+            cnpj
+          )
+        `)
         .eq('estabelecimento_id', estabId)
         .order('created_at', { ascending: false });
 
@@ -295,7 +322,7 @@ export default function Contatos() {
       const mapped: Contact[] = (rows || []).map((r: any) => ({
         id: r.id,
         name: r.nome,
-        company: r.custom_fields?.company_name || '',
+        company: r.empresas?.nome_fantasia || r.custom_fields?.company_name || '',
         phone: r.telefone,
         email: r.email,
         position: r.custom_fields?.position || '',
@@ -305,21 +332,55 @@ export default function Contatos() {
         createdBy: 'Sistema',
         modifiedAt: r.created_at,
         modifiedBy: 'Sistema',
-        customFields: r.custom_fields || {},
+        customFields: {
+          ...r.custom_fields,
+          empresa_id: r.empresa_id,
+          company_name: r.empresas?.nome_fantasia || r.custom_fields?.company_name,
+          company_fantasia: r.empresas?.nome_fantasia || r.custom_fields?.company_fantasia,
+          cpf_cnpj: r.empresas?.cnpj || r.custom_fields?.cpf_cnpj,
+        },
         active: true,
         segmentos: segmentsByCustomer[r.id] || [],
       }));
 
+
       setContacts(mapped);
     } catch (e) {
-      console.error('Erro inesperado ao carregar contatos:', e);
+      console.error('Erro ao carregar contatos:', e);
       toast.error('Erro ao carregar contatos');
     }
   };
 
+
   useEffect(() => {
     loadContacts();
   }, []);
+
+  // Carregar dados da empresa selecionada
+  useEffect(() => {
+    const loadEmpresaData = async () => {
+      if (empresaSelecionada && !criarNovaEmpresa) {
+        const empresa = empresas.find(e => e.id === empresaSelecionada);
+        if (empresa) {
+          setFormData(prev => ({
+            ...prev,
+            company_type: empresa.custom_fields?.company_type || (empresa.cnpj ? "Pessoa Jurídica" : "Pessoa Física"),
+            cpf_cnpj: empresa.cnpj || empresa.custom_fields?.cpf_cnpj || '',
+            company_name: empresa.razao_social || '',
+            company_fantasia: empresa.nome_fantasia || '',
+            cep: empresa.cep || '',
+            address: empresa.endereco || '',
+            city: empresa.cidade || '',
+            neighborhood: empresa.custom_fields?.neighborhood || '',
+            state: empresa.estado || '',
+            inscricao: empresa.custom_fields?.inscricao || ''
+          }));
+        }
+      }
+    };
+    
+    loadEmpresaData();
+  }, [empresaSelecionada, criarNovaEmpresa, empresas]);
 
   // Salvar contatos (inline/local configs continuam locais)
   const saveContactsToStorage = (updatedContacts: Contact[]) => {
@@ -672,8 +733,8 @@ export default function Contatos() {
       errors.position = "Campo obrigatório";
     }
 
-    // Validar campos obrigatórios de empresa se preenchidos
-    if (formData.company_type) {
+    // Validar campos obrigatórios de empresa se criar nova ou tiver empresa selecionada
+    if (criarNovaEmpresa || formData.company_type) {
       const requiredCompanyFields = [
         { id: "company_type", label: "Tipo" },
         { id: "cpf_cnpj", label: "CPF/CNPJ" },
@@ -710,20 +771,7 @@ export default function Contatos() {
       }
     }
 
-    // Validar duplicatas (CPF/CNPJ/WhatsApp)
-    const duplicateCpfCnpj = contacts.find(c => 
-      c.id !== (editingContact?.id) && 
-      c.active &&
-      c.customFields?.cpf_cnpj && 
-      formData.cpf_cnpj && 
-      c.customFields.cpf_cnpj.replace(/\D/g, '') === formData.cpf_cnpj.replace(/\D/g, '')
-    );
-    
-    if (duplicateCpfCnpj) {
-      errors.cpf_cnpj = "CPF/CNPJ já cadastrado";
-      toast.error("CPF/CNPJ já cadastrado no sistema");
-    }
-    
+    // Validar duplicatas de WhatsApp (dentro do mesmo contato, não empresa)
     const duplicatePhone = contacts.find(c => 
       c.id !== (editingContact?.id) && 
       c.active &&
@@ -757,12 +805,57 @@ export default function Contatos() {
         return;
       }
 
+      let empresaId = empresaSelecionada;
+
+      // Se for criar nova empresa ou atualizar dados da empresa
+      if (criarNovaEmpresa) {
+        const empresaPayload = {
+          estabelecimento_id: estabId,
+          nome_fantasia: formData.company_fantasia || formData.company_name,
+          razao_social: formData.company_name,
+          cnpj: formData.company_type === "Pessoa Jurídica" ? formData.cpf_cnpj : null,
+          telefone: formData.phone,
+          email: formData.email,
+          endereco: formData.address,
+          cidade: formData.city,
+          estado: formData.state,
+          cep: formData.cep,
+          custom_fields: {
+            company_type: formData.company_type,
+            cpf_cnpj: formData.cpf_cnpj,
+            neighborhood: formData.neighborhood,
+            inscricao: formData.inscricao
+          }
+        };
+
+        const { data: novaEmpresa, error: empresaErr } = await supabase
+          .from('empresas')
+          .insert([empresaPayload])
+          .select('id')
+          .maybeSingle();
+
+        if (empresaErr) throw empresaErr;
+        empresaId = novaEmpresa?.id;
+
+        // Recarregar empresas
+        const { data: empresasData } = await supabase
+          .from("empresas")
+          .select("*")
+          .eq("estabelecimento_id", estabId)
+          .order("nome_fantasia");
+        setEmpresas(empresasData || []);
+      }
+
       const payload: any = {
         estabelecimento_id: estabId,
         nome: formData.name || "",
         telefone: formData.phone || "",
         email: formData.email || "",
-        custom_fields: formData,
+        empresa_id: empresaId || null,
+        custom_fields: {
+          position: formData.position,
+          responsible: formData.responsible,
+        },
         tags: [],
       };
 
@@ -807,6 +900,9 @@ export default function Contatos() {
       setEditingContact(null);
       setFieldErrors({});
       setSegmentosSelecionados([]);
+      setEmpresaSelecionada("");
+      setCriarNovaEmpresa(false);
+      setContatosDaEmpresa([]);
     } catch (e: any) {
       console.error('Erro ao salvar contato:', e);
       toast.error(e?.message || "Erro ao salvar contato");
@@ -817,6 +913,21 @@ export default function Contatos() {
     setEditingContact(contact);
     setFormData(contact.customFields);
     setSegmentosSelecionados(contact.segmentos || []);
+    
+    // Se o contato tem empresa vinculada, carregar dados da empresa
+    if (contact.customFields?.empresa_id) {
+      setEmpresaSelecionada(contact.customFields.empresa_id);
+      setCriarNovaEmpresa(false);
+      
+      // Carregar contatos da empresa
+      const empresaContatos = contacts.filter(c => c.customFields?.empresa_id === contact.customFields.empresa_id);
+      setContatosDaEmpresa(empresaContatos);
+    } else {
+      setEmpresaSelecionada("");
+      setCriarNovaEmpresa(false);
+      setContatosDaEmpresa([]);
+    }
+    
     setShowForm(true);
   };
 
@@ -1079,7 +1190,15 @@ export default function Contatos() {
         <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground">TODOS OS CONTATOS E EMPRESAS</h1>
-            <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Button onClick={() => {
+              setShowForm(true);
+              setEditingContact(null);
+              setFormData({});
+              setSegmentosSelecionados([]);
+              setEmpresaSelecionada("");
+              setCriarNovaEmpresa(false);
+              setContatosDaEmpresa([]);
+            }} className="gap-2">
               <Plus className="w-4 h-4" />
               ADICIONAR CONTATO
             </Button>
@@ -1534,7 +1653,7 @@ export default function Contatos() {
                 value="principal" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
               >
-                Principal
+                Contato
               </TabsTrigger>
               <TabsTrigger 
                 value="empresa"
@@ -1601,17 +1720,93 @@ export default function Contatos() {
 
           <TabsContent value="empresa" className="p-6 space-y-6">
             <Card className="p-6 space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-sm font-medium text-foreground/70">INFORMAÇÕES DA EMPRESA</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-foreground/70">SELEÇÃO DE EMPRESA</h3>
               </div>
 
               <div className="space-y-4">
-                {companyFields.map((field) => (
-                  <div key={field.id}>
-                    <Label htmlFor={field.id}>{field.label}</Label>
-                    {renderField(field)}
+                <div>
+                  <Label htmlFor="empresa-select">Empresa</Label>
+                  <Select
+                    value={empresaSelecionada || criarNovaEmpresa ? "nova" : ""}
+                    onValueChange={(value) => {
+                      if (value === "nova") {
+                        setCriarNovaEmpresa(true);
+                        setEmpresaSelecionada("");
+                        setContatosDaEmpresa([]);
+                      } else {
+                        setCriarNovaEmpresa(false);
+                        setEmpresaSelecionada(value);
+                        // Carregar contatos desta empresa
+                        const empresaContatos = contacts.filter(c => c.customFields?.empresa_id === value);
+                        setContatosDaEmpresa(empresaContatos);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="empresa-select">
+                      <SelectValue placeholder="Selecione uma empresa ou crie nova" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nova">+ Criar Nova Empresa</SelectItem>
+                      {empresas.map((empresa) => (
+                        <SelectItem key={empresa.id} value={empresa.id}>
+                          {empresa.nome_fantasia} {empresa.cnpj ? `- ${empresa.cnpj}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {(criarNovaEmpresa || empresaSelecionada) && (
+                  <>
+                    <div className="flex items-center gap-2 pt-4 border-t">
+                      <h3 className="text-sm font-medium text-foreground/70">
+                        {criarNovaEmpresa ? 'DADOS DA NOVA EMPRESA' : 'DADOS DA EMPRESA'}
+                      </h3>
+                    </div>
+
+                    {companyFields.map((field) => (
+                      <div key={field.id}>
+                        <Label htmlFor={field.id}>{field.label}</Label>
+                        {renderField(field)}
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {!criarNovaEmpresa && empresaSelecionada && contatosDaEmpresa.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <h4 className="text-sm font-medium text-foreground/70 mb-3">
+                      CONTATOS VINCULADOS A ESTA EMPRESA ({contatosDaEmpresa.length})
+                    </h4>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {contatosDaEmpresa.map((contato) => (
+                        <div key={contato.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-accent transition-colors">
+                          <div>
+                            <p className="font-medium">{contato.name}</p>
+                            <p className="text-sm text-muted-foreground">{contato.phone} • {contato.email}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingContact(contato);
+                              setFormData({
+                                name: contato.name,
+                                phone: contato.phone,
+                                email: contato.email,
+                                position: contato.position,
+                                ...contato.customFields
+                              });
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </Card>
 

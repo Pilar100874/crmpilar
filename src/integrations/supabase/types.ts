@@ -459,6 +459,7 @@ export type Database = {
           created_at: string | null
           custom_fields: Json | null
           email: string
+          empresa_id: string | null
           estabelecimento_id: string | null
           id: string
           nome: string
@@ -470,6 +471,7 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           email: string
+          empresa_id?: string | null
           estabelecimento_id?: string | null
           id?: string
           nome: string
@@ -481,6 +483,7 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           email?: string
+          empresa_id?: string | null
           estabelecimento_id?: string | null
           id?: string
           nome?: string
@@ -489,6 +492,13 @@ export type Database = {
           tipo_operador?: boolean | null
         }
         Relationships: [
+          {
+            foreignKeyName: "customers_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customers_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
@@ -598,6 +608,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      empresas: {
+        Row: {
+          cep: string | null
+          cidade: string | null
+          cnpj: string | null
+          created_at: string | null
+          custom_fields: Json | null
+          email: string | null
+          endereco: string | null
+          estabelecimento_id: string | null
+          estado: string | null
+          id: string
+          nome_fantasia: string
+          razao_social: string | null
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          endereco?: string | null
+          estabelecimento_id?: string | null
+          estado?: string | null
+          id?: string
+          nome_fantasia: string
+          razao_social?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          endereco?: string | null
+          estabelecimento_id?: string | null
+          estado?: string | null
+          id?: string
+          nome_fantasia?: string
+          razao_social?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       estabelecimentos: {
         Row: {
