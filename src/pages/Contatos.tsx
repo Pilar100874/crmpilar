@@ -1479,7 +1479,7 @@ export default function Contatos() {
                                 size="icon"
                                 variant="ghost"
                                 className="h-8 w-8"
-                                onClick={() => {
+                                onClick={async () => {
                                   setEditingContact(contact);
                                   setFormData({
                                     name: contact.name,
@@ -1488,6 +1488,36 @@ export default function Contatos() {
                                     position: contact.position,
                                     ...contact.customFields
                                   });
+                                  
+                                  // Carregar empresas vinculadas
+                                  const { data: vinculos } = await supabase
+                                    .from('customer_empresas')
+                                    .select(`
+                                      id,
+                                      is_primary,
+                                      empresas:empresa_id (
+                                        id,
+                                        nome_fantasia,
+                                        razao_social,
+                                        cnpj,
+                                        custom_fields
+                                      )
+                                    `)
+                                    .eq('customer_id', contact.id);
+                                  
+                                  if (vinculos) {
+                                    const empresasFormatadas = vinculos.map(v => ({
+                                      id: v.empresas.id,
+                                      nome_fantasia: v.empresas.nome_fantasia,
+                                      razao_social: v.empresas.razao_social,
+                                      cnpj: v.empresas.cnpj,
+                                      custom_fields: v.empresas.custom_fields,
+                                      is_primary: v.is_primary,
+                                      vinculo_id: v.id
+                                    }));
+                                    setEmpresasVinculadas(empresasFormatadas);
+                                  }
+                                  
                                   setShowForm(true);
                                 }}
                                 title="Editar cadastro completo"

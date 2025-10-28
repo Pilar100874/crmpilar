@@ -934,10 +934,28 @@ export default function Empresas() {
                           size="sm"
                           className="h-7 px-2"
                           onClick={() => {
-                            // Editar contato
+                            // Editar contato - preservar dados da empresa
                             const contatoCompleto = contatos.find(c => c.id === vinculo.contato?.id);
                             if (contatoCompleto) {
+                              // Salvar dados atuais da empresa antes de trocar
+                              const empresaData = {
+                                company_type: formData.company_type,
+                                cpf_cnpj: formData.cpf_cnpj,
+                                company_name: formData.company_name,
+                                company_fantasia: formData.company_fantasia,
+                                phone: formData.phone,
+                                email: formData.email,
+                                cep: formData.cep,
+                                address: formData.address,
+                                city: formData.city,
+                                state: formData.state,
+                                neighborhood: formData.neighborhood,
+                                inscricao: formData.inscricao,
+                              };
+                              
+                              // Carregar dados do contato + preservar empresa
                               const data: Record<string, any> = {
+                                ...empresaData,
                                 contact_name: contatoCompleto.nome,
                                 contact_phone: contatoCompleto.telefone,
                                 contact_email: contatoCompleto.email,
