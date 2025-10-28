@@ -274,6 +274,7 @@ export type Database = {
           estabelecimento_id: string | null
           id: string
           nome: string
+          tipo_pagamento_id: string | null
           updated_at: string | null
           valor_maximo: number | null
           valor_minimo: number | null
@@ -285,6 +286,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           nome: string
+          tipo_pagamento_id?: string | null
           updated_at?: string | null
           valor_maximo?: number | null
           valor_minimo?: number | null
@@ -296,6 +298,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           nome?: string
+          tipo_pagamento_id?: string | null
           updated_at?: string | null
           valor_maximo?: number | null
           valor_minimo?: number | null
@@ -306,6 +309,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "condicoes_pagamento_tipo_pagamento_id_fkey"
+            columns: ["tipo_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_pagamento"
             referencedColumns: ["id"]
           },
         ]

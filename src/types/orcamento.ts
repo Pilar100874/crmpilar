@@ -40,9 +40,11 @@ export interface CondicaoPagamento {
   descricao?: string;
   valor_minimo: number;
   valor_maximo?: number;
+  tipo_pagamento_id?: string;
   ativo: boolean;
   created_at: string;
   updated_at: string;
+  tipo_pagamento?: TipoPagamento;
 }
 
 export interface TipoPagamento {
