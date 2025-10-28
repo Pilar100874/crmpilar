@@ -827,11 +827,35 @@ export default function Contatos() {
     setContactToDelete(contact);
     setDeleteDialogOpen(true);
   };
+
+  const confirmDelete = async () => {
+    if (!contactToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', contactToDelete.id);
+
+      if (error) throw error;
+
+      await loadContacts();
+      toast.success("Contato excluído com sucesso");
+    } catch (e: any) {
+      console.error('Erro ao excluir contato:', e);
+      toast.error(e?.message || "Erro ao excluir contato");
+    }
+    
+    setDeleteDialogOpen(false);
+    setContactToDelete(null);
+  };
+
+  const handleStartEdit = (contactId: string, field: string, value: string) => {
     setEditingCell({ contactId, field });
     setEditingValue(value);
   };
 
-  const handleSaveInlineEdit = () => {
+  const handleSaveInlineEdit = async () => {
     if (!editingCell) return;
 
     const trimmedValue = editingValue.trim();
@@ -911,35 +935,45 @@ export default function Contatos() {
       return;
     }
 
-    const updatedContacts = contacts.map(contact => {
-      if (contact.id === editingCell.contactId) {
-        // Atualizar campo principal ou customField
-        if (['name', 'company', 'phone', 'email', 'position'].includes(editingCell.field)) {
-          return {
-            ...contact,
-            [editingCell.field]: trimmedValue,
-            modifiedAt: new Date().toISOString(),
-            modifiedBy: "Usuário Atual",
-          };
-        } else {
-          return {
-            ...contact,
-            customFields: {
-              ...contact.customFields,
-              [editingCell.field]: trimmedValue,
-            },
-            modifiedAt: new Date().toISOString(),
-            modifiedBy: "Usuário Atual",
-          };
-        }
-      }
-      return contact;
-    });
+    try {
+      const contact = contacts.find(c => c.id === editingCell.contactId);
+      if (!contact) return;
 
-    saveContactsToStorage(updatedContacts);
-    setEditingCell(null);
-    setEditingValue("");
-    toast.success("Campo atualizado com sucesso");
+      const updatedCustomFields = { ...contact.customFields };
+      
+      // Atualizar campo correto
+      if (editingCell.field === 'name') {
+        await supabase
+          .from('customers')
+          .update({ nome: trimmedValue })
+          .eq('id', editingCell.contactId);
+      } else if (editingCell.field === 'phone') {
+        await supabase
+          .from('customers')
+          .update({ telefone: trimmedValue })
+          .eq('id', editingCell.contactId);
+      } else if (editingCell.field === 'email') {
+        await supabase
+          .from('customers')
+          .update({ email: trimmedValue })
+          .eq('id', editingCell.contactId);
+      } else {
+        // Custom field
+        updatedCustomFields[editingCell.field] = trimmedValue;
+        await supabase
+          .from('customers')
+          .update({ custom_fields: updatedCustomFields })
+          .eq('id', editingCell.contactId);
+      }
+
+      await loadContacts();
+      setEditingCell(null);
+      setEditingValue("");
+      toast.success("Campo atualizado com sucesso");
+    } catch (e: any) {
+      console.error('Erro ao atualizar campo:', e);
+      toast.error("Erro ao atualizar campo");
+    }
   };
 
   const handleCancelEdit = () => {
