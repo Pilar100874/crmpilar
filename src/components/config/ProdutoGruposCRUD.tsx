@@ -80,14 +80,22 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
           .update(grupoData)
           .eq('id', editingGrupo.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Grupo atualizado!");
       } else {
         const { error } = await supabase
           .from('produto_grupos')
           .insert(grupoData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao inserir:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Grupo criado!");
       }
 

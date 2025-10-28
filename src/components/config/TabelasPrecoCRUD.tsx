@@ -114,14 +114,22 @@ export function TabelasPrecoCRUD({ estabelecimentoId }: TabelasPrecoCRUDProps) {
           .update(tabelaData)
           .eq('id', editingTabela.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Tabela atualizada!");
       } else {
         const { error } = await supabase
           .from('tabelas_preco')
           .insert(tabelaData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao inserir:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Tabela criada!");
       }
 

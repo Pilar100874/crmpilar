@@ -88,14 +88,22 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
           .update(condicaoData)
           .eq('id', editingCondicao.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Condição atualizada!");
       } else {
         const { error } = await supabase
           .from('condicoes_pagamento')
           .insert(condicaoData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao inserir:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Condição criada!");
       }
 

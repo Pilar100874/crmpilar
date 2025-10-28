@@ -71,7 +71,11 @@ export function ProdutoCategoriasCRUD({ estabelecimentoId }: ProdutoCategoriasCR
           .update({ nome })
           .eq('id', editingCategoria.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Categoria atualizada!");
       } else {
         const { error } = await supabase
@@ -81,7 +85,11 @@ export function ProdutoCategoriasCRUD({ estabelecimentoId }: ProdutoCategoriasCR
             nome,
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao inserir:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Categoria criada!");
       }
 

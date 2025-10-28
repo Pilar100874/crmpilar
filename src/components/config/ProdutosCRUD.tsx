@@ -122,14 +122,22 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           .update(produtoData)
           .eq('id', editingProduto.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Produto atualizado!");
       } else {
         const { error } = await supabase
           .from('produtos')
           .insert(produtoData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao inserir:', error);
+          toast.error(`Erro: ${error.message}`);
+          return;
+        }
         toast.success("Produto criado!");
       }
 
