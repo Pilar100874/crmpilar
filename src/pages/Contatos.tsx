@@ -1605,46 +1605,6 @@ export default function Contatos() {
               </div>
             </Card>
 
-            <Card className="p-6 space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-5 h-5 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-foreground/70">Segmentos</h3>
-              </div>
-
-              <div className="space-y-3">
-                <Label>Selecione um ou mais segmentos</Label>
-                {segmentos.length > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {segmentos.map((segmento) => (
-                      <div key={segmento.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`segmento-${segmento.id}`}
-                          checked={segmentosSelecionados.includes(segmento.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSegmentosSelecionados([...segmentosSelecionados, segmento.id]);
-                            } else {
-                              setSegmentosSelecionados(segmentosSelecionados.filter(id => id !== segmento.id));
-                            }
-                          }}
-                        />
-                        <Label
-                          htmlFor={`segmento-${segmento.id}`}
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          {segmento.nome}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Nenhum segmento cadastrado. Configure segmentos nas configurações do estabelecimento.
-                  </p>
-                )}
-              </div>
-            </Card>
-
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowForm(false)}>
                 Cancelar
