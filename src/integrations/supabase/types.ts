@@ -418,6 +418,51 @@ export type Database = {
           },
         ]
       }
+      customer_empresas: {
+        Row: {
+          cargo: string | null
+          created_at: string | null
+          customer_id: string
+          departamento: string | null
+          empresa_id: string
+          id: string
+          is_primary: boolean | null
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string | null
+          customer_id: string
+          departamento?: string | null
+          empresa_id: string
+          id?: string
+          is_primary?: boolean | null
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string | null
+          customer_id?: string
+          departamento?: string | null
+          empresa_id?: string
+          id?: string
+          is_primary?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_empresas_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_empresas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_segmentos: {
         Row: {
           created_at: string | null

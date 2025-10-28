@@ -219,6 +219,7 @@ export default function Contatos() {
   const [contatosDaEmpresa, setContatosDaEmpresa] = useState<Contact[]>([]);
   const [buscaEmpresa, setBuscaEmpresa] = useState<string>("");
   const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
+  const [empresasVinculadas, setEmpresasVinculadas] = useState<any[]>([]);
   
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -360,42 +361,21 @@ export default function Contatos() {
     loadContacts();
   }, []);
 
-  // Carregar dados da empresa selecionada
+  // Filtrar empresas conforme busca
   useEffect(() => {
-    const loadEmpresaData = async () => {
-      if (empresaSelecionada && !criarNovaEmpresa) {
-        const empresa = empresas.find(e => e.id === empresaSelecionada);
-        if (empresa) {
-          setFormData(prev => {
-            const base: Record<string, any> = {
-              ...prev,
-              company_type: empresa.custom_fields?.company_type || (empresa.cnpj ? "Pessoa Jurídica" : "Pessoa Física"),
-              cpf_cnpj: empresa.cnpj || empresa.custom_fields?.cpf_cnpj || '',
-              company_name: empresa.razao_social || '',
-              company_fantasia: empresa.nome_fantasia || '',
-              cep: empresa.cep || '',
-              address: empresa.endereco || '',
-              city: empresa.cidade || '',
-              neighborhood: empresa.custom_fields?.neighborhood || '',
-              state: empresa.estado || '',
-              inscricao: empresa.custom_fields?.inscricao || ''
-            };
-
-            // Preencher campos personalizados adicionais desta empresa
-            const merged: Record<string, any> = { ...base };
-            companyFields.forEach((f) => {
-              if (!(f.id in merged)) {
-                merged[f.id] = empresa.custom_fields?.[f.id] ?? '';
-              }
-            });
-            return merged;
-          });
-        }
-      }
-    };
-    
-    loadEmpresaData();
-  }, [empresaSelecionada, criarNovaEmpresa, empresas]);
+    if (buscaEmpresa.trim() === "") {
+      setEmpresasFiltradas([]);
+    } else {
+      const termo = buscaEmpresa.toLowerCase();
+      const filtradas = empresas.filter(e => 
+        e.nome_fantasia?.toLowerCase().includes(termo) ||
+        e.razao_social?.toLowerCase().includes(termo) ||
+        e.cnpj?.toLowerCase().includes(termo) ||
+        e.custom_fields?.cpf_cnpj?.toLowerCase().includes(termo)
+      );
+      setEmpresasFiltradas(filtradas);
+    }
+  }, [buscaEmpresa, empresas]);
 
   // Salvar contatos (inline/local configs continuam locais)
   const saveContactsToStorage = (updatedContacts: Contact[]) => {
@@ -763,8 +743,8 @@ export default function Contatos() {
       errors.phone = "WhatsApp inválido";
     }
 
-    // Se tem empresa selecionada ou está criando nova, validar campos da empresa
-    if (empresaSelecionada || criarNovaEmpresa) {
+    // Se tem empresa sendo criada, validar campos da empresa
+    if (criarNovaEmpresa) {
       const requiredCompanyFields = [
         'company_type', 'cpf_cnpj', 'company_name', 'company_fantasia',
         'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao'
@@ -807,10 +787,10 @@ export default function Contatos() {
         return;
       }
 
-      let empresaId = empresaSelecionada;
+      let novaEmpresaId: string | null = null;
 
-      // Criar ou atualizar empresa se necessário
-      if (criarNovaEmpresa || empresaSelecionada) {
+      // Criar nova empresa se necessário
+      if (criarNovaEmpresa) {
         const empresaPayload: any = {
           estabelecimento_id: estabId,
           nome_fantasia: formData.company_fantasia || formData.company_name,
@@ -825,7 +805,7 @@ export default function Contatos() {
           custom_fields: {}
         };
 
-        // Preencher todos os campos personalizados da empresa no custom_fields
+        // Preencher campos personalizados da empresa
         companyFields.forEach((field) => {
           const value = formData[field.id];
           if (value !== undefined && value !== '') {
@@ -837,25 +817,14 @@ export default function Contatos() {
           }
         });
 
-        if (editingContact && empresaSelecionada) {
-          // Atualizar empresa existente
-          const { error: empresaErr } = await supabase
-            .from('empresas')
-            .update(empresaPayload)
-            .eq('id', empresaSelecionada);
+        const { data: novaEmpresa, error: empresaErr } = await supabase
+          .from('empresas')
+          .insert([empresaPayload])
+          .select('id')
+          .maybeSingle();
 
-          if (empresaErr) throw empresaErr;
-        } else if (criarNovaEmpresa) {
-          // Criar nova empresa
-          const { data: novaEmpresa, error: empresaErr } = await supabase
-            .from('empresas')
-            .insert([empresaPayload])
-            .select('id')
-            .maybeSingle();
-
-          if (empresaErr) throw empresaErr;
-          empresaId = novaEmpresa?.id;
-        }
+        if (empresaErr) throw empresaErr;
+        novaEmpresaId = novaEmpresa?.id;
       }
 
       // Preparar dados do contato
@@ -864,8 +833,8 @@ export default function Contatos() {
         nome: formData.name,
         telefone: formData.phone,
         email: formData.email,
-        empresa_id: empresaId || null,
-        tipo_operador: empresaId ? true : false, // true = cliente, false = prospect
+        empresa_id: null, // Mantém null pois usamos tabela de junção
+        tipo_operador: empresasVinculadas.length > 0 ? true : false, // true = cliente, false = prospect
         custom_fields: {
           position: formData.position,
         },
@@ -882,22 +851,23 @@ export default function Contatos() {
         }
       });
 
+      let contatoId: string;
+
       if (editingContact) {
         // Atualizar contato existente
+        contatoId = editingContact.id;
         await supabase
           .from('customers')
           .update(contatoPayload)
-          .eq('id', editingContact.id);
+          .eq('id', contatoId);
 
         // Atualizar segmentos
-        await supabase.from('customer_segmentos').delete().eq('customer_id', editingContact.id);
+        await supabase.from('customer_segmentos').delete().eq('customer_id', contatoId);
         if (segmentosSelecionados.length > 0) {
           await supabase.from('customer_segmentos').insert(
-            segmentosSelecionados.map((sid) => ({ customer_id: editingContact.id, segmento_id: sid }))
+            segmentosSelecionados.map((sid) => ({ customer_id: contatoId, segmento_id: sid }))
           );
         }
-        
-        toast.success(empresaId ? "Cliente atualizado com sucesso!" : "Prospect atualizado com sucesso!");
       } else {
         // Criar novo contato
         const { data: inserted, error: insErr } = await supabase
@@ -908,15 +878,27 @@ export default function Contatos() {
         
         if (insErr) throw insErr;
 
-        const newId = inserted?.id;
-        if (newId && segmentosSelecionados.length > 0) {
+        contatoId = inserted!.id;
+        if (segmentosSelecionados.length > 0) {
           await supabase.from('customer_segmentos').insert(
-            segmentosSelecionados.map((sid) => ({ customer_id: newId, segmento_id: sid }))
+            segmentosSelecionados.map((sid) => ({ customer_id: contatoId, segmento_id: sid }))
           );
         }
-        
-        toast.success(empresaId ? "Cliente criado com sucesso!" : "Prospect criado com sucesso!");
       }
+
+      // Se criou uma nova empresa, adicionar ao vínculo
+      if (novaEmpresaId) {
+        await supabase.from('customer_empresas').insert([{
+          customer_id: contatoId,
+          empresa_id: novaEmpresaId,
+          is_primary: empresasVinculadas.length === 0
+        }]);
+      }
+
+      toast.success(empresasVinculadas.length > 0 ? 
+        (editingContact ? "Cliente atualizado!" : "Cliente criado!") :
+        (editingContact ? "Prospect atualizado!" : "Prospect criado!"));
+
 
       await loadContacts();
 
@@ -930,6 +912,7 @@ export default function Contatos() {
       setContatosDaEmpresa([]);
       setBuscaEmpresa("");
       setEmpresasFiltradas([]);
+      setEmpresasVinculadas([]);
     } catch (e: any) {
       console.error('Erro ao salvar:', e);
       toast.error(e?.message || "Erro ao salvar contato");
@@ -954,37 +937,31 @@ export default function Contatos() {
       }
     });
     
-    // Se o contato tem empresa vinculada, carregar dados da empresa
-    if (contact.customFields?.empresa_id) {
-      const empresaId = contact.customFields.empresa_id;
-      setEmpresaSelecionada(empresaId);
-      setCriarNovaEmpresa(false);
-      
-      // Buscar dados da empresa
-      const empresa = empresas.find(e => e.id === empresaId);
-      if (empresa) {
-        baseFormData.company_type = empresa.custom_fields?.company_type || (empresa.cnpj ? "Pessoa Jurídica" : "Pessoa Física");
-        baseFormData.cpf_cnpj = empresa.cnpj || empresa.custom_fields?.cpf_cnpj || '';
-        baseFormData.company_name = empresa.razao_social || '';
-        baseFormData.company_fantasia = empresa.nome_fantasia || '';
-        baseFormData.cep = empresa.cep || '';
-        baseFormData.address = empresa.endereco || '';
-        baseFormData.city = empresa.cidade || '';
-        baseFormData.neighborhood = empresa.custom_fields?.neighborhood || '';
-        baseFormData.state = empresa.estado || '';
-        baseFormData.inscricao = empresa.custom_fields?.inscricao || '';
-
-        // Preencher campos personalizados adicionais da empresa
-        companyFields.forEach((f) => {
-          if (!(f.id in baseFormData)) {
-            baseFormData[f.id] = empresa.custom_fields?.[f.id] ?? '';
-          }
-        });
-      }
+    // Carregar empresas vinculadas do contato
+    const { data: vinculosData } = await supabase
+      .from('customer_empresas')
+      .select(`
+        *,
+        empresas:empresa_id (
+          id,
+          nome_fantasia,
+          razao_social,
+          cnpj,
+          custom_fields
+        )
+      `)
+      .eq('customer_id', contact.id);
+    
+    if (vinculosData && vinculosData.length > 0) {
+      setEmpresasVinculadas(vinculosData.map((v: any) => ({
+        ...v.empresas,
+        cargo: v.cargo,
+        departamento: v.departamento,
+        is_primary: v.is_primary,
+        vinculo_id: v.id
+      })));
     } else {
-      // Sem empresa vinculada - prospect
-      setEmpresaSelecionada("");
-      setCriarNovaEmpresa(false);
+      setEmpresasVinculadas([]);
     }
 
     setFormData(baseFormData);
@@ -1004,6 +981,13 @@ export default function Contatos() {
     if (!contactToDelete) return;
     
     try {
+      // Deletar vínculos com empresas
+      await supabase
+        .from('customer_empresas')
+        .delete()
+        .eq('customer_id', contactToDelete.id);
+
+      // Deletar contato
       const { error } = await supabase
         .from('customers')
         .delete()
@@ -1020,6 +1004,94 @@ export default function Contatos() {
     
     setDeleteDialogOpen(false);
     setContactToDelete(null);
+  };
+
+  const handleAddEmpresaVinculada = async (empresaId: string) => {
+    if (!editingContact) {
+      // Se estiver criando novo contato, apenas adiciona à lista local
+      const empresa = empresas.find(e => e.id === empresaId);
+      if (empresa && !empresasVinculadas.some(ev => ev.id === empresaId)) {
+        setEmpresasVinculadas([...empresasVinculadas, {
+          ...empresa,
+          is_primary: empresasVinculadas.length === 0
+        }]);
+        setEmpresaSelecionada("");
+        setBuscaEmpresa("");
+        toast.success("Empresa vinculada!");
+      }
+      return;
+    }
+
+    // Se estiver editando, salvar no banco
+    try {
+      const { error } = await supabase
+        .from('customer_empresas')
+        .insert([{
+          customer_id: editingContact.id,
+          empresa_id: empresaId,
+          is_primary: empresasVinculadas.length === 0
+        }]);
+
+      if (error) throw error;
+
+      const empresa = empresas.find(e => e.id === empresaId);
+      if (empresa) {
+        setEmpresasVinculadas([...empresasVinculadas, {
+          ...empresa,
+          is_primary: empresasVinculadas.length === 0
+        }]);
+      }
+
+      // Atualizar tipo_operador para cliente
+      await supabase
+        .from('customers')
+        .update({ tipo_operador: true })
+        .eq('id', editingContact.id);
+
+      setEmpresaSelecionada("");
+      setBuscaEmpresa("");
+      toast.success("Empresa vinculada com sucesso!");
+      await loadContacts();
+    } catch (e: any) {
+      console.error('Erro ao vincular empresa:', e);
+      toast.error(e?.message || "Erro ao vincular empresa");
+    }
+  };
+
+  const handleRemoveEmpresaVinculada = async (empresaId: string, vinculoId?: string) => {
+    if (!editingContact) {
+      // Se estiver criando, apenas remove da lista local
+      setEmpresasVinculadas(empresasVinculadas.filter(ev => ev.id !== empresaId));
+      return;
+    }
+
+    // Se estiver editando, remover do banco
+    try {
+      if (vinculoId) {
+        const { error } = await supabase
+          .from('customer_empresas')
+          .delete()
+          .eq('id', vinculoId);
+
+        if (error) throw error;
+      }
+
+      setEmpresasVinculadas(empresasVinculadas.filter(ev => ev.id !== empresaId));
+
+      // Se não sobrar nenhuma empresa, atualizar para prospect
+      if (empresasVinculadas.length === 1) {
+        await supabase
+          .from('customers')
+          .update({ tipo_operador: false })
+          .eq('id', editingContact.id);
+      }
+
+      toast.success("Empresa desvinculada!");
+      await loadContacts();
+    } catch (e: any) {
+      console.error('Erro ao desvincular empresa:', e);
+      toast.error(e?.message || "Erro ao desvincular empresa");
+    }
   };
 
   const handleStartEdit = (contactId: string, field: string, value: string) => {
@@ -1278,6 +1350,7 @@ export default function Contatos() {
                 setContatosDaEmpresa([]);
                 setBuscaEmpresa("");
                 setEmpresasFiltradas([]);
+                setEmpresasVinculadas([]);
               }} className="gap-2">
                 <Plus className="w-4 h-4" />
                 ADICIONAR CONTATO
@@ -1780,11 +1853,42 @@ export default function Contatos() {
           </TabsContent>
 
           <TabsContent value="empresa" className="p-6 space-y-6">
+            {/* Lista de Empresas Vinculadas */}
+            {empresasVinculadas.length > 0 && (
+              <Card className="p-6">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-foreground/70">EMPRESAS VINCULADAS</h3>
+                  <div className="space-y-2">
+                    {empresasVinculadas.map((empresa) => (
+                      <div key={empresa.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <div className="font-medium">{empresa.nome_fantasia}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {empresa.razao_social} - {empresa.cnpj || empresa.custom_fields?.cpf_cnpj}
+                          </div>
+                          {empresa.is_primary && (
+                            <Badge variant="secondary" className="mt-1">Principal</Badge>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveEmpresaVinculada(empresa.id, empresa.vinculo_id)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* Busca e Seleção de Empresa */}
             <Card className="p-6 space-y-4">
               <div className="space-y-4">
                 <div>
-                  <Label>Buscar Empresa Existente ou Criar Nova</Label>
+                  <Label>Vincular Nova Empresa</Label>
                   <div className="flex gap-2 mt-2">
                     <Input
                       placeholder="Buscar por nome, fantasia, CNPJ ou CPF..."
@@ -1793,14 +1897,14 @@ export default function Contatos() {
                         const valor = e.target.value;
                         setBuscaEmpresa(valor);
                         
-                        // Filtrar empresas
                         if (valor.trim()) {
                           const termo = valor.toLowerCase();
                           const filtradas = empresas.filter(emp => 
-                            emp.nome_fantasia?.toLowerCase().includes(termo) ||
+                            !empresasVinculadas.some(ev => ev.id === emp.id) &&
+                            (emp.nome_fantasia?.toLowerCase().includes(termo) ||
                             emp.razao_social?.toLowerCase().includes(termo) ||
                             emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
-                            emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
+                            emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, '')))
                           );
                           setEmpresasFiltradas(filtradas);
                         } else {
@@ -1808,10 +1912,8 @@ export default function Contatos() {
                         }
                       }}
                       onBlur={async () => {
-                        // Auto-buscar por CPF/CNPJ se tiver 11 ou 14 dígitos
                         const clean = buscaEmpresa.replace(/\D/g, '');
                         if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
-                          // Se não encontrou empresa existente, buscar na API
                           if (clean.length === 14) {
                             await handleCNPJLookup(buscaEmpresa);
                           }
@@ -1841,9 +1943,7 @@ export default function Contatos() {
                         key={empresa.id}
                         className="w-full text-left p-3 hover:bg-accent transition-colors border-b last:border-b-0"
                         onClick={() => {
-                          setEmpresaSelecionada(empresa.id);
-                          setCriarNovaEmpresa(false);
-                          setBuscaEmpresa("");
+                          handleAddEmpresaVinculada(empresa.id);
                           setEmpresasFiltradas([]);
                         }}
                       >
@@ -1855,43 +1955,24 @@ export default function Contatos() {
                     ))}
                   </div>
                 )}
-
-                {/* Empresa selecionada */}
-                {empresaSelecionada && !criarNovaEmpresa && (
-                  <div className="p-4 bg-accent rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">
-                          {empresas.find(e => e.id === empresaSelecionada)?.nome_fantasia}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {empresas.find(e => e.id === empresaSelecionada)?.cnpj || 
-                           empresas.find(e => e.id === empresaSelecionada)?.custom_fields?.cpf_cnpj}
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEmpresaSelecionada("");
-                          setFormData({});
-                        }}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </Card>
 
-            {/* Formulário de Nova Empresa ou Edição */}
-            {(criarNovaEmpresa || empresaSelecionada) && (
+            {/* Formulário de Nova Empresa */}
+            {criarNovaEmpresa && (
               <Card className="p-6 space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-foreground/70">
-                    {criarNovaEmpresa ? "NOVA EMPRESA" : "DADOS DA EMPRESA"}
-                  </h3>
+                  <h3 className="text-sm font-medium text-foreground/70">NOVA EMPRESA</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setCriarNovaEmpresa(false);
+                      setFormData({});
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
 
                 <div className="space-y-4">
