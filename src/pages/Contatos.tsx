@@ -19,6 +19,7 @@ import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, v
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from "@/lib/masks";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
+import { supabase } from "@/integrations/supabase/client";
 import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -65,6 +66,13 @@ interface Contact {
   modifiedBy: string;
   customFields: Record<string, any>;
   active: boolean;
+  segmentos?: string[];
+}
+
+interface Segmento {
+  id: string;
+  nome: string;
+  estabelecimento_id: string;
 }
 
 interface SearchFilters {
@@ -196,6 +204,9 @@ export default function Contatos() {
   const [activeFieldTab, setActiveFieldTab] = useState<"contact" | "company">("contact");
   const [fieldMasks, setFieldMasks] = useState<FieldMask[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [segmentos, setSegmentos] = useState<Segmento[]>([]);
+  const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -215,6 +226,26 @@ export default function Contatos() {
     tasks: "",
     tags: "",
   });
+
+  // Carregar estabelecimento e segmentos
+  useEffect(() => {
+    const fetchEstabelecimentoAndSegmentos = async () => {
+      const estabId = localStorage.getItem("estabelecimentoId");
+      setEstabelecimentoId(estabId);
+      
+      if (estabId) {
+        const { data } = await supabase
+          .from("segmentos")
+          .select("*")
+          .eq("estabelecimento_id", estabId)
+          .order("nome");
+        
+        setSegmentos(data || []);
+      }
+    };
+    
+    fetchEstabelecimentoAndSegmentos();
+  }, []);
 
   // Carregar contatos do localStorage
   useEffect(() => {
@@ -669,6 +700,7 @@ export default function Contatos() {
       modifiedBy: "Usuário Atual",
       customFields: formData,
       active: editingContact?.active ?? true,
+      segmentos: segmentosSelecionados,
     };
 
     if (editingContact) {
@@ -684,11 +716,13 @@ export default function Contatos() {
     setFormData({});
     setEditingContact(null);
     setFieldErrors({});
+    setSegmentosSelecionados([]);
   };
 
   const handleEditContact = (contact: Contact) => {
     setEditingContact(contact);
     setFormData(contact.customFields);
+    setSegmentosSelecionados(contact.segmentos || []);
     setShowForm(true);
   };
 
@@ -1461,6 +1495,46 @@ export default function Contatos() {
                     {renderField(field)}
                   </div>
                 ))}
+              </div>
+            </Card>
+
+            <Card className="p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Plus className="w-5 h-5 text-muted-foreground" />
+                <h3 className="text-sm font-medium text-foreground/70">Segmentos</h3>
+              </div>
+
+              <div className="space-y-3">
+                <Label>Selecione um ou mais segmentos</Label>
+                {segmentos.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {segmentos.map((segmento) => (
+                      <div key={segmento.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`segmento-${segmento.id}`}
+                          checked={segmentosSelecionados.includes(segmento.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSegmentosSelecionados([...segmentosSelecionados, segmento.id]);
+                            } else {
+                              setSegmentosSelecionados(segmentosSelecionados.filter(id => id !== segmento.id));
+                            }
+                          }}
+                        />
+                        <Label
+                          htmlFor={`segmento-${segmento.id}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {segmento.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum segmento cadastrado. Configure segmentos nas configurações do estabelecimento.
+                  </p>
+                )}
               </div>
             </Card>
 

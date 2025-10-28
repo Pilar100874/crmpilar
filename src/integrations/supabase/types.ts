@@ -418,6 +418,42 @@ export type Database = {
           },
         ]
       }
+      customer_segmentos: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          id: string
+          segmento_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          segmento_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          segmento_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_segmentos_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_segmentos_segmento_id_fkey"
+            columns: ["segmento_id"]
+            isOneToOne: false
+            referencedRelation: "segmentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string | null
