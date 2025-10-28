@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.fetch-emails]
 verify_jwt = true
+
+[functions.extract-orcamento-items]
+verify_jwt = true

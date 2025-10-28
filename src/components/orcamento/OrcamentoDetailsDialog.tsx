@@ -24,6 +24,8 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import ImageItemExtractor from "./ImageItemExtractor";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OrcamentoDetailsDialogProps {
   orcamento: Orcamento;
@@ -50,6 +52,34 @@ export default function OrcamentoDetailsDialog({
 
   const handleDuplicate = () => {
     toast.info("Funcionalidade de duplicar será implementada");
+  };
+
+  const handleItemsExtracted = async (items: any[]) => {
+    try {
+      // Converter itens extraídos para formato do banco
+      // Por enquanto, vamos apenas criar os itens sem vincular a produtos existentes
+      const itemsToInsert = items.map(item => ({
+        orcamento_id: orcamento.id,
+        produto_id: null, // Será null, o usuário pode vincular depois
+        quantidade: item.quantidade,
+        preco_unitario: item.valor_unitario,
+        preco_original: item.valor_unitario,
+        desconto: 0,
+        subtotal: item.quantidade * item.valor_unitario
+      }));
+
+      const { error } = await supabase
+        .from('orcamento_itens')
+        .insert(itemsToInsert);
+
+      if (error) throw error;
+
+      toast.success(`${items.length} item(ns) adicionado(s) ao orçamento!`);
+      onSave(); // Recarregar orçamento
+    } catch (error: any) {
+      console.error('Erro ao adicionar itens:', error);
+      toast.error("Erro ao adicionar itens ao orçamento");
+    }
   };
 
   return (
@@ -181,6 +211,10 @@ export default function OrcamentoDetailsDialog({
             </TabsContent>
 
             <TabsContent value="itens" className="space-y-3">
+              {/* Componente de extração de imagem */}
+              <ImageItemExtractor onItemsExtracted={handleItemsExtracted} />
+
+              {/* Lista de itens existentes */}
               {orcamento.itens && orcamento.itens.length > 0 ? (
                 orcamento.itens.map((item) => (
                   <Card key={item.id}>
@@ -194,7 +228,7 @@ export default function OrcamentoDetailsDialog({
                           />
                         )}
                         <div className="flex-1">
-                          <h4 className="font-semibold">{item.produto?.nome}</h4>
+                          <h4 className="font-semibold">{item.produto?.nome || "Item sem produto vinculado"}</h4>
                           <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                             <span>Qtd: {item.quantidade}</span>
                             <span>
@@ -220,6 +254,7 @@ export default function OrcamentoDetailsDialog({
                   <CardContent className="p-8 text-center text-muted-foreground">
                     <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>Nenhum item adicionado ainda</p>
+                    <p className="text-xs mt-1">Use o reconhecimento de imagem acima para adicionar itens rapidamente</p>
                   </CardContent>
                 </Card>
               )}
