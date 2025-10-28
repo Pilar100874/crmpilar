@@ -1543,12 +1543,6 @@ export default function Contatos() {
                 Empresa
               </TabsTrigger>
               <TabsTrigger 
-                value="leads"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Leads
-              </TabsTrigger>
-              <TabsTrigger 
                 value="segmentos"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
               >
@@ -1628,12 +1622,6 @@ export default function Contatos() {
               <Button onClick={handleSaveContact}>
                 Salvar
               </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="leads" className="p-6">
-            <div className="text-center text-muted-foreground py-12">
-              Nenhum lead associado a este contato
             </div>
           </TabsContent>
 
