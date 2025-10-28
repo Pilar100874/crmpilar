@@ -1050,7 +1050,7 @@ export default function Contatos() {
 
       setEmpresaSelecionada("");
       setBuscaEmpresa("");
-      toast.success("Empresa vinculada com sucesso!");
+      toast.success("Empresa vinculada! O vínculo também aparecerá no cadastro da empresa.");
       await loadContacts();
     } catch (e: any) {
       console.error('Erro ao vincular empresa:', e);

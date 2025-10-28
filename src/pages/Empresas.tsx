@@ -313,11 +313,16 @@ export default function Empresas() {
         .from('customers')
         .update({ tipo_operador: true })
         .eq('id', contatoId);
+      
+      // Recarregar empresas para atualizar contatos vinculados
+      if (estabelecimentoId) {
+        await fetchEmpresas(estabelecimentoId);
+      }
     }
 
     setContatosVinculados(prev => [...prev, { contato, cargo: "", departamento: "", is_primary: prev.length === 0 }]);
     setBuscaContato("");
-    toast.success("Contato vinculado!");
+    toast.success("Contato vinculado! O vínculo também aparecerá no cadastro do contato.");
   };
 
   const handleRemoveContatoVinculado = async (index: number) => {
