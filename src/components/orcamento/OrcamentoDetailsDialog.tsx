@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import ImageItemExtractor from "./ImageItemExtractor";
+import AddItemForm from "./AddItemForm";
 import { supabase } from "@/integrations/supabase/client";
 
 interface OrcamentoDetailsDialogProps {
@@ -107,11 +108,12 @@ export default function OrcamentoDetailsDialog({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
             <TabsTrigger value="itens">
               Itens ({orcamento.itens?.length || 0})
             </TabsTrigger>
+            <TabsTrigger value="sugestoes">Sugestões</TabsTrigger>
             <TabsTrigger value="historico">Histórico</TabsTrigger>
           </TabsList>
 
@@ -211,6 +213,13 @@ export default function OrcamentoDetailsDialog({
             </TabsContent>
 
             <TabsContent value="itens" className="space-y-3">
+              {/* Formulário para adicionar itens manualmente */}
+              <AddItemForm 
+                orcamentoId={orcamento.id}
+                estabelecimentoId={orcamento.estabelecimento_id}
+                onItemAdded={onSave}
+              />
+
               {/* Componente de extração de imagem */}
               <ImageItemExtractor onItemsExtracted={handleItemsExtracted} />
 
@@ -254,10 +263,20 @@ export default function OrcamentoDetailsDialog({
                   <CardContent className="p-8 text-center text-muted-foreground">
                     <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>Nenhum item adicionado ainda</p>
-                    <p className="text-xs mt-1">Use o reconhecimento de imagem acima para adicionar itens rapidamente</p>
+                    <p className="text-xs mt-1">Use o formulário acima ou reconhecimento de imagem</p>
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            <TabsContent value="sugestoes">
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Sugestões de produtos serão exibidas aqui</p>
+                  <p className="text-xs mt-1">Baseadas no histórico de compras do cliente</p>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="historico">

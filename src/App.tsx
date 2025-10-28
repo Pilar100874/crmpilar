@@ -26,6 +26,7 @@ import ChatWebhook from "./pages/ChatWebhook";
 import MeusTextosProntos from "./pages/MeusTextosProntos";
 import MeusAnexos from "./pages/MeusAnexos";
 import Orcamentos from "./pages/Orcamentos";
+import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 
@@ -70,6 +71,8 @@ const App = () => (
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
             <Route path="/meus-anexos" element={<MeusAnexos />} />
           </Route>
+          {/* Public routes (no layout) */}
+          <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
