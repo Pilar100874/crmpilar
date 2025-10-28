@@ -1974,9 +1974,10 @@ export default function Contatos() {
 
       {/* Panel de Configurações */}
       <Sheet open={showConfigPanel} onOpenChange={setShowConfigPanel}>
-        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto">
+        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="config-description">
           <SheetHeader>
             <SheetTitle>Configurações de Campos</SheetTitle>
+            <p id="config-description" className="sr-only">Configure campos personalizados e máscaras para contatos e empresas</p>
           </SheetHeader>
           
           <div className="mt-6">
@@ -2168,9 +2169,10 @@ export default function Contatos() {
 
       {/* Panel de Importação */}
       <Sheet open={showImportPanel} onOpenChange={setShowImportPanel}>
-        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto">
+        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="import-description">
           <SheetHeader>
             <SheetTitle>Importar Empresas e Contatos</SheetTitle>
+            <p id="import-description" className="sr-only">Importe múltiplos contatos através de arquivo Excel/CSV ou integração com API</p>
           </SheetHeader>
           
           <div className="mt-6">
