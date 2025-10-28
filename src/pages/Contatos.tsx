@@ -258,17 +258,71 @@ export default function Contatos() {
     fetchEstabelecimentoAndSegmentos();
   }, []);
 
-  // Carregar contatos do localStorage
-  useEffect(() => {
-    const savedContacts = localStorage.getItem("contacts");
-    if (savedContacts) {
-      setContacts(JSON.parse(savedContacts));
+  // Carregar contatos do backend
+  const loadContacts = async () => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        setContacts([]);
+        return;
+      }
+
+      const { data: rows, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('estabelecimento_id', estabId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao carregar contatos:', error);
+        toast.error('Erro ao carregar contatos');
+        return;
+      }
+
+      let segmentsByCustomer: Record<string, string[]> = {};
+      if (rows && rows.length > 0) {
+        const { data: segRows } = await supabase
+          .from('customer_segmentos')
+          .select('customer_id, segmento_id')
+          .in('customer_id', rows.map((r: any) => r.id));
+
+        (segRows || []).forEach((r: any) => {
+          if (!segmentsByCustomer[r.customer_id]) segmentsByCustomer[r.customer_id] = [];
+          segmentsByCustomer[r.customer_id].push(r.segmento_id);
+        });
+      }
+
+      const mapped: Contact[] = (rows || []).map((r: any) => ({
+        id: r.id,
+        name: r.nome,
+        company: r.custom_fields?.company_name || '',
+        phone: r.telefone,
+        email: r.email,
+        position: r.custom_fields?.position || '',
+        responsible: r.custom_fields?.responsible || '',
+        tags: r.tags || [],
+        createdAt: r.created_at,
+        createdBy: 'Sistema',
+        modifiedAt: r.created_at,
+        modifiedBy: 'Sistema',
+        customFields: r.custom_fields || {},
+        active: true,
+        segmentos: segmentsByCustomer[r.id] || [],
+      }));
+
+      setContacts(mapped);
+    } catch (e) {
+      console.error('Erro inesperado ao carregar contatos:', e);
+      toast.error('Erro ao carregar contatos');
     }
+  };
+
+  useEffect(() => {
+    loadContacts();
   }, []);
 
-  // Salvar contatos no localStorage
+  // Salvar contatos (inline/local configs continuam locais)
   const saveContactsToStorage = (updatedContacts: Contact[]) => {
-    localStorage.setItem("contacts", JSON.stringify(updatedContacts));
     setContacts(updatedContacts);
   };
 
@@ -597,7 +651,7 @@ export default function Contatos() {
     }
   };
 
-  const handleSaveContact = () => {
+  const handleSaveContact = async () => {
     const errors: Record<string, string> = {};
     
     // Validar campos obrigatórios de contato
@@ -696,38 +750,67 @@ export default function Contatos() {
       return;
     }
 
-    const newContact: Contact = {
-      id: editingContact?.id || `contact_${Date.now()}`,
-      name: formData.name || "",
-      company: formData.company_name || "",
-      phone: formData.phone || "",
-      email: formData.email || "",
-      position: formData.position || "",
-      responsible: formData.responsible || "",
-      tags: [],
-      createdAt: editingContact?.createdAt || new Date().toISOString(),
-      createdBy: editingContact?.createdBy || "Usuário Atual",
-      modifiedAt: new Date().toISOString(),
-      modifiedBy: "Usuário Atual",
-      customFields: formData,
-      active: editingContact?.active ?? true,
-      segmentos: segmentosSelecionados,
-    };
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        toast.error("Selecione um estabelecimento antes de salvar");
+        return;
+      }
 
-    if (editingContact) {
-      const updatedContacts = contacts.map(c => c.id === editingContact.id ? newContact : c);
-      saveContactsToStorage(updatedContacts);
-      toast.success("Contato atualizado com sucesso");
-    } else {
-      saveContactsToStorage([...contacts, newContact]);
-      toast.success("Contato salvo com sucesso");
+      const payload: any = {
+        estabelecimento_id: estabId,
+        nome: formData.name || "",
+        telefone: formData.phone || "",
+        email: formData.email || "",
+        custom_fields: formData,
+        tags: [],
+      };
+
+      if (editingContact) {
+        const { error: upErr } = await supabase
+          .from('customers')
+          .update(payload)
+          .eq('id', editingContact.id);
+        if (upErr) throw upErr;
+
+        // Atualiza segmentos (limpa e insere novamente)
+        await supabase.from('customer_segmentos').delete().eq('customer_id', editingContact.id);
+        if (segmentosSelecionados.length > 0) {
+          await supabase.from('customer_segmentos').insert(
+            segmentosSelecionados.map((sid) => ({ customer_id: editingContact.id, segmento_id: sid }))
+          );
+        }
+
+        toast.success("Contato atualizado com sucesso");
+      } else {
+        const { data: inserted, error: insErr } = await supabase
+          .from('customers')
+          .insert([payload])
+          .select('id')
+          .maybeSingle();
+        if (insErr) throw insErr;
+
+        const newId = inserted?.id;
+        if (newId && segmentosSelecionados.length > 0) {
+          await supabase.from('customer_segmentos').insert(
+            segmentosSelecionados.map((sid) => ({ customer_id: newId, segmento_id: sid }))
+          );
+        }
+
+        toast.success("Contato salvo com sucesso");
+      }
+
+      await loadContacts();
+
+      setShowForm(false);
+      setFormData({});
+      setEditingContact(null);
+      setFieldErrors({});
+      setSegmentosSelecionados([]);
+    } catch (e: any) {
+      console.error('Erro ao salvar contato:', e);
+      toast.error(e?.message || "Erro ao salvar contato");
     }
-    
-    setShowForm(false);
-    setFormData({});
-    setEditingContact(null);
-    setFieldErrors({});
-    setSegmentosSelecionados([]);
   };
 
   const handleEditContact = (contact: Contact) => {
@@ -744,33 +827,6 @@ export default function Contatos() {
     setContactToDelete(contact);
     setDeleteDialogOpen(true);
   };
-
-  const confirmDelete = () => {
-    if (!contactToDelete) return;
-    
-    // Verificar se o contato está em uso (simular verificação)
-    // Em um sistema real, você verificaria se há conversas, pedidos, etc
-    const isInUse = Math.random() > 0.7; // Simula 30% de chance de estar em uso
-    
-    if (isInUse) {
-      // Inativar ao invés de excluir
-      const updatedContacts = contacts.map(c =>
-        c.id === contactToDelete.id ? { ...c, active: false } : c
-      );
-      saveContactsToStorage(updatedContacts);
-      toast.warning("Contato inativado pois está em uso no sistema");
-    } else {
-      // Pode excluir
-      const updatedContacts = contacts.filter(c => c.id !== contactToDelete.id);
-      saveContactsToStorage(updatedContacts);
-      toast.success("Contato excluído com sucesso");
-    }
-    
-    setDeleteDialogOpen(false);
-    setContactToDelete(null);
-  };
-
-  const handleStartEdit = (contactId: string, field: string, value: string) => {
     setEditingCell({ contactId, field });
     setEditingValue(value);
   };
