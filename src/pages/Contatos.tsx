@@ -564,9 +564,22 @@ export default function Contatos() {
         processedValue = maskWhatsApp(newValue);
       }
       
-      // Auto-preencher inscrição como "isento" para pessoa física
-      if (field.id === "company_type" && newValue === "Pessoa Física") {
-        setFormData({ ...formData, [field.id]: newValue, inscricao: "ISENTO" });
+      // Limpar dados da empresa ao mudar o tipo de pessoa
+      if (field.id === "company_type") {
+        const companyFieldIds = companyFields.map(f => f.id).filter(id => id !== "company_type");
+        const clearedData: Record<string, any> = { ...formData, [field.id]: newValue };
+        
+        // Limpar todos os campos da empresa
+        companyFieldIds.forEach(id => {
+          clearedData[id] = "";
+        });
+        
+        // Auto-preencher inscrição como "ISENTO" para pessoa física
+        if (newValue === "Pessoa Física") {
+          clearedData.inscricao = "ISENTO";
+        }
+        
+        setFormData(clearedData);
       } else {
         setFormData({ ...formData, [field.id]: processedValue });
       }
