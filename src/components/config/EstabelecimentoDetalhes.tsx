@@ -494,11 +494,36 @@ function ResendConfigSection({ estabelecimentoId }: { estabelecimentoId: string 
 }
 
 export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome }: EstabelecimentoDetalhesProps) {
+  const [userEstabId, setUserEstabId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (user) {
+          const { data, error } = await supabase.rpc('get_user_estabelecimento_id', { _user_id: user.id });
+          if (!error) setUserEstabId(data);
+        }
+      } catch (e) {
+        console.error('Erro ao obter estabelecimento do usuário:', e);
+      }
+    })();
+  }, [estabelecimentoId]);
+
   return (
     <div className="space-y-4 pl-4 border-l-2 border-primary/20">
       <div className="text-sm font-medium text-muted-foreground mb-4">
         Gerenciando dados de: <span className="text-primary font-semibold">{estabelecimentoNome}</span>
       </div>
+
+      {userEstabId && userEstabId !== estabelecimentoId && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Você não tem permissão para salvar neste estabelecimento. Selecione o estabelecimento vinculado ao seu usuário.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Accordion type="single" collapsible className="space-y-2">
         <AccordionItem value="whatsapp-config" className="border rounded-md">
