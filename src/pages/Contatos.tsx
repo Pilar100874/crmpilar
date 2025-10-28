@@ -20,6 +20,7 @@ import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskDate, applyCustomMask } from
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -231,8 +232,8 @@ export default function Contatos() {
   // Carregar estabelecimento e segmentos
   useEffect(() => {
     const fetchEstabelecimentoAndSegmentos = async () => {
-      const estabId = localStorage.getItem("estabelecimentoId");
-      console.log("🔍 Contatos - estabelecimentoId do localStorage:", estabId);
+      const estabId = await getEstabelecimentoId();
+      console.log("🔍 Contatos - estabelecimentoId detectado:", estabId);
       setEstabelecimentoId(estabId);
       
       if (estabId) {
@@ -244,16 +245,13 @@ export default function Contatos() {
           .order("nome");
         
         console.log("🔍 Contatos - Segmentos retornados:", data);
-        console.log("🔍 Contatos - Erro na busca:", error);
-        
         if (error) {
           console.error("❌ Erro ao buscar segmentos:", error);
           toast.error("Erro ao carregar segmentos: " + error.message);
         }
-        
         setSegmentos(data || []);
       } else {
-        console.warn("⚠️ estabelecimentoId não encontrado no localStorage");
+        console.warn("⚠️ estabelecimentoId não disponível. Selecione um estabelecimento.");
       }
     };
     
