@@ -103,16 +103,15 @@ const fieldValidators: Record<string, {
 // Labels amigáveis para os campos
 const fieldLabels: Record<string, string> = {
   cnpj: "CNPJ",
-  razao_social: "Razão Social",
+  razao_social: "Nome",
   nome_fantasia: "Nome Fantasia",
   email: "E-mail",
   telefone: "Telefone",
   endereco: "Endereço",
   cidade: "Cidade",
-  estado: "Estado (UF)",
+  estado: "UF",
   cep: "CEP",
   bairro: "Bairro",
-  inscricao: "Inscrição",
 };
 
 export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldValidatorProps) {

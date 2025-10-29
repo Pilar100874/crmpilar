@@ -713,7 +713,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             break;
           }
           empresaData.estabelecimento_id = estabId;
-          empresaData.tipo = 'Juridico'; // Sempre definir como Jurídico
+          
+          // Definir tipo como Pessoa Jurídica em custom_fields
+          empresaData.custom_fields = {
+            ...(empresaData.custom_fields || {}),
+            company_type: "Pessoa Jurídica"
+          };
 
           // Campos obrigatórios
           let camposObrigatorios: string[] = [];

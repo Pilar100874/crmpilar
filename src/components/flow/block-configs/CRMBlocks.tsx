@@ -62,7 +62,6 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
   };
 
   const getDefaultFields = (): FieldConfig[] => [
-    { field_id: "company_type", field_label: "Tipo", required: true },
     { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", required: true },
     { field_id: "company_name", field_label: "Nome", required: true },
     { field_id: "company_fantasia", field_label: "Nome Fantasia", required: true },
@@ -75,7 +74,6 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
 
   // Mapear IDs de campo para nomes da tabela empresas
   const fieldMapping: Record<string, string> = {
-    company_type: "tipo",
     cpf_cnpj: "cnpj",
     company_name: "razao_social",
     company_fantasia: "nome_fantasia",
@@ -141,6 +139,9 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
         </p>
         <p className="text-xs text-blue-600">
           ℹ️ Os campos listados aqui vêm da configuração de "Campos de Empresa" na tela de Contatos.
+        </p>
+        <p className="text-xs text-green-600 font-medium">
+          ✓ Tipo da empresa será automaticamente definido como "Pessoa Jurídica"
         </p>
         
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
