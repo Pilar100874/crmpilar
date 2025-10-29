@@ -134,6 +134,7 @@ export default function Orcamentos() {
 
   const handleOrcamentoClick = (orcamento: Orcamento) => {
     setSelectedOrcamento(orcamento);
+    setViewMode('pos');
   };
 
   const handleOrcamentoSaved = () => {
@@ -251,8 +252,10 @@ export default function Orcamentos() {
         <div className="flex-1 overflow-hidden">
           <POSView 
             estabelecimentoId={estabelecimentoId}
+            orcamentoId={selectedOrcamento?.id}
             onClose={() => {
               setViewMode('kanban');
+              setSelectedOrcamento(null);
               loadOrcamentos();
             }}
           />
@@ -274,8 +277,8 @@ export default function Orcamentos() {
         </div>
       )}
 
-      {/* Dialogs */}
-      {selectedOrcamento && (
+      {/* Dialogs - Não mostrar se estiver no modo POS */}
+      {selectedOrcamento && viewMode !== 'pos' && (
         <OrcamentoDetailsDialog
           orcamento={selectedOrcamento}
           open={!!selectedOrcamento}

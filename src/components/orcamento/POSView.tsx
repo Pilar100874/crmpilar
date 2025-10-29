@@ -34,10 +34,11 @@ import ImageItemExtractor from "./ImageItemExtractor";
 
 interface POSViewProps {
   estabelecimentoId: string;
+  orcamentoId?: string | null;
   onClose?: () => void;
 }
 
-export default function POSView({ estabelecimentoId, onClose }: POSViewProps) {
+export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POSViewProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,7 +52,10 @@ export default function POSView({ estabelecimentoId, onClose }: POSViewProps) {
   useEffect(() => {
     loadProdutos();
     loadClientes();
-  }, []);
+    if (orcamentoId) {
+      loadOrcamento(orcamentoId);
+    }
+  }, [orcamentoId]);
 
   const loadProdutos = async () => {
     try {
@@ -82,6 +86,55 @@ export default function POSView({ estabelecimentoId, onClose }: POSViewProps) {
       setClientes(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar clientes:', error);
+    }
+  };
+
+  const loadOrcamento = async (id: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .select(`
+          *,
+          itens:orcamento_itens(
+            *,
+            produto:produtos(*)
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Preencher cliente
+        setSelectedCliente(data.cliente_id);
+        
+        // Preencher carrinho com itens
+        const newCart = new Map<string, { produto: Produto; quantity: number }>();
+        data.itens?.forEach((item: any) => {
+          if (item.produto) {
+            newCart.set(item.produto.id, {
+              produto: item.produto,
+              quantity: item.quantidade
+            });
+          }
+        });
+        setCartItems(newCart);
+        
+        // Definir ID e link de compartilhamento se existir
+        setCurrentOrcamentoId(data.id);
+        if (data.token_compartilhamento) {
+          const link = `${window.location.origin}/orcamento/${data.token_compartilhamento}`;
+          setShareLink(link);
+          setActiveTab("share");
+        }
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar orçamento:', error);
+      toast.error('Erro ao carregar orçamento');
+    } finally {
+      setLoading(false);
     }
   };
 
