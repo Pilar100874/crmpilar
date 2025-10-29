@@ -200,7 +200,7 @@ export const EmpresaFieldsCRUD = () => {
       const mainFields = [
         { field_id: "company_type", field_label: "Tipo", field_type: "select", field_order: 0, required: true, locked: false, options: { options: ["Pessoa Física", "Pessoa Jurídica"] } },
         { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 1, required: true, locked: false },
-        { field_id: "company_name", field_label: "Razão Social", field_type: "text", field_order: 2, required: true, locked: false },
+        { field_id: "company_name", field_label: "Nome", field_type: "text", field_order: 2, required: true, locked: false },
         { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 3, required: true, locked: false },
         { field_id: "cep", field_label: "CEP", field_type: "text", field_order: 4, required: true, locked: false },
         { field_id: "address", field_label: "Endereço", field_type: "text", field_order: 5, required: true, locked: false },

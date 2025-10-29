@@ -102,18 +102,18 @@ export default function Empresas() {
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
-    { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: true },
-    { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: true },
-    { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
-    { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: true },
-    { id: "cep", label: "CEP", type: "text", category: "company", required: true, locked: true },
+    { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: false },
+    { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: false },
+    { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: false },
+    { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: false },
+    { id: "cep", label: "CEP", type: "text", category: "company", required: true, locked: false },
     { id: "address", label: "Endereço", type: "text", category: "company", required: true, locked: true },
     { id: "city", label: "Cidade", type: "text", category: "company", required: true, locked: true },
     { id: "neighborhood", label: "Bairro", type: "text", category: "company", required: true, locked: true },
     { id: "state", label: "UF", type: "text", category: "company", required: true, locked: true },
     { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: true, locked: true },
-    { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: false },
-    { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: false },
+    { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: true },
+    { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: true },
   ]);
 
   const [contactFields] = useState<CustomField[]>([
@@ -681,6 +681,7 @@ export default function Empresas() {
           <Select
             value={displayValue}
             onValueChange={(value) => handleFieldChange(value)}
+            disabled={field.locked}
           >
             <SelectTrigger className={fieldErrors[field.id] ? "border-red-500" : ""}>
               <SelectValue placeholder="Selecione..." />
@@ -698,6 +699,7 @@ export default function Empresas() {
             value={displayValue}
             onChange={(e) => handleFieldChange(e.target.value)}
             placeholder="..."
+            disabled={field.locked}
             className={fieldErrors[field.id] ? "border-red-500" : ""}
           />
         );
@@ -708,6 +710,7 @@ export default function Empresas() {
               id={field.id}
               checked={!!displayValue}
               onCheckedChange={(checked) => handleFieldChange(checked)}
+              disabled={field.locked}
             />
             <label htmlFor={field.id} className="text-sm cursor-pointer">
               {field.label}
@@ -725,6 +728,7 @@ export default function Empresas() {
               onChange={(e) => handleFieldChange(e.target.value)}
               onBlur={handleFieldBlur}
               required={field.required}
+              disabled={field.locked}
               className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}
             />
             {fieldErrors[field.id] && (
