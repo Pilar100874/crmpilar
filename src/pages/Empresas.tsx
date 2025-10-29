@@ -646,7 +646,7 @@ export default function Empresas() {
       : <ArrowDown className="w-3 h-3 text-primary" />;
   };
 
-  const renderField = (field: CustomField) => {
+  const renderField = (field: CustomField, isDisabled: boolean = false) => {
     const displayValue = formData[field.id] || "";
 
     const handleFieldBlur = () => {
@@ -681,9 +681,9 @@ export default function Empresas() {
           <Select
             value={displayValue}
             onValueChange={(value) => handleFieldChange(value)}
-            disabled={field.locked}
+            disabled={isDisabled}
           >
-            <SelectTrigger className={`${fieldErrors[field.id] ? "border-red-500" : ""} ${field.locked ? "bg-muted/50 cursor-not-allowed" : ""}`}>
+            <SelectTrigger className={`${fieldErrors[field.id] ? "border-red-500" : ""} ${isDisabled ? "bg-muted/50 cursor-not-allowed" : ""}`}>
               <SelectValue placeholder="Selecione..." />
             </SelectTrigger>
             <SelectContent>
@@ -699,8 +699,8 @@ export default function Empresas() {
             value={displayValue}
             onChange={(e) => handleFieldChange(e.target.value)}
             placeholder="..."
-            disabled={field.locked}
-            className={`${fieldErrors[field.id] ? "border-red-500" : ""} ${field.locked ? "bg-muted/50 cursor-not-allowed" : ""}`}
+            disabled={isDisabled}
+            className={`${fieldErrors[field.id] ? "border-red-500" : ""} ${isDisabled ? "bg-muted/50 cursor-not-allowed" : ""}`}
           />
         );
       case "checkbox":
@@ -710,7 +710,7 @@ export default function Empresas() {
               id={field.id}
               checked={!!displayValue}
               onCheckedChange={(checked) => handleFieldChange(checked)}
-              disabled={field.locked}
+              disabled={isDisabled}
             />
             <label htmlFor={field.id} className="text-sm cursor-pointer">
               {field.label}
@@ -728,8 +728,8 @@ export default function Empresas() {
               onChange={(e) => handleFieldChange(e.target.value)}
               onBlur={handleFieldBlur}
               required={field.required}
-              disabled={field.locked}
-              className={`${fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""} ${field.locked ? "bg-muted/50 cursor-not-allowed" : ""}`}
+              disabled={isDisabled}
+              className={`${fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""} ${isDisabled ? "bg-muted/50 cursor-not-allowed" : ""}`}
             />
             {fieldErrors[field.id] && (
               <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
@@ -1065,15 +1065,29 @@ export default function Empresas() {
                 Dados da Empresa
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {companyFields.map((field) => (
-                  <div key={field.id}>
-                    <Label htmlFor={field.id} className="text-xs">
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
-                      {field.locked && <span className="text-xs text-muted-foreground ml-1">(auto)</span>}
-                    </Label>
-                    {renderField(field)}
-                  </div>
-                ))}
+                {companyFields.map((field) => {
+                  // Lógica de liberação progressiva
+                  const tipoSelecionado = !!formData.company_type;
+                  const cnpjPreenchido = !!formData.cpf_cnpj;
+                  
+                  // CPF/CNPJ só habilita após selecionar o tipo
+                  const isDisabled = field.id === "cpf_cnpj" ? !tipoSelecionado : 
+                                     field.id === "company_type" ? false :
+                                     !cnpjPreenchido;
+                  
+                  // Para campos auto-preenchidos, desabilitar sempre
+                  const finalDisabled = field.locked || isDisabled;
+                  
+                  return (
+                    <div key={field.id}>
+                      <Label htmlFor={field.id} className="text-xs">
+                        {field.label} {field.required && <span className="text-red-500">*</span>}
+                        {field.locked && <span className="text-xs text-muted-foreground ml-1">(auto)</span>}
+                      </Label>
+                      {renderField(field, finalDisabled)}
+                    </div>
+                  );
+                })}
               </div>
             </Card>
 
