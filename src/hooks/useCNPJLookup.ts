@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CNPJData {
   cnpj: string;
@@ -58,6 +59,32 @@ export const useCNPJLookup = () => {
         telefoneProcessado = telefoneNumeros.substring(0, 13);
       }
 
+      // Fallback para e-mail/telefone via função backend se BrasilAPI não retornar
+      let email = data.email || '';
+      if (!email || email.trim() === '') {
+        try {
+          const { data: fnData, error } = await supabase.functions.invoke('consultar-cnpj', {
+            body: { cnpj: cleanCNPJ },
+          });
+          if (!error && fnData) {
+            const empresa = fnData?.empresaData || fnData?.empresa || fnData?.data || fnData;
+            if (empresa?.email) {
+              email = empresa.email;
+            }
+            if (!telefoneProcessado && (empresa?.telefone || empresa?.phone)) {
+              let primeiroTelefone2 = String(empresa.telefone || empresa.phone).split(/[,;]/)[0].trim();
+              let telefoneNumeros2 = primeiroTelefone2.replace(/\D/g, '');
+              if (!telefoneNumeros2.startsWith('55')) {
+                telefoneNumeros2 = '55' + telefoneNumeros2;
+              }
+              telefoneProcessado = telefoneNumeros2.substring(0, 13);
+            }
+          }
+        } catch (_) {
+          // Ignorar erros do fallback e prosseguir com os dados disponíveis
+        }
+      }
+
       setLoading(false);
       return {
         cnpj: data.cnpj,
@@ -71,7 +98,7 @@ export const useCNPJLookup = () => {
         uf: data.uf,
         cep: data.cep,
         telefone: telefoneProcessado,
-        email: data.email || '',
+        email,
       };
     } catch (error) {
       toast.error('Erro ao buscar CNPJ. Verifique se está correto.');
