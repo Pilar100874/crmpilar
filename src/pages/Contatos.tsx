@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Filter, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual, validateWhatsApp } from "@/lib/validators";
@@ -91,7 +91,6 @@ interface SearchFilters {
 
 export default function Contatos() {
   const [showForm, setShowForm] = useState(false);
-  const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -1406,17 +1405,8 @@ export default function Contatos() {
             >
               Lista completa
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-              onClick={() => setShowSearchPanel(true)}
-            >
-              <Filter className="w-4 h-4" />
-              Filtros avançados
-            </Button>
             
-            <TableColumnsConfig 
+            <TableColumnsConfig
               columns={tableColumns} 
               onColumnsChange={handleColumnsChange}
             />
@@ -1673,184 +1663,6 @@ export default function Contatos() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-        {/* Search Panel */}
-        <Sheet open={showSearchPanel} onOpenChange={setShowSearchPanel}>
-          <SheetContent side="right" className="w-full sm:max-w-[900px] p-0 overflow-hidden">
-            <div className="flex h-full">
-              {/* Left Sidebar - Filter Lists */}
-              <div className="w-64 border-r border-border bg-muted/30 overflow-y-auto">
-                <div className="p-4">
-                  <div className="mb-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-medium text-primary bg-primary/10 hover:bg-primary/20"
-                    >
-                      Lista completa
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Contatos sem tarefas atribuí...
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Contatos com tarefas atrasa...
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Sem leads vinculado
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-left font-normal text-muted-foreground hover:text-foreground"
-                    >
-                      Exluído
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main Content - Search Fields */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Left Column */}
-                      <div className="space-y-4">
-                      <div>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal h-10 text-muted-foreground"
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          A qualquer hora
-                        </Button>
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Funil de vendas, etapas"
-                          value={searchFilters.funnel}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, funnel: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Usuário responsável"
-                          value={searchFilters.responsible}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, responsible: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Criado por"
-                          value={searchFilters.createdBy}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, createdBy: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Input
-                          placeholder="Modificado por"
-                          value={searchFilters.modifiedBy}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, modifiedBy: e.target.value })}
-                          className="h-10"
-                        />
-                      </div>
-
-                      <div>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal h-10 text-muted-foreground"
-                        >
-                          Tarefas: Todos valores
-                        </Button>
-                      </div>
-                      
-                      {/* Campos customizados searchable */}
-                      {[...contactFields, ...companyFields]
-                        .filter(f => f.searchable && !f.locked)
-                        .map((field) => (
-                          <div key={field.id}>
-                            <Input
-                              placeholder={field.label}
-                              value={searchFilters[field.id as keyof SearchFilters] || ""}
-                              onChange={(e) => setSearchFilters({ ...searchFilters, [field.id]: e.target.value })}
-                              className="h-10"
-                            />
-                          </div>
-                        ))}
-                    </div>
-
-                    {/* Right Column - Tags */}
-                    <div className="space-y-4">
-                      <div className="border border-border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium">TAGS</span>
-                          <Button variant="link" className="h-auto p-0 text-primary text-sm">
-                            Gerenciar
-                          </Button>
-                        </div>
-                        <Input
-                          placeholder="Localizar tags"
-                          value={searchFilters.tags}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, tags: e.target.value })}
-                          className="h-10 mb-3"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Você não tem tags conectadas
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 mt-6 pt-6 border-t">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSearchFilters({
-                          unifiedSearch: "",
-                          dateFilter: "",
-                          funnel: "",
-                          responsible: "",
-                          createdBy: "",
-                          modifiedBy: "",
-                          tasks: "",
-                          tags: "",
-                        });
-                      }}
-                    >
-                      Limpar filtros
-                    </Button>
-                    <Button
-                      onClick={() => setShowSearchPanel(false)}
-                    >
-                      Aplicar
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
       </div>
     );
   }
