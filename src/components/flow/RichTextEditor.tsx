@@ -972,8 +972,9 @@ export const RichTextEditor = ({
       </div>
       
       {/* Formatting Toolbar */}
-      {showFormatting && (
       <div className="flex items-center gap-0.5 flex-wrap">
+        {showFormatting && (
+        <>
         <Button
           type="button"
           variant="ghost"
@@ -1101,6 +1102,8 @@ export const RichTextEditor = ({
         </Button>
         
         <Separator orientation="vertical" className="h-6 mx-1" />
+        </>
+        )}
         
         <Popover open={isOpen} onOpenChange={(o) => { if (o) saveSelection(); setIsOpen(o); }}>
           <PopoverTrigger asChild>
@@ -1178,7 +1181,6 @@ export const RichTextEditor = ({
           </PopoverContent>
         </Popover>
       </div>
-      )}
     </div>
   );
 };
