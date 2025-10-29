@@ -1366,14 +1366,7 @@ export default function Contatos() {
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  setShowConfigPanel(true);
-                  // Automatically open the fields configuration tab
-                  setTimeout(() => {
-                    const fieldsTab = document.querySelector('[value="fields"]') as HTMLElement;
-                    fieldsTab?.click();
-                  }, 100);
-                }} 
+                onClick={() => setShowConfigPanel(true)} 
                 className="gap-2"
               >
                 <Settings2 className="w-4 h-4" />

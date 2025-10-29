@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
@@ -897,6 +897,62 @@ export default function Empresas() {
             </div>
           )}
         </div>
+
+        {/* Panel de Configurações de Campos */}
+        <Sheet open={showConfigPanel} onOpenChange={setShowConfigPanel}>
+          <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="config-description">
+            <SheetHeader>
+              <SheetTitle>Configurações de Campos de Empresa</SheetTitle>
+              <p id="config-description" className="sr-only">Configure campos obrigatórios para cadastro de empresas</p>
+            </SheetHeader>
+            
+            <div className="mt-6">
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-sm font-medium mb-4">Campos Obrigatórios de Empresa</h3>
+                    <div className="space-y-2 bg-muted/30 rounded-lg p-4">
+                      {companyFields.map((field) => (
+                        <div key={field.id} className="flex items-center justify-between p-3 bg-background rounded-md border">
+                          <div className="flex items-center gap-3">
+                            <GripVertical className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-sm">{field.label}</div>
+                              <div className="text-xs text-muted-foreground">
+                                Tipo: {field.type === 'text' ? 'Texto' : 
+                                       field.type === 'email' ? 'E-mail' :
+                                       field.type === 'phone' ? 'Telefone' :
+                                       field.type === 'select' ? 'Seleção' :
+                                       field.type}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={field.required ? "default" : "secondary"} className="text-xs">
+                              {field.required ? "Obrigatório" : "Opcional"}
+                            </Badge>
+                            {field.locked && (
+                              <Badge variant="outline" className="text-xs">
+                                Bloqueado
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">
+                      Os campos listados acima são configurados na tabela <code className="bg-muted px-1 py-0.5 rounded">form_field_configs</code> no banco de dados.
+                      Para alterar quais campos são obrigatórios, vá para <strong>Contatos → Configuração de Campos → Campos de Empresa</strong>.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     );
   }
