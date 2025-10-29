@@ -759,11 +759,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             break;
           }
 
-          // Buscar existente
+          // Buscar existente (comparando CNPJ sem máscara para flexibilidade)
+          const cnpjSemMascara = empresaData.cnpj.replace(/\D/g, '');
           const { data: existente, error: searchError } = await supabase
             .from('empresas')
             .select('id')
-            .eq('cnpj', empresaData.cnpj)
+            .ilike('cnpj', `%${cnpjSemMascara}%`)
             .eq('estabelecimento_id', estabId)
             .maybeSingle();
           if (searchError) {
