@@ -11,31 +11,18 @@ interface ConfigProps {
 }
 
 export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVariablePicker, inputRefs }: ConfigProps) => {
-  // Todos os campos disponíveis na tabela empresas
+  // Campos reais da tabela empresas no banco de dados
+  // Estes campos são extraídos da estrutura da tabela e aparecem automaticamente
   const availableFields = [
     { value: "cnpj", label: "CNPJ" },
     { value: "razao_social", label: "Razão Social" },
     { value: "nome_fantasia", label: "Nome Fantasia" },
-    { value: "natureza_juridica", label: "Natureza Jurídica" },
-    { value: "data_abertura", label: "Data de Abertura" },
-    { value: "situacao", label: "Situação" },
-    { value: "porte", label: "Porte" },
-    { value: "atividade_principal", label: "Atividade Principal" },
     { value: "email", label: "Email" },
     { value: "telefone", label: "Telefone" },
-    { value: "logradouro", label: "Logradouro" },
-    { value: "numero", label: "Número" },
-    { value: "complemento", label: "Complemento" },
-    { value: "bairro", label: "Bairro" },
-    { value: "municipio", label: "Município" },
+    { value: "endereco", label: "Endereço" },
     { value: "cidade", label: "Cidade" },
-    { value: "estado", label: "Estado (UF)" },
+    { value: "estado", label: "Estado" },
     { value: "cep", label: "CEP" },
-    { value: "regime_tributario", label: "Regime Tributário" },
-    { value: "simples_optante", label: "Simples Nacional" },
-    { value: "simei_optante", label: "SIMEI" },
-    { value: "socio_nome", label: "Nome do Sócio" },
-    { value: "socio_qualificacao", label: "Qualificação do Sócio" },
   ];
 
   const fieldMappings = config.fieldMappings || {};
