@@ -63,6 +63,10 @@ export default function Empresas() {
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Estados para confirmação de exclusão
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [empresaToDelete, setEmpresaToDelete] = useState<Empresa | null>(null);
 
   // Gerenciamento de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -208,10 +212,6 @@ export default function Empresas() {
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
   const [criarNovoContato, setCriarNovoContato] = useState(false);
-  
-  // Estados para confirmação de exclusão
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [empresaToDelete, setEmpresaToDelete] = useState<Empresa | null>(null);
 
   // Lookup hooks
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
@@ -792,9 +792,10 @@ export default function Empresas() {
     });
   }, [filteredEmpresas, sortConfig]);
 
-  if (!showForm) {
-    return (
-      <div className="flex-1 flex flex-col h-full bg-background">
+  return (
+    <>
+      {!showForm ? (
+        <div className="flex-1 flex flex-col h-full bg-background">
         <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground">EMPRESA</h1>
@@ -1075,12 +1076,9 @@ export default function Empresas() {
             </div>
           </SheetContent>
         </Sheet>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 flex flex-col h-full bg-background">
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col h-full bg-background">
       <div className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-foreground">
@@ -1312,9 +1310,11 @@ export default function Empresas() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+        </div>
+      )}
 
-      {/* Dialog de confirmação de exclusão */}
+      {/* Dialog de confirmação de exclusão - renderizado em ambas as visualizações */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1333,6 +1333,6 @@ export default function Empresas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }
