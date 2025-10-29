@@ -76,14 +76,14 @@ export default function ProductSearchFilters({ grupos, onFilterChange }: Product
         <div className="space-y-1.5">
           <Label htmlFor="grupo" className="text-xs">Grupo</Label>
           <Select
-            value={filters.grupoId || ""}
-            onValueChange={(value) => handleFilterChange("grupoId", value || undefined)}
+            value={filters.grupoId ?? "all"}
+            onValueChange={(value) => handleFilterChange("grupoId", value === "all" ? undefined : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Todos os grupos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os grupos</SelectItem>
+              <SelectItem value="all">Todos os grupos</SelectItem>
               {grupos.map((grupo) => (
                 <SelectItem key={grupo.id} value={grupo.id}>
                   {grupo.nome}
