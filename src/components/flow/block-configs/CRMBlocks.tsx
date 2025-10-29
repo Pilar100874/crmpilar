@@ -97,7 +97,7 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
                 <VariableInput
                   value={(fieldMappings[field.value] as string) || ""}
                   onChange={(e) => updateFieldMapping(field.value, e.target.value)}
-                  placeholder=""
+                  placeholder="Digite ou use o botão ao lado"
                   onVariableRequest={openVariablePicker ? () => openVariablePicker(`fieldMapping_${field.value}`, (fieldMappings[field.value] as string) || "") : undefined}
                   ref={(el) => {
                     if (inputRefs?.current) {
