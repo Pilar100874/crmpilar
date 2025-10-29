@@ -757,95 +757,144 @@ export default function Empresas() {
               </div>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                  <TableRow>
-                    {tableColumns.filter(col => col.visible).map(column => (
-                      <TableHead 
-                        key={column.id} 
-                        style={{ width: column.width }}
-                        className={column.id !== 'actions' ? 'cursor-pointer select-none' : ''}
-                        onClick={() => column.id !== 'actions' && handleSort(column.id)}
+            <div className="relative">
+              <table className="w-full">
+                <thead className="border-b border-border sticky top-0 bg-background z-10">
+                  <tr>
+                    {tableColumns.filter(col => col.visible).map((column, index) => (
+                      <th
+                        key={column.id}
+                        className={`text-left p-3 font-medium text-sm text-muted-foreground relative ${
+                          index === 0 ? 'sticky left-0 bg-background border-r border-border z-20' : ''
+                        }`}
+                        style={{ width: column.width, minWidth: column.width }}
                       >
-                        <div className="flex items-center gap-2">
-                          {column.label}
-                          {column.id !== 'actions' && getSortIcon(column.id)}
-                        </div>
-                      </TableHead>
-                    ))}
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedEmpresas.map(empresa => (
-                  <TableRow key={empresa.id}>
-                    {tableColumns.filter(col => col.visible).map(column => {
-                      if (column.id === 'actions') {
-                        return (
-                          <TableCell key={column.id}>
+                        <div className="flex items-center justify-between gap-2 pr-4">
+                          <span>{column.label.toUpperCase()}</span>
+                          {column.id !== 'actions' && (
                             <Button
-                              size="icon"
                               variant="ghost"
-                              className="h-8 w-8"
-                              onClick={() => handleEditEmpresa(empresa)}
-                              title="Editar cadastro completo"
+                              size="icon"
+                              className="h-5 w-5 hover:bg-transparent"
+                              onClick={() => handleSort(column.id)}
                             >
-                              <Edit className="w-4 h-4" />
+                              {getSortIcon(column.id)}
                             </Button>
-                          </TableCell>
+                          )}
+                        </div>
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary bg-border/50 z-20"
+                          style={{ touchAction: 'none' }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const startX = e.clientX;
+                            const startWidth = column.width;
+
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                              moveEvent.preventDefault();
+                              const diff = moveEvent.clientX - startX;
+                              const newWidth = Math.max(60, startWidth + diff);
+                              setTableColumns(prev =>
+                                prev.map(col =>
+                                  col.id === column.id ? { ...col, width: newWidth } : col
+                                )
+                              );
+                            };
+
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                              document.body.style.cursor = '';
+                              document.body.style.userSelect = '';
+                            };
+
+                            document.body.style.cursor = 'col-resize';
+                            document.body.style.userSelect = 'none';
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                          }}
+                        />
+                      </th>
+                    ))}
+                    <th className="w-[50px] p-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedEmpresas.map((empresa) => (
+                    <tr key={empresa.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      {tableColumns.filter(col => col.visible).map((column, index) => {
+                        if (column.id === 'actions') {
+                          return (
+                            <td key="actions" className="p-3 sticky left-0 bg-background border-r border-border">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => handleEditEmpresa(empresa)}
+                                title="Editar cadastro completo"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          );
+                        }
+                        
+                        let cellValue = "";
+                        switch (column.id) {
+                          case 'nome_fantasia':
+                            cellValue = empresa.nome_fantasia || "-";
+                            break;
+                          case 'razao_social':
+                            cellValue = empresa.razao_social || "-";
+                            break;
+                          case 'cnpj':
+                            cellValue = empresa.cnpj || "-";
+                            break;
+                          case 'telefone':
+                            cellValue = empresa.telefone || "-";
+                            break;
+                          case 'email':
+                            cellValue = empresa.email || "-";
+                            break;
+                          case 'cidade':
+                            cellValue = empresa.cidade || "-";
+                            break;
+                          case 'estado':
+                            cellValue = empresa.estado || "-";
+                            break;
+                          default:
+                            cellValue = "-";
+                        }
+                        
+                        return (
+                          <td 
+                            key={column.id} 
+                            className={`p-3 ${column.id === 'nome_fantasia' ? 'font-medium' : ''}`}
+                            style={{ width: column.width, maxWidth: column.width }}
+                          >
+                            <span className="truncate block">{cellValue}</span>
+                          </td>
                         );
-                      }
-                      
-                      let cellValue = "";
-                      switch (column.id) {
-                        case 'nome_fantasia':
-                          cellValue = empresa.nome_fantasia || "-";
-                          break;
-                        case 'razao_social':
-                          cellValue = empresa.razao_social || "-";
-                          break;
-                        case 'cnpj':
-                          cellValue = empresa.cnpj || "-";
-                          break;
-                        case 'telefone':
-                          cellValue = empresa.telefone || "-";
-                          break;
-                        case 'email':
-                          cellValue = empresa.email || "-";
-                          break;
-                        case 'cidade':
-                          cellValue = empresa.cidade || "-";
-                          break;
-                        case 'estado':
-                          cellValue = empresa.estado || "-";
-                          break;
-                        default:
-                          cellValue = "-";
-                      }
-                      
-                      return (
-                        <TableCell key={column.id} className={column.id === 'nome_fantasia' ? "font-medium" : ""}>
-                          {cellValue}
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteEmpresa(empresa.id);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      })}
+                      <td className="p-3">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEmpresa(empresa.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
