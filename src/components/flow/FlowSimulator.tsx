@@ -713,6 +713,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             break;
           }
           empresaData.estabelecimento_id = estabId;
+          empresaData.tipo = 'Juridico'; // Sempre definir como Jurídico
 
           // Campos obrigatórios
           let camposObrigatorios: string[] = [];
