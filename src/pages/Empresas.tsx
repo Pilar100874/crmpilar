@@ -104,14 +104,14 @@ export default function Empresas() {
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: false },
     { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: false },
-    { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: false },
-    { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: false },
+    { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
+    { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: true },
     { id: "cep", label: "CEP", type: "text", category: "company", required: true, locked: false },
     { id: "address", label: "Endereço", type: "text", category: "company", required: true, locked: true },
     { id: "city", label: "Cidade", type: "text", category: "company", required: true, locked: true },
     { id: "neighborhood", label: "Bairro", type: "text", category: "company", required: true, locked: true },
     { id: "state", label: "UF", type: "text", category: "company", required: true, locked: true },
-    { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: true, locked: true },
+    { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: false, locked: true },
     { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: true },
     { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: true },
   ]);

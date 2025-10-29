@@ -159,6 +159,7 @@ export const EmpresaFieldsCRUD = () => {
   const [fieldLabel, setFieldLabel] = useState("");
   const [fieldType, setFieldType] = useState("text");
   const [fieldRequired, setFieldRequired] = useState(false);
+  const [fieldLocked, setFieldLocked] = useState(false);
   const [maskType, setMaskType] = useState("none");
   const [customMask, setCustomMask] = useState("");
   const [selectOptions, setSelectOptions] = useState("");
@@ -200,16 +201,16 @@ export const EmpresaFieldsCRUD = () => {
       const mainFields = [
         { field_id: "company_type", field_label: "Tipo", field_type: "select", field_order: 0, required: true, locked: false, options: { options: ["Pessoa Física", "Pessoa Jurídica"] } },
         { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 1, required: true, locked: false },
-        { field_id: "company_name", field_label: "Nome", field_type: "text", field_order: 2, required: true, locked: false },
-        { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 3, required: true, locked: false },
+        { field_id: "company_name", field_label: "Nome", field_type: "text", field_order: 2, required: true, locked: true },
+        { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 3, required: true, locked: true },
         { field_id: "cep", field_label: "CEP", field_type: "text", field_order: 4, required: true, locked: false },
-        { field_id: "address", field_label: "Endereço", field_type: "text", field_order: 5, required: true, locked: false },
-        { field_id: "city", field_label: "Cidade", field_type: "text", field_order: 6, required: true, locked: false },
-        { field_id: "neighborhood", field_label: "Bairro", field_type: "text", field_order: 7, required: true, locked: false },
-        { field_id: "state", field_label: "UF", field_type: "text", field_order: 8, required: true, locked: false },
-        { field_id: "inscricao", field_label: "Inscrição", field_type: "text", field_order: 9, required: true, locked: false },
-        { field_id: "telefone", field_label: "Telefone", field_type: "phone", field_order: 10, required: false, locked: false },
-        { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 11, required: false, locked: false },
+        { field_id: "address", field_label: "Endereço", field_type: "text", field_order: 5, required: true, locked: true },
+        { field_id: "city", field_label: "Cidade", field_type: "text", field_order: 6, required: true, locked: true },
+        { field_id: "neighborhood", field_label: "Bairro", field_type: "text", field_order: 7, required: true, locked: true },
+        { field_id: "state", field_label: "UF", field_type: "text", field_order: 8, required: true, locked: true },
+        { field_id: "inscricao", field_label: "Inscrição", field_type: "text", field_order: 9, required: false, locked: true },
+        { field_id: "telefone", field_label: "Telefone", field_type: "phone", field_order: 10, required: false, locked: true },
+        { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 11, required: false, locked: true },
       ];
 
       console.log('📋 Main fields to check:', mainFields.map(f => f.field_id).join(', '));
@@ -396,7 +397,7 @@ export const EmpresaFieldsCRUD = () => {
           field_type: fieldType,
           field_order: fields.length,
           required: fieldRequired,
-          locked: false,
+          locked: fieldLocked,
           options: Object.keys(options).length > 0 ? options : null,
         });
 
@@ -415,6 +416,7 @@ export const EmpresaFieldsCRUD = () => {
     setFieldLabel("");
     setFieldType("text");
     setFieldRequired(false);
+    setFieldLocked(false);
     setMaskType("none");
     setCustomMask("");
     setSelectOptions("");
@@ -574,12 +576,22 @@ export const EmpresaFieldsCRUD = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={fieldRequired}
-              onCheckedChange={setFieldRequired}
-            />
-            <Label>Campo obrigatório</Label>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={fieldRequired}
+                onCheckedChange={setFieldRequired}
+              />
+              <Label>Campo obrigatório</Label>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={fieldLocked}
+                onCheckedChange={setFieldLocked}
+              />
+              <Label>Auto-preenchido (não pode ser editado manualmente)</Label>
+            </div>
           </div>
 
           <Button onClick={handleAddField} className="w-full">
