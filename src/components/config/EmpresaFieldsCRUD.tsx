@@ -188,7 +188,12 @@ export const EmpresaFieldsCRUD = () => {
   };
 
   const loadOrCreateMainFields = async () => {
-    if (!estabelecimentoId) return;
+    if (!estabelecimentoId) {
+      console.log('❌ No estabelecimento ID in loadOrCreateMainFields');
+      return;
+    }
+
+    console.log('🔄 Starting loadOrCreateMainFields for estabelecimento:', estabelecimentoId);
 
     try {
       // Campos principais que devem sempre existir
@@ -207,13 +212,21 @@ export const EmpresaFieldsCRUD = () => {
         { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 11, required: false, locked: false },
       ];
 
+      console.log('📋 Main fields to check:', mainFields.map(f => f.field_id).join(', '));
+
       // Verificar quais campos principais já existem
-      const { data: existingFields } = await supabase
+      const { data: existingFields, error: selectError } = await supabase
         .from("form_field_configs")
         .select("field_id")
         .eq("form_type", "empresa")
         .eq("estabelecimento_id", estabelecimentoId)
         .in("field_id", mainFields.map(f => f.field_id));
+
+      if (selectError) {
+        console.error('❌ Error checking existing fields:', selectError);
+      } else {
+        console.log('✅ Existing fields:', existingFields?.map(f => f.field_id).join(', ') || 'none');
+      }
 
       const existingFieldIds = new Set(existingFields?.map(f => f.field_id) || []);
 
@@ -233,37 +246,76 @@ export const EmpresaFieldsCRUD = () => {
         }));
 
       if (fieldsToInsert.length > 0) {
+        console.log('📝 Inserting', fieldsToInsert.length, 'fields:', fieldsToInsert.map(f => f.field_id).join(', '));
+        
         const { error } = await supabase
           .from("form_field_configs")
           .insert(fieldsToInsert);
 
         if (error) {
-          console.error("Error creating main fields:", error);
+          console.error("❌ Error creating main fields:", error);
+          toast.error("Erro ao criar campos principais: " + error.message);
         } else {
+          console.log('✅ Fields created successfully');
           loadFields();
         }
+      } else {
+        console.log('✅ All main fields already exist');
       }
     } catch (error) {
-      console.error("Error in loadOrCreateMainFields:", error);
+      console.error("❌ Error in loadOrCreateMainFields:", error);
     }
   };
 
   const loadEstabelecimento = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('❌ No user found');
+        return;
+      }
 
-      const { data: userData } = await supabase
+      console.log('✅ User found:', user.id);
+
+      // Check if user is admin by email pattern
+      const email = user.email || '';
+      const isAdmin = email.includes('admin_') && email.includes('@sistema.local');
+      
+      if (isAdmin) {
+        console.log('✅ Admin user detected, checking for estabelecimento');
+        // Admin user - get any estabelecimento
+        const { data: estabelecimentos } = await supabase
+          .from("estabelecimentos")
+          .select("id")
+          .limit(1);
+
+        if (estabelecimentos && estabelecimentos.length > 0) {
+          console.log('✅ Found estabelecimento:', estabelecimentos[0].id);
+          setEstabelecimentoId(estabelecimentos[0].id);
+        } else {
+          console.log('❌ No estabelecimento found');
+        }
+        return;
+      }
+
+      const { data: userData, error } = await supabase
         .from("usuarios")
         .select("estabelecimento_id")
         .eq("id", user.id)
         .single();
 
+      if (error) {
+        console.error('❌ Error loading user data:', error);
+      }
+
       if (userData) {
+        console.log('✅ User estabelecimento_id:', userData.estabelecimento_id);
         setEstabelecimentoId(userData.estabelecimento_id);
+      } else {
+        console.log('❌ No user data found');
       }
     } catch (error) {
-      console.error("Error loading estabelecimento:", error);
+      console.error("❌ Error loading estabelecimento:", error);
     }
   };
 
