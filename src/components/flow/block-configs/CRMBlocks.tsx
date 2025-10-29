@@ -62,25 +62,28 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
   };
 
   const getDefaultFields = (): FieldConfig[] => [
+    { field_id: "company_type", field_label: "Tipo", required: true },
     { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", required: true },
-    { field_id: "company_name", field_label: "Nome (Razão Social)", required: true },
+    { field_id: "company_name", field_label: "Nome", required: true },
     { field_id: "company_fantasia", field_label: "Nome Fantasia", required: true },
     { field_id: "cep", field_label: "CEP", required: true },
     { field_id: "address", field_label: "Endereço", required: true },
     { field_id: "city", field_label: "Cidade", required: true },
     { field_id: "neighborhood", field_label: "Bairro", required: true },
     { field_id: "state", field_label: "UF", required: true },
-    { field_id: "inscricao", field_label: "Inscrição", required: true },
   ];
 
   // Mapear IDs de campo para nomes da tabela empresas
   const fieldMapping: Record<string, string> = {
+    company_type: "tipo",
     cpf_cnpj: "cnpj",
     company_name: "razao_social",
     company_fantasia: "nome_fantasia",
     address: "endereco",
+    city: "cidade",
     neighborhood: "bairro",
     state: "estado",
+    cep: "cep",
   };
 
   const getDbFieldName = (fieldId: string): string => {

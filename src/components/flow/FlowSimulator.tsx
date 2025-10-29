@@ -692,7 +692,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               if (raw && raw.trim()) {
                 const value = formatValue(field, raw);
                 if ([
-                  'cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep'
+                  'tipo','cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'
                 ].includes(field)) {
                   empresaData[field] = value;
                 } else {
@@ -726,13 +726,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
           if (fieldConfigs && fieldConfigs.length > 0) {
             const mapIds: Record<string, string> = {
+              company_type: 'tipo',
               cpf_cnpj: 'cnpj',
               company_name: 'razao_social',
               company_fantasia: 'nome_fantasia',
               address: 'endereco',
+              city: 'cidade',
               neighborhood: 'bairro',
               state: 'estado',
-              city: 'cidade',
+              cep: 'cep',
             };
             camposObrigatorios = fieldConfigs.map((fc: any) => mapIds[fc.field_id] || fc.field_id);
           }
@@ -741,7 +743,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }
 
           const faltando = camposObrigatorios.filter((campo) => {
-            const isTableField = ['cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep'].includes(campo);
+            const isTableField = ['tipo','cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'].includes(campo);
             return isTableField ? !(empresaData as any)[campo] : !(customFields as any)[campo];
           });
           if (faltando.length > 0) {
