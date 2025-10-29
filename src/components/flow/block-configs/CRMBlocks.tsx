@@ -84,6 +84,7 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
                 nodes={nodes}
                 edges={edges}
                 selectedNode={selectedNode}
+                showFormatting={false}
               />
             </div>
           ))}
@@ -100,6 +101,7 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
           nodes={nodes}
           edges={edges}
           selectedNode={selectedNode}
+          showFormatting={false}
         />
         <p className="text-xs text-muted-foreground">
           Esta variável receberá "Sim" se o CNPJ não existia (cliente novo) ou "Não" se já existia.

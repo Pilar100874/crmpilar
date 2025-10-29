@@ -25,6 +25,7 @@ interface RichTextEditorProps {
   edges?: any[];
   selectedNode?: any;
   className?: string;
+  showFormatting?: boolean;
 }
 
 const getCategoryIcon = (category: string) => {
@@ -341,7 +342,8 @@ export const RichTextEditor = ({
   nodes = [],
   edges = [],
   selectedNode,
-  className
+  className,
+  showFormatting = true
 }: RichTextEditorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -970,6 +972,7 @@ export const RichTextEditor = ({
       </div>
       
       {/* Formatting Toolbar */}
+      {showFormatting && (
       <div className="flex items-center gap-0.5 flex-wrap">
         <Button
           type="button"
@@ -1175,6 +1178,7 @@ export const RichTextEditor = ({
           </PopoverContent>
         </Popover>
       </div>
+      )}
     </div>
   );
 };
