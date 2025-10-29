@@ -48,7 +48,8 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
       if (error) throw error;
 
       if (data && data.length > 0) {
-        setAvailableFields(data);
+        const filtered = data.filter((f: any) => allowedFieldIds.has(f.field_id));
+        setAvailableFields(filtered.length > 0 ? filtered : getDefaultFields());
       } else {
         // Se não tem configuração, usar campos padrão
         setAvailableFields(getDefaultFields());
@@ -71,6 +72,9 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
     { field_id: "neighborhood", field_label: "Bairro", required: true },
     { field_id: "state", field_label: "UF", required: true },
   ];
+
+  // Campos permitidos neste bloco (sem 'company_type')
+  const allowedFieldIds = new Set(["cpf_cnpj","company_name","company_fantasia","cep","address","city","neighborhood","state"]);
 
   // Mapear IDs de campo para nomes da tabela empresas
   const fieldMapping: Record<string, string> = {

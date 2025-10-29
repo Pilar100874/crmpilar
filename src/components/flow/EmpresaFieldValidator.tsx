@@ -126,8 +126,12 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
     
     const results: FieldValidation[] = [];
     
+    // Campos permitidos para validação
+    const allowedFields = new Set(["cnpj","razao_social","nome_fantasia","cep","endereco","cidade","bairro","estado"]);
+    
     // Processar cada campo mapeado
     for (const [fieldName, variableTemplate] of Object.entries(fieldMappings)) {
+      if (!allowedFields.has(fieldName)) continue;
       if (variableTemplate && typeof variableTemplate === 'string') {
         // Interpolar o valor
         const interpolatedValue = interpolateTemplate(variableTemplate, context);
