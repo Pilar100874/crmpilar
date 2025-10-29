@@ -112,6 +112,8 @@ export default function Empresas() {
     { id: "neighborhood", label: "Bairro", type: "text", category: "company", required: true, locked: true },
     { id: "state", label: "UF", type: "text", category: "company", required: true, locked: true },
     { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: true, locked: true },
+    { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: false },
+    { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: false },
   ]);
 
   const [contactFields] = useState<CustomField[]>([
