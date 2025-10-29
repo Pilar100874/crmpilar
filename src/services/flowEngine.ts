@@ -558,8 +558,8 @@ export class FlowEngine {
       variable: 'cep',
       logradouroField: 'logradouro',
       bairroField: 'bairro',
-      cidadeField: 'localidade',
-      estadoField: 'uf',
+      localidadeField: 'localidade',
+      ufField: 'uf',
       complementoField: 'complemento',
     };
 

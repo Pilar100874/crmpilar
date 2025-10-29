@@ -41,7 +41,7 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
       );
       break;
 
-    // Question blocks
+    // Question blocks (básicos - 1 variável)
     case "ask_name":
     case "ask_question":
     case "ask_email":
@@ -50,14 +50,37 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
     case "ask_date":
     case "ask_file":
     case "ask_address":
-    case "ask_url":
-    case "ask_cnpj":
-    case "ask_cep": {
+    case "ask_url": {
+      const defaults: Record<string, string> = {
+        ask_name: "nome",
+        ask_question: "resposta",
+        ask_email: "email",
+        ask_number: "numero",
+        ask_phone: "telefone",
+        ask_date: "data",
+        ask_file: "arquivo",
+        ask_address: "endereco",
+        ask_url: "url",
+      };
+      const varName = (config.variable || defaults[data.type]) as string | undefined;
+      if (varName) {
+        const cleanVarName = String(varName).replace(/^@/, "");
+        outputs.push({
+          name: cleanVarName,
+          description: `Resposta: ${config.question || 'pergunta'}`,
+          type: data.type === "ask_number" ? "number" : 
+                data.type === "ask_date" ? "datetime" : 
+                data.type === "ask_file" ? "file" : "string"
+        });
+      }
+      break;
+    }
+
+    // Perguntar CNPJ (múltiplas variáveis)
+    case "ask_cnpj": {
       const varName = (config.variable || "cnpj") as string | undefined;
       if (varName) {
         const cleanVarName = String(varName).replace(/^@/, "");
-        
-        // Usar campos configurados ou padrões
         const fields = {
           cnpj: config.variable || cleanVarName,
           razaoSocial: config.razaoSocialField || 'razao_social',
@@ -82,7 +105,6 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
           simplesOptante: config.simplesOptanteField || 'simples_optante',
           simeiOptante: config.simeiOptanteField || 'simei_optante',
         };
-        
         outputs.push(
           { name: fields.cnpj, description: "CNPJ digitado", type: "string" },
           { name: fields.razaoSocial, description: "Razão social", type: "string" },
