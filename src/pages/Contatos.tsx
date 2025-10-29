@@ -297,7 +297,7 @@ export default function Contatos() {
           empresas (
             id,
             nome_fantasia,
-            razao_social,
+            nome,
             cnpj
           )
         `)
@@ -408,7 +408,7 @@ export default function Contatos() {
       const termo = buscaEmpresa.toLowerCase();
       const filtradas = empresas.filter(e => 
         e.nome_fantasia?.toLowerCase().includes(termo) ||
-        e.razao_social?.toLowerCase().includes(termo) ||
+        e.nome?.toLowerCase().includes(termo) ||
         e.cnpj?.toLowerCase().includes(termo) ||
         e.custom_fields?.cpf_cnpj?.toLowerCase().includes(termo)
       );
@@ -833,7 +833,7 @@ export default function Contatos() {
         const empresaPayload: any = {
           estabelecimento_id: estabId,
           nome_fantasia: formData.company_fantasia || formData.company_name,
-          razao_social: formData.company_name,
+          nome: formData.company_name,
           cnpj: formData.company_type === "Pessoa Jurídica" ? formData.cpf_cnpj : null,
           telefone: formData.phone || '',
           email: formData.email || '',
@@ -850,7 +850,7 @@ export default function Contatos() {
           if (value !== undefined && value !== '') {
             if (['company_type', 'cpf_cnpj', 'neighborhood', 'inscricao'].includes(field.id)) {
               empresaPayload.custom_fields[field.id] = value;
-            } else if (!['nome_fantasia', 'razao_social', 'cnpj', 'telefone', 'email', 'endereco', 'cidade', 'estado', 'cep', 'company_name', 'company_fantasia', 'address', 'city', 'state'].includes(field.id)) {
+            } else if (!['nome_fantasia', 'nome', 'cnpj', 'telefone', 'email', 'endereco', 'cidade', 'estado', 'cep', 'company_name', 'company_fantasia', 'address', 'city', 'state'].includes(field.id)) {
               empresaPayload.custom_fields[field.id] = value;
             }
           }
@@ -984,7 +984,7 @@ export default function Contatos() {
         empresas:empresa_id (
           id,
           nome_fantasia,
-          razao_social,
+          nome,
           cnpj,
           custom_fields
         )
@@ -1528,7 +1528,7 @@ export default function Contatos() {
                                       empresas:empresa_id (
                                         id,
                                         nome_fantasia,
-                                        razao_social,
+                                        nome,
                                         cnpj,
                                         custom_fields
                                       )
@@ -1539,7 +1539,7 @@ export default function Contatos() {
                                     const empresasFormatadas = vinculos.map(v => ({
                                       id: v.empresas.id,
                                       nome_fantasia: v.empresas.nome_fantasia,
-                                      razao_social: v.empresas.razao_social,
+                                      nome: v.empresas.nome,
                                       cnpj: v.empresas.cnpj,
                                       custom_fields: v.empresas.custom_fields,
                                       is_primary: v.is_primary,
@@ -1766,7 +1766,7 @@ export default function Contatos() {
                               const data: Record<string, any> = {
                                 company_type: empresaCompleta.custom_fields?.company_type || "Pessoa Jurídica",
                                 cpf_cnpj: empresaCompleta.cnpj || "",
-                                company_name: empresaCompleta.razao_social || "",
+                                company_name: empresaCompleta.nome || "",
                                 company_fantasia: empresaCompleta.nome_fantasia || "",
                                 phone: empresaCompleta.telefone || "",
                                 email: empresaCompleta.email || "",
@@ -1817,7 +1817,7 @@ export default function Contatos() {
                         const filtradas = empresas.filter(emp => 
                           !empresasVinculadas.some(ev => ev.id === emp.id) &&
                           (emp.nome_fantasia?.toLowerCase().includes(termo) ||
-                          emp.razao_social?.toLowerCase().includes(termo) ||
+                          emp.nome?.toLowerCase().includes(termo) ||
                           emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
                           emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, '')))
                         );

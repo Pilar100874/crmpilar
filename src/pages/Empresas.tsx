@@ -37,7 +37,7 @@ interface CustomField {
 interface Empresa {
   id: string;
   nome_fantasia: string;
-  razao_social: string | null;
+  nome: string | null;
   cnpj: string | null;
   telefone: string | null;
   email: string | null;
@@ -80,7 +80,7 @@ export default function Empresas() {
     return [
       { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
       { id: "nome_fantasia", label: "Nome Fantasia", visible: true, width: 250, locked: true },
-      { id: "razao_social", label: "Razão Social", visible: true, width: 250 },
+      { id: "nome", label: "Nome", visible: true, width: 250 },
       { id: "cnpj", label: "CNPJ", visible: true, width: 180 },
       { id: "telefone", label: "Telefone", visible: true, width: 150 },
       { id: "email", label: "E-mail", visible: true, width: 250 },
@@ -286,9 +286,9 @@ export default function Empresas() {
     const data: Record<string, any> = {
       company_type: empresa.custom_fields?.company_type || "Pessoa Jurídica",
       cpf_cnpj: empresa.cnpj || "",
-      company_name: empresa.razao_social || "",
+      company_name: empresa.nome || "",
       company_fantasia: empresa.nome_fantasia || "",
-      phone: empresa.telefone || "",
+      telefone: empresa.telefone || "",
       email: empresa.email || "",
       cep: empresa.cep || "",
       address: empresa.endereco || "",
@@ -514,9 +514,9 @@ export default function Empresas() {
       const empresaPayload: any = {
         estabelecimento_id: estabId,
         nome_fantasia: formData.company_fantasia,
-        razao_social: formData.company_name,
+        nome: formData.company_name,
         cnpj: formData.company_type === "Pessoa Jurídica" ? formData.cpf_cnpj : null,
-        telefone: formData.phone || null,
+        telefone: formData.telefone || null,
         email: formData.email || null,
         endereco: formData.address,
         cidade: formData.city,
@@ -683,7 +683,7 @@ export default function Empresas() {
             onValueChange={(value) => handleFieldChange(value)}
             disabled={field.locked}
           >
-            <SelectTrigger className={fieldErrors[field.id] ? "border-red-500" : ""}>
+            <SelectTrigger className={`${fieldErrors[field.id] ? "border-red-500" : ""} ${field.locked ? "bg-muted/50 cursor-not-allowed" : ""}`}>
               <SelectValue placeholder="Selecione..." />
             </SelectTrigger>
             <SelectContent>
@@ -700,7 +700,7 @@ export default function Empresas() {
             onChange={(e) => handleFieldChange(e.target.value)}
             placeholder="..."
             disabled={field.locked}
-            className={fieldErrors[field.id] ? "border-red-500" : ""}
+            className={`${fieldErrors[field.id] ? "border-red-500" : ""} ${field.locked ? "bg-muted/50 cursor-not-allowed" : ""}`}
           />
         );
       case "checkbox":
@@ -729,7 +729,7 @@ export default function Empresas() {
               onBlur={handleFieldBlur}
               required={field.required}
               disabled={field.locked}
-              className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}
+              className={`${fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""} ${field.locked ? "bg-muted/50 cursor-not-allowed" : ""}`}
             />
             {fieldErrors[field.id] && (
               <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
@@ -744,7 +744,7 @@ export default function Empresas() {
 
   const filteredEmpresas = empresas.filter(e =>
     e.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.cnpj?.includes(searchTerm) ||
     e.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -761,9 +761,9 @@ export default function Empresas() {
           aValue = a.nome_fantasia || '';
           bValue = b.nome_fantasia || '';
           break;
-        case 'razao_social':
-          aValue = a.razao_social || '';
-          bValue = b.razao_social || '';
+        case 'nome':
+          aValue = a.nome || '';
+          bValue = b.nome || '';
           break;
         case 'cnpj':
           aValue = a.cnpj || '';
@@ -957,8 +957,8 @@ export default function Empresas() {
                           case 'nome_fantasia':
                             cellValue = empresa.nome_fantasia || "-";
                             break;
-                          case 'razao_social':
-                            cellValue = empresa.razao_social || "-";
+                          case 'nome':
+                            cellValue = empresa.nome || "-";
                             break;
                           case 'cnpj':
                             cellValue = empresa.cnpj || "-";
@@ -1068,7 +1068,8 @@ export default function Empresas() {
                 {companyFields.map((field) => (
                   <div key={field.id}>
                     <Label htmlFor={field.id} className="text-xs">
-                      {field.label} {field.required && '*'}
+                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                      {field.locked && <span className="text-xs text-muted-foreground ml-1">(auto)</span>}
                     </Label>
                     {renderField(field)}
                   </div>
@@ -1238,7 +1239,8 @@ export default function Empresas() {
                   {contactFields.map((field) => (
                     <div key={field.id}>
                       <Label htmlFor={field.id} className="text-xs">
-                        {field.label} {field.required && '*'}
+                        {field.label} {field.required && <span className="text-red-500">*</span>}
+                        {field.locked && <span className="text-xs text-muted-foreground ml-1">(auto)</span>}
                       </Label>
                       {renderField(field)}
                     </div>
@@ -1267,7 +1269,7 @@ export default function Empresas() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a empresa <strong>{empresaToDelete?.nome_fantasia || empresaToDelete?.razao_social}</strong>?
+              Tem certeza que deseja excluir a empresa <strong>{empresaToDelete?.nome_fantasia || empresaToDelete?.nome}</strong>?
               {"\n\n"}
               Esta ação não poderá ser desfeita.
             </AlertDialogDescription>

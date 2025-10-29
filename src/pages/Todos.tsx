@@ -20,7 +20,7 @@ interface Contato {
 interface Empresa {
   id: string;
   nome_fantasia: string;
-  razao_social: string | null;
+  nome: string | null;
   cnpj: string | null;
   telefone: string | null;
   email: string | null;
@@ -70,7 +70,7 @@ export default function Todos() {
 
   const filteredEmpresas = empresas.filter(e =>
     e.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.cnpj?.includes(searchTerm) ||
     e.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -228,7 +228,7 @@ export default function Todos() {
                 {filteredEmpresas.map(empresa => (
                   <TableRow key={empresa.id}>
                     <TableCell className="font-medium">{empresa.nome_fantasia}</TableCell>
-                    <TableCell>{empresa.razao_social || "-"}</TableCell>
+                    <TableCell>{empresa.nome || "-"}</TableCell>
                     <TableCell>{empresa.cnpj || "-"}</TableCell>
                     <TableCell>{empresa.email || "-"}</TableCell>
                     <TableCell>{empresa.telefone || "-"}</TableCell>
