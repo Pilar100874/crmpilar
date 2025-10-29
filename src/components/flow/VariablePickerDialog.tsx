@@ -81,54 +81,39 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
       const varName = (config.variable || "cnpj") as string | undefined;
       if (varName) {
         const cleanVarName = String(varName).replace(/^@/, "");
-        const fields = {
-          cnpj: config.variable || cleanVarName,
-          razaoSocial: config.razaoSocialField || 'razao_social',
-          nomeFantasia: config.nomeFantasiaField || 'nome_fantasia',
-          naturezaJuridica: config.naturezaJuridicaField || 'natureza_juridica',
-          dataAbertura: config.dataAberturaField || 'data_abertura',
-          situacao: config.situacaoField || 'situacao',
-          porte: config.porteField || 'porte',
-          atividadePrincipal: config.atividadePrincipalField || 'atividade_principal',
-          logradouro: config.logradouroField || 'logradouro',
-          numero: config.numeroField || 'numero',
-          complemento: config.complementoField || 'complemento',
-          bairro: config.bairroField || 'bairro',
-          municipio: config.municipioField || 'municipio',
-          uf: config.ufField || 'uf',
-          cep: config.cepField || 'cep',
-          telefone: config.telefoneField || 'telefone',
-          email: config.emailField || 'email',
-          socioNome: config.socioNomeField || 'socio_nome',
-          socioQualificacao: config.socioQualificacaoField || 'socio_qualificacao',
-          regimeTributario: config.regimeTributarioField || 'regime_tributario',
-          simplesOptante: config.simplesOptanteField || 'simples_optante',
-          simeiOptante: config.simeiOptanteField || 'simei_optante',
+        // Sempre incluir a variável principal do CNPJ
+        outputs.push({ name: cleanVarName, description: "CNPJ digitado", type: "string" });
+
+        // Incluir dinamicamente todos os campos configurados (terminam com 'Field')
+        const entries = Object.entries(config).filter(([k, v]) => k.endsWith('Field') && typeof v === 'string' && v);
+        const labelMap: Record<string, string> = {
+          razaoSocialField: "Razão social",
+          nomeFantasiaField: "Nome fantasia",
+          naturezaJuridicaField: "Natureza jurídica",
+          dataAberturaField: "Data de abertura",
+          situacaoField: "Situação cadastral",
+          porteField: "Porte da empresa",
+          atividadePrincipalField: "Atividade principal",
+          logradouroField: "Logradouro",
+          numeroField: "Número",
+          complementoField: "Complemento",
+          bairroField: "Bairro",
+          municipioField: "Município",
+          ufField: "UF",
+          cepField: "CEP",
+          telefoneField: "Telefone",
+          emailField: "E-mail",
+          socioNomeField: "Nome do sócio principal",
+          socioQualificacaoField: "Qualificação do sócio",
+          regimeTributarioField: "Regime tributário",
+          simplesOptanteField: "Optante Simples Nacional",
+          simeiOptanteField: "Optante SIMEI",
         };
-        outputs.push(
-          { name: fields.cnpj, description: "CNPJ digitado", type: "string" },
-          { name: fields.razaoSocial, description: "Razão social", type: "string" },
-          { name: fields.nomeFantasia, description: "Nome fantasia", type: "string" },
-          { name: fields.naturezaJuridica, description: "Natureza jurídica", type: "string" },
-          { name: fields.dataAbertura, description: "Data de abertura", type: "string" },
-          { name: fields.situacao, description: "Situação cadastral", type: "string" },
-          { name: fields.porte, description: "Porte da empresa", type: "string" },
-          { name: fields.atividadePrincipal, description: "Atividade principal", type: "string" },
-          { name: fields.logradouro, description: "Logradouro", type: "string" },
-          { name: fields.numero, description: "Número", type: "string" },
-          { name: fields.complemento, description: "Complemento", type: "string" },
-          { name: fields.bairro, description: "Bairro", type: "string" },
-          { name: fields.municipio, description: "Município", type: "string" },
-          { name: fields.uf, description: "UF", type: "string" },
-          { name: fields.cep, description: "CEP", type: "string" },
-          { name: fields.telefone, description: "Telefone", type: "string" },
-          { name: fields.email, description: "E-mail", type: "string" },
-          { name: fields.socioNome, description: "Nome do sócio principal", type: "string" },
-          { name: fields.socioQualificacao, description: "Qualificação do sócio", type: "string" },
-          { name: fields.regimeTributario, description: "Regime tributário", type: "string" },
-          { name: fields.simplesOptante, description: "Optante Simples Nacional", type: "string" },
-          { name: fields.simeiOptante, description: "Optante SIMEI", type: "string" }
-        );
+        entries.forEach(([key, varName]) => {
+          const name = String(varName).replace(/^@/, "");
+          const description = labelMap[key] || name;
+          outputs.push({ name, description, type: "string" });
+        });
       }
       break;
     }
