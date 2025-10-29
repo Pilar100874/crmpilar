@@ -12,20 +12,19 @@ interface ConfigProps {
 }
 
 export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
-  // Campos disponíveis da tabela empresas + custom_fields
+  // Campos disponíveis no cadastro de empresas (mesmos da tela de cadastro)
   const availableFields = [
-    { value: "cnpj", label: "CNPJ", required: true },
-    { value: "razao_social", label: "Razão Social", required: true },
+    { value: "cnpj", label: "CPF/CNPJ", required: true },
+    { value: "razao_social", label: "Nome (Razão Social)", required: true },
     { value: "nome_fantasia", label: "Nome Fantasia", required: true },
-    { value: "email", label: "Email", required: false },
-    { value: "telefone", label: "Telefone", required: false },
-    { value: "endereco", label: "Endereço", required: false },
-    { value: "bairro", label: "Bairro", required: false },
-    { value: "cidade", label: "Cidade", required: false },
-    { value: "estado", label: "Estado", required: false },
     { value: "cep", label: "CEP", required: false },
-    { value: "inscricao_estadual", label: "Inscrição Estadual", required: false },
-    { value: "inscricao_municipal", label: "Inscrição Municipal", required: false },
+    { value: "endereco", label: "Endereço", required: false },
+    { value: "cidade", label: "Cidade", required: false },
+    { value: "bairro", label: "Bairro", required: false },
+    { value: "estado", label: "UF", required: false },
+    { value: "inscricao", label: "Inscrição", required: false },
+    { value: "telefone", label: "Telefone", required: false },
+    { value: "email", label: "Email", required: false },
   ];
 
   const fieldMappings = config.fieldMappings || {};

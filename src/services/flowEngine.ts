@@ -600,11 +600,11 @@ export class FlowEngine {
         // Interpolar as variáveis no template (ex: "{{cnpj}}")
         const value = this.interpolate(variableTemplate);
         if (value && value.trim()) {
-          // Campos que vão direto na tabela
+          // Campos que vão direto na tabela empresas
           if (['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(field)) {
             empresaData[field] = value;
           } else {
-            // Outros campos vão para custom_fields
+            // Campos como bairro, inscricao vão para custom_fields
             customFields[field] = value;
           }
         }
