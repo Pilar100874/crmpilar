@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import { Orcamento, OrcamentoEtapa } from "@/types/orcamento";
-import { Plus, Search, Filter, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Filter, LayoutGrid, List, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,6 +20,7 @@ import OrcamentoBoard from "@/components/orcamento/OrcamentoBoard";
 import OrcamentoListView from "@/components/orcamento/OrcamentoListView";
 import NewOrcamentoDialog from "@/components/orcamento/NewOrcamentoDialog";
 import OrcamentoDetailsDialog from "@/components/orcamento/OrcamentoDetailsDialog";
+import POSView from "@/components/orcamento/POSView";
 
 const ETAPAS_CONFIG = [
   { id: 'orcamento', title: 'Orçamento', color: '#3b82f6' },
@@ -35,7 +36,8 @@ export default function Orcamentos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterVendedor, setFilterVendedor] = useState<string>("");
   const [filterEtapa, setFilterEtapa] = useState<string>("");
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'pos'>('kanban');
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
 
@@ -46,12 +48,14 @@ export default function Orcamentos() {
   const loadOrcamentos = async () => {
     try {
       setLoading(true);
-      const estabelecimentoId = await getEstabelecimentoId();
+      const estabId = await getEstabelecimentoId();
       
-      if (!estabelecimentoId) {
+      if (!estabId) {
         toast.error("Selecione um estabelecimento");
         return;
       }
+
+      setEstabelecimentoId(estabId);
 
       const { data, error } = await supabase
         .from('orcamentos')
@@ -65,7 +69,7 @@ export default function Orcamentos() {
             produto:produtos(id, nome, foto_url)
           )
         `)
-        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('estabelecimento_id', estabId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -193,6 +197,7 @@ export default function Orcamentos() {
                 variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('kanban')}
+                title="Kanban"
               >
                 <LayoutGrid className="w-4 h-4" />
               </Button>
@@ -200,8 +205,17 @@ export default function Orcamentos() {
                 variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('list')}
+                title="Lista"
               >
                 <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'pos' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('pos')}
+                title="POS"
+              >
+                <Monitor className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -238,20 +252,30 @@ export default function Orcamentos() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
-        {viewMode === 'kanban' ? (
-          <OrcamentoBoard
-            columns={columns}
-            onOrcamentoMove={handleOrcamentoMove}
-            onOrcamentoClick={handleOrcamentoClick}
-          />
-        ) : (
-          <OrcamentoListView
-            orcamentos={flatOrcamentos}
-            onOrcamentoClick={handleOrcamentoClick}
-          />
-        )}
-      </div>
+      {viewMode === 'pos' ? (
+        <POSView 
+          estabelecimentoId={estabelecimentoId}
+          onClose={() => {
+            setViewMode('kanban');
+            loadOrcamentos();
+          }}
+        />
+      ) : (
+        <div className="flex-1 overflow-hidden">
+          {viewMode === 'kanban' ? (
+            <OrcamentoBoard
+              columns={columns}
+              onOrcamentoMove={handleOrcamentoMove}
+              onOrcamentoClick={handleOrcamentoClick}
+            />
+          ) : (
+            <OrcamentoListView
+              orcamentos={flatOrcamentos}
+              onOrcamentoClick={handleOrcamentoClick}
+            />
+          )}
+        </div>
+      )}
 
       {/* Dialogs */}
       <NewOrcamentoDialog
