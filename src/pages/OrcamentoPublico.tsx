@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, XCircle, Edit2, DollarSign } from "lucide-react";
+import { CheckCircle, XCircle, Edit2, DollarSign, Package, User, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function OrcamentoPublico() {
   const { token } = useParams();
@@ -210,228 +211,294 @@ export default function OrcamentoPublico() {
   const isRejeitado = orcamento.etapa === 'perdido';
 
   return (
-    <div className="min-h-screen bg-slate-900 flex">
-      {/* Lado Esquerdo - Itens */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                Orçamento #{orcamento.id.slice(0, 8)}
-              </h1>
-              <p className="text-sm text-slate-400 mt-1">
-                {format(new Date(orcamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-              </p>
-            </div>
-            <Badge 
-              className={
-                isAprovado 
-                  ? "bg-green-600 text-white" 
-                  : isRejeitado 
-                  ? "bg-red-600 text-white" 
-                  : "bg-blue-600 text-white"
-              }
-            >
-              {orcamento.etapa}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Itens do Orçamento */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className="space-y-3">
-            {orcamento.itens?.map((item: any) => (
-              <div key={item.id} className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-slate-700 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.produto?.foto_url ? (
-                      <img 
-                        src={item.produto.foto_url} 
-                        alt={item.produto.nome}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-slate-400 text-xl">{item.produto?.nome?.[0]}</span>
-                    )}
+    <div className="flex flex-col h-screen bg-slate-900">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Lado Esquerdo - Itens */}
+        <div className="flex-1 flex flex-col bg-slate-900">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  Orçamento #{orcamento.id.slice(0, 8)}
+                </h1>
+                <div className="flex items-center gap-4 mt-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    {format(new Date(orcamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-white text-base">{item.produto?.nome}</h4>
-                    <div className="flex gap-4 mt-1 text-sm text-slate-400">
-                      <span>Qtd: {item.quantidade}</span>
-                      <span>
-                        Unit: {new Intl.NumberFormat('pt-BR', {
+                  {orcamento.data_visualizacao && (
+                    <span className="text-xs">
+                      Visualizado em {format(new Date(orcamento.data_visualizacao), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Badge 
+                className={
+                  isAprovado 
+                    ? "bg-green-600 text-white" 
+                    : isRejeitado 
+                    ? "bg-red-600 text-white" 
+                    : "bg-blue-600 text-white"
+                }
+              >
+                {orcamento.etapa}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Itens do Orçamento */}
+          <ScrollArea className="flex-1 p-6">
+            <div className="space-y-3">
+              {orcamento.itens?.map((item: any) => (
+                <div key={item.id} className="bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-slate-600 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 bg-slate-700 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {item.produto?.foto_url ? (
+                        <img 
+                          src={item.produto.foto_url} 
+                          alt={item.produto.nome}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Package className="w-8 h-8 text-slate-400" />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-white text-base mb-2">{item.produto?.nome}</h4>
+                      <div className="flex gap-4 text-sm text-slate-400">
+                        <span>Qtd: <span className="text-white font-medium">{item.quantidade}</span></span>
+                        <span>
+                          Unit: <span className="text-white font-medium">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(item.preco_unitario)}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-xs text-slate-400 mb-1">Subtotal</div>
+                      <div className="text-xl font-bold text-blue-400">
+                        {new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
                           currency: 'BRL'
-                        }).format(item.preco_unitario)}
-                      </span>
+                        }).format(item.subtotal)}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-white">
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL'
-                      }).format(item.subtotal)}
+                  {editMode && (
+                    <div className="mt-4 pt-4 border-t border-slate-700">
+                      <Label htmlFor={`preco-${item.id}`} className="text-slate-300 text-sm font-medium">
+                        Sugerir novo preço unitário
+                      </Label>
+                      <Input
+                        id={`preco-${item.id}`}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder={`Atual: ${item.preco_unitario}`}
+                        value={precosSugeridos[item.id] || ''}
+                        onChange={(e) => setPrecosSugeridos({
+                          ...precosSugeridos,
+                          [item.id]: Number(e.target.value)
+                        })}
+                        className="mt-2 bg-slate-700 border-slate-600 text-white h-11"
+                      />
                     </div>
-                  </div>
+                  )}
                 </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
 
-                {editMode && (
-                  <div className="mt-3 pt-3 border-t border-slate-700">
-                    <Label htmlFor={`preco-${item.id}`} className="text-slate-300 text-sm">
-                      Sugerir novo preço unitário
-                    </Label>
-                    <Input
-                      id={`preco-${item.id}`}
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder={`Atual: ${item.preco_unitario}`}
-                      value={precosSugeridos[item.id] || ''}
-                      onChange={(e) => setPrecosSugeridos({
-                        ...precosSugeridos,
-                        [item.id]: Number(e.target.value)
-                      })}
-                      className="mt-2 bg-slate-700 border-slate-600 text-white"
-                    />
-                  </div>
-                )}
+        {/* Lado Direito - Informações e Ações */}
+        <div className="w-[420px] bg-slate-800 border-l border-slate-700 flex flex-col overflow-hidden">
+        {/* Informações do Cliente e Vendedor */}
+        <ScrollArea className="flex-1">
+          <div className="p-6 space-y-6">
+            <div className="bg-slate-700 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Informações
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-slate-400 text-xs">Cliente</Label>
+                  <p className="font-semibold text-white text-base mt-1">{orcamento.cliente?.nome}</p>
+                  {orcamento.cliente?.email && (
+                    <p className="text-sm text-slate-400">{orcamento.cliente.email}</p>
+                  )}
+                </div>
+                <Separator className="bg-slate-600" />
+                <div>
+                  <Label className="text-slate-400 text-xs">Vendedor</Label>
+                  <p className="font-semibold text-white text-base mt-1">{orcamento.vendedor?.nome}</p>
+                  {orcamento.vendedor?.email && (
+                    <p className="text-sm text-slate-400">{orcamento.vendedor.email}</p>
+                  )}
+                </div>
               </div>
-            ))}
+            </div>
+
+            {orcamento.observacoes && (
+              <div className="bg-slate-700 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-white mb-2">Observações</h3>
+                <p className="text-sm text-slate-300">{orcamento.observacoes}</p>
+              </div>
+            )}
+
+            <div className="bg-slate-700 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-white mb-3">Resumo</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Total de Itens:</span>
+                  <span className="text-white font-medium">{orcamento.itens?.length || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Quantidade Total:</span>
+                  <span className="text-white font-medium">
+                    {orcamento.itens?.reduce((sum: number, item: any) => sum + item.quantidade, 0) || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Área de Edição (quando ativo) */}
+            {editMode && (
+              <div className="bg-slate-700 rounded-lg p-4">
+                <Label htmlFor="observacoes" className="text-white font-semibold text-sm">
+                  Observações sobre sua proposta
+                </Label>
+                <Textarea
+                  id="observacoes"
+                  placeholder="Explique porque você está sugerindo estes preços..."
+                  value={observacoes}
+                  onChange={(e) => setObservacoes(e.target.value)}
+                  rows={4}
+                  className="mt-2 bg-slate-600 border-slate-500 text-white placeholder:text-slate-400"
+                />
+              </div>
+            )}
+
+            {/* Status de Aprovado */}
+            {isAprovado && (
+              <div className="bg-green-900/20 border border-green-800 rounded-lg p-4 text-center">
+                <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-400" />
+                <h3 className="text-lg font-semibold text-white">Orçamento Confirmado!</h3>
+                <p className="text-slate-400 text-sm mt-1">
+                  Obrigado pela confirmação. Em breve entraremos em contato.
+                </p>
+              </div>
+            )}
+
+            {/* Status de Rejeitado */}
+            {isRejeitado && (
+              <div className="bg-red-900/20 border border-red-800 rounded-lg p-4 text-center">
+                <XCircle className="w-12 h-12 mx-auto mb-2 text-red-400" />
+                <h3 className="text-lg font-semibold text-white">Orçamento Rejeitado</h3>
+                <p className="text-slate-400 text-sm mt-1">
+                  Obrigado pelo feedback. Ficamos à disposição para futuras cotações.
+                </p>
+              </div>
+            )}
           </div>
+        </ScrollArea>
+
+        {/* Botões de Ação Fixos */}
+        {!isAprovado && !isRejeitado && (
+          <div className="border-t border-slate-700 p-4 bg-slate-800">
+            {editMode ? (
+              <div className="space-y-2">
+                <Button 
+                  onClick={handleSugerirPrecos} 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 font-semibold"
+                >
+                  <DollarSign className="w-5 h-5 mr-2" />
+                  Enviar Proposta
+                </Button>
+                <Button 
+                  onClick={() => setEditMode(false)}
+                  variant="outline"
+                  className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Button 
+                  onClick={handleConfirmar}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white h-12 font-semibold"
+                >
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Confirmar Orçamento
+                </Button>
+                <Button 
+                  onClick={() => setEditMode(true)}
+                  variant="outline"
+                  className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
+                >
+                  <Edit2 className="w-5 h-5 mr-2" />
+                  Sugerir Preços
+                </Button>
+                <Button 
+                  onClick={handleRejeitar}
+                  variant="outline"
+                  className="w-full bg-red-900/20 border-red-800 text-red-400 hover:bg-red-900/30 h-12"
+                >
+                  <XCircle className="w-5 h-5 mr-2" />
+                  Rejeitar
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         </div>
       </div>
 
-      {/* Lado Direito - Informações e Ações */}
-      <div className="w-[420px] bg-slate-800 border-l border-slate-700 flex flex-col">
-        {/* Informações do Cliente e Vendedor */}
-        <div className="p-6 border-b border-slate-700 space-y-4">
-          <div>
-            <Label className="text-slate-400 text-sm">Cliente</Label>
-            <p className="font-semibold text-white text-base mt-1">{orcamento.cliente?.nome}</p>
+      {/* Barra de Total Inferior */}
+      <div className="bg-slate-800 border-t border-slate-700 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 text-slate-400">
+            <User className="w-5 h-5" />
+            <span className="text-sm">{orcamento.cliente?.nome}</span>
           </div>
+          <div className="h-8 w-px bg-slate-700" />
           <div>
-            <Label className="text-slate-400 text-sm">Vendedor</Label>
-            <p className="font-semibold text-white text-base mt-1">{orcamento.vendedor?.nome}</p>
-          </div>
-          {orcamento.observacoes && (
-            <div>
-              <Label className="text-slate-400 text-sm">Observações</Label>
-              <p className="text-sm text-slate-300 mt-1">{orcamento.observacoes}</p>
+            <div className="text-slate-400 text-xs mb-1">Valor Total</div>
+            <div className="text-white font-bold text-3xl">
+              {new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              }).format(orcamento.valor_total || 0)}
             </div>
-          )}
+          </div>
         </div>
-
-        {/* Área de Edição (quando ativo) */}
-        {editMode && (
-          <div className="p-6 border-b border-slate-700">
-            <Label htmlFor="observacoes" className="text-slate-300">
-              Observações sobre sua proposta
-            </Label>
-            <Textarea
-              id="observacoes"
-              placeholder="Explique porque você está sugerindo estes preços..."
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              rows={4}
-              className="mt-2 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
-            />
-          </div>
-        )}
-
-        {/* Resumo e Total */}
-        <div className="flex-1"></div>
         
-        <div className="p-6 border-t border-slate-700 space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-slate-300">
-              <span className="text-sm">Itens:</span>
-              <span className="text-sm">{orcamento.itens?.length || 0}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-white">Valor Total:</span>
-              <span className="font-bold text-white text-2xl">
-                {new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                }).format(orcamento.valor_total || 0)}
-              </span>
-            </div>
-          </div>
-
-          {/* Botões de Ação */}
-          {!isAprovado && !isRejeitado && (
-            <div className="space-y-3">
-              {editMode ? (
-                <>
-                  <Button 
-                    onClick={handleSugerirPrecos} 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
-                  >
-                    <DollarSign className="w-5 h-5 mr-2" />
-                    Enviar Proposta
-                  </Button>
-                  <Button 
-                    onClick={() => setEditMode(false)}
-                    variant="outline"
-                    className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
-                  >
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    onClick={handleConfirmar}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
-                  >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Confirmar Orçamento
-                  </Button>
-                  <Button 
-                    onClick={() => setEditMode(true)}
-                    variant="outline"
-                    className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
-                  >
-                    <Edit2 className="w-5 h-5 mr-2" />
-                    Sugerir Preços
-                  </Button>
-                  <Button 
-                    onClick={handleRejeitar}
-                    variant="outline"
-                    className="w-full bg-red-900/20 border-red-800 text-red-400 hover:bg-red-900/30 h-12"
-                  >
-                    <XCircle className="w-5 h-5 mr-2" />
-                    Rejeitar
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Status de Aprovado */}
+        <div className="flex items-center gap-3">
           {isAprovado && (
-            <div className="bg-green-900/20 border border-green-800 rounded-lg p-4 text-center">
-              <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-400" />
-              <h3 className="text-lg font-semibold text-white">Orçamento Confirmado!</h3>
-              <p className="text-slate-400 text-sm mt-1">
-                Obrigado pela confirmação. Em breve entraremos em contato.
-              </p>
-            </div>
+            <Badge className="bg-green-600 text-white px-4 py-2 text-sm">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Confirmado
+            </Badge>
           )}
-
-          {/* Status de Rejeitado */}
           {isRejeitado && (
-            <div className="bg-red-900/20 border border-red-800 rounded-lg p-4 text-center">
-              <XCircle className="w-12 h-12 mx-auto mb-2 text-red-400" />
-              <h3 className="text-lg font-semibold text-white">Orçamento Rejeitado</h3>
-              <p className="text-slate-400 text-sm mt-1">
-                Obrigado pelo feedback. Ficamos à disposição para futuras cotações.
-              </p>
-            </div>
+            <Badge className="bg-red-600 text-white px-4 py-2 text-sm">
+              <XCircle className="w-4 h-4 mr-2" />
+              Rejeitado
+            </Badge>
+          )}
+          {!isAprovado && !isRejeitado && (
+            <Badge className="bg-blue-600 text-white px-4 py-2 text-sm">
+              Aguardando Resposta
+            </Badge>
           )}
         </div>
       </div>
