@@ -105,35 +105,26 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
     return <div className="p-4 text-center text-muted-foreground">Carregando configuração de campos...</div>;
   }
 
+  // Garantir que validationMode esteja sempre como "create_or_update"
+  if (config.validationMode !== "create_or_update") {
+    handleConfigChange({ validationMode: "create_or_update" });
+  }
+
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Modo de operação</Label>
-        <Select
-          value={config.validationMode || "create_or_update"}
-          onValueChange={(value) => handleConfigChange({ validationMode: value })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="create_or_update">Criar ou Atualizar</SelectItem>
-            <SelectItem value="create_only">Apenas Criar</SelectItem>
-            <SelectItem value="validate_only">Apenas Validar</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {config.validationMode !== "validate_only" && (
-        <div className="flex items-center justify-between space-x-2">
-          <Label htmlFor="updateExisting">Atualizar empresa se já existir</Label>
-          <Switch
-            id="updateExisting"
-            checked={config.updateExisting !== false}
-            onCheckedChange={(checked) => handleConfigChange({ updateExisting: checked })}
-          />
+      <div className="flex items-center justify-between space-x-2 p-3 bg-muted/50 rounded-md">
+        <div className="space-y-1">
+          <Label htmlFor="updateExisting" className="font-medium">Atualizar empresa se já existir</Label>
+          <p className="text-xs text-muted-foreground">
+            Se desativado, o bot não atualizará dados de empresas já cadastradas
+          </p>
         </div>
-      )}
+        <Switch
+          id="updateExisting"
+          checked={config.updateExisting !== false}
+          onCheckedChange={(checked) => handleConfigChange({ updateExisting: checked })}
+        />
+      </div>
 
       <div className="space-y-3 border-t pt-4">
         <Label className="font-semibold">Mapeamento de Campos da Empresa</Label>

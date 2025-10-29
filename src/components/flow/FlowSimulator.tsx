@@ -775,7 +775,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           let clienteNovo = 'Não';
 
           if (existente) {
-            if (config.updateExisting && config.validationMode !== 'validate_only') {
+            if (config.updateExisting) {
               const { error: updateError } = await supabase
                 .from('empresas')
                 .update({ ...empresaData, updated_at: new Date().toISOString() })
@@ -786,22 +786,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               }
               addSuccessMessage(`✅ Empresa atualizada: ${empresaData.nome_fantasia || empresaData.razao_social}`);
             } else {
-              addSystemMessage(`ℹ️ Empresa já cadastrada.`);
+              addSystemMessage(`ℹ️ Empresa já cadastrada (não foi atualizada).`);
             }
           } else {
             clienteNovo = 'Sim';
-            if (config.validationMode !== 'validate_only') {
-              const { error: insertError } = await supabase
-                .from('empresas')
-                .insert([empresaData as any]);
-              if (insertError) {
-                addSystemMessage(`❌ Erro ao criar empresa: ${insertError.message}`);
-                break;
-              }
-              addSuccessMessage(`✅ Empresa cadastrada: ${empresaData.nome_fantasia || empresaData.razao_social}`);
-            } else {
-              addSystemMessage('ℹ️ Modo validação: sem gravar.');
+            const { error: insertError } = await supabase
+              .from('empresas')
+              .insert([empresaData as any]);
+            if (insertError) {
+              addSystemMessage(`❌ Erro ao criar empresa: ${insertError.message}`);
+              break;
             }
+            addSuccessMessage(`✅ Empresa cadastrada: ${empresaData.nome_fantasia || empresaData.razao_social}`);
           }
 
           const outputVar = config.outputVariable || 'cliente_novo';
