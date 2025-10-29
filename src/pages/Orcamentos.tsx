@@ -18,7 +18,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import OrcamentoBoard from "@/components/orcamento/OrcamentoBoard";
 import OrcamentoListView from "@/components/orcamento/OrcamentoListView";
-import NewOrcamentoDialog from "@/components/orcamento/NewOrcamentoDialog";
 import OrcamentoDetailsDialog from "@/components/orcamento/OrcamentoDetailsDialog";
 import POSView from "@/components/orcamento/POSView";
 
@@ -38,7 +37,6 @@ export default function Orcamentos() {
   const [filterEtapa, setFilterEtapa] = useState<string>("");
   const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'pos'>('kanban');
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
-  const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
 
   useEffect(() => {
@@ -138,7 +136,6 @@ export default function Orcamentos() {
 
   const handleOrcamentoSaved = () => {
     loadOrcamentos();
-    setShowNewDialog(false);
     setSelectedOrcamento(null);
   };
 
@@ -152,15 +149,18 @@ export default function Orcamentos() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
+      {/* Header - Escondido no modo POS */}
+      {viewMode !== 'pos' && (
+        <div className="border-b bg-card">
         <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Orçamentos</h1>
-            <Button onClick={() => setShowNewDialog(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Orçamento
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setViewMode('pos')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Orçamento
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -250,16 +250,19 @@ export default function Orcamentos() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Content */}
       {viewMode === 'pos' ? (
-        <POSView 
-          estabelecimentoId={estabelecimentoId}
-          onClose={() => {
-            setViewMode('kanban');
-            loadOrcamentos();
-          }}
-        />
+        <div className="flex-1 overflow-hidden">
+          <POSView 
+            estabelecimentoId={estabelecimentoId}
+            onClose={() => {
+              setViewMode('kanban');
+              loadOrcamentos();
+            }}
+          />
+        </div>
       ) : (
         <div className="flex-1 overflow-hidden">
           {viewMode === 'kanban' ? (
@@ -278,12 +281,6 @@ export default function Orcamentos() {
       )}
 
       {/* Dialogs */}
-      <NewOrcamentoDialog
-        open={showNewDialog}
-        onOpenChange={setShowNewDialog}
-        onSave={handleOrcamentoSaved}
-      />
-
       {selectedOrcamento && (
         <OrcamentoDetailsDialog
           orcamento={selectedOrcamento}
