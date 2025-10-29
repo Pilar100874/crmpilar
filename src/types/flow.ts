@@ -341,7 +341,8 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     defaultData: { 
       validationMode: "create_or_update", 
       cnpjVariable: "cnpj",
-      updateExisting: false,
+      updateExisting: true,
+      outputVariable: "cliente_novo",
       fieldMappings: {}
     },
   },

@@ -594,17 +594,8 @@ export class FlowEngine {
 
     if (!cnpjValue) {
       console.error("CNPJ variable not found:", cnpjVariable);
-      this.context.vars[config.statusVariable || "empresa_status"] = "error";
       return;
     }
-
-    // Simular verificação de existência e criação/atualização
-    await this.onResponse({
-      type: "crm_action",
-      action: "validate_empresa",
-      cnpj: cnpjValue,
-      validationMode: config.validationMode || "create_or_update",
-    });
 
     // Mapear campos configurados
     const fieldMappings = config.fieldMappings || {};
@@ -618,31 +609,37 @@ export class FlowEngine {
       }
     }
 
-    // Simular resultado (em produção, seria uma chamada ao Supabase)
-    // Status: "created", "updated", "exists", "not_found"
-    const empresaId = `empresa_${Date.now()}`;
-    let status = "created";
+    // Simular verificação de existência no banco
+    // Em produção, seria uma query no Supabase
+    const empresaExiste = false; // Placeholder: verificar se CNPJ existe no banco
+    
+    let clienteNovo = "Não";
 
-    // Verificar modo de validação
-    if (config.validationMode === "validate_only") {
-      status = "exists"; // Simulação
-    } else if (config.validationMode === "create_or_update") {
-      status = config.updateExisting ? "updated" : "created";
+    if (empresaExiste) {
+      // Empresa já existe
+      clienteNovo = "Não";
+      
+      if (config.updateExisting && config.validationMode !== "validate_only") {
+        // Atualizar empresa existente
+        // Em produção: UPDATE na tabela empresas
+        console.log("Atualizando empresa:", empresaData);
+      }
+    } else {
+      // Empresa não existe - criar nova
+      clienteNovo = "Sim";
+      
+      if (config.validationMode !== "validate_only") {
+        // Criar nova empresa
+        // Em produção: INSERT na tabela empresas
+        console.log("Criando empresa:", empresaData);
+      }
     }
 
-    // Salvar resultados nas variáveis
-    if (config.outputVariable) {
-      this.context.vars[config.outputVariable] = empresaId;
-    }
-    if (config.statusVariable) {
-      this.context.vars[config.statusVariable] = status;
-    }
+    // Definir variável de saída: "Sim" = cliente novo, "Não" = cliente existente
+    const outputVariable = config.outputVariable || "cliente_novo";
+    this.context.vars[outputVariable] = clienteNovo;
 
-    await this.onResponse({
-      type: "message",
-      content: `Empresa ${status === "created" ? "cadastrada" : status === "updated" ? "atualizada" : "validada"} com sucesso!`,
-    });
-
+    // Continuar para próximo bloco (bloco de passagem, sem interação)
     const nextNodes = this.getNextNodes(node.id);
     for (const next of nextNodes) {
       await this.executeNode(next);

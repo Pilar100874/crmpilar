@@ -1,8 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VariableInput } from "../VariableInput";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface ConfigProps {
@@ -13,35 +11,34 @@ interface ConfigProps {
 }
 
 export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVariablePicker, inputRefs }: ConfigProps) => {
-  // Campos disponíveis na tabela empresas
+  // Todos os campos disponíveis na tabela empresas
   const availableFields = [
     { value: "cnpj", label: "CNPJ" },
     { value: "razao_social", label: "Razão Social" },
     { value: "nome_fantasia", label: "Nome Fantasia" },
+    { value: "natureza_juridica", label: "Natureza Jurídica" },
+    { value: "data_abertura", label: "Data de Abertura" },
+    { value: "situacao", label: "Situação" },
+    { value: "porte", label: "Porte" },
+    { value: "atividade_principal", label: "Atividade Principal" },
     { value: "email", label: "Email" },
     { value: "telefone", label: "Telefone" },
-    { value: "endereco", label: "Endereço" },
+    { value: "logradouro", label: "Logradouro" },
+    { value: "numero", label: "Número" },
+    { value: "complemento", label: "Complemento" },
+    { value: "bairro", label: "Bairro" },
+    { value: "municipio", label: "Município" },
     { value: "cidade", label: "Cidade" },
-    { value: "estado", label: "Estado" },
+    { value: "estado", label: "Estado (UF)" },
     { value: "cep", label: "CEP" },
+    { value: "regime_tributario", label: "Regime Tributário" },
+    { value: "simples_optante", label: "Simples Nacional" },
+    { value: "simei_optante", label: "SIMEI" },
+    { value: "socio_nome", label: "Nome do Sócio" },
+    { value: "socio_qualificacao", label: "Qualificação do Sócio" },
   ];
 
   const fieldMappings = config.fieldMappings || {};
-
-  const addFieldMapping = () => {
-    const newMappings = { ...fieldMappings };
-    const unusedField = availableFields.find(f => !newMappings[f.value]);
-    if (unusedField) {
-      newMappings[unusedField.value] = "";
-      handleConfigChange({ fieldMappings: newMappings });
-    }
-  };
-
-  const removeFieldMapping = (field: string) => {
-    const newMappings = { ...fieldMappings };
-    delete newMappings[field];
-    handleConfigChange({ fieldMappings: newMappings });
-  };
 
   const updateFieldMapping = (field: string, variable: string) => {
     const newMappings = { ...fieldMappings };
@@ -64,10 +61,13 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
             }
           }}
         />
+        <p className="text-xs text-muted-foreground">
+          Esta variável indica qual campo contém o CNPJ para validar se a empresa já existe no cadastro.
+        </p>
       </div>
 
       <div className="space-y-2">
-        <Label>Modo de validação</Label>
+        <Label>Modo de operação</Label>
         <Select
           value={config.validationMode || "create_or_update"}
           onValueChange={(value) => handleConfigChange({ validationMode: value })}
@@ -88,96 +88,53 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
           <Label htmlFor="updateExisting">Atualizar empresa se já existir</Label>
           <Switch
             id="updateExisting"
-            checked={config.updateExisting || false}
+            checked={config.updateExisting !== false}
             onCheckedChange={(checked) => handleConfigChange({ updateExisting: checked })}
           />
         </div>
       )}
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Mapeamento de campos</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addFieldMapping}
-            disabled={Object.keys(fieldMappings).length >= availableFields.length}
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Adicionar campo
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          {Object.entries(fieldMappings).map(([field, variable]) => (
-            <div key={field} className="flex items-center gap-2">
-              <div className="flex-1">
-                <Label className="text-xs">
-                  {availableFields.find(f => f.value === field)?.label || field}
-                </Label>
-                <VariableInput
-                  value={variable as string}
-                  onChange={(e) => updateFieldMapping(field, e.target.value)}
-                  placeholder={`Variável para ${field}`}
-                  onVariableRequest={openVariablePicker ? () => openVariablePicker(`fieldMapping_${field}`, variable as string) : undefined}
-                  ref={(el) => {
-                    if (inputRefs?.current) {
-                      inputRefs.current[`fieldMapping_${field}`] = el;
-                    }
-                  }}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeFieldMapping(field)}
-                className="h-8 w-8"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+      <div className="space-y-3 border-t pt-4">
+        <Label className="font-semibold">Mapeamento de Campos da Empresa</Label>
+        <p className="text-xs text-muted-foreground">
+          Vincule as variáveis do fluxo aos campos do cadastro de empresa. Use "Usar variável" para selecionar.
+        </p>
+        
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+          {availableFields.map((field) => (
+            <div key={field.value} className="space-y-1">
+              <Label className="text-xs font-medium">{field.label}</Label>
+              <VariableInput
+                value={(fieldMappings[field.value] as string) || ""}
+                onChange={(e) => updateFieldMapping(field.value, e.target.value)}
+                placeholder={`Selecione a variável para ${field.label}`}
+                onVariableRequest={openVariablePicker ? () => openVariablePicker(`fieldMapping_${field.value}`, (fieldMappings[field.value] as string) || "") : undefined}
+                ref={(el) => {
+                  if (inputRefs?.current) {
+                    inputRefs.current[`fieldMapping_${field.value}`] = el;
+                  }
+                }}
+              />
             </div>
           ))}
         </div>
-
-        {Object.keys(fieldMappings).length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Adicione campos para mapear variáveis aos campos da empresa
-          </p>
-        )}
       </div>
 
-      <div className="space-y-2">
-        <Label>Variável de saída (ID da empresa)</Label>
+      <div className="space-y-2 border-t pt-4">
+        <Label>Variável de saída</Label>
         <VariableInput
-          value={config.outputVariable || "empresa_id"}
+          value={config.outputVariable || "cliente_novo"}
           onChange={(e) => handleConfigChange({ outputVariable: e.target.value })}
-          placeholder="empresa_id"
-          onVariableRequest={openVariablePicker ? () => openVariablePicker('outputVariable', config.outputVariable || "empresa_id") : undefined}
+          placeholder="cliente_novo"
+          onVariableRequest={openVariablePicker ? () => openVariablePicker('outputVariable', config.outputVariable || "cliente_novo") : undefined}
           ref={(el) => {
             if (inputRefs?.current) {
               inputRefs.current['outputVariable'] = el;
             }
           }}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Variável de status</Label>
-        <VariableInput
-          value={config.statusVariable || "empresa_status"}
-          onChange={(e) => handleConfigChange({ statusVariable: e.target.value })}
-          placeholder="empresa_status"
-          onVariableRequest={openVariablePicker ? () => openVariablePicker('statusVariable', config.statusVariable || "empresa_status") : undefined}
-          ref={(el) => {
-            if (inputRefs?.current) {
-              inputRefs.current['statusVariable'] = el;
-            }
-          }}
-        />
         <p className="text-xs text-muted-foreground">
-          Valores: "created" (nova), "updated" (atualizada), "exists" (já existe), "not_found" (não encontrada)
+          Esta variável receberá "Sim" se o CNPJ não existia (cliente novo) ou "Não" se já existia.
         </p>
       </div>
     </div>
