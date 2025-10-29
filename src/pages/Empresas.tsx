@@ -291,7 +291,7 @@ export default function Empresas() {
       address: empresa.endereco || "",
       city: empresa.cidade || "",
       state: empresa.estado || "",
-      neighborhood: empresa.custom_fields?.neighborhood || "",
+      neighborhood: (empresa as any).bairro || empresa.custom_fields?.neighborhood || "",
       inscricao: empresa.custom_fields?.inscricao || "",
     };
     setFormData(data);
@@ -519,6 +519,7 @@ export default function Empresas() {
         cidade: formData.city,
         estado: formData.state,
         cep: formData.cep,
+        bairro: formData.neighborhood || null,
         custom_fields: {
           company_type: formData.company_type,
           neighborhood: formData.neighborhood,
