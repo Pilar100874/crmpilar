@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
@@ -759,21 +759,22 @@ export default function Empresas() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  {tableColumns.filter(col => col.visible).map(column => (
-                    <TableHead 
-                      key={column.id} 
-                      style={{ width: column.width }}
-                      className={column.id !== 'actions' ? 'cursor-pointer select-none' : ''}
-                      onClick={() => column.id !== 'actions' && handleSort(column.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        {column.label}
-                        {column.id !== 'actions' && getSortIcon(column.id)}
-                      </div>
-                    </TableHead>
-                  ))}
-                </TableRow>
+                  <TableRow>
+                    {tableColumns.filter(col => col.visible).map(column => (
+                      <TableHead 
+                        key={column.id} 
+                        style={{ width: column.width }}
+                        className={column.id !== 'actions' ? 'cursor-pointer select-none' : ''}
+                        onClick={() => column.id !== 'actions' && handleSort(column.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {column.label}
+                          {column.id !== 'actions' && getSortIcon(column.id)}
+                        </div>
+                      </TableHead>
+                    ))}
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedEmpresas.map(empresa => (
@@ -782,24 +783,15 @@ export default function Empresas() {
                       if (column.id === 'actions') {
                         return (
                           <TableCell key={column.id}>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditEmpresa(empresa)}
-                                className="h-8 px-2"
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteEmpresa(empresa.id)}
-                                className="h-8 px-2"
-                              >
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </div>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => handleEditEmpresa(empresa)}
+                              title="Editar cadastro completo"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                           </TableCell>
                         );
                       }
@@ -837,6 +829,19 @@ export default function Empresas() {
                         </TableCell>
                       );
                     })}
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteEmpresa(empresa.id);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
