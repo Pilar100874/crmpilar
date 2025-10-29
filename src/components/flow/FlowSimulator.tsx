@@ -759,42 +759,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             break;
           }
 
-          // Buscar existente (comparando CNPJ sem máscara)
+          // Buscar existente comparando CNPJ sem máscara
           const cnpjSemMascara = empresaData.cnpj.replace(/\D/g, '');
-          const { data: existente, error: searchError } = await supabase
+          
+          const { data: todasEmpresas, error: searchError } = await supabase
             .from('empresas')
             .select('id, cnpj')
-            .eq('estabelecimento_id', estabId)
-            .maybeSingle();
-          
-          // Filtrar manualmente comparando apenas números
-          let empresaExistente = null;
-          if (existente) {
-            const cnpjBancoSemMascara = existente.cnpj?.replace(/\D/g, '') || '';
-            if (cnpjBancoSemMascara === cnpjSemMascara) {
-              empresaExistente = existente;
-            }
-          }
-          
-          // Se não encontrou com maybeSingle, buscar todos e filtrar
-          if (!empresaExistente) {
-            const { data: todasEmpresas } = await supabase
-              .from('empresas')
-              .select('id, cnpj')
-              .eq('estabelecimento_id', estabId);
+            .eq('estabelecimento_id', estabId);
             
-            if (todasEmpresas) {
-              empresaExistente = todasEmpresas.find(e => {
-                const cnpjBancoSemMascara = e.cnpj?.replace(/\D/g, '') || '';
-                return cnpjBancoSemMascara === cnpjSemMascara;
-              });
-            }
-          }
-          
           if (searchError) {
-            addSystemMessage(`❌ Erro ao buscar empresa: ${searchError.message}`);
+            addSystemMessage(`❌ Erro ao buscar empresas: ${searchError.message}`);
             break;
           }
+          
+          // Encontrar empresa com mesmo CNPJ (comparando sem máscara)
+          const empresaExistente = todasEmpresas?.find(e => {
+            const cnpjBancoSemMascara = e.cnpj?.replace(/\D/g, '') || '';
+            return cnpjBancoSemMascara === cnpjSemMascara;
+          });
 
           let clienteNovo = 'Não';
 
