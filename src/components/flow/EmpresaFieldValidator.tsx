@@ -98,7 +98,6 @@ const fieldValidators: Record<string, {
   nome_fantasia: { validate: validateText, format: "Texto não vazio" },
   endereco: { validate: validateText, format: "Texto não vazio" },
   cidade: { validate: validateText, format: "Texto não vazio" },
-  bairro: { validate: validateText, format: "Texto não vazio" },
 };
 
 // Labels amigáveis para os campos
