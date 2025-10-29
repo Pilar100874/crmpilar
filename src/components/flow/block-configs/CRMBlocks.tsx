@@ -2,11 +2,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VariableInput } from "../VariableInput";
 import { Switch } from "@/components/ui/switch";
-
+import { Button } from "@/components/ui/button";
 interface ConfigProps {
   config: any;
   handleConfigChange: (updates: any) => void;
-  openVariablePicker?: (fieldName: string, currentValue: string) => void;
+  openVariablePicker?: (ref: HTMLInputElement | HTMLTextAreaElement) => void;
   inputRefs?: React.MutableRefObject<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>;
 }
 
@@ -37,17 +37,26 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Variável com CNPJ</Label>
-        <VariableInput
-          value={config.cnpjVariable || "cnpj"}
-          onChange={(e) => handleConfigChange({ cnpjVariable: e.target.value })}
-          placeholder="cnpj"
-          onVariableRequest={openVariablePicker ? () => openVariablePicker('cnpjVariable', config.cnpjVariable || "cnpj") : undefined}
-          ref={(el) => {
-            if (inputRefs?.current) {
-              inputRefs.current['cnpjVariable'] = el;
-            }
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <VariableInput
+            value={config.cnpjVariable || "cnpj"}
+            onChange={(e) => handleConfigChange({ cnpjVariable: e.target.value })}
+            placeholder="Digite ou use o botão ao lado"
+            ref={(el) => {
+              if (inputRefs?.current) {
+                inputRefs.current['cnpjVariable'] = el;
+              }
+            }}
+            className="flex-1"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => inputRefs?.current?.['cnpjVariable'] && openVariablePicker?.(inputRefs.current['cnpjVariable']!)}
+          >
+            Usar variável
+          </Button>
+        </div>
         <p className="text-xs text-muted-foreground">
           Esta variável indica qual campo contém o CNPJ para validar se a empresa já existe no cadastro.
         </p>
@@ -93,18 +102,25 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
               <Label className="text-xs font-medium w-40 flex-shrink-0">
                 {field.label}
               </Label>
-              <div className="flex-1">
+              <div className="flex-1 flex items-center gap-2">
                 <VariableInput
                   value={(fieldMappings[field.value] as string) || ""}
                   onChange={(e) => updateFieldMapping(field.value, e.target.value)}
                   placeholder="Digite ou use o botão ao lado"
-                  onVariableRequest={openVariablePicker ? () => openVariablePicker(`fieldMapping_${field.value}`, (fieldMappings[field.value] as string) || "") : undefined}
                   ref={(el) => {
                     if (inputRefs?.current) {
                       inputRefs.current[`fieldMapping_${field.value}`] = el;
                     }
                   }}
+                  className="flex-1"
                 />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => inputRefs?.current && inputRefs.current[`fieldMapping_${field.value}`] && openVariablePicker?.(inputRefs.current[`fieldMapping_${field.value}`]!)}
+                >
+                  Usar variável
+                </Button>
               </div>
             </div>
           ))}
@@ -117,7 +133,6 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
           value={config.outputVariable || "cliente_novo"}
           onChange={(e) => handleConfigChange({ outputVariable: e.target.value })}
           placeholder="cliente_novo"
-          onVariableRequest={openVariablePicker ? () => openVariablePicker('outputVariable', config.outputVariable || "cliente_novo") : undefined}
           ref={(el) => {
             if (inputRefs?.current) {
               inputRefs.current['outputVariable'] = el;
