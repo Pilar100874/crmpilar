@@ -116,6 +116,9 @@ export class FlowEngine {
       case "dynamic_data":
         await this.handleExternal(node);
         break;
+      case "crm_cadastro_empresa":
+        await this.handleCRMCadastroEmpresa(node);
+        break;
       default:
         console.log(`Node type ${data.type} not implemented yet`);
         const nextNodes = this.getNextNodes(node.id);
@@ -575,6 +578,70 @@ export class FlowEngine {
         }
       }
     }
+
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
+  }
+
+  private async handleCRMCadastroEmpresa(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+
+    const cnpjVariable = config.cnpjVariable || "cnpj";
+    const cnpjValue = this.context.vars[cnpjVariable];
+
+    if (!cnpjValue) {
+      console.error("CNPJ variable not found:", cnpjVariable);
+      this.context.vars[config.statusVariable || "empresa_status"] = "error";
+      return;
+    }
+
+    // Simular verificação de existência e criação/atualização
+    await this.onResponse({
+      type: "crm_action",
+      action: "validate_empresa",
+      cnpj: cnpjValue,
+      validationMode: config.validationMode || "create_or_update",
+    });
+
+    // Mapear campos configurados
+    const fieldMappings = config.fieldMappings || {};
+    const empresaData: Record<string, any> = {
+      cnpj: cnpjValue,
+    };
+
+    for (const [field, variable] of Object.entries(fieldMappings)) {
+      if (variable && this.context.vars[variable as string]) {
+        empresaData[field] = this.context.vars[variable as string];
+      }
+    }
+
+    // Simular resultado (em produção, seria uma chamada ao Supabase)
+    // Status: "created", "updated", "exists", "not_found"
+    const empresaId = `empresa_${Date.now()}`;
+    let status = "created";
+
+    // Verificar modo de validação
+    if (config.validationMode === "validate_only") {
+      status = "exists"; // Simulação
+    } else if (config.validationMode === "create_or_update") {
+      status = config.updateExisting ? "updated" : "created";
+    }
+
+    // Salvar resultados nas variáveis
+    if (config.outputVariable) {
+      this.context.vars[config.outputVariable] = empresaId;
+    }
+    if (config.statusVariable) {
+      this.context.vars[config.statusVariable] = status;
+    }
+
+    await this.onResponse({
+      type: "message",
+      content: `Empresa ${status === "created" ? "cadastrada" : status === "updated" ? "atualizada" : "validada"} com sucesso!`,
+    });
 
     const nextNodes = this.getNextNodes(node.id);
     for (const next of nextNodes) {

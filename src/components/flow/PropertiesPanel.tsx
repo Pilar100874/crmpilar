@@ -339,6 +339,18 @@ export const PropertiesPanel = ({
       case "ai_agent":
         return <BlockConfigs.AIAgentConfig {...configProps} />;
 
+      // CRM Blocks
+      case "crm_cadastro_empresa":
+        return <BlockConfigs.CRMCadastroEmpresaConfig 
+          {...configProps} 
+          handleConfigChange={(updates: any) => {
+            // Adapter: convert object updates to individual key-value calls
+            Object.entries(updates).forEach(([key, value]) => {
+              handleConfigChange(key, value);
+            });
+          }} 
+        />;
+
       case "start":
         return (
           <div className="space-y-4">

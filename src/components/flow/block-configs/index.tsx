@@ -51,6 +51,11 @@ export {
   AIAgentConfig,
 } from './LowCodeBlocks';
 
+// CRM Blocks
+export {
+  CRMCadastroEmpresaConfig,
+} from './CRMBlocks';
+
 // Additional Blocks
 export { ABTestConfig } from './ABTestConfig';
 export { BotJumpConfig } from './BotJumpConfig';

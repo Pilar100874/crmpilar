@@ -46,6 +46,11 @@ const blockCategories = [
     icon: "Code",
     blocks: ["webhook", "trigger_automation", "dynamic_data"] as NodeType[],
   },
+  {
+    name: "Integração CRM",
+    icon: "Building2",
+    blocks: ["crm_cadastro_empresa"] as NodeType[],
+  },
 ];
 
 export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: BlockLibraryProps) => {

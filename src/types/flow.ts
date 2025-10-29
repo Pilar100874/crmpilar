@@ -32,7 +32,8 @@ export type NodeType =
   | "goal"
   | "webhook"
   | "trigger_automation"
-  | "dynamic_data";
+  | "dynamic_data"
+  | "crm_cadastro_empresa";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -329,5 +330,19 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "Database",
     color: "text-accent",
     defaultData: { source: "api", query: "", outputVariable: "dados_dinamicos" },
+  },
+  // Integração CRM
+  {
+    type: "crm_cadastro_empresa",
+    label: "Cadastro de empresa",
+    description: "Validar e cadastrar empresa no CRM",
+    icon: "Building2",
+    color: "text-success",
+    defaultData: { 
+      validationMode: "create_or_update", 
+      cnpjVariable: "cnpj",
+      updateExisting: false,
+      fieldMappings: {}
+    },
   },
 ];
