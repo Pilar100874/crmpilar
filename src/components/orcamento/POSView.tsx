@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
@@ -325,12 +325,93 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   };
 
   const cartArray = Array.from(cartItems.values());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopyLink = () => {
     if (shareLink) {
       navigator.clipboard.writeText(shareLink);
       toast.success("Link copiado!");
     }
+  };
+
+  const handleShare = async () => {
+    if (!selectedCliente) {
+      toast.error('Selecione um cliente para compartilhar');
+      return;
+    }
+
+    if (cartItems.size === 0) {
+      toast.error('Adicione itens ao carrinho');
+      return;
+    }
+
+    // Se já existe link, apenas copia
+    if (shareLink) {
+      handleCopyLink();
+      return;
+    }
+
+    // Criar orçamento e gerar link
+    setLoading(true);
+    try {
+      const token = crypto.randomUUID().replace(/-/g, '');
+      const { data: orcamento, error: orcamentoError } = await supabase
+        .from('orcamentos')
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          cliente_id: selectedCliente,
+          etapa: 'orcamento',
+          status: 'em_aberto',
+          valor_total: getTotal(),
+          token_compartilhamento: token,
+        })
+        .select()
+        .single();
+
+      if (orcamentoError) throw orcamentoError;
+
+      const items = Array.from(cartItems.values()).map(item => ({
+        orcamento_id: orcamento.id,
+        produto_id: item.produto.id,
+        quantidade: item.quantity,
+        preco_unitario: 10,
+        preco_original: 10,
+        desconto: 0,
+        subtotal: item.quantity * 10,
+      }));
+
+      const { error: itensError } = await supabase
+        .from('orcamento_itens')
+        .insert(items);
+
+      if (itensError) throw itensError;
+
+      const link = `${window.location.origin}/orcamento/${token}`;
+      setShareLink(link);
+      setCurrentOrcamentoId(orcamento.id);
+      
+      // Copiar automaticamente
+      navigator.clipboard.writeText(link);
+      toast.success('Link criado e copiado!');
+    } catch (error: any) {
+      console.error('Erro ao criar link:', error);
+      toast.error('Erro ao criar link de compartilhamento');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Aqui você pode adicionar lógica para processar a imagem
+    toast.info('Processando imagem...');
+    // TODO: Implementar extração de itens da foto
   };
 
   const handleItemsExtracted = async (items: any[]) => {
@@ -691,11 +772,10 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
               </Select>
             </div>
 
-            {/* Total */}
-            <div className="px-4 py-3 border-b border-slate-700">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-white">Total:</span>
-                <span className="font-bold text-white text-2xl">
+            {/* Total - Estilo Grande Centralizado */}
+            <div className="px-4 py-6 border-b border-slate-700 bg-slate-900/50">
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-7xl font-bold text-white tracking-tight">
                   {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
@@ -706,12 +786,20 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
 
             {/* Botões de Ação */}
             <div className="p-4 space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+              
               <div className="grid grid-cols-4 gap-2">
                 <Button
                   size="sm"
                   variant="outline"
                   className="flex-col h-auto py-3 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-                  onClick={() => setActiveTab("photo")}
+                  onClick={handlePhotoClick}
                 >
                   <Camera className="w-5 h-5 mb-1" />
                   <span className="text-xs">Foto</span>
@@ -729,15 +817,11 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                   size="sm"
                   variant="outline"
                   className="flex-col h-auto py-3 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-                  onClick={() => {
-                    if (shareLink) {
-                      setActiveTab("share");
-                    }
-                  }}
-                  disabled={!shareLink}
+                  onClick={handleShare}
+                  disabled={loading || cartArray.length === 0 || !selectedCliente}
                 >
                   <Share2 className="w-5 h-5 mb-1" />
-                  <span className="text-xs">Compartilhar</span>
+                  <span className="text-xs">{shareLink ? 'Copiar' : 'Compartilhar'}</span>
                 </Button>
                 <Button
                   size="sm"
@@ -760,23 +844,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             </div>
           </div>
 
-          {/* Modais das Funcionalidades */}
-          {activeTab === "photo" && (
-            <div className="absolute inset-0 bg-slate-900/95 z-50 p-4 overflow-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">Inserir por Foto</h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setActiveTab("cart")}
-                >
-                  <X className="w-5 h-5 text-white" />
-                </Button>
-              </div>
-              <ImageItemExtractor onItemsExtracted={handleItemsExtracted} />
-            </div>
-          )}
-
+          {/* Modal: Sugestões */}
           {activeTab === "suggestions" && (
             <div className="absolute inset-0 bg-slate-900/95 z-50 p-4">
               <div className="flex items-center justify-between mb-4">
@@ -793,71 +861,6 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                 <Lightbulb className="w-12 h-12 mb-3 opacity-20" />
                 <p className="text-sm text-center">Sugestões de produtos</p>
                 <p className="text-xs text-center mt-1">Baseadas no histórico do cliente</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "share" && shareLink && (
-            <div className="absolute inset-0 bg-slate-900/95 z-50 p-4 overflow-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">Compartilhar</h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setActiveTab("cart")}
-                >
-                  <X className="w-5 h-5 text-white" />
-                </Button>
-              </div>
-              <div className="space-y-4">
-                <div className="flex flex-col items-center justify-center py-6">
-                  <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
-                    <Share2 className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Orçamento Criado!</h3>
-                  <p className="text-sm text-slate-400 text-center">
-                    Compartilhe o link abaixo com o cliente
-                  </p>
-                </div>
-
-                <div className="bg-slate-700 rounded-lg p-4">
-                  <label className="text-xs text-slate-400 mb-2 block">Link de Compartilhamento</label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={shareLink}
-                      readOnly
-                      className="bg-slate-600 border-slate-500 text-white text-sm"
-                    />
-                    <Button
-                      onClick={handleCopyLink}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      Copiar
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-                    onClick={() => {
-                      setShareLink("");
-                      setCurrentOrcamentoId(null);
-                      setActiveTab("cart");
-                    }}
-                  >
-                    Novo Orçamento
-                  </Button>
-                  {onClose && (
-                    <Button
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      onClick={onClose}
-                    >
-                      Concluir
-                    </Button>
-                  )}
-                </div>
               </div>
             </div>
           )}
