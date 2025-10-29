@@ -86,6 +86,12 @@ export class FlowEngine {
       case "ask_url":
         await this.handleQuestion(node);
         break;
+      case "ask_cnpj":
+        await this.handleCNPJ(node);
+        break;
+      case "ask_cep":
+        await this.handleCEP(node);
+        break;
       case "reply_buttons":
       case "list_buttons":
       case "keyword_options":
@@ -449,23 +455,127 @@ export class FlowEngine {
     const data = node.data as FlowNodeData;
     const config = data.config as any;
 
-    // Verificar status de opt-in (placeholder)
-    const isSubscribed = this.context.vars[config.statusVariable || "opt_in_status"] === "subscribed";
+    const optInStatus = this.context.vars.opt_in_status || "pending";
     
-    const handleId = isSubscribed ? "subscribed" : "unsubscribed";
-    const edge = this.edges.find(
-      (e) => e.source === node.id && e.sourceHandle === handleId
-    );
+    if (optInStatus === "opted_in") {
+      const yesEdge = this.edges.find(
+        (e) => e.source === node.id && e.sourceHandle === "yes"
+      );
+      if (yesEdge) {
+        const nextNode = this.nodes.find((n) => n.id === yesEdge.target);
+        if (nextNode) await this.executeNode(nextNode);
+      }
+    } else {
+      const noEdge = this.edges.find(
+        (e) => e.source === node.id && e.sourceHandle === "no"
+      );
+      if (noEdge) {
+        const nextNode = this.nodes.find((n) => n.id === noEdge.target);
+        if (nextNode) await this.executeNode(nextNode);
+      }
+    }
+  }
 
-    if (edge) {
-      const nextNode = this.nodes.find((n) => n.id === edge.target);
-      if (nextNode) {
-        await this.executeNode(nextNode);
-        return;
+  private async handleCNPJ(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+
+    const question = this.interpolate(config.question || "Digite o CNPJ da empresa:");
+    
+    await this.onResponse({
+      type: "question",
+      question,
+      questionType: "ask_cnpj",
+      outputVariable: config.variable || "cnpj",
+    });
+
+    // Simular chamada à edge function consultar-cnpj
+    const cnpjValue = this.context.userMessage || "";
+    
+    // Mapear os campos configurados para as variáveis
+    const fieldMappings = {
+      variable: 'cnpj',
+      razaoSocialField: 'razao_social',
+      nomeFantasiaField: 'nome_fantasia',
+      naturezaJuridicaField: 'natureza_juridica',
+      dataAberturaField: 'abertura',
+      situacaoField: 'situacao',
+      porteField: 'porte',
+      atividadePrincipalField: 'atividade_principal',
+      logradouroField: 'logradouro',
+      numeroField: 'numero',
+      complementoField: 'complemento',
+      bairroField: 'bairro',
+      municipioField: 'municipio',
+      ufField: 'uf',
+      cepField: 'cep',
+      telefoneField: 'telefone',
+      emailField: 'email',
+      socioNomeField: 'socio_nome',
+      socioQualificacaoField: 'socio_qualificacao',
+      regimeTributarioField: 'regime_tributario',
+      simplesOptanteField: 'simples_optante',
+      simeiOptanteField: 'simei_optante',
+    };
+
+    // Em um cenário real, aqui seria feita a chamada à edge function
+    // Por ora, vamos simular salvando o CNPJ e criando variáveis mock para os outros campos
+    for (const [configKey, apiField] of Object.entries(fieldMappings)) {
+      const variableName = config[configKey];
+      if (variableName) {
+        if (configKey === 'variable') {
+          this.context.vars[variableName] = cnpjValue;
+        } else {
+          // Simular dados da API - em produção viriam da edge function
+          this.context.vars[variableName] = `[${apiField}]`;
+        }
       }
     }
 
-    // Fallback
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
+  }
+
+  private async handleCEP(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+
+    const question = this.interpolate(config.question || "Digite o CEP:");
+    
+    await this.onResponse({
+      type: "question",
+      question,
+      questionType: "ask_cep",
+      outputVariable: config.variable || "cep",
+    });
+
+    const cepValue = this.context.userMessage || "";
+    
+    // Mapear os campos configurados para as variáveis
+    const fieldMappings = {
+      variable: 'cep',
+      logradouroField: 'logradouro',
+      bairroField: 'bairro',
+      cidadeField: 'localidade',
+      estadoField: 'uf',
+      complementoField: 'complemento',
+    };
+
+    // Salvar as variáveis conforme configurado
+    for (const [configKey, apiField] of Object.entries(fieldMappings)) {
+      const variableName = config[configKey];
+      if (variableName) {
+        if (configKey === 'variable') {
+          this.context.vars[variableName] = cepValue;
+        } else {
+          // Simular dados da API - em produção viriam da API do ViaCEP
+          this.context.vars[variableName] = `[${apiField}]`;
+        }
+      }
+    }
+
     const nextNodes = this.getNextNodes(node.id);
     for (const next of nextNodes) {
       await this.executeNode(next);
