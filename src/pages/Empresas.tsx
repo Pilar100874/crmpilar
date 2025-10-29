@@ -22,6 +22,7 @@ import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
+import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
 
 interface CustomField {
   id: string;
@@ -1008,71 +1009,11 @@ export default function Empresas() {
           <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="config-description">
             <SheetHeader>
               <SheetTitle>Configurações de Campos de Empresa</SheetTitle>
-              <p id="config-description" className="sr-only">Configure campos obrigatórios para cadastro de empresas</p>
+              <p id="config-description" className="sr-only">Configure campos personalizados para cadastro de empresas</p>
             </SheetHeader>
             
             <div className="mt-6">
-              <Card className="p-6">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-sm font-medium mb-4">Campos Obrigatórios de Empresa</h3>
-                    <div className="space-y-2 bg-muted/30 rounded-lg p-4">
-                      {companyFields.map((field) => (
-                        <div key={field.id} className="flex items-center justify-between p-3 bg-background rounded-md border">
-                          <div className="flex items-center gap-3">
-                            <GripVertical className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <div className="font-medium text-sm">{field.label}</div>
-                              <div className="text-xs text-muted-foreground">
-                                Tipo: {field.type === 'text' ? 'Texto' : 
-                                       field.type === 'email' ? 'E-mail' :
-                                       field.type === 'phone' ? 'Telefone' :
-                                       field.type === 'select' ? 'Seleção' :
-                                       field.type}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-2">
-                                <Label htmlFor={`required-${field.id}`} className="text-xs cursor-pointer">
-                                  Obrigatório
-                                </Label>
-                                <Switch
-                                  id={`required-${field.id}`}
-                                  checked={field.required || false}
-                                  onCheckedChange={(checked) => {
-                                    updateFieldConfig(field.id, { required: checked });
-                                  }}
-                                />
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Label htmlFor={`locked-${field.id}`} className="text-xs cursor-pointer">
-                                  Bloqueado
-                                </Label>
-                                <Switch
-                                  id={`locked-${field.id}`}
-                                  checked={field.locked || false}
-                                  onCheckedChange={(checked) => {
-                                    updateFieldConfig(field.id, { locked: checked });
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Configure se cada campo é obrigatório ou opcional e se pode ser editado manualmente.
-                      Os campos bloqueados não poderão ser modificados no formulário de cadastro.
-                    </p>
-                  </div>
-                </div>
-              </Card>
+              <EmpresaFieldsCRUD />
             </div>
           </SheetContent>
         </Sheet>
