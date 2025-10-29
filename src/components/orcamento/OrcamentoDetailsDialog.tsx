@@ -26,6 +26,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import ImageItemExtractor from "./ImageItemExtractor";
 import AddItemForm from "./AddItemForm";
+import OrcamentoItemCard from "./OrcamentoItemCard";
 import { supabase } from "@/integrations/supabase/client";
 
 interface OrcamentoDetailsDialogProps {
@@ -226,37 +227,11 @@ export default function OrcamentoDetailsDialog({
               {/* Lista de itens existentes */}
               {orcamento.itens && orcamento.itens.length > 0 ? (
                 orcamento.itens.map((item) => (
-                  <Card key={item.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        {item.produto?.foto_url && (
-                          <img
-                            src={item.produto.foto_url}
-                            alt={item.produto.nome}
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{item.produto?.nome || "Item sem produto vinculado"}</h4>
-                          <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                            <span>Qtd: {item.quantidade}</span>
-                            <span>
-                              Unit: {new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL'
-                              }).format(item.preco_unitario)}
-                            </span>
-                            <span className="font-semibold text-foreground">
-                              Total: {new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL'
-                              }).format(item.subtotal)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <OrcamentoItemCard 
+                    key={item.id} 
+                    item={item} 
+                    onUpdate={onSave}
+                  />
                 ))
               ) : (
                 <Card>

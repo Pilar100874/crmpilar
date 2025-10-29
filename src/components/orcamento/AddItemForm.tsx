@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Produto } from "@/types/orcamento";
+import { Produto, ProdutoGrupo } from "@/types/orcamento";
+import ProductSearchFilters, { ProductFilters } from "./ProductSearchFilters";
 
 interface AddItemFormProps {
   orcamentoId: string;
@@ -23,6 +24,8 @@ interface AddItemFormProps {
 
 export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdded }: AddItemFormProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [filteredProdutos, setFilteredProdutos] = useState<Produto[]>([]);
+  const [grupos, setGrupos] = useState<ProdutoGrupo[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     produto_id: "",
@@ -34,22 +37,84 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
     try {
       const { data, error } = await supabase
         .from('produtos')
-        .select('*')
+        .select(`
+          *,
+          grupo:produto_grupos(*)
+        `)
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
         .order('nome');
 
       if (error) throw error;
       setProdutos(data || []);
+      setFilteredProdutos(data || []);
     } catch (error: any) {
       console.error('Error loading produtos:', error);
       toast.error('Erro ao carregar produtos');
     }
   };
 
-  // Carregar produtos ao montar
+  const loadGrupos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_grupos')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+
+      if (error) throw error;
+      setGrupos(data || []);
+    } catch (error: any) {
+      console.error('Error loading grupos:', error);
+    }
+  };
+
+  const applyFilters = (filters: ProductFilters) => {
+    let filtered = [...produtos];
+
+    // Filtro por nome
+    if (filters.nome) {
+      filtered = filtered.filter(p => 
+        p.nome.toLowerCase().includes(filters.nome!.toLowerCase())
+      );
+    }
+
+    // Filtro por grupo
+    if (filters.grupoId) {
+      filtered = filtered.filter(p => p.grupo_id === filters.grupoId);
+    }
+
+    // Filtro por gramatura
+    if (filters.gramaturaMin !== undefined) {
+      filtered = filtered.filter(p => p.gramatura && p.gramatura >= filters.gramaturaMin!);
+    }
+    if (filters.gramaturaMax !== undefined) {
+      filtered = filtered.filter(p => p.gramatura && p.gramatura <= filters.gramaturaMax!);
+    }
+
+    // Filtro por largura
+    if (filters.larguraMin !== undefined) {
+      filtered = filtered.filter(p => p.largura && p.largura >= filters.larguraMin!);
+    }
+    if (filters.larguraMax !== undefined) {
+      filtered = filtered.filter(p => p.largura && p.largura <= filters.larguraMax!);
+    }
+
+    // Filtro por comprimento
+    if (filters.comprimentoMin !== undefined) {
+      filtered = filtered.filter(p => p.comprimento && p.comprimento >= filters.comprimentoMin!);
+    }
+    if (filters.comprimentoMax !== undefined) {
+      filtered = filtered.filter(p => p.comprimento && p.comprimento <= filters.comprimentoMax!);
+    }
+
+    setFilteredProdutos(filtered);
+  };
+
+  // Carregar produtos e grupos ao montar
   useEffect(() => {
     loadProdutos();
+    loadGrupos();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,21 +186,27 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Plus className="w-4 h-4" />
-          Adicionar Item Manualmente
+          Adicionar Item
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Filtros de Busca */}
+        <ProductSearchFilters 
+          grupos={grupos}
+          onFilterChange={applyFilters}
+        />
+
+        {/* Formulário de Adição */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="produto">Produto</Label>
+            <Label htmlFor="produto">Produto ({filteredProdutos.length} encontrado{filteredProdutos.length !== 1 ? 's' : ''})</Label>
             <Select
               value={formData.produto_id}
               onValueChange={(value) => {
-                const produto = produtos.find(p => p.id === value);
+                const produto = filteredProdutos.find(p => p.id === value);
                 setFormData({
                   ...formData,
                   produto_id: value,
-                  // Poderia buscar preço de tabela aqui
                 });
               }}
             >
@@ -143,9 +214,18 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
                 <SelectValue placeholder="Selecione um produto" />
               </SelectTrigger>
               <SelectContent>
-                {produtos.map((produto) => (
+                {filteredProdutos.map((produto) => (
                   <SelectItem key={produto.id} value={produto.id}>
-                    {produto.nome}
+                    <div className="flex flex-col">
+                      <span>{produto.nome}</span>
+                      {(produto.largura || produto.comprimento || produto.gramatura) && (
+                        <span className="text-xs text-muted-foreground">
+                          {produto.largura && `L: ${produto.largura}cm`}
+                          {produto.comprimento && ` × C: ${produto.comprimento}cm`}
+                          {produto.gramatura && ` | ${produto.gramatura}g/m²`}
+                        </span>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
