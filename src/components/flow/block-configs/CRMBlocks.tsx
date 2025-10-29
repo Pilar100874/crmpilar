@@ -42,7 +42,7 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
         .from('form_field_configs')
         .select('field_id, field_label, required')
         .eq('estabelecimento_id', estabId)
-        .eq('form_type', 'company')
+        .eq('form_type', 'empresa')
         .order('field_order');
 
       if (error) throw error;
@@ -73,8 +73,8 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
     { field_id: "state", field_label: "UF", required: true },
   ];
 
-  // Campos permitidos neste bloco (sem 'company_type')
-  const allowedFieldIds = new Set(["cpf_cnpj","company_name","company_fantasia","cep","address","city","neighborhood","state"]);
+  // Campos permitidos neste bloco
+  const allowedFieldIds = new Set(["cpf_cnpj","company_name","company_fantasia","cep","address","city","neighborhood","state","telefone","email"]);
 
   // Mapear IDs de campo para nomes da tabela empresas
   const fieldMapping: Record<string, string> = {
@@ -86,6 +86,8 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
     neighborhood: "bairro",
     state: "estado",
     cep: "cep",
+    telefone: "telefone",
+    email: "email",
   };
 
   const getDbFieldName = (fieldId: string): string => {

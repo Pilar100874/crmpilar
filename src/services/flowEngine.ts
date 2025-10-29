@@ -601,8 +601,21 @@ export class FlowEngine {
         return valorTrimmed.replace(/\D/g, '');
       
       case 'telefone':
+        // Se houver múltiplos telefones separados por vírgula, vírgula+espaço, ou ponto-e-vírgula, pegar apenas o primeiro
+        let primeiroTelefone = valorTrimmed.split(/[,;]/)[0].trim();
+        
         // Remover todos os caracteres não numéricos
-        return valorTrimmed.replace(/\D/g, '');
+        let telefoneNumeros = primeiroTelefone.replace(/\D/g, '');
+        
+        // Se não começar com 55, adicionar código do país
+        if (!telefoneNumeros.startsWith('55')) {
+          telefoneNumeros = '55' + telefoneNumeros;
+        }
+        
+        // Limitar a 13 dígitos (55 + 11 dígitos)
+        telefoneNumeros = telefoneNumeros.substring(0, 13);
+        
+        return telefoneNumeros;
       
       case 'email':
         // Converter para minúsculas e fazer trim
@@ -696,7 +709,7 @@ export class FlowEngine {
         .from('form_field_configs')
         .select('field_id, required')
         .eq('estabelecimento_id', estabId)
-        .eq('form_type', 'company')
+        .eq('form_type', 'empresa')
         .eq('required', true);
 
       console.log("📋 Configuração de campos obrigatórios:", fieldConfigs);
