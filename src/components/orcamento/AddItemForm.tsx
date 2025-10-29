@@ -220,18 +220,21 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
                 <SelectValue placeholder="Selecione um produto" />
               </SelectTrigger>
               <SelectContent>
-                {filteredProdutos.map((produto) => (
-                  <SelectItem key={produto.id} value={produto.id}>
-                    {produto.nome}
-                    {(produto.largura || produto.comprimento || produto.gramatura) && (
-                      <span className="text-xs text-muted-foreground ml-2">
-                        {produto.largura && `L: ${produto.largura}`}
-                        {produto.comprimento && ` C: ${produto.comprimento}`}
-                        {produto.gramatura && ` G: ${produto.gramatura}`}
-                      </span>
-                    )}
-                  </SelectItem>
-                ))}
+                {filteredProdutos.map((produto) => {
+                  const dims = [
+                    produto.largura ? `L: ${produto.largura}` : null,
+                    produto.comprimento ? `C: ${produto.comprimento}` : null,
+                    produto.gramatura ? `G: ${produto.gramatura}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+                  const label = dims ? `${produto.nome} (${dims})` : produto.nome;
+                  return (
+                    <SelectItem key={produto.id} value={produto.id}>
+                      {label}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
