@@ -253,18 +253,40 @@ const getBlockOutputVariables = (node: any): Variable[] => {
       );
       break;
     case "ask_cnpj":
-      const cnpjVar = node.data.config?.variable || "company";
+      const cnpjVar = node.data.config?.variable || "cnpj";
+      // Sempre incluir a variável principal do CNPJ
       variables.push(
-        { name: `${cnpjVar}_cnpj`, description: "CNPJ", category: "Company", blockName },
-        { name: `${cnpjVar}_name`, description: "Razão Social", category: "Company", blockName },
-        { name: `${cnpjVar}_fantasy`, description: "Nome Fantasia", category: "Company", blockName },
-        { name: `${cnpjVar}_opening_date`, description: "Data Abertura", category: "Company", blockName },
-        { name: `${cnpjVar}_legal_nature`, description: "Natureza Jurídica", category: "Company", blockName },
-        { name: `${cnpjVar}_address`, description: "Endereço Completo", category: "Company", blockName },
-        { name: `${cnpjVar}_phone`, description: "Telefone", category: "Company", blockName },
-        { name: `${cnpjVar}_email`, description: "Email", category: "Company", blockName },
-        { name: `${cnpjVar}_regime_tributario`, description: "Regime Tributário", category: "Company", blockName }
+        { name: cnpjVar, description: "CNPJ digitado", category: "Company", blockName }
       );
+      // Incluir dinamicamente todos os campos configurados no bloco (terminam com 'Field')
+      const entries = Object.entries(node.data.config || {}).filter(([k, v]) => k.endsWith('Field') && typeof v === 'string' && v);
+      const labelMap: Record<string, string> = {
+        razaoSocialField: "Razão Social",
+        nomeFantasiaField: "Nome Fantasia",
+        naturezaJuridicaField: "Natureza Jurídica",
+        dataAberturaField: "Data Abertura",
+        situacaoField: "Situação Cadastral",
+        porteField: "Porte da Empresa",
+        atividadePrincipalField: "Atividade Principal",
+        logradouroField: "Logradouro",
+        numeroField: "Número",
+        complementoField: "Complemento",
+        bairroField: "Bairro",
+        municipioField: "Município",
+        ufField: "UF",
+        cepField: "CEP",
+        telefoneField: "Telefone",
+        emailField: "Email",
+        socioNomeField: "Nome do Sócio",
+        socioQualificacaoField: "Qualificação do Sócio",
+        regimeTributarioField: "Regime Tributário",
+        simplesOptanteField: "Optante Simples",
+        simeiOptanteField: "Optante SIMEI",
+      };
+      entries.forEach(([key, varName]) => {
+        const clean = String(varName).replace(/^@/, "");
+        variables.push({ name: clean, description: labelMap[key] || clean, category: "Company", blockName });
+      });
       break;
     case "ask_cep":
       const cepVar = node.data.config?.variable || "address";
