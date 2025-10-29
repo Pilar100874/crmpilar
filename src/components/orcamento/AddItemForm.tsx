@@ -18,7 +18,7 @@ import ProductSearchFilters, { ProductFilters } from "./ProductSearchFilters";
 
 interface AddItemFormProps {
   orcamentoId: string;
-  estabelecimentoId: string;
+  estabelecimentoId?: string;
   onItemAdded: () => void;
 }
 
@@ -35,12 +35,17 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
 
   const loadProdutos = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('produtos')
         .select('*')
-        .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
         .order('nome');
+
+      if (estabelecimentoId) {
+        query = query.eq('estabelecimento_id', estabelecimentoId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setProdutos(data || []);
@@ -53,11 +58,16 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
 
   const loadGrupos = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('produto_grupos')
         .select('*')
-        .eq('estabelecimento_id', estabelecimentoId)
         .order('nome');
+
+      if (estabelecimentoId) {
+        query = query.eq('estabelecimento_id', estabelecimentoId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setGrupos(data || []);
