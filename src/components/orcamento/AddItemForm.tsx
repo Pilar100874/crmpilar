@@ -203,7 +203,6 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
             <Select
               value={formData.produto_id}
               onValueChange={(value) => {
-                const produto = filteredProdutos.find(p => p.id === value);
                 setFormData({
                   ...formData,
                   produto_id: value,
@@ -216,16 +215,14 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
               <SelectContent>
                 {filteredProdutos.map((produto) => (
                   <SelectItem key={produto.id} value={produto.id}>
-                    <div className="flex flex-col">
-                      <span>{produto.nome}</span>
-                      {(produto.largura || produto.comprimento || produto.gramatura) && (
-                        <span className="text-xs text-muted-foreground">
-                          {produto.largura && `L: ${produto.largura}cm`}
-                          {produto.comprimento && ` × C: ${produto.comprimento}cm`}
-                          {produto.gramatura && ` | ${produto.gramatura}g/m²`}
-                        </span>
-                      )}
-                    </div>
+                    {produto.nome}
+                    {(produto.largura || produto.comprimento || produto.gramatura) && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {produto.largura && `L: ${produto.largura}`}
+                        {produto.comprimento && ` C: ${produto.comprimento}`}
+                        {produto.gramatura && ` G: ${produto.gramatura}`}
+                      </span>
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
