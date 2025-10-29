@@ -656,6 +656,7 @@ export type Database = {
       }
       empresas: {
         Row: {
+          bairro: string | null
           cep: string | null
           cidade: string | null
           cnpj: string | null
@@ -672,6 +673,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          bairro?: string | null
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
@@ -688,6 +690,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          bairro?: string | null
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
