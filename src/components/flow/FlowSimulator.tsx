@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
+import { maskCNPJ } from "@/lib/masks";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -668,6 +669,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const v = String(valor).trim();
             switch (campo) {
               case 'cnpj':
+                return maskCNPJ(v);
               case 'cep':
               case 'telefone':
                 return v.replace(/\D/g, '');
