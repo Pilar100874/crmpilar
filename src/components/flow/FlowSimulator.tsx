@@ -679,6 +679,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               case 'nome_fantasia':
               case 'cidade':
               case 'endereco':
+              case 'bairro':
                 return v.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
               default:
                 return v;
