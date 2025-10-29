@@ -40,6 +40,24 @@ export const useCNPJLookup = () => {
 
       const data = await response.json();
 
+      // Processar telefone: pegar primeiro se houver vários, adicionar +55 e limitar a 13 dígitos
+      let telefoneProcessado = '';
+      if (data.ddd_telefone_1) {
+        // Se houver múltiplos telefones separados, pegar apenas o primeiro
+        let primeiroTelefone = data.ddd_telefone_1.split(/[,;]/)[0].trim();
+        
+        // Remover todos os caracteres não numéricos
+        let telefoneNumeros = primeiroTelefone.replace(/\D/g, '');
+        
+        // Se não começar com 55, adicionar código do país
+        if (!telefoneNumeros.startsWith('55')) {
+          telefoneNumeros = '55' + telefoneNumeros;
+        }
+        
+        // Limitar a 13 dígitos (55 + 11 dígitos)
+        telefoneProcessado = telefoneNumeros.substring(0, 13);
+      }
+
       setLoading(false);
       return {
         cnpj: data.cnpj,
@@ -52,7 +70,7 @@ export const useCNPJLookup = () => {
         municipio: data.municipio,
         uf: data.uf,
         cep: data.cep,
-        telefone: data.ddd_telefone_1 || '',
+        telefone: telefoneProcessado,
         email: data.email || '',
       };
     } catch (error) {

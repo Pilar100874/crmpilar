@@ -380,7 +380,7 @@ export default function Empresas() {
         ...prev,
         company_name: result.nome,
         company_fantasia: result.fantasia,
-        phone: result.telefone,
+        telefone: result.telefone,
         email: result.email,
         cep: result.cep,
         address: result.logradouro,
