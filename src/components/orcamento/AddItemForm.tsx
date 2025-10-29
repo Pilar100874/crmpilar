@@ -37,10 +37,7 @@ export default function AddItemForm({ orcamentoId, estabelecimentoId, onItemAdde
     try {
       const { data, error } = await supabase
         .from('produtos')
-        .select(`
-          *,
-          grupo:produto_grupos(*)
-        `)
+        .select('*')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
         .order('nome');
