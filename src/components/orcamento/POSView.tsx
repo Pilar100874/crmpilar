@@ -152,7 +152,9 @@ export default function POSView({ estabelecimentoId, onClose }: POSViewProps) {
 
     setLoading(true);
     try {
-      // Criar orçamento
+      // Gerar token de compartilhamento no cliente para evitar dependência de funções no banco
+      const token = crypto.randomUUID().replace(/-/g, '');
+      // Criar orçamento já com o token (evita trigger/func no banco)
       const { data: orcamento, error: orcamentoError } = await supabase
         .from('orcamentos')
         .insert({
@@ -161,6 +163,7 @@ export default function POSView({ estabelecimentoId, onClose }: POSViewProps) {
           etapa: 'orcamento',
           status: 'em_aberto',
           valor_total: getTotal(),
+          token_compartilhamento: token,
         })
         .select()
         .single();
@@ -184,21 +187,12 @@ export default function POSView({ estabelecimentoId, onClose }: POSViewProps) {
 
       if (itensError) throw itensError;
 
-      // Gerar token de compartilhamento
-      const token = crypto.randomUUID();
-      const { error: tokenError } = await supabase
-        .from('orcamentos')
-        .update({ token_compartilhamento: token })
-        .eq('id', orcamento.id);
-
-      if (!tokenError) {
-        const link = `${window.location.origin}/orcamento/${token}`;
-        setShareLink(link);
-      }
+      // Link de compartilhamento a partir do token gerado
+      const link = `${window.location.origin}/orcamento/${token}`;
+      setShareLink(link);
 
       setCurrentOrcamentoId(orcamento.id);
       toast.success('Orçamento criado com sucesso!');
-      
       // Limpar carrinho
       setCartItems(new Map());
       setSelectedCliente("");
