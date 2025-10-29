@@ -62,8 +62,9 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
   };
 
   const handleToggleLocked = async () => {
+    // Tipo e CPF/CNPJ são campos de entrada manual, nunca bloqueados
     if (field.field_id === "cpf_cnpj" || field.field_id === "company_type") {
-      // CNPJ e Tipo sempre bloqueados
+      toast.error("Campos de entrada manual não podem ser bloqueados");
       return;
     }
     
@@ -101,12 +102,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
           {field.field_label}
           {field.field_id === "cpf_cnpj" && (
             <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-              Chave Única
-            </span>
-          )}
-          {field.field_id === "company_type" && (
-            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-              Campo Base
+              Chave Única - Sempre Obrigatório
             </span>
           )}
         </div>
@@ -126,7 +122,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
           <Switch
             checked={field.required}
             onCheckedChange={() => onToggleRequired(field.id)}
-            disabled={field.field_id === "cpf_cnpj" || field.field_id === "company_type"}
+            disabled={field.field_id === "cpf_cnpj"}
           />
           <span className="text-sm text-muted-foreground whitespace-nowrap">Obrigatório</span>
         </div>
@@ -135,13 +131,12 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
           <Switch
             checked={isLocked}
             onCheckedChange={handleToggleLocked}
-            disabled={field.field_id === "cpf_cnpj" || field.field_id === "company_type"}
           />
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Bloqueado</span>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Auto-preenchido</span>
         </div>
       </div>
 
-      {!field.locked && field.field_id !== "cpf_cnpj" && field.field_id !== "company_type" && (
+      {field.field_id !== "cpf_cnpj" && field.field_id !== "company_type" && (
         <Button
           variant="ghost"
           size="icon"
@@ -203,8 +198,8 @@ export const EmpresaFieldsCRUD = () => {
     try {
       // Campos principais que devem sempre existir
       const mainFields = [
-        { field_id: "company_type", field_label: "Tipo", field_type: "select", field_order: 0, required: true, locked: true, options: { options: ["Pessoa Física", "Pessoa Jurídica"] } },
-        { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 1, required: true, locked: true },
+        { field_id: "company_type", field_label: "Tipo", field_type: "select", field_order: 0, required: true, locked: false, options: { options: ["Pessoa Física", "Pessoa Jurídica"] } },
+        { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 1, required: true, locked: false },
         { field_id: "company_name", field_label: "Razão Social", field_type: "text", field_order: 2, required: true, locked: false },
         { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 3, required: true, locked: false },
         { field_id: "cep", field_label: "CEP", field_type: "text", field_order: 4, required: true, locked: false },
@@ -598,7 +593,7 @@ export const EmpresaFieldsCRUD = () => {
         <CardHeader>
           <CardTitle>Campos Configurados ({fields.length})</CardTitle>
           <CardDescription>
-            Configure todos os campos do cadastro de empresas. Tipo e CPF/CNPJ são sempre obrigatórios e bloqueados. Use "Bloqueado" nos demais campos para impedir edição após preenchimento.
+            Configure todos os campos do cadastro de empresas. CPF/CNPJ é sempre obrigatório. "Auto-preenchido" indica campos preenchidos automaticamente (ex: via busca CNPJ) que não podem ser editados manualmente.
           </CardDescription>
         </CardHeader>
         <CardContent>
