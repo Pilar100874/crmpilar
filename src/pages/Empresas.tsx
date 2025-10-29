@@ -132,7 +132,7 @@ export default function Empresas() {
       .from('form_field_configs')
       .select('*')
       .eq('estabelecimento_id', estabId)
-      .eq('form_type', 'company')
+      .eq('form_type', 'empresa')
       .order('field_order');
 
     if (error) {
@@ -164,7 +164,7 @@ export default function Empresas() {
   const createDefaultFieldConfigs = async (estabId: string) => {
     const defaultConfigs = companyFields.map((field, index) => ({
       estabelecimento_id: estabId,
-      form_type: 'company',
+      form_type: 'empresa',
       field_id: field.id,
       field_label: field.label,
       field_type: field.type,
@@ -192,7 +192,7 @@ export default function Empresas() {
       .from('form_field_configs')
       .update(updates)
       .eq('estabelecimento_id', estabelecimentoId)
-      .eq('form_type', 'company')
+      .eq('form_type', 'empresa')
       .eq('field_id', fieldId);
 
     if (error) {
@@ -460,11 +460,11 @@ export default function Empresas() {
   const handleSaveEmpresa = async () => {
     const errors: Record<string, string> = {};
 
-    // Validar campos obrigatórios da empresa
-    const requiredFields = ['company_type', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'state', 'inscricao'];
-    requiredFields.forEach(field => {
-      if (!formData[field]?.toString().trim()) {
-        errors[field] = "Campo obrigatório";
+    // Validar campos obrigatórios da empresa com base na configuração
+    const requiredIds = companyFields.filter(f => f.required).map(f => f.id);
+    requiredIds.forEach((fieldId) => {
+      if (!formData[fieldId]?.toString().trim()) {
+        errors[fieldId] = "Campo obrigatório";
       }
     });
 
