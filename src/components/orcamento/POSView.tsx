@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
@@ -22,8 +22,7 @@ import {
   Lightbulb,
   History,
   Tag,
-  Filter,
-  Package
+  Filter
 } from "lucide-react";
 import {
   Select,
@@ -325,93 +324,12 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   };
 
   const cartArray = Array.from(cartItems.values());
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopyLink = () => {
     if (shareLink) {
       navigator.clipboard.writeText(shareLink);
       toast.success("Link copiado!");
     }
-  };
-
-  const handleShare = async () => {
-    if (!selectedCliente) {
-      toast.error('Selecione um cliente para compartilhar');
-      return;
-    }
-
-    if (cartItems.size === 0) {
-      toast.error('Adicione itens ao carrinho');
-      return;
-    }
-
-    // Se já existe link, apenas copia
-    if (shareLink) {
-      handleCopyLink();
-      return;
-    }
-
-    // Criar orçamento e gerar link
-    setLoading(true);
-    try {
-      const token = crypto.randomUUID().replace(/-/g, '');
-      const { data: orcamento, error: orcamentoError } = await supabase
-        .from('orcamentos')
-        .insert({
-          estabelecimento_id: estabelecimentoId,
-          cliente_id: selectedCliente,
-          etapa: 'orcamento',
-          status: 'em_aberto',
-          valor_total: getTotal(),
-          token_compartilhamento: token,
-        })
-        .select()
-        .single();
-
-      if (orcamentoError) throw orcamentoError;
-
-      const items = Array.from(cartItems.values()).map(item => ({
-        orcamento_id: orcamento.id,
-        produto_id: item.produto.id,
-        quantidade: item.quantity,
-        preco_unitario: 10,
-        preco_original: 10,
-        desconto: 0,
-        subtotal: item.quantity * 10,
-      }));
-
-      const { error: itensError } = await supabase
-        .from('orcamento_itens')
-        .insert(items);
-
-      if (itensError) throw itensError;
-
-      const link = `${window.location.origin}/orcamento/${token}`;
-      setShareLink(link);
-      setCurrentOrcamentoId(orcamento.id);
-      
-      // Copiar automaticamente
-      navigator.clipboard.writeText(link);
-      toast.success('Link criado e copiado!');
-    } catch (error: any) {
-      console.error('Erro ao criar link:', error);
-      toast.error('Erro ao criar link de compartilhamento');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePhotoClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Aqui você pode adicionar lógica para processar a imagem
-    toast.info('Processando imagem...');
-    // TODO: Implementar extração de itens da foto
   };
 
   const handleItemsExtracted = async (items: any[]) => {
@@ -639,87 +557,222 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           {/* Header com Tabs */}
           <div className="border-b border-slate-700">
-            <TabsList className="w-full grid grid-cols-2 bg-transparent h-12 rounded-none">
-              <TabsTrigger value="cart" className="data-[state=active]:bg-slate-700">
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                <span>Carrinho</span>
+            <TabsList className="w-full grid grid-cols-5 bg-transparent h-14 rounded-none">
+              <TabsTrigger value="cart" className="flex-col gap-1 data-[state=active]:bg-slate-700">
+                <ShoppingCart className="w-4 h-4" />
+                <span className="text-xs">Carrinho</span>
               </TabsTrigger>
-              <TabsTrigger value="info" className="data-[state=active]:bg-slate-700">
-                <Package className="w-4 h-4 mr-2" />
-                <span>Detalhes</span>
+              <TabsTrigger value="photo" className="flex-col gap-1 data-[state=active]:bg-slate-700">
+                <Camera className="w-4 h-4" />
+                <span className="text-xs">Foto</span>
+              </TabsTrigger>
+              <TabsTrigger value="suggestions" className="flex-col gap-1 data-[state=active]:bg-slate-700">
+                <Lightbulb className="w-4 h-4" />
+                <span className="text-xs">Sugestões</span>
+              </TabsTrigger>
+              <TabsTrigger value="share" className="flex-col gap-1 data-[state=active]:bg-slate-700">
+                <Share2 className="w-4 h-4" />
+                <span className="text-xs">Compartilhar</span>
+              </TabsTrigger>
+              <TabsTrigger value="status" className="flex-col gap-1 data-[state=active]:bg-slate-700">
+                <Tag className="w-4 h-4" />
+                <span className="text-xs">Status</span>
               </TabsTrigger>
             </TabsList>
+          </div>
+
+          {/* Cliente (sempre visível) */}
+          <div className="p-4 border-b border-slate-700">
+            <label className="text-sm font-medium text-slate-300 flex items-center gap-2 mb-2">
+              <User className="w-4 h-4" />
+              Cliente
+            </label>
+            <Select value={selectedCliente} onValueChange={setSelectedCliente}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {clientes.map((cliente) => (
+                  <SelectItem key={cliente.id} value={cliente.id}>
+                    {cliente.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Conteúdo das Tabs */}
           <TabsContent value="cart" className="flex-1 flex flex-col m-0">
             <ScrollArea className="flex-1 p-4">
-              {cartArray.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                  <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
-                  <p className="text-sm">Carrinho vazio</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {cartArray.map(({ produto, quantity }) => (
-                    <div key={produto.id} className="bg-slate-700 rounded-lg p-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-slate-600 rounded flex items-center justify-center flex-shrink-0">
-                          {produto.foto_url ? (
-                            <img src={produto.foto_url} alt="" className="w-full h-full object-cover rounded" />
-                          ) : (
-                            <span className="text-slate-400 text-sm">{produto.nome[0]}</span>
-                          )}
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-medium truncate">{produto.nome}</p>
-                          <p className="text-slate-400 text-xs">R$ 10,00</p>
-                        </div>
-
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-red-400 hover:text-red-300"
-                          onClick={() => removeFromCart(produto.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6 bg-slate-600 border-slate-500"
-                            onClick={() => updateQuantity(produto.id, -1)}
-                          >
-                            <Minus className="w-3 h-3 text-white" />
-                          </Button>
-                          <span className="text-white font-medium w-10 text-center text-sm">{quantity}</span>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6 bg-slate-600 border-slate-500"
-                            onClick={() => updateQuantity(produto.id, 1)}
-                          >
-                            <Plus className="w-3 h-3 text-white" />
-                          </Button>
-                        </div>
-                        <span className="text-white font-bold text-sm">
-                          R$ {(quantity * 10).toFixed(2)}
-                        </span>
-                      </div>
+          {cartArray.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
+              <p className="text-sm">Carrinho vazio</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {cartArray.map(({ produto, quantity }) => (
+                <div key={produto.id} className="bg-slate-700 rounded-lg p-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-slate-600 rounded flex items-center justify-center flex-shrink-0">
+                      {produto.foto_url ? (
+                        <img src={produto.foto_url} alt="" className="w-full h-full object-cover rounded" />
+                      ) : (
+                        <span className="text-slate-400 text-sm">{produto.nome[0]}</span>
+                      )}
                     </div>
-                  ))}
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{produto.nome}</p>
+                      <p className="text-slate-400 text-xs">R$ 10,00</p>
+                    </div>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 text-red-400 hover:text-red-300"
+                      onClick={() => removeFromCart(produto.id)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6 bg-slate-600 border-slate-500"
+                        onClick={() => updateQuantity(produto.id, -1)}
+                      >
+                        <Minus className="w-3 h-3 text-white" />
+                      </Button>
+                      <span className="text-white font-medium w-10 text-center text-sm">{quantity}</span>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6 bg-slate-600 border-slate-500"
+                        onClick={() => updateQuantity(produto.id, 1)}
+                      >
+                        <Plus className="w-3 h-3 text-white" />
+                      </Button>
+                    </div>
+                    <span className="text-white font-bold text-sm">
+                      R$ {(quantity * 10).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
+              ))}
+            </div>
               )}
             </ScrollArea>
+
+            {/* Footer do Carrinho */}
+            <div className="p-4 border-t border-slate-700 space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-slate-300">
+              <span className="text-sm">Itens:</span>
+              <span className="text-sm">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-white">Total:</span>
+              <span className="font-bold text-white text-2xl">
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL'
+                }).format(getTotal())}
+              </span>
+            </div>
+          </div>
+
+          <Button 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+            onClick={handleFinalize}
+            disabled={loading || cartArray.length === 0 || !selectedCliente}
+          >
+            <DollarSign className="w-5 h-5 mr-2" />
+            {loading ? 'Processando...' : 'Finalizar Orçamento'}
+              </Button>
+            </div>
           </TabsContent>
 
-          {/* Tab: Detalhes do Produto */}
-          <TabsContent value="info" className="flex-1 m-0 p-4">
+          {/* Tab: Inserir por Foto */}
+          <TabsContent value="photo" className="flex-1 m-0 p-4">
+            <ImageItemExtractor onItemsExtracted={handleItemsExtracted} />
+          </TabsContent>
+
+          {/* Tab: Sugestões */}
+          <TabsContent value="suggestions" className="flex-1 m-0 p-4">
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <Lightbulb className="w-12 h-12 mb-3 opacity-20" />
+              <p className="text-sm text-center">Sugestões de produtos</p>
+              <p className="text-xs text-center mt-1">Baseadas no histórico do cliente</p>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Compartilhar */}
+          <TabsContent value="share" className="flex-1 m-0 p-4">
+            {shareLink ? (
+              <div className="space-y-4">
+                <div className="flex flex-col items-center justify-center py-6">
+                  <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
+                    <Share2 className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2">Orçamento Criado!</h3>
+                  <p className="text-sm text-slate-400 text-center">
+                    Compartilhe o link abaixo com o cliente
+                  </p>
+                </div>
+
+                <div className="bg-slate-700 rounded-lg p-4">
+                  <label className="text-xs text-slate-400 mb-2 block">Link de Compartilhamento</label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={shareLink}
+                      readOnly
+                      className="bg-slate-600 border-slate-500 text-white text-sm"
+                    />
+                    <Button
+                      onClick={handleCopyLink}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                    onClick={() => {
+                      setShareLink("");
+                      setCurrentOrcamentoId(null);
+                      setActiveTab("cart");
+                    }}
+                  >
+                    Novo Orçamento
+                  </Button>
+                  {onClose && (
+                    <Button
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                      onClick={onClose}
+                    >
+                      Concluir
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <Share2 className="w-12 h-12 mb-3 opacity-20" />
+                <p className="text-sm text-center">Finalize o orçamento para gerar o link</p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Tab: Status */}
+          <TabsContent value="status" className="flex-1 m-0 p-4">
             <div className="space-y-3">
               <div className="bg-slate-700 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-white mb-3">Status do Orçamento</h4>
@@ -742,128 +795,18 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                     <span className="text-white">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Produtos:</span>
-                    <span className="text-white">{cartArray.length}</span>
+                    <span className="text-slate-400">Valor Total:</span>
+                    <span className="text-white font-bold">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(getTotal())}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </TabsContent>
-
-          {/* Rodapé Fixo - Cliente, Total e Botões */}
-          <div className="border-t border-slate-700 bg-slate-800">
-            {/* Cliente */}
-            <div className="p-4 border-b border-slate-700">
-              <label className="text-sm font-medium text-slate-300 flex items-center gap-2 mb-2">
-                <User className="w-4 h-4" />
-                Cliente
-              </label>
-              <Select value={selectedCliente} onValueChange={setSelectedCliente}>
-                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((cliente) => (
-                    <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Total - Estilo Grande Centralizado */}
-            <div className="px-4 py-6 border-b border-slate-700 bg-slate-900/50">
-              <div className="flex flex-col items-center justify-center">
-                <span className="text-7xl font-bold text-white tracking-tight">
-                  {new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                  }).format(getTotal())}
-                </span>
-              </div>
-            </div>
-
-            {/* Botões de Ação */}
-            <div className="p-4 space-y-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-              
-              <div className="grid grid-cols-4 gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-col h-auto py-3 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-                  onClick={handlePhotoClick}
-                >
-                  <Camera className="w-5 h-5 mb-1" />
-                  <span className="text-xs">Foto</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-col h-auto py-3 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-                  onClick={() => setActiveTab("suggestions")}
-                >
-                  <Lightbulb className="w-5 h-5 mb-1" />
-                  <span className="text-xs">Sugestões</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-col h-auto py-3 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-                  onClick={handleShare}
-                  disabled={loading || cartArray.length === 0 || !selectedCliente}
-                >
-                  <Share2 className="w-5 h-5 mb-1" />
-                  <span className="text-xs">{shareLink ? 'Copiar' : 'Compartilhar'}</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-col h-auto py-3 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
-                >
-                  <Tag className="w-5 h-5 mb-1" />
-                  <span className="text-xs">Stats</span>
-                </Button>
-              </div>
-
-              <Button 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
-                onClick={handleFinalize}
-                disabled={loading || cartArray.length === 0 || !selectedCliente}
-              >
-                <DollarSign className="w-5 h-5 mr-2" />
-                {loading ? 'Processando...' : 'Finalizar Orçamento'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Modal: Sugestões */}
-          {activeTab === "suggestions" && (
-            <div className="absolute inset-0 bg-slate-900/95 z-50 p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">Sugestões</h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setActiveTab("cart")}
-                >
-                  <X className="w-5 h-5 text-white" />
-                </Button>
-              </div>
-              <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                <Lightbulb className="w-12 h-12 mb-3 opacity-20" />
-                <p className="text-sm text-center">Sugestões de produtos</p>
-                <p className="text-xs text-center mt-1">Baseadas no histórico do cliente</p>
-              </div>
-            </div>
-          )}
         </Tabs>
       </div>
     </div>
