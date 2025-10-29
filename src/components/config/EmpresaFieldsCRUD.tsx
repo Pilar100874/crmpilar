@@ -105,6 +105,11 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
               Chave Única - Sempre Obrigatório
             </span>
           )}
+          {field.field_id === "company_type" && (
+            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+              Sempre Obrigatório
+            </span>
+          )}
         </div>
         <div className="text-sm text-muted-foreground">
           {fieldTypeOptions.find(t => t.value === field.field_type)?.label || field.field_type}
@@ -122,7 +127,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
           <Switch
             checked={field.required}
             onCheckedChange={() => onToggleRequired(field.id)}
-            disabled={field.field_id === "cpf_cnpj"}
+            disabled={field.field_id === "cpf_cnpj" || field.field_id === "company_type"}
           />
           <span className="text-sm text-muted-foreground whitespace-nowrap">Obrigatório</span>
         </div>
