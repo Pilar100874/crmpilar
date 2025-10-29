@@ -176,7 +176,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
     }
     
     // Filtro de grupo
-    if (selectedGrupo && p.grupo_id !== selectedGrupo) {
+    if (selectedGrupo && selectedGrupo !== 'all' && p.grupo_id !== selectedGrupo) {
       return false;
     }
     
@@ -399,7 +399,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                     <SelectValue placeholder="Todos os grupos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os grupos</SelectItem>
+                    <SelectItem value="all">Todos os grupos</SelectItem>
                     {grupos.map((grupo) => (
                       <SelectItem key={grupo.id} value={grupo.id}>
                         {grupo.nome}
@@ -482,7 +482,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                   size="sm"
                   className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
                   onClick={() => {
-                    setSelectedGrupo("");
+                    setSelectedGrupo("all");
                     setGramaturaMin("");
                     setGramaturaMax("");
                     setLarguraMin("");
