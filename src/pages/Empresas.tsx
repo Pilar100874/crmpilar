@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical } from "lucide-react";
@@ -94,7 +95,7 @@ export default function Empresas() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Campos obrigatórios fixos de empresa
-  const [companyFields] = useState<CustomField[]>([
+  const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: true },
     { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: true },
     { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
@@ -113,6 +114,92 @@ export default function Empresas() {
     { id: "contact_email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
     { id: "contact_position", label: "Cargo", type: "text", category: "contact", required: false, locked: true },
   ]);
+
+  // Estados para carregar/salvar configs no banco
+  const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
+
+  // Carregar configurações de campos do banco
+  const loadFieldConfigs = async (estabId: string) => {
+    const { data, error } = await supabase
+      .from('form_field_configs')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .eq('form_type', 'company')
+      .order('field_order');
+
+    if (error) {
+      console.error('Erro ao carregar configs:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      setFieldConfigsFromDB(data);
+      
+      // Atualizar companyFields com os dados do banco
+      setCompanyFields(prev => prev.map(field => {
+        const dbConfig = data.find((c: any) => c.field_id === field.id);
+        if (dbConfig) {
+          return {
+            ...field,
+            required: dbConfig.required,
+            locked: dbConfig.locked,
+          };
+        }
+        return field;
+      }));
+    } else {
+      // Se não tem configs no banco, criar padrão
+      await createDefaultFieldConfigs(estabId);
+    }
+  };
+
+  const createDefaultFieldConfigs = async (estabId: string) => {
+    const defaultConfigs = companyFields.map((field, index) => ({
+      estabelecimento_id: estabId,
+      form_type: 'company',
+      field_id: field.id,
+      field_label: field.label,
+      field_type: field.type,
+      required: field.required || false,
+      locked: field.locked || false,
+      field_order: index,
+      options: field.options ? JSON.stringify(field.options) : null,
+    }));
+
+    const { error } = await supabase
+      .from('form_field_configs')
+      .insert(defaultConfigs);
+
+    if (error) {
+      console.error('Erro ao criar configs padrão:', error);
+    } else {
+      loadFieldConfigs(estabId);
+    }
+  };
+
+  const updateFieldConfig = async (fieldId: string, updates: { required?: boolean; locked?: boolean }) => {
+    if (!estabelecimentoId) return;
+
+    const { error } = await supabase
+      .from('form_field_configs')
+      .update(updates)
+      .eq('estabelecimento_id', estabelecimentoId)
+      .eq('form_type', 'company')
+      .eq('field_id', fieldId);
+
+    if (error) {
+      console.error('Erro ao atualizar config:', error);
+      toast.error('Erro ao salvar configuração');
+      return;
+    }
+
+    // Atualizar estado local
+    setCompanyFields(prev => prev.map(field => 
+      field.id === fieldId ? { ...field, ...updates } : field
+    ));
+    
+    toast.success('Configuração salva!');
+  };
 
   // Estados para vincular contatos
   const [contatos, setContatos] = useState<Contato[]>([]);
@@ -133,6 +220,7 @@ export default function Empresas() {
       if (estabId) {
         fetchEmpresas(estabId);
         fetchContatos(estabId);
+        loadFieldConfigs(estabId);
       }
     };
     fetchEstabelecimento();
@@ -927,15 +1015,33 @@ export default function Empresas() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={field.required ? "default" : "secondary"} className="text-xs">
-                              {field.required ? "Obrigatório" : "Opcional"}
-                            </Badge>
-                            {field.locked && (
-                              <Badge variant="outline" className="text-xs">
-                                Bloqueado
-                              </Badge>
-                            )}
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <Label htmlFor={`required-${field.id}`} className="text-xs cursor-pointer">
+                                  Obrigatório
+                                </Label>
+                                <Switch
+                                  id={`required-${field.id}`}
+                                  checked={field.required || false}
+                                  onCheckedChange={(checked) => {
+                                    updateFieldConfig(field.id, { required: checked });
+                                  }}
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Label htmlFor={`locked-${field.id}`} className="text-xs cursor-pointer">
+                                  Bloqueado
+                                </Label>
+                                <Switch
+                                  id={`locked-${field.id}`}
+                                  checked={field.locked || false}
+                                  onCheckedChange={(checked) => {
+                                    updateFieldConfig(field.id, { locked: checked });
+                                  }}
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -944,8 +1050,8 @@ export default function Empresas() {
 
                   <div className="pt-4 border-t">
                     <p className="text-sm text-muted-foreground">
-                      Os campos listados acima são configurados na tabela <code className="bg-muted px-1 py-0.5 rounded">form_field_configs</code> no banco de dados.
-                      Para alterar quais campos são obrigatórios, vá para <strong>Contatos → Configuração de Campos → Campos de Empresa</strong>.
+                      Configure se cada campo é obrigatório ou opcional e se pode ser editado manualmente.
+                      Os campos bloqueados não poderão ser modificados no formulário de cadastro.
                     </p>
                   </div>
                 </div>
