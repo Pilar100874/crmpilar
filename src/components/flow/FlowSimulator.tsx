@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface Message {
   id: string;
@@ -654,6 +655,159 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }, 1000);
         }
         break;
+
+      case "crm_cadastro_empresa": {
+        addSystemMessage("📇 Validando e cadastrando empresa...");
+        try {
+          const fieldMappings = config.fieldMappings || {};
+          const empresaData: Record<string, any> = {};
+          const customFields: Record<string, any> = {};
+
+          const formatValue = (campo: string, valor: string): string => {
+            if (!valor) return valor;
+            const v = String(valor).trim();
+            switch (campo) {
+              case 'cnpj':
+              case 'cep':
+              case 'telefone':
+                return v.replace(/\D/g, '');
+              case 'email':
+                return v.toLowerCase();
+              case 'estado':
+                return v.toUpperCase().substring(0, 2);
+              case 'razao_social':
+              case 'nome_fantasia':
+              case 'cidade':
+              case 'endereco':
+                return v.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+              default:
+                return v;
+            }
+          };
+
+          // Interpolar todas as variáveis mapeadas
+          for (const [field, template] of Object.entries(fieldMappings)) {
+            if (typeof template === 'string' && template) {
+              const raw = interpolateVariables(template as string, context);
+              if (raw && raw.trim()) {
+                const value = formatValue(field, raw);
+                if ([
+                  'cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep'
+                ].includes(field)) {
+                  empresaData[field] = value;
+                } else {
+                  customFields[field] = value;
+                }
+              }
+            }
+          }
+
+          if (Object.keys(customFields).length > 0) {
+            empresaData.custom_fields = customFields;
+          }
+
+          // Estabelecimento
+          const estabId = await getEstabelecimentoId();
+          if (!estabId) {
+            addSystemMessage("❌ Estabelecimento não identificado. Selecione um estabelecimento.");
+            break;
+          }
+          empresaData.estabelecimento_id = estabId;
+
+          // Campos obrigatórios
+          let camposObrigatorios: string[] = [];
+          const { data: fieldConfigs } = await supabase
+            .from('form_field_configs')
+            .select('field_id, required')
+            .eq('estabelecimento_id', estabId)
+            .eq('form_type', 'company')
+            .eq('required', true);
+
+          if (fieldConfigs && fieldConfigs.length > 0) {
+            const mapIds: Record<string, string> = {
+              cpf_cnpj: 'cnpj',
+              company_name: 'razao_social',
+              company_fantasia: 'nome_fantasia',
+              address: 'endereco',
+              neighborhood: 'bairro',
+              state: 'estado',
+              city: 'cidade',
+            };
+            camposObrigatorios = fieldConfigs.map((fc: any) => mapIds[fc.field_id] || fc.field_id);
+          }
+          if (camposObrigatorios.length === 0) {
+            camposObrigatorios = ['cnpj','razao_social','nome_fantasia'];
+          }
+
+          const faltando = camposObrigatorios.filter((campo) => {
+            const isTableField = ['cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep'].includes(campo);
+            return isTableField ? !(empresaData as any)[campo] : !(customFields as any)[campo];
+          });
+          if (faltando.length > 0) {
+            addSystemMessage(`❌ Campos obrigatórios faltando: ${faltando.join(', ')}`);
+            break;
+          }
+
+          // Buscar existente
+          const { data: existente, error: searchError } = await supabase
+            .from('empresas')
+            .select('id')
+            .eq('cnpj', empresaData.cnpj)
+            .eq('estabelecimento_id', estabId)
+            .maybeSingle();
+          if (searchError) {
+            addSystemMessage(`❌ Erro ao buscar empresa: ${searchError.message}`);
+            break;
+          }
+
+          let clienteNovo = 'Não';
+
+          if (existente) {
+            if (config.updateExisting && config.validationMode !== 'validate_only') {
+              const { error: updateError } = await supabase
+                .from('empresas')
+                .update({ ...empresaData, updated_at: new Date().toISOString() })
+                .eq('id', existente.id);
+              if (updateError) {
+                addSystemMessage(`❌ Erro ao atualizar empresa: ${updateError.message}`);
+                break;
+              }
+              addSuccessMessage(`✅ Empresa atualizada: ${empresaData.nome_fantasia || empresaData.razao_social}`);
+            } else {
+              addSystemMessage(`ℹ️ Empresa já cadastrada.`);
+            }
+          } else {
+            clienteNovo = 'Sim';
+            if (config.validationMode !== 'validate_only') {
+              const { error: insertError } = await supabase
+                .from('empresas')
+                .insert([empresaData as any]);
+              if (insertError) {
+                addSystemMessage(`❌ Erro ao criar empresa: ${insertError.message}`);
+                break;
+              }
+              addSuccessMessage(`✅ Empresa cadastrada: ${empresaData.nome_fantasia || empresaData.razao_social}`);
+            } else {
+              addSystemMessage('ℹ️ Modo validação: sem gravar.');
+            }
+          }
+
+          const outputVar = config.outputVariable || 'cliente_novo';
+          setContext((prev) => ({ ...prev, [outputVar]: clienteNovo }));
+        } catch (e: any) {
+          addSystemMessage(`❌ Erro no cadastro de empresa: ${e?.message || e}`);
+        }
+
+        // Próximo bloco
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            executeNode(nextNode);
+          }
+        }, 500);
+        break;
+      }
 
       case "reply_buttons":
         const replyHeader = interpolateVariables(config.header || "", context);
