@@ -784,6 +784,62 @@ export type Database = {
           },
         ]
       }
+      form_field_configs: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          estabelecimento_id: string | null
+          field_id: string
+          field_label: string
+          field_order: number | null
+          field_type: string
+          form_type: string
+          id: string
+          locked: boolean | null
+          options: Json | null
+          required: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          field_id: string
+          field_label: string
+          field_order?: number | null
+          field_type: string
+          form_type: string
+          id?: string
+          locked?: boolean | null
+          options?: Json | null
+          required?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string | null
+          field_id?: string
+          field_label?: string
+          field_order?: number | null
+          field_type?: string
+          form_type?: string
+          id?: string
+          locked?: boolean | null
+          options?: Json | null
+          required?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_field_configs_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funil_deals: {
         Row: {
           cliente_id: string | null

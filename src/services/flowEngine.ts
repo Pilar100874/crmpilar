@@ -611,50 +611,62 @@ export class FlowEngine {
       }
     }
 
-    // Validar campos obrigatórios
-    const camposObrigatorios = ['cnpj', 'razao_social', 'nome_fantasia'];
-    const camposFaltando = camposObrigatorios.filter(campo => !empresaData[campo]);
-    
-    if (camposFaltando.length > 0) {
-      console.error("Campos obrigatórios não preenchidos:", camposFaltando.join(", "));
-      return;
-    }
-
     // Adicionar custom_fields se houver
     if (Object.keys(customFields).length > 0) {
       empresaData.custom_fields = customFields;
     }
 
-    // Verificar se o CNPJ foi informado (tenta fallback da variável global "cnpj")
-    if (!empresaData.cnpj) {
-      const fallbackCnpj = (this.context as any)?.vars?.cnpj;
-      if (fallbackCnpj && String(fallbackCnpj).trim()) {
-        empresaData.cnpj = String(fallbackCnpj).trim();
-      }
-    }
-
-    if (!empresaData.cnpj) {
-      console.error("CNPJ não foi mapeado ou está vazio");
-      return;
-    }
-
-    // Garantir que nome_fantasia existe (campo obrigatório)
-    if (!empresaData.nome_fantasia) {
-      empresaData.nome_fantasia = empresaData.razao_social || empresaData.cnpj;
-    }
-
-    // Garantir que razao_social existe (campo obrigatório)
-    if (!empresaData.razao_social) {
-      empresaData.razao_social = empresaData.nome_fantasia || empresaData.cnpj;
-    }
-
     try {
-      // Importar o cliente Supabase dinamicamente
+      // Importar dependências
       const { supabase } = await import("@/integrations/supabase/client");
       const { getEstabelecimentoId } = await import("@/lib/estabelecimentoUtils");
       const estabId = await getEstabelecimentoId();
+      
+      // Buscar configuração de campos obrigatórios
+      let camposObrigatorios: string[] = [];
       if (estabId) {
         empresaData.estabelecimento_id = estabId;
+        
+        const { data: fieldConfigs } = await supabase
+          .from('form_field_configs')
+          .select('field_id, required')
+          .eq('estabelecimento_id', estabId)
+          .eq('form_type', 'company')
+          .eq('required', true);
+
+        if (fieldConfigs && fieldConfigs.length > 0) {
+          // Mapear IDs de campo para nomes da tabela
+          const fieldMapping: Record<string, string> = {
+            cpf_cnpj: "cnpj",
+            company_name: "razao_social",
+            company_fantasia: "nome_fantasia",
+            address: "endereco",
+            neighborhood: "bairro",
+            state: "estado",
+          };
+
+          camposObrigatorios = fieldConfigs.map(fc => fieldMapping[fc.field_id] || fc.field_id);
+        }
+      }
+
+      // Se não tem configuração, usar campos obrigatórios padrão
+      if (camposObrigatorios.length === 0) {
+        camposObrigatorios = ['cnpj', 'razao_social', 'nome_fantasia'];
+      }
+
+      // Validar campos obrigatórios
+      const camposFaltando = camposObrigatorios.filter(campo => {
+        const isTableField = ['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(campo);
+        if (isTableField) {
+          return !empresaData[campo];
+        } else {
+          return !customFields[campo];
+        }
+      });
+      
+      if (camposFaltando.length > 0) {
+        console.error("Campos obrigatórios não preenchidos:", camposFaltando.join(", "));
+        return;
       }
 
       // Buscar empresa existente pelo CNPJ
@@ -722,7 +734,7 @@ export class FlowEngine {
       return;
     }
 
-    // Continuar para próximo bloco (bloco de passagem, sem interação)
+    // Continuar para próximo bloco
     const nextNodes = this.getNextNodes(node.id);
     for (const next of nextNodes) {
       await this.executeNode(next);

@@ -2,6 +2,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "../RichTextEditor";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface ConfigProps {
   config: any;
@@ -11,29 +14,91 @@ interface ConfigProps {
   selectedNode?: any;
 }
 
+interface FieldConfig {
+  field_id: string;
+  field_label: string;
+  required: boolean;
+}
+
 export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
-  // Campos disponíveis no cadastro de empresas (mesmos da tela de cadastro)
-  const availableFields = [
-    { value: "cnpj", label: "CPF/CNPJ", required: true },
-    { value: "razao_social", label: "Nome (Razão Social)", required: true },
-    { value: "nome_fantasia", label: "Nome Fantasia", required: true },
-    { value: "cep", label: "CEP", required: false },
-    { value: "endereco", label: "Endereço", required: false },
-    { value: "cidade", label: "Cidade", required: false },
-    { value: "bairro", label: "Bairro", required: false },
-    { value: "estado", label: "UF", required: false },
-    { value: "inscricao", label: "Inscrição", required: false },
-    { value: "telefone", label: "Telefone", required: false },
-    { value: "email", label: "Email", required: false },
+  const [availableFields, setAvailableFields] = useState<FieldConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFieldConfigs();
+  }, []);
+
+  const loadFieldConfigs = async () => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        // Se não tem estabelecimento, usar campos padrão
+        setAvailableFields(getDefaultFields());
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('form_field_configs')
+        .select('field_id, field_label, required')
+        .eq('estabelecimento_id', estabId)
+        .eq('form_type', 'company')
+        .order('field_order');
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setAvailableFields(data);
+      } else {
+        // Se não tem configuração, usar campos padrão
+        setAvailableFields(getDefaultFields());
+      }
+    } catch (error) {
+      console.error("Erro ao carregar configuração de campos:", error);
+      setAvailableFields(getDefaultFields());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDefaultFields = (): FieldConfig[] => [
+    { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", required: true },
+    { field_id: "company_name", field_label: "Nome (Razão Social)", required: true },
+    { field_id: "company_fantasia", field_label: "Nome Fantasia", required: true },
+    { field_id: "cep", field_label: "CEP", required: true },
+    { field_id: "address", field_label: "Endereço", required: true },
+    { field_id: "city", field_label: "Cidade", required: true },
+    { field_id: "neighborhood", field_label: "Bairro", required: true },
+    { field_id: "state", field_label: "UF", required: true },
+    { field_id: "inscricao", field_label: "Inscrição", required: true },
   ];
+
+  // Mapear IDs de campo para nomes da tabela empresas
+  const fieldMapping: Record<string, string> = {
+    cpf_cnpj: "cnpj",
+    company_name: "razao_social",
+    company_fantasia: "nome_fantasia",
+    address: "endereco",
+    neighborhood: "bairro",
+    state: "estado",
+  };
+
+  const getDbFieldName = (fieldId: string): string => {
+    return fieldMapping[fieldId] || fieldId;
+  };
 
   const fieldMappings = config.fieldMappings || {};
 
-  const updateFieldMapping = (field: string, variable: string) => {
+  const updateFieldMapping = (fieldId: string, variable: string) => {
+    const dbFieldName = getDbFieldName(fieldId);
     const newMappings = { ...fieldMappings };
-    newMappings[field] = variable;
+    newMappings[dbFieldName] = variable;
     handleConfigChange({ fieldMappings: newMappings });
   };
+
+  if (loading) {
+    return <div className="p-4 text-center text-muted-foreground">Carregando configuração de campos...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -71,25 +136,31 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
           Clique em "Usar campo" dentro de cada caixa para selecionar variáveis. 
           <strong className="text-destructive"> Campos obrigatórios (*) devem ser preenchidos.</strong>
         </p>
+        <p className="text-xs text-blue-600">
+          ℹ️ Os campos listados aqui vêm da configuração de "Campos de Empresa" na tela de Contatos.
+        </p>
         
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-          {availableFields.map((field) => (
-            <div key={field.value} className="space-y-1">
-              <Label className="text-xs font-medium">
-                {field.label} {field.required && <span className="text-destructive">*</span>}
-              </Label>
-              <RichTextEditor
-                value={(fieldMappings[field.value] as string) || ""}
-                onChange={(value) => updateFieldMapping(field.value, value)}
-                placeholder={field.required ? "Obrigatório - use 'Usar campo' para selecionar" : "Digite ou clique em 'Usar campo' para selecionar variável"}
-                multiline={false}
-                nodes={nodes}
-                edges={edges}
-                selectedNode={selectedNode}
-                showFormatting={false}
-              />
-            </div>
-          ))}
+          {availableFields.map((field) => {
+            const dbFieldName = getDbFieldName(field.field_id);
+            return (
+              <div key={field.field_id} className="space-y-1">
+                <Label className="text-xs font-medium">
+                  {field.field_label} {field.required && <span className="text-destructive">*</span>}
+                </Label>
+                <RichTextEditor
+                  value={(fieldMappings[dbFieldName] as string) || ""}
+                  onChange={(value) => updateFieldMapping(field.field_id, value)}
+                  placeholder={field.required ? "Obrigatório - use 'Usar campo' para selecionar" : "Digite ou clique em 'Usar campo' para selecionar variável"}
+                  multiline={false}
+                  nodes={nodes}
+                  edges={edges}
+                  selectedNode={selectedNode}
+                  showFormatting={false}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 

@@ -361,6 +361,46 @@ export default function Contatos() {
     loadContacts();
   }, []);
 
+  // Salvar configuração de campos de empresa no Supabase
+  useEffect(() => {
+    const saveCompanyFieldsConfig = async () => {
+      if (!estabelecimentoId) return;
+
+      try {
+        // Deletar configurações antigas
+        await supabase
+          .from('form_field_configs')
+          .delete()
+          .eq('estabelecimento_id', estabelecimentoId)
+          .eq('form_type', 'company');
+
+        // Inserir novas configurações
+        const configs = companyFields.map((field, index) => ({
+          estabelecimento_id: estabelecimentoId,
+          form_type: 'company',
+          field_id: field.id,
+          field_label: field.label,
+          field_type: field.type,
+          required: field.required || false,
+          locked: field.locked || false,
+          field_order: index,
+          options: field.options ? field.options : null,
+          category: field.category
+        }));
+
+        const { error } = await supabase
+          .from('form_field_configs')
+          .insert(configs);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Erro ao salvar configuração de campos:', error);
+      }
+    };
+
+    saveCompanyFieldsConfig();
+  }, [companyFields, estabelecimentoId]);
+
   // Filtrar empresas conforme busca
   useEffect(() => {
     if (buscaEmpresa.trim() === "") {
