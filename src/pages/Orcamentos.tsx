@@ -21,6 +21,8 @@ import OrcamentoListView from "@/components/orcamento/OrcamentoListView";
 import OrcamentoDetailsDialog from "@/components/orcamento/OrcamentoDetailsDialog";
 import POSView from "@/components/orcamento/POSView";
 
+type ViewMode = 'kanban' | 'list' | 'pos';
+
 const ETAPAS_CONFIG = [
   { id: 'orcamento', title: 'Orçamento', color: '#3b82f6' },
   { id: 'negociacao', title: 'Negociação', color: '#f59e0b' },
@@ -35,7 +37,7 @@ export default function Orcamentos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterVendedor, setFilterVendedor] = useState<string>("");
   const [filterEtapa, setFilterEtapa] = useState<string>("");
-  const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'pos'>('kanban');
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
 
@@ -208,14 +210,6 @@ export default function Orcamentos() {
                 title="Lista"
               >
                 <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'pos' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('pos')}
-                title="POS"
-              >
-                <Monitor className="w-4 h-4" />
               </Button>
             </div>
           </div>
