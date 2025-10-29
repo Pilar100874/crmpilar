@@ -110,8 +110,8 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
           {field.mask_type && field.mask_type !== "none" && (
             <> • Máscara: {field.custom_mask || maskTypeOptions.find(m => m.value === field.mask_type)?.label}</>
           )}
-          {field.options && Array.isArray(field.options) && (
-            <> • {field.options.length} opções</>
+          {field.field_type === "select" && field.options && Array.isArray((field.options as any)?.options || field.options) && (
+            <> • {((field.options as any)?.options || field.options).length} opções</>
           )}
         </div>
       </div>
@@ -193,16 +193,18 @@ export const EmpresaFieldsCRUD = () => {
     try {
       // Campos principais que devem sempre existir
       const mainFields = [
-        { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 0, required: true, locked: true },
-        { field_id: "company_name", field_label: "Razão Social", field_type: "text", field_order: 1, required: true, locked: false },
-        { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 2, required: true, locked: false },
-        { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 3, required: false, locked: false },
-        { field_id: "telefone", field_label: "Telefone", field_type: "phone", field_order: 4, required: false, locked: false },
-        { field_id: "cep", field_label: "CEP", field_type: "text", field_order: 5, required: true, locked: false },
-        { field_id: "address", field_label: "Endereço", field_type: "text", field_order: 6, required: true, locked: false },
-        { field_id: "city", field_label: "Cidade", field_type: "text", field_order: 7, required: true, locked: false },
-        { field_id: "neighborhood", field_label: "Bairro", field_type: "text", field_order: 8, required: false, locked: false },
-        { field_id: "state", field_label: "UF", field_type: "text", field_order: 9, required: true, locked: false },
+        { field_id: "company_type", field_label: "Tipo", field_type: "select", field_order: 0, required: true, locked: false, options: { options: ["Pessoa Física", "Pessoa Jurídica"] } },
+        { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 1, required: true, locked: true },
+        { field_id: "company_name", field_label: "Razão Social", field_type: "text", field_order: 2, required: true, locked: false },
+        { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 3, required: true, locked: false },
+        { field_id: "cep", field_label: "CEP", field_type: "text", field_order: 4, required: true, locked: false },
+        { field_id: "address", field_label: "Endereço", field_type: "text", field_order: 5, required: true, locked: false },
+        { field_id: "city", field_label: "Cidade", field_type: "text", field_order: 6, required: true, locked: false },
+        { field_id: "neighborhood", field_label: "Bairro", field_type: "text", field_order: 7, required: true, locked: false },
+        { field_id: "state", field_label: "UF", field_type: "text", field_order: 8, required: true, locked: false },
+        { field_id: "inscricao", field_label: "Inscrição", field_type: "text", field_order: 9, required: true, locked: false },
+        { field_id: "telefone", field_label: "Telefone", field_type: "phone", field_order: 10, required: false, locked: false },
+        { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 11, required: false, locked: false },
       ];
 
       // Verificar quais campos principais já existem
@@ -221,8 +223,13 @@ export const EmpresaFieldsCRUD = () => {
         .map(field => ({
           estabelecimento_id: estabelecimentoId,
           form_type: "empresa",
-          ...field,
-          options: null,
+          field_id: field.field_id,
+          field_label: field.field_label,
+          field_type: field.field_type,
+          field_order: field.field_order,
+          required: field.required,
+          locked: field.locked,
+          options: field.options || null,
         }));
 
       if (fieldsToInsert.length > 0) {
@@ -278,6 +285,7 @@ export const EmpresaFieldsCRUD = () => {
           ...field,
           mask_type: options?.mask_type,
           custom_mask: options?.custom_mask,
+          options: options?.options || field.options,
         };
       }));
     } catch (error) {
@@ -533,7 +541,7 @@ export const EmpresaFieldsCRUD = () => {
         <CardHeader>
           <CardTitle>Campos Configurados ({fields.length})</CardTitle>
           <CardDescription>
-            Arraste para reordenar. CNPJ é chave única e sempre obrigatório. Use "Bloqueado" para impedir edição no formulário.
+            Configure todos os campos do cadastro de empresas. CNPJ é sempre obrigatório e não pode ser desativado. Use "Bloqueado" para impedir edição após preenchimento.
           </CardDescription>
         </CardHeader>
         <CardContent>
