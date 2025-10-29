@@ -589,16 +589,22 @@ export class FlowEngine {
     const data = node.data as FlowNodeData;
     const config = data.config as any;
 
+    console.log("🔍 Iniciando cadastro de empresa - config:", config);
+
     // Mapear campos configurados
     const fieldMappings = config.fieldMappings || {};
     const empresaData: Record<string, any> = {};
     const customFields: Record<string, any> = {};
+
+    console.log("📋 Field mappings recebidos:", fieldMappings);
 
     // Processar cada campo mapeado
     for (const [field, variableTemplate] of Object.entries(fieldMappings)) {
       if (variableTemplate && typeof variableTemplate === 'string') {
         // Interpolar as variáveis no template (ex: "{{cnpj}}")
         const value = this.interpolate(variableTemplate);
+        console.log(`  Campo ${field}: "${variableTemplate}" -> "${value}"`);
+        
         if (value && value.trim()) {
           // Campos que vão direto na tabela empresas
           if (['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(field)) {
@@ -611,6 +617,9 @@ export class FlowEngine {
       }
     }
 
+    console.log("📦 Dados da empresa (tabela):", empresaData);
+    console.log("📦 Custom fields:", customFields);
+
     // Adicionar custom_fields se houver
     if (Object.keys(customFields).length > 0) {
       empresaData.custom_fields = customFields;
@@ -622,31 +631,41 @@ export class FlowEngine {
       const { getEstabelecimentoId } = await import("@/lib/estabelecimentoUtils");
       const estabId = await getEstabelecimentoId();
       
+      if (!estabId) {
+        console.error("❌ Estabelecimento ID não encontrado! Não é possível criar empresa.");
+        await this.onResponse({
+          type: "text",
+          content: "Erro: Estabelecimento não identificado. Por favor, selecione um estabelecimento.",
+        });
+        return;
+      }
+
+      empresaData.estabelecimento_id = estabId;
+      console.log("✅ Estabelecimento ID:", estabId);
+      
       // Buscar configuração de campos obrigatórios
       let camposObrigatorios: string[] = [];
-      if (estabId) {
-        empresaData.estabelecimento_id = estabId;
-        
-        const { data: fieldConfigs } = await supabase
-          .from('form_field_configs')
-          .select('field_id, required')
-          .eq('estabelecimento_id', estabId)
-          .eq('form_type', 'company')
-          .eq('required', true);
+      const { data: fieldConfigs } = await supabase
+        .from('form_field_configs')
+        .select('field_id, required')
+        .eq('estabelecimento_id', estabId)
+        .eq('form_type', 'company')
+        .eq('required', true);
 
-        if (fieldConfigs && fieldConfigs.length > 0) {
-          // Mapear IDs de campo para nomes da tabela
-          const fieldMapping: Record<string, string> = {
-            cpf_cnpj: "cnpj",
-            company_name: "razao_social",
-            company_fantasia: "nome_fantasia",
-            address: "endereco",
-            neighborhood: "bairro",
-            state: "estado",
-          };
+      console.log("📋 Configuração de campos obrigatórios:", fieldConfigs);
 
-          camposObrigatorios = fieldConfigs.map(fc => fieldMapping[fc.field_id] || fc.field_id);
-        }
+      if (fieldConfigs && fieldConfigs.length > 0) {
+        // Mapear IDs de campo para nomes da tabela
+        const fieldMapping: Record<string, string> = {
+          cpf_cnpj: "cnpj",
+          company_name: "razao_social",
+          company_fantasia: "nome_fantasia",
+          address: "endereco",
+          neighborhood: "bairro",
+          state: "estado",
+        };
+
+        camposObrigatorios = fieldConfigs.map(fc => fieldMapping[fc.field_id] || fc.field_id);
       }
 
       // Se não tem configuração, usar campos obrigatórios padrão
@@ -654,30 +673,48 @@ export class FlowEngine {
         camposObrigatorios = ['cnpj', 'razao_social', 'nome_fantasia'];
       }
 
+      console.log("✅ Campos obrigatórios identificados:", camposObrigatorios);
+
       // Validar campos obrigatórios
       const camposFaltando = camposObrigatorios.filter(campo => {
         const isTableField = ['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(campo);
         if (isTableField) {
-          return !empresaData[campo];
+          const faltando = !empresaData[campo] || empresaData[campo].trim() === '';
+          if (faltando) console.log(`  ❌ Campo obrigatório faltando (tabela): ${campo}`);
+          return faltando;
         } else {
-          return !customFields[campo];
+          const faltando = !customFields[campo] || customFields[campo].trim() === '';
+          if (faltando) console.log(`  ❌ Campo obrigatório faltando (custom): ${campo}`);
+          return faltando;
         }
       });
       
       if (camposFaltando.length > 0) {
-        console.error("Campos obrigatórios não preenchidos:", camposFaltando.join(", "));
+        console.error("❌ Campos obrigatórios não preenchidos:", camposFaltando.join(", "));
+        await this.onResponse({
+          type: "text",
+          content: `Não foi possível cadastrar a empresa. Campos obrigatórios faltando: ${camposFaltando.join(", ")}`,
+        });
         return;
       }
 
+      console.log("✅ Todos os campos obrigatórios preenchidos!");
+
       // Buscar empresa existente pelo CNPJ
+      console.log("🔍 Buscando empresa existente com CNPJ:", empresaData.cnpj);
       const { data: empresaExistente, error: searchError } = await supabase
         .from("empresas")
         .select("id")
         .eq("cnpj", empresaData.cnpj)
+        .eq("estabelecimento_id", estabId)
         .maybeSingle();
 
       if (searchError) {
-        console.error("Erro ao buscar empresa:", searchError);
+        console.error("❌ Erro ao buscar empresa:", searchError);
+        await this.onResponse({
+          type: "text",
+          content: `Erro ao buscar empresa: ${searchError.message}`,
+        });
         return;
       }
 
@@ -685,10 +722,12 @@ export class FlowEngine {
 
       if (empresaExistente) {
         // Empresa já existe
+        console.log("ℹ️ Empresa já existe no banco de dados, ID:", empresaExistente.id);
         clienteNovo = "Não";
         
         if (config.updateExisting && config.validationMode !== "validate_only") {
           // Atualizar empresa existente
+          console.log("🔄 Atualizando empresa existente...");
           const { error: updateError } = await supabase
             .from("empresas")
             .update({
@@ -698,30 +737,55 @@ export class FlowEngine {
             .eq("id", empresaExistente.id);
 
           if (updateError) {
-            console.error("Erro ao atualizar empresa:", updateError);
+            console.error("❌ Erro ao atualizar empresa:", updateError);
+            await this.onResponse({
+              type: "text",
+              content: `Erro ao atualizar empresa: ${updateError.message}`,
+            });
             return;
           }
 
           console.log("✅ Empresa atualizada com sucesso:", empresaData.cnpj);
+          await this.onResponse({
+            type: "text",
+            content: `Empresa ${empresaData.nome_fantasia} atualizada com sucesso!`,
+          });
         } else {
-          console.log("ℹ️ Empresa já existe, não será atualizada");
+          console.log("ℹ️ Empresa já existe, não será atualizada (updateExisting=false ou validationMode=validate_only)");
+          await this.onResponse({
+            type: "text",
+            content: `Empresa ${empresaData.nome_fantasia} já cadastrada.`,
+          });
         }
       } else {
         // Empresa não existe - criar nova
+        console.log("➕ Criando nova empresa...");
         clienteNovo = "Sim";
         
         if (config.validationMode !== "validate_only") {
           // Criar nova empresa
-          const { error: insertError } = await supabase
+          const { data: novaEmpresa, error: insertError } = await supabase
             .from("empresas")
-            .insert([empresaData as any]);
+            .insert([empresaData as any])
+            .select()
+            .maybeSingle();
 
           if (insertError) {
-            console.error("Erro ao criar empresa:", insertError);
+            console.error("❌ Erro ao criar empresa:", insertError);
+            await this.onResponse({
+              type: "text",
+              content: `Erro ao criar empresa: ${insertError.message}`,
+            });
             return;
           }
 
-          console.log("✅ Empresa criada com sucesso:", empresaData.cnpj);
+          console.log("✅ Empresa criada com sucesso! ID:", novaEmpresa?.id, "CNPJ:", empresaData.cnpj);
+          await this.onResponse({
+            type: "text",
+            content: `Empresa ${empresaData.nome_fantasia} cadastrada com sucesso!`,
+          });
+        } else {
+          console.log("ℹ️ Modo de validação apenas (validate_only) - empresa não foi criada");
         }
       }
 
