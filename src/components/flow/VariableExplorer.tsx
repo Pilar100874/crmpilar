@@ -361,6 +361,13 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
   }
 
   const ancestorNodes = getAncestorNodes(selectedNode.id, nodes, edges);
+  // Fallback: incluir também blocos CNPJ existentes no fluxo (útil quando o fluxo ainda não está totalmente conectado)
+  const cnpjNodes = nodes.filter(n => (n.data as FlowNodeData).type === "ask_cnpj");
+  const consideredNodes: Node[] = [...ancestorNodes];
+  cnpjNodes.forEach(n => {
+    if (!consideredNodes.some(a => a.id === n.id)) consideredNodes.push(n);
+  });
+
   const availableVariables: { 
     blockName: string; 
     blockType: NodeType | "custom";

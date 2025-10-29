@@ -342,13 +342,20 @@ export const VariablePickerDialog = ({
   if (!selectedNode) return null;
 
   const ancestorNodes = getAncestorNodes(selectedNode.id, nodes, edges);
+  // Fallback: também considerar blocos de CNPJ existentes no fluxo (alguns fluxos podem ainda não estar conectados ao nó selecionado)
+  const cnpjNodes = nodes.filter(n => (n.data as FlowNodeData).type === "ask_cnpj");
+  const consideredNodes: Node[] = [...ancestorNodes];
+  cnpjNodes.forEach(n => {
+    if (!consideredNodes.some(a => a.id === n.id)) consideredNodes.push(n);
+  });
+
   const allVariables: { 
     blockName: string; 
     blockType: NodeType;
     variable: { name: string; description: string; type: string };
   }[] = [];
 
-  ancestorNodes.forEach(node => {
+  consideredNodes.forEach(node => {
     const outputs = getBlockOutputVariables(node);
     outputs.forEach(variable => {
       allVariables.push({
