@@ -62,8 +62,8 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
   };
 
   const handleToggleLocked = async () => {
-    if (field.field_id === "cpf_cnpj") {
-      // CNPJ sempre bloqueado
+    if (field.field_id === "cpf_cnpj" || field.field_id === "company_type") {
+      // CNPJ e Tipo sempre bloqueados
       return;
     }
     
@@ -104,6 +104,11 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
               Chave Única
             </span>
           )}
+          {field.field_id === "company_type" && (
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+              Campo Base
+            </span>
+          )}
         </div>
         <div className="text-sm text-muted-foreground">
           {fieldTypeOptions.find(t => t.value === field.field_type)?.label || field.field_type}
@@ -121,7 +126,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
           <Switch
             checked={field.required}
             onCheckedChange={() => onToggleRequired(field.id)}
-            disabled={field.field_id === "cpf_cnpj"}
+            disabled={field.field_id === "cpf_cnpj" || field.field_id === "company_type"}
           />
           <span className="text-sm text-muted-foreground whitespace-nowrap">Obrigatório</span>
         </div>
@@ -130,13 +135,13 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
           <Switch
             checked={isLocked}
             onCheckedChange={handleToggleLocked}
-            disabled={field.field_id === "cpf_cnpj"}
+            disabled={field.field_id === "cpf_cnpj" || field.field_id === "company_type"}
           />
           <span className="text-sm text-muted-foreground whitespace-nowrap">Bloqueado</span>
         </div>
       </div>
 
-      {!field.locked && field.field_id !== "cpf_cnpj" && (
+      {!field.locked && field.field_id !== "cpf_cnpj" && field.field_id !== "company_type" && (
         <Button
           variant="ghost"
           size="icon"
@@ -198,7 +203,7 @@ export const EmpresaFieldsCRUD = () => {
     try {
       // Campos principais que devem sempre existir
       const mainFields = [
-        { field_id: "company_type", field_label: "Tipo", field_type: "select", field_order: 0, required: true, locked: false, options: { options: ["Pessoa Física", "Pessoa Jurídica"] } },
+        { field_id: "company_type", field_label: "Tipo", field_type: "select", field_order: 0, required: true, locked: true, options: { options: ["Pessoa Física", "Pessoa Jurídica"] } },
         { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 1, required: true, locked: true },
         { field_id: "company_name", field_label: "Razão Social", field_type: "text", field_order: 2, required: true, locked: false },
         { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 3, required: true, locked: false },
@@ -593,7 +598,7 @@ export const EmpresaFieldsCRUD = () => {
         <CardHeader>
           <CardTitle>Campos Configurados ({fields.length})</CardTitle>
           <CardDescription>
-            Configure todos os campos do cadastro de empresas. CNPJ é sempre obrigatório e não pode ser desativado. Use "Bloqueado" para impedir edição após preenchimento.
+            Configure todos os campos do cadastro de empresas. Tipo e CPF/CNPJ são sempre obrigatórios e bloqueados. Use "Bloqueado" nos demais campos para impedir edição após preenchimento.
           </CardDescription>
         </CardHeader>
         <CardContent>
