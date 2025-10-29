@@ -54,10 +54,36 @@ interface SortableFieldItemProps {
 
 const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: field.id });
+  const [isLocked, setIsLocked] = useState(field.locked);
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  };
+
+  const handleToggleLocked = async () => {
+    if (field.field_id === "cpf_cnpj") {
+      // CNPJ sempre bloqueado
+      return;
+    }
+    
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { error } = await supabase
+        .from("form_field_configs")
+        .update({ locked: !isLocked })
+        .eq("id", field.id);
+
+      if (error) throw error;
+
+      setIsLocked(!isLocked);
+      const { toast } = await import("sonner");
+      toast.success("Campo atualizado");
+    } catch (error) {
+      console.error("Error updating locked status:", error);
+      const { toast } = await import("sonner");
+      toast.error("Erro ao atualizar campo");
+    }
   };
 
   return (
@@ -71,7 +97,14 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
       </div>
       
       <div className="flex-1">
-        <div className="font-medium">{field.field_label}</div>
+        <div className="font-medium flex items-center gap-2">
+          {field.field_label}
+          {field.field_id === "cpf_cnpj" && (
+            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+              Chave Única
+            </span>
+          )}
+        </div>
         <div className="text-sm text-muted-foreground">
           {fieldTypeOptions.find(t => t.value === field.field_type)?.label || field.field_type}
           {field.mask_type && field.mask_type !== "none" && (
@@ -83,16 +116,27 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Switch
-          checked={field.required}
-          onCheckedChange={() => onToggleRequired(field.id)}
-          disabled={field.locked}
-        />
-        <span className="text-sm text-muted-foreground">Obrigatório</span>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={field.required}
+            onCheckedChange={() => onToggleRequired(field.id)}
+            disabled={field.field_id === "cpf_cnpj"}
+          />
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Obrigatório</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={isLocked}
+            onCheckedChange={handleToggleLocked}
+            disabled={field.field_id === "cpf_cnpj"}
+          />
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Bloqueado</span>
+        </div>
       </div>
 
-      {!field.locked && (
+      {!field.locked && field.field_id !== "cpf_cnpj" && (
         <Button
           variant="ghost"
           size="icon"
@@ -109,6 +153,7 @@ export const EmpresaFieldsCRUD = () => {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   // Form states
   const [fieldLabel, setFieldLabel] = useState("");
@@ -130,11 +175,17 @@ export const EmpresaFieldsCRUD = () => {
   }, []);
 
   useEffect(() => {
-    if (estabelecimentoId) {
-      loadFields();
-      loadOrCreateMainFields();
+    if (estabelecimentoId && !isInitializing) {
+      initializeFields();
     }
   }, [estabelecimentoId]);
+
+  const initializeFields = async () => {
+    setIsInitializing(true);
+    await loadOrCreateMainFields();
+    await loadFields();
+    setIsInitializing(false);
+  };
 
   const loadOrCreateMainFields = async () => {
     if (!estabelecimentoId) return;
@@ -482,15 +533,15 @@ export const EmpresaFieldsCRUD = () => {
         <CardHeader>
           <CardTitle>Campos Configurados ({fields.length})</CardTitle>
           <CardDescription>
-            Arraste para reordenar os campos. Campos principais aparecem primeiro.
+            Arraste para reordenar. CNPJ é chave única e sempre obrigatório. Use "Bloqueado" para impedir edição no formulário.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+          {loading || isInitializing ? (
+            <div className="text-center py-8 text-muted-foreground">Carregando campos...</div>
           ) : fields.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhum campo configurado
+              Nenhum campo configurado. Aguarde...
             </div>
           ) : (
             <DndContext
