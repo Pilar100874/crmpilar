@@ -21,7 +21,8 @@ import {
   Camera,
   Lightbulb,
   History,
-  Tag
+  Tag,
+  Filter
 } from "lucide-react";
 import {
   Select,
@@ -40,6 +41,7 @@ interface POSViewProps {
 
 export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POSViewProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [grupos, setGrupos] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCliente, setSelectedCliente] = useState<string>("");
@@ -48,9 +50,20 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   const [activeTab, setActiveTab] = useState("cart");
   const [currentOrcamentoId, setCurrentOrcamentoId] = useState<string | null>(null);
   const [shareLink, setShareLink] = useState<string>("");
+  
+  // Filtros avançados
+  const [gramaturaMin, setGramaturaMin] = useState<string>("");
+  const [gramaturaMax, setGramaturaMax] = useState<string>("");
+  const [larguraMin, setLarguraMin] = useState<string>("");
+  const [larguraMax, setLarguraMax] = useState<string>("");
+  const [comprimentoMin, setComprimentoMin] = useState<string>("");
+  const [comprimentoMax, setComprimentoMax] = useState<string>("");
+  const [selectedGrupo, setSelectedGrupo] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     loadProdutos();
+    loadGrupos();
     loadClientes();
     if (orcamentoId) {
       loadOrcamento(orcamentoId);
@@ -61,16 +74,34 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
     try {
       const { data, error } = await supabase
         .from('produtos')
-        .select('*')
+        .select(`
+          *,
+          grupo:produto_grupos(id, nome)
+        `)
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
         .order('nome');
 
       if (error) throw error;
-      setProdutos(data || []);
+      setProdutos((data as any) || []);
     } catch (error: any) {
       console.error('Erro ao carregar produtos:', error);
       toast.error('Erro ao carregar produtos');
+    }
+  };
+
+  const loadGrupos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_grupos')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+
+      if (error) throw error;
+      setGrupos(data || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar grupos:', error);
     }
   };
 
@@ -138,9 +169,43 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
     }
   };
 
-  const filteredProdutos = produtos.filter(p => 
-    p.nome.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProdutos = produtos.filter(p => {
+    // Filtro de nome
+    if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    
+    // Filtro de grupo
+    if (selectedGrupo && p.grupo_id !== selectedGrupo) {
+      return false;
+    }
+    
+    // Filtro de gramatura
+    if (gramaturaMin && p.gramatura && p.gramatura < Number(gramaturaMin)) {
+      return false;
+    }
+    if (gramaturaMax && p.gramatura && p.gramatura > Number(gramaturaMax)) {
+      return false;
+    }
+    
+    // Filtro de largura
+    if (larguraMin && p.largura && p.largura < Number(larguraMin)) {
+      return false;
+    }
+    if (larguraMax && p.largura && p.largura > Number(larguraMax)) {
+      return false;
+    }
+    
+    // Filtro de comprimento
+    if (comprimentoMin && p.comprimento && p.comprimento < Number(comprimentoMin)) {
+      return false;
+    }
+    if (comprimentoMax && p.comprimento && p.comprimento > Number(comprimentoMax)) {
+      return false;
+    }
+    
+    return true;
+  });
 
   const addToCart = (produto: Produto) => {
     setCartItems(prev => {
@@ -295,7 +360,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
       <div className="flex-1 flex flex-col bg-slate-900">
         {/* Header de Busca e Filtros */}
         <div className="p-4 border-b border-slate-700">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
@@ -305,6 +370,13 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                 className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 h-12 text-base"
               />
             </div>
+            <Button
+              variant="outline"
+              className="bg-slate-800 border-slate-600 text-white hover:bg-slate-700"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              Filtros {showFilters ? '▲' : '▼'}
+            </Button>
             {onClose && (
               <Button 
                 variant="outline" 
@@ -315,6 +387,115 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
               </Button>
             )}
           </div>
+
+          {/* Filtros Avançados */}
+          {showFilters && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-slate-800 rounded-lg border border-slate-700">
+              {/* Grupo */}
+              <div className="col-span-2">
+                <label className="text-xs text-slate-400 mb-1 block">Grupo</label>
+                <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                    <SelectValue placeholder="Todos os grupos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos os grupos</SelectItem>
+                    {grupos.map((grupo) => (
+                      <SelectItem key={grupo.id} value={grupo.id}>
+                        {grupo.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Gramatura */}
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Gramatura Mín</label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={gramaturaMin}
+                  onChange={(e) => setGramaturaMin(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white h-10"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Gramatura Máx</label>
+                <Input
+                  type="number"
+                  placeholder="999"
+                  value={gramaturaMax}
+                  onChange={(e) => setGramaturaMax(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white h-10"
+                />
+              </div>
+
+              {/* Largura */}
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Largura Mín</label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={larguraMin}
+                  onChange={(e) => setLarguraMin(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white h-10"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Largura Máx</label>
+                <Input
+                  type="number"
+                  placeholder="999"
+                  value={larguraMax}
+                  onChange={(e) => setLarguraMax(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white h-10"
+                />
+              </div>
+
+              {/* Comprimento */}
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Comprimento Mín</label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={comprimentoMin}
+                  onChange={(e) => setComprimentoMin(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white h-10"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Comprimento Máx</label>
+                <Input
+                  type="number"
+                  placeholder="999"
+                  value={comprimentoMax}
+                  onChange={(e) => setComprimentoMax(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white h-10"
+                />
+              </div>
+
+              {/* Botão Limpar Filtros */}
+              <div className="col-span-2 md:col-span-4 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                  onClick={() => {
+                    setSelectedGrupo("");
+                    setGramaturaMin("");
+                    setGramaturaMax("");
+                    setLarguraMin("");
+                    setLarguraMax("");
+                    setComprimentoMin("");
+                    setComprimentoMax("");
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Grade de Produtos */}
