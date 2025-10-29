@@ -585,6 +585,49 @@ export class FlowEngine {
     }
   }
 
+  // Função auxiliar para formatar dados antes de inserir
+  private formatarDadosEmpresa(campo: string, valor: string): string {
+    if (!valor) return valor;
+    
+    const valorTrimmed = valor.trim();
+    
+    switch (campo) {
+      case 'cnpj':
+        // Remover todos os caracteres não numéricos
+        return valorTrimmed.replace(/\D/g, '');
+      
+      case 'cep':
+        // Remover todos os caracteres não numéricos
+        return valorTrimmed.replace(/\D/g, '');
+      
+      case 'telefone':
+        // Remover todos os caracteres não numéricos
+        return valorTrimmed.replace(/\D/g, '');
+      
+      case 'email':
+        // Converter para minúsculas e fazer trim
+        return valorTrimmed.toLowerCase();
+      
+      case 'estado':
+        // Converter para maiúsculas e limitar a 2 caracteres
+        return valorTrimmed.toUpperCase().substring(0, 2);
+      
+      case 'razao_social':
+      case 'nome_fantasia':
+      case 'cidade':
+      case 'endereco':
+        // Capitalizar primeira letra de cada palavra
+        return valorTrimmed
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+      
+      default:
+        // Para outros campos, apenas trim
+        return valorTrimmed;
+    }
+  }
+
   private async handleCRMCadastroEmpresa(node: Node): Promise<void> {
     const data = node.data as FlowNodeData;
     const config = data.config as any;
@@ -602,10 +645,14 @@ export class FlowEngine {
     for (const [field, variableTemplate] of Object.entries(fieldMappings)) {
       if (variableTemplate && typeof variableTemplate === 'string') {
         // Interpolar as variáveis no template (ex: "{{cnpj}}")
-        const value = this.interpolate(variableTemplate);
-        console.log(`  Campo ${field}: "${variableTemplate}" -> "${value}"`);
+        const rawValue = this.interpolate(variableTemplate);
+        console.log(`  Campo ${field}: "${variableTemplate}" -> "${rawValue}"`);
         
-        if (value && value.trim()) {
+        if (rawValue && rawValue.trim()) {
+          // Formatar o valor antes de processar
+          const value = this.formatarDadosEmpresa(field, rawValue);
+          console.log(`  ✨ Valor formatado: "${rawValue}" -> "${value}"`);
+          
           // Campos que vão direto na tabela empresas
           if (['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(field)) {
             empresaData[field] = value;
