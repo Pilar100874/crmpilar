@@ -37,6 +37,7 @@ import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { VariableManager, FlowVariable } from "@/components/flow/VariableManager";
 import { VariableMonitor } from "@/components/flow/VariableMonitor";
 import { BlockMonitor } from "@/components/flow/BlockMonitor";
+import { EmpresaFieldValidator } from "@/components/flow/EmpresaFieldValidator";
 import { ErrorDialog } from "@/components/flow/ErrorDialog";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "sonner";
@@ -1025,6 +1026,10 @@ function BotBuilderContent() {
                 edges={edges}
                 context={simulatorContext}
                 allVariables={allVariables}
+              />
+              <EmpresaFieldValidator
+                selectedNode={selectedNode}
+                context={simulatorContext}
               />
               
               {/* Nome do Bot (somente leitura) */}
