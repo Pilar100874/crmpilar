@@ -610,35 +610,79 @@ export class FlowEngine {
       return;
     }
 
-    // Simular verificação de existência no banco
-    // Em produção, seria uma query no Supabase
-    const empresaExiste = false; // Placeholder: verificar se CNPJ existe no banco
-    
-    let clienteNovo = "Não";
-
-    if (empresaExiste) {
-      // Empresa já existe
-      clienteNovo = "Não";
-      
-      if (config.updateExisting && config.validationMode !== "validate_only") {
-        // Atualizar empresa existente
-        // Em produção: UPDATE na tabela empresas
-        console.log("Atualizando empresa:", empresaData);
-      }
-    } else {
-      // Empresa não existe - criar nova
-      clienteNovo = "Sim";
-      
-      if (config.validationMode !== "validate_only") {
-        // Criar nova empresa
-        // Em produção: INSERT na tabela empresas
-        console.log("Criando empresa:", empresaData);
-      }
+    // Garantir que nome_fantasia existe (campo obrigatório)
+    if (!empresaData.nome_fantasia) {
+      empresaData.nome_fantasia = empresaData.razao_social || empresaData.cnpj;
     }
 
-    // Definir variável de saída: "Sim" = cliente novo, "Não" = cliente existente
-    const outputVariable = config.outputVariable || "cliente_novo";
-    this.context.vars[outputVariable] = clienteNovo;
+    try {
+      // Importar o cliente Supabase dinamicamente
+      const { supabase } = await import("@/integrations/supabase/client");
+
+      // Buscar empresa existente pelo CNPJ
+      const { data: empresaExistente, error: searchError } = await supabase
+        .from("empresas")
+        .select("id")
+        .eq("cnpj", empresaData.cnpj)
+        .maybeSingle();
+
+      if (searchError) {
+        console.error("Erro ao buscar empresa:", searchError);
+        return;
+      }
+
+      let clienteNovo = "Não";
+
+      if (empresaExistente) {
+        // Empresa já existe
+        clienteNovo = "Não";
+        
+        if (config.updateExisting && config.validationMode !== "validate_only") {
+          // Atualizar empresa existente
+          const { error: updateError } = await supabase
+            .from("empresas")
+            .update({
+              ...empresaData,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", empresaExistente.id);
+
+          if (updateError) {
+            console.error("Erro ao atualizar empresa:", updateError);
+            return;
+          }
+
+          console.log("✅ Empresa atualizada com sucesso:", empresaData.cnpj);
+        } else {
+          console.log("ℹ️ Empresa já existe, não será atualizada");
+        }
+      } else {
+        // Empresa não existe - criar nova
+        clienteNovo = "Sim";
+        
+        if (config.validationMode !== "validate_only") {
+          // Criar nova empresa
+          const { error: insertError } = await supabase
+            .from("empresas")
+            .insert([empresaData as any]);
+
+          if (insertError) {
+            console.error("Erro ao criar empresa:", insertError);
+            return;
+          }
+
+          console.log("✅ Empresa criada com sucesso:", empresaData.cnpj);
+        }
+      }
+
+      // Definir variável de saída: "Sim" = cliente novo, "Não" = cliente existente
+      const outputVariable = config.outputVariable || "cliente_novo";
+      this.context.vars[outputVariable] = clienteNovo;
+
+    } catch (error) {
+      console.error("Erro ao processar cadastro de empresa:", error);
+      return;
+    }
 
     // Continuar para próximo bloco (bloco de passagem, sem interação)
     const nextNodes = this.getNextNodes(node.id);
