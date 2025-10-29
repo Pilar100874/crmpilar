@@ -1362,15 +1362,22 @@ export default function Contatos() {
       <div className="flex-1 flex flex-col h-full bg-background">
         <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-foreground">TODAS AS EMPRESAS</h1>
+            <h1 className="text-2xl font-bold text-foreground">CONTATOS</h1>
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => setShowConfigPanel(true)} 
+                onClick={() => {
+                  setShowConfigPanel(true);
+                  // Automatically open the fields configuration tab
+                  setTimeout(() => {
+                    const fieldsTab = document.querySelector('[value="fields"]') as HTMLElement;
+                    fieldsTab?.click();
+                  }, 100);
+                }} 
                 className="gap-2"
               >
                 <Settings2 className="w-4 h-4" />
-                Configurações
+                Configuração de Campos
               </Button>
               <Button 
                 variant="outline" 
