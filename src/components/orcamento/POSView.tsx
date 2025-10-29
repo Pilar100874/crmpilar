@@ -22,7 +22,9 @@ import {
   Lightbulb,
   History,
   Tag,
-  Filter
+  Filter,
+  Grid,
+  List
 } from "lucide-react";
 import {
   Select,
@@ -53,6 +55,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Filtros avançados
   const [gramaturaMin, setGramaturaMin] = useState<string>("");
@@ -358,9 +361,10 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   };
 
   return (
-    <div className="flex h-screen bg-slate-900">
-      {/* Grade de Produtos - Lado Esquerdo */}
-      <div className="flex-1 flex flex-col bg-slate-900">
+    <div className="flex flex-col h-screen bg-slate-900">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Grade de Produtos - Lado Esquerdo */}
+        <div className="flex-1 flex flex-col bg-slate-900">
         {/* Header de Busca e Filtros */}
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center gap-3 mb-3">
@@ -373,13 +377,23 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                 className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 h-12 text-base"
               />
             </div>
-            <Button
-              variant="outline"
-              className="bg-slate-800 border-slate-600 text-white hover:bg-slate-700"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              Filtros {showFilters ? '▲' : '▼'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="bg-slate-800 border-slate-600 text-white hover:bg-slate-700"
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              >
+                {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+              </Button>
+              <Button
+                variant="outline"
+                className="bg-slate-800 border-slate-600 text-white hover:bg-slate-700"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                Filtros {showFilters ? '▲' : '▼'}
+              </Button>
+            </div>
             {onClose && (
               <Button 
                 variant="outline" 
@@ -501,50 +515,105 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
           )}
         </div>
 
-        {/* Grade de Produtos */}
+        {/* Grade/Lista de Produtos */}
         <ScrollArea className="flex-1 p-4">
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
-            {filteredProdutos.map((produto) => (
-              <Card
-                key={produto.id}
-                className="bg-slate-800 border-slate-700 hover:border-blue-500 cursor-pointer transition-all overflow-hidden group"
-                onClick={() => addToCart(produto)}
-              >
-                <div className="aspect-square bg-slate-700 relative overflow-hidden">
-                  {produto.foto_url ? (
-                    <img 
-                      src={produto.foto_url} 
-                      alt={produto.nome}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-4xl text-slate-500">{produto.nome[0]}</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                  
-                  {cartItems.has(produto.id) && (
-                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white">
-                      {cartItems.get(produto.id)?.quantity}
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="p-3">
-                  <h3 className="font-medium text-white text-sm line-clamp-2 min-h-[2.5rem]">
-                    {produto.nome}
-                  </h3>
-                  
-                  <div className="mt-2">
-                    <span className="text-base font-bold text-blue-400">
-                      R$ 10,00
-                    </span>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+              {filteredProdutos.map((produto) => (
+                <Card
+                  key={produto.id}
+                  className="bg-slate-800 border-slate-700 hover:border-blue-500 cursor-pointer transition-all overflow-hidden group"
+                  onClick={() => addToCart(produto)}
+                >
+                  <div className="aspect-square bg-slate-700 relative overflow-hidden">
+                    {produto.foto_url ? (
+                      <img 
+                        src={produto.foto_url} 
+                        alt={produto.nome}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-4xl text-slate-500">{produto.nome[0]}</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                    
+                    {cartItems.has(produto.id) && (
+                      <Badge className="absolute top-2 right-2 bg-blue-600 text-white">
+                        {cartItems.get(produto.id)?.quantity}
+                      </Badge>
+                    )}
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                  
+                  <div className="p-3">
+                    <h3 className="font-medium text-white text-sm line-clamp-2 min-h-[2.5rem]">
+                      {produto.nome}
+                    </h3>
+                    
+                    <div className="mt-2">
+                      <span className="text-base font-bold text-blue-400">
+                        R$ 10,00
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredProdutos.map((produto) => (
+                <Card
+                  key={produto.id}
+                  className="bg-slate-800 border-slate-700 hover:border-blue-500 cursor-pointer transition-all overflow-hidden"
+                  onClick={() => addToCart(produto)}
+                >
+                  <div className="flex items-center gap-4 p-3">
+                    <div className="w-16 h-16 bg-slate-700 rounded flex-shrink-0 overflow-hidden">
+                      {produto.foto_url ? (
+                        <img 
+                          src={produto.foto_url} 
+                          alt={produto.nome}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-2xl text-slate-500">{produto.nome[0]}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-white text-sm truncate">
+                        {produto.nome}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-base font-bold text-blue-400">
+                          R$ 10,00
+                        </span>
+                        {cartItems.has(produto.id) && (
+                          <Badge className="bg-blue-600 text-white text-xs">
+                            {cartItems.get(produto.id)?.quantity} no carrinho
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <Button
+                      size="icon"
+                      className="bg-blue-600 hover:bg-blue-700 flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(produto);
+                      }}
+                    >
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {filteredProdutos.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-slate-400">
@@ -553,12 +622,13 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             </div>
           )}
         </ScrollArea>
-      </div>
+        </div>
 
       {/* Painel Lateral - Lado Direito */}
-      <div className="w-[420px] bg-slate-800 border-l border-slate-700 flex flex-col">
+      <div className="w-[420px] bg-slate-800 border-l border-slate-700 flex flex-col overflow-hidden">
+
         {/* Header com Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="border-b border-slate-700">
             <TabsList className="w-full grid grid-cols-2 bg-transparent h-12 rounded-none">
               <TabsTrigger value="cart" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
@@ -573,8 +643,8 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
           </div>
 
           {/* Conteúdo das Tabs */}
-          <TabsContent value="cart" className="flex-1 m-0 overflow-hidden">
-            <ScrollArea className="h-full p-4">
+          <TabsContent value="cart" className="flex-1 m-0">
+            <ScrollArea className="h-[calc(100vh-400px)] p-4">
               {cartArray.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-400">
                   <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
@@ -639,8 +709,8 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="details" className="flex-1 m-0 overflow-hidden">
-            <ScrollArea className="h-full p-4">
+          <TabsContent value="details" className="flex-1 m-0">
+            <ScrollArea className="h-[calc(100vh-400px)] p-4">
               <div className="space-y-3">
                 <div className="bg-slate-700 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-white mb-3">Status do Orçamento</h4>
@@ -681,22 +751,8 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
           </TabsContent>
         </Tabs>
 
-        {/* Footer Fixo - Total, Cliente e Ações */}
-        <div className="border-t border-slate-700 bg-slate-800">
-          {/* Total Grande */}
-          <div className="p-6 text-center border-b border-slate-700">
-            <div className="text-slate-400 text-sm mb-1">Total</div>
-            <div className="text-white font-bold text-5xl">
-              {new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-              }).format(getTotal())}
-            </div>
-            <div className="text-slate-400 text-xs mt-1">
-              {cartArray.reduce((sum, item) => sum + item.quantity, 0)} itens
-            </div>
-          </div>
-
+        {/* Cliente e Botões de Ação */}
+        <div className="border-t border-slate-700 bg-slate-800 mt-auto">
           {/* Cliente */}
           <div className="p-4 border-b border-slate-700">
             <label className="text-xs font-medium text-slate-400 mb-2 block">
@@ -754,18 +810,6 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             >
               <History className="w-5 h-5 mb-1" />
               <span className="text-xs">Status</span>
-            </Button>
-          </div>
-
-          {/* Botão Finalizar */}
-          <div className="p-4 pt-0">
-            <Button 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-base font-semibold"
-              onClick={handleFinalize}
-              disabled={loading || cartArray.length === 0 || !selectedCliente}
-            >
-              <DollarSign className="w-5 h-5 mr-2" />
-              {loading ? 'Processando...' : 'Finalizar Orçamento'}
             </Button>
           </div>
         </div>
@@ -864,6 +908,40 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             </div>
           </div>
         )}
+        </div>
+      </div>
+
+      {/* Barra de Total Inferior */}
+      <div className="bg-slate-800 border-t border-slate-700 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 text-slate-400">
+            <User className="w-5 h-5" />
+            <span className="text-sm">
+              {selectedCliente 
+                ? clientes.find(c => c.id === selectedCliente)?.nome 
+                : 'Nenhum cliente selecionado'}
+            </span>
+          </div>
+          <div className="h-8 w-px bg-slate-700" />
+          <div>
+            <div className="text-slate-400 text-xs mb-1">Total</div>
+            <div className="text-white font-bold text-3xl">
+              {new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              }).format(getTotal())}
+            </div>
+          </div>
+        </div>
+        
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700 text-white h-14 px-8 text-base font-semibold"
+          onClick={handleFinalize}
+          disabled={loading || cartArray.length === 0 || !selectedCliente}
+        >
+          {loading ? 'Processando...' : 'Finalizar Orçamento'}
+          <span className="ml-2">→</span>
+        </Button>
       </div>
     </div>
   );
