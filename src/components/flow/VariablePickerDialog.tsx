@@ -84,35 +84,34 @@ const getBlockOutputVariables = (node: Node): { name: string; description: strin
         // Sempre incluir a variável principal do CNPJ
         outputs.push({ name: cleanVarName, description: "CNPJ digitado", type: "string" });
 
-        // Incluir dinamicamente todos os campos configurados (terminam com 'Field')
-        const entries = Object.entries(config).filter(([k, v]) => k.endsWith('Field') && typeof v === 'string' && v);
-        const labelMap: Record<string, string> = {
-          razaoSocialField: "Razão social",
-          nomeFantasiaField: "Nome fantasia",
-          naturezaJuridicaField: "Natureza jurídica",
-          dataAberturaField: "Data de abertura",
-          situacaoField: "Situação cadastral",
-          porteField: "Porte da empresa",
-          atividadePrincipalField: "Atividade principal",
-          logradouroField: "Logradouro",
-          numeroField: "Número",
-          complementoField: "Complemento",
-          bairroField: "Bairro",
-          municipioField: "Município",
-          ufField: "UF",
-          cepField: "CEP",
-          telefoneField: "Telefone",
-          emailField: "E-mail",
-          socioNomeField: "Nome do sócio principal",
-          socioQualificacaoField: "Qualificação do sócio",
-          regimeTributarioField: "Regime tributário",
-          simplesOptanteField: "Optante Simples Nacional",
-          simeiOptanteField: "Optante SIMEI",
-        };
-        entries.forEach(([key, varName]) => {
-          const name = String(varName).replace(/^@/, "");
-          const description = labelMap[key] || name;
-          outputs.push({ name, description, type: "string" });
+        // Mapa completo de campos com defaults quando não configurados
+        const fields = {
+          razao_social: (config.razaoSocialField || 'razao_social') as string,
+          nome_fantasia: (config.nomeFantasiaField || 'nome_fantasia') as string,
+          natureza_juridica: (config.naturezaJuridicaField || 'natureza_juridica') as string,
+          data_abertura: (config.dataAberturaField || 'data_abertura') as string,
+          situacao: (config.situacaoField || 'situacao') as string,
+          porte: (config.porteField || 'porte') as string,
+          atividade_principal: (config.atividadePrincipalField || 'atividade_principal') as string,
+          logradouro: (config.logradouroField || 'logradouro') as string,
+          numero: (config.numeroField || 'numero') as string,
+          complemento: (config.complementoField || 'complemento') as string,
+          bairro: (config.bairroField || 'bairro') as string,
+          municipio: (config.municipioField || 'municipio') as string,
+          uf: (config.ufField || 'uf') as string,
+          cep: (config.cepField || 'cep') as string,
+          telefone: (config.telefoneField || 'telefone') as string,
+          email: (config.emailField || 'email') as string,
+          socio_nome: (config.socioNomeField || 'socio_nome') as string,
+          socio_qualificacao: (config.socioQualificacaoField || 'socio_qualificacao') as string,
+          regime_tributario: (config.regimeTributarioField || 'regime_tributario') as string,
+          simples_optante: (config.simplesOptanteField || 'simples_optante') as string,
+          simei_optante: (config.simeiOptanteField || 'simei_optante') as string,
+        } as const;
+
+        Object.entries(fields).forEach(([label, name]) => {
+          const clean = String(name).replace(/^@/, "");
+          outputs.push({ name: clean, description: label.replace(/_/g, ' ').replace(/^\w/, c=>c.toUpperCase()), type: "string" });
         });
       }
       break;

@@ -258,34 +258,33 @@ const getBlockOutputVariables = (node: any): Variable[] => {
       variables.push(
         { name: cnpjVar, description: "CNPJ digitado", category: "Company", blockName }
       );
-      // Incluir dinamicamente todos os campos configurados no bloco (terminam com 'Field')
-      const entries = Object.entries(node.data.config || {}).filter(([k, v]) => k.endsWith('Field') && typeof v === 'string' && v);
-      const labelMap: Record<string, string> = {
-        razaoSocialField: "Razão Social",
-        nomeFantasiaField: "Nome Fantasia",
-        naturezaJuridicaField: "Natureza Jurídica",
-        dataAberturaField: "Data Abertura",
-        situacaoField: "Situação Cadastral",
-        porteField: "Porte da Empresa",
-        atividadePrincipalField: "Atividade Principal",
-        logradouroField: "Logradouro",
-        numeroField: "Número",
-        complementoField: "Complemento",
-        bairroField: "Bairro",
-        municipioField: "Município",
-        ufField: "UF",
-        cepField: "CEP",
-        telefoneField: "Telefone",
-        emailField: "Email",
-        socioNomeField: "Nome do Sócio",
-        socioQualificacaoField: "Qualificação do Sócio",
-        regimeTributarioField: "Regime Tributário",
-        simplesOptanteField: "Optante Simples",
-        simeiOptanteField: "Optante SIMEI",
-      };
-      entries.forEach(([key, varName]) => {
-        const clean = String(varName).replace(/^@/, "");
-        variables.push({ name: clean, description: labelMap[key] || clean, category: "Company", blockName });
+      // Mapa completo de campos com defaults quando não configurados
+      const cnpjFields = {
+        razao_social: (node.data.config?.razaoSocialField || 'razao_social') as string,
+        nome_fantasia: (node.data.config?.nomeFantasiaField || 'nome_fantasia') as string,
+        natureza_juridica: (node.data.config?.naturezaJuridicaField || 'natureza_juridica') as string,
+        data_abertura: (node.data.config?.dataAberturaField || 'data_abertura') as string,
+        situacao: (node.data.config?.situacaoField || 'situacao') as string,
+        porte: (node.data.config?.porteField || 'porte') as string,
+        atividade_principal: (node.data.config?.atividadePrincipalField || 'atividade_principal') as string,
+        logradouro: (node.data.config?.logradouroField || 'logradouro') as string,
+        numero: (node.data.config?.numeroField || 'numero') as string,
+        complemento: (node.data.config?.complementoField || 'complemento') as string,
+        bairro: (node.data.config?.bairroField || 'bairro') as string,
+        municipio: (node.data.config?.municipioField || 'municipio') as string,
+        uf: (node.data.config?.ufField || 'uf') as string,
+        cep: (node.data.config?.cepField || 'cep') as string,
+        telefone: (node.data.config?.telefoneField || 'telefone') as string,
+        email: (node.data.config?.emailField || 'email') as string,
+        socio_nome: (node.data.config?.socioNomeField || 'socio_nome') as string,
+        socio_qualificacao: (node.data.config?.socioQualificacaoField || 'socio_qualificacao') as string,
+        regime_tributario: (node.data.config?.regimeTributarioField || 'regime_tributario') as string,
+        simples_optante: (node.data.config?.simplesOptanteField || 'simples_optante') as string,
+        simei_optante: (node.data.config?.simeiOptanteField || 'simei_optante') as string,
+      } as const;
+      Object.entries(cnpjFields).forEach(([label, name]) => {
+        const clean = String(name).replace(/^@/, "");
+        variables.push({ name: clean, description: label.replace(/_/g, ' ').replace(/^\w/, c=>c.toUpperCase()), category: "Company", blockName });
       });
       break;
     case "ask_cep":
