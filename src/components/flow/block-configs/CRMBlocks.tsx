@@ -12,18 +12,20 @@ interface ConfigProps {
 }
 
 export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
-  // Campos reais da tabela empresas no banco de dados
-  // Estes campos são extraídos da estrutura da tabela e aparecem automaticamente
+  // Campos disponíveis da tabela empresas + custom_fields
   const availableFields = [
-    { value: "cnpj", label: "CNPJ" },
-    { value: "razao_social", label: "Razão Social" },
-    { value: "nome_fantasia", label: "Nome Fantasia" },
-    { value: "email", label: "Email" },
-    { value: "telefone", label: "Telefone" },
-    { value: "endereco", label: "Endereço" },
-    { value: "cidade", label: "Cidade" },
-    { value: "estado", label: "Estado" },
-    { value: "cep", label: "CEP" },
+    { value: "cnpj", label: "CNPJ", required: true },
+    { value: "razao_social", label: "Razão Social", required: true },
+    { value: "nome_fantasia", label: "Nome Fantasia", required: true },
+    { value: "email", label: "Email", required: false },
+    { value: "telefone", label: "Telefone", required: false },
+    { value: "endereco", label: "Endereço", required: false },
+    { value: "bairro", label: "Bairro", required: false },
+    { value: "cidade", label: "Cidade", required: false },
+    { value: "estado", label: "Estado", required: false },
+    { value: "cep", label: "CEP", required: false },
+    { value: "inscricao_estadual", label: "Inscrição Estadual", required: false },
+    { value: "inscricao_municipal", label: "Inscrição Municipal", required: false },
   ];
 
   const fieldMappings = config.fieldMappings || {};
@@ -67,19 +69,20 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
       <div className="space-y-3 border-t pt-4">
         <Label className="font-semibold">Mapeamento de Campos da Empresa</Label>
         <p className="text-xs text-muted-foreground">
-          Clique em "Usar campo" dentro de cada caixa para selecionar variáveis. Campos em branco não serão atualizados.
+          Clique em "Usar campo" dentro de cada caixa para selecionar variáveis. 
+          <strong className="text-destructive"> Campos obrigatórios (*) devem ser preenchidos.</strong>
         </p>
         
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
           {availableFields.map((field) => (
             <div key={field.value} className="space-y-1">
               <Label className="text-xs font-medium">
-                {field.label}
+                {field.label} {field.required && <span className="text-destructive">*</span>}
               </Label>
               <RichTextEditor
                 value={(fieldMappings[field.value] as string) || ""}
                 onChange={(value) => updateFieldMapping(field.value, value)}
-                placeholder="Digite ou clique em 'Usar campo' para selecionar variável"
+                placeholder={field.required ? "Obrigatório - use 'Usar campo' para selecionar" : "Digite ou clique em 'Usar campo' para selecionar variável"}
                 multiline={false}
                 nodes={nodes}
                 edges={edges}

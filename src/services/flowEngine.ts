@@ -592,16 +592,37 @@ export class FlowEngine {
     // Mapear campos configurados
     const fieldMappings = config.fieldMappings || {};
     const empresaData: Record<string, any> = {};
+    const customFields: Record<string, any> = {};
 
-    // Processar cada campo mapeado, incluindo o CNPJ
+    // Processar cada campo mapeado
     for (const [field, variableTemplate] of Object.entries(fieldMappings)) {
       if (variableTemplate && typeof variableTemplate === 'string') {
         // Interpolar as variáveis no template (ex: "{{cnpj}}")
         const value = this.interpolate(variableTemplate);
         if (value && value.trim()) {
-          empresaData[field] = value;
+          // Campos que vão direto na tabela
+          if (['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(field)) {
+            empresaData[field] = value;
+          } else {
+            // Outros campos vão para custom_fields
+            customFields[field] = value;
+          }
         }
       }
+    }
+
+    // Validar campos obrigatórios
+    const camposObrigatorios = ['cnpj', 'razao_social', 'nome_fantasia'];
+    const camposFaltando = camposObrigatorios.filter(campo => !empresaData[campo]);
+    
+    if (camposFaltando.length > 0) {
+      console.error("Campos obrigatórios não preenchidos:", camposFaltando.join(", "));
+      return;
+    }
+
+    // Adicionar custom_fields se houver
+    if (Object.keys(customFields).length > 0) {
+      empresaData.custom_fields = customFields;
     }
 
     // Verificar se o CNPJ foi informado (tenta fallback da variável global "cnpj")
@@ -620,6 +641,11 @@ export class FlowEngine {
     // Garantir que nome_fantasia existe (campo obrigatório)
     if (!empresaData.nome_fantasia) {
       empresaData.nome_fantasia = empresaData.razao_social || empresaData.cnpj;
+    }
+
+    // Garantir que razao_social existe (campo obrigatório)
+    if (!empresaData.razao_social) {
+      empresaData.razao_social = empresaData.nome_fantasia || empresaData.cnpj;
     }
 
     try {
