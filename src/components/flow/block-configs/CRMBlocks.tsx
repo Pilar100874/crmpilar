@@ -2,6 +2,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VariableInput } from "../VariableInput";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Variable, X } from "lucide-react";
 
 interface ConfigProps {
   config: any;
@@ -97,26 +99,49 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
       <div className="space-y-3 border-t pt-4">
         <Label className="font-semibold">Mapeamento de Campos da Empresa</Label>
         <p className="text-xs text-muted-foreground">
-          Vincule as variáveis do fluxo aos campos do cadastro de empresa. Use "Usar variável" para selecionar.
+          Clique no botão ao lado de cada campo para selecionar a variável. Campos em branco não serão atualizados.
         </p>
         
-        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-          {availableFields.map((field) => (
-            <div key={field.value} className="space-y-1">
-              <Label className="text-xs font-medium">{field.label}</Label>
-              <VariableInput
-                value={(fieldMappings[field.value] as string) || ""}
-                onChange={(e) => updateFieldMapping(field.value, e.target.value)}
-                placeholder={`Selecione a variável para ${field.label}`}
-                onVariableRequest={openVariablePicker ? () => openVariablePicker(`fieldMapping_${field.value}`, (fieldMappings[field.value] as string) || "") : undefined}
-                ref={(el) => {
-                  if (inputRefs?.current) {
-                    inputRefs.current[`fieldMapping_${field.value}`] = el;
-                  }
-                }}
-              />
-            </div>
-          ))}
+        <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+          {availableFields.map((field) => {
+            const selectedVariable = (fieldMappings[field.value] as string) || "";
+            return (
+              <div key={field.value} className="flex items-center gap-2 py-1">
+                <Label className="text-xs font-medium flex-1 min-w-[140px]">
+                  {field.label}
+                </Label>
+                <div className="flex items-center gap-2 flex-1">
+                  {selectedVariable ? (
+                    <>
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded flex-1 truncate">
+                        {selectedVariable}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0"
+                        onClick={() => updateFieldMapping(field.value, "")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs flex-1"
+                      onClick={() => openVariablePicker?.(`fieldMapping_${field.value}`, "")}
+                    >
+                      <Variable className="h-3 w-3 mr-1" />
+                      Selecionar variável
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
