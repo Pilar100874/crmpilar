@@ -604,7 +604,14 @@ export class FlowEngine {
       }
     }
 
-    // Verificar se o CNPJ foi informado
+    // Verificar se o CNPJ foi informado (tenta fallback da variável global "cnpj")
+    if (!empresaData.cnpj) {
+      const fallbackCnpj = (this.context as any)?.vars?.cnpj;
+      if (fallbackCnpj && String(fallbackCnpj).trim()) {
+        empresaData.cnpj = String(fallbackCnpj).trim();
+      }
+    }
+
     if (!empresaData.cnpj) {
       console.error("CNPJ não foi mapeado ou está vazio");
       return;
@@ -618,6 +625,11 @@ export class FlowEngine {
     try {
       // Importar o cliente Supabase dinamicamente
       const { supabase } = await import("@/integrations/supabase/client");
+      const { getEstabelecimentoId } = await import("@/lib/estabelecimentoUtils");
+      const estabId = await getEstabelecimentoId();
+      if (estabId) {
+        empresaData.estabelecimento_id = estabId;
+      }
 
       // Buscar empresa existente pelo CNPJ
       const { data: empresaExistente, error: searchError } = await supabase
