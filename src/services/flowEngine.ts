@@ -589,24 +589,25 @@ export class FlowEngine {
     const data = node.data as FlowNodeData;
     const config = data.config as any;
 
-    const cnpjVariable = config.cnpjVariable || "cnpj";
-    const cnpjValue = this.context.vars[cnpjVariable];
-
-    if (!cnpjValue) {
-      console.error("CNPJ variable not found:", cnpjVariable);
-      return;
-    }
-
     // Mapear campos configurados
     const fieldMappings = config.fieldMappings || {};
-    const empresaData: Record<string, any> = {
-      cnpj: cnpjValue,
-    };
+    const empresaData: Record<string, any> = {};
 
-    for (const [field, variable] of Object.entries(fieldMappings)) {
-      if (variable && this.context.vars[variable as string]) {
-        empresaData[field] = this.context.vars[variable as string];
+    // Processar cada campo mapeado, incluindo o CNPJ
+    for (const [field, variableTemplate] of Object.entries(fieldMappings)) {
+      if (variableTemplate && typeof variableTemplate === 'string') {
+        // Interpolar as variáveis no template (ex: "{{cnpj}}")
+        const value = this.interpolate(variableTemplate);
+        if (value && value.trim()) {
+          empresaData[field] = value;
+        }
       }
+    }
+
+    // Verificar se o CNPJ foi informado
+    if (!empresaData.cnpj) {
+      console.error("CNPJ não foi mapeado ou está vazio");
+      return;
     }
 
     // Simular verificação de existência no banco

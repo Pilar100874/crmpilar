@@ -1,16 +1,17 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { VariableInput } from "../VariableInput";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { RichTextEditor } from "../RichTextEditor";
+
 interface ConfigProps {
   config: any;
   handleConfigChange: (updates: any) => void;
-  openVariablePicker?: (ref: HTMLInputElement | HTMLTextAreaElement) => void;
-  inputRefs?: React.MutableRefObject<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>;
+  nodes?: any[];
+  edges?: any[];
+  selectedNode?: any;
 }
 
-export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVariablePicker, inputRefs }: ConfigProps) => {
+export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
   // Campos reais da tabela empresas no banco de dados
   // Estes campos são extraídos da estrutura da tabela e aparecem automaticamente
   const availableFields = [
@@ -35,33 +36,6 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Variável com CNPJ</Label>
-        <div className="flex items-center gap-2">
-          <VariableInput
-            value={config.cnpjVariable || "cnpj"}
-            onChange={(e) => handleConfigChange({ cnpjVariable: e.target.value })}
-            placeholder="Digite ou use o botão ao lado"
-            ref={(el) => {
-              if (inputRefs?.current) {
-                inputRefs.current['cnpjVariable'] = el;
-              }
-            }}
-            className="flex-1"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => inputRefs?.current?.['cnpjVariable'] && openVariablePicker?.(inputRefs.current['cnpjVariable']!)}
-          >
-            Usar variável
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Esta variável indica qual campo contém o CNPJ para validar se a empresa já existe no cadastro.
-        </p>
-      </div>
-
       <div className="space-y-2">
         <Label>Modo de operação</Label>
         <Select
@@ -93,35 +67,24 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
       <div className="space-y-3 border-t pt-4">
         <Label className="font-semibold">Mapeamento de Campos da Empresa</Label>
         <p className="text-xs text-muted-foreground">
-          Use o botão "Usar variável" ao lado de cada campo para selecionar. Campos em branco não serão atualizados.
+          Clique em "Usar campo" dentro de cada caixa para selecionar variáveis. Campos em branco não serão atualizados.
         </p>
         
-        <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
           {availableFields.map((field) => (
-            <div key={field.value} className="flex items-center gap-2">
-              <Label className="text-xs font-medium w-40 flex-shrink-0">
+            <div key={field.value} className="space-y-1">
+              <Label className="text-xs font-medium">
                 {field.label}
               </Label>
-              <div className="flex-1 flex items-center gap-2">
-                <VariableInput
-                  value={(fieldMappings[field.value] as string) || ""}
-                  onChange={(e) => updateFieldMapping(field.value, e.target.value)}
-                  placeholder="Digite ou use o botão ao lado"
-                  ref={(el) => {
-                    if (inputRefs?.current) {
-                      inputRefs.current[`fieldMapping_${field.value}`] = el;
-                    }
-                  }}
-                  className="flex-1"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => inputRefs?.current && inputRefs.current[`fieldMapping_${field.value}`] && openVariablePicker?.(inputRefs.current[`fieldMapping_${field.value}`]!)}
-                >
-                  Usar variável
-                </Button>
-              </div>
+              <RichTextEditor
+                value={(fieldMappings[field.value] as string) || ""}
+                onChange={(value) => updateFieldMapping(field.value, value)}
+                placeholder="Digite ou clique em 'Usar campo' para selecionar variável"
+                multiline={false}
+                nodes={nodes}
+                edges={edges}
+                selectedNode={selectedNode}
+              />
             </div>
           ))}
         </div>
@@ -129,15 +92,14 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, openVaria
 
       <div className="space-y-2 border-t pt-4">
         <Label>Variável de saída</Label>
-        <VariableInput
+        <RichTextEditor
           value={config.outputVariable || "cliente_novo"}
-          onChange={(e) => handleConfigChange({ outputVariable: e.target.value })}
+          onChange={(value) => handleConfigChange({ outputVariable: value })}
           placeholder="cliente_novo"
-          ref={(el) => {
-            if (inputRefs?.current) {
-              inputRefs.current['outputVariable'] = el;
-            }
-          }}
+          multiline={false}
+          nodes={nodes}
+          edges={edges}
+          selectedNode={selectedNode}
         />
         <p className="text-xs text-muted-foreground">
           Esta variável receberá "Sim" se o CNPJ não existia (cliente novo) ou "Não" se já existia.
