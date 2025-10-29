@@ -132,8 +132,63 @@ export const EmpresaFieldsCRUD = () => {
   useEffect(() => {
     if (estabelecimentoId) {
       loadFields();
+      loadOrCreateMainFields();
     }
   }, [estabelecimentoId]);
+
+  const loadOrCreateMainFields = async () => {
+    if (!estabelecimentoId) return;
+
+    try {
+      // Campos principais que devem sempre existir
+      const mainFields = [
+        { field_id: "cpf_cnpj", field_label: "CPF/CNPJ", field_type: "text", field_order: 0, required: true, locked: true },
+        { field_id: "company_name", field_label: "Razão Social", field_type: "text", field_order: 1, required: true, locked: false },
+        { field_id: "company_fantasia", field_label: "Nome Fantasia", field_type: "text", field_order: 2, required: true, locked: false },
+        { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 3, required: false, locked: false },
+        { field_id: "telefone", field_label: "Telefone", field_type: "phone", field_order: 4, required: false, locked: false },
+        { field_id: "cep", field_label: "CEP", field_type: "text", field_order: 5, required: true, locked: false },
+        { field_id: "address", field_label: "Endereço", field_type: "text", field_order: 6, required: true, locked: false },
+        { field_id: "city", field_label: "Cidade", field_type: "text", field_order: 7, required: true, locked: false },
+        { field_id: "neighborhood", field_label: "Bairro", field_type: "text", field_order: 8, required: false, locked: false },
+        { field_id: "state", field_label: "UF", field_type: "text", field_order: 9, required: true, locked: false },
+      ];
+
+      // Verificar quais campos principais já existem
+      const { data: existingFields } = await supabase
+        .from("form_field_configs")
+        .select("field_id")
+        .eq("form_type", "empresa")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .in("field_id", mainFields.map(f => f.field_id));
+
+      const existingFieldIds = new Set(existingFields?.map(f => f.field_id) || []);
+
+      // Inserir apenas os campos que ainda não existem
+      const fieldsToInsert = mainFields
+        .filter(field => !existingFieldIds.has(field.field_id))
+        .map(field => ({
+          estabelecimento_id: estabelecimentoId,
+          form_type: "empresa",
+          ...field,
+          options: null,
+        }));
+
+      if (fieldsToInsert.length > 0) {
+        const { error } = await supabase
+          .from("form_field_configs")
+          .insert(fieldsToInsert);
+
+        if (error) {
+          console.error("Error creating main fields:", error);
+        } else {
+          loadFields();
+        }
+      }
+    } catch (error) {
+      console.error("Error in loadOrCreateMainFields:", error);
+    }
+  };
 
   const loadEstabelecimento = async () => {
     try {
@@ -427,7 +482,7 @@ export const EmpresaFieldsCRUD = () => {
         <CardHeader>
           <CardTitle>Campos Configurados ({fields.length})</CardTitle>
           <CardDescription>
-            Arraste para reordenar os campos
+            Arraste para reordenar os campos. Campos principais aparecem primeiro.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -435,7 +490,7 @@ export const EmpresaFieldsCRUD = () => {
             <div className="text-center py-8 text-muted-foreground">Carregando...</div>
           ) : fields.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhum campo personalizado configurado
+              Nenhum campo configurado
             </div>
           ) : (
             <DndContext
