@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -207,6 +208,10 @@ export default function Empresas() {
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
   const [criarNovoContato, setCriarNovoContato] = useState(false);
+  
+  // Estados para confirmação de exclusão
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [empresaToDelete, setEmpresaToDelete] = useState<Empresa | null>(null);
 
   // Lookup hooks
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
@@ -319,13 +324,21 @@ export default function Empresas() {
     setShowForm(true);
   };
 
-  const handleDeleteEmpresa = async (id: string) => {
-    if (!confirm("Deseja realmente excluir esta empresa?")) return;
+  const handleDeleteEmpresa = (id: string) => {
+    const empresa = empresas.find(e => e.id === id);
+    if (!empresa) return;
+    
+    setEmpresaToDelete(empresa);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteEmpresa = async () => {
+    if (!empresaToDelete) return;
 
     const { error } = await supabase
       .from('empresas')
       .delete()
-      .eq('id', id);
+      .eq('id', empresaToDelete.id);
 
     if (error) {
       toast.error("Erro ao excluir empresa");
@@ -334,6 +347,8 @@ export default function Empresas() {
     }
 
     toast.success("Empresa excluída!");
+    setDeleteDialogOpen(false);
+    setEmpresaToDelete(null);
     if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
   };
 
@@ -1297,6 +1312,26 @@ export default function Empresas() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a empresa <strong>{empresaToDelete?.nome_fantasia || empresaToDelete?.razao_social}</strong>?
+              {"\n\n"}
+              Esta ação não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteEmpresa}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
