@@ -509,6 +509,12 @@ function BotBuilderContent() {
         return false;
       }
 
+      // Garantir que o bot herda e fixa o estabelecimento atual para todo o fluxo
+      try {
+        localStorage.setItem("selectedEstabelecimentoId", estabelecimentoId);
+      } catch {}
+
+
       // Preferir dados do React Flow (garante último estado do canvas)
       const rfData = typeof reactFlowInstance?.toObject === 'function' ? reactFlowInstance.toObject() : null;
       const nodesToSave = rfData?.nodes?.length ? rfData.nodes : nodes;
@@ -675,6 +681,13 @@ function BotBuilderContent() {
       setCurrentBotName(data.name);
       setCurrentBotDescription(data.description || "");
       setSelectedNode(null);
+      
+      // Fixar estabelecimento do bot como o estabelecimento corrente da sessão
+      if ((data as any).estabelecimento_id) {
+        try {
+          localStorage.setItem("selectedEstabelecimentoId", (data as any).estabelecimento_id);
+        } catch {}
+      }
       
       toast.success(`Bot "${data.name}" carregado!`);
       // Definir assinatura como estado salvo após carregar
