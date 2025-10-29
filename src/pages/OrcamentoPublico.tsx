@@ -186,24 +186,22 @@ export default function OrcamentoPublico() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (!orcamento) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <XCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-            <h2 className="text-xl font-semibold mb-2">Orçamento não encontrado</h2>
-            <p className="text-muted-foreground">
-              O link pode estar inválido ou o orçamento foi removido.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 max-w-md text-center">
+          <XCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
+          <h2 className="text-xl font-semibold mb-2 text-white">Orçamento não encontrado</h2>
+          <p className="text-slate-400">
+            O link pode estar inválido ou o orçamento foi removido.
+          </p>
+        </div>
       </div>
     );
   }
@@ -212,77 +210,55 @@ export default function OrcamentoPublico() {
   const isRejeitado = orcamento.etapa === 'perdido';
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Cabeçalho */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl">
-                  Orçamento #{orcamento.id.slice(0, 8)}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {format(new Date(orcamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                </p>
-              </div>
-              <Badge variant={isAprovado ? "default" : isRejeitado ? "destructive" : "secondary"}>
-                {orcamento.etapa}
-              </Badge>
+    <div className="min-h-screen bg-slate-900 flex">
+      {/* Lado Esquerdo - Itens */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                Orçamento #{orcamento.id.slice(0, 8)}
+              </h1>
+              <p className="text-sm text-slate-400 mt-1">
+                {format(new Date(orcamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground">Cliente</Label>
-                <p className="font-semibold">{orcamento.cliente?.nome}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">Vendedor</Label>
-                <p className="font-semibold">{orcamento.vendedor?.nome}</p>
-              </div>
-            </div>
+            <Badge 
+              className={
+                isAprovado 
+                  ? "bg-green-600 text-white" 
+                  : isRejeitado 
+                  ? "bg-red-600 text-white" 
+                  : "bg-blue-600 text-white"
+              }
+            >
+              {orcamento.etapa}
+            </Badge>
+          </div>
+        </div>
 
-            {orcamento.observacoes && (
-              <div>
-                <Label className="text-muted-foreground">Observações</Label>
-                <p className="text-sm">{orcamento.observacoes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Itens */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Itens do Orçamento
-              {!isAprovado && !isRejeitado && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditMode(!editMode)}
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  {editMode ? 'Cancelar' : 'Sugerir Preços'}
-                </Button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        {/* Itens do Orçamento */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="space-y-3">
             {orcamento.itens?.map((item: any) => (
-              <div key={item.id}>
+              <div key={item.id} className="bg-slate-800 rounded-lg p-4 border border-slate-700">
                 <div className="flex items-center gap-4">
-                  {item.produto?.foto_url && (
-                    <img
-                      src={item.produto.foto_url}
-                      alt={item.produto.nome}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h4 className="font-semibold">{item.produto?.nome}</h4>
-                    <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+                  <div className="w-16 h-16 bg-slate-700 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {item.produto?.foto_url ? (
+                      <img 
+                        src={item.produto.foto_url} 
+                        alt={item.produto.nome}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-slate-400 text-xl">{item.produto?.nome?.[0]}</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-white text-base">{item.produto?.nome}</h4>
+                    <div className="flex gap-4 mt-1 text-sm text-slate-400">
                       <span>Qtd: {item.quantidade}</span>
                       <span>
                         Unit: {new Intl.NumberFormat('pt-BR', {
@@ -290,113 +266,174 @@ export default function OrcamentoPublico() {
                           currency: 'BRL'
                         }).format(item.preco_unitario)}
                       </span>
-                      <span className="font-semibold text-foreground">
-                        Total: {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL'
-                        }).format(item.subtotal)}
-                      </span>
                     </div>
-                    
-                    {editMode && (
-                      <div className="mt-2">
-                        <Label htmlFor={`preco-${item.id}`}>Sugerir novo preço unitário</Label>
-                        <Input
-                          id={`preco-${item.id}`}
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder={`Atual: ${item.preco_unitario}`}
-                          value={precosSugeridos[item.id] || ''}
-                          onChange={(e) => setPrecosSugeridos({
-                            ...precosSugeridos,
-                            [item.id]: Number(e.target.value)
-                          })}
-                          className="max-w-xs mt-1"
-                        />
-                      </div>
-                    )}
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-white">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(item.subtotal)}
+                    </div>
                   </div>
                 </div>
-                <Separator className="mt-4" />
+
+                {editMode && (
+                  <div className="mt-3 pt-3 border-t border-slate-700">
+                    <Label htmlFor={`preco-${item.id}`} className="text-slate-300 text-sm">
+                      Sugerir novo preço unitário
+                    </Label>
+                    <Input
+                      id={`preco-${item.id}`}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder={`Atual: ${item.preco_unitario}`}
+                      value={precosSugeridos[item.id] || ''}
+                      onChange={(e) => setPrecosSugeridos({
+                        ...precosSugeridos,
+                        [item.id]: Number(e.target.value)
+                      })}
+                      className="mt-2 bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+                )}
               </div>
             ))}
+          </div>
+        </div>
+      </div>
 
-            <div className="flex justify-between items-center text-lg font-bold pt-2">
-              <span>Valor Total:</span>
-              <span>
+      {/* Lado Direito - Informações e Ações */}
+      <div className="w-[420px] bg-slate-800 border-l border-slate-700 flex flex-col">
+        {/* Informações do Cliente e Vendedor */}
+        <div className="p-6 border-b border-slate-700 space-y-4">
+          <div>
+            <Label className="text-slate-400 text-sm">Cliente</Label>
+            <p className="font-semibold text-white text-base mt-1">{orcamento.cliente?.nome}</p>
+          </div>
+          <div>
+            <Label className="text-slate-400 text-sm">Vendedor</Label>
+            <p className="font-semibold text-white text-base mt-1">{orcamento.vendedor?.nome}</p>
+          </div>
+          {orcamento.observacoes && (
+            <div>
+              <Label className="text-slate-400 text-sm">Observações</Label>
+              <p className="text-sm text-slate-300 mt-1">{orcamento.observacoes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Área de Edição (quando ativo) */}
+        {editMode && (
+          <div className="p-6 border-b border-slate-700">
+            <Label htmlFor="observacoes" className="text-slate-300">
+              Observações sobre sua proposta
+            </Label>
+            <Textarea
+              id="observacoes"
+              placeholder="Explique porque você está sugerindo estes preços..."
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              rows={4}
+              className="mt-2 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+            />
+          </div>
+        )}
+
+        {/* Resumo e Total */}
+        <div className="flex-1"></div>
+        
+        <div className="p-6 border-t border-slate-700 space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-slate-300">
+              <span className="text-sm">Itens:</span>
+              <span className="text-sm">{orcamento.itens?.length || 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-white">Valor Total:</span>
+              <span className="font-bold text-white text-2xl">
                 {new Intl.NumberFormat('pt-BR', {
                   style: 'currency',
                   currency: 'BRL'
                 }).format(orcamento.valor_total || 0)}
               </span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Ações */}
-        {!isAprovado && !isRejeitado && (
-          <Card>
-            <CardContent className="p-6">
+          {/* Botões de Ação */}
+          {!isAprovado && !isRejeitado && (
+            <div className="space-y-3">
               {editMode ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="observacoes">Observações sobre sua proposta</Label>
-                    <Textarea
-                      id="observacoes"
-                      placeholder="Explique porque você está sugerindo estes preços..."
-                      value={observacoes}
-                      onChange={(e) => setObservacoes(e.target.value)}
-                      rows={3}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    <Button onClick={handleSugerirPrecos} className="flex-1">
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Enviar Proposta
-                    </Button>
-                  </div>
-                </div>
+                <>
+                  <Button 
+                    onClick={handleSugerirPrecos} 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+                  >
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Enviar Proposta
+                  </Button>
+                  <Button 
+                    onClick={() => setEditMode(false)}
+                    variant="outline"
+                    className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
+                  >
+                    Cancelar
+                  </Button>
+                </>
               ) : (
-                <div className="flex gap-3">
-                  <Button onClick={handleConfirmar} className="flex-1" variant="default">
-                    <CheckCircle className="w-4 h-4 mr-2" />
+                <>
+                  <Button 
+                    onClick={handleConfirmar}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
                     Confirmar Orçamento
                   </Button>
-                  <Button onClick={handleRejeitar} className="flex-1" variant="destructive">
-                    <XCircle className="w-4 h-4 mr-2" />
+                  <Button 
+                    onClick={() => setEditMode(true)}
+                    variant="outline"
+                    className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
+                  >
+                    <Edit2 className="w-5 h-5 mr-2" />
+                    Sugerir Preços
+                  </Button>
+                  <Button 
+                    onClick={handleRejeitar}
+                    variant="outline"
+                    className="w-full bg-red-900/20 border-red-800 text-red-400 hover:bg-red-900/30 h-12"
+                  >
+                    <XCircle className="w-5 h-5 mr-2" />
                     Rejeitar
                   </Button>
-                </div>
+                </>
               )}
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          )}
 
-        {isAprovado && (
-          <Card className="border-primary">
-            <CardContent className="p-6 text-center">
-              <CheckCircle className="w-12 h-12 mx-auto mb-2 text-primary" />
-              <h3 className="text-lg font-semibold">Orçamento Confirmado!</h3>
-              <p className="text-muted-foreground mt-1">
+          {/* Status de Aprovado */}
+          {isAprovado && (
+            <div className="bg-green-900/20 border border-green-800 rounded-lg p-4 text-center">
+              <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-400" />
+              <h3 className="text-lg font-semibold text-white">Orçamento Confirmado!</h3>
+              <p className="text-slate-400 text-sm mt-1">
                 Obrigado pela confirmação. Em breve entraremos em contato.
               </p>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          )}
 
-        {isRejeitado && (
-          <Card className="border-destructive">
-            <CardContent className="p-6 text-center">
-              <XCircle className="w-12 h-12 mx-auto mb-2 text-destructive" />
-              <h3 className="text-lg font-semibold">Orçamento Rejeitado</h3>
-              <p className="text-muted-foreground mt-1">
+          {/* Status de Rejeitado */}
+          {isRejeitado && (
+            <div className="bg-red-900/20 border border-red-800 rounded-lg p-4 text-center">
+              <XCircle className="w-12 h-12 mx-auto mb-2 text-red-400" />
+              <h3 className="text-lg font-semibold text-white">Orçamento Rejeitado</h3>
+              <p className="text-slate-400 text-sm mt-1">
                 Obrigado pelo feedback. Ficamos à disposição para futuras cotações.
               </p>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
