@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings2, GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -86,9 +87,10 @@ function SortableColumnItem({ column, onToggle }: SortableColumnItemProps) {
 interface TableColumnsConfigProps {
   columns: TableColumn[];
   onColumnsChange: (columns: TableColumn[]) => void;
+  fieldsConfigComponent?: React.ReactNode;
 }
 
-export function TableColumnsConfig({ columns, onColumnsChange }: TableColumnsConfigProps) {
+export function TableColumnsConfig({ columns, onColumnsChange, fieldsConfigComponent }: TableColumnsConfigProps) {
   const [open, setOpen] = useState(false);
 
   const sensors = useSensors(
@@ -120,40 +122,51 @@ export function TableColumnsConfig({ columns, onColumnsChange }: TableColumnsCon
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <Settings2 className="w-4 h-4" />
-          Colunas
+          Configurações
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="w-full sm:max-w-[900px] overflow-auto">
         <SheetHeader>
-          <SheetTitle>Configurar Colunas da Tabela</SheetTitle>
+          <SheetTitle>Configurações</SheetTitle>
         </SheetHeader>
         
-        <div className="mt-6 space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Selecione quais colunas exibir e arraste para reordenar
-          </p>
+        <Tabs defaultValue="columns" className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="columns">Colunas da Tabela</TabsTrigger>
+            <TabsTrigger value="fields">Campos de Contato</TabsTrigger>
+          </TabsList>
           
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={columns.map(c => c.id)}
-              strategy={verticalListSortingStrategy}
+          <TabsContent value="columns" className="space-y-4 mt-6">
+            <p className="text-sm text-muted-foreground">
+              Selecione quais colunas exibir e arraste para reordenar
+            </p>
+            
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              <div className="space-y-2">
-                {columns.map((column) => (
-                  <SortableColumnItem
-                    key={column.id}
-                    column={column}
-                    onToggle={handleToggleColumn}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        </div>
+              <SortableContext
+                items={columns.map(c => c.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {columns.map((column) => (
+                    <SortableColumnItem
+                      key={column.id}
+                      column={column}
+                      onToggle={handleToggleColumn}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </TabsContent>
+          
+          <TabsContent value="fields" className="mt-6">
+            {fieldsConfigComponent}
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );

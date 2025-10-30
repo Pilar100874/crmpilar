@@ -92,7 +92,6 @@ interface SearchFilters {
 
 export default function Contatos() {
   const [showForm, setShowForm] = useState(false);
-  const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
@@ -1393,16 +1392,9 @@ export default function Contatos() {
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => setShowConfigPanel(true)} 
-                className="gap-2"
-              >
-                <Settings2 className="w-4 h-4" />
-                Configuração de Campos
-              </Button>
-              <Button 
-                variant="outline" 
                 onClick={() => setShowImportPanel(true)} 
                 className="gap-2"
+                size="sm"
               >
                 <Upload className="w-4 h-4" />
                 Importação
@@ -1437,6 +1429,22 @@ export default function Contatos() {
             <TableColumnsConfig
               columns={tableColumns} 
               onColumnsChange={handleColumnsChange}
+              fieldsConfigComponent={
+                estabelecimentoId ? (
+                  <ContatoFieldsCRUD 
+                    estabelecimentoId={estabelecimentoId} 
+                    onChanged={async () => {
+                      console.log('🔄 ContatoFieldsCRUD onChange triggered');
+                      await loadTableColumns(estabelecimentoId);
+                      await loadContacts();
+                    }}
+                  />
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    Carregando configurações...
+                  </div>
+                )
+              }
             />
             
             <div className="flex-1 max-w-md">
@@ -2024,35 +2032,6 @@ export default function Contatos() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Panel de Configurações */}
-      <Sheet open={showConfigPanel} onOpenChange={setShowConfigPanel}>
-        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="config-description">
-          <SheetHeader>
-            <SheetTitle>Configurações de Campos de Contato</SheetTitle>
-            <p id="config-description" className="sr-only">Configure campos personalizados para contatos</p>
-          </SheetHeader>
-          
-          {showConfigPanel && estabelecimentoId && (
-            <div className="mt-6">
-              <ContatoFieldsCRUD 
-                estabelecimentoId={estabelecimentoId} 
-                onChanged={async () => {
-                  console.log('🔄 ContatoFieldsCRUD onChange triggered');
-                  await loadTableColumns(estabelecimentoId);
-                  await loadContacts();
-                }}
-              />
-            </div>
-          )}
-          
-          {showConfigPanel && !estabelecimentoId && (
-            <div className="mt-6 text-center text-muted-foreground">
-              Carregando configurações...
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
 
       {/* Panel de Importação */}
       <Sheet open={showImportPanel} onOpenChange={setShowImportPanel}>
