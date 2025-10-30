@@ -434,11 +434,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const handleFieldChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setFieldErrors(prev => ({ ...prev, [field]: '' }));
-    
-    // Verificar duplicação de CNPJ/CPF ao perder foco
-    if (field === 'cpf_cnpj' && value && value.length >= 11) {
-      checkDuplicateCnpjCpf(value);
-    }
   };
   
   const checkDuplicateCnpjCpf = async (cnpjCpf: string) => {
@@ -776,8 +771,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       if (field.id === "cep" && formData.cep?.length === 9) {
         handleCEPLookup(formData.cep);
       }
-      if (field.id === "cpf_cnpj" && formData.company_type === "Pessoa Jurídica" && formData.cpf_cnpj?.length === 18) {
-        handleCNPJLookup(formData.cpf_cnpj);
+      if (field.id === "cpf_cnpj") {
+        const cleanValue = formData.cpf_cnpj?.replace(/\D/g, '') || '';
+        // Verifica duplicação se tiver pelo menos 11 dígitos (CPF ou CNPJ)
+        if (cleanValue.length >= 11) {
+          checkDuplicateCnpjCpf(formData.cpf_cnpj);
+        }
+        // Consulta CNPJ na API se for Pessoa Jurídica e tiver 14 dígitos
+        if (formData.company_type === "Pessoa Jurídica" && formData.cpf_cnpj?.length === 18) {
+          handleCNPJLookup(formData.cpf_cnpj);
+        }
       }
     };
 
