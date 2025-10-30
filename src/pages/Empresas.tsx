@@ -165,6 +165,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
   // Carregar configurações de campos do banco
   const loadFieldConfigs = async (estabId: string) => {
+    console.log('🔄 Carregando configs do banco...');
     const { data, error } = await supabase
       .from('form_field_configs')
       .select('*')
@@ -173,12 +174,18 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       .order('field_order');
 
     if (error) {
-      console.error('Erro ao carregar configs:', error);
+      console.error('❌ Erro ao carregar configs:', error);
       return;
     }
 
     if (data && data.length > 0) {
-      setFieldConfigsFromDB(data);
+      console.log('✅ Configs carregadas:', data.map(d => ({ 
+        id: d.field_id, 
+        required: d.required,
+        locked: d.locked 
+      })));
+      
+      setFieldConfigsFromDB([...data]); // Force new array reference
       
       // Atualizar companyFields com os dados do banco
       setCompanyFields(prev => prev.map(field => {
@@ -1157,9 +1164,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </SheetHeader>
             
             <div className="mt-6">
-              <EmpresaFieldsCRUD onChanged={() => {
+              <EmpresaFieldsCRUD onChanged={async () => {
+                console.log('📢 onChanged callback triggered');
                 if (estabelecimentoId) {
-                  loadFieldConfigs(estabelecimentoId);
+                  await loadFieldConfigs(estabelecimentoId);
+                  console.log('✅ Configs recarregadas após mudança');
+                } else {
+                  console.log('⚠️ No estabelecimentoId found');
                 }
               }} />
             </div>

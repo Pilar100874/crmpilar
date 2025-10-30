@@ -333,6 +333,7 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
   const loadFields = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading fields from database...');
       const { data, error } = await supabase
         .from("form_field_configs")
         .select("*")
@@ -341,6 +342,13 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
         .order("field_order", { ascending: true });
 
       if (error) throw error;
+
+      console.log('✅ Fields loaded:', data?.length, 'fields');
+      console.log('📋 Fields details:', data?.map(f => ({ 
+        id: f.field_id, 
+        required: f.required,
+        locked: f.locked 
+      })));
 
       setFields((data || []).map(field => {
         const options = field.options as any;
@@ -352,7 +360,7 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
         };
       }));
     } catch (error) {
-      console.error("Error loading fields:", error);
+      console.error("❌ Error loading fields:", error);
       toast.error("Erro ao carregar campos");
     } finally {
       setLoading(false);
@@ -464,6 +472,8 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
     const field = fields.find(f => f.id === id);
     if (!field) return;
 
+    console.log('🔄 Toggling required for field:', field.field_id, 'from', field.required, 'to', !field.required);
+
     try {
       const { error } = await supabase
         .from("form_field_configs")
@@ -472,10 +482,14 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
 
       if (error) throw error;
 
-      loadFields();
+      console.log('✅ Database updated successfully');
+      await loadFields();
+      console.log('✅ Fields reloaded in CRUD');
+      toast.success(`Campo "${field.field_label}" atualizado`);
       onChanged?.();
+      console.log('✅ onChanged callback invoked');
     } catch (error) {
-      console.error("Error updating field:", error);
+      console.error("❌ Error updating field:", error);
       toast.error("Erro ao atualizar campo");
     }
   };
