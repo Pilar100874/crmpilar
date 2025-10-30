@@ -730,12 +730,32 @@ export class FlowEngine {
         };
 
         const NORMALIZE = (s: any) => (typeof s === 'string' ? s.toLowerCase().trim() : String(s));
-        const EXCLUDE = new Set(['tipo', 'type', 'company_type', 'tipo_empresa']);
+        
+        // Lista expandida de exclusão para campo tipo
+        const EXCLUDE = new Set([
+          'tipo', 'type', 'company_type', 'tipo_empresa', 'tipo_pessoa',
+          'company_type_field', 'tipo_cadastro', 'tipo_contato', 
+          'entity_type', 'person_type'
+        ]);
 
-        camposObrigatorios = fieldConfigs
-          .map(fc => fieldMapping[fc.field_id] || fc.field_id)
-          .map(NORMALIZE)
-          .filter((s) => !EXCLUDE.has(s));
+        console.log("🔍 DEBUG - Field IDs antes do mapeamento:", fieldConfigs.map(fc => fc.field_id));
+        
+        const camposMapeados = fieldConfigs.map(fc => {
+          const mapeado = fieldMapping[fc.field_id] || fc.field_id;
+          console.log(`  🔍 Mapeamento: ${fc.field_id} -> ${mapeado}`);
+          return mapeado;
+        });
+        
+        console.log("🔍 DEBUG - Campos após mapeamento:", camposMapeados);
+        
+        const camposNormalizados = camposMapeados.map(NORMALIZE);
+        console.log("🔍 DEBUG - Campos após normalização:", camposNormalizados);
+        
+        camposObrigatorios = camposNormalizados.filter((s) => {
+          const excluido = EXCLUDE.has(s);
+          if (excluido) console.log(`  ⚠️ Campo '${s}' EXCLUÍDO da validação`);
+          return !excluido;
+        });
       }
 
       // Se não tem configuração, usar campos obrigatórios padrão
