@@ -500,14 +500,14 @@ export default function BotCreate() {
                       Número WhatsApp
                     </Label>
                     <Select
-                      value={selectedSessions[bot.id] || ""}
-                      onValueChange={(value) => handleSessionChange(bot.id, value)}
+                      value={selectedSessions[bot.id] || "none"}
+                      onValueChange={(value) => handleSessionChange(bot.id, value === "none" ? "" : value)}
                     >
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue placeholder="Nenhum número" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
+                        <SelectItem value="none">Nenhum</SelectItem>
                         {whatsappSessions
                           .filter(s => !s.bot_flow_id || s.bot_flow_id === bot.id)
                           .map(session => (
