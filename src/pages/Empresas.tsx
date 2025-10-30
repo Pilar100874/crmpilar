@@ -188,6 +188,35 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         }
         return field;
       }));
+
+      // Atualizar colunas da tabela com campos customizados
+      const customFieldColumns = data
+        .filter((cfg: any) => {
+          // Incluir apenas campos que não são padrão da tabela
+          const standardTableFields = ['company_type', 'cpf_cnpj', 'company_name', 'company_fantasia', 'telefone', 'email', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao'];
+          return !standardTableFields.includes(cfg.field_id);
+        })
+        .map((cfg: any): TableColumn => ({
+          id: cfg.field_id,
+          label: cfg.field_label,
+          visible: false,
+          width: 150,
+        }));
+
+      // Mesclar com colunas existentes
+      setTableColumns(prev => {
+        const standardCols = prev.filter(col => {
+          // Manter colunas padrão
+          const standardIds = ['actions', 'nome_fantasia', 'nome', 'cnpj', 'telefone', 'email', 'cidade', 'estado'];
+          return standardIds.includes(col.id);
+        });
+        
+        // Adicionar campos customizados que não existem ainda
+        const existingCustomIds = new Set(standardCols.map(c => c.id));
+        const newCustomCols = customFieldColumns.filter(c => !existingCustomIds.has(c.id));
+        
+        return [...standardCols, ...newCustomCols];
+      });
     } else {
       // Se não tem configs no banco, criar padrão
       await createDefaultFieldConfigs(estabId);
@@ -330,6 +359,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       neighborhood: (empresa as any).bairro || empresa.custom_fields?.neighborhood || "",
       inscricao: empresa.custom_fields?.inscricao || "",
     };
+    
+    // Carregar campos customizados do custom_fields
+    if (empresa.custom_fields) {
+      Object.keys(empresa.custom_fields).forEach(key => {
+        if (!data[key]) {
+          data[key] = empresa.custom_fields[key];
+        }
+      });
+    }
+    
     setFormData(data);
 
     // Carregar contatos vinculados
@@ -544,6 +583,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         return;
       }
 
+      // Separar campos padrão de campos customizados
+      const standardFields = ['company_type', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'email'];
+      const customFieldsData: any = {
+        company_type: formData.company_type,
+        neighborhood: formData.neighborhood,
+        inscricao: formData.inscricao,
+      };
+      
+      // Adicionar campos customizados do formulário
+      Object.keys(formData).forEach(key => {
+        if (!standardFields.includes(key) && !key.startsWith('contact_')) {
+          customFieldsData[key] = formData[key];
+        }
+      });
+
       const empresaPayload: any = {
         estabelecimento_id: estabId,
         nome_fantasia: formData.company_fantasia,
@@ -556,11 +610,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         estado: formData.state,
         cep: formData.cep,
         bairro: formData.neighborhood || null,
-        custom_fields: {
-          company_type: formData.company_type,
-          neighborhood: formData.neighborhood,
-          inscricao: formData.inscricao,
-        }
+        custom_fields: customFieldsData
       };
 
       let empresaId: string;
@@ -819,8 +869,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           bValue = b.estado || '';
           break;
         default:
-          aValue = '';
-          bValue = '';
+          // Campos customizados vêm do custom_fields
+          aValue = a.custom_fields?.[sortConfig.key] || '';
+          bValue = b.custom_fields?.[sortConfig.key] || '';
       }
 
       aValue = String(aValue || '').toLowerCase();
@@ -1009,7 +1060,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             cellValue = empresa.estado || "-";
                             break;
                           default:
-                            cellValue = "-";
+                            // Campos customizados vêm do custom_fields
+                            cellValue = empresa.custom_fields?.[column.id] || "-";
                         }
                         
                         return (
