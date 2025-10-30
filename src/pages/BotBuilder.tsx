@@ -884,7 +884,7 @@ function BotBuilderContent() {
     }
     
     setShowSimulator(true);
-    toast.success("Simulador aberto!");
+    // Removido toast "Simulador aberto!" a pedido do usuário
   }, [nodes, showSimulator, validateConnections, highlightDisconnectedNodes]);
 
   const handleNewFlow = useCallback(() => {

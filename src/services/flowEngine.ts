@@ -729,9 +729,13 @@ export class FlowEngine {
           state: "estado",
         };
 
+        const NORMALIZE = (s: any) => (typeof s === 'string' ? s.toLowerCase().trim() : String(s));
+        const EXCLUDE = new Set(['tipo', 'type', 'company_type', 'tipo_empresa']);
+
         camposObrigatorios = fieldConfigs
           .map(fc => fieldMapping[fc.field_id] || fc.field_id)
-          .map((s: any) => (typeof s === 'string' ? s.toLowerCase().trim() : String(s))) as string[];
+          .map(NORMALIZE)
+          .filter((s) => !EXCLUDE.has(s));
       }
 
       // Se não tem configuração, usar campos obrigatórios padrão

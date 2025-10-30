@@ -2071,7 +2071,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     if (startNode) {
       setCurrentNodeId(startNode.id);
       executeNode(startNode);
-      toast.info("Simulação iniciada");
+      // Removido toast "Simulação iniciada" a pedido do usuário
     } else {
       toast.error("Adicione um bloco 'Start' para iniciar o fluxo");
       addSystemMessage("❌ Nenhum bloco 'Start' encontrado. Adicione um para iniciar.");
