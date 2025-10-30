@@ -1418,14 +1418,6 @@ export default function Contatos() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 bg-primary/10 text-primary border-primary/20"
-            >
-              Lista completa
-            </Button>
-            
             <TableColumnsConfig
               columns={tableColumns} 
               onColumnsChange={handleColumnsChange}
@@ -1458,6 +1450,18 @@ export default function Contatos() {
                 />
               </div>
             </div>
+            
+            {searchFilters.unifiedSearch && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchFilters({ ...searchFilters, unifiedSearch: "" })}
+                className="gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+                Limpar
+              </Button>
+            )}
             
             <div className="ml-auto text-sm text-muted-foreground">
               {sortedContacts.length} elementos
