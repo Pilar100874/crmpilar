@@ -124,7 +124,40 @@ export default function Empresas() {
   ]);
 
   // Estados para carregar/salvar configs no banco
-  const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
+const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
+
+  // Lista final de campos para renderização (prioriza configurações do banco)
+  const formFieldsToRender = React.useMemo(() => {
+    if (fieldConfigsFromDB && fieldConfigsFromDB.length > 0) {
+      return fieldConfigsFromDB.map((cfg: any): CustomField => {
+        let optionsParsed: any = cfg.options;
+        try {
+          if (typeof optionsParsed === 'string') {
+            optionsParsed = JSON.parse(optionsParsed);
+          }
+        } catch {}
+        let opts: string[] | undefined;
+        if (optionsParsed?.options && Array.isArray(optionsParsed.options)) {
+          opts = optionsParsed.options;
+        } else if (Array.isArray(optionsParsed)) {
+          opts = optionsParsed;
+        }
+        if (cfg.field_id === 'company_type' && (!opts || opts.length === 0)) {
+          opts = ['Pessoa Física', 'Pessoa Jurídica'];
+        }
+        return {
+          id: cfg.field_id,
+          label: cfg.field_label,
+          type: cfg.field_type,
+          category: 'company',
+          options: opts,
+          required: !!cfg.required,
+          locked: !!cfg.locked,
+        };
+      });
+    }
+    return companyFields;
+  }, [fieldConfigsFromDB, companyFields]);
 
   // Carregar configurações de campos do banco
   const loadFieldConfigs = async (estabId: string) => {
@@ -461,7 +494,7 @@ export default function Empresas() {
     const errors: Record<string, string> = {};
 
     // Validar campos obrigatórios da empresa com base na configuração
-    const requiredIds = companyFields.filter(f => f.required).map(f => f.id);
+    const requiredIds = formFieldsToRender.filter(f => f.required).map(f => f.id);
     requiredIds.forEach((fieldId) => {
       if (!formData[fieldId]?.toString().trim()) {
         errors[fieldId] = "Campo obrigatório";
@@ -1065,7 +1098,7 @@ export default function Empresas() {
                 Dados da Empresa
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {companyFields.map((field) => {
+                {formFieldsToRender.map((field) => {
                   // Lógica de liberação progressiva
                   const tipoSelecionado = !!formData.company_type;
                   const cnpjPreenchido = !!formData.cpf_cnpj;
