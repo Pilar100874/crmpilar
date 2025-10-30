@@ -1295,18 +1295,12 @@ export default function Contatos() {
     // Filtrar apenas contatos ativos
     if (!contact.active) return false;
     
-    // Busca unificada nos campos principais
+    // Busca unificada apenas em nome, telefone/WhatsApp e e-mail
     if (searchFilters.unifiedSearch) {
       const searchTerm = searchFilters.unifiedSearch.toLowerCase();
-      const cpfCnpj = (contact.customFields?.cpf_cnpj || "").toString().toLowerCase();
-      const companyName = (contact.customFields?.company_name || "").toString().toLowerCase();
-      const companyFantasia = (contact.customFields?.company_fantasia || "").toString().toLowerCase();
       
       const matchesSearch = 
         contact.name.toLowerCase().includes(searchTerm) ||
-        cpfCnpj.includes(searchTerm) ||
-        companyName.includes(searchTerm) ||
-        companyFantasia.includes(searchTerm) ||
         contact.phone.includes(searchTerm) ||
         contact.email.toLowerCase().includes(searchTerm);
       
@@ -1443,7 +1437,7 @@ export default function Contatos() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome, CPF/CNPJ, empresa, fantasia, WhatsApp ou e-mail..."
+                  placeholder="Buscar por nome, WhatsApp ou e-mail..."
                   value={searchFilters.unifiedSearch}
                   onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
                   className="pl-10 h-9"
