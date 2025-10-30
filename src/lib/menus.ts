@@ -5,7 +5,6 @@ export const MENU_CONFIG = [
   { id: "Dashboard", label: "Painel" },
   { id: "Clientes", label: "Leads" },
   { id: "Atendimento", label: "Chats" },
-  { id: "WhatsApp Config", label: "WhatsApp" },
   { id: "Campanhas", label: "Calendário" },
   { id: "Orçamentos", label: "Orçamentos" },
   { id: "Conteúdos", label: "Listas" },

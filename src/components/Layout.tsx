@@ -17,7 +17,6 @@ import {
   Workflow,
   Megaphone,
   LogOut,
-  Smartphone,
   Globe,
   Pencil,
   Building2,
@@ -62,7 +61,6 @@ const menuItems: MenuItem[] = [
   { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
   { id: "Clientes", title: "Funil", url: "/funil", icon: Users },
   { id: "Atendimento", title: "Chats", url: "/atendimento", icon: MessageSquare },
-  { id: "WhatsApp Config", title: "WhatsApp", url: "/whatsapp-config", icon: Smartphone },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },
   { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: FileBarChart },
   { 
