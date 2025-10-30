@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Search, Filter, Building2, User, Settings2, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Filter, Building2, User, Settings2, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -38,6 +38,11 @@ export default function Todos() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [contatoEmpresas, setContatoEmpresas] = useState<Record<string, any[]>>({});
   const [empresaContatos, setEmpresaContatos] = useState<Record<string, any[]>>({});
+
+  // Estados de ordenação
+  const [todosSortConfig, setTodosSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [contatosSortConfig, setContatosSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [empresasSortConfig, setEmpresasSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   // Gerenciamento de colunas da tabela - Todos (aba combinada)
   const [todosTableColumns, setTodosTableColumns] = useState<TableColumn[]>(() => {
@@ -185,14 +190,108 @@ export default function Todos() {
     e.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const todosItens = [
+  // Aplicar ordenação para Todos
+  let todosItens = [
     ...filteredContatos.map(c => ({ ...c, type: 'contato' as const })),
     ...filteredEmpresas.map(e => ({ ...e, type: 'empresa' as const }))
-  ].sort((a, b) => {
-    const nomeA = a.type === 'contato' ? a.nome : a.nome_fantasia;
-    const nomeB = b.type === 'contato' ? b.nome : b.nome_fantasia;
-    return nomeA.localeCompare(nomeB);
-  });
+  ];
+
+  if (todosSortConfig) {
+    todosItens = [...todosItens].sort((a, b) => {
+      let aValue, bValue;
+      if (todosSortConfig.key === 'nome') {
+        aValue = a.type === 'contato' ? a.nome : a.nome_fantasia;
+        bValue = b.type === 'contato' ? b.nome : b.nome_fantasia;
+      } else if (todosSortConfig.key === 'email') {
+        aValue = a.email || '';
+        bValue = b.email || '';
+      } else if (todosSortConfig.key === 'telefone') {
+        aValue = a.telefone || '';
+        bValue = b.telefone || '';
+      } else {
+        aValue = '';
+        bValue = '';
+      }
+      
+      if (todosSortConfig.direction === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  } else {
+    todosItens = todosItens.sort((a, b) => {
+      const nomeA = a.type === 'contato' ? a.nome : a.nome_fantasia;
+      const nomeB = b.type === 'contato' ? b.nome : b.nome_fantasia;
+      return nomeA.localeCompare(nomeB);
+    });
+  }
+
+  // Aplicar ordenação para Contatos
+  let sortedContatos = [...filteredContatos];
+  if (contatosSortConfig) {
+    sortedContatos = sortedContatos.sort((a, b) => {
+      let aValue, bValue;
+      if (contatosSortConfig.key === 'nome') {
+        aValue = a.nome;
+        bValue = b.nome;
+      } else if (contatosSortConfig.key === 'email') {
+        aValue = a.email || '';
+        bValue = b.email || '';
+      } else if (contatosSortConfig.key === 'telefone') {
+        aValue = a.telefone || '';
+        bValue = b.telefone || '';
+      } else if (contatosSortConfig.key === 'position') {
+        aValue = a.custom_fields?.position || '';
+        bValue = b.custom_fields?.position || '';
+      } else {
+        aValue = '';
+        bValue = '';
+      }
+      
+      if (contatosSortConfig.direction === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }
+
+  // Aplicar ordenação para Empresas
+  let sortedEmpresas = [...filteredEmpresas];
+  if (empresasSortConfig) {
+    sortedEmpresas = sortedEmpresas.sort((a, b) => {
+      let aValue, bValue;
+      if (empresasSortConfig.key === 'nome_fantasia') {
+        aValue = a.nome_fantasia;
+        bValue = b.nome_fantasia;
+      } else if (empresasSortConfig.key === 'nome') {
+        aValue = a.nome || '';
+        bValue = b.nome || '';
+      } else if (empresasSortConfig.key === 'cnpj') {
+        aValue = a.cnpj || '';
+        bValue = b.cnpj || '';
+      } else if (empresasSortConfig.key === 'email') {
+        aValue = a.email || '';
+        bValue = b.email || '';
+      } else if (empresasSortConfig.key === 'telefone') {
+        aValue = a.telefone || '';
+        bValue = b.telefone || '';
+      } else if (empresasSortConfig.key === 'cidade') {
+        aValue = a.cidade || '';
+        bValue = b.cidade || '';
+      } else {
+        aValue = '';
+        bValue = '';
+      }
+      
+      if (empresasSortConfig.direction === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }
 
   const toggleRow = (itemId: string) => {
     setExpandedRows(prev => {
@@ -209,6 +308,55 @@ export default function Todos() {
   const visibleTodosColumns = todosTableColumns.filter(col => col.visible);
   const visibleContatosColumns = contatosTableColumns.filter(col => col.visible);
   const visibleEmpresasColumns = empresasTableColumns.filter(col => col.visible);
+
+  // Funções de ordenação
+  const handleTodosSort = (columnId: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (todosSortConfig && todosSortConfig.key === columnId) {
+      if (todosSortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else {
+        setTodosSortConfig(null);
+        return;
+      }
+    }
+    setTodosSortConfig({ key: columnId, direction });
+  };
+
+  const handleContatosSort = (columnId: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (contatosSortConfig && contatosSortConfig.key === columnId) {
+      if (contatosSortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else {
+        setContatosSortConfig(null);
+        return;
+      }
+    }
+    setContatosSortConfig({ key: columnId, direction });
+  };
+
+  const handleEmpresasSort = (columnId: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (empresasSortConfig && empresasSortConfig.key === columnId) {
+      if (empresasSortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else {
+        setEmpresasSortConfig(null);
+        return;
+      }
+    }
+    setEmpresasSortConfig({ key: columnId, direction });
+  };
+
+  const getSortIcon = (columnId: string, sortConfig: any) => {
+    if (!sortConfig || sortConfig.key !== columnId) {
+      return <ArrowUpDown className="w-3 h-3 text-muted-foreground" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="w-3 h-3 text-primary" />
+      : <ArrowDown className="w-3 h-3 text-primary" />;
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
@@ -283,19 +431,62 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-border/40 bg-muted/30">
-                    <TableHead className="w-[30px] font-semibold"></TableHead>
-                    {visibleTodosColumns.map(col => (
-                      <TableHead key={col.id} className="font-semibold" style={{ width: col.width }}>
-                        {col.label}
-                      </TableHead>
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-auto">
+              <table className="w-full">
+                <thead className="border-b border-border/40 bg-muted/30">
+                  <tr>
+                    <th className="p-4 w-[30px]"></th>
+                    {visibleTodosColumns.map((column) => (
+                      <th
+                        key={column.id}
+                        className="text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative"
+                        style={{ width: column.width, minWidth: column.width }}
+                      >
+                        <div className="flex items-center justify-between gap-2 pr-4">
+                          <span>{column.label}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 hover:bg-background/50"
+                            onClick={() => handleTodosSort(column.id)}
+                          >
+                            {getSortIcon(column.id, todosSortConfig)}
+                          </Button>
+                        </div>
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 transition-all"
+                          style={{ touchAction: 'none' }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            const startX = e.clientX;
+                            const startWidth = column.width;
+
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                              const diff = moveEvent.clientX - startX;
+                              const newWidth = Math.max(80, startWidth + diff);
+                              setTodosTableColumns(prev =>
+                                prev.map(col =>
+                                  col.id === column.id ? { ...col, width: newWidth } : col
+                                )
+                              );
+                            };
+
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                              document.body.style.cursor = '';
+                            };
+
+                            document.body.style.cursor = 'col-resize';
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                          }}
+                        />
+                      </th>
                     ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                  </tr>
+                </thead>
+                <tbody>
                   {todosItens.map(item => {
                     const isExpanded = expandedRows.has(item.id);
                     const hasVinculos = item.type === 'contato' 
@@ -304,8 +495,8 @@ export default function Todos() {
 
                     return (
                       <>
-                        <TableRow key={`${item.type}-${item.id}`} className="hover:bg-muted/30">
-                          <TableCell>
+                        <tr key={`${item.type}-${item.id}`} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
+                          <td className="p-3">
                             {hasVinculos && (
                               <Button
                                 variant="ghost"
@@ -320,47 +511,47 @@ export default function Todos() {
                                 )}
                               </Button>
                             )}
-                          </TableCell>
+                          </td>
                           {visibleTodosColumns.map(col => {
                             if (col.id === "tipo") {
                               return (
-                                <TableCell key={col.id}>
+                                <td key={col.id} className="p-3">
                                   {item.type === 'contato' ? (
                                     <User className="w-4 h-4 text-blue-500" />
                                   ) : (
                                     <Building2 className="w-4 h-4 text-purple-500" />
                                   )}
-                                </TableCell>
+                                </td>
                               );
                             }
                             
                             if (col.id === "nome") {
                               return (
-                                <TableCell key={col.id} className="font-medium">
+                                <td key={col.id} className="p-3 font-medium">
                                   {item.type === 'contato' ? item.nome : item.nome_fantasia}
-                                </TableCell>
+                                </td>
                               );
                             }
                             
                             if (col.id === "email") {
                               return (
-                                <TableCell key={col.id} className="text-muted-foreground">
+                                <td key={col.id} className="p-3 text-muted-foreground">
                                   {item.email || "-"}
-                                </TableCell>
+                                </td>
                               );
                             }
                             
                             if (col.id === "telefone") {
                               return (
-                                <TableCell key={col.id} className="text-muted-foreground">
+                                <td key={col.id} className="p-3 text-muted-foreground">
                                   {item.telefone || "-"}
-                                </TableCell>
+                                </td>
                               );
                             }
                             
                             if (col.id === "status") {
                               return (
-                                <TableCell key={col.id}>
+                                <td key={col.id} className="p-3">
                                   {item.type === 'contato' ? (
                                     <Badge variant={item.tipo_operador ? "default" : "secondary"}>
                                       {item.tipo_operador ? "Cliente" : "Prospect"}
@@ -368,16 +559,16 @@ export default function Todos() {
                                   ) : (
                                     <Badge variant="outline">Empresa</Badge>
                                   )}
-                                </TableCell>
+                                </td>
                               );
                             }
                             
-                            return <TableCell key={col.id}>-</TableCell>;
+                            return <td key={col.id} className="p-3">-</td>;
                           })}
-                        </TableRow>
+                        </tr>
                         {isExpanded && hasVinculos && (
-                          <TableRow>
-                            <TableCell colSpan={visibleTodosColumns.length + 1} className="bg-muted/20 p-4">
+                          <tr>
+                            <td colSpan={visibleTodosColumns.length + 1} className="bg-muted/20 p-4">
                               <div className="ml-8">
                                 <p className="text-sm font-medium text-muted-foreground mb-2">
                                   {item.type === 'contato' ? 'Empresas Vinculadas:' : 'Contatos Vinculados:'}
@@ -406,14 +597,14 @@ export default function Todos() {
                                   )}
                                 </div>
                               </div>
-                            </TableCell>
-                          </TableRow>
+                            </td>
+                          </tr>
                         )}
                       </>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           )}
         </TabsContent>
@@ -432,27 +623,70 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-border/40 bg-muted/30">
-                    <TableHead className="w-[30px] font-semibold"></TableHead>
-                    {visibleContatosColumns.map(col => (
-                      <TableHead key={col.id} className="font-semibold" style={{ width: col.width }}>
-                        {col.label}
-                      </TableHead>
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-auto">
+              <table className="w-full">
+                <thead className="border-b border-border/40 bg-muted/30">
+                  <tr>
+                    <th className="p-4 w-[30px]"></th>
+                    {visibleContatosColumns.map((column) => (
+                      <th
+                        key={column.id}
+                        className="text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative"
+                        style={{ width: column.width, minWidth: column.width }}
+                      >
+                        <div className="flex items-center justify-between gap-2 pr-4">
+                          <span>{column.label}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 hover:bg-background/50"
+                            onClick={() => handleContatosSort(column.id)}
+                          >
+                            {getSortIcon(column.id, contatosSortConfig)}
+                          </Button>
+                        </div>
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 transition-all"
+                          style={{ touchAction: 'none' }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            const startX = e.clientX;
+                            const startWidth = column.width;
+
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                              const diff = moveEvent.clientX - startX;
+                              const newWidth = Math.max(80, startWidth + diff);
+                              setContatosTableColumns(prev =>
+                                prev.map(col =>
+                                  col.id === column.id ? { ...col, width: newWidth } : col
+                                )
+                              );
+                            };
+
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                              document.body.style.cursor = '';
+                            };
+
+                            document.body.style.cursor = 'col-resize';
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                          }}
+                        />
+                      </th>
                     ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredContatos.map(contato => {
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedContatos.map(contato => {
                     const isExpanded = expandedRows.has(contato.id);
                     const hasEmpresas = (contatoEmpresas[contato.id]?.length || 0) > 0;
 
                     return (
                       <>
-                        <TableRow key={contato.id} className="hover:bg-muted/30">
-                          <TableCell>
+                        <tr key={contato.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
+                          <td className="p-3">
                             {hasEmpresas && (
                               <Button
                                 variant="ghost"
@@ -467,37 +701,35 @@ export default function Todos() {
                                 )}
                               </Button>
                             )}
-                          </TableCell>
+                          </td>
                           {visibleContatosColumns.map(col => {
-                            let cellContent = "-";
-                            
-                            if (col.id === "nome") cellContent = contato.nome;
-                            else if (col.id === "email") cellContent = contato.email;
-                            else if (col.id === "telefone") cellContent = contato.telefone;
-                            else if (col.id === "position") cellContent = contato.custom_fields?.position || "-";
-                            else if (col.id === "status") {
+                            if (col.id === "nome") {
+                              return <td key={col.id} className="p-3 font-medium">{contato.nome}</td>;
+                            }
+                            if (col.id === "email") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.email}</td>;
+                            }
+                            if (col.id === "telefone") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.telefone}</td>;
+                            }
+                            if (col.id === "position") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.custom_fields?.position || "-"}</td>;
+                            }
+                            if (col.id === "status") {
                               return (
-                                <TableCell key={col.id}>
+                                <td key={col.id} className="p-3">
                                   <Badge variant={contato.tipo_operador ? "default" : "secondary"}>
                                     {contato.tipo_operador ? "Cliente" : "Prospect"}
                                   </Badge>
-                                </TableCell>
+                                </td>
                               );
                             }
-
-                            return (
-                              <TableCell 
-                                key={col.id} 
-                                className={col.id === "nome" ? "font-medium" : "text-muted-foreground"}
-                              >
-                                {cellContent}
-                              </TableCell>
-                            );
+                            return <td key={col.id} className="p-3">-</td>;
                           })}
-                        </TableRow>
+                        </tr>
                         {isExpanded && hasEmpresas && (
-                          <TableRow>
-                            <TableCell colSpan={visibleContatosColumns.length + 1} className="bg-muted/20 p-4">
+                          <tr>
+                            <td colSpan={visibleContatosColumns.length + 1} className="bg-muted/20 p-4">
                               <div className="ml-8">
                                 <p className="text-sm font-medium text-muted-foreground mb-2">
                                   Empresas Vinculadas:
@@ -514,14 +746,14 @@ export default function Todos() {
                                   ))}
                                 </div>
                               </div>
-                            </TableCell>
-                          </TableRow>
+                            </td>
+                          </tr>
                         )}
                       </>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           )}
         </TabsContent>
@@ -540,27 +772,70 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-border/40 bg-muted/30">
-                    <TableHead className="w-[30px] font-semibold"></TableHead>
-                    {visibleEmpresasColumns.map(col => (
-                      <TableHead key={col.id} className="font-semibold" style={{ width: col.width }}>
-                        {col.label}
-                      </TableHead>
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-auto">
+              <table className="w-full">
+                <thead className="border-b border-border/40 bg-muted/30">
+                  <tr>
+                    <th className="p-4 w-[30px]"></th>
+                    {visibleEmpresasColumns.map((column) => (
+                      <th
+                        key={column.id}
+                        className="text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative"
+                        style={{ width: column.width, minWidth: column.width }}
+                      >
+                        <div className="flex items-center justify-between gap-2 pr-4">
+                          <span>{column.label}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 hover:bg-background/50"
+                            onClick={() => handleEmpresasSort(column.id)}
+                          >
+                            {getSortIcon(column.id, empresasSortConfig)}
+                          </Button>
+                        </div>
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 transition-all"
+                          style={{ touchAction: 'none' }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            const startX = e.clientX;
+                            const startWidth = column.width;
+
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                              const diff = moveEvent.clientX - startX;
+                              const newWidth = Math.max(80, startWidth + diff);
+                              setEmpresasTableColumns(prev =>
+                                prev.map(col =>
+                                  col.id === column.id ? { ...col, width: newWidth } : col
+                                )
+                              );
+                            };
+
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                              document.body.style.cursor = '';
+                            };
+
+                            document.body.style.cursor = 'col-resize';
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                          }}
+                        />
+                      </th>
                     ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEmpresas.map(empresa => {
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedEmpresas.map(empresa => {
                     const isExpanded = expandedRows.has(empresa.id);
                     const hasContatos = (empresaContatos[empresa.id]?.length || 0) > 0;
 
                     return (
                       <>
-                        <TableRow key={empresa.id} className="hover:bg-muted/30">
-                          <TableCell>
+                        <tr key={empresa.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
+                          <td className="p-3">
                             {hasContatos && (
                               <Button
                                 variant="ghost"
@@ -575,30 +850,32 @@ export default function Todos() {
                                 )}
                               </Button>
                             )}
-                          </TableCell>
+                          </td>
                           {visibleEmpresasColumns.map(col => {
-                            let cellContent = "-";
-                            
-                            if (col.id === "nome_fantasia") cellContent = empresa.nome_fantasia;
-                            else if (col.id === "nome") cellContent = empresa.nome || "-";
-                            else if (col.id === "cnpj") cellContent = empresa.cnpj || "-";
-                            else if (col.id === "email") cellContent = empresa.email || "-";
-                            else if (col.id === "telefone") cellContent = empresa.telefone || "-";
-                            else if (col.id === "cidade") cellContent = empresa.cidade || "-";
-
-                            return (
-                              <TableCell 
-                                key={col.id} 
-                                className={col.id === "nome_fantasia" ? "font-medium" : "text-muted-foreground"}
-                              >
-                                {cellContent}
-                              </TableCell>
-                            );
+                            if (col.id === "nome_fantasia") {
+                              return <td key={col.id} className="p-3 font-medium">{empresa.nome_fantasia}</td>;
+                            }
+                            if (col.id === "nome") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.nome || "-"}</td>;
+                            }
+                            if (col.id === "cnpj") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.cnpj || "-"}</td>;
+                            }
+                            if (col.id === "email") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.email || "-"}</td>;
+                            }
+                            if (col.id === "telefone") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.telefone || "-"}</td>;
+                            }
+                            if (col.id === "cidade") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.cidade || "-"}</td>;
+                            }
+                            return <td key={col.id} className="p-3">-</td>;
                           })}
-                        </TableRow>
+                        </tr>
                         {isExpanded && hasContatos && (
-                          <TableRow>
-                            <TableCell colSpan={visibleEmpresasColumns.length + 1} className="bg-muted/20 p-4">
+                          <tr>
+                            <td colSpan={visibleEmpresasColumns.length + 1} className="bg-muted/20 p-4">
                               <div className="ml-8">
                                 <p className="text-sm font-medium text-muted-foreground mb-2">
                                   Contatos Vinculados:
@@ -615,14 +892,14 @@ export default function Todos() {
                                   ))}
                                 </div>
                               </div>
-                            </TableCell>
-                          </TableRow>
+                            </td>
+                          </tr>
                         )}
                       </>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           )}
         </TabsContent>
@@ -630,36 +907,39 @@ export default function Todos() {
 
       {/* Sheet de Configurações */}
       <Sheet open={showConfigSheet} onOpenChange={setShowConfigSheet}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Configurar Colunas das Tabelas</SheetTitle>
           </SheetHeader>
 
-          <div className="space-y-8 mt-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">Tabela Todos</h3>
+          <Tabs defaultValue="todos" className="mt-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="todos">Todos</TabsTrigger>
+              <TabsTrigger value="contatos">Contatos</TabsTrigger>
+              <TabsTrigger value="empresas">Empresas</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="todos" className="mt-4">
               <TableColumnsConfig
                 columns={todosTableColumns}
                 onColumnsChange={setTodosTableColumns}
               />
-            </div>
+            </TabsContent>
 
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-medium mb-4">Tabela Contatos</h3>
+            <TabsContent value="contatos" className="mt-4">
               <TableColumnsConfig
                 columns={contatosTableColumns}
                 onColumnsChange={setContatosTableColumns}
               />
-            </div>
+            </TabsContent>
 
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-medium mb-4">Tabela Empresas</h3>
+            <TabsContent value="empresas" className="mt-4">
               <TableColumnsConfig
                 columns={empresasTableColumns}
                 onColumnsChange={setEmpresasTableColumns}
               />
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </SheetContent>
       </Sheet>
     </div>
