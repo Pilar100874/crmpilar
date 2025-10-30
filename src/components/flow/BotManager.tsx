@@ -84,15 +84,18 @@ export const BotManager = ({
         .from("usuarios")
         .select("estabelecimento_id")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (usuario) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("whatsapp_sessions")
           .select("*")
           .eq("estabelecimento_id", usuario.estabelecimento_id);
 
-        if (data) {
+        if (error) {
+          console.error("Error loading WhatsApp sessions:", error);
+        } else if (data) {
+          console.log("Loaded WhatsApp sessions:", data);
           setWhatsappSessions(data);
         }
       }
@@ -266,10 +269,10 @@ export const BotManager = ({
                             <SelectContent>
                               <SelectItem value="">Nenhum</SelectItem>
                               {whatsappSessions
-                                .filter(s => s.status === "WORKING" && (!s.bot_flow_id || s.bot_flow_id === bot.id))
+                                .filter(s => !s.bot_flow_id || s.bot_flow_id === bot.id)
                                 .map(session => (
                                   <SelectItem key={session.id} value={session.id}>
-                                    {session.phone_number || session.session_name}
+                                    {session.phone_number || session.session_name} ({session.status})
                                   </SelectItem>
                                 ))}
                             </SelectContent>
