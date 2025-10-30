@@ -2290,8 +2290,10 @@ export type Database = {
           created_at: string | null
           description: string | null
           estabelecimento_id: string
+          has_input_variables: boolean | null
           has_variables: boolean | null
           id: string
+          input_variables: Json | null
           method: string
           name: string
           type: string
@@ -2305,8 +2307,10 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           estabelecimento_id: string
+          has_input_variables?: boolean | null
           has_variables?: boolean | null
           id?: string
+          input_variables?: Json | null
           method?: string
           name: string
           type: string
@@ -2320,8 +2324,10 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           estabelecimento_id?: string
+          has_input_variables?: boolean | null
           has_variables?: boolean | null
           id?: string
+          input_variables?: Json | null
           method?: string
           name?: string
           type?: string
