@@ -27,7 +27,6 @@ import { TableColumnsConfig, type TableColumn } from "@/components/config/TableC
 import { APIImportDialog } from "@/components/config/APIImportDialog";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { ContatoFieldsCRUD } from "@/components/config/ContatoFieldsCRUD";
-import { NovaEmpresaDialog } from "@/components/NovaEmpresaDialog";
 import {
   DndContext,
   closestCenter,
@@ -198,7 +197,6 @@ export default function Contatos() {
   const [buscaEmpresa, setBuscaEmpresa] = useState<string>("");
   const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
   const [empresasVinculadas, setEmpresasVinculadas] = useState<any[]>([]);
-  const [showNovaEmpresaDialog, setShowNovaEmpresaDialog] = useState(false);
   
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -2080,7 +2078,9 @@ export default function Contatos() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setShowNovaEmpresaDialog(true);
+                      setCriarNovaEmpresa(true);
+                      setBuscaEmpresa("");
+                      setEmpresasFiltradas([]);
                     }}
                   >
                     + Nova
@@ -2345,12 +2345,6 @@ export default function Contatos() {
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Dialog para adicionar nova empresa */}
-      <NovaEmpresaDialog 
-        open={showNovaEmpresaDialog} 
-        onOpenChange={setShowNovaEmpresaDialog}
-      />
     </div>
   );
 }
