@@ -352,11 +352,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   useEffect(() => {
     if (buscaContato.trim()) {
       const termo = buscaContato.toLowerCase();
-      const filtrados = contatos.filter(c => 
-        c.nome?.toLowerCase().includes(termo) ||
-        c.email?.toLowerCase().includes(termo) ||
-        c.telefone?.includes(termo)
-      );
+      const termoNumerico = termo.replace(/\D/g, ''); // Remove caracteres não-numéricos para buscar telefone/WhatsApp
+      const filtrados = contatos.filter(c => {
+        const nomeMatch = c.nome?.toLowerCase().includes(termo);
+        const emailMatch = c.email?.toLowerCase().includes(termo);
+        const telefoneMatch = c.telefone?.replace(/\D/g, '').includes(termoNumerico);
+        return nomeMatch || emailMatch || telefoneMatch;
+      });
       setContatosFiltrados(filtrados);
     } else {
       setContatosFiltrados([]);
@@ -1379,7 +1381,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 <Label className="text-xs">Vincular Contato</Label>
                 <div className="flex gap-2 mt-2">
                   <Input
-                    placeholder="Buscar por nome, e-mail..."
+                    placeholder="Buscar por nome, e-mail ou WhatsApp..."
                     value={buscaContato}
                     className="h-9 text-sm"
                     onChange={(e) => setBuscaContato(e.target.value)}
@@ -1412,7 +1414,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       >
                         <div className="font-medium text-sm">{contato.nome}</div>
                         <div className="text-xs text-muted-foreground">
-                          {contato.email}
+                          {contato.email} {contato.telefone && `• ${contato.telefone}`}
                         </div>
                       </button>
                     ))}
