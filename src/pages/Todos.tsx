@@ -4,9 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Building2, User } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Search, Filter, Building2, User, Settings2, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 
 interface Contato {
   id: string;
@@ -32,6 +34,53 @@ export default function Todos() {
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [showConfigSheet, setShowConfigSheet] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [contatoEmpresas, setContatoEmpresas] = useState<Record<string, any[]>>({});
+  const [empresaContatos, setEmpresaContatos] = useState<Record<string, any[]>>({});
+
+  // Gerenciamento de colunas da tabela - Contatos
+  const [contatosTableColumns, setContatosTableColumns] = useState<TableColumn[]>(() => {
+    const saved = localStorage.getItem("todosContatosTableColumns");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return [
+      { id: "nome", label: "Nome", visible: true, width: 250, locked: true },
+      { id: "email", label: "E-mail", visible: true, width: 250 },
+      { id: "telefone", label: "Telefone", visible: true, width: 150 },
+      { id: "position", label: "Cargo", visible: true, width: 150 },
+      { id: "status", label: "Status", visible: true, width: 120 },
+    ];
+  });
+
+  // Gerenciamento de colunas da tabela - Empresas
+  const [empresasTableColumns, setEmpresasTableColumns] = useState<TableColumn[]>(() => {
+    const saved = localStorage.getItem("todosEmpresasTableColumns");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return [
+      { id: "nome_fantasia", label: "Nome Fantasia", visible: true, width: 250, locked: true },
+      { id: "nome", label: "Razão Social", visible: true, width: 250 },
+      { id: "cnpj", label: "CNPJ", visible: true, width: 180 },
+      { id: "email", label: "E-mail", visible: true, width: 250 },
+      { id: "telefone", label: "Telefone", visible: true, width: 150 },
+      { id: "cidade", label: "Cidade", visible: true, width: 150 },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("todosContatosTableColumns", JSON.stringify(contatosTableColumns));
+  }, [contatosTableColumns]);
+
+  useEffect(() => {
+    localStorage.setItem("todosEmpresasTableColumns", JSON.stringify(empresasTableColumns));
+  }, [empresasTableColumns]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,6 +105,46 @@ export default function Todos() {
           .order('nome_fantasia');
 
         if (empresasData) setEmpresas(empresasData);
+
+        // Buscar vínculos contato-empresa
+        const { data: vinculos } = await supabase
+          .from('customer_empresas')
+          .select(`
+            customer_id,
+            empresa_id,
+            empresas (
+              id,
+              nome_fantasia,
+              cnpj,
+              custom_fields
+            )
+          `);
+
+        if (vinculos) {
+          const contatoEmpresasMap: Record<string, any[]> = {};
+          vinculos.forEach((v: any) => {
+            if (!contatoEmpresasMap[v.customer_id]) {
+              contatoEmpresasMap[v.customer_id] = [];
+            }
+            if (v.empresas) {
+              contatoEmpresasMap[v.customer_id].push(v.empresas);
+            }
+          });
+          setContatoEmpresas(contatoEmpresasMap);
+
+          // Mapear empresas -> contatos
+          const empresaContatosMap: Record<string, any[]> = {};
+          vinculos.forEach((v: any) => {
+            if (!empresaContatosMap[v.empresa_id]) {
+              empresaContatosMap[v.empresa_id] = [];
+            }
+            const contato = contatosData?.find(c => c.id === v.customer_id);
+            if (contato) {
+              empresaContatosMap[v.empresa_id].push(contato);
+            }
+          });
+          setEmpresaContatos(empresaContatosMap);
+        }
       }
     };
 
@@ -84,6 +173,21 @@ export default function Todos() {
     return nomeA.localeCompare(nomeB);
   });
 
+  const toggleRow = (itemId: string) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const visibleContatosColumns = contatosTableColumns.filter(col => col.visible);
+  const visibleEmpresasColumns = empresasTableColumns.filter(col => col.visible);
+
   return (
     <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
       <div className="border-b border-border/40 bg-card/80 backdrop-blur-sm px-8 py-6">
@@ -95,6 +199,17 @@ export default function Todos() {
             <p className="text-sm text-muted-foreground mt-1">
               Visualize e gerencie todos os registros do sistema
             </p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConfigSheet(true)}
+              className="gap-2 border-border/40"
+            >
+              <Settings2 className="w-4 h-4" />
+              Configurar
+            </Button>
           </div>
         </div>
         <div className="relative">
@@ -150,6 +265,7 @@ export default function Todos() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border/40 bg-muted/30">
+                    <TableHead className="w-[30px] font-semibold"></TableHead>
                     <TableHead className="w-[50px] font-semibold">Tipo</TableHead>
                     <TableHead className="font-semibold">Nome</TableHead>
                     <TableHead className="font-semibold">E-mail</TableHead>
@@ -158,31 +274,90 @@ export default function Todos() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {todosItens.map(item => (
-                    <TableRow key={`${item.type}-${item.id}`} className="hover:bg-muted/30">
-                      <TableCell>
-                        {item.type === 'contato' ? (
-                          <User className="w-4 h-4 text-blue-500" />
-                        ) : (
-                          <Building2 className="w-4 h-4 text-purple-500" />
+                  {todosItens.map(item => {
+                    const isExpanded = expandedRows.has(item.id);
+                    const hasVinculos = item.type === 'contato' 
+                      ? (contatoEmpresas[item.id]?.length || 0) > 0
+                      : (empresaContatos[item.id]?.length || 0) > 0;
+
+                    return (
+                      <>
+                        <TableRow key={`${item.type}-${item.id}`} className="hover:bg-muted/30">
+                          <TableCell>
+                            {hasVinculos && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => toggleRow(item.id)}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {item.type === 'contato' ? (
+                              <User className="w-4 h-4 text-blue-500" />
+                            ) : (
+                              <Building2 className="w-4 h-4 text-purple-500" />
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {item.type === 'contato' ? item.nome : item.nome_fantasia}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{item.email || "-"}</TableCell>
+                          <TableCell className="text-muted-foreground">{item.telefone || "-"}</TableCell>
+                          <TableCell>
+                            {item.type === 'contato' ? (
+                              <Badge variant={item.tipo_operador ? "default" : "secondary"}>
+                                {item.tipo_operador ? "Cliente" : "Prospect"}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">Empresa</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                        {isExpanded && hasVinculos && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="bg-muted/20 p-4">
+                              <div className="ml-8">
+                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                  {item.type === 'contato' ? 'Empresas Vinculadas:' : 'Contatos Vinculados:'}
+                                </p>
+                                <div className="space-y-1">
+                                  {item.type === 'contato' ? (
+                                    contatoEmpresas[item.id]?.map((emp: any) => (
+                                      <div key={emp.id} className="flex items-center gap-2 text-sm">
+                                        <Building2 className="w-3 h-3 text-purple-500" />
+                                        <span>{emp.nome_fantasia}</span>
+                                        {emp.cnpj && (
+                                          <span className="text-muted-foreground">({emp.cnpj})</span>
+                                        )}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    empresaContatos[item.id]?.map((cont: any) => (
+                                      <div key={cont.id} className="flex items-center gap-2 text-sm">
+                                        <User className="w-3 h-3 text-blue-500" />
+                                        <span>{cont.nome}</span>
+                                        {cont.email && (
+                                          <span className="text-muted-foreground">({cont.email})</span>
+                                        )}
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
                         )}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {item.type === 'contato' ? item.nome : item.nome_fantasia}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{item.email || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">{item.telefone || "-"}</TableCell>
-                      <TableCell>
-                        {item.type === 'contato' ? (
-                          <Badge variant={item.tipo_operador ? "default" : "secondary"}>
-                            {item.tipo_operador ? "Cliente" : "Prospect"}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">Empresa</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      </>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -207,27 +382,90 @@ export default function Todos() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border/40 bg-muted/30">
-                    <TableHead className="font-semibold">Nome</TableHead>
-                    <TableHead className="font-semibold">E-mail</TableHead>
-                    <TableHead className="font-semibold">Telefone</TableHead>
-                    <TableHead className="font-semibold">Cargo</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="w-[30px] font-semibold"></TableHead>
+                    {visibleContatosColumns.map(col => (
+                      <TableHead key={col.id} className="font-semibold" style={{ width: col.width }}>
+                        {col.label}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredContatos.map(contato => (
-                    <TableRow key={contato.id} className="hover:bg-muted/30">
-                      <TableCell className="font-medium">{contato.nome}</TableCell>
-                      <TableCell className="text-muted-foreground">{contato.email}</TableCell>
-                      <TableCell className="text-muted-foreground">{contato.telefone}</TableCell>
-                      <TableCell className="text-muted-foreground">{contato.custom_fields?.position || "-"}</TableCell>
-                      <TableCell>
-                        <Badge variant={contato.tipo_operador ? "default" : "secondary"}>
-                          {contato.tipo_operador ? "Cliente" : "Prospect"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredContatos.map(contato => {
+                    const isExpanded = expandedRows.has(contato.id);
+                    const hasEmpresas = (contatoEmpresas[contato.id]?.length || 0) > 0;
+
+                    return (
+                      <>
+                        <TableRow key={contato.id} className="hover:bg-muted/30">
+                          <TableCell>
+                            {hasEmpresas && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => toggleRow(contato.id)}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                          </TableCell>
+                          {visibleContatosColumns.map(col => {
+                            let cellContent = "-";
+                            
+                            if (col.id === "nome") cellContent = contato.nome;
+                            else if (col.id === "email") cellContent = contato.email;
+                            else if (col.id === "telefone") cellContent = contato.telefone;
+                            else if (col.id === "position") cellContent = contato.custom_fields?.position || "-";
+                            else if (col.id === "status") {
+                              return (
+                                <TableCell key={col.id}>
+                                  <Badge variant={contato.tipo_operador ? "default" : "secondary"}>
+                                    {contato.tipo_operador ? "Cliente" : "Prospect"}
+                                  </Badge>
+                                </TableCell>
+                              );
+                            }
+
+                            return (
+                              <TableCell 
+                                key={col.id} 
+                                className={col.id === "nome" ? "font-medium" : "text-muted-foreground"}
+                              >
+                                {cellContent}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                        {isExpanded && hasEmpresas && (
+                          <TableRow>
+                            <TableCell colSpan={visibleContatosColumns.length + 1} className="bg-muted/20 p-4">
+                              <div className="ml-8">
+                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                  Empresas Vinculadas:
+                                </p>
+                                <div className="space-y-1">
+                                  {contatoEmpresas[contato.id]?.map((emp: any) => (
+                                    <div key={emp.id} className="flex items-center gap-2 text-sm">
+                                      <Building2 className="w-3 h-3 text-purple-500" />
+                                      <span>{emp.nome_fantasia}</span>
+                                      {emp.cnpj && (
+                                        <span className="text-muted-foreground">({emp.cnpj})</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -252,31 +490,119 @@ export default function Todos() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border/40 bg-muted/30">
-                    <TableHead className="font-semibold">Nome Fantasia</TableHead>
-                    <TableHead className="font-semibold">Razão Social</TableHead>
-                    <TableHead className="font-semibold">CNPJ</TableHead>
-                    <TableHead className="font-semibold">E-mail</TableHead>
-                    <TableHead className="font-semibold">Telefone</TableHead>
-                    <TableHead className="font-semibold">Cidade</TableHead>
+                    <TableHead className="w-[30px] font-semibold"></TableHead>
+                    {visibleEmpresasColumns.map(col => (
+                      <TableHead key={col.id} className="font-semibold" style={{ width: col.width }}>
+                        {col.label}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmpresas.map(empresa => (
-                    <TableRow key={empresa.id} className="hover:bg-muted/30">
-                      <TableCell className="font-medium">{empresa.nome_fantasia}</TableCell>
-                      <TableCell className="text-muted-foreground">{empresa.nome || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">{empresa.cnpj || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">{empresa.email || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">{empresa.telefone || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">{empresa.cidade || "-"}</TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredEmpresas.map(empresa => {
+                    const isExpanded = expandedRows.has(empresa.id);
+                    const hasContatos = (empresaContatos[empresa.id]?.length || 0) > 0;
+
+                    return (
+                      <>
+                        <TableRow key={empresa.id} className="hover:bg-muted/30">
+                          <TableCell>
+                            {hasContatos && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => toggleRow(empresa.id)}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                          </TableCell>
+                          {visibleEmpresasColumns.map(col => {
+                            let cellContent = "-";
+                            
+                            if (col.id === "nome_fantasia") cellContent = empresa.nome_fantasia;
+                            else if (col.id === "nome") cellContent = empresa.nome || "-";
+                            else if (col.id === "cnpj") cellContent = empresa.cnpj || "-";
+                            else if (col.id === "email") cellContent = empresa.email || "-";
+                            else if (col.id === "telefone") cellContent = empresa.telefone || "-";
+                            else if (col.id === "cidade") cellContent = empresa.cidade || "-";
+
+                            return (
+                              <TableCell 
+                                key={col.id} 
+                                className={col.id === "nome_fantasia" ? "font-medium" : "text-muted-foreground"}
+                              >
+                                {cellContent}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                        {isExpanded && hasContatos && (
+                          <TableRow>
+                            <TableCell colSpan={visibleEmpresasColumns.length + 1} className="bg-muted/20 p-4">
+                              <div className="ml-8">
+                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                  Contatos Vinculados:
+                                </p>
+                                <div className="space-y-1">
+                                  {empresaContatos[empresa.id]?.map((cont: any) => (
+                                    <div key={cont.id} className="flex items-center gap-2 text-sm">
+                                      <User className="w-3 h-3 text-blue-500" />
+                                      <span>{cont.nome}</span>
+                                      {cont.email && (
+                                        <span className="text-muted-foreground">({cont.email})</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Sheet de Configurações */}
+      <Sheet open={showConfigSheet} onOpenChange={setShowConfigSheet}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Configurações da Tabela</SheetTitle>
+          </SheetHeader>
+
+          <Tabs defaultValue="contatos" className="mt-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="contatos">Contatos</TabsTrigger>
+              <TabsTrigger value="empresas">Empresas</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="contatos" className="mt-4">
+              <TableColumnsConfig
+                columns={contatosTableColumns}
+                onColumnsChange={setContatosTableColumns}
+              />
+            </TabsContent>
+
+            <TabsContent value="empresas" className="mt-4">
+              <TableColumnsConfig
+                columns={empresasTableColumns}
+                onColumnsChange={setEmpresasTableColumns}
+              />
+            </TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
