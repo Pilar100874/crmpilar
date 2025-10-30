@@ -85,10 +85,17 @@ export default function Todos() {
   });
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-background">
-      <div className="border-b border-border bg-card px-6 py-4">
+    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
+      <div className="border-b border-border/40 bg-card/80 backdrop-blur-sm px-8 py-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-foreground">Todos os Contatos e Empresas</h1>
+          <div>
+            <h1 className="text-3xl font-light tracking-tight text-foreground">
+              Todos os Contatos e Empresas
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Visualize e gerencie todos os registros do sistema
+            </p>
+          </div>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -96,147 +103,177 @@ export default function Todos() {
             placeholder="Buscar contatos e empresas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+            className="pl-10 h-10 border-border/40 focus-visible:ring-1 bg-background/50"
           />
         </div>
       </div>
 
       <Tabs defaultValue="all" className="flex-1 flex flex-col">
-        <div className="border-b border-border bg-card px-6">
-          <TabsList className="bg-transparent h-auto p-0">
+        <div className="border-b border-border/40 bg-card/50 backdrop-blur-sm px-8">
+          <TabsList className="bg-transparent h-auto p-0 gap-6">
             <TabsTrigger 
               value="all" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
             >
               Todos ({todosItens.length})
             </TabsTrigger>
             <TabsTrigger 
               value="contacts"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
             >
               Contatos ({filteredContatos.length})
             </TabsTrigger>
             <TabsTrigger 
               value="companies"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
             >
               Empresas ({filteredEmpresas.length})
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="all" className="flex-1 p-6 overflow-auto">
+        <TabsContent value="all" className="flex-1 p-8 overflow-auto">
           {todosItens.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              Nenhum contato ou empresa encontrado
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <Search className="w-8 h-8 text-muted-foreground/50" />
+              </div>
+              <p className="text-lg font-medium text-muted-foreground mb-1">
+                Nenhum registro encontrado
+              </p>
+              <p className="text-sm text-muted-foreground/70">
+                Tente ajustar os filtros de pesquisa
+              </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">Tipo</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {todosItens.map(item => (
-                  <TableRow key={`${item.type}-${item.id}`}>
-                    <TableCell>
-                      {item.type === 'contato' ? (
-                        <User className="w-4 h-4 text-blue-500" />
-                      ) : (
-                        <Building2 className="w-4 h-4 text-purple-500" />
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {item.type === 'contato' ? item.nome : item.nome_fantasia}
-                    </TableCell>
-                    <TableCell>{item.email || "-"}</TableCell>
-                    <TableCell>{item.telefone || "-"}</TableCell>
-                    <TableCell>
-                      {item.type === 'contato' ? (
-                        <Badge variant={item.tipo_operador ? "default" : "secondary"}>
-                          {item.tipo_operador ? "Cliente" : "Prospect"}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Empresa</Badge>
-                      )}
-                    </TableCell>
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border/40 bg-muted/30">
+                    <TableHead className="w-[50px] font-semibold">Tipo</TableHead>
+                    <TableHead className="font-semibold">Nome</TableHead>
+                    <TableHead className="font-semibold">E-mail</TableHead>
+                    <TableHead className="font-semibold">Telefone</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {todosItens.map(item => (
+                    <TableRow key={`${item.type}-${item.id}`} className="hover:bg-muted/30">
+                      <TableCell>
+                        {item.type === 'contato' ? (
+                          <User className="w-4 h-4 text-blue-500" />
+                        ) : (
+                          <Building2 className="w-4 h-4 text-purple-500" />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {item.type === 'contato' ? item.nome : item.nome_fantasia}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{item.email || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.telefone || "-"}</TableCell>
+                      <TableCell>
+                        {item.type === 'contato' ? (
+                          <Badge variant={item.tipo_operador ? "default" : "secondary"}>
+                            {item.tipo_operador ? "Cliente" : "Prospect"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">Empresa</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </TabsContent>
 
-        <TabsContent value="contacts" className="flex-1 p-6 overflow-auto">
+        <TabsContent value="contacts" className="flex-1 p-8 overflow-auto">
           {filteredContatos.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              Nenhum contato encontrado
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <User className="w-8 h-8 text-muted-foreground/50" />
+              </div>
+              <p className="text-lg font-medium text-muted-foreground mb-1">
+                Nenhum contato encontrado
+              </p>
+              <p className="text-sm text-muted-foreground/70">
+                Tente ajustar os filtros de pesquisa
+              </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContatos.map(contato => (
-                  <TableRow key={contato.id}>
-                    <TableCell className="font-medium">{contato.nome}</TableCell>
-                    <TableCell>{contato.email}</TableCell>
-                    <TableCell>{contato.telefone}</TableCell>
-                    <TableCell>{contato.custom_fields?.position || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant={contato.tipo_operador ? "default" : "secondary"}>
-                        {contato.tipo_operador ? "Cliente" : "Prospect"}
-                      </Badge>
-                    </TableCell>
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border/40 bg-muted/30">
+                    <TableHead className="font-semibold">Nome</TableHead>
+                    <TableHead className="font-semibold">E-mail</TableHead>
+                    <TableHead className="font-semibold">Telefone</TableHead>
+                    <TableHead className="font-semibold">Cargo</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredContatos.map(contato => (
+                    <TableRow key={contato.id} className="hover:bg-muted/30">
+                      <TableCell className="font-medium">{contato.nome}</TableCell>
+                      <TableCell className="text-muted-foreground">{contato.email}</TableCell>
+                      <TableCell className="text-muted-foreground">{contato.telefone}</TableCell>
+                      <TableCell className="text-muted-foreground">{contato.custom_fields?.position || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant={contato.tipo_operador ? "default" : "secondary"}>
+                          {contato.tipo_operador ? "Cliente" : "Prospect"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </TabsContent>
 
-        <TabsContent value="companies" className="flex-1 p-6 overflow-auto">
+        <TabsContent value="companies" className="flex-1 p-8 overflow-auto">
           {filteredEmpresas.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              Nenhuma empresa encontrada
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <Building2 className="w-8 h-8 text-muted-foreground/50" />
+              </div>
+              <p className="text-lg font-medium text-muted-foreground mb-1">
+                Nenhuma empresa encontrada
+              </p>
+              <p className="text-sm text-muted-foreground/70">
+                Tente ajustar os filtros de pesquisa
+              </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome Fantasia</TableHead>
-                  <TableHead>Razão Social</TableHead>
-                  <TableHead>CNPJ</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Cidade</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmpresas.map(empresa => (
-                  <TableRow key={empresa.id}>
-                    <TableCell className="font-medium">{empresa.nome_fantasia}</TableCell>
-                    <TableCell>{empresa.nome || "-"}</TableCell>
-                    <TableCell>{empresa.cnpj || "-"}</TableCell>
-                    <TableCell>{empresa.email || "-"}</TableCell>
-                    <TableCell>{empresa.telefone || "-"}</TableCell>
-                    <TableCell>{empresa.cidade || "-"}</TableCell>
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border/40 bg-muted/30">
+                    <TableHead className="font-semibold">Nome Fantasia</TableHead>
+                    <TableHead className="font-semibold">Razão Social</TableHead>
+                    <TableHead className="font-semibold">CNPJ</TableHead>
+                    <TableHead className="font-semibold">E-mail</TableHead>
+                    <TableHead className="font-semibold">Telefone</TableHead>
+                    <TableHead className="font-semibold">Cidade</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredEmpresas.map(empresa => (
+                    <TableRow key={empresa.id} className="hover:bg-muted/30">
+                      <TableCell className="font-medium">{empresa.nome_fantasia}</TableCell>
+                      <TableCell className="text-muted-foreground">{empresa.nome || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{empresa.cnpj || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{empresa.email || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{empresa.telefone || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{empresa.cidade || "-"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </TabsContent>
       </Tabs>
