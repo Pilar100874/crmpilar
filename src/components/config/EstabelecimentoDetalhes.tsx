@@ -334,17 +334,20 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
 
   const loadConfig = async () => {
     try {
-      const { data: configData } = await supabase
+      const { data: configData, error } = await supabase
         .from("whatsapp_config")
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
-        .single();
+        .maybeSingle();
 
-      if (configData) {
-        const config = configData as any;
-        setConfig(config);
-        setWahaUrl(config.waha_url || "");
-        setWahaApiKey(config.waha_api_key || "");
+      if (!error && configData) {
+        const cfg = configData as any;
+        // Only set config if it has waha_url configured
+        if (cfg.waha_url) {
+          setConfig(cfg);
+          setWahaUrl(cfg.waha_url);
+          setWahaApiKey(cfg.waha_api_key || "");
+        }
       }
 
       await refreshSessions();
@@ -377,27 +380,40 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
 
     setLoading(true);
     try {
-      if (config) {
-        await supabase
+      // Check if config already exists
+      const { data: existingConfig } = await supabase
+        .from("whatsapp_config")
+        .select("*")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+
+      if (existingConfig) {
+        const { error } = await supabase
           .from("whatsapp_config")
           .update({
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
           } as any)
-          .eq("id", config.id);
+          .eq("id", existingConfig.id);
+
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from("whatsapp_config")
           .insert({
             estabelecimento_id: estabelecimentoId,
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
+            business_token: '',
+            phone_number_id: '',
           } as any);
+
+        if (error) throw error;
       }
       
       toast({
         title: "✓ Configuração salva!",
-        description: "Servidor WAHA configurado com sucesso.",
+        description: "Servidor WAHA configurado com sucesso. Agora você pode criar sessões.",
       });
       setShowConfigDialog(false);
       await loadConfig();
