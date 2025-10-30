@@ -34,6 +34,8 @@ export interface WebhookConfig {
   usageLocations: string[];
   hasVariables: boolean;
   variables?: WebhookVariable[];
+  hasInputVariables: boolean;
+  inputVariables?: WebhookVariable[];
   createdAt: Date;
 }
 
@@ -76,6 +78,8 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     usageLocations: [] as string[],
     hasVariables: false,
     variables: [] as WebhookVariable[],
+    hasInputVariables: false,
+    inputVariables: [] as WebhookVariable[],
   });
   const [newTypeName, setNewTypeName] = useState("");
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
@@ -87,6 +91,16 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
   const [newVariableFormat, setNewVariableFormat] = useState("string");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  
+  // Estados para variáveis de entrada
+  const [newInputVariableName, setNewInputVariableName] = useState("");
+  const [newInputVariableDescription, setNewInputVariableDescription] = useState("");
+  const [newInputVariableType, setNewInputVariableType] = useState("json");
+  const [newInputVariableDefaultValue, setNewInputVariableDefaultValue] = useState("");
+  const [newInputVariableRequired, setNewInputVariableRequired] = useState(false);
+  const [newInputVariableFormat, setNewInputVariableFormat] = useState("string");
+  const [selectedInputFile, setSelectedInputFile] = useState<File | null>(null);
+  const [editingInputVariableId, setEditingInputVariableId] = useState<string | null>(null);
   const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("all");
   const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
@@ -147,6 +161,8 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
       usageLocations: w.usage_locations || [],
       hasVariables: w.has_variables || false,
       variables: w.variables || [],
+      hasInputVariables: w.has_input_variables || false,
+      inputVariables: w.input_variables || [],
       createdAt: new Date(w.created_at),
     }));
 
@@ -244,6 +260,8 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
       usage_locations: formData.usageLocations as any,
       has_variables: formData.hasVariables,
       variables: formData.variables as any,
+      has_input_variables: formData.hasInputVariables,
+      input_variables: formData.inputVariables as any,
       estabelecimento_id: estabId,
     };
 
@@ -361,7 +379,18 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
 
 
   const resetForm = () => {
-    setFormData({ name: "", url: "", method: "POST", type: "", description: "", usageLocations: [], hasVariables: false, variables: [] });
+    setFormData({ 
+      name: "", 
+      url: "", 
+      method: "POST", 
+      type: "", 
+      description: "", 
+      usageLocations: [], 
+      hasVariables: false, 
+      variables: [],
+      hasInputVariables: false,
+      inputVariables: []
+    });
     setEditingWebhook(null);
     setNewVariableName("");
     setNewVariableDescription("");
@@ -370,6 +399,14 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     setNewVariableRequired(false);
     setNewVariableFormat("string");
     setSelectedFile(null);
+    
+    setNewInputVariableName("");
+    setNewInputVariableDescription("");
+    setNewInputVariableType("json");
+    setNewInputVariableDefaultValue("");
+    setNewInputVariableRequired(false);
+    setNewInputVariableFormat("string");
+    setSelectedInputFile(null);
   };
 
   const handleOpenForm = () => {
@@ -388,6 +425,8 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
       usageLocations: webhook.usageLocations || [],
       hasVariables: webhook.hasVariables || false,
       variables: webhook.variables || [],
+      hasInputVariables: webhook.hasInputVariables || false,
+      inputVariables: webhook.inputVariables || [],
     });
     setIsFormDialogOpen(true);
   };
@@ -551,6 +590,183 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     toast.success("Variável removida!");
   };
 
+  // Funções para gerenciar variáveis de entrada
+  const resetInputVariableForm = () => {
+    setNewInputVariableName("");
+    setNewInputVariableDescription("");
+    if (formData.inputVariables.length > 0) {
+      setNewInputVariableType(formData.inputVariables[0].type);
+    } else {
+      setNewInputVariableType("json");
+    }
+    setNewInputVariableDefaultValue("");
+    setNewInputVariableRequired(false);
+    setNewInputVariableFormat("string");
+    setSelectedInputFile(null);
+  };
+
+  const handleInputFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedInputFile(file);
+      setNewInputVariableDefaultValue(file.name);
+    }
+  };
+
+  const handleAddInputVariable = () => {
+    if (!newInputVariableName.trim()) {
+      toast.error("Digite um nome para a variável");
+      return;
+    }
+
+    if (formData.inputVariables.length > 0 && !editingInputVariableId) {
+      const existingType = formData.inputVariables[0].type;
+      if (newInputVariableType !== existingType) {
+        setNewInputVariableType(existingType);
+      }
+    }
+
+    const namePattern = /^[a-zA-Z0-9_-]+$/;
+    if (!namePattern.test(newInputVariableName)) {
+      toast.error("Nome inválido. Use apenas letras, números, underscore (_) ou hífen (-)");
+      return;
+    }
+
+    if (newInputVariableType === "header") {
+      const headerPattern = /^[a-zA-Z0-9-]+$/;
+      if (!headerPattern.test(newInputVariableName)) {
+        toast.error("Nome de header inválido");
+        return;
+      }
+    }
+
+    if (newInputVariableType === "query") {
+      const queryPattern = /^[a-zA-Z0-9_]+$/;
+      if (!queryPattern.test(newInputVariableName)) {
+        toast.error("Nome de query param inválido");
+        return;
+      }
+    }
+
+    if (newInputVariableType === "path") {
+      if (newInputVariableName.startsWith(":")) {
+        toast.error("Remova o ':' do início");
+        return;
+      }
+      const pathPattern = /^[a-zA-Z0-9_]+$/;
+      if (!pathPattern.test(newInputVariableName)) {
+        toast.error("Nome de path param inválido");
+        return;
+      }
+    }
+
+    if (newInputVariableType === "json" && newInputVariableDefaultValue) {
+      if (newInputVariableFormat === "number") {
+        if (isNaN(Number(newInputVariableDefaultValue))) {
+          toast.error("Valor padrão deve ser um número");
+          return;
+        }
+      } else if (newInputVariableFormat === "boolean") {
+        if (newInputVariableDefaultValue !== "true" && newInputVariableDefaultValue !== "false") {
+          toast.error("Para boolean use: true ou false");
+          return;
+        }
+      } else if (newInputVariableFormat === "object") {
+        try {
+          const parsed = JSON.parse(newInputVariableDefaultValue);
+          if (typeof parsed !== "object" || Array.isArray(parsed)) {
+            toast.error("Deve ser um objeto JSON");
+            return;
+          }
+        } catch (e) {
+          toast.error("JSON inválido");
+          return;
+        }
+      } else if (newInputVariableFormat === "array") {
+        try {
+          const parsed = JSON.parse(newInputVariableDefaultValue);
+          if (!Array.isArray(parsed)) {
+            toast.error("Deve ser um array JSON");
+            return;
+          }
+        } catch (e) {
+          toast.error("JSON inválido");
+          return;
+        }
+      }
+    }
+
+    if (newInputVariableType === "query" && newInputVariableDefaultValue && newInputVariableDefaultValue.includes(" ")) {
+      toast.error("Query param não pode ter espaços");
+      return;
+    }
+
+    if (editingInputVariableId) {
+      setFormData(prev => ({
+        ...prev,
+        inputVariables: prev.inputVariables.map(v => 
+          v.id === editingInputVariableId 
+            ? {
+                ...v,
+                name: newInputVariableName,
+                type: newInputVariableType,
+                description: newInputVariableDescription || undefined,
+                defaultValue: newInputVariableDefaultValue || undefined,
+                required: newInputVariableRequired,
+                format: newInputVariableType === "json" ? newInputVariableFormat : undefined,
+              }
+            : v
+        )
+      }));
+      
+      const currentType = newInputVariableType;
+      resetInputVariableForm();
+      setNewInputVariableType(currentType);
+      setEditingInputVariableId(null);
+      
+      toast.success("Variável de entrada atualizada!");
+    } else {
+      const newVariable: WebhookVariable = {
+        id: Date.now().toString(),
+        name: newInputVariableName,
+        type: newInputVariableType,
+        description: newInputVariableDescription || undefined,
+        defaultValue: newInputVariableDefaultValue || undefined,
+        required: newInputVariableRequired,
+        format: newInputVariableType === "json" ? newInputVariableFormat : undefined,
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        inputVariables: [...prev.inputVariables, newVariable]
+      }));
+
+      const currentType = newInputVariableType;
+      resetInputVariableForm();
+      setNewInputVariableType(currentType);
+
+      toast.success("Variável de entrada adicionada!");
+    }
+  };
+
+  const handleEditInputVariable = (variable: WebhookVariable) => {
+    setEditingInputVariableId(variable.id);
+    setNewInputVariableName(variable.name);
+    setNewInputVariableType(variable.type);
+    setNewInputVariableDescription(variable.description || "");
+    setNewInputVariableDefaultValue(variable.defaultValue || "");
+    setNewInputVariableRequired(variable.required || false);
+    setNewInputVariableFormat(variable.format || "string");
+  };
+
+  const handleDeleteInputVariable = (variableId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      inputVariables: prev.inputVariables.filter(v => v.id !== variableId)
+    }));
+    toast.success("Variável de entrada removida!");
+  };
+
   const handleUpdateType = async (typeId: string, newName: string) => {
     if (!newName.trim()) {
       toast.error("Digite um nome válido");
@@ -708,7 +924,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                   }}
                 />
                 <Label htmlFor="hasVariables" className="cursor-pointer">
-                  Configurar Variáveis
+                  Configurar Variáveis de Saída
                 </Label>
               </div>
 
@@ -880,6 +1096,201 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                               size="sm"
                               onClick={() => handleDeleteVariable(variable.id)}
                               disabled={editingVariableId !== null}
+                            >
+                              <X className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
+
+              <div className="flex items-center space-x-2 mt-4">
+                <Checkbox
+                  id="hasInputVariables"
+                  checked={formData.hasInputVariables}
+                  onCheckedChange={(checked) => {
+                    setFormData({ ...formData, hasInputVariables: checked as boolean });
+                    if (!checked) {
+                      setFormData(prev => ({ ...prev, inputVariables: [] }));
+                    }
+                  }}
+                />
+                <Label htmlFor="hasInputVariables" className="cursor-pointer">
+                  Configurar Variáveis de Entrada
+                </Label>
+              </div>
+
+              {formData.hasInputVariables && (
+                <Card className="p-4 space-y-4 bg-secondary/20">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="inputVarName">Nome da Variável *</Label>
+                        <Input
+                          id="inputVarName"
+                          value={newInputVariableName}
+                          onChange={(e) => setNewInputVariableName(e.target.value)}
+                          placeholder="Ex: user_id, status"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="inputVarType">Tipo *</Label>
+                        <Select 
+                          value={newInputVariableType} 
+                          onValueChange={setNewInputVariableType}
+                          disabled={formData.inputVariables.length > 0 && !editingInputVariableId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="json">JSON Body</SelectItem>
+                            <SelectItem value="query">Query Param</SelectItem>
+                            <SelectItem value="header">Header</SelectItem>
+                            <SelectItem value="path">Path Param</SelectItem>
+                            <SelectItem value="form-data">Form Data</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {newInputVariableType === "json" && (
+                      <div>
+                        <Label htmlFor="inputVarFormat">Formato JSON</Label>
+                        <Select value={newInputVariableFormat} onValueChange={setNewInputVariableFormat}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="string">String</SelectItem>
+                            <SelectItem value="number">Number</SelectItem>
+                            <SelectItem value="boolean">Boolean</SelectItem>
+                            <SelectItem value="object">Object</SelectItem>
+                            <SelectItem value="array">Array</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div>
+                      <Label htmlFor="inputVarDescription">Descrição</Label>
+                      <Input
+                        id="inputVarDescription"
+                        value={newInputVariableDescription}
+                        onChange={(e) => setNewInputVariableDescription(e.target.value)}
+                        placeholder="Descreva o uso desta variável"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="inputVarDefault">Valor Padrão</Label>
+                      {newInputVariableType === "form-data" ? (
+                        <div>
+                          <input
+                            type="file"
+                            onChange={handleInputFileSelect}
+                            className="hidden"
+                            id="input-file-input"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById('input-file-input')?.click()}
+                            className="w-full"
+                          >
+                            {selectedInputFile ? selectedInputFile.name : "Selecionar arquivo"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <Input
+                          id="inputVarDefault"
+                          value={newInputVariableDefaultValue}
+                          onChange={(e) => setNewInputVariableDefaultValue(e.target.value)}
+                          placeholder={
+                            newInputVariableType === "json" && newInputVariableFormat === "object" ? '{"key": "value"}' :
+                            newInputVariableType === "json" && newInputVariableFormat === "array" ? '["item1", "item2"]' :
+                            "Valor padrão"
+                          }
+                        />
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="inputVarRequired"
+                        checked={newInputVariableRequired}
+                        onCheckedChange={(checked) => setNewInputVariableRequired(checked as boolean)}
+                      />
+                      <Label htmlFor="inputVarRequired" className="cursor-pointer">
+                        Obrigatório
+                      </Label>
+                    </div>
+
+                    <Button 
+                      type="button" 
+                      onClick={handleAddInputVariable}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      {editingInputVariableId ? "Atualizar" : "Adicionar"} Variável de Entrada
+                    </Button>
+                  </div>
+
+                  {formData.inputVariables.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Variáveis de Entrada Configuradas</Label>
+                      {formData.inputVariables.map((variable) => (
+                        <div key={variable.id} className="flex items-start justify-between gap-2 p-3 bg-background rounded-lg border">
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-sm font-semibold">{variable.name}</span>
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                {variable.type === "json" ? "JSON" :
+                                variable.type === "query" ? "Query" :
+                                variable.type === "header" ? "Header" :
+                                variable.type === "path" ? "Path" :
+                                "Form Data"}
+                              </span>
+                              {variable.required && (
+                                <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
+                                  Obrigatório
+                                </span>
+                              )}
+                              {variable.format && (
+                                <span className="text-xs bg-secondary px-2 py-0.5 rounded">
+                                  {variable.format}
+                                </span>
+                              )}
+                            </div>
+                            {variable.description && (
+                              <p className="text-xs text-muted-foreground">{variable.description}</p>
+                            )}
+                            {variable.defaultValue && (
+                              <p className="text-xs text-muted-foreground">
+                                Padrão: <span className="font-mono">{variable.defaultValue}</span>
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditInputVariable(variable)}
+                              disabled={editingInputVariableId !== null && editingInputVariableId !== variable.id}
+                            >
+                              <Pencil className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteInputVariable(variable.id)}
+                              disabled={editingInputVariableId !== null}
                             >
                               <X className="h-4 w-4 text-destructive" />
                             </Button>
