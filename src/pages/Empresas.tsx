@@ -886,18 +886,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   return (
     <>
       {!showForm ? (
-        <div className="flex-1 flex flex-col h-full bg-background">
-        <div className="border-b border-border bg-card px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-foreground">EMPRESA</h1>
-            <div className="flex items-center gap-2">
+        <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
+        <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-light tracking-tight text-foreground">Empresas</h1>
+              <p className="text-sm text-muted-foreground mt-1">Gerencie sua carteira de clientes</p>
+            </div>
+            <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => setShowConfigPanel(true)}
-                className="gap-2"
+                className="gap-2 border-border/40 hover:bg-accent/50"
               >
                 <Settings2 className="w-4 h-4" />
-                Configuração de Campos
+                Configurar Campos
               </Button>
               <Button onClick={() => {
                 setShowForm(true);
@@ -905,9 +908,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setFormData({});
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
-              }} className="gap-2">
+              }} className="gap-2 shadow-sm">
                 <Plus className="w-4 h-4" />
-                ADICIONAR EMPRESA
+                Nova Empresa
               </Button>
             </div>
           </div>
@@ -922,60 +925,63 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome fantasia, razão social, CNPJ ou e-mail..."
+                  placeholder="Buscar empresas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-9"
+                  className="pl-10 h-10 border-border/40 focus-visible:ring-1 bg-background/50"
                 />
               </div>
             </div>
             
             {searchTerm && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setSearchTerm("")}
-                className="gap-2"
+                className="gap-2 text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4" />
-                Limpar filtro
+                Limpar
               </Button>
             )}
             
-            <div className="ml-auto text-sm text-muted-foreground">
-              {sortedEmpresas.length} elementos
+            <div className="ml-auto text-sm font-light text-muted-foreground">
+              {sortedEmpresas.length} {sortedEmpresas.length === 1 ? 'empresa' : 'empresas'}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto p-6">
           {sortedEmpresas.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center text-muted-foreground">
-                <p className="text-lg font-medium mb-2">Nenhuma empresa encontrada</p>
-                <p className="text-sm">Clique em "ADICIONAR EMPRESA" para começar</p>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-8 h-8 text-muted-foreground/50" />
+                </div>
+                <p className="text-lg font-light text-foreground mb-2">Nenhuma empresa encontrada</p>
+                <p className="text-sm text-muted-foreground">Adicione sua primeira empresa para começar</p>
               </div>
             </div>
           ) : (
-            <div className="relative">
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
               <table className="w-full">
-                <thead className="border-b border-border sticky top-0 bg-background z-10">
+                <thead className="border-b border-border/40 bg-muted/30">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
                       <th
                         key={column.id}
-                        className={`text-left p-3 font-medium text-sm text-muted-foreground relative ${
-                          index === 0 ? 'sticky left-0 bg-background border-r border-border z-20' : ''
+                        className={`text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground ${
+                          index === 0 ? 'sticky left-0 bg-muted/30 border-r border-border/40 z-20' : ''
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
-                          <span>{column.label.toUpperCase()}</span>
+                          <span>{column.label}</span>
                           {column.id !== 'actions' && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-5 w-5 hover:bg-transparent"
+                              className="h-5 w-5 hover:bg-background/50"
                               onClick={() => handleSort(column.id)}
                             >
                               {getSortIcon(column.id)}
@@ -1022,17 +1028,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </thead>
                 <tbody>
                   {sortedEmpresas.map((empresa) => (
-                    <tr key={empresa.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                    <tr key={empresa.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors group">
                       {tableColumns.filter(col => col.visible).map((column, index) => {
                         if (column.id === 'actions') {
                           return (
-                            <td key="actions" className="p-3 sticky left-0 bg-background border-r border-border">
+                            <td key="actions" className="p-4 sticky left-0 bg-card group-hover:bg-muted/30 border-r border-border/40">
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-8 w-8"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={() => handleEditEmpresa(empresa)}
-                                title="Editar cadastro completo"
+                                title="Editar"
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -1071,18 +1077,18 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         return (
                           <td 
                             key={column.id} 
-                            className={`p-3 ${column.id === 'nome_fantasia' ? 'font-medium' : ''}`}
+                            className={`p-4 ${column.id === 'nome_fantasia' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
                             style={{ width: column.width, maxWidth: column.width }}
                           >
-                            <span className="truncate block">{cellValue}</span>
+                            <span className="truncate block text-sm">{cellValue}</span>
                           </td>
                         );
                       })}
-                      <td className="p-3">
+                      <td className="p-4">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteEmpresa(empresa.id);
@@ -1118,46 +1124,56 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         </Sheet>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col h-full bg-background">
-      <div className="border-b border-border bg-card px-6 py-4">
+        <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
+      <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-foreground">
-            {editingEmpresa ? "Editar Empresa" : "Nova Empresa"}
-          </h1>
-          <Button variant="ghost" size="sm" className="gap-2 ml-auto">
-            #ADICIONAR TAGS
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowForm(false)}
+            className="hover:bg-accent/50"
+          >
+            <X className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-4 h-4" />
+          <div className="flex-1">
+            <h1 className="text-2xl font-light tracking-tight text-foreground">
+              {editingEmpresa ? "Editar Empresa" : "Nova Empresa"}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {editingEmpresa ? "Atualize as informações da empresa" : "Preencha os dados da nova empresa"}
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+            <Plus className="w-4 h-4" />
+            Tags
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto">
-        <Tabs defaultValue="empresa" className="w-full">
-          <div className="border-b border-border bg-card px-6">
-            <TabsList className="bg-transparent h-auto p-0">
-              <TabsTrigger 
-                value="empresa"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Empresa
-              </TabsTrigger>
-              <TabsTrigger 
-                value="contatos" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Contatos
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      <div className="flex-1 overflow-auto p-8">
+        <Tabs defaultValue="empresa" className="w-full max-w-6xl mx-auto">
+          <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-6">
+            <TabsTrigger 
+              value="empresa"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Dados da Empresa
+            </TabsTrigger>
+            <TabsTrigger 
+              value="contatos" 
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Contatos Vinculados
+            </TabsTrigger>
+          </TabsList>
 
-          <TabsContent value="empresa" className="p-6">
-            <Card className="p-4">
-              <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-                Dados da Empresa
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
+          <TabsContent value="empresa" className="space-y-6">
+            <Card className="border-border/40 shadow-sm">
+              <div className="p-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-wide">
+                  Informações Principais
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
                 {formFieldsToRender.map((field) => {
                   // Lógica de liberação progressiva
                   const tipoSelecionado = !!formData.company_type;
@@ -1172,24 +1188,30 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   const finalDisabled = field.locked || isDisabled;
                   
                   return (
-                    <div key={field.id}>
-                      <Label htmlFor={field.id} className="text-xs">
-                        {field.label} {field.required && <span className="text-red-500">*</span>}
-                        {field.locked && <span className="text-xs text-muted-foreground ml-1">(auto)</span>}
+                    <div key={field.id} className="space-y-2">
+                      <Label htmlFor={field.id} className="text-sm font-medium text-foreground">
+                        {field.label} 
+                        {field.required && <span className="text-destructive ml-1">*</span>}
+                        {field.locked && <span className="text-xs text-muted-foreground ml-2">(preenchido automaticamente)</span>}
                       </Label>
                       {renderField(field, finalDisabled)}
                     </div>
                   );
                 })}
               </div>
+            </div>
             </Card>
 
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowForm(false)}
+                className="border-border/40"
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleSaveEmpresa}>
-                Salvar Empresa
+              <Button onClick={handleSaveEmpresa} className="shadow-sm">
+                {editingEmpresa ? "Salvar Alterações" : "Criar Empresa"}
               </Button>
             </div>
           </TabsContent>
