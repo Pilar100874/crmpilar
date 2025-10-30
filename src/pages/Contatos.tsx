@@ -212,6 +212,44 @@ export default function Contatos() {
     tags: "",
   });
 
+  // Carregar campos customizados de contato do banco
+  const loadContactFields = async (estabId: string) => {
+    try {
+      const { data: campos, error } = await supabase
+        .from("form_field_configs")
+        .select("*")
+        .eq("form_type", "contato")
+        .eq("estabelecimento_id", estabId)
+        .order("field_order", { ascending: true });
+
+      if (error) {
+        console.error("❌ Erro ao buscar campos de contato:", error);
+        return;
+      }
+
+      if (campos && campos.length > 0) {
+        // Mapear os campos do banco para o formato usado no formulário
+        const mappedFields: CustomField[] = campos.map((campo) => {
+          const options = campo.options as any;
+          return {
+            id: campo.field_id,
+            label: campo.field_label,
+            type: campo.field_type as CustomField["type"],
+            category: "contact",
+            options: options?.options || [],
+            required: campo.required || false,
+            locked: campo.locked || false,
+          };
+        });
+        
+        console.log("✅ Campos customizados carregados:", mappedFields.length);
+        setContactFields(mappedFields);
+      }
+    } catch (error) {
+      console.error("❌ Erro ao carregar campos customizados:", error);
+    }
+  };
+
   // Carregar colunas da tabela baseadas nos campos de contato configurados
   const loadTableColumns = async (estabId: string) => {
     try {
@@ -271,6 +309,9 @@ export default function Contatos() {
       
       if (estabId) {
         console.log("🔍 Contatos - Buscando segmentos para estabelecimento:", estabId);
+        
+        // Carregar campos customizados para o formulário
+        await loadContactFields(estabId);
         
         // Carregar colunas baseadas nos campos configurados
         await loadTableColumns(estabId);
@@ -1421,7 +1462,11 @@ export default function Contatos() {
                     estabelecimentoId={estabelecimentoId} 
                     onChanged={async () => {
                       console.log('🔄 ContatoFieldsCRUD onChange triggered');
+                      // Recarregar campos customizados no formulário
+                      await loadContactFields(estabelecimentoId);
+                      // Recarregar colunas da tabela
                       await loadTableColumns(estabelecimentoId);
+                      // Recarregar lista de contatos
                       await loadContacts();
                     }}
                   />
