@@ -22,6 +22,16 @@ export default function MarketingAutomacoes() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [selectedAutomacao, setSelectedAutomacao] = useState<any>(null);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [variablesDialogOpen, setVariablesDialogOpen] = useState(false);
+  const [renameName, setRenameName] = useState("");
+  const [renameDescription, setRenameDescription] = useState("");
+  const [duplicateName, setDuplicateName] = useState("");
+  const [duplicateDescription, setDuplicateDescription] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   useEffect(() => {
     loadAutomacoes();
@@ -107,6 +117,78 @@ export default function MarketingAutomacoes() {
     return labels[tipo] || tipo;
   };
 
+  const handleRename = async () => {
+    if (!renameName.trim()) {
+      toast.error("Por favor, informe um nome");
+      return;
+    }
+    if (!selectedAutomacao) return;
+
+    setIsRenaming(true);
+    try {
+      const { error } = await supabase
+        .from("marketing_automations" as any)
+        .update({ 
+          name: renameName.trim(),
+          description: renameDescription.trim()
+        })
+        .eq("id", selectedAutomacao.id);
+
+      if (error) throw error;
+      toast.success("Automação renomeada com sucesso!");
+      setRenameDialogOpen(false);
+      setRenameName("");
+      setRenameDescription("");
+      setSelectedAutomacao(null);
+      loadAutomacoes();
+    } catch (error) {
+      console.error("Erro ao renomear:", error);
+      toast.error("Erro ao renomear automação");
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (!duplicateName.trim()) {
+      toast.error("Por favor, informe um nome");
+      return;
+    }
+    if (!selectedAutomacao) return;
+
+    setIsDuplicating(true);
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Não foi possível identificar o estabelecimento");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("marketing_automations" as any)
+        .insert({
+          name: duplicateName.trim(),
+          description: duplicateDescription.trim(),
+          config: selectedAutomacao.config,
+          active: false,
+          estabelecimento_id: estabelecimentoId,
+        });
+
+      if (error) throw error;
+      toast.success("Automação duplicada com sucesso!");
+      setDuplicateDialogOpen(false);
+      setDuplicateName("");
+      setDuplicateDescription("");
+      setSelectedAutomacao(null);
+      loadAutomacoes();
+    } catch (error) {
+      console.error("Erro ao duplicar:", error);
+      toast.error("Erro ao duplicar automação");
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
       <div>
@@ -171,6 +253,46 @@ export default function MarketingAutomacoes() {
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       setOpenMenuId(null);
+                      setSelectedAutomacao(automacao);
+                      setDialogOpen(true);
+                    }}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenMenuId(null);
+                      setSelectedAutomacao(automacao);
+                      setRenameName(automacao.name);
+                      setRenameDescription(automacao.description || "");
+                      setRenameDialogOpen(true);
+                    }}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Renomear
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenMenuId(null);
+                      setSelectedAutomacao(automacao);
+                      setDuplicateName(`${automacao.name} (cópia)`);
+                      setDuplicateDescription(automacao.description || "");
+                      setDuplicateDialogOpen(true);
+                    }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Duplicar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenMenuId(null);
+                      setSelectedAutomacao(automacao);
+                      setVariablesDialogOpen(true);
+                    }}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Gerenciar Variáveis
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenMenuId(null);
                       handleToggleActive(automacao.id, automacao.active);
                     }}>
                       <Power className="w-4 h-4 mr-2" />
@@ -232,9 +354,147 @@ export default function MarketingAutomacoes() {
 
       <NovaAutomacaoDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setSelectedAutomacao(null);
+        }}
         onSuccess={loadAutomacoes}
+        automationToEdit={selectedAutomacao}
       />
+
+      {/* Dialog de Renomear */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear Automação</DialogTitle>
+            <DialogDescription>
+              Digite um novo nome para a automação
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input
+                value={renameName}
+                onChange={(e) => setRenameName(e.target.value)}
+                placeholder="Nome da automação"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input
+                value={renameDescription}
+                onChange={(e) => setRenameDescription(e.target.value)}
+                placeholder="Descrição (opcional)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRename} disabled={isRenaming}>
+              {isRenaming ? "Renomeando..." : "Renomear"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Duplicar */}
+      <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicar Automação</DialogTitle>
+            <DialogDescription>
+              Digite um nome para a automação duplicada
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input
+                value={duplicateName}
+                onChange={(e) => setDuplicateName(e.target.value)}
+                placeholder="Nome da automação"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input
+                value={duplicateDescription}
+                onChange={(e) => setDuplicateDescription(e.target.value)}
+                placeholder="Descrição (opcional)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDuplicateDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleDuplicate} disabled={isDuplicating}>
+              {isDuplicating ? "Duplicando..." : "Duplicar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Gerenciar Variáveis */}
+      <Dialog open={variablesDialogOpen} onOpenChange={setVariablesDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Gerenciar Variáveis do Webhook</DialogTitle>
+            <DialogDescription>
+              Configure os valores das variáveis de entrada e saída
+            </DialogDescription>
+          </DialogHeader>
+          {selectedAutomacao && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Automação: {selectedAutomacao.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Webhook ID: {selectedAutomacao.config?.webhook_id || "Não configurado"}
+                </p>
+              </div>
+
+              {/* Seção de Variáveis de Entrada */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold">Variáveis de Entrada</h4>
+                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                  {selectedAutomacao.config?.variaveis && Object.keys(selectedAutomacao.config.variaveis).length > 0 ? (
+                    Object.entries(selectedAutomacao.config.variaveis).map(([key, value]: [string, any]) => (
+                      <div key={key} className="space-y-2">
+                        <Label className="text-sm">{key}</Label>
+                        <Input
+                          value={value || ""}
+                          disabled
+                          className="bg-background"
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Nenhuma variável de entrada configurada</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Seção de Variáveis de Saída */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold">Variáveis de Saída</h4>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    As variáveis de saída são definidas pelo webhook e estarão disponíveis após a execução
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setVariablesDialogOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
