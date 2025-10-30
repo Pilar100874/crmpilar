@@ -762,11 +762,17 @@ export class FlowEngine {
         }
       });
       
-      if (camposFaltando.length > 0) {
-        console.error("❌ Campos obrigatórios não preenchidos:", camposFaltando.join(", "));
+      // Remoção defensiva: garantir que 'tipo' nunca bloqueie a criação
+      const camposFaltandoFinal = camposFaltando.filter(c => c !== 'tipo' && c !== 'type');
+      if (camposFaltando.includes('tipo')) {
+        console.warn("⚠️ Removendo 'tipo' da validação por ser preenchido automaticamente.");
+      }
+      
+      if (camposFaltandoFinal.length > 0) {
+        console.error("❌ Campos obrigatórios não preenchidos:", camposFaltandoFinal.join(", "));
         await this.onResponse({
           type: "text",
-          content: `Não foi possível cadastrar a empresa. Campos obrigatórios faltando: ${camposFaltando.join(", ")}`,
+          content: `Não foi possível cadastrar a empresa. Campos obrigatórios faltando: ${camposFaltandoFinal.join(", ")}`,
         });
         return;
       }
