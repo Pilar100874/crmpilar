@@ -19,7 +19,7 @@ export const MENU_CONFIG = [
   { id: "Bot Test", label: "Bot" },
   { id: "Criar Bot", label: "Criar / Editar Bot" },
   { id: "Testar", label: "Testar Bot" },
-  { id: "Desenho", label: "Estatísticas" },
+  { id: "Desenho", label: "Marketing" },
   { id: "Configurações", label: "Configurações" },
   { id: "Config Geral", label: "Configurações Gerais" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },

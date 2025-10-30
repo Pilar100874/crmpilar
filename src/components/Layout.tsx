@@ -18,13 +18,14 @@ import {
   Megaphone,
   LogOut,
   Globe,
-  Pencil,
   Building2,
   User as UserIcon,
   ChevronDown,
+  ChevronRight,
   Plus,
   TestTube2,
   FileBarChart,
+  Target,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,7 @@ const menuItems: MenuItem[] = [
       { id: "Testar", title: "Testar", url: "/bot-test", icon: TestTube2 },
     ]
   },
-  { id: "Desenho", title: "Estatísticas", url: "/desenho", icon: Pencil },
+  { id: "Desenho", title: "Marketing", url: "/desenho", icon: Target },
   { 
     id: "Configurações", 
     title: "Configurações", 
@@ -410,7 +411,7 @@ export default function Layout({ children }: LayoutProps) {
                                     >
                                       <span className="text-sm font-medium">{subItem.title}</span>
                                       {location.pathname === subItem.url && (
-                                        <Pencil className="w-3 h-3 text-muted-foreground opacity-40" />
+                                        <ChevronRight className="w-3 h-3 text-muted-foreground opacity-40" />
                                       )}
                                     </NavLink>
                                   </div>
