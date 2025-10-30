@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as React from "react";
 import * as XLSX from 'xlsx';
 import { useLocation } from "react-router-dom";
@@ -109,6 +109,7 @@ export default function Contatos() {
   const [duplicateField, setDuplicateField] = useState<'phone' | 'email' | null>(null);
   const [shouldCheckDuplicate, setShouldCheckDuplicate] = useState(true);
   const [isClosingForm, setIsClosingForm] = useState(false);
+  const isClosingRef = useRef(false);
   
   // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
@@ -1347,7 +1348,7 @@ export default function Contatos() {
 
   // Função para verificar duplicidade de WhatsApp ou Email
   const checkDuplicate = async (field: 'phone' | 'email', value: string) => {
-    if (!value || !estabelecimentoId || !shouldCheckDuplicate || isClosingForm) return;
+    if (!value || !estabelecimentoId || !shouldCheckDuplicate || isClosingForm || isClosingRef.current) return;
     
     // Se estamos editando e o valor não mudou, não verificar
     if (editingContact && editingContact[field] === value) return;
@@ -2139,13 +2140,19 @@ export default function Contatos() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => {
+            onMouseDown={() => {
+              // Garante que dispare antes do onBlur dos inputs
               setIsClosingForm(true);
+              isClosingRef.current = true;
+              setShouldCheckDuplicate(false);
+            }}
+            onClick={() => {
               setShowForm(false);
               setTimeout(() => {
                 setIsClosingForm(false);
+                isClosingRef.current = false;
                 setShouldCheckDuplicate(true);
-              }, 100);
+              }, 150);
             }}
             className="hover:bg-accent/50"
           >
@@ -2215,13 +2222,19 @@ export default function Contatos() {
             <div className="flex justify-end gap-3">
               <Button 
                 variant="outline" 
-                onClick={() => {
+                onMouseDown={() => {
+                  // Previne verificação de duplicidade no blur ao cancelar
                   setIsClosingForm(true);
+                  isClosingRef.current = true;
+                  setShouldCheckDuplicate(false);
+                }}
+                onClick={() => {
                   setShowForm(false);
                   setTimeout(() => {
                     setIsClosingForm(false);
+                    isClosingRef.current = false;
                     setShouldCheckDuplicate(true);
-                  }, 100);
+                  }, 150);
                 }}
                 className="border-border/40"
               >
@@ -2419,13 +2432,18 @@ export default function Contatos() {
             <div className="flex justify-end gap-3">
               <Button 
                 variant="outline" 
-                onClick={() => {
+                onMouseDown={() => {
                   setIsClosingForm(true);
+                  isClosingRef.current = true;
+                  setShouldCheckDuplicate(false);
+                }}
+                onClick={() => {
                   setShowForm(false);
                   setTimeout(() => {
                     setIsClosingForm(false);
+                    isClosingRef.current = false;
                     setShouldCheckDuplicate(true);
-                  }, 100);
+                  }, 150);
                 }}
                 className="border-border/40"
               >
