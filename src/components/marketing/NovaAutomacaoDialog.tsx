@@ -130,13 +130,18 @@ export default function NovaAutomacaoDialog({
         .from("webhooks")
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
-        .eq("active", true)
-        .or('usage_locations.cs.{automacoes},usage_locations.cs.{campanha}');
+        .eq("active", true);
 
       if (error) throw error;
       
+      // Filtrar webhooks que têm "automacoes" ou "campanha" em usage_locations
+      const filteredData = (data || []).filter((webhook: any) => {
+        const locations = webhook.usage_locations || [];
+        return locations.includes("automacoes") || locations.includes("campanha");
+      });
+      
       // Parse variables from JSON
-      const parsedWebhooks = (data || []).map(webhook => ({
+      const parsedWebhooks = filteredData.map(webhook => ({
         id: webhook.id,
         name: webhook.name,
         url: webhook.url,
