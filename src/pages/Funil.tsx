@@ -200,28 +200,50 @@ export default function Funil() {
     }));
   }, [deals, searchQuery, filters, stagesConfig]);
 
-  const handleDealMove = (dealId: string, newStage: FunilStage) => {
+  const handleDealMove = async (dealId: string, newStage: FunilStage) => {
     const deal = deals.find(d => d.id === dealId);
     
-    setDeals(prevDeals => 
-      prevDeals.map(d => 
-        d.id === dealId ? { ...d, stage: newStage, diasParado: 0 } as any : d
-      )
-    );
-    
-    toast({
-      title: 'Negócio movido',
-      description: `${deal?.cliente} foi movido para ${getStageTitle(newStage)}`,
-    });
+    // Atualizar no banco de dados
+    try {
+      const { error } = await supabase
+        .from('funil_deals')
+        .update({ 
+          stage_id: newStage,
+          dias_parado: 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', dealId);
 
-    // Simular playbook automático
-    if (newStage === 'qualificacao') {
-      setTimeout(() => {
-        toast({
-          title: '🤖 Playbook ativado',
-          description: 'Tarefa automática criada: Enviar script de qualificação',
-        });
-      }, 1000);
+      if (error) throw error;
+
+      // Atualizar estado local
+      setDeals(prevDeals => 
+        prevDeals.map(d => 
+          d.id === dealId ? { ...d, stage: newStage, diasParado: 0 } as any : d
+        )
+      );
+      
+      toast({
+        title: 'Negócio movido',
+        description: `${deal?.cliente} foi movido para ${getStageTitle(newStage)}`,
+      });
+
+      // Simular playbook automático
+      if (newStage === 'qualificacao') {
+        setTimeout(() => {
+          toast({
+            title: '🤖 Playbook ativado',
+            description: 'Tarefa automática criada: Enviar script de qualificação',
+          });
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Erro ao mover negócio:', error);
+      toast({
+        title: 'Erro ao mover negócio',
+        description: 'Não foi possível mover o negócio. Tente novamente.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -235,18 +257,77 @@ export default function Funil() {
     setNewDealOpen(true);
   };
 
-  const handleSaveNewDeal = (newDeal: Omit<Deal, 'id'>) => {
-    const deal: Deal = {
-      ...newDeal,
-      id: `deal-${Date.now()}`,
-    };
-    
-    setDeals(prev => [...prev, deal as any]);
-    
-    toast({
-      title: 'Lead criado',
-      description: `${deal.cliente} foi adicionado ao funil com sucesso.`,
-    });
+  const handleSaveNewDeal = async (newDeal: Omit<Deal, 'id'>) => {
+    if (!selectedFunilId) {
+      toast({
+        title: 'Erro',
+        description: 'Nenhum funil selecionado',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        toast({
+          title: 'Erro',
+          description: 'Estabelecimento não identificado',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Buscar o stage_id da primeira etapa do funil
+      const firstStage = stagesConfig[0];
+      if (!firstStage) {
+        toast({
+          title: 'Erro',
+          description: 'Nenhuma etapa configurada neste funil',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Preparar dados para inserir no banco
+      const dealData = {
+        funil_id: selectedFunilId,
+        estabelecimento_id: estabId,
+        stage_id: firstStage.id,
+        cliente_nome: newDeal.cliente,
+        valor: newDeal.valor,
+        data_estimada: newDeal.dataEstimada,
+        origem: newDeal.origem,
+        status: newDeal.status || 'ativo',
+        saude: newDeal.saude || 'verde',
+        dias_parado: 0,
+        prioridade: newDeal.prioridade || 0,
+        tags: newDeal.tags || [],
+      };
+
+      const { data, error } = await supabase
+        .from('funil_deals')
+        .insert([dealData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Recarregar deals do banco
+      await loadDeals();
+      
+      toast({
+        title: 'Lead criado',
+        description: `${newDeal.cliente} foi adicionado ao funil com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao salvar lead:', error);
+      toast({
+        title: 'Erro ao criar lead',
+        description: 'Não foi possível salvar o lead. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDealClick = (deal: Deal) => {
@@ -254,15 +335,47 @@ export default function Funil() {
     setDetailsOpen(true);
   };
 
-  const handleUpdateDeal = (dealId: string, updates: Partial<Deal>) => {
-    setDeals(prev => prev.map(d => 
-      d.id === dealId ? { ...d, ...updates } : d
-    ));
-    
-    toast({
-      title: 'Negócio atualizado',
-      description: 'As alterações foram salvas com sucesso.',
-    });
+  const handleUpdateDeal = async (dealId: string, updates: Partial<Deal>) => {
+    try {
+      // Preparar dados para atualizar no banco
+      const updateData: any = {};
+      
+      if (updates.cliente) updateData.cliente_nome = updates.cliente;
+      if (updates.valor !== undefined) updateData.valor = updates.valor;
+      if (updates.dataEstimada) updateData.data_estimada = updates.dataEstimada;
+      if (updates.origem) updateData.origem = updates.origem;
+      if (updates.status) updateData.status = updates.status;
+      if (updates.saude) updateData.saude = updates.saude;
+      if (updates.diasParado !== undefined) updateData.dias_parado = updates.diasParado;
+      if (updates.prioridade !== undefined) updateData.prioridade = updates.prioridade;
+      if (updates.tags) updateData.tags = updates.tags;
+      
+      updateData.updated_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('funil_deals')
+        .update(updateData)
+        .eq('id', dealId);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setDeals(prev => prev.map(d => 
+        d.id === dealId ? { ...d, ...updates } : d
+      ));
+      
+      toast({
+        title: 'Negócio atualizado',
+        description: 'As alterações foram salvas com sucesso.',
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar negócio:', error);
+      toast({
+        title: 'Erro ao atualizar negócio',
+        description: 'Não foi possível salvar as alterações. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleConfigureStages = () => {
