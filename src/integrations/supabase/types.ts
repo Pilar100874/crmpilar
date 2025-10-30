@@ -2385,33 +2385,33 @@ export type Database = {
       whatsapp_config: {
         Row: {
           business_account_id: string | null
-          business_token: string
+          business_token: string | null
           created_at: string | null
           estabelecimento_id: string | null
           id: string
-          phone_number_id: string
+          phone_number_id: string | null
           updated_at: string | null
           waha_api_key: string | null
           waha_url: string | null
         }
         Insert: {
           business_account_id?: string | null
-          business_token: string
+          business_token?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
-          phone_number_id: string
+          phone_number_id?: string | null
           updated_at?: string | null
           waha_api_key?: string | null
           waha_url?: string | null
         }
         Update: {
           business_account_id?: string | null
-          business_token?: string
+          business_token?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
-          phone_number_id?: string
+          phone_number_id?: string | null
           updated_at?: string | null
           waha_api_key?: string | null
           waha_url?: string | null

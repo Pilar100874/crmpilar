@@ -404,8 +404,6 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
             estabelecimento_id: estabelecimentoId,
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
-            business_token: '',
-            phone_number_id: '',
           } as any);
 
         if (error) throw error;
