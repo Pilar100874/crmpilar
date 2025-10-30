@@ -24,7 +24,9 @@ import {
   Tag,
   Filter,
   Grid,
-  List
+  List,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
 import {
   Select,
@@ -33,6 +35,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 
 interface POSViewProps {
@@ -45,10 +61,9 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
   const [empresas, setEmpresas] = useState<any[]>([]);
-  const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
-  const [buscaEmpresa, setBuscaEmpresa] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmpresa, setSelectedEmpresa] = useState<string>("");
+  const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
   const [cartItems, setCartItems] = useState<Map<string, { produto: Produto; quantity: number }>>(new Map());
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("cart");
@@ -77,20 +92,6 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
       loadOrcamento(orcamentoId);
     }
   }, [orcamentoId]);
-
-  useEffect(() => {
-    // Filtrar empresas quando a busca muda
-    if (buscaEmpresa.trim() === "") {
-      setEmpresasFiltradas(empresas);
-    } else {
-      const busca = buscaEmpresa.toLowerCase();
-      const filtradas = empresas.filter(empresa => 
-        empresa.nome_fantasia?.toLowerCase().includes(busca) ||
-        empresa.cnpj?.replace(/\D/g, '').includes(busca.replace(/\D/g, ''))
-      );
-      setEmpresasFiltradas(filtradas);
-    }
-  }, [buscaEmpresa, empresas]);
 
   const loadProdutos = async () => {
     try {
@@ -137,7 +138,6 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
 
       if (error) throw error;
       setEmpresas(data || []);
-      setEmpresasFiltradas(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar empresas:', error);
     }
@@ -337,7 +337,6 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
       // Limpar carrinho
       setCartItems(new Map());
       setSelectedEmpresa("");
-      setBuscaEmpresa("");
       setActiveTab("share");
     } catch (error: any) {
       console.error('Erro ao finalizar orçamento:', error);
@@ -776,26 +775,60 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             <label className="text-xs font-medium text-slate-400 mb-2 block">
               Empresa
             </label>
-            <div className="space-y-2">
-              <Input
-                placeholder="Buscar empresa por nome ou CNPJ..."
-                value={buscaEmpresa}
-                onChange={(e) => setBuscaEmpresa(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white h-10"
-              />
-              <Select value={selectedEmpresa} onValueChange={setSelectedEmpresa}>
-                <SelectTrigger className="bg-slate-700 border-slate-600 text-white h-10">
-                  <SelectValue placeholder="Selecione a empresa..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {empresasFiltradas.map((empresa) => (
-                    <SelectItem key={empresa.id} value={empresa.id}>
-                      {empresa.nome_fantasia} {empresa.cnpj && `- ${empresa.cnpj}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openEmpresaCombobox}
+                  className="w-full justify-between bg-slate-700 border-slate-600 text-white hover:bg-slate-600 hover:text-white h-10"
+                >
+                  {selectedEmpresa
+                    ? empresas.find((empresa) => empresa.id === selectedEmpresa)?.nome_fantasia
+                    : "Selecione a empresa..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0 bg-slate-800 border-slate-700">
+                <Command className="bg-slate-800">
+                  <CommandInput 
+                    placeholder="Buscar empresa por nome ou CNPJ..." 
+                    className="bg-slate-800 text-white border-slate-700"
+                  />
+                  <CommandList>
+                    <CommandEmpty className="text-slate-400 py-6 text-center text-sm">
+                      Nenhuma empresa encontrada.
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {empresas.map((empresa) => (
+                        <CommandItem
+                          key={empresa.id}
+                          value={`${empresa.nome_fantasia} ${empresa.cnpj || ''}`}
+                          onSelect={() => {
+                            setSelectedEmpresa(empresa.id);
+                            setOpenEmpresaCombobox(false);
+                          }}
+                          className="text-white hover:bg-slate-700 cursor-pointer"
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedEmpresa === empresa.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span>{empresa.nome_fantasia}</span>
+                            {empresa.cnpj && (
+                              <span className="text-xs text-slate-400">{empresa.cnpj}</span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Botões de Ação */}
