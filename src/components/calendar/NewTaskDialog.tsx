@@ -439,7 +439,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
           {/* Campo de busca de contato */}
           <div className="relative">
             <Input
-              placeholder="Contato ou lead"
+              placeholder="Pesquisar e vincular uma empresa ou contato"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -464,19 +464,28 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
             
             {/* Lista de contatos */}
             {showContactList && filteredContacts.length > 0 && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {filteredContacts.map((contact) => (
                   <div
                     key={contact.id}
-                    className="p-3 hover:bg-accent cursor-pointer border-b last:border-b-0"
+                    className="p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 transition-colors"
                     onClick={() => handleSelectContact(contact)}
                   >
                     <div className="font-medium text-sm">{contact.name}</div>
-                    {contact.customFields?.company_name && (
-                      <div className="text-xs text-muted-foreground">
-                        {contact.customFields.company_name}
-                      </div>
-                    )}
+                    <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                      {contact.customFields?.company_name && (
+                        <div>Empresa: {contact.customFields.company_name}</div>
+                      )}
+                      {contact.customFields?.cpf_cnpj && (
+                        <div>CPF/CNPJ: {contact.customFields.cpf_cnpj}</div>
+                      )}
+                      {contact.phone && (
+                        <div>Tel: {contact.phone}</div>
+                      )}
+                      {contact.email && (
+                        <div>Email: {contact.email}</div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

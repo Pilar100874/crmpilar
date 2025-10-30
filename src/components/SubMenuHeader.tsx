@@ -10,7 +10,7 @@ export function SubMenuHeader({ title, subtitle, onOpenSubmenu }: SubMenuHeaderP
   return (
     <button
       onClick={onOpenSubmenu}
-      className="inline-flex items-center gap-2 px-3 py-1.5 hover:bg-accent rounded-sm transition-colors group"
+      className="inline-flex items-center gap-2 px-3 py-1.5 hover:bg-muted/50 rounded-sm transition-colors group"
     >
       <h2 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
         {title}
