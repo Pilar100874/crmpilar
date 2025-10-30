@@ -377,11 +377,7 @@ export default function Layout({ children }: LayoutProps) {
                           />
                           
                           {/* Submenu panel */}
-                          <div className={`fixed left-20 top-0 bottom-0 w-72 border-r border-border/30 shadow-sm z-50 overflow-y-auto ${
-                            item.id === "Conteúdos" || item.id === "Bot Test" || item.id === "Email" 
-                              ? "bg-muted/20" 
-                              : "bg-card"
-                          }`}>
+                          <div className="fixed left-20 top-0 bottom-0 w-72 bg-card border-r border-border/30 shadow-sm z-50 overflow-y-auto">
                             <div className="p-8 pt-10">
                               <h3 className="text-lg font-bold text-foreground mb-4">
                                 {item.title}
