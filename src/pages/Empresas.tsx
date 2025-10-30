@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
+import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 
 interface CustomField {
   id: string;
@@ -279,6 +280,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
   const [criarNovoContato, setCriarNovoContato] = useState(false);
+  const [showNovoContatoDialog, setShowNovoContatoDialog] = useState(false);
   
   // Estados para segmentos
   const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string; estabelecimento_id: string }>>([]);
@@ -1390,9 +1392,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setCriarNovoContato(true);
-                      setBuscaContato("");
-                      setContatosFiltrados([]);
+                      setShowNovoContatoDialog(true);
                     }}
                   >
                     + Novo
@@ -1594,6 +1594,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog para adicionar novo contato */}
+      <NovoContatoDialog 
+        open={showNovoContatoDialog} 
+        onOpenChange={setShowNovoContatoDialog}
+      />
     </>
   );
 }
