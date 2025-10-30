@@ -26,6 +26,7 @@ import { SortableFieldItem } from "@/components/config/SortableFieldItem";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { APIImportDialog } from "@/components/config/APIImportDialog";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
+import { ContatoFieldsCRUD } from "@/components/config/ContatoFieldsCRUD";
 import {
   DndContext,
   closestCenter,
@@ -2006,193 +2007,18 @@ export default function Contatos() {
       <Sheet open={showConfigPanel} onOpenChange={setShowConfigPanel}>
         <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="config-description">
           <SheetHeader>
-            <SheetTitle>Configurações de Campos</SheetTitle>
-            <p id="config-description" className="sr-only">Configure campos personalizados e máscaras para contatos e empresas</p>
+            <SheetTitle>Configurações de Campos de Contato</SheetTitle>
+            <p id="config-description" className="sr-only">Configure campos personalizados para contatos</p>
           </SheetHeader>
           
           <div className="mt-6">
-            <Card className="p-6">
-              <div className="space-y-6">
-                <Tabs defaultValue="contact" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="contact">Campos de Contato</TabsTrigger>
-                    <TabsTrigger value="company">Campos de Empresa</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="contact" className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-4">Campos Obrigatórios</h3>
-                      <div className="space-y-2 bg-muted/30 rounded-lg p-4">
-                        <DndContext
-                          sensors={sensors}
-                          collisionDetection={closestCenter}
-                          onDragEnd={(event: DragEndEvent) => {
-                            const { active, over } = event;
-                            if (over && active.id !== over.id) {
-                              setContactFields((items) => {
-                                const oldIndex = items.findIndex((item) => item.id === active.id);
-                                const newIndex = items.findIndex((item) => item.id === over.id);
-                                return arrayMove(items, oldIndex, newIndex);
-                              });
-                            }
-                          }}
-                        >
-                          <SortableContext items={contactFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-                            {contactFields.map((field) => (
-                              <SortableFieldItem
-                                key={field.id}
-                                field={field}
-                                onRemove={(id) => setContactFields(contactFields.filter(f => f.id !== id))}
-                                onToggleSearchable={(id) => {
-                                  setContactFields(contactFields.map(f => 
-                                    f.id === id ? { ...f, searchable: !f.searchable } : f
-                                  ));
-                                }}
-                              />
-                            ))}
-                          </SortableContext>
-                        </DndContext>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t">
-                      <h3 className="text-sm font-medium mb-4">Adicionar Novo Campo</h3>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Nome do campo"
-                          value={newFieldLabel}
-                          onChange={(e) => setNewFieldLabel(e.target.value)}
-                        />
-                        <Select value={newFieldType} onValueChange={(val) => setNewFieldType(val as CustomField["type"])}>
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">Texto</SelectItem>
-                            <SelectItem value="email">E-mail</SelectItem>
-                            <SelectItem value="phone">Telefone</SelectItem>
-                            <SelectItem value="textarea">Texto Longo</SelectItem>
-                            <SelectItem value="select">Seleção</SelectItem>
-                            <SelectItem value="checkbox">Checkbox</SelectItem>
-                            <SelectItem value="date">Data</SelectItem>
-                            <SelectItem value="number">Número</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          onClick={() => {
-                            if (newFieldLabel.trim()) {
-                              const newField: CustomField = {
-                                id: newFieldLabel.toLowerCase().replace(/\s+/g, '_'),
-                                label: newFieldLabel,
-                                type: newFieldType,
-                                category: "contact",
-                                required: false,
-                              };
-                              setContactFields([...contactFields, newField]);
-                              setNewFieldLabel("");
-                              setNewFieldType("text");
-                            }
-                          }}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Adicionar campo
-                        </Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="company" className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-4">Campos Obrigatórios</h3>
-                      <div className="space-y-2 bg-muted/30 rounded-lg p-4">
-                        <DndContext
-                          sensors={sensors}
-                          collisionDetection={closestCenter}
-                          onDragEnd={(event: DragEndEvent) => {
-                            const { active, over } = event;
-                            if (over && active.id !== over.id) {
-                              setCompanyFields((items) => {
-                                const oldIndex = items.findIndex((item) => item.id === active.id);
-                                const newIndex = items.findIndex((item) => item.id === over.id);
-                                return arrayMove(items, oldIndex, newIndex);
-                              });
-                            }
-                          }}
-                        >
-                          <SortableContext items={companyFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-                            {companyFields.map((field) => (
-                              <SortableFieldItem
-                                key={field.id}
-                                field={field}
-                                onRemove={(id) => setCompanyFields(companyFields.filter(f => f.id !== id))}
-                                onToggleSearchable={(id) => {
-                                  setCompanyFields(companyFields.map(f => 
-                                    f.id === id ? { ...f, searchable: !f.searchable } : f
-                                  ));
-                                }}
-                              />
-                            ))}
-                          </SortableContext>
-                        </DndContext>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t">
-                      <h3 className="text-sm font-medium mb-4">Adicionar Novo Campo</h3>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Nome do campo"
-                          value={newFieldLabel}
-                          onChange={(e) => setNewFieldLabel(e.target.value)}
-                        />
-                        <Select value={newFieldType} onValueChange={(val) => setNewFieldType(val as CustomField["type"])}>
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">Texto</SelectItem>
-                            <SelectItem value="email">E-mail</SelectItem>
-                            <SelectItem value="phone">Telefone</SelectItem>
-                            <SelectItem value="textarea">Texto Longo</SelectItem>
-                            <SelectItem value="select">Seleção</SelectItem>
-                            <SelectItem value="checkbox">Checkbox</SelectItem>
-                            <SelectItem value="date">Data</SelectItem>
-                            <SelectItem value="number">Número</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          onClick={() => {
-                            if (newFieldLabel.trim()) {
-                              const newField: CustomField = {
-                                id: newFieldLabel.toLowerCase().replace(/\s+/g, '_'),
-                                label: newFieldLabel,
-                                type: newFieldType,
-                                category: "company",
-                                required: false,
-                              };
-                              setCompanyFields([...companyFields, newField]);
-                              setNewFieldLabel("");
-                              setNewFieldType("text");
-                            }
-                          }}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Adicionar campo
-                        </Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-                
-                <div className="mt-6">
-                  <FieldMaskConfig
-                    availableFields={[...contactFields, ...companyFields].map(f => ({ id: f.id, label: f.label }))}
-                    masks={fieldMasks}
-                    onMasksChange={setFieldMasks}
-                  />
-                </div>
-              </div>
-            </Card>
+            <ContatoFieldsCRUD 
+              estabelecimentoId={estabelecimentoId} 
+              onChanged={() => {
+                console.log('🔄 ContatoFieldsCRUD onChange triggered');
+                loadContacts();
+              }}
+            />
           </div>
         </SheetContent>
       </Sheet>
