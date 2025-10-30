@@ -1097,7 +1097,7 @@ function BotBuilderContent() {
             onToggleExpanded={setIsBlockLibraryExpanded}
           />
 
-          <div className={`${showSimulator ? "flex-1" : "flex-1"} relative`} ref={reactFlowWrapper}>
+          <div className={`${showSimulator ? "mr-96" : ""} flex-1 relative`} ref={reactFlowWrapper}>
             <ReactFlow
               nodes={nodes.map(node => ({
                 ...node,
@@ -1253,7 +1253,7 @@ function BotBuilderContent() {
           </div>
 
           {showSimulator && (
-            <div className="w-96 flex flex-col bg-card backdrop-blur-sm border-l border-border">
+            <div className="fixed right-0 top-0 w-96 h-screen flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 pt-[64px]">
               <FlowSimulator
                 nodes={nodes}
                 edges={edges}
