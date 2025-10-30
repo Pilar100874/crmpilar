@@ -39,6 +39,23 @@ export default function Todos() {
   const [contatoEmpresas, setContatoEmpresas] = useState<Record<string, any[]>>({});
   const [empresaContatos, setEmpresaContatos] = useState<Record<string, any[]>>({});
 
+  // Gerenciamento de colunas da tabela - Todos (aba combinada)
+  const [todosTableColumns, setTodosTableColumns] = useState<TableColumn[]>(() => {
+    const saved = localStorage.getItem("todosAllTableColumns");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return [
+      { id: "tipo", label: "Tipo", visible: true, width: 80, locked: true },
+      { id: "nome", label: "Nome", visible: true, width: 250, locked: true },
+      { id: "email", label: "E-mail", visible: true, width: 250 },
+      { id: "telefone", label: "Telefone", visible: true, width: 150 },
+      { id: "status", label: "Status", visible: true, width: 120 },
+    ];
+  });
+
   // Gerenciamento de colunas da tabela - Contatos
   const [contatosTableColumns, setContatosTableColumns] = useState<TableColumn[]>(() => {
     const saved = localStorage.getItem("todosContatosTableColumns");
@@ -73,6 +90,10 @@ export default function Todos() {
       { id: "cidade", label: "Cidade", visible: true, width: 150 },
     ];
   });
+
+  useEffect(() => {
+    localStorage.setItem("todosAllTableColumns", JSON.stringify(todosTableColumns));
+  }, [todosTableColumns]);
 
   useEffect(() => {
     localStorage.setItem("todosContatosTableColumns", JSON.stringify(contatosTableColumns));
@@ -185,6 +206,7 @@ export default function Todos() {
     });
   };
 
+  const visibleTodosColumns = todosTableColumns.filter(col => col.visible);
   const visibleContatosColumns = contatosTableColumns.filter(col => col.visible);
   const visibleEmpresasColumns = empresasTableColumns.filter(col => col.visible);
 
@@ -266,11 +288,11 @@ export default function Todos() {
                 <TableHeader>
                   <TableRow className="border-b border-border/40 bg-muted/30">
                     <TableHead className="w-[30px] font-semibold"></TableHead>
-                    <TableHead className="w-[50px] font-semibold">Tipo</TableHead>
-                    <TableHead className="font-semibold">Nome</TableHead>
-                    <TableHead className="font-semibold">E-mail</TableHead>
-                    <TableHead className="font-semibold">Telefone</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    {visibleTodosColumns.map(col => (
+                      <TableHead key={col.id} className="font-semibold" style={{ width: col.width }}>
+                        {col.label}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -299,31 +321,63 @@ export default function Todos() {
                               </Button>
                             )}
                           </TableCell>
-                          <TableCell>
-                            {item.type === 'contato' ? (
-                              <User className="w-4 h-4 text-blue-500" />
-                            ) : (
-                              <Building2 className="w-4 h-4 text-purple-500" />
-                            )}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {item.type === 'contato' ? item.nome : item.nome_fantasia}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{item.email || "-"}</TableCell>
-                          <TableCell className="text-muted-foreground">{item.telefone || "-"}</TableCell>
-                          <TableCell>
-                            {item.type === 'contato' ? (
-                              <Badge variant={item.tipo_operador ? "default" : "secondary"}>
-                                {item.tipo_operador ? "Cliente" : "Prospect"}
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline">Empresa</Badge>
-                            )}
-                          </TableCell>
+                          {visibleTodosColumns.map(col => {
+                            if (col.id === "tipo") {
+                              return (
+                                <TableCell key={col.id}>
+                                  {item.type === 'contato' ? (
+                                    <User className="w-4 h-4 text-blue-500" />
+                                  ) : (
+                                    <Building2 className="w-4 h-4 text-purple-500" />
+                                  )}
+                                </TableCell>
+                              );
+                            }
+                            
+                            if (col.id === "nome") {
+                              return (
+                                <TableCell key={col.id} className="font-medium">
+                                  {item.type === 'contato' ? item.nome : item.nome_fantasia}
+                                </TableCell>
+                              );
+                            }
+                            
+                            if (col.id === "email") {
+                              return (
+                                <TableCell key={col.id} className="text-muted-foreground">
+                                  {item.email || "-"}
+                                </TableCell>
+                              );
+                            }
+                            
+                            if (col.id === "telefone") {
+                              return (
+                                <TableCell key={col.id} className="text-muted-foreground">
+                                  {item.telefone || "-"}
+                                </TableCell>
+                              );
+                            }
+                            
+                            if (col.id === "status") {
+                              return (
+                                <TableCell key={col.id}>
+                                  {item.type === 'contato' ? (
+                                    <Badge variant={item.tipo_operador ? "default" : "secondary"}>
+                                      {item.tipo_operador ? "Cliente" : "Prospect"}
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline">Empresa</Badge>
+                                  )}
+                                </TableCell>
+                              );
+                            }
+                            
+                            return <TableCell key={col.id}>-</TableCell>;
+                          })}
                         </TableRow>
                         {isExpanded && hasVinculos && (
                           <TableRow>
-                            <TableCell colSpan={6} className="bg-muted/20 p-4">
+                            <TableCell colSpan={visibleTodosColumns.length + 1} className="bg-muted/20 p-4">
                               <div className="ml-8">
                                 <p className="text-sm font-medium text-muted-foreground mb-2">
                                   {item.type === 'contato' ? 'Empresas Vinculadas:' : 'Contatos Vinculados:'}
@@ -576,31 +630,36 @@ export default function Todos() {
 
       {/* Sheet de Configurações */}
       <Sheet open={showConfigSheet} onOpenChange={setShowConfigSheet}>
-        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Configurar Colunas da Tabela</SheetTitle>
+            <SheetTitle>Configurar Colunas das Tabelas</SheetTitle>
           </SheetHeader>
 
-          <Tabs defaultValue="contatos" className="mt-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="contatos">Tabela de Contatos</TabsTrigger>
-              <TabsTrigger value="empresas">Tabela de Empresas</TabsTrigger>
-            </TabsList>
+          <div className="space-y-8 mt-6">
+            <div>
+              <h3 className="text-lg font-medium mb-4">Tabela Todos</h3>
+              <TableColumnsConfig
+                columns={todosTableColumns}
+                onColumnsChange={setTodosTableColumns}
+              />
+            </div>
 
-            <TabsContent value="contatos" className="mt-4">
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium mb-4">Tabela Contatos</h3>
               <TableColumnsConfig
                 columns={contatosTableColumns}
                 onColumnsChange={setContatosTableColumns}
               />
-            </TabsContent>
+            </div>
 
-            <TabsContent value="empresas" className="mt-4">
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium mb-4">Tabela Empresas</h3>
               <TableColumnsConfig
                 columns={empresasTableColumns}
                 onColumnsChange={setEmpresasTableColumns}
               />
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     </div>
