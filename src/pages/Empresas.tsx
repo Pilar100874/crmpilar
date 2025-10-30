@@ -59,7 +59,6 @@ interface Contato {
 
 export default function Empresas() {
   const [showForm, setShowForm] = useState(false);
-  const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -956,14 +955,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               <p className="text-sm text-muted-foreground mt-1">Gerencie sua carteira de clientes</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowConfigPanel(true)}
-                className="gap-2 border-border/40 hover:bg-accent/50"
-              >
-                <Settings2 className="w-4 h-4" />
-                Configurar Campos
-              </Button>
               <Button onClick={() => {
                 setShowForm(true);
                 setEditingEmpresa(null);
@@ -1199,27 +1190,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           )}
         </div>
 
-        {/* Panel de Configurações de Campos */}
-        <Sheet open={showConfigPanel} onOpenChange={setShowConfigPanel}>
-          <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="config-description">
-            <SheetHeader>
-              <SheetTitle>Configurações de Campos de Empresa</SheetTitle>
-              <p id="config-description" className="sr-only">Configure campos personalizados para cadastro de empresas</p>
-            </SheetHeader>
-            
-            <div className="mt-6">
-              <EmpresaFieldsCRUD estabelecimentoId={estabelecimentoId} onChanged={async () => {
-                console.log('📢 onChanged callback triggered');
-                if (estabelecimentoId) {
-                  await loadFieldConfigs(estabelecimentoId);
-                  console.log('✅ Configs recarregadas após mudança');
-                } else {
-                  console.log('⚠️ No estabelecimentoId found');
-                }
-              }} />
-            </div>
-          </SheetContent>
-        </Sheet>
         </div>
       ) : (
         <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
