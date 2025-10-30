@@ -50,9 +50,10 @@ interface SortableFieldItemProps {
   field: CustomField;
   onRemove: (id: string) => void;
   onToggleRequired: (id: string) => void;
+  onChanged?: () => void;
 }
 
-const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldItemProps) => {
+const SortableFieldItem = ({ field, onRemove, onToggleRequired, onChanged }: SortableFieldItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: field.id });
   const [isLocked, setIsLocked] = useState(field.locked);
 
@@ -78,6 +79,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
       if (error) throw error;
 
       setIsLocked(!isLocked);
+      onChanged?.();
       const { toast } = await import("sonner");
       toast.success("Campo atualizado");
     } catch (error) {
@@ -154,7 +156,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired }: SortableFieldI
   );
 };
 
-export const EmpresaFieldsCRUD = () => {
+export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -411,6 +413,7 @@ export const EmpresaFieldsCRUD = () => {
       toast.success("Campo adicionado com sucesso");
       loadFields();
       resetForm();
+      onChanged?.();
     } catch (error) {
       console.error("Error adding field:", error);
       toast.error("Erro ao adicionar campo");
@@ -440,9 +443,10 @@ export const EmpresaFieldsCRUD = () => {
 
       toast.success("Campo removido");
       loadFields();
+      onChanged?.();
     } catch (error) {
-      console.error("Error removing field:", error);
-      toast.error("Erro ao remover campo");
+      console.error("Error updating field:", error);
+      toast.error("Erro ao atualizar campo");
     }
   };
 
@@ -459,6 +463,7 @@ export const EmpresaFieldsCRUD = () => {
       if (error) throw error;
 
       loadFields();
+      onChanged?.();
     } catch (error) {
       console.error("Error updating field:", error);
       toast.error("Erro ao atualizar campo");
@@ -637,6 +642,7 @@ export const EmpresaFieldsCRUD = () => {
                       field={field}
                       onRemove={handleRemoveField}
                       onToggleRequired={handleToggleRequired}
+                      onChanged={onChanged}
                     />
                   ))}
                 </div>

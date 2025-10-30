@@ -1052,7 +1052,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </SheetHeader>
             
             <div className="mt-6">
-              <EmpresaFieldsCRUD />
+              <EmpresaFieldsCRUD onChanged={() => {
+                if (estabelecimentoId) {
+                  loadFieldConfigs(estabelecimentoId);
+                }
+              }} />
             </div>
           </SheetContent>
         </Sheet>
