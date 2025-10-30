@@ -348,8 +348,10 @@ export const PropertiesPanel = ({
             Object.entries(updates).forEach(([key, value]) => {
               handleConfigChange(key, value);
             });
-          }} 
+          }}
         />;
+      case "crm_agenda_rapida":
+        return <BlockConfigs.AgendaRapidaConfig {...configProps} />;
 
       case "start":
         return (

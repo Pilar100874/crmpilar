@@ -56,6 +56,10 @@ export {
   CRMCadastroEmpresaConfig,
 } from './CRMBlocks';
 
+export {
+  AgendaRapidaConfig,
+} from './AgendaRapidaConfig';
+
 // Additional Blocks
 export { ABTestConfig } from './ABTestConfig';
 export { BotJumpConfig } from './BotJumpConfig';

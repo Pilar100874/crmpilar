@@ -33,7 +33,8 @@ export type NodeType =
   | "webhook"
   | "trigger_automation"
   | "dynamic_data"
-  | "crm_cadastro_empresa";
+  | "crm_cadastro_empresa"
+  | "crm_agenda_rapida";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -344,6 +345,18 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       updateExisting: true,
       outputVariable: "cliente_novo",
       fieldMappings: {}
+    },
+  },
+  {
+    type: "crm_agenda_rapida",
+    label: "Agenda rápida",
+    description: "Criar tarefa na agenda após consultar empresa",
+    icon: "Calendar",
+    color: "text-success",
+    defaultData: { 
+      cnpjVariable: "cnpj",
+      observacaoVariable: "observacao",
+      outputVariable: "tarefa_criada"
     },
   },
 ];

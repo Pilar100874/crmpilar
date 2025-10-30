@@ -49,7 +49,7 @@ const blockCategories = [
   {
     name: "Integração CRM",
     icon: "Building2",
-    blocks: ["crm_cadastro_empresa"] as NodeType[],
+    blocks: ["crm_cadastro_empresa", "crm_agenda_rapida"] as NodeType[],
   },
 ];
 
