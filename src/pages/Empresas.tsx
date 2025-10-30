@@ -486,21 +486,57 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const confirmDeleteEmpresa = async () => {
     if (!empresaToDelete) return;
 
-    const { error } = await supabase
-      .from('empresas')
-      .delete()
-      .eq('id', empresaToDelete.id);
+    try {
+      // Verificar se há orçamentos vinculados
+      const { data: orcamentos, error: orcamentosError } = await supabase
+        .from('orcamentos')
+        .select('id')
+        .eq('empresa_id', empresaToDelete.id)
+        .limit(1);
 
-    if (error) {
+      if (orcamentosError) {
+        console.error('Erro ao verificar orçamentos:', orcamentosError);
+      }
+
+      if (orcamentos && orcamentos.length > 0) {
+        toast.error("Não é possível excluir esta empresa pois existem orçamentos vinculados a ela");
+        setDeleteDialogOpen(false);
+        setEmpresaToDelete(null);
+        return;
+      }
+
+      // Deletar vínculos com contatos
+      const { error: vinculosError } = await supabase
+        .from('customer_empresas')
+        .delete()
+        .eq('empresa_id', empresaToDelete.id);
+
+      if (vinculosError) {
+        toast.error("Erro ao remover vínculos da empresa");
+        console.error(vinculosError);
+        return;
+      }
+
+      // Deletar a empresa
+      const { error } = await supabase
+        .from('empresas')
+        .delete()
+        .eq('id', empresaToDelete.id);
+
+      if (error) {
+        toast.error("Erro ao excluir empresa");
+        console.error(error);
+        return;
+      }
+
+      toast.success("Empresa excluída!");
+      setDeleteDialogOpen(false);
+      setEmpresaToDelete(null);
+      if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
+    } catch (err) {
       toast.error("Erro ao excluir empresa");
-      console.error(error);
-      return;
+      console.error(err);
     }
-
-    toast.success("Empresa excluída!");
-    setDeleteDialogOpen(false);
-    setEmpresaToDelete(null);
-    if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
   };
 
   const handleFieldChange = (field: string, value: any) => {
