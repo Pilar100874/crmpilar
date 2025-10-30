@@ -680,6 +680,10 @@ export class FlowEngine {
     console.log("📦 Dados da empresa (tabela):", empresaData);
     console.log("📦 Custom fields:", customFields);
 
+    // Definir automaticamente o tipo como "Pessoa Jurídica"
+    customFields.tipo = "Pessoa Jurídica";
+    console.log("✅ Tipo definido automaticamente como 'Pessoa Jurídica'");
+
     // Adicionar custom_fields se houver
     if (Object.keys(customFields).length > 0) {
       empresaData.custom_fields = customFields;
