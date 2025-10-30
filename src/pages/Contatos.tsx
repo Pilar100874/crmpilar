@@ -101,7 +101,7 @@ export default function Contatos() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   
-  // Gerenciamento de colunas da tabela
+  // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
     const saved = localStorage.getItem("contactsTableColumns");
     if (saved) {
@@ -111,7 +111,7 @@ export default function Contatos() {
         const hasActions = parsed.some((col: TableColumn) => col.id === 'actions');
         if (!hasActions) {
           return [
-            { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
+            { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
             ...parsed
           ];
         }
@@ -124,16 +124,11 @@ export default function Contatos() {
       }
     }
     return [
-      { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
+      { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
       { id: "name", label: "Nome", visible: true, width: 250, locked: true },
-      { id: "company", label: "Empresa", visible: true, width: 200 },
       { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
       { id: "email", label: "E-mail", visible: true, width: 250 },
-      { id: "position", label: "Cargo", visible: false, width: 150 },
-      { id: "cpf_cnpj", label: "CPF/CNPJ", visible: false, width: 180 },
-      { id: "company_fantasia", label: "Nome Fantasia", visible: false, width: 200 },
-      { id: "city", label: "Cidade", visible: false, width: 150 },
-      { id: "state", label: "UF", visible: false, width: 80 },
+      { id: "position", label: "Cargo", visible: true, width: 150 },
     ];
   });
 
@@ -1493,11 +1488,10 @@ export default function Contatos() {
                             document.addEventListener('mousemove', handleMouseMove);
                             document.addEventListener('mouseup', handleMouseUp);
                           }}
-                        />
-                      </th>
-                    ))}
-                    <th className="w-[50px] p-3"></th>
-                  </tr>
+                         />
+                       </th>
+                     ))}
+                   </tr>
                 </thead>
                 <tbody>
                   {sortedContacts.map((contact) => (
@@ -1506,55 +1500,69 @@ export default function Contatos() {
                         if (column.id === 'actions') {
                           return (
                             <td key="actions" className="p-3 sticky left-0 bg-background border-r border-border">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={async () => {
-                                  setEditingContact(contact);
-                                  setFormData({
-                                    name: contact.name,
-                                    phone: contact.phone,
-                                    email: contact.email,
-                                    position: contact.position,
-                                    ...contact.customFields
-                                  });
-                                  
-                                  // Carregar empresas vinculadas
-                                  const { data: vinculos } = await supabase
-                                    .from('customer_empresas')
-                                    .select(`
-                                      id,
-                                      is_primary,
-                                      empresas:empresa_id (
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  onClick={async () => {
+                                    setEditingContact(contact);
+                                    setFormData({
+                                      name: contact.name,
+                                      phone: contact.phone,
+                                      email: contact.email,
+                                      position: contact.position,
+                                      ...contact.customFields
+                                    });
+                                    
+                                    // Carregar empresas vinculadas
+                                    const { data: vinculos } = await supabase
+                                      .from('customer_empresas')
+                                      .select(`
                                         id,
-                                        nome_fantasia,
-                                        nome,
-                                        cnpj,
-                                        custom_fields
-                                      )
-                                    `)
-                                    .eq('customer_id', contact.id);
-                                  
-                                  if (vinculos) {
-                                    const empresasFormatadas = vinculos.map(v => ({
-                                      id: v.empresas.id,
-                                      nome_fantasia: v.empresas.nome_fantasia,
-                                      nome: v.empresas.nome,
-                                      cnpj: v.empresas.cnpj,
-                                      custom_fields: v.empresas.custom_fields,
-                                      is_primary: v.is_primary,
-                                      vinculo_id: v.id
-                                    }));
-                                    setEmpresasVinculadas(empresasFormatadas);
-                                  }
-                                  
-                                  setShowForm(true);
-                                }}
-                                title="Editar cadastro completo"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
+                                        is_primary,
+                                        empresas:empresa_id (
+                                          id,
+                                          nome_fantasia,
+                                          nome,
+                                          cnpj,
+                                          custom_fields
+                                        )
+                                      `)
+                                      .eq('customer_id', contact.id);
+                                    
+                                    if (vinculos) {
+                                      const empresasFormatadas = vinculos.map(v => ({
+                                        id: v.empresas.id,
+                                        nome_fantasia: v.empresas.nome_fantasia,
+                                        nome: v.empresas.nome,
+                                        cnpj: v.empresas.cnpj,
+                                        custom_fields: v.empresas.custom_fields,
+                                        is_primary: v.is_primary,
+                                        vinculo_id: v.id
+                                      }));
+                                      setEmpresasVinculadas(empresasFormatadas);
+                                    }
+                                    
+                                    setShowForm(true);
+                                  }}
+                                  title="Editar cadastro completo"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteContact(contact.id);
+                                  }}
+                                  title="Excluir contato"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </td>
                           );
                         }
@@ -1590,14 +1598,10 @@ export default function Contatos() {
                             <div className="flex items-center justify-between min-w-0">
                               <span className={`truncate ${column.id === 'name' ? 'font-medium text-primary' : ''}`}>
                                 {column.id === 'name' && contact.name}
-                                {column.id === 'company' && (contact.company || "-")}
                                 {column.id === 'phone' && contact.phone}
                                 {column.id === 'email' && contact.email}
-                                {column.id === 'position' && contact.position}
-                                {column.id === 'cpf_cnpj' && (contact.customFields?.cpf_cnpj || "-")}
-                                {column.id === 'company_fantasia' && (contact.customFields?.company_fantasia || "-")}
-                                {column.id === 'city' && (contact.customFields?.city || "-")}
-                                {column.id === 'state' && (contact.customFields?.state || "-")}
+                                {column.id === 'position' && (contact.position || "-")}
+                                {!['name', 'phone', 'email', 'position'].includes(column.id) && (contact.customFields?.[column.id] || "-")}
                               </span>
                               <Button
                                 size="icon"
@@ -1607,7 +1611,6 @@ export default function Contatos() {
                                   e.stopPropagation();
                                   let value = "";
                                   if (column.id === 'name') value = contact.name;
-                                  else if (column.id === 'company') value = contact.company || "";
                                   else if (column.id === 'phone') value = contact.phone;
                                   else if (column.id === 'email') value = contact.email;
                                   else if (column.id === 'position') value = contact.position;
@@ -1623,19 +1626,6 @@ export default function Contatos() {
                         </td>
                         );
                       })}
-                      <td className="p-3">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteContact(contact.id);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
