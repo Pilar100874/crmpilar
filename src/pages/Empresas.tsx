@@ -280,6 +280,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
   const [criarNovoContato, setCriarNovoContato] = useState(false);
+  
+  // Estados para segmentos
+  const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string; estabelecimento_id: string }>>([]);
+  const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
 
   // Lookup hooks
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
@@ -294,6 +298,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         fetchEmpresas(estabId);
         fetchContatos(estabId);
         loadFieldConfigs(estabId);
+        fetchSegmentos(estabId);
       }
     };
     fetchEstabelecimento();
@@ -327,6 +332,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
 
     setContatos(data || []);
+  };
+  
+  const fetchSegmentos = async (estabId: string) => {
+    const { data, error } = await supabase
+      .from('segmentos')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .order('nome');
+
+    if (error) {
+      console.error('Erro ao carregar segmentos:', error);
+      return;
+    }
+
+    setSegmentos(data || []);
   };
 
   // Filtrar contatos na busca
@@ -1226,6 +1246,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Contatos Vinculados
             </TabsTrigger>
+            <TabsTrigger 
+              value="segmentos"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Segmentos
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="empresa" className="space-y-6">
@@ -1456,6 +1482,72 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Salvar
               </Button>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="segmentos" className="p-6">
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Segmentos da Empresa</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Selecione um ou mais segmentos para categorizar esta empresa.
+                  </p>
+                </div>
+
+                {segmentos.length > 0 ? (
+                  <div className="space-y-2">
+                    {segmentos.map((segmento) => (
+                      <div key={segmento.id} className="flex items-center space-x-3 p-3 border rounded-md hover:bg-accent transition-colors">
+                        <Checkbox
+                          id={`seg-tab-${segmento.id}`}
+                          checked={segmentosSelecionados.includes(segmento.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSegmentosSelecionados([...segmentosSelecionados, segmento.id]);
+                            } else {
+                              setSegmentosSelecionados(segmentosSelecionados.filter(id => id !== segmento.id));
+                            }
+                          }}
+                        />
+                        <Label
+                          htmlFor={`seg-tab-${segmento.id}`}
+                          className="text-base font-normal cursor-pointer flex-1"
+                        >
+                          {segmento.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground mb-4">
+                      Nenhum segmento cadastrado
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Configure segmentos nas configurações do estabelecimento para poder categorizar suas empresas.
+                    </p>
+                  </div>
+                )}
+
+                {segmentosSelecionados.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Segmentos selecionados: <span className="font-semibold">{segmentosSelecionados.length}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {segmentosSelecionados.map((segId) => {
+                        const seg = segmentos.find(s => s.id === segId);
+                        return seg ? (
+                          <Badge key={segId} variant="secondary">
+                            {seg.nome}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
           </TabsContent>
         </Tabs>
         </div>
