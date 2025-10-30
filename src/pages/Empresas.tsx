@@ -124,7 +124,7 @@ export default function Empresas() {
     { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: true },
   ]);
 
-  const [contactFields] = useState<CustomField[]>([
+  const [contactFields, setContactFields] = useState<CustomField[]>([
     { id: "contact_name", label: "Nome", type: "text", category: "contact", required: true, locked: true },
     { id: "contact_phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
     { id: "contact_email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
@@ -297,6 +297,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         fetchEmpresas(estabId);
         fetchContatos(estabId);
         loadFieldConfigs(estabId);
+        loadContactFieldConfigs(estabId);
         fetchSegmentos(estabId);
       }
     };
