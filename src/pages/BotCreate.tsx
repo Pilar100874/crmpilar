@@ -103,6 +103,19 @@ export default function BotCreate() {
 
   const handleSessionChange = async (botId: string, sessionId: string) => {
     try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      // Buscar configuração WAHA
+      const { data: config } = await supabase
+        .from('whatsapp_config')
+        .select('waha_url, waha_api_key')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .maybeSingle();
+
       // Limpar vinculação anterior
       const previousSession = whatsappSessions.find(s => s.bot_flow_id === botId);
       if (previousSession) {
@@ -114,10 +127,42 @@ export default function BotCreate() {
 
       // Atribuir nova sessão
       if (sessionId) {
+        const session = whatsappSessions.find(s => s.id === sessionId);
+        
         await supabase
           .from("whatsapp_sessions")
           .update({ bot_flow_id: botId })
           .eq("id", sessionId);
+        
+        // Configurar webhook no WAHA
+        if (config?.waha_url && config?.waha_api_key && session) {
+          try {
+            const webhookUrl = `https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/whatsapp-webhook`;
+            
+            // Configurar webhook usando a API do WAHA
+            const webhookResponse = await fetch(`${config.waha_url}/api/webhooks`, {
+              method: 'POST',
+              headers: {
+                'X-Api-Key': config.waha_api_key,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                url: webhookUrl,
+                events: ['message'],
+                session: session.session_name
+              })
+            });
+
+            if (webhookResponse.ok) {
+              console.log("Webhook configurado com sucesso no WAHA");
+            } else {
+              console.warn("Não foi possível configurar o webhook no WAHA:", await webhookResponse.text());
+            }
+          } catch (webhookError) {
+            console.error("Erro ao configurar webhook no WAHA:", webhookError);
+            // Não exibe erro ao usuário pois o bot pode funcionar sem webhook configurado via UI
+          }
+        }
         
         toast.success("Número WhatsApp associado ao bot!");
       } else {
