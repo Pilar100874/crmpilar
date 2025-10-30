@@ -2391,6 +2391,8 @@ export type Database = {
           id: string
           phone_number_id: string
           updated_at: string | null
+          waha_api_key: string | null
+          waha_url: string | null
         }
         Insert: {
           business_account_id?: string | null
@@ -2400,6 +2402,8 @@ export type Database = {
           id?: string
           phone_number_id: string
           updated_at?: string | null
+          waha_api_key?: string | null
+          waha_url?: string | null
         }
         Update: {
           business_account_id?: string | null
@@ -2409,6 +2413,8 @@ export type Database = {
           id?: string
           phone_number_id?: string
           updated_at?: string | null
+          waha_api_key?: string | null
+          waha_url?: string | null
         }
         Relationships: [
           {

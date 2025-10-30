@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Layout } from "@/components/Layout";
+import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,9 +86,10 @@ export default function WhatsAppConfig() {
           .single();
 
         if (configData) {
-          setConfig(configData);
-          setWahaUrl(configData.waha_url);
-          setWahaApiKey(configData.waha_api_key || "");
+          const config = configData as any;
+          setConfig(config);
+          setWahaUrl(config.waha_url || "");
+          setWahaApiKey(config.waha_api_key || "");
         }
 
         await refreshSessions();
@@ -136,7 +137,7 @@ export default function WhatsAppConfig() {
           .update({
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
-          })
+          } as any)
           .eq("id", config.id);
       } else {
         await supabase
@@ -145,7 +146,7 @@ export default function WhatsAppConfig() {
             estabelecimento_id: estabelecimentoId,
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
-          });
+          } as any);
       }
       
       toast.success("Configuração salva com sucesso!");
