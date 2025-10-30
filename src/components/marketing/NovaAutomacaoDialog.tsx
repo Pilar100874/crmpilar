@@ -21,6 +21,7 @@ interface NovaAutomacaoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  automationToEdit?: any;
 }
 
 interface WebhookVariable {
@@ -41,6 +42,7 @@ export default function NovaAutomacaoDialog({
   open,
   onOpenChange,
   onSuccess,
+  automationToEdit,
 }: NovaAutomacaoDialogProps) {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -87,6 +89,38 @@ export default function NovaAutomacaoDialog({
     }
   }, [webhookSelecionado, webhooks]);
 
+  useEffect(() => {
+    if (open && automationToEdit) {
+      setNome(automationToEdit.name || "");
+      setDescricao(automationToEdit.description || "");
+      const cfg = automationToEdit.config || {};
+      setTipoDisparo(cfg.tipo_disparo || "manual");
+      setLocalDisponivel(cfg.local_disponivel || "");
+      setAreaAutomatica(cfg.area || "");
+      setEventoAutomatico(cfg.evento || "");
+      setPeriodicidade(cfg.periodicidade || "");
+      setDiaSemana(cfg.dia_semana || "");
+      setDiaMes(cfg.dia_mes || "");
+      setHorario(cfg.horario || "");
+      setWebhookSelecionado(cfg.webhook_id || "");
+      setVariaveisWebhook(cfg.variaveis || {});
+    } else if (open && !automationToEdit) {
+      // Resetar ao abrir para criar nova
+      setNome("");
+      setDescricao("");
+      setTipoDisparo("manual");
+      setLocalDisponivel("");
+      setAreaAutomatica("");
+      setEventoAutomatico("");
+      setPeriodicidade("");
+      setDiaSemana("");
+      setDiaMes("");
+      setHorario("");
+      setWebhookSelecionado("");
+      setVariaveisWebhook({});
+    }
+  }, [open, automationToEdit]);
+
   const loadWebhooks = async () => {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
@@ -97,7 +131,7 @@ export default function NovaAutomacaoDialog({
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("active", true)
-        .eq("local_uso", "automacoes");
+        .or('usage_locations.cs.{automacoes},usage_locations.cs.{campanha}');
 
       if (error) throw error;
       
@@ -157,25 +191,39 @@ export default function NovaAutomacaoDialog({
         config.horario = horario;
       }
 
-      const { error } = await supabase
-        .from("marketing_automations" as any)
-        .insert({
-          name: nome.trim(),
-          description: descricao.trim(),
-          config: config,
-          active: true,
-          estabelecimento_id: estabelecimentoId,
-        });
+      if (automationToEdit?.id) {
+        const { error } = await supabase
+          .from("marketing_automations" as any)
+          .update({
+            name: nome.trim(),
+            description: descricao.trim(),
+            config: config,
+          })
+          .eq("id", automationToEdit.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Automação atualizada com sucesso!");
+      } else {
+        const { error } = await supabase
+          .from("marketing_automations" as any)
+          .insert({
+            name: nome.trim(),
+            description: descricao.trim(),
+            config: config,
+            active: true,
+            estabelecimento_id: estabelecimentoId,
+          });
 
-      toast.success("Automação criada com sucesso!");
-      resetForm();
+        if (error) throw error;
+        toast.success("Automação criada com sucesso!");
+      }
+
+      // Resetar estado e fechar
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      console.error("Erro ao criar automação:", error);
-      toast.error("Erro ao criar automação");
+      console.error("Erro ao salvar automação:", error);
+      toast.error("Erro ao salvar automação");
     } finally {
       setIsCreating(false);
     }
