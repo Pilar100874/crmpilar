@@ -108,6 +108,7 @@ export default function Contatos() {
   const [duplicateContact, setDuplicateContact] = useState<any | null>(null);
   const [duplicateField, setDuplicateField] = useState<'phone' | 'email' | null>(null);
   const [shouldCheckDuplicate, setShouldCheckDuplicate] = useState(true);
+  const [isClosingForm, setIsClosingForm] = useState(false);
   
   // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
@@ -1303,6 +1304,7 @@ export default function Contatos() {
     setFormData(baseFormData);
     setSegmentosSelecionados(contact.segmentos || []);
     setShouldCheckDuplicate(true);
+    setIsClosingForm(false);
     setShowForm(true);
   };
 
@@ -1345,7 +1347,7 @@ export default function Contatos() {
 
   // Função para verificar duplicidade de WhatsApp ou Email
   const checkDuplicate = async (field: 'phone' | 'email', value: string) => {
-    if (!value || !estabelecimentoId || !shouldCheckDuplicate) return;
+    if (!value || !estabelecimentoId || !shouldCheckDuplicate || isClosingForm) return;
     
     // Se estamos editando e o valor não mudou, não verificar
     if (editingContact && editingContact[field] === value) return;
@@ -1783,6 +1785,7 @@ export default function Contatos() {
               </Button>
               <Button onClick={() => {
                 setShouldCheckDuplicate(true);
+                setIsClosingForm(false);
                 setShowForm(true);
                 setEditingContact(null);
                 setFormData({});
@@ -1982,6 +1985,7 @@ export default function Contatos() {
                                     }
                                     
                                     setShouldCheckDuplicate(true);
+                                    setIsClosingForm(false);
                                     setShowForm(true);
                                   }}
                                   title="Editar cadastro completo"
@@ -2136,9 +2140,12 @@ export default function Contatos() {
             variant="ghost" 
             size="icon" 
             onClick={() => {
-              setShouldCheckDuplicate(false);
+              setIsClosingForm(true);
               setShowForm(false);
-              setTimeout(() => setShouldCheckDuplicate(true), 100);
+              setTimeout(() => {
+                setIsClosingForm(false);
+                setShouldCheckDuplicate(true);
+              }, 100);
             }}
             className="hover:bg-accent/50"
           >
@@ -2208,7 +2215,14 @@ export default function Contatos() {
             <div className="flex justify-end gap-3">
               <Button 
                 variant="outline" 
-                onClick={() => { setShouldCheckDuplicate(false); setShowForm(false); setTimeout(() => setShouldCheckDuplicate(true), 100); }}
+                onClick={() => {
+                  setIsClosingForm(true);
+                  setShowForm(false);
+                  setTimeout(() => {
+                    setIsClosingForm(false);
+                    setShouldCheckDuplicate(true);
+                  }, 100);
+                }}
                 className="border-border/40"
               >
                 Cancelar
@@ -2406,9 +2420,12 @@ export default function Contatos() {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  setShouldCheckDuplicate(false);
+                  setIsClosingForm(true);
                   setShowForm(false);
-                  setTimeout(() => setShouldCheckDuplicate(true), 100);
+                  setTimeout(() => {
+                    setIsClosingForm(false);
+                    setShouldCheckDuplicate(true);
+                  }, 100);
                 }}
                 className="border-border/40"
               >
