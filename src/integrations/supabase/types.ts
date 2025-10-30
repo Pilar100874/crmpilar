@@ -2420,6 +2420,57 @@ export type Database = {
           },
         ]
       }
+      whatsapp_sessions: {
+        Row: {
+          bot_flow_id: string | null
+          created_at: string
+          estabelecimento_id: string | null
+          id: string
+          phone_number: string | null
+          qr_code: string | null
+          session_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bot_flow_id?: string | null
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          phone_number?: string | null
+          qr_code?: string | null
+          session_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bot_flow_id?: string | null
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          phone_number?: string | null
+          qr_code?: string | null
+          session_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_sessions_bot_flow_id_fkey"
+            columns: ["bot_flow_id"]
+            isOneToOne: false
+            referencedRelation: "bot_flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_sessions_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
