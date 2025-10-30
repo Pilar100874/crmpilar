@@ -27,7 +27,7 @@ import { TableColumnsConfig, type TableColumn } from "@/components/config/TableC
 import { APIImportDialog } from "@/components/config/APIImportDialog";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { ContatoFieldsCRUD } from "@/components/config/ContatoFieldsCRUD";
-import { NovaEmpresaDialog } from "@/components/NovaEmpresaDialog";
+
 import {
   DndContext,
   closestCenter,
@@ -198,7 +198,6 @@ export default function Contatos() {
   const [buscaEmpresa, setBuscaEmpresa] = useState<string>("");
   const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
   const [empresasVinculadas, setEmpresasVinculadas] = useState<any[]>([]);
-  const [showNovaEmpresaDialog, setShowNovaEmpresaDialog] = useState(false);
   
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -254,6 +253,43 @@ export default function Contatos() {
       }
     } catch (error) {
       console.error("❌ Erro ao carregar campos customizados:", error);
+    }
+  };
+
+  // Carregar campos customizados de empresa do banco
+  const loadCompanyFields = async (estabId: string) => {
+    try {
+      const { data: campos, error } = await supabase
+        .from("form_field_configs")
+        .select("*")
+        .eq("form_type", "empresa")
+        .eq("estabelecimento_id", estabId)
+        .order("field_order", { ascending: true });
+
+      if (error) {
+        console.error("❌ Erro ao buscar campos de empresa:", error);
+        return;
+      }
+
+      if (campos && campos.length > 0) {
+        const mappedFields: CustomField[] = campos.map((campo) => {
+          const options = campo.options as any;
+          return {
+            id: campo.field_id,
+            label: campo.field_label,
+            type: campo.field_type as CustomField["type"],
+            category: "company",
+            options: options?.options || [],
+            required: campo.required || false,
+            locked: campo.locked || false,
+          };
+        });
+        
+        console.log("✅ Campos de empresa carregados:", mappedFields.length);
+        setCompanyFields(mappedFields);
+      }
+    } catch (error) {
+      console.error("❌ Erro ao carregar campos de empresa:", error);
     }
   };
 
@@ -319,6 +355,7 @@ export default function Contatos() {
         
         // Carregar campos customizados para o formulário
         await loadContactFields(estabId);
+        await loadCompanyFields(estabId);
         
         // Carregar colunas baseadas nos campos configurados
         await loadTableColumns(estabId);
@@ -641,6 +678,143 @@ export default function Contatos() {
     }
   };
 
+  const renderCompanyField = (field: CustomField) => {
+    const value = formData[field.id] || "";
+    
+    const displayValue = applyFieldMask(field.id, value);
+    
+    const handleCompanyFieldChange = (newValue: string) => {
+      let processedValue = newValue;
+      
+      if (fieldErrors[field.id]) {
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field.id];
+          return newErrors;
+        });
+      }
+      
+      if (field.id === "cpf_cnpj") {
+        const companyType = formData.company_type;
+        if (companyType === "Pessoa Física") {
+          processedValue = maskCPF(newValue);
+        } else if (companyType === "Pessoa Jurídica") {
+          processedValue = maskCNPJ(newValue);
+        }
+      } else if (field.id === "cep") {
+        processedValue = maskCEP(newValue);
+      } else if (field.type === "phone") {
+        processedValue = maskWhatsApp(newValue);
+      }
+      
+      if (field.id === "company_type") {
+        const companyFieldIds = companyFields.map(f => f.id).filter(id => id !== "company_type");
+        const clearedData: Record<string, any> = { ...formData, [field.id]: newValue };
+        
+        companyFieldIds.forEach(id => {
+          clearedData[id] = "";
+        });
+        
+        if (newValue === "Pessoa Física") {
+          clearedData.inscricao = "ISENTO";
+        }
+        
+        setFormData(clearedData);
+      } else {
+        setFormData({ ...formData, [field.id]: processedValue });
+      }
+    };
+    
+    const handleCompanyFieldBlur = () => {
+      const cleanValue = value.replace(/\D/g, '');
+      
+      if (field.id === "cpf_cnpj") {
+        const companyType = formData.company_type;
+        if (companyType === "Pessoa Física") {
+          if (cleanValue.length === 11 && !validateCPF(value)) {
+            toast.error("CPF inválido");
+          }
+        } else if (companyType === "Pessoa Jurídica") {
+          if (cleanValue.length === 14) {
+            if (!validateCNPJ(value)) {
+              toast.error("CNPJ inválido");
+            } else {
+              handleCNPJLookup(value);
+            }
+          }
+        }
+      }
+      
+      if (field.id === "cep" && cleanValue.length === 8) {
+        if (!validateCEP(value)) {
+          toast.error("CEP inválido");
+        } else {
+          handleCEPLookup(value);
+        }
+      }
+    };
+    
+    switch (field.type) {
+      case "textarea":
+        return (
+          <Textarea
+            id={field.id}
+            placeholder="..."
+            value={value}
+            onChange={(e) => handleCompanyFieldChange(e.target.value)}
+            onBlur={handleCompanyFieldBlur}
+            required={field.required}
+            className={fieldErrors[field.id] ? "border-red-500" : ""}
+          />
+        );
+      case "select":
+        return (
+          <Select value={value} onValueChange={(val) => handleCompanyFieldChange(val)}>
+            <SelectTrigger className={fieldErrors[field.id] ? "border-red-500" : ""}>
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={field.id}
+              checked={value === true}
+              onCheckedChange={(checked) => handleCompanyFieldChange(String(checked))}
+            />
+            <label htmlFor={field.id} className="text-sm">Sim</label>
+          </div>
+        );
+      default:
+        return (
+          <div className="relative">
+            <Input
+              id={field.id}
+              type={field.type === "email" ? "email" : field.type === "number" ? "number" : "text"}
+              placeholder="..."
+              value={displayValue}
+              onChange={(e) => handleCompanyFieldChange(e.target.value)}
+              onBlur={handleCompanyFieldBlur}
+              required={field.required}
+              className={fieldErrors[field.id] ? "border-red-500" : ""}
+            />
+            {fieldErrors[field.id] && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
+            )}
+            {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+            ) : null}
+          </div>
+        );
+    }
+  };
+
   const renderField = (field: CustomField) => {
     const value = formData[field.id] || "";
     
@@ -926,6 +1100,7 @@ export default function Contatos() {
           cidade: formData.city,
           estado: formData.state,
           cep: formData.cep,
+          bairro: formData.neighborhood,
           custom_fields: {}
         };
 
@@ -2080,7 +2255,7 @@ export default function Contatos() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setShowNovaEmpresaDialog(true);
+                      setCriarNovaEmpresa(true);
                     }}
                   >
                     + Nova
@@ -2111,12 +2286,12 @@ export default function Contatos() {
               </Card>
             )}
 
-            {/* Formulário de Nova Empresa */}
+            {/* Formulário de Nova Empresa - igual à tela de Empresas */}
             {criarNovaEmpresa && (
               <Card className="p-4 mb-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Nova Empresa
+                    Cadastrar Empresa
                   </h3>
                   <Button
                     variant="ghost"
@@ -2124,7 +2299,13 @@ export default function Contatos() {
                     className="h-7 px-2"
                     onClick={() => {
                       setCriarNovaEmpresa(false);
-                      setFormData({});
+                      setFormData(prev => {
+                        const newData = { ...prev };
+                        companyFields.forEach(field => {
+                          delete newData[field.id];
+                        });
+                        return newData;
+                      });
                     }}
                   >
                     <X className="w-3 h-3" />
@@ -2145,7 +2326,7 @@ export default function Contatos() {
                         {field.label} {field.required && '*'}
                       </Label>
                       <div className={field.id === 'company_type' || field.id === 'cpf_cnpj' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
-                        {renderField(field)}
+                        {renderCompanyField(field)}
                       </div>
                     </div>
                   ))}
@@ -2346,11 +2527,6 @@ export default function Contatos() {
         </SheetContent>
       </Sheet>
 
-      {/* Dialog para adicionar nova empresa */}
-      <NovaEmpresaDialog 
-        open={showNovaEmpresaDialog} 
-        onOpenChange={setShowNovaEmpresaDialog}
-      />
     </div>
   );
 }
