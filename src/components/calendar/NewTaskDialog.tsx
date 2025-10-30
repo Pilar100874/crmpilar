@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { X, CalendarIcon, Clock, Pencil, Trash2 } from "lucide-react";
+import { X, CalendarIcon, Clock, Pencil, Trash2, Building2, User } from "lucide-react";
 import { format, addDays, addMinutes, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -15,14 +15,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface Contact {
   id: string;
   name: string;
-  company: string;
+  type: 'contato' | 'empresa';
+  company?: string;
   phone: string;
   email: string;
-  customFields: Record<string, any>;
+  customFields?: Record<string, any>;
+  cnpj?: string;
+  razaoSocial?: string;
 }
 
 interface NewTaskDialogProps {
@@ -64,16 +69,61 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [contactExistingTasks, setContactExistingTasks] = useState<any[]>([]);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
-  // Carregar contatos do localStorage
+  // Carregar contatos e empresas do Supabase
   useEffect(() => {
     if (open) {
-      const savedContacts = localStorage.getItem("contacts");
-      if (savedContacts) {
-        const parsedContacts = JSON.parse(savedContacts);
-        setContacts(parsedContacts.filter((c: Contact) => c.customFields?.active !== false));
-      }
+      loadContactsAndCompanies();
     }
   }, [open]);
+
+  const loadContactsAndCompanies = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
+    const allContacts: Contact[] = [];
+
+    // Buscar contatos
+    const { data: contatosData } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('estabelecimento_id', estabId);
+
+    if (contatosData) {
+      contatosData.forEach(contato => {
+        allContacts.push({
+          id: contato.id,
+          name: contato.nome,
+          type: 'contato',
+          phone: contato.telefone || '',
+          email: contato.email || '',
+          customFields: (contato.custom_fields as Record<string, any>) || {},
+        });
+      });
+    }
+
+    // Buscar empresas
+    const { data: empresasData } = await supabase
+      .from('empresas')
+      .select('*')
+      .eq('estabelecimento_id', estabId);
+
+    if (empresasData) {
+      empresasData.forEach(empresa => {
+        allContacts.push({
+          id: empresa.id,
+          name: empresa.nome_fantasia,
+          type: 'empresa',
+          phone: empresa.telefone || '',
+          email: empresa.email || '',
+          cnpj: empresa.cnpj || '',
+          razaoSocial: empresa.nome || '',
+          customFields: (empresa.custom_fields as Record<string, any>) || {},
+        });
+      });
+    }
+
+    setContacts(allContacts);
+  };
 
   // Resetar ao fechar
   useEffect(() => {
@@ -94,22 +144,40 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     }
   }, [open, initialDate]);
 
-  // Filtrar contatos baseado na busca unificada
+  // Filtrar contatos e empresas baseado na busca
   const filteredContacts = contacts.filter(contact => {
     if (!searchQuery) return true;
     
     const searchTerm = searchQuery.toLowerCase();
-    const cpfCnpj = (contact.customFields?.cpf_cnpj || "").toString().toLowerCase();
-    const companyName = (contact.customFields?.company_name || "").toString().toLowerCase();
-    const companyFantasia = (contact.customFields?.company_fantasia || "").toString().toLowerCase();
+    
+    // Para empresas
+    if (contact.type === 'empresa') {
+      const nomeFantasia = contact.name.toLowerCase();
+      const razaoSocial = (contact.razaoSocial || '').toLowerCase();
+      const cnpj = (contact.cnpj || '').toLowerCase();
+      const telefone = (contact.phone || '').toLowerCase();
+      const email = (contact.email || '').toLowerCase();
+      
+      return (
+        nomeFantasia.includes(searchTerm) ||
+        razaoSocial.includes(searchTerm) ||
+        cnpj.includes(searchTerm) ||
+        telefone.includes(searchTerm) ||
+        email.includes(searchTerm)
+      );
+    }
+    
+    // Para contatos
+    const nome = contact.name.toLowerCase();
+    const telefone = (contact.phone || '').toLowerCase();
+    const email = (contact.email || '').toLowerCase();
+    const cpfCnpj = (contact.customFields?.cpf_cnpj || '').toString().toLowerCase();
     
     return (
-      contact.name.toLowerCase().includes(searchTerm) ||
-      cpfCnpj.includes(searchTerm) ||
-      companyName.includes(searchTerm) ||
-      companyFantasia.includes(searchTerm) ||
-      contact.phone.includes(searchTerm) ||
-      contact.email.toLowerCase().includes(searchTerm)
+      nome.includes(searchTerm) ||
+      telefone.includes(searchTerm) ||
+      email.includes(searchTerm) ||
+      cpfCnpj.includes(searchTerm)
     );
   });
 
@@ -471,12 +539,22 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
                     className="p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 transition-colors"
                     onClick={() => handleSelectContact(contact)}
                   >
-                    <div className="font-medium text-sm">{contact.name}</div>
-                    <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
-                      {contact.customFields?.company_name && (
-                        <div>Empresa: {contact.customFields.company_name}</div>
+                    <div className="flex items-center gap-2">
+                      {contact.type === 'empresa' ? (
+                        <Building2 className="w-4 h-4 text-primary" />
+                      ) : (
+                        <User className="w-4 h-4 text-blue-500" />
                       )}
-                      {contact.customFields?.cpf_cnpj && (
+                      <div className="font-medium text-sm">{contact.name}</div>
+                    </div>
+                    <div className="text-xs text-muted-foreground space-y-0.5 mt-1 ml-6">
+                      {contact.type === 'empresa' && contact.razaoSocial && contact.razaoSocial !== contact.name && (
+                        <div>Razão Social: {contact.razaoSocial}</div>
+                      )}
+                      {contact.type === 'empresa' && contact.cnpj && (
+                        <div>CNPJ: {contact.cnpj}</div>
+                      )}
+                      {contact.type === 'contato' && contact.customFields?.cpf_cnpj && (
                         <div>CPF/CNPJ: {contact.customFields.cpf_cnpj}</div>
                       )}
                       {contact.phone && (
