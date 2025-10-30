@@ -26,9 +26,14 @@ export default function MarketingAutomacoes() {
 
   const loadAutomacoes = async () => {
     try {
+      console.log("Carregando automações...");
       const estabelecimentoId = await getEstabelecimentoId();
+      console.log("Estabelecimento ID:", estabelecimentoId);
+      
       if (!estabelecimentoId) {
+        console.error("Estabelecimento ID não encontrado");
         toast.error("Não foi possível identificar o estabelecimento");
+        setLoading(false);
         return;
       }
 
@@ -38,8 +43,16 @@ export default function MarketingAutomacoes() {
         .eq("estabelecimento_id", estabelecimentoId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      console.log("Dados retornados:", data);
+      console.log("Erro (se houver):", error);
+
+      if (error) {
+        console.error("Erro na query:", error);
+        throw error;
+      }
+      
       setAutomacoes(data || []);
+      console.log("Automações carregadas com sucesso:", data?.length || 0);
     } catch (error) {
       console.error("Erro ao carregar automações:", error);
       toast.error("Erro ao carregar automações");
