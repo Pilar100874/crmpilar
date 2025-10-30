@@ -18,8 +18,6 @@ import { Webhook, ShieldCheck, Store, MessageSquare, Save, ExternalLink, Megapho
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
-import { WebhooksCRUD } from "@/components/config/WebhooksCRUD";
-import ChatWebhook from "@/pages/ChatWebhook";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -677,33 +675,6 @@ export default function Config() {
                     )}
                   </CardContent>
                 </Card>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="webhooks-config" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Webhook className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Webhooks</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Configure e teste webhooks para integração com sistemas externos
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Configuração de Webhooks</h3>
-                  <WebhooksCRUD />
-                </div>
-                
-                <div className="border-t pt-6 mt-6">
-                  <h3 className="text-lg font-semibold mb-4">Testar Webhooks</h3>
-                  <ChatWebhook />
-                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
