@@ -78,7 +78,7 @@ export default function Empresas() {
       } catch {}
     }
     return [
-      { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
+      { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
       { id: "nome_fantasia", label: "Nome Fantasia", visible: true, width: 250, locked: true },
       { id: "nome", label: "Nome", visible: true, width: 250 },
       { id: "cnpj", label: "CNPJ", visible: true, width: 180 },
@@ -1023,7 +1023,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         />
                       </th>
                     ))}
-                    <th className="w-[50px] p-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1032,16 +1031,30 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       {tableColumns.filter(col => col.visible).map((column, index) => {
                         if (column.id === 'actions') {
                           return (
-                            <td key="actions" className="p-4 sticky left-0 bg-card group-hover:bg-muted/30 border-r border-border/40">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleEditEmpresa(empresa)}
-                                title="Editar"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
+                            <td key="actions" className="p-3 sticky left-0 bg-card group-hover:bg-muted/30 border-r border-border/40">
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                                  onClick={() => handleEditEmpresa(empresa)}
+                                  title="Editar empresa"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteEmpresa(empresa.id);
+                                  }}
+                                  title="Excluir empresa"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </td>
                           );
                         }
@@ -1084,19 +1097,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           </td>
                         );
                       })}
-                      <td className="p-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteEmpresa(empresa.id);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
