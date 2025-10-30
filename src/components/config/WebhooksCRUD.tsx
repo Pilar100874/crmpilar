@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { Pencil, Trash2, Plus, X, Webhook, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -808,505 +810,559 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
               Novo Webhook
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-2xl">
                 {editingWebhook ? "Editar" : "Criar"} Webhook
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Nome *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Ex: Notificar N8N"
-                  />
-                </div>
+            
+            <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
+              <Tabs defaultValue="basic" className="flex-1 flex flex-col">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
+                  <TabsTrigger value="output">Variáveis de Saída</TabsTrigger>
+                  <TabsTrigger value="input">Variáveis de Entrada</TabsTrigger>
+                </TabsList>
 
-                <div>
-                  <Label htmlFor="type">Tipo *</Label>
-                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {webhookTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                <ScrollArea className="flex-1 pr-4">
+                  {/* Informações Básicas */}
+                  <TabsContent value="basic" className="space-y-6 mt-0">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">Configurações Gerais</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="name">Nome *</Label>
+                            <Input
+                              id="name"
+                              value={formData.name}
+                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                              placeholder="Ex: Notificar N8N"
+                            />
+                          </div>
 
-              <div className="grid grid-cols-4 gap-4">
-                <div className="col-span-3">
-                  <Label htmlFor="url">URL *</Label>
-                  <Input
-                    id="url"
-                    value={formData.url}
-                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                    placeholder="https://exemplo.com/webhook"
-                  />
-                </div>
+                          <div>
+                            <Label htmlFor="type">Tipo *</Label>
+                            <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {webhookTypes.map((type) => (
+                                  <SelectItem key={type.id} value={type.id}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
 
-                <div>
-                  <Label htmlFor="method">Método *</Label>
-                  <Select value={formData.method} onValueChange={(value) => setFormData({ ...formData, method: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="GET">GET</SelectItem>
-                      <SelectItem value="POST">POST</SelectItem>
-                      <SelectItem value="PUT">PUT</SelectItem>
-                      <SelectItem value="PATCH">PATCH</SelectItem>
-                      <SelectItem value="DELETE">DELETE</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                      <Separator />
 
-              <div>
-                <Label htmlFor="description">Descrição *</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descreva o propósito deste webhook"
-                  rows={3}
-                />
-              </div>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">Endpoint</h3>
+                        <div className="grid grid-cols-4 gap-4">
+                          <div className="col-span-3">
+                            <Label htmlFor="url">URL *</Label>
+                            <Input
+                              id="url"
+                              value={formData.url}
+                              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                              placeholder="https://exemplo.com/webhook"
+                            />
+                          </div>
 
-              <div>
-                <Label>Locais de Uso *</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {usageLocations.map((location) => (
-                    <div key={location.id} className="flex items-center space-x-2">
+                          <div>
+                            <Label htmlFor="method">Método *</Label>
+                            <Select value={formData.method} onValueChange={(value) => setFormData({ ...formData, method: value })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="GET">GET</SelectItem>
+                                <SelectItem value="POST">POST</SelectItem>
+                                <SelectItem value="PUT">PUT</SelectItem>
+                                <SelectItem value="PATCH">PATCH</SelectItem>
+                                <SelectItem value="DELETE">DELETE</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          <Label htmlFor="description">Descrição *</Label>
+                          <Textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            placeholder="Descreva o propósito deste webhook"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">Locais de Uso *</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {usageLocations.map((location) => (
+                            <Card key={location.id} className="p-3 hover:bg-accent/50 transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <Checkbox
+                                  id={`location-${location.id}`}
+                                  checked={formData.usageLocations.includes(location.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setFormData({
+                                        ...formData,
+                                        usageLocations: [...formData.usageLocations, location.id],
+                                      });
+                                    } else {
+                                      setFormData({
+                                        ...formData,
+                                        usageLocations: formData.usageLocations.filter((id) => id !== location.id),
+                                      });
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={`location-${location.id}`} className="cursor-pointer font-medium">
+                                  {location.name}
+                                </Label>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Variáveis de Saída */}
+                  <TabsContent value="output" className="space-y-6 mt-0">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">Variáveis de Saída</h3>
+                        <p className="text-sm text-muted-foreground">Configure as variáveis que serão enviadas no webhook</p>
+                      </div>
                       <Checkbox
-                        id={`location-${location.id}`}
-                        checked={formData.usageLocations.includes(location.id)}
+                        id="hasVariables"
+                        checked={formData.hasVariables}
                         onCheckedChange={(checked) => {
-                          if (checked) {
-                            setFormData({
-                              ...formData,
-                              usageLocations: [...formData.usageLocations, location.id],
-                            });
-                          } else {
-                            setFormData({
-                              ...formData,
-                              usageLocations: formData.usageLocations.filter((id) => id !== location.id),
-                            });
+                          setFormData({ ...formData, hasVariables: checked as boolean });
+                          if (!checked) {
+                            setFormData(prev => ({ ...prev, variables: [] }));
                           }
                         }}
                       />
-                      <Label htmlFor={`location-${location.id}`} className="cursor-pointer">
-                        {location.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="hasVariables"
-                  checked={formData.hasVariables}
-                  onCheckedChange={(checked) => {
-                    setFormData({ ...formData, hasVariables: checked as boolean });
-                    if (!checked) {
-                      setFormData(prev => ({ ...prev, variables: [] }));
-                    }
-                  }}
-                />
-                <Label htmlFor="hasVariables" className="cursor-pointer">
-                  Configurar Variáveis de Saída
-                </Label>
-              </div>
-
-              {formData.hasVariables && (
-                <Card className="p-4 space-y-4 bg-secondary/20">
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="varName">Nome da Variável *</Label>
-                        <Input
-                          id="varName"
-                          value={newVariableName}
-                          onChange={(e) => setNewVariableName(e.target.value)}
-                          placeholder="Ex: user_id, status"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="varType">Tipo *</Label>
-                        <Select 
-                          value={newVariableType} 
-                          onValueChange={setNewVariableType}
-                          disabled={formData.variables.length > 0 && !editingVariableId}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="json">JSON Body</SelectItem>
-                            <SelectItem value="query">Query Param</SelectItem>
-                            <SelectItem value="header">Header</SelectItem>
-                            <SelectItem value="path">Path Param</SelectItem>
-                            <SelectItem value="form-data">Form Data</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
                     </div>
 
-                    {newVariableType === "json" && (
-                      <div>
-                        <Label htmlFor="varFormat">Formato JSON</Label>
-                        <Select value={newVariableFormat} onValueChange={setNewVariableFormat}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="string">String</SelectItem>
-                            <SelectItem value="number">Number</SelectItem>
-                            <SelectItem value="boolean">Boolean</SelectItem>
-                            <SelectItem value="object">Object</SelectItem>
-                            <SelectItem value="array">Array</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
+                    {formData.hasVariables ? (
+                      <div className="space-y-6">
+                        <Card className="p-4 border-2 border-dashed">
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="varName">Nome da Variável *</Label>
+                                <Input
+                                  id="varName"
+                                  value={newVariableName}
+                                  onChange={(e) => setNewVariableName(e.target.value)}
+                                  placeholder="Ex: user_id, status"
+                                />
+                              </div>
 
-                    <div>
-                      <Label htmlFor="varDescription">Descrição</Label>
-                      <Input
-                        id="varDescription"
-                        value={newVariableDescription}
-                        onChange={(e) => setNewVariableDescription(e.target.value)}
-                        placeholder="Descreva o uso desta variável"
-                      />
-                    </div>
+                              <div>
+                                <Label htmlFor="varType">Tipo *</Label>
+                                <Select 
+                                  value={newVariableType} 
+                                  onValueChange={setNewVariableType}
+                                  disabled={formData.variables.length > 0 && !editingVariableId}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="json">JSON Body</SelectItem>
+                                    <SelectItem value="query">Query Param</SelectItem>
+                                    <SelectItem value="header">Header</SelectItem>
+                                    <SelectItem value="path">Path Param</SelectItem>
+                                    <SelectItem value="form-data">Form Data</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
 
-                    <div>
-                      <Label htmlFor="varDefault">Valor Padrão</Label>
-                      {newVariableType === "form-data" ? (
-                        <div>
-                          <input
-                            type="file"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                            id="file-input"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => document.getElementById('file-input')?.click()}
-                            className="w-full"
-                          >
-                            {selectedFile ? selectedFile.name : "Selecionar arquivo"}
-                          </Button>
-                        </div>
-                      ) : (
-                        <Input
-                          id="varDefault"
-                          value={newVariableDefaultValue}
-                          onChange={(e) => setNewVariableDefaultValue(e.target.value)}
-                          placeholder={
-                            newVariableType === "json" && newVariableFormat === "object" ? '{"key": "value"}' :
-                            newVariableType === "json" && newVariableFormat === "array" ? '["item1", "item2"]' :
-                            "Valor padrão"
-                          }
-                        />
-                      )}
-                    </div>
+                            {newVariableType === "json" && (
+                              <div>
+                                <Label htmlFor="varFormat">Formato JSON</Label>
+                                <Select value={newVariableFormat} onValueChange={setNewVariableFormat}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="string">String</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                    <SelectItem value="boolean">Boolean</SelectItem>
+                                    <SelectItem value="object">Object</SelectItem>
+                                    <SelectItem value="array">Array</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
 
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="varRequired"
-                        checked={newVariableRequired}
-                        onCheckedChange={(checked) => setNewVariableRequired(checked as boolean)}
-                      />
-                      <Label htmlFor="varRequired" className="cursor-pointer">
-                        Obrigatório
-                      </Label>
-                    </div>
+                            <div>
+                              <Label htmlFor="varDescription">Descrição</Label>
+                              <Input
+                                id="varDescription"
+                                value={newVariableDescription}
+                                onChange={(e) => setNewVariableDescription(e.target.value)}
+                                placeholder="Descreva o uso desta variável"
+                              />
+                            </div>
 
-                    <Button 
-                      type="button" 
-                      onClick={handleAddVariable}
-                      variant="secondary"
-                      className="w-full"
-                    >
-                      {editingVariableId ? "Atualizar" : "Adicionar"} Variável
-                    </Button>
-                  </div>
-
-                  {formData.variables.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Variáveis Configuradas</Label>
-                      {formData.variables.map((variable) => (
-                        <div key={variable.id} className="flex items-start justify-between gap-2 p-3 bg-background rounded-lg border">
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-mono text-sm font-semibold">{variable.name}</span>
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                {variable.type === "json" ? "JSON" :
-                                variable.type === "query" ? "Query" :
-                                variable.type === "header" ? "Header" :
-                                variable.type === "path" ? "Path" :
-                                "Form Data"}
-                              </span>
-                              {variable.required && (
-                                <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
-                                  Obrigatório
-                                </span>
-                              )}
-                              {variable.format && (
-                                <span className="text-xs bg-secondary px-2 py-0.5 rounded">
-                                  {variable.format}
-                                </span>
+                            <div>
+                              <Label htmlFor="varDefault">Valor Padrão</Label>
+                              {newVariableType === "form-data" ? (
+                                <div>
+                                  <input
+                                    type="file"
+                                    onChange={handleFileSelect}
+                                    className="hidden"
+                                    id="file-input"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => document.getElementById('file-input')?.click()}
+                                    className="w-full"
+                                  >
+                                    {selectedFile ? selectedFile.name : "Selecionar arquivo"}
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Input
+                                  id="varDefault"
+                                  value={newVariableDefaultValue}
+                                  onChange={(e) => setNewVariableDefaultValue(e.target.value)}
+                                  placeholder={
+                                    newVariableType === "json" && newVariableFormat === "object" ? '{"key": "value"}' :
+                                    newVariableType === "json" && newVariableFormat === "array" ? '["item1", "item2"]' :
+                                    "Valor padrão"
+                                  }
+                                />
                               )}
                             </div>
-                            {variable.description && (
-                              <p className="text-xs text-muted-foreground">{variable.description}</p>
-                            )}
-                            {variable.defaultValue && (
-                              <p className="text-xs text-muted-foreground">
-                                Padrão: <span className="font-mono">{variable.defaultValue}</span>
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditVariable(variable)}
-                              disabled={editingVariableId !== null && editingVariableId !== variable.id}
+
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="varRequired"
+                                checked={newVariableRequired}
+                                onCheckedChange={(checked) => setNewVariableRequired(checked as boolean)}
+                              />
+                              <Label htmlFor="varRequired" className="cursor-pointer">
+                                Obrigatório
+                              </Label>
+                            </div>
+
+                            <Button 
+                              type="button" 
+                              onClick={handleAddVariable}
+                              variant="default"
+                              className="w-full"
                             >
-                              <Pencil className="h-4 w-4 text-primary" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteVariable(variable.id)}
-                              disabled={editingVariableId !== null}
-                            >
-                              <X className="h-4 w-4 text-destructive" />
+                              <Plus className="h-4 w-4 mr-2" />
+                              {editingVariableId ? "Atualizar" : "Adicionar"} Variável
                             </Button>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              )}
+                        </Card>
 
-              <div className="flex items-center space-x-2 mt-4">
-                <Checkbox
-                  id="hasInputVariables"
-                  checked={formData.hasInputVariables}
-                  onCheckedChange={(checked) => {
-                    setFormData({ ...formData, hasInputVariables: checked as boolean });
-                    if (!checked) {
-                      setFormData(prev => ({ ...prev, inputVariables: [] }));
-                    }
-                  }}
-                />
-                <Label htmlFor="hasInputVariables" className="cursor-pointer">
-                  Configurar Variáveis de Entrada
-                </Label>
-              </div>
-
-              {formData.hasInputVariables && (
-                <Card className="p-4 space-y-4 bg-secondary/20">
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="inputVarName">Nome da Variável *</Label>
-                        <Input
-                          id="inputVarName"
-                          value={newInputVariableName}
-                          onChange={(e) => setNewInputVariableName(e.target.value)}
-                          placeholder="Ex: user_id, status"
-                        />
+                        {formData.variables.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="font-semibold text-sm">Variáveis Configuradas ({formData.variables.length})</h4>
+                            {formData.variables.map((variable) => (
+                              <Card key={variable.id} className="p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-mono text-sm font-semibold">{variable.name}</span>
+                                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
+                                        {variable.type === "json" ? "JSON" :
+                                        variable.type === "query" ? "Query" :
+                                        variable.type === "header" ? "Header" :
+                                        variable.type === "path" ? "Path" :
+                                        "Form Data"}
+                                      </span>
+                                      {variable.required && (
+                                        <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-md">
+                                          Obrigatório
+                                        </span>
+                                      )}
+                                      {variable.format && (
+                                        <span className="text-xs bg-secondary px-2 py-1 rounded-md">
+                                          {variable.format}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {variable.description && (
+                                      <p className="text-sm text-muted-foreground">{variable.description}</p>
+                                    )}
+                                    {variable.defaultValue && (
+                                      <p className="text-sm text-muted-foreground">
+                                        Padrão: <span className="font-mono text-xs">{variable.defaultValue}</span>
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEditVariable(variable)}
+                                      disabled={editingVariableId !== null && editingVariableId !== variable.id}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteVariable(variable.id)}
+                                      disabled={editingVariableId !== null}
+                                    >
+                                      <X className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
                       </div>
-
-                      <div>
-                        <Label htmlFor="inputVarType">Tipo *</Label>
-                        <Select 
-                          value={newInputVariableType} 
-                          onValueChange={setNewInputVariableType}
-                          disabled={formData.inputVariables.length > 0 && !editingInputVariableId}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="json">JSON Body</SelectItem>
-                            <SelectItem value="query">Query Param</SelectItem>
-                            <SelectItem value="header">Header</SelectItem>
-                            <SelectItem value="path">Path Param</SelectItem>
-                            <SelectItem value="form-data">Form Data</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {newInputVariableType === "json" && (
-                      <div>
-                        <Label htmlFor="inputVarFormat">Formato JSON</Label>
-                        <Select value={newInputVariableFormat} onValueChange={setNewInputVariableFormat}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="string">String</SelectItem>
-                            <SelectItem value="number">Number</SelectItem>
-                            <SelectItem value="boolean">Boolean</SelectItem>
-                            <SelectItem value="object">Object</SelectItem>
-                            <SelectItem value="array">Array</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <p>Ative o checkbox acima para configurar variáveis de saída</p>
                       </div>
                     )}
+                  </TabsContent>
 
-                    <div>
-                      <Label htmlFor="inputVarDescription">Descrição</Label>
-                      <Input
-                        id="inputVarDescription"
-                        value={newInputVariableDescription}
-                        onChange={(e) => setNewInputVariableDescription(e.target.value)}
-                        placeholder="Descreva o uso desta variável"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="inputVarDefault">Valor Padrão</Label>
-                      {newInputVariableType === "form-data" ? (
-                        <div>
-                          <input
-                            type="file"
-                            onChange={handleInputFileSelect}
-                            className="hidden"
-                            id="input-file-input"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => document.getElementById('input-file-input')?.click()}
-                            className="w-full"
-                          >
-                            {selectedInputFile ? selectedInputFile.name : "Selecionar arquivo"}
-                          </Button>
-                        </div>
-                      ) : (
-                        <Input
-                          id="inputVarDefault"
-                          value={newInputVariableDefaultValue}
-                          onChange={(e) => setNewInputVariableDefaultValue(e.target.value)}
-                          placeholder={
-                            newInputVariableType === "json" && newInputVariableFormat === "object" ? '{"key": "value"}' :
-                            newInputVariableType === "json" && newInputVariableFormat === "array" ? '["item1", "item2"]' :
-                            "Valor padrão"
-                          }
-                        />
-                      )}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
+                  {/* Variáveis de Entrada */}
+                  <TabsContent value="input" className="space-y-6 mt-0">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">Variáveis de Entrada</h3>
+                        <p className="text-sm text-muted-foreground">Configure as variáveis que serão recebidas pelo webhook</p>
+                      </div>
                       <Checkbox
-                        id="inputVarRequired"
-                        checked={newInputVariableRequired}
-                        onCheckedChange={(checked) => setNewInputVariableRequired(checked as boolean)}
+                        id="hasInputVariables"
+                        checked={formData.hasInputVariables}
+                        onCheckedChange={(checked) => {
+                          setFormData({ ...formData, hasInputVariables: checked as boolean });
+                          if (!checked) {
+                            setFormData(prev => ({ ...prev, inputVariables: [] }));
+                          }
+                        }}
                       />
-                      <Label htmlFor="inputVarRequired" className="cursor-pointer">
-                        Obrigatório
-                      </Label>
                     </div>
 
-                    <Button 
-                      type="button" 
-                      onClick={handleAddInputVariable}
-                      variant="secondary"
-                      className="w-full"
-                    >
-                      {editingInputVariableId ? "Atualizar" : "Adicionar"} Variável de Entrada
-                    </Button>
-                  </div>
+                    {formData.hasInputVariables ? (
+                      <div className="space-y-6">
+                        <Card className="p-4 border-2 border-dashed">
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="inputVarName">Nome da Variável *</Label>
+                                <Input
+                                  id="inputVarName"
+                                  value={newInputVariableName}
+                                  onChange={(e) => setNewInputVariableName(e.target.value)}
+                                  placeholder="Ex: user_id, status"
+                                />
+                              </div>
 
-                  {formData.inputVariables.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Variáveis de Entrada Configuradas</Label>
-                      {formData.inputVariables.map((variable) => (
-                        <div key={variable.id} className="flex items-start justify-between gap-2 p-3 bg-background rounded-lg border">
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-mono text-sm font-semibold">{variable.name}</span>
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                {variable.type === "json" ? "JSON" :
-                                variable.type === "query" ? "Query" :
-                                variable.type === "header" ? "Header" :
-                                variable.type === "path" ? "Path" :
-                                "Form Data"}
-                              </span>
-                              {variable.required && (
-                                <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded">
-                                  Obrigatório
-                                </span>
-                              )}
-                              {variable.format && (
-                                <span className="text-xs bg-secondary px-2 py-0.5 rounded">
-                                  {variable.format}
-                                </span>
+                              <div>
+                                <Label htmlFor="inputVarType">Tipo *</Label>
+                                <Select 
+                                  value={newInputVariableType} 
+                                  onValueChange={setNewInputVariableType}
+                                  disabled={formData.inputVariables.length > 0 && !editingInputVariableId}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="json">JSON Body</SelectItem>
+                                    <SelectItem value="query">Query Param</SelectItem>
+                                    <SelectItem value="header">Header</SelectItem>
+                                    <SelectItem value="path">Path Param</SelectItem>
+                                    <SelectItem value="form-data">Form Data</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            {newInputVariableType === "json" && (
+                              <div>
+                                <Label htmlFor="inputVarFormat">Formato JSON</Label>
+                                <Select value={newInputVariableFormat} onValueChange={setNewInputVariableFormat}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="string">String</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                    <SelectItem value="boolean">Boolean</SelectItem>
+                                    <SelectItem value="object">Object</SelectItem>
+                                    <SelectItem value="array">Array</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+
+                            <div>
+                              <Label htmlFor="inputVarDescription">Descrição</Label>
+                              <Input
+                                id="inputVarDescription"
+                                value={newInputVariableDescription}
+                                onChange={(e) => setNewInputVariableDescription(e.target.value)}
+                                placeholder="Descreva o uso desta variável"
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="inputVarDefault">Valor Padrão</Label>
+                              {newInputVariableType === "form-data" ? (
+                                <div>
+                                  <input
+                                    type="file"
+                                    onChange={handleInputFileSelect}
+                                    className="hidden"
+                                    id="input-file-input"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => document.getElementById('input-file-input')?.click()}
+                                    className="w-full"
+                                  >
+                                    {selectedInputFile ? selectedInputFile.name : "Selecionar arquivo"}
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Input
+                                  id="inputVarDefault"
+                                  value={newInputVariableDefaultValue}
+                                  onChange={(e) => setNewInputVariableDefaultValue(e.target.value)}
+                                  placeholder={
+                                    newInputVariableType === "json" && newInputVariableFormat === "object" ? '{"key": "value"}' :
+                                    newInputVariableType === "json" && newInputVariableFormat === "array" ? '["item1", "item2"]' :
+                                    "Valor padrão"
+                                  }
+                                />
                               )}
                             </div>
-                            {variable.description && (
-                              <p className="text-xs text-muted-foreground">{variable.description}</p>
-                            )}
-                            {variable.defaultValue && (
-                              <p className="text-xs text-muted-foreground">
-                                Padrão: <span className="font-mono">{variable.defaultValue}</span>
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditInputVariable(variable)}
-                              disabled={editingInputVariableId !== null && editingInputVariableId !== variable.id}
-                            >
-                              <Pencil className="h-4 w-4 text-primary" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteInputVariable(variable.id)}
-                              disabled={editingInputVariableId !== null}
-                            >
-                              <X className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              )}
 
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1 h-10">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="inputVarRequired"
+                                checked={newInputVariableRequired}
+                                onCheckedChange={(checked) => setNewInputVariableRequired(checked as boolean)}
+                              />
+                              <Label htmlFor="inputVarRequired" className="cursor-pointer">
+                                Obrigatório
+                              </Label>
+                            </div>
+
+                            <Button 
+                              type="button" 
+                              onClick={handleAddInputVariable}
+                              variant="default"
+                              className="w-full"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              {editingInputVariableId ? "Atualizar" : "Adicionar"} Variável
+                            </Button>
+                          </div>
+                        </Card>
+
+                        {formData.inputVariables.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="font-semibold text-sm">Variáveis Configuradas ({formData.inputVariables.length})</h4>
+                            {formData.inputVariables.map((variable) => (
+                              <Card key={variable.id} className="p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-mono text-sm font-semibold">{variable.name}</span>
+                                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
+                                        {variable.type === "json" ? "JSON" :
+                                        variable.type === "query" ? "Query" :
+                                        variable.type === "header" ? "Header" :
+                                        variable.type === "path" ? "Path" :
+                                        "Form Data"}
+                                      </span>
+                                      {variable.required && (
+                                        <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-md">
+                                          Obrigatório
+                                        </span>
+                                      )}
+                                      {variable.format && (
+                                        <span className="text-xs bg-secondary px-2 py-1 rounded-md">
+                                          {variable.format}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {variable.description && (
+                                      <p className="text-sm text-muted-foreground">{variable.description}</p>
+                                    )}
+                                    {variable.defaultValue && (
+                                      <p className="text-sm text-muted-foreground">
+                                        Padrão: <span className="font-mono text-xs">{variable.defaultValue}</span>
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEditInputVariable(variable)}
+                                      disabled={editingInputVariableId !== null && editingInputVariableId !== variable.id}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteInputVariable(variable.id)}
+                                      disabled={editingInputVariableId !== null}
+                                    >
+                                      <X className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <p>Ative o checkbox acima para configurar variáveis de entrada</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+
+              <div className="flex gap-3 pt-4 border-t mt-4">
+                <Button type="submit" className="flex-1">
                   {editingWebhook ? "Atualizar" : "Criar"} Webhook
                 </Button>
-                <Button type="button" variant="outline" onClick={handleCloseForm} className="h-10">
+                <Button type="button" variant="outline" onClick={handleCloseForm}>
                   Cancelar
                 </Button>
               </div>
