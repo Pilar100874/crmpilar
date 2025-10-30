@@ -190,6 +190,7 @@ export default function BotCreate() {
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
         toast.error("Estabelecimento não encontrado");
+        setShowQRDialog(false);
         return;
       }
 
@@ -205,13 +206,6 @@ export default function BotCreate() {
         return;
       }
 
-      // Se já tem QR code salvo e sessão não está conectada, mostra o QR
-      if (session.qr_code && session.status !== 'WORKING') {
-        setQrCodeData(session.qr_code);
-        setIsLoadingQR(false);
-        return;
-      }
-
       // Se a sessão está conectada, informa ao usuário
       if (session.status === 'WORKING') {
         toast.success("WhatsApp já está conectado!");
@@ -219,24 +213,11 @@ export default function BotCreate() {
         return;
       }
 
-      // Se não tem QR code ou sessão não está iniciada, inicia a sessão
-      if (session.status === 'STOPPED' || !session.qr_code) {
-        // Inicia a sessão no WAHA
-        await fetch(`${config.waha_url}/api/sessions/${session.session_name}/start`, {
-          method: 'POST',
-          headers: {
-            'X-Api-Key': config.waha_api_key,
-            'Content-Type': 'application/json'
-          }
-        });
+      console.log(`Verificando sessão "${session.session_name}" no WAHA...`);
 
-        // Aguarda um pouco para o QR code ser gerado
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      // Busca o QR code do WAHA
-      const qrResponse = await fetch(
-        `${config.waha_url}/api/sessions/${session.session_name}/auth/qr`,
+      // Verifica se a sessão existe no WAHA
+      const checkResponse = await fetch(
+        `${config.waha_url}/api/sessions/${session.session_name}`,
         {
           headers: {
             'X-Api-Key': config.waha_api_key
@@ -244,13 +225,89 @@ export default function BotCreate() {
         }
       );
 
-      if (!qrResponse.ok) {
-        throw new Error('Erro ao buscar QR code');
+      // Se a sessão não existe, cria ela
+      if (!checkResponse.ok) {
+        console.log(`Sessão "${session.session_name}" não encontrada. Criando...`);
+        
+        const createResponse = await fetch(`${config.waha_url}/api/sessions/`, {
+          method: 'POST',
+          headers: {
+            'X-Api-Key': config.waha_api_key,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: session.session_name,
+            config: {
+              webhooks: [{
+                url: `https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/whatsapp-webhook`,
+                events: ['message']
+              }]
+            }
+          })
+        });
+
+        if (!createResponse.ok) {
+          const errorText = await createResponse.text();
+          console.error("Erro ao criar sessão:", errorText);
+          throw new Error(`Não foi possível criar a sessão no WAHA: ${errorText}`);
+        }
+
+        console.log("Sessão criada com sucesso!");
+        // Aguarda a sessão ser inicializada
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      } else {
+        // Verifica o status da sessão existente
+        const sessionData = await checkResponse.json();
+        console.log("Status da sessão no WAHA:", sessionData.status);
+        
+        // Se a sessão está parada, inicia ela
+        if (sessionData.status === 'STOPPED') {
+          console.log("Iniciando sessão...");
+          await fetch(`${config.waha_url}/api/sessions/${session.session_name}/start`, {
+            method: 'POST',
+            headers: {
+              'X-Api-Key': config.waha_api_key,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          // Aguarda inicialização
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
       }
 
-      const qrData = await qrResponse.json();
+      // Tenta buscar o QR code com retry
+      let attempts = 0;
+      let qrData = null;
       
-      if (qrData.qr) {
+      while (attempts < 5 && !qrData) {
+        attempts++;
+        console.log(`Tentativa ${attempts} de buscar QR code...`);
+        
+        const qrResponse = await fetch(
+          `${config.waha_url}/api/sessions/${session.session_name}/auth/qr`,
+          {
+            headers: {
+              'X-Api-Key': config.waha_api_key
+            }
+          }
+        );
+
+        if (qrResponse.ok) {
+          const data = await qrResponse.json();
+          if (data.qr) {
+            qrData = data;
+            break;
+          }
+        }
+        
+        // Aguarda antes de tentar novamente
+        if (attempts < 5) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+      
+      if (qrData?.qr) {
         setQrCodeData(qrData.qr);
         
         // Salva o QR code no banco
@@ -262,14 +319,15 @@ export default function BotCreate() {
           })
           .eq('id', session.id);
 
-        // Atualiza a lista de sessões
         await loadWhatsAppSessions();
+        toast.success("QR Code carregado! Escaneie com seu WhatsApp.");
       } else {
-        throw new Error('QR code não disponível');
+        throw new Error(`QR code não disponível após ${attempts} tentativas. Verifique se o nome da sessão "${session.session_name}" está correto no WAHA.`);
       }
     } catch (error) {
       console.error("Error loading QR code:", error);
-      toast.error("Erro ao carregar QR code. Verifique se a sessão está iniciada no servidor WAHA.");
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error(errorMessage);
       setShowQRDialog(false);
     } finally {
       setIsLoadingQR(false);
