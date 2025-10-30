@@ -673,8 +673,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               case 'cnpj':
                 return maskCNPJ(v);
               case 'cep':
+                const cepLimpo = v.replace(/\D/g, '');
+                if (cepLimpo.length === 8) {
+                  return `${cepLimpo.substring(0, 5)}-${cepLimpo.substring(5)}`;
+                }
+                return cepLimpo;
               case 'telefone':
-                return v.replace(/\D/g, '');
+                // Pegar apenas o primeiro número se houver múltiplos
+                let primeiroTel = v.split(/[,;]/)[0].trim();
+                let telNumeros = primeiroTel.replace(/\D/g, '');
+                
+                // Adicionar código do país se não tiver
+                if (!telNumeros.startsWith('55')) {
+                  telNumeros = '55' + telNumeros;
+                }
+                
+                // Limitar a 13 dígitos
+                telNumeros = telNumeros.substring(0, 13);
+                
+                // Formatar com máscara
+                if (telNumeros.length === 13) {
+                  return `+${telNumeros.substring(0, 2)} (${telNumeros.substring(2, 4)}) ${telNumeros.substring(4, 9)}-${telNumeros.substring(9)}`;
+                } else if (telNumeros.length === 12) {
+                  return `+${telNumeros.substring(0, 2)} (${telNumeros.substring(2, 4)}) ${telNumeros.substring(4, 8)}-${telNumeros.substring(8)}`;
+                }
+                return telNumeros;
               case 'email':
                 return v.toLowerCase().replace(/\s/g, '');
               case 'estado':

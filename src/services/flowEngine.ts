@@ -598,7 +598,12 @@ export class FlowEngine {
       
       case 'cep':
         // Remover todos os caracteres não numéricos
-        return valorTrimmed.replace(/\D/g, '');
+        const cepLimpo = valorTrimmed.replace(/\D/g, '');
+        // Formatar com tracinho: XXXXX-XXX
+        if (cepLimpo.length === 8) {
+          return `${cepLimpo.substring(0, 5)}-${cepLimpo.substring(5)}`;
+        }
+        return cepLimpo;
       
       case 'telefone':
         // Se houver múltiplos telefones separados por vírgula, vírgula+espaço, ou ponto-e-vírgula, pegar apenas o primeiro
@@ -614,6 +619,15 @@ export class FlowEngine {
         
         // Limitar a 13 dígitos (55 + 11 dígitos)
         telefoneNumeros = telefoneNumeros.substring(0, 13);
+        
+        // Formatar: +55 (XX) XXXXX-XXXX ou +55 (XX) XXXX-XXXX
+        if (telefoneNumeros.length === 13) {
+          // Celular com 9 dígitos
+          return `+${telefoneNumeros.substring(0, 2)} (${telefoneNumeros.substring(2, 4)}) ${telefoneNumeros.substring(4, 9)}-${telefoneNumeros.substring(9)}`;
+        } else if (telefoneNumeros.length === 12) {
+          // Fixo com 8 dígitos
+          return `+${telefoneNumeros.substring(0, 2)} (${telefoneNumeros.substring(2, 4)}) ${telefoneNumeros.substring(4, 8)}-${telefoneNumeros.substring(8)}`;
+        }
         
         return telefoneNumeros;
       
