@@ -18,17 +18,36 @@ import { ProdutoGruposCRUD } from "./ProdutoGruposCRUD";
 import { CondicoesPagamentoCRUD } from "./CondicoesPagamentoCRUD";
 import { TabelasPrecoCRUD } from "./TabelasPrecoCRUD";
 import { TiposPagamentoCRUD } from "./TiposPagamentoCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet } from "lucide-react";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Smartphone, QrCode, Plus, Trash2, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Save, AlertCircle, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EstabelecimentoDetalhesProps {
   estabelecimentoId: string;
@@ -278,6 +297,448 @@ function WhatsAppConfigSection({ estabelecimentoId }: { estabelecimentoId: strin
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+interface WhatsAppSession {
+  id: string;
+  session_name: string;
+  phone_number: string | null;
+  status: string;
+  qr_code: string | null;
+  bot_flow_id: string | null;
+}
+
+function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: string }) {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [config, setConfig] = useState<any>(null);
+  const [sessions, setSessions] = useState<WhatsAppSession[]>([]);
+  
+  const [wahaUrl, setWahaUrl] = useState("");
+  const [wahaApiKey, setWahaApiKey] = useState("");
+  const [newSessionName, setNewSessionName] = useState("");
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
+  const [selectedQrSession, setSelectedQrSession] = useState<WhatsAppSession | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadConfig();
+    const interval = setInterval(() => {
+      refreshSessions();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [estabelecimentoId]);
+
+  const loadConfig = async () => {
+    try {
+      const { data: configData } = await supabase
+        .from("whatsapp_config")
+        .select("*")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .single();
+
+      if (configData) {
+        const config = configData as any;
+        setConfig(config);
+        setWahaUrl(config.waha_url || "");
+        setWahaApiKey(config.waha_api_key || "");
+      }
+
+      await refreshSessions();
+    } catch (error) {
+      console.error("Error loading config:", error);
+    }
+  };
+
+  const refreshSessions = async () => {
+    const { data: sessionsData } = await supabase
+      .from("whatsapp_sessions")
+      .select("*")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .order("created_at", { ascending: false });
+
+    if (sessionsData) {
+      setSessions(sessionsData);
+    }
+  };
+
+  const saveConfig = async () => {
+    if (!wahaUrl) {
+      toast({
+        title: "Erro",
+        description: "URL do servidor WAHA é obrigatória",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (config) {
+        await supabase
+          .from("whatsapp_config")
+          .update({
+            waha_url: wahaUrl,
+            waha_api_key: wahaApiKey || null,
+          } as any)
+          .eq("id", config.id);
+      } else {
+        await supabase
+          .from("whatsapp_config")
+          .insert({
+            estabelecimento_id: estabelecimentoId,
+            waha_url: wahaUrl,
+            waha_api_key: wahaApiKey || null,
+          } as any);
+      }
+      
+      toast({
+        title: "✓ Configuração salva!",
+        description: "Servidor WAHA configurado com sucesso.",
+      });
+      setShowConfigDialog(false);
+      await loadConfig();
+    } catch (error: any) {
+      console.error("Error saving config:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createSession = async () => {
+    if (!newSessionName) {
+      toast({
+        title: "Erro",
+        description: "Nome da sessão é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config) {
+      toast({
+        title: "Erro",
+        description: "Configure o servidor WAHA primeiro",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("whatsapp_sessions")
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          session_name: newSessionName,
+          status: "STOPPED",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await startSession(data.id, newSessionName);
+      
+      toast({
+        title: "✓ Sessão criada!",
+        description: "Sessão criada com sucesso!",
+      });
+      setShowNewSessionDialog(false);
+      setNewSessionName("");
+      await refreshSessions();
+    } catch (error: any) {
+      console.error("Error creating session:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao criar sessão",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startSession = async (sessionId: string, sessionName: string) => {
+    try {
+      const response = await fetch(`${config?.waha_url}/api/sessions/${sessionName}/start`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+        },
+        body: JSON.stringify({ name: sessionName }),
+      });
+
+      if (!response.ok) throw new Error("Failed to start session");
+
+      await getQRCode(sessionId, sessionName);
+    } catch (error) {
+      console.error("Error starting session:", error);
+    }
+  };
+
+  const getQRCode = async (sessionId: string, sessionName: string) => {
+    try {
+      const response = await fetch(`${config?.waha_url}/api/${sessionName}/auth/qr`, {
+        headers: {
+          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to get QR code");
+
+      const data = await response.json();
+      
+      await supabase
+        .from("whatsapp_sessions")
+        .update({
+          qr_code: data.qr,
+          status: "SCAN_QR_CODE",
+        })
+        .eq("id", sessionId);
+
+      await refreshSessions();
+    } catch (error) {
+      console.error("Error getting QR code:", error);
+    }
+  };
+
+  const deleteSession = async () => {
+    if (!sessionToDelete) return;
+
+    try {
+      const session = sessions.find(s => s.id === sessionToDelete);
+      if (!session) return;
+
+      await fetch(`${config?.waha_url}/api/sessions/${session.session_name}/stop`, {
+        method: "POST",
+        headers: {
+          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+        },
+      });
+
+      await supabase
+        .from("whatsapp_sessions")
+        .delete()
+        .eq("id", sessionToDelete);
+
+      toast({
+        title: "✓ Sessão excluída!",
+        description: "Sessão excluída com sucesso!",
+      });
+      setSessionToDelete(null);
+      await refreshSessions();
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir sessão",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
+      "STOPPED": { variant: "secondary", label: "Parado" },
+      "SCAN_QR_CODE": { variant: "outline", label: "Escaneie QR Code" },
+      "WORKING": { variant: "default", label: "Conectado" },
+      "FAILED": { variant: "destructive", label: "Falhou" },
+    };
+
+    const info = statusMap[status] || { variant: "outline", label: status };
+    return <Badge variant={info.variant}>{info.label}</Badge>;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-muted-foreground">
+          Gerencie sessões WAHA para múltiplos números de WhatsApp
+        </p>
+        <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              {config ? "Editar Servidor" : "Configurar Servidor"}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Configuração do Servidor WAHA</DialogTitle>
+              <DialogDescription>
+                Configure a URL e chave de API do seu servidor WAHA
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="waha-url">URL do Servidor WAHA</Label>
+                <Input
+                  id="waha-url"
+                  placeholder="https://waha.exemplo.com"
+                  value={wahaUrl}
+                  onChange={(e) => setWahaUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="waha-key">Chave de API (opcional)</Label>
+                <Input
+                  id="waha-key"
+                  type="password"
+                  placeholder="Sua chave de API"
+                  value={wahaApiKey}
+                  onChange={(e) => setWahaApiKey(e.target.value)}
+                />
+              </div>
+              <Button onClick={saveConfig} className="w-full" disabled={loading}>
+                {loading ? "Salvando..." : "Salvar Configuração"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {config && (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-base">Sessões WhatsApp</CardTitle>
+              <Dialog open={showNewSessionDialog} onOpenChange={setShowNewSessionDialog}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Sessão
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Nova Sessão WhatsApp</DialogTitle>
+                    <DialogDescription>
+                      Crie uma nova sessão para conectar um número de WhatsApp
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="session-name">Nome da Sessão</Label>
+                      <Input
+                        id="session-name"
+                        placeholder="ex: atendimento-01"
+                        value={newSessionName}
+                        onChange={(e) => setNewSessionName(e.target.value)}
+                      />
+                    </div>
+                    <Button onClick={createSession} className="w-full">
+                      Criar Sessão
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <CardDescription>
+              Gerencie as sessões de WhatsApp conectadas ao servidor
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {sessions.map((session) => (
+                <Card key={session.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="h-5 w-5" />
+                        <CardTitle className="text-base">{session.session_name}</CardTitle>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSessionToDelete(session.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <CardDescription>
+                      {session.phone_number || "Aguardando conexão"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {getStatusBadge(session.status)}
+                    {session.status === "SCAN_QR_CODE" && session.qr_code && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        size="sm"
+                        onClick={() => setSelectedQrSession(session)}
+                      >
+                        <QrCode className="h-4 w-4 mr-2" />
+                        Ver QR Code
+                      </Button>
+                    )}
+                    {session.bot_flow_id && (
+                      <p className="text-xs text-muted-foreground">
+                        Em uso por bot
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!config && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-sm text-muted-foreground">
+              Configure o servidor WAHA para começar
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* QR Code Dialog */}
+      <Dialog open={!!selectedQrSession} onOpenChange={() => setSelectedQrSession(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Escaneie o QR Code</DialogTitle>
+            <DialogDescription>
+              Use o WhatsApp no seu celular para escanear o código
+            </DialogDescription>
+          </DialogHeader>
+          {selectedQrSession?.qr_code && (
+            <div className="flex justify-center p-4">
+              <img
+                src={selectedQrSession.qr_code}
+                alt="QR Code"
+                className="w-64 h-64"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!sessionToDelete} onOpenChange={() => setSessionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Sessão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteSession}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -536,6 +997,18 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <WhatsAppConfigSection estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="whatsapp-waha-config" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-primary" />
+              <span className="font-medium">Configuração WhatsApp WAHA</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <WhatsAppWAHAConfigSection estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
