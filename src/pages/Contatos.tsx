@@ -1102,6 +1102,26 @@ export default function Contatos() {
         return;
       }
 
+      // Checagem final de duplicidade antes de salvar
+      const emailLower = (formData.email || '').toLowerCase().trim();
+      const phoneClean = (formData.phone || '').replace(/\D/g, '');
+      const dupByEmail = contacts.find(c => (c.email || '').toLowerCase().trim() === emailLower && c.id !== editingContact?.id);
+      const dupByPhone = contacts.find(c => ((c.phone || '').replace(/\D/g, '') === phoneClean) && c.id !== editingContact?.id);
+      if (dupByEmail) {
+        setDuplicateContact(dupByEmail as any);
+        setDuplicateField('email');
+        setDuplicateDialogOpen(true);
+        toast.error('E-mail já cadastrado');
+        return;
+      }
+      if (dupByPhone) {
+        setDuplicateContact(dupByPhone as any);
+        setDuplicateField('phone');
+        setDuplicateDialogOpen(true);
+        toast.error('WhatsApp já cadastrado');
+        return;
+      }
+
       let novaEmpresaId: string | null = null;
 
       // Criar nova empresa se necessário
@@ -2188,7 +2208,7 @@ export default function Contatos() {
             <div className="flex justify-end gap-3">
               <Button 
                 variant="outline" 
-                onClick={() => setShowForm(false)}
+                onClick={() => { setShouldCheckDuplicate(false); setShowForm(false); setTimeout(() => setShouldCheckDuplicate(true), 100); }}
                 className="border-border/40"
               >
                 Cancelar
