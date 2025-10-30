@@ -19,9 +19,11 @@ interface OrcamentoBoardProps {
   columns: Column[];
   onOrcamentoMove: (orcamentoId: string, newEtapa: OrcamentoEtapa) => void;
   onOrcamentoClick: (orcamento: Orcamento) => void;
+  onOrcamentoDelete?: (orcamentoId: string) => void;
+  etapas?: { id: string; title: string; color: string; }[];
 }
 
-export default function OrcamentoBoard({ columns, onOrcamentoMove, onOrcamentoClick }: OrcamentoBoardProps) {
+export default function OrcamentoBoard({ columns, onOrcamentoMove, onOrcamentoClick, onOrcamentoDelete, etapas }: OrcamentoBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   
   const sensors = useSensors(
@@ -102,6 +104,9 @@ export default function OrcamentoBoard({ columns, onOrcamentoMove, onOrcamentoCl
                           key={orcamento.id}
                           orcamento={orcamento}
                           onClick={() => onOrcamentoClick(orcamento)}
+                          onDelete={onOrcamentoDelete}
+                          onEtapaChange={onOrcamentoMove}
+                          etapas={etapas}
                         />
                       ))}
                     </div>

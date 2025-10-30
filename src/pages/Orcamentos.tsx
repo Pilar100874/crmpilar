@@ -61,6 +61,7 @@ export default function Orcamentos() {
         .from('orcamentos')
         .select(`
           *,
+          empresa:empresas(id, nome_fantasia, cnpj),
           cliente:customers(id, nome, email, telefone),
           vendedor:usuarios(id, nome),
           condicao_pagamento:condicoes_pagamento(id, nome),
@@ -129,6 +130,34 @@ export default function Orcamentos() {
     } catch (error: any) {
       console.error('Erro ao mover orçamento:', error);
       toast.error("Erro ao mover orçamento");
+    }
+  };
+
+  const handleOrcamentoDelete = async (orcamentoId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este orçamento?")) return;
+
+    try {
+      // Primeiro deletar os itens
+      const { error: itensError } = await supabase
+        .from('orcamento_itens')
+        .delete()
+        .eq('orcamento_id', orcamentoId);
+
+      if (itensError) throw itensError;
+
+      // Depois deletar o orçamento
+      const { error } = await supabase
+        .from('orcamentos')
+        .delete()
+        .eq('id', orcamentoId);
+
+      if (error) throw error;
+
+      setOrcamentos(prev => prev.filter(o => o.id !== orcamentoId));
+      toast.success("Orçamento excluído com sucesso");
+    } catch (error: any) {
+      console.error('Erro ao excluir orçamento:', error);
+      toast.error("Erro ao excluir orçamento");
     }
   };
 
@@ -267,6 +296,8 @@ export default function Orcamentos() {
               columns={columns}
               onOrcamentoMove={handleOrcamentoMove}
               onOrcamentoClick={handleOrcamentoClick}
+              onOrcamentoDelete={handleOrcamentoDelete}
+              etapas={ETAPAS_CONFIG}
             />
           ) : (
             <OrcamentoListView

@@ -34,6 +34,8 @@ export default function NewOrcamentoDialog({
   orcamentoOrigemId 
 }: NewOrcamentoDialogProps) {
   const [empresas, setEmpresas] = useState<any[]>([]);
+  const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
+  const [buscaEmpresa, setBuscaEmpresa] = useState("");
   const [clientes, setClientes] = useState<any[]>([]);
   const [vendedores, setVendedores] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,12 +68,13 @@ export default function NewOrcamentoDialog({
       const estabelecimentoId = await getEstabelecimentoId();
       const { data, error } = await supabase
         .from('empresas')
-        .select('id, nome_fantasia, razao_social, cnpj')
+        .select('id, nome_fantasia, nome, cnpj')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('nome_fantasia');
 
       if (error) throw error;
       setEmpresas(data || []);
+      setEmpresasFiltradas(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar empresas:', error);
     }
@@ -151,6 +154,7 @@ export default function NewOrcamentoDialog({
 
       const novoOrcamento = {
         estabelecimento_id: estabelecimentoId,
+        empresa_id: formData.empresa_id,
         cliente_id: formData.cliente_id,
         vendedor_id: formData.vendedor_id,
         observacoes: formData.observacoes || null,
@@ -221,15 +225,42 @@ export default function NewOrcamentoDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="empresa">Empresa *</Label>
+            <Input
+              placeholder="Buscar por nome ou CNPJ..."
+              value={buscaEmpresa}
+              onChange={(e) => {
+                const valor = e.target.value;
+                setBuscaEmpresa(valor);
+                
+                if (valor.trim()) {
+                  const termo = valor.toLowerCase();
+                  const filtradas = empresas.filter(emp => 
+                    emp.nome_fantasia?.toLowerCase().includes(termo) ||
+                    emp.nome?.toLowerCase().includes(termo) ||
+                    emp.cnpj?.includes(termo.replace(/\D/g, ''))
+                  );
+                  setEmpresasFiltradas(filtradas);
+                } else {
+                  setEmpresasFiltradas(empresas);
+                }
+              }}
+              className="mb-2"
+            />
             <Select
               value={formData.empresa_id}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, empresa_id: value }))}
+              onValueChange={(value) => {
+                setFormData(prev => ({ ...prev, empresa_id: value }));
+                const empresa = empresas.find(e => e.id === value);
+                if (empresa) {
+                  setBuscaEmpresa(empresa.nome_fantasia);
+                }
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a empresa" />
               </SelectTrigger>
               <SelectContent>
-                {empresas.map((empresa) => (
+                {empresasFiltradas.map((empresa) => (
                   <SelectItem key={empresa.id} value={empresa.id}>
                     {empresa.nome_fantasia} {empresa.cnpj && `(${empresa.cnpj})`}
                   </SelectItem>

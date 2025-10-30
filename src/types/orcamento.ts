@@ -75,6 +75,7 @@ export type OrcamentoEtapa = 'orcamento' | 'negociacao' | 'aprovacao_gerencia' |
 export interface Orcamento {
   id: string;
   estabelecimento_id: string;
+  empresa_id?: string;
   cliente_id: string;
   vendedor_id: string;
   unidade_id?: string;
@@ -93,6 +94,7 @@ export interface Orcamento {
   orcamento_origem_id?: string;
   created_at: string;
   updated_at: string;
+  empresa?: any;
   cliente?: any;
   vendedor?: any;
   condicao_pagamento?: CondicaoPagamento;

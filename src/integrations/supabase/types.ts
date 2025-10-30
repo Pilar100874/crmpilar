@@ -1280,6 +1280,7 @@ export type Database = {
           data_envio: string | null
           data_modificacao_cliente: string | null
           data_visualizacao: string | null
+          empresa_id: string | null
           estabelecimento_id: string | null
           etapa: string
           id: string
@@ -1302,6 +1303,7 @@ export type Database = {
           data_envio?: string | null
           data_modificacao_cliente?: string | null
           data_visualizacao?: string | null
+          empresa_id?: string | null
           estabelecimento_id?: string | null
           etapa?: string
           id?: string
@@ -1324,6 +1326,7 @@ export type Database = {
           data_envio?: string | null
           data_modificacao_cliente?: string | null
           data_visualizacao?: string | null
+          empresa_id?: string | null
           estabelecimento_id?: string | null
           etapa?: string
           id?: string
@@ -1352,6 +1355,13 @@ export type Database = {
             columns: ["condicao_pagamento_id"]
             isOneToOne: false
             referencedRelation: "condicoes_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
           {

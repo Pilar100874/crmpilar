@@ -1,19 +1,36 @@
-import { Orcamento } from "@/types/orcamento";
+import { Orcamento, OrcamentoEtapa } from "@/types/orcamento";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Calendar, DollarSign, User } from "lucide-react";
+import { Calendar, DollarSign, User, MoreVertical, Trash2, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface OrcamentoCardProps {
   orcamento: Orcamento;
   onClick?: () => void;
+  onDelete?: (orcamentoId: string) => void;
+  onEtapaChange?: (orcamentoId: string, newEtapa: OrcamentoEtapa) => void;
+  etapas?: { id: string; title: string; color: string; }[];
 }
 
-export default function OrcamentoCard({ orcamento, onClick }: OrcamentoCardProps) {
+export default function OrcamentoCard({ orcamento, onClick, onDelete, onEtapaChange, etapas }: OrcamentoCardProps) {
   const {
     attributes,
     listeners,
@@ -33,27 +50,70 @@ export default function OrcamentoCard({ orcamento, onClick }: OrcamentoCardProps
     <Card
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
       className="cursor-pointer hover:shadow-md transition-shadow"
-      onClick={onClick}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
+          <div className="flex-1" {...attributes} {...listeners} onClick={onClick}>
             <h4 className="font-semibold text-sm line-clamp-1">
-              {orcamento.cliente?.nome || 'Cliente não informado'}
+              {orcamento.empresa?.nome_fantasia || orcamento.cliente?.nome || 'Cliente não informado'}
             </h4>
             <p className="text-xs text-muted-foreground">
               #{orcamento.id.slice(0, 8)}
             </p>
           </div>
-          <Badge variant={orcamento.status === 'em_aberto' ? 'default' : 'secondary'}>
-            {orcamento.status}
-          </Badge>
+          
+          <div className="flex items-center gap-2">
+            <Badge variant={orcamento.status === 'em_aberto' ? 'default' : 'secondary'}>
+              {orcamento.status}
+            </Badge>
+            
+            {(onDelete || onEtapaChange) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onEtapaChange && etapas && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                        Mover para
+                      </div>
+                      {etapas.filter(e => e.id !== orcamento.etapa).map((etapa) => (
+                        <DropdownMenuItem
+                          key={etapa.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEtapaChange(orcamento.id, etapa.id as OrcamentoEtapa);
+                          }}
+                        >
+                          <ArrowRight className="w-4 h-4 mr-2" />
+                          {etapa.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(orcamento.id);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2" {...attributes} {...listeners} onClick={onClick}>
           <div className="flex items-center gap-2 text-sm">
             <DollarSign className="w-4 h-4 text-muted-foreground" />
             <span className="font-semibold">
