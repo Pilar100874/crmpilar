@@ -20,8 +20,11 @@ export const MENU_CONFIG = [
   { id: "Criar Bot", label: "Criar / Editar Bot" },
   { id: "Testar", label: "Testar Bot" },
   { id: "Desenho", label: "Estatísticas" },
-  { id: "Teste de Webhooks", label: "Webhooks" },
   { id: "Configurações", label: "Configurações" },
+  { id: "Config Geral", label: "Configurações Gerais" },
+  { id: "Teste de Webhooks", label: "Teste de Webhooks" },
+  { id: "Variáveis Globais", label: "Variáveis Globais" },
+  { id: "Teste Campanhas", label: "Teste Campanhas" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)

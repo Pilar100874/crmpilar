@@ -4,6 +4,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatInput from "@/components/chat/ChatInput";
 import WebhookSelector from "@/components/chat/WebhookSelector";
+import { SubMenuHeader } from "@/components/SubMenuHeader";
+import { useLayout } from "@/contexts/LayoutContext";
 import { Webhook, Sparkles, Send, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,7 @@ export interface WebhookType {
 }
 
 export default function ChatWebhook() {
+  const { openSubmenu } = useLayout();
   const [messages, setMessages] = useState<Message[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
   const [webhookTypes, setWebhookTypes] = useState<WebhookType[]>([]);
@@ -578,7 +581,13 @@ export default function ChatWebhook() {
         {/* Header */}
         <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-foreground">TESTE DE WEBHOOKS</h2>
+            <div className="flex items-center gap-4 mb-2">
+              <SubMenuHeader 
+                title="Configurações"
+                onOpenSubmenu={() => openSubmenu("Configurações")}
+              />
+              <h2 className="text-lg font-bold text-foreground">Teste de Webhooks</h2>
+            </div>
             <p className="text-sm text-muted-foreground">
               Configure e teste suas integrações
             </p>

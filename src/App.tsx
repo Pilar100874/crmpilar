@@ -48,7 +48,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Login />} />
           <Route element={<LayoutWrapper />}>
-            <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/atendimento" element={<Atendimento />} />
             <Route path="/email" element={<Email />} />
             <Route path="/email/:folder" element={<Email />} />
@@ -65,6 +65,9 @@ const App = () => (
             <Route path="/empresas" element={<Empresas />} />
             <Route path="/todos" element={<Todos />} />
             <Route path="/config" element={<Config />} />
+            <Route path="/config/webhooks" element={<ChatWebhook />} />
+            <Route path="/config/variaveis" element={<GlobalVariables />} />
+            <Route path="/config/campanhas" element={<Campanhas />} />
             <Route path="/global-variables" element={<GlobalVariables />} />
             <Route path="/desenho" element={<Desenho />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />

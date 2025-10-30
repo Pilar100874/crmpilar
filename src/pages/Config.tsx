@@ -18,6 +18,8 @@ import { Webhook, ShieldCheck, Store, MessageSquare, Save, ExternalLink, Megapho
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
+import { SubMenuHeader } from "@/components/SubMenuHeader";
+import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -51,6 +53,7 @@ const variableTypeLabels = {
 };
 
 export default function Config() {
+  const { openSubmenu } = useLayout();
   // Estados para variáveis globais
   const [variables, setVariables] = useState<GlobalVariable[]>([]);
   const [loadingVariables, setLoadingVariables] = useState(true);
@@ -205,12 +208,17 @@ export default function Config() {
 
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
-        <div>
-          <h1 className="text-lg font-bold mb-2 text-foreground">Configurações</h1>
-          <p className="text-muted-foreground">
-            Gerencie as configurações da plataforma
-          </p>
+        <div className="flex items-center gap-4">
+          <SubMenuHeader 
+            title="Configurações"
+            onOpenSubmenu={() => openSubmenu("Configurações")}
+          />
+          <h1 className="text-lg font-bold text-foreground">Configurações Gerais</h1>
         </div>
+        
+        <p className="text-muted-foreground">
+          Gerencie as configurações da plataforma
+        </p>
 
         <Accordion type="single" collapsible className="space-y-4 max-w-4xl">
           <AccordionItem value="cadastro-estabelecimentos" className="border rounded-lg bg-white shadow-sm">

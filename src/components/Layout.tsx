@@ -94,8 +94,17 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Desenho", title: "Estatísticas", url: "/desenho", icon: Pencil },
-  { id: "Teste de Webhooks", title: "Webhooks", url: "/chat-webhook", icon: Globe },
-  { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
+  { 
+    id: "Configurações", 
+    title: "Configurações", 
+    icon: Settings,
+    subItems: [
+      { id: "Config Geral", title: "Configurações", url: "/config", icon: Settings },
+      { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: Globe },
+      { id: "Variáveis Globais", title: "Variáveis Globais", url: "/config/variaveis", icon: FileText },
+      { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: Megaphone },
+    ]
+  },
 ];
 
 interface LayoutProps {
