@@ -88,9 +88,10 @@ interface TableColumnsConfigProps {
   columns: TableColumn[];
   onColumnsChange: (columns: TableColumn[]) => void;
   fieldsConfigComponent?: React.ReactNode;
+  fieldsTabLabel?: string;
 }
 
-export function TableColumnsConfig({ columns, onColumnsChange, fieldsConfigComponent }: TableColumnsConfigProps) {
+export function TableColumnsConfig({ columns, onColumnsChange, fieldsConfigComponent, fieldsTabLabel = "Campos de Contato" }: TableColumnsConfigProps) {
   const [open, setOpen] = useState(false);
 
   const sensors = useSensors(
@@ -133,7 +134,7 @@ export function TableColumnsConfig({ columns, onColumnsChange, fieldsConfigCompo
         <Tabs defaultValue="columns" className="mt-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="columns">Colunas da Tabela</TabsTrigger>
-            <TabsTrigger value="fields">Campos de Contato</TabsTrigger>
+            <TabsTrigger value="fields">{fieldsTabLabel}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="columns" className="space-y-4 mt-6">

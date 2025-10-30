@@ -981,6 +981,23 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <TableColumnsConfig 
               columns={tableColumns} 
               onColumnsChange={handleColumnsChange}
+              fieldsTabLabel="Campos da Empresa"
+              fieldsConfigComponent={
+                estabelecimentoId ? (
+                  <EmpresaFieldsCRUD 
+                    estabelecimentoId={estabelecimentoId} 
+                    onChanged={async () => {
+                      if (estabelecimentoId) {
+                        await loadFieldConfigs(estabelecimentoId);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    Carregando configurações...
+                  </div>
+                )
+              }
             />
             
             <div className="flex-1 max-w-md">
