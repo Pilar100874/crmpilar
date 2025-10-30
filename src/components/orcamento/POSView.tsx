@@ -44,9 +44,11 @@ interface POSViewProps {
 export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POSViewProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
-  const [clientes, setClientes] = useState<any[]>([]);
+  const [empresas, setEmpresas] = useState<any[]>([]);
+  const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
+  const [buscaEmpresa, setBuscaEmpresa] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCliente, setSelectedCliente] = useState<string>("");
+  const [selectedEmpresa, setSelectedEmpresa] = useState<string>("");
   const [cartItems, setCartItems] = useState<Map<string, { produto: Produto; quantity: number }>>(new Map());
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("cart");
@@ -70,11 +72,25 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   useEffect(() => {
     loadProdutos();
     loadGrupos();
-    loadClientes();
+    loadEmpresas();
     if (orcamentoId) {
       loadOrcamento(orcamentoId);
     }
   }, [orcamentoId]);
+
+  useEffect(() => {
+    // Filtrar empresas quando a busca muda
+    if (buscaEmpresa.trim() === "") {
+      setEmpresasFiltradas(empresas);
+    } else {
+      const busca = buscaEmpresa.toLowerCase();
+      const filtradas = empresas.filter(empresa => 
+        empresa.nome_fantasia?.toLowerCase().includes(busca) ||
+        empresa.cnpj?.replace(/\D/g, '').includes(busca.replace(/\D/g, ''))
+      );
+      setEmpresasFiltradas(filtradas);
+    }
+  }, [buscaEmpresa, empresas]);
 
   const loadProdutos = async () => {
     try {
@@ -111,18 +127,19 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
     }
   };
 
-  const loadClientes = async () => {
+  const loadEmpresas = async () => {
     try {
       const { data, error } = await supabase
-        .from('customers')
-        .select('id, nome, email, telefone')
+        .from('empresas')
+        .select('id, nome_fantasia, cnpj')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('nome');
+        .order('nome_fantasia');
 
       if (error) throw error;
-      setClientes(data || []);
+      setEmpresas(data || []);
+      setEmpresasFiltradas(data || []);
     } catch (error: any) {
-      console.error('Erro ao carregar clientes:', error);
+      console.error('Erro ao carregar empresas:', error);
     }
   };
 
@@ -144,8 +161,8 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
       if (error) throw error;
 
       if (data) {
-        // Preencher cliente
-        setSelectedCliente(data.cliente_id);
+        // Preencher empresa
+        setSelectedEmpresa(data.empresa_id);
         
         // Preencher carrinho com itens
         const newCart = new Map<string, { produto: Produto; quantity: number }>();
@@ -264,8 +281,8 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   };
 
   const handleFinalize = async () => {
-    if (!selectedCliente) {
-      toast.error('Selecione um cliente');
+    if (!selectedEmpresa) {
+      toast.error('Selecione uma empresa');
       return;
     }
 
@@ -283,7 +300,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         .from('orcamentos')
         .insert({
           estabelecimento_id: estabelecimentoId,
-          cliente_id: selectedCliente,
+          empresa_id: selectedEmpresa,
           etapa: 'orcamento',
           status: 'em_aberto',
           valor_total: getTotal(),
@@ -319,7 +336,8 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
       toast.success('Orçamento criado com sucesso!');
       // Limpar carrinho
       setCartItems(new Map());
-      setSelectedCliente("");
+      setSelectedEmpresa("");
+      setBuscaEmpresa("");
       setActiveTab("share");
     } catch (error: any) {
       console.error('Erro ao finalizar orçamento:', error);
@@ -736,11 +754,11 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                       <span className="text-slate-400">Quantidade Total:</span>
                       <span className="text-white">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
                     </div>
-                    {selectedCliente && (
+                    {selectedEmpresa && (
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Cliente:</span>
+                        <span className="text-slate-400">Empresa:</span>
                         <span className="text-white">
-                          {clientes.find(c => c.id === selectedCliente)?.nome}
+                          {empresas.find(e => e.id === selectedEmpresa)?.nome_fantasia}
                         </span>
                       </div>
                     )}
@@ -751,25 +769,33 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
           </TabsContent>
         </Tabs>
 
-        {/* Cliente e Botões de Ação */}
+        {/* Empresa e Botões de Ação */}
         <div className="border-t border-slate-700 bg-slate-800 mt-auto">
-          {/* Cliente */}
+          {/* Empresa */}
           <div className="p-4 border-b border-slate-700">
             <label className="text-xs font-medium text-slate-400 mb-2 block">
-              Cliente
+              Empresa
             </label>
-            <Select value={selectedCliente} onValueChange={setSelectedCliente}>
-              <SelectTrigger className="bg-slate-700 border-slate-600 text-white h-10">
-                <SelectValue placeholder="Selecione o cliente..." />
-              </SelectTrigger>
-              <SelectContent>
-                {clientes.map((cliente) => (
-                  <SelectItem key={cliente.id} value={cliente.id}>
-                    {cliente.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Input
+                placeholder="Buscar empresa por nome ou CNPJ..."
+                value={buscaEmpresa}
+                onChange={(e) => setBuscaEmpresa(e.target.value)}
+                className="bg-slate-700 border-slate-600 text-white h-10"
+              />
+              <Select value={selectedEmpresa} onValueChange={setSelectedEmpresa}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white h-10">
+                  <SelectValue placeholder="Selecione a empresa..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {empresasFiltradas.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id}>
+                      {empresa.nome_fantasia} {empresa.cnpj && `- ${empresa.cnpj}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Botões de Ação */}
@@ -914,12 +940,12 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
       {/* Barra de Total Inferior */}
       <div className="bg-slate-800 border-t border-slate-700 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-2 text-slate-400">
             <User className="w-5 h-5" />
             <span className="text-sm">
-              {selectedCliente 
-                ? clientes.find(c => c.id === selectedCliente)?.nome 
-                : 'Nenhum cliente selecionado'}
+              {selectedEmpresa 
+                ? empresas.find(e => e.id === selectedEmpresa)?.nome_fantasia 
+                : 'Nenhuma empresa selecionada'}
             </span>
           </div>
           <div className="h-8 w-px bg-slate-700" />
@@ -937,7 +963,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         <Button 
           className="bg-blue-600 hover:bg-blue-700 text-white h-14 px-8 text-base font-semibold"
           onClick={handleFinalize}
-          disabled={loading || cartArray.length === 0 || !selectedCliente}
+          disabled={loading || cartArray.length === 0 || !selectedEmpresa}
         >
           {loading ? 'Processando...' : 'Finalizar Orçamento'}
           <span className="ml-2">→</span>
