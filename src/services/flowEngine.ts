@@ -671,10 +671,13 @@ export class FlowEngine {
           console.log(`  ✨ Valor formatado: "${rawValue}" -> "${value}"`);
           
           // Campos que vão direto na tabela empresas
-          if (['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(field)) {
+          if (['cnpj', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep', 'bairro', 'nome_fantasia'].includes(field)) {
             empresaData[field] = value;
+          } else if (field === 'razao_social') {
+            // razao_social mapeia para coluna 'nome' na tabela empresas
+            empresaData['nome'] = value;
           } else {
-            // Campos como bairro, inscricao vão para custom_fields
+            // Outros campos vão para custom_fields
             customFields[field] = value;
           }
         }
@@ -722,7 +725,8 @@ export class FlowEngine {
         // Mapear IDs de campo para nomes da tabela
         const fieldMapping: Record<string, string> = {
           cpf_cnpj: "cnpj",
-          company_name: "razao_social",
+          company_name: "nome",
+          razao_social: "nome",
           company_fantasia: "nome_fantasia",
           address: "endereco",
           neighborhood: "bairro",
@@ -760,7 +764,7 @@ export class FlowEngine {
 
       // Se não tem configuração, usar campos obrigatórios padrão
       if (camposObrigatorios.length === 0) {
-        camposObrigatorios = ['cnpj', 'razao_social', 'nome_fantasia'];
+        camposObrigatorios = ['cnpj', 'nome', 'nome_fantasia'];
       }
 
       console.log("✅ Campos obrigatórios identificados (normalizados):", camposObrigatorios);
@@ -772,7 +776,7 @@ export class FlowEngine {
 
       // Validar campos obrigatórios (exceto tipo que é automático)
       const camposFaltando = camposParaValidar.filter(campo => {
-        const isTableField = ['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(campo);
+        const isTableField = ['cnpj', 'nome', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep', 'bairro'].includes(campo);
         if (isTableField) {
           const valorTabela = empresaData[campo];
           const faltando = !valorTabela || (typeof valorTabela === 'string' && valorTabela.trim() === '');

@@ -697,9 +697,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               if (raw && raw.trim()) {
                 const value = formatValue(field, raw);
                 if ([
-                  'cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'
+                  'cnpj','email','telefone','endereco','cidade','estado','cep','bairro','nome_fantasia'
                 ].includes(field)) {
                   empresaData[field] = value;
+                } else if (field === 'razao_social') {
+                  empresaData['nome'] = value;
                 } else {
                   customFields[field] = value;
                 }
@@ -739,7 +741,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const mapIds: Record<string, string> = {
               company_type: 'tipo',
               cpf_cnpj: 'cnpj',
-              company_name: 'razao_social',
+              company_name: 'nome',
+              razao_social: 'nome',
               company_fantasia: 'nome_fantasia',
               address: 'endereco',
               city: 'cidade',
@@ -755,12 +758,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               .filter((s: string) => !EXCLUDE.has(s));
           }
           if (camposObrigatorios.length === 0) {
-            camposObrigatorios = ['cnpj','razao_social','nome_fantasia'];
+            camposObrigatorios = ['cnpj','nome','nome_fantasia'];
           }
 
           const camposParaValidar = camposObrigatorios;
           const faltando = camposParaValidar.filter((campo) => {
-            const isTableField = ['cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'].includes(campo);
+            const isTableField = ['cnpj','nome','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'].includes(campo);
             if (isTableField) {
               return !(empresaData as any)[campo];
             }
@@ -803,7 +806,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 addSystemMessage(`❌ Erro ao atualizar empresa: ${updateError.message}`);
                 break;
               }
-              addSuccessMessage(`✅ Empresa atualizada: ${empresaData.nome_fantasia || empresaData.razao_social}`);
+              addSuccessMessage(`✅ Empresa atualizada: ${empresaData.nome_fantasia || empresaData.nome}`);
             } else {
               addSystemMessage(`ℹ️ Empresa já cadastrada (não foi atualizada).`);
             }
@@ -816,7 +819,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               addSystemMessage(`❌ Erro ao criar empresa: ${insertError.message}`);
               break;
             }
-            addSuccessMessage(`✅ Empresa cadastrada: ${empresaData.nome_fantasia || empresaData.razao_social}`);
+            addSuccessMessage(`✅ Empresa cadastrada: ${empresaData.nome_fantasia || empresaData.nome}`);
           }
 
           const outputVar = config.outputVariable || 'cliente_novo';
