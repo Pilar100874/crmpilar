@@ -33,7 +33,7 @@ export default function MarketingAutomacoes() {
       }
 
       const { data, error } = await supabase
-        .from("marketing_automations")
+        .from("marketing_automations" as any)
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
         .order("created_at", { ascending: false });
@@ -51,7 +51,7 @@ export default function MarketingAutomacoes() {
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     try {
       const { error } = await supabase
-        .from("marketing_automations")
+        .from("marketing_automations" as any)
         .update({ active: !currentActive })
         .eq("id", id);
 
@@ -69,7 +69,7 @@ export default function MarketingAutomacoes() {
 
     try {
       const { error } = await supabase
-        .from("marketing_automations")
+        .from("marketing_automations" as any)
         .delete()
         .eq("id", id);
 

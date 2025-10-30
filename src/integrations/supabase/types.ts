@@ -1101,6 +1101,39 @@ export type Database = {
           },
         ]
       }
+      marketing_automations: {
+        Row: {
+          active: boolean
+          config: Json
+          created_at: string
+          description: string | null
+          estabelecimento_id: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          config?: Json
+          created_at?: string
+          description?: string | null
+          estabelecimento_id: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          config?: Json
+          created_at?: string
+          description?: string | null
+          estabelecimento_id?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: string[] | null

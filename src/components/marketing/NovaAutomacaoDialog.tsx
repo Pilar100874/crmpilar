@@ -23,12 +23,18 @@ interface NovaAutomacaoDialogProps {
   onSuccess: () => void;
 }
 
+interface WebhookVariable {
+  name: string;
+  type: string;
+  required: boolean;
+}
+
 interface Webhook {
   id: string;
   name: string;
   url: string;
   method: string;
-  variables: Array<{ name: string; type: string; required: boolean }>;
+  variables: WebhookVariable[];
 }
 
 export default function NovaAutomacaoDialog({
@@ -94,7 +100,19 @@ export default function NovaAutomacaoDialog({
         .eq("type", "bot");
 
       if (error) throw error;
-      setWebhooks(data || []);
+      
+      // Parse variables from JSON
+      const parsedWebhooks = (data || []).map(webhook => ({
+        id: webhook.id,
+        name: webhook.name,
+        url: webhook.url,
+        method: webhook.method,
+        variables: Array.isArray(webhook.variables) 
+          ? (webhook.variables as unknown as WebhookVariable[])
+          : []
+      }));
+      
+      setWebhooks(parsedWebhooks);
     } catch (error) {
       console.error("Erro ao carregar webhooks:", error);
     }
@@ -140,7 +158,7 @@ export default function NovaAutomacaoDialog({
       }
 
       const { error } = await supabase
-        .from("marketing_automations")
+        .from("marketing_automations" as any)
         .insert({
           name: nome.trim(),
           description: descricao.trim(),
