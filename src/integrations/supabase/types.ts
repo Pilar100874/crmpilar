@@ -2327,6 +2327,7 @@ export type Database = {
           has_variables: boolean | null
           id: string
           input_variables: Json | null
+          local_uso: string | null
           method: string
           name: string
           type: string
@@ -2344,6 +2345,7 @@ export type Database = {
           has_variables?: boolean | null
           id?: string
           input_variables?: Json | null
+          local_uso?: string | null
           method?: string
           name: string
           type: string
@@ -2361,6 +2363,7 @@ export type Database = {
           has_variables?: boolean | null
           id?: string
           input_variables?: Json | null
+          local_uso?: string | null
           method?: string
           name?: string
           type?: string

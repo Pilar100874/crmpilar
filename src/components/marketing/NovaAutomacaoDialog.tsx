@@ -93,7 +93,7 @@ export default function NovaAutomacaoDialog({
       if (!estabelecimentoId) return;
 
       const { data, error } = await supabase
-        .from("webhooks" as any)
+        .from("webhooks")
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("active", true)
@@ -102,7 +102,7 @@ export default function NovaAutomacaoDialog({
       if (error) throw error;
       
       // Parse variables from JSON
-      const parsedWebhooks = (data || []).map((webhook: any) => ({
+      const parsedWebhooks = (data || []).map(webhook => ({
         id: webhook.id,
         name: webhook.name,
         url: webhook.url,
