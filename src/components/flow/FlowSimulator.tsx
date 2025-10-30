@@ -676,7 +676,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               case 'telefone':
                 return v.replace(/\D/g, '');
               case 'email':
-                return v.toLowerCase();
+                return v.toLowerCase().replace(/\s/g, '');
               case 'estado':
                 return v.toUpperCase().substring(0, 2);
               case 'razao_social':

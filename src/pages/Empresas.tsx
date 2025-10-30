@@ -852,9 +852,51 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       if (field.type === "phone" || field.id === "phone") {
         maskedValue = maskWhatsApp(value);
       }
+      
+      if (field.type === "email" || field.id === "email") {
+        maskedValue = value.toLowerCase().replace(/\s/g, '');
+      }
 
       setFormData(prev => ({ ...prev, [field.id]: maskedValue }));
       setFieldErrors(prev => ({ ...prev, [field.id]: '' }));
+    };
+
+    const handleContactFieldBlur = async () => {
+      const value = formData[field.id];
+      if (!value || !estabelecimentoId) return;
+      
+      // Verificar duplicidade de WhatsApp
+      if ((field.type === "phone" || field.id === "phone") && value) {
+        const cleanPhone = value.replace(/\D/g, '');
+        const { data } = await supabase
+          .from('customers')
+          .select('id, nome, telefone, email')
+          .eq('estabelecimento_id', estabelecimentoId);
+        
+        const duplicate = data?.find(c => {
+          const existingPhone = c.telefone?.replace(/\D/g, '') || '';
+          return existingPhone === cleanPhone;
+        });
+        
+        if (duplicate) {
+          setFieldErrors(prev => ({ ...prev, [field.id]: 'WhatsApp já cadastrado' }));
+          toast.error(`WhatsApp já cadastrado para ${duplicate.nome}`);
+        }
+      }
+      
+      // Verificar duplicidade de E-mail
+      if ((field.type === "email" || field.id === "email") && value) {
+        const { data } = await supabase
+          .from('customers')
+          .select('id, nome, telefone, email')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .eq('email', value.toLowerCase());
+        
+        if (data && data.length > 0) {
+          setFieldErrors(prev => ({ ...prev, [field.id]: 'E-mail já cadastrado' }));
+          toast.error(`E-mail já cadastrado para ${data[0].nome}`);
+        }
+      }
     };
 
     switch (field.type) {
@@ -905,6 +947,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               placeholder="..."
               value={displayValue}
               onChange={(e) => handleContactFieldChange(e.target.value)}
+              onBlur={handleContactFieldBlur}
               required={field.required}
               className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}
             />

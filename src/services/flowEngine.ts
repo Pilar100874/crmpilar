@@ -618,8 +618,8 @@ export class FlowEngine {
         return telefoneNumeros;
       
       case 'email':
-        // Converter para minúsculas e fazer trim
-        return valorTrimmed.toLowerCase();
+        // Converter para minúsculas, fazer trim, e remover espaços
+        return valorTrimmed.toLowerCase().replace(/\s/g, '');
       
       case 'estado':
         // Converter para maiúsculas e limitar a 2 caracteres
