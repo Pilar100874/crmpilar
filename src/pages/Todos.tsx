@@ -420,6 +420,17 @@ export default function Todos() {
               Visualize e gerencie todos os registros do sistema
             </p>
           </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConfigSheet(true)}
+              className="gap-2 border-border/40"
+            >
+              <Settings2 className="w-4 h-4" />
+              Configurar
+            </Button>
+          </div>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
