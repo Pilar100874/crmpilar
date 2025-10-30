@@ -1727,16 +1727,18 @@ export default function Contatos() {
 
   if (!showForm) {
     return (
-      <div className="flex-1 flex flex-col h-full bg-background">
-        <div className="border-b border-border bg-card px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-foreground">CONTATOS</h1>
-            <div className="flex items-center gap-2">
+      <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
+        <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-light tracking-tight text-foreground">Contatos</h1>
+              <p className="text-sm text-muted-foreground mt-1">Gerencie seus contatos e clientes</p>
+            </div>
+            <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => setShowImportPanel(true)} 
-                className="gap-2"
-                size="sm"
+                className="gap-2 shadow-sm"
               >
                 <Upload className="w-4 h-4" />
                 Importação
@@ -1752,9 +1754,9 @@ export default function Contatos() {
                 setBuscaEmpresa("");
                 setEmpresasFiltradas([]);
                 setEmpresasVinculadas([]);
-              }} className="gap-2">
+              }} className="gap-2 shadow-sm">
                 <Plus className="w-4 h-4" />
-                ADICIONAR CONTATO
+                Novo Contato
               </Button>
             </div>
           </div>
@@ -1789,10 +1791,10 @@ export default function Contatos() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome, WhatsApp ou e-mail..."
+                  placeholder="Buscar contatos..."
                   value={searchFilters.unifiedSearch}
                   onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
-                  className="pl-10 h-9"
+                  className="pl-10 h-10 border-border/40 focus-visible:ring-1 bg-background/50"
                 />
               </div>
             </div>
@@ -1809,21 +1811,27 @@ export default function Contatos() {
               </Button>
             )}
             
-            <div className="ml-auto text-sm text-muted-foreground">
-              {sortedContacts.length} elementos
+            <div className="ml-auto text-sm font-light text-muted-foreground">
+              {sortedContacts.length} {sortedContacts.length === 1 ? 'contato' : 'contatos'}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto p-6">
           {sortedContacts.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              Nenhum contato cadastrado. Clique em "ADICIONAR CONTATO" para começar.
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-8 h-8 text-muted-foreground/50" />
+                </div>
+                <p className="text-lg font-light text-foreground mb-2">Nenhum contato encontrado</p>
+                <p className="text-sm text-muted-foreground">Adicione seu primeiro contato para começar</p>
+              </div>
             </div>
           ) : (
-            <div className="relative">
+            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
               <table className="w-full">
-                <thead className="border-b border-border sticky top-0 bg-background z-10">
+                <thead className="border-b border-border/40 bg-muted/30">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
                        <th
@@ -1839,7 +1847,7 @@ export default function Contatos() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-5 w-5 hover:bg-transparent"
+                              className="h-5 w-5 hover:bg-background/50"
                               onClick={() => handleSort(column.id)}
                             >
                               {getSortIcon(column.id)}
@@ -2082,71 +2090,86 @@ export default function Contatos() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
-      <div className="border-b border-border bg-card px-6 py-4">
+      <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-foreground">
-            {editingContact ? "Editar Contato" : "Novo Contato"}
-          </h1>
-          <Button variant="ghost" size="sm" className="gap-2 ml-auto">
-            #ADICIONAR TAGS
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowForm(false)}
+            className="hover:bg-accent/50"
+          >
+            <X className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-4 h-4" />
+          <div className="flex-1">
+            <h1 className="text-2xl font-light tracking-tight text-foreground">
+              {editingContact ? "Editar Contato" : "Novo Contato"}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {editingContact ? "Atualize as informações do contato" : "Preencha os dados do novo contato"}
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+            <Plus className="w-4 h-4" />
+            Tags
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto">
-        <Tabs defaultValue="contato" className="w-full">
-          <div className="border-b border-border bg-card px-6">
-            <TabsList className="bg-transparent h-auto p-0">
-              <TabsTrigger 
-                value="contato"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Contato
-              </TabsTrigger>
-              <TabsTrigger 
-                value="empresa" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent"
-              >
-                Empresa
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      <div className="flex-1 overflow-auto p-8">
+        <Tabs defaultValue="contato" className="w-full max-w-6xl mx-auto">
+          <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-6">
+            <TabsTrigger 
+              value="contato"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Dados do Contato
+            </TabsTrigger>
+            <TabsTrigger 
+              value="empresa" 
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Empresa
+            </TabsTrigger>
+          </TabsList>
 
-          <TabsContent value="contato" className="p-6">
-            <Card className="p-4">
-              <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-                Dados do Contato
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {contactFields.map((field) => (
-                  <div key={field.id}>
-                    <Label 
-                      htmlFor={field.id} 
-                      className={`text-sm font-medium ${
-                        field.id === 'name' || field.id === 'phone' 
-                          ? 'text-primary font-semibold text-base' 
-                          : 'text-foreground'
-                      }`}
-                    >
-                      {field.label} {field.required && '*'}
-                    </Label>
+          <TabsContent value="contato" className="space-y-6">
+            <Card className="border-border/40 shadow-sm">
+              <div className="p-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-wide">
+                  Informações do Contato
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {contactFields.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label 
+                        htmlFor={field.id} 
+                        className={`text-sm font-medium ${
+                          field.id === 'name' || field.id === 'phone' 
+                            ? 'text-primary font-semibold text-base' 
+                            : 'text-foreground'
+                        }`}
+                      >
+                        {field.label} {field.required && <span className="text-destructive ml-1">*</span>}
+                      </Label>
                     <div className={field.id === 'name' || field.id === 'phone' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
                       {renderField(field)}
                     </div>
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             </Card>
 
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowForm(false)}
+                className="border-border/40"
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleSaveContact}>
-                {empresaSelecionada ? "Salvar Contato" : "Salvar Prospect"}
+              <Button onClick={handleSaveContact} className="shadow-sm">
+                {empresaSelecionada ? "Salvar Cliente" : "Salvar Prospect"}
               </Button>
             </div>
           </TabsContent>
@@ -2334,11 +2357,15 @@ export default function Contatos() {
               </Card>
             )}
 
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowForm(false)}
+                className="border-border/40"
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleSaveContact}>
+              <Button onClick={handleSaveContact} className="shadow-sm">
                 Salvar
               </Button>
             </div>
