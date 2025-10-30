@@ -788,38 +788,8 @@ export class FlowEngine {
       console.log("📋 Campos a validar (sem tipo):", camposParaValidar);
       console.log("📋 Valor do campo tipo:", customFields.tipo);
 
-      // Validar campos obrigatórios (exceto tipo que é automático)
-      const camposFaltando = camposParaValidar.filter(campo => {
-        const isTableField = ['cnpj', 'nome', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep', 'bairro'].includes(campo);
-        if (isTableField) {
-          const valorTabela = empresaData[campo];
-          const faltando = !valorTabela || (typeof valorTabela === 'string' && valorTabela.trim() === '');
-          if (faltando) console.log(`  ❌ Campo obrigatório faltando (tabela): ${campo}`);
-          return faltando;
-        } else {
-          const valorCustom = customFields[campo];
-          const faltando = !valorCustom || (typeof valorCustom === 'string' && valorCustom.trim() === '');
-          if (faltando) console.log(`  ❌ Campo obrigatório faltando (custom): ${campo}, valor atual: ${valorCustom}`);
-          return faltando;
-        }
-      });
-      
-      // Remoção defensiva: garantir que 'tipo' nunca bloqueie a criação
-      const camposFaltandoFinal = camposFaltando.filter(c => c !== 'tipo' && c !== 'type');
-      if (camposFaltando.includes('tipo')) {
-        console.warn("⚠️ Removendo 'tipo' da validação por ser preenchido automaticamente.");
-      }
-      
-      if (camposFaltandoFinal.length > 0) {
-        console.error("❌ Campos obrigatórios não preenchidos:", camposFaltandoFinal.join(", "));
-        await this.onResponse({
-          type: "text",
-          content: `Não foi possível cadastrar a empresa. Campos obrigatórios faltando: ${camposFaltandoFinal.join(", ")}`,
-        });
-        return;
-      }
-
-      console.log("✅ Todos os campos obrigatórios preenchidos!");
+      // Permitir salvar mesmo se variáveis obrigatórias vierem vazias
+      console.log("ℹ️ Validação de campos obrigatórios desabilitada - permitindo cadastro com campos vazios");
 
       // Buscar empresa existente pelo CNPJ
       console.log("🔍 Buscando empresa existente com CNPJ:", empresaData.cnpj);
