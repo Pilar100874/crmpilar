@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import * as React from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,6 +60,7 @@ interface Contato {
 }
 
 export default function Empresas() {
+  const location = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
@@ -339,6 +341,19 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     };
     fetchEstabelecimento();
   }, []);
+
+  // Detectar se há um ID de empresa para editar vindo da navegação
+  useEffect(() => {
+    const state = location.state as { editEmpresaId?: string };
+    if (state?.editEmpresaId && empresas.length > 0) {
+      const empresaToEdit = empresas.find(e => e.id === state.editEmpresaId);
+      if (empresaToEdit) {
+        handleEditEmpresa(empresaToEdit);
+        // Limpar o state após usar
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, empresas]);
 
   const fetchEmpresas = async (estabId: string) => {
     const { data, error } = await supabase

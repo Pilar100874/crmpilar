@@ -761,7 +761,7 @@ export default function Todos() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigate('/contatos')}
+                                    onClick={() => navigate('/contatos', { state: { editContactId: contato.id } })}
                                     className="h-8 px-2 hover:bg-primary/10"
                                   >
                                     <Edit className="w-4 h-4" />
@@ -923,7 +923,7 @@ export default function Todos() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigate('/empresas')}
+                                    onClick={() => navigate('/empresas', { state: { editEmpresaId: empresa.id } })}
                                     className="h-8 px-2 hover:bg-primary/10"
                                   >
                                     <Edit className="w-4 h-4" />

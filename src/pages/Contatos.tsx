@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import * as React from "react";
 import * as XLSX from 'xlsx';
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,6 +93,7 @@ interface SearchFilters {
 }
 
 export default function Contatos() {
+  const location = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -392,6 +394,19 @@ export default function Contatos() {
     
     fetchEstabelecimentoAndSegmentos();
   }, []);
+
+  // Detectar se há um ID de contato para editar vindo da navegação
+  useEffect(() => {
+    const state = location.state as { editContactId?: string };
+    if (state?.editContactId && contacts.length > 0) {
+      const contactToEdit = contacts.find(c => c.id === state.editContactId);
+      if (contactToEdit) {
+        handleEditContact(contactToEdit);
+        // Limpar o state após usar
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, contacts]);
 
   // Carregar contatos do backend
   const loadContacts = async () => {
