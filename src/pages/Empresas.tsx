@@ -68,6 +68,10 @@ export default function Empresas() {
   // Estados para confirmação de exclusão
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [empresaToDelete, setEmpresaToDelete] = useState<Empresa | null>(null);
+  
+  // Estados para CNPJ/CPF duplicado
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateEmpresa, setDuplicateEmpresa] = useState<Empresa | null>(null);
 
   // Gerenciamento de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -430,6 +434,42 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const handleFieldChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setFieldErrors(prev => ({ ...prev, [field]: '' }));
+    
+    // Verificar duplicação de CNPJ/CPF ao perder foco
+    if (field === 'cpf_cnpj' && value && value.length >= 11) {
+      checkDuplicateCnpjCpf(value);
+    }
+  };
+  
+  const checkDuplicateCnpjCpf = async (cnpjCpf: string) => {
+    if (!estabelecimentoId) return;
+    
+    // Limpar formatação
+    const cleanValue = cnpjCpf.replace(/\D/g, '');
+    if (cleanValue.length < 11) return; // Aguardar entrada completa
+    
+    // Verificar se é uma edição do mesmo registro
+    if (editingEmpresa && editingEmpresa.cnpj?.replace(/\D/g, '') === cleanValue) {
+      return;
+    }
+    
+    const { data, error } = await supabase
+      .from('empresas')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId);
+    
+    if (error) {
+      console.error('Erro ao verificar CNPJ/CPF:', error);
+      return;
+    }
+    
+    // Comparar valores limpos
+    const duplicate = data?.find(emp => emp.cnpj?.replace(/\D/g, '') === cleanValue);
+    
+    if (duplicate) {
+      setDuplicateEmpresa(duplicate);
+      setDuplicateDialogOpen(true);
+    }
   };
 
   const handleCEPLookup = async (cep: string) => {
@@ -1407,6 +1447,38 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteEmpresa}>
               Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Dialog de CNPJ/CPF duplicado */}
+      <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>CNPJ/CPF já cadastrado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este CNPJ/CPF já está cadastrado para a empresa <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
+              {"\n\n"}
+              Deseja ir para o cadastro existente?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDuplicateDialogOpen(false);
+              setDuplicateEmpresa(null);
+              setFormData(prev => ({ ...prev, cpf_cnpj: '' }));
+            }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (duplicateEmpresa) {
+                handleEditEmpresa(duplicateEmpresa);
+              }
+              setDuplicateDialogOpen(false);
+              setDuplicateEmpresa(null);
+            }}>
+              Ir para o cadastro
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
