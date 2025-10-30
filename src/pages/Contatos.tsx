@@ -100,6 +100,11 @@ export default function Contatos() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   
+  // Estados para validação de duplicidade
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateContact, setDuplicateContact] = useState<any | null>(null);
+  const [duplicateField, setDuplicateField] = useState<'phone' | 'email' | null>(null);
+  
   // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
     { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
@@ -690,6 +695,16 @@ export default function Contatos() {
     const handleFieldBlur = () => {
       const cleanValue = value.replace(/\D/g, '');
       
+      // Verificar duplicidade de WhatsApp
+      if (field.id === "phone" && value) {
+        checkDuplicate('phone', value);
+      }
+      
+      // Verificar duplicidade de Email
+      if (field.id === "email" && value) {
+        checkDuplicate('email', value);
+      }
+      
       // Validar CPF/CNPJ ao sair do campo
       if (field.id === "cpf_cnpj") {
         const companyType = formData.company_type;
@@ -1111,6 +1126,121 @@ export default function Contatos() {
     
     setDeleteDialogOpen(false);
     setContactToDelete(null);
+  };
+
+  // Função para verificar duplicidade de WhatsApp ou Email
+  const checkDuplicate = async (field: 'phone' | 'email', value: string) => {
+    if (!value || !estabelecimentoId) return;
+    
+    // Se estamos editando e o valor não mudou, não verificar
+    if (editingContact && editingContact[field] === value) return;
+    
+    // Limpar o valor para comparação
+    const cleanValue = field === 'phone' ? value.replace(/\D/g, '') : value.toLowerCase().trim();
+    if (!cleanValue) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId);
+      
+      if (error) throw error;
+      
+      // Verificar se existe um contato com o mesmo valor
+      const duplicate = data?.find(contact => {
+        if (field === 'phone') {
+          const contactPhone = contact.telefone?.replace(/\D/g, '');
+          return contactPhone === cleanValue && contact.id !== editingContact?.id;
+        } else {
+          const contactEmail = contact.email?.toLowerCase().trim();
+          return contactEmail === cleanValue && contact.id !== editingContact?.id;
+        }
+      });
+      
+      if (duplicate) {
+        setDuplicateContact(duplicate);
+        setDuplicateField(field);
+        setDuplicateDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar duplicidade:', error);
+    }
+  };
+
+  const loadDuplicateContact = async () => {
+    if (!duplicateContact) return;
+    
+    // Carregar dados do contato duplicado no formulário
+    const baseFormData: Record<string, any> = {
+      name: duplicateContact.nome,
+      phone: duplicateContact.telefone,
+      email: duplicateContact.email,
+      position: duplicateContact.custom_fields?.position || "",
+    };
+    
+    // Carregar campos customizados
+    if (duplicateContact.custom_fields) {
+      Object.keys(duplicateContact.custom_fields).forEach(key => {
+        if (!['position'].includes(key)) {
+          baseFormData[key] = duplicateContact.custom_fields[key];
+        }
+      });
+    }
+    
+    setEditingContact({
+      id: duplicateContact.id,
+      name: duplicateContact.nome,
+      phone: duplicateContact.telefone,
+      email: duplicateContact.email,
+      position: duplicateContact.custom_fields?.position || "",
+      customFields: duplicateContact.custom_fields || {},
+      company: "",
+      segmentos: [],
+      active: true,
+      createdAt: duplicateContact.created_at,
+      responsible: "",
+      tags: duplicateContact.tags || [],
+      createdBy: "",
+      modifiedAt: "",
+      modifiedBy: ""
+    });
+    setFormData(baseFormData);
+    
+    // Carregar empresas vinculadas
+    const { data: vinculos } = await supabase
+      .from('customer_empresas')
+      .select(`
+        id,
+        is_primary,
+        empresas:empresa_id (
+          id,
+          nome_fantasia,
+          nome,
+          cnpj,
+          custom_fields
+        )
+      `)
+      .eq('customer_id', duplicateContact.id);
+    
+    if (vinculos) {
+      const empresasFormatadas = vinculos.map(v => ({
+        id: v.empresas.id,
+        nome_fantasia: v.empresas.nome_fantasia,
+        nome: v.empresas.nome,
+        cnpj: v.empresas.cnpj,
+        custom_fields: v.empresas.custom_fields,
+        is_primary: v.is_primary,
+        vinculo_id: v.id
+      }));
+      setEmpresasVinculadas(empresasFormatadas);
+    }
+    
+    setDuplicateDialogOpen(false);
+    setDuplicateContact(null);
+    setDuplicateField(null);
+    
+    toast.info(`Cadastro de ${duplicateContact.nome} carregado!`);
   };
 
   const handleAddEmpresaVinculada = async (empresaId: string) => {
@@ -1733,6 +1863,38 @@ export default function Contatos() {
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDelete}>
                 Confirmar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Dialog de contato duplicado */}
+        <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Contato já cadastrado</AlertDialogTitle>
+              <AlertDialogDescription>
+                Já existe um contato cadastrado com este {duplicateField === 'phone' ? 'WhatsApp' : 'e-mail'}:
+                <br /><br />
+                <strong>{duplicateContact?.nome}</strong>
+                <br />
+                WhatsApp: {duplicateContact?.telefone}
+                <br />
+                E-mail: {duplicateContact?.email}
+                <br /><br />
+                Deseja carregar o cadastro existente?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setDuplicateDialogOpen(false);
+                setDuplicateContact(null);
+                setDuplicateField(null);
+              }}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={loadDuplicateContact}>
+                Sim, carregar cadastro
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
