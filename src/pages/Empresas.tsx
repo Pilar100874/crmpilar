@@ -1012,7 +1012,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     {tableColumns.filter(col => col.visible).map((column, index) => (
                       <th
                         key={column.id}
-                        className={`text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground ${
+                        className={`text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative ${
                           index === 0 ? 'sticky left-0 bg-muted/30 border-r border-border/40 z-20' : ''
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
@@ -1031,7 +1031,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           )}
                         </div>
                         <div
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary bg-border/50 z-20"
+                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 z-20 transition-all"
                           style={{ touchAction: 'none' }}
                           onMouseDown={(e) => {
                             e.preventDefault();
@@ -1042,7 +1042,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             const handleMouseMove = (moveEvent: MouseEvent) => {
                               moveEvent.preventDefault();
                               const diff = moveEvent.clientX - startX;
-                              const newWidth = Math.max(60, startWidth + diff);
+                              const newWidth = Math.max(80, startWidth + diff);
                               setTableColumns(prev =>
                                 prev.map(col =>
                                   col.id === column.id ? { ...col, width: newWidth } : col
@@ -1250,12 +1250,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   
                   return (
                     <div key={field.id} className="space-y-2">
-                      <Label htmlFor={field.id} className="text-sm font-medium text-foreground">
+                      <Label 
+                        htmlFor={field.id} 
+                        className={`text-sm font-medium ${
+                          field.id === 'company_type' || field.id === 'cpf_cnpj' 
+                            ? 'text-primary font-semibold text-base' 
+                            : 'text-foreground'
+                        }`}
+                      >
                         {field.label} 
                         {field.required && <span className="text-destructive ml-1">*</span>}
                         {field.locked && <span className="text-xs text-muted-foreground ml-2">(preenchido automaticamente)</span>}
                       </Label>
-                      {renderField(field, finalDisabled)}
+                      <div className={field.id === 'company_type' || field.id === 'cpf_cnpj' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
+                        {renderField(field, finalDisabled)}
+                      </div>
                     </div>
                   );
                 })}
