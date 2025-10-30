@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, GripVertical, Trash2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -161,6 +162,8 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [fieldToDelete, setFieldToDelete] = useState<string | null>(null);
 
   // Form states
   const [fieldLabel, setFieldLabel] = useState("");
@@ -431,22 +434,29 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
   };
 
   const handleRemoveField = async (id: string) => {
-    if (!confirm("Tem certeza que deseja remover este campo?")) return;
+    setFieldToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteField = async () => {
+    if (!fieldToDelete) return;
 
     try {
       const { error } = await supabase
         .from("form_field_configs")
         .delete()
-        .eq("id", id);
+        .eq("id", fieldToDelete);
 
       if (error) throw error;
 
       toast.success("Campo removido");
       loadFields();
       onChanged?.();
+      setDeleteDialogOpen(false);
+      setFieldToDelete(null);
     } catch (error) {
-      console.error("Error updating field:", error);
-      toast.error("Erro ao atualizar campo");
+      console.error("Error removing field:", error);
+      toast.error("Erro ao remover campo");
     }
   };
 
@@ -651,6 +661,21 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover este campo? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteField}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
