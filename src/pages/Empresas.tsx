@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
-import { NovoContatoDialog } from "@/components/NovoContatoDialog";
+
 
 interface CustomField {
   id: string;
@@ -125,11 +125,11 @@ export default function Empresas() {
     { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: true },
   ]);
 
-  const [contactFields] = useState<CustomField[]>([
-    { id: "contact_name", label: "Nome", type: "text", category: "contact", required: true, locked: true },
-    { id: "contact_phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
-    { id: "contact_email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
-    { id: "contact_position", label: "Cargo", type: "text", category: "contact", required: false, locked: true },
+  const [contactFields, setContactFields] = useState<CustomField[]>([
+    { id: "name", label: "Nome", type: "text", category: "contact", required: true, locked: true },
+    { id: "phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
+    { id: "email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
+    { id: "position", label: "Cargo", type: "text", category: "contact", required: false, locked: true },
   ]);
 
   // Estados para carregar/salvar configs no banco
@@ -168,7 +168,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     return companyFields;
   }, [fieldConfigsFromDB, companyFields]);
 
-  // Carregar configurações de campos do banco
+  // Carregar configurações de campos de empresa do banco
   const loadFieldConfigs = async (estabId: string) => {
     console.log('🔄 Carregando configs do banco...');
     const { data, error } = await supabase
@@ -204,6 +204,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         }
         return field;
       }));
+      
+      // Carregar também os campos de contato
+      await loadContactFieldConfigs(estabId);
 
       // Atualizar colunas da tabela com campos customizados
       const customFieldColumns = data
@@ -223,6 +226,39 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     } else {
       // Se não tem configs no banco, criar padrão
       await createDefaultFieldConfigs(estabId);
+    }
+  };
+
+  // Carregar configurações de campos de contato do banco
+  const loadContactFieldConfigs = async (estabId: string) => {
+    console.log('🔄 Carregando campos de contato do banco...');
+    const { data, error } = await supabase
+      .from('form_field_configs')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .eq('form_type', 'contato')
+      .order('field_order');
+
+    if (error) {
+      console.error('❌ Erro ao carregar campos de contato:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      console.log('✅ Campos de contato carregados:', data.length);
+      const mappedFields: CustomField[] = data.map((campo) => {
+        const options = campo.options as any;
+        return {
+          id: campo.field_id,
+          label: campo.field_label,
+          type: campo.field_type as CustomField["type"],
+          category: "contact",
+          options: options?.options || [],
+          required: campo.required || false,
+          locked: campo.locked || false,
+        };
+      });
+      setContactFields(mappedFields);
     }
   };
 
@@ -280,7 +316,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
   const [criarNovoContato, setCriarNovoContato] = useState(false);
-  const [showNovoContatoDialog, setShowNovoContatoDialog] = useState(false);
   
   // Estados para segmentos
   const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string; estabelecimento_id: string }>>([]);
@@ -718,17 +753,23 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       // Criar novo contato se necessário
       if (criarNovoContato) {
+        // Preparar custom_fields com todos os campos de contato (exceto name, phone, email)
+        const customFieldsData: Record<string, any> = {};
+        contactFields.forEach(field => {
+          if (!['name', 'phone', 'email'].includes(field.id) && formData[field.id]) {
+            customFieldsData[field.id] = formData[field.id];
+          }
+        });
+
         const { data: novoContato, error: contatoErr } = await supabase
           .from('customers')
           .insert([{
             estabelecimento_id: estabId,
-            nome: formData.contact_name,
-            telefone: formData.contact_phone,
-            email: formData.contact_email,
+            nome: formData.name,
+            telefone: formData.phone,
+            email: formData.email,
             tipo_operador: true,
-            custom_fields: {
-              position: formData.contact_position || ""
-            }
+            custom_fields: customFieldsData
           }])
           .select('id')
           .maybeSingle();
@@ -786,6 +827,79 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       : <ArrowDown className="w-3 h-3 text-primary" />;
   };
 
+  const renderContactField = (field: CustomField) => {
+    const displayValue = formData[field.id] || "";
+
+    const handleContactFieldChange = (value: any) => {
+      let maskedValue = value;
+      
+      if (field.type === "phone" || field.id === "phone") {
+        maskedValue = maskWhatsApp(value);
+      }
+
+      setFormData(prev => ({ ...prev, [field.id]: maskedValue }));
+      setFieldErrors(prev => ({ ...prev, [field.id]: '' }));
+    };
+
+    switch (field.type) {
+      case "select":
+        return (
+          <Select
+            value={displayValue}
+            onValueChange={(value) => handleContactFieldChange(value)}
+          >
+            <SelectTrigger className={fieldErrors[field.id] ? "border-red-500" : ""}>
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map(opt => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "textarea":
+        return (
+          <Textarea
+            value={displayValue}
+            onChange={(e) => handleContactFieldChange(e.target.value)}
+            placeholder="..."
+            className={fieldErrors[field.id] ? "border-red-500" : ""}
+          />
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={field.id}
+              checked={!!displayValue}
+              onCheckedChange={(checked) => handleContactFieldChange(checked)}
+            />
+            <label htmlFor={field.id} className="text-sm cursor-pointer">
+              {field.label}
+            </label>
+          </div>
+        );
+      default:
+        return (
+          <div className="relative">
+            <Input
+              id={field.id}
+              type={field.type === "email" ? "email" : field.type === "number" ? "number" : "text"}
+              placeholder="..."
+              value={displayValue}
+              onChange={(e) => handleContactFieldChange(e.target.value)}
+              required={field.required}
+              className={fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""}
+            />
+            {fieldErrors[field.id] && (
+              <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
+            )}
+          </div>
+        );
+    }
+  };
+
   const renderField = (field: CustomField, isDisabled: boolean = false) => {
     const displayValue = formData[field.id] || "";
 
@@ -813,7 +927,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         maskedValue = formData.company_type === "Pessoa Física" ? maskCPF(value) : maskCNPJ(value);
       } else if (field.id === "cep") {
         maskedValue = maskCEP(value);
-      } else if (field.type === "phone" || field.id === "contact_phone") {
+      } else if (field.type === "phone") {
         maskedValue = maskWhatsApp(value);
       } else if (field.id === "phone") {
         maskedValue = maskPhone(value);
@@ -1348,12 +1462,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                               };
                               
                               // Carregar dados do contato + preservar empresa
+                              // Carregar dados do contato
                               const data: Record<string, any> = {
                                 ...empresaData,
-                                contact_name: contatoCompleto.nome,
-                                contact_phone: contatoCompleto.telefone,
-                                contact_email: contatoCompleto.email,
-                                contact_position: contatoCompleto.custom_fields?.position || "",
+                                name: contatoCompleto.nome,
+                                phone: contatoCompleto.telefone,
+                                email: contatoCompleto.email,
+                                ...contatoCompleto.custom_fields,
                               };
                               setFormData(data);
                               setCriarNovoContato(true);
@@ -1392,7 +1507,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setShowNovoContatoDialog(true);
+                      setCriarNovoContato(true);
                     }}
                   >
                     + Novo
@@ -1423,12 +1538,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </Card>
             )}
 
-            {/* Formulário de Novo Contato */}
+            {/* Formulário de Novo Contato - igual à tela de Contatos */}
             {criarNovoContato && (
               <Card className="p-4 mb-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Novo Contato
+                    Cadastrar Contato
                   </h3>
                   <Button
                     variant="ghost"
@@ -1452,11 +1567,19 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 <div className="grid grid-cols-2 gap-3">
                   {contactFields.map((field) => (
                     <div key={field.id}>
-                      <Label htmlFor={field.id} className="text-xs">
-                        {field.label} {field.required && <span className="text-red-500">*</span>}
-                        {field.locked && <span className="text-xs text-muted-foreground ml-1">(auto)</span>}
+                      <Label 
+                        htmlFor={field.id} 
+                        className={`text-sm font-medium ${
+                          field.id === 'name' || field.id === 'phone' 
+                            ? 'text-primary font-semibold text-base' 
+                            : 'text-foreground'
+                        }`}
+                      >
+                        {field.label} {field.required && '*'}
                       </Label>
-                      {renderField(field)}
+                      <div className={field.id === 'name' || field.id === 'phone' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
+                        {renderContactField(field)}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1594,12 +1717,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Dialog para adicionar novo contato */}
-      <NovoContatoDialog 
-        open={showNovoContatoDialog} 
-        onOpenChange={setShowNovoContatoDialog}
-      />
     </>
   );
 }
