@@ -130,7 +130,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired, onChanged }: Sor
           <Switch
             checked={field.required}
             onCheckedChange={() => onToggleRequired(field.id)}
-            disabled={field.field_id === "cpf_cnpj" || field.field_id === "company_type"}
+            disabled={field.field_id === "cpf_cnpj" || field.field_id === "company_type" || field.field_id === "telefone"}
           />
           <span className="text-sm text-muted-foreground whitespace-nowrap">Obrigatório</span>
         </div>

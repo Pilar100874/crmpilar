@@ -90,6 +90,11 @@ export default function Empresas() {
       { id: "email", label: "E-mail", visible: true, width: 250 },
       { id: "cidade", label: "Cidade", visible: false, width: 150 },
       { id: "estado", label: "UF", visible: false, width: 80 },
+      { id: "endereco", label: "Endereço", visible: false, width: 220 },
+      { id: "bairro", label: "Bairro", visible: false, width: 160 },
+      { id: "cep", label: "CEP", visible: false, width: 120 },
+      { id: "company_type", label: "Tipo", visible: false, width: 140 },
+      { id: "inscricao", label: "Inscrição", visible: false, width: 160 },
     ];
   });
 
@@ -155,7 +160,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           type: cfg.field_type,
           category: 'company',
           options: opts,
-          required: !!cfg.required,
+          required: cfg.field_id === 'telefone' ? false : !!cfg.required,
           locked: !!cfg.locked,
         };
       });
@@ -193,7 +198,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         if (dbConfig) {
           return {
             ...field,
-            required: dbConfig.required,
+            required: field.id === 'telefone' ? false : dbConfig.required,
             locked: dbConfig.locked,
           };
         }
@@ -202,11 +207,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       // Atualizar colunas da tabela com campos customizados
       const customFieldColumns = data
-        .filter((cfg: any) => {
-          // Incluir apenas campos que não são padrão da tabela
-          const standardTableFields = ['company_type', 'cpf_cnpj', 'company_name', 'company_fantasia', 'telefone', 'email', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao'];
-          return !standardTableFields.includes(cfg.field_id);
-        })
         .map((cfg: any): TableColumn => ({
           id: cfg.field_id,
           label: cfg.field_label,
@@ -214,19 +214,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           width: 150,
         }));
 
-      // Mesclar com colunas existentes
+      // Mesclar com colunas existentes (sem perder customizações)
       setTableColumns(prev => {
-        const standardCols = prev.filter(col => {
-          // Manter colunas padrão
-          const standardIds = ['actions', 'nome_fantasia', 'nome', 'cnpj', 'telefone', 'email', 'cidade', 'estado'];
-          return standardIds.includes(col.id);
-        });
-        
-        // Adicionar campos customizados que não existem ainda
-        const existingCustomIds = new Set(standardCols.map(c => c.id));
-        const newCustomCols = customFieldColumns.filter(c => !existingCustomIds.has(c.id));
-        
-        return [...standardCols, ...newCustomCols];
+        const existingIds = new Set(prev.map(c => c.id));
+        const toAdd = customFieldColumns.filter(c => !existingIds.has(c.id));
+        return [...prev, ...toAdd];
       });
     } else {
       // Se não tem configs no banco, criar padrão
@@ -1131,6 +1123,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             break;
                           case 'estado':
                             cellValue = empresa.estado || "-";
+                            break;
+                          case 'endereco':
+                            cellValue = empresa.endereco || "-";
+                            break;
+                          case 'cep':
+                            cellValue = empresa.cep || "-";
+                            break;
+                          case 'bairro':
+                            cellValue = (empresa as any).bairro || "-";
+                            break;
+                          case 'company_type':
+                            cellValue = empresa.custom_fields?.company_type || "-";
+                            break;
+                          case 'inscricao':
+                            cellValue = empresa.custom_fields?.inscricao || "-";
                             break;
                           default:
                             // Campos customizados vêm do custom_fields
