@@ -1440,15 +1440,15 @@ export default function Contatos() {
                 <thead className="border-b border-border sticky top-0 bg-background z-10">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
-                      <th
+                       <th
                         key={column.id}
-                        className={`text-left p-3 font-medium text-sm text-muted-foreground relative ${
-                          index === 0 ? 'sticky left-0 bg-background border-r border-border z-20' : ''
+                        className={`text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative ${
+                          index === 0 ? 'sticky left-0 bg-muted/30 border-r border-border/40 z-20' : ''
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
-                          <span>{column.label.toUpperCase()}</span>
+                          <span>{column.label}</span>
                           {column.id !== 'actions' && (
                             <Button
                               variant="ghost"
@@ -1461,7 +1461,7 @@ export default function Contatos() {
                           )}
                         </div>
                         <div
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary bg-border/50 z-20"
+                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 z-20 transition-all"
                           style={{ touchAction: 'none' }}
                           onMouseDown={(e) => {
                             e.preventDefault();
@@ -1472,7 +1472,7 @@ export default function Contatos() {
                             const handleMouseMove = (moveEvent: MouseEvent) => {
                               moveEvent.preventDefault();
                               const diff = moveEvent.clientX - startX;
-                              const newWidth = Math.max(60, startWidth + diff);
+                              const newWidth = Math.max(80, startWidth + diff);
                               setTableColumns(prev =>
                                 prev.map(col =>
                                   col.id === column.id ? { ...col, width: newWidth } : col
@@ -1716,10 +1716,19 @@ export default function Contatos() {
               <div className="grid grid-cols-2 gap-3">
                 {contactFields.map((field) => (
                   <div key={field.id}>
-                    <Label htmlFor={field.id} className="text-xs">
+                    <Label 
+                      htmlFor={field.id} 
+                      className={`text-sm font-medium ${
+                        field.id === 'name' || field.id === 'phone' 
+                          ? 'text-primary font-semibold text-base' 
+                          : 'text-foreground'
+                      }`}
+                    >
                       {field.label} {field.required && '*'}
                     </Label>
-                    {renderField(field)}
+                    <div className={field.id === 'name' || field.id === 'phone' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
+                      {renderField(field)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1897,10 +1906,19 @@ export default function Contatos() {
                 <div className="grid grid-cols-2 gap-3">
                   {companyFields.map((field) => (
                     <div key={field.id}>
-                      <Label htmlFor={field.id} className="text-xs">
+                      <Label 
+                        htmlFor={field.id} 
+                        className={`text-sm font-medium ${
+                          field.id === 'company_type' || field.id === 'cpf_cnpj' 
+                            ? 'text-primary font-semibold text-base' 
+                            : 'text-foreground'
+                        }`}
+                      >
                         {field.label} {field.required && '*'}
                       </Label>
-                      {renderField(field)}
+                      <div className={field.id === 'company_type' || field.id === 'cpf_cnpj' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
+                        {renderField(field)}
+                      </div>
                     </div>
                   ))}
                 </div>
