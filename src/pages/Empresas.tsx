@@ -529,6 +529,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     if (result) {
       setFormData(prev => ({
         ...prev,
+        cep: maskCEP(result.cep),
         address: result.logradouro,
         neighborhood: result.bairro,
         city: result.localidade,
@@ -1346,8 +1347,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               Dados da Empresa
             </TabsTrigger>
             <TabsTrigger 
-              value="contatos" 
+              value="contatos"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              onClick={() => setCriarNovoContato(false)}
             >
               Contatos Vinculados
             </TabsTrigger>

@@ -648,6 +648,7 @@ export default function Contatos() {
     if (data) {
       setFormData({
         ...formData,
+        cep: maskCEP(data.cep),
         address: data.logradouro,
         city: data.localidade,
         neighborhood: data.bairro,
@@ -2127,6 +2128,7 @@ export default function Contatos() {
             <TabsTrigger 
               value="empresa" 
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              onClick={() => setCriarNovaEmpresa(false)}
             >
               Empresa
             </TabsTrigger>
