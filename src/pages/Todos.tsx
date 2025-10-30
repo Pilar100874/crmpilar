@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Search, Filter, Building2, User, Settings2, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Filter, Building2, User, Settings2, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -26,10 +27,16 @@ interface Empresa {
   cnpj: string | null;
   telefone: string | null;
   email: string | null;
+  endereco: string | null;
   cidade: string | null;
+  estado: string | null;
+  cep: string | null;
+  bairro: string | null;
+  custom_fields?: any;
 }
 
 export default function Todos() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -43,6 +50,10 @@ export default function Todos() {
   const [todosSortConfig, setTodosSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [contatosSortConfig, setContatosSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [empresasSortConfig, setEmpresasSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  // Campos dinâmicos carregados do banco
+  const [contatoFieldsFromDB, setContatoFieldsFromDB] = useState<any[]>([]);
+  const [empresaFieldsFromDB, setEmpresaFieldsFromDB] = useState<any[]>([]);
 
   // Gerenciamento de colunas da tabela - Todos (aba combinada)
   const [todosTableColumns, setTodosTableColumns] = useState<TableColumn[]>(() => {
@@ -61,7 +72,7 @@ export default function Todos() {
     ];
   });
 
-  // Gerenciamento de colunas da tabela - Contatos
+  // Gerenciamento de colunas - gerar dinamicamente baseado nos campos do banco
   const [contatosTableColumns, setContatosTableColumns] = useState<TableColumn[]>(() => {
     const saved = localStorage.getItem("todosContatosTableColumns");
     if (saved) {
@@ -70,15 +81,11 @@ export default function Todos() {
       } catch {}
     }
     return [
+      { id: "actions", label: "Ações", visible: true, width: 100, locked: true },
       { id: "nome", label: "Nome", visible: true, width: 250, locked: true },
-      { id: "email", label: "E-mail", visible: true, width: 250 },
-      { id: "telefone", label: "Telefone", visible: true, width: 150 },
-      { id: "position", label: "Cargo", visible: true, width: 150 },
-      { id: "status", label: "Status", visible: true, width: 120 },
     ];
   });
 
-  // Gerenciamento de colunas da tabela - Empresas
   const [empresasTableColumns, setEmpresasTableColumns] = useState<TableColumn[]>(() => {
     const saved = localStorage.getItem("todosEmpresasTableColumns");
     if (saved) {
@@ -87,12 +94,8 @@ export default function Todos() {
       } catch {}
     }
     return [
+      { id: "actions", label: "Ações", visible: true, width: 100, locked: true },
       { id: "nome_fantasia", label: "Nome Fantasia", visible: true, width: 250, locked: true },
-      { id: "nome", label: "Razão Social", visible: true, width: 250 },
-      { id: "cnpj", label: "CNPJ", visible: true, width: 180 },
-      { id: "email", label: "E-mail", visible: true, width: 250 },
-      { id: "telefone", label: "Telefone", visible: true, width: 150 },
-      { id: "cidade", label: "Cidade", visible: true, width: 150 },
     ];
   });
 
@@ -114,6 +117,54 @@ export default function Todos() {
       setEstabelecimentoId(estabId);
       
       if (estabId) {
+        // Carregar campos configurados
+        const { data: contatoConfigs } = await supabase
+          .from('form_field_configs')
+          .select('*')
+          .eq('estabelecimento_id', estabId)
+          .eq('form_type', 'contato')
+          .order('field_order');
+
+        if (contatoConfigs) {
+          setContatoFieldsFromDB(contatoConfigs);
+          // Atualizar colunas baseado nos campos
+          const newCols: TableColumn[] = [
+            { id: "actions", label: "Ações", visible: true, width: 100, locked: true },
+          ];
+          contatoConfigs.forEach(cfg => {
+            newCols.push({
+              id: cfg.field_id,
+              label: cfg.field_label,
+              visible: true,
+              width: 180,
+            });
+          });
+          setContatosTableColumns(newCols);
+        }
+
+        const { data: empresaConfigs } = await supabase
+          .from('form_field_configs')
+          .select('*')
+          .eq('estabelecimento_id', estabId)
+          .eq('form_type', 'empresa')
+          .order('field_order');
+
+        if (empresaConfigs) {
+          setEmpresaFieldsFromDB(empresaConfigs);
+          const newCols: TableColumn[] = [
+            { id: "actions", label: "Ações", visible: true, width: 100, locked: true },
+          ];
+          empresaConfigs.forEach(cfg => {
+            newCols.push({
+              id: cfg.field_id,
+              label: cfg.field_label,
+              visible: true,
+              width: 180,
+            });
+          });
+          setEmpresasTableColumns(newCols);
+        }
+
         // Buscar contatos
         const { data: contatosData } = await supabase
           .from('customers')
@@ -132,7 +183,7 @@ export default function Todos() {
 
         if (empresasData) setEmpresas(empresasData);
 
-        // Buscar vínculos contato-empresa
+        // Buscar vínculos
         const { data: vinculos } = await supabase
           .from('customer_empresas')
           .select(`
@@ -158,7 +209,6 @@ export default function Todos() {
           });
           setContatoEmpresas(contatoEmpresasMap);
 
-          // Mapear empresas -> contatos
           const empresaContatosMap: Record<string, any[]> = {};
           vinculos.forEach((v: any) => {
             if (!empresaContatosMap[v.empresa_id]) {
@@ -678,7 +728,7 @@ export default function Todos() {
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                 <tbody>
                   {sortedContatos.map(contato => {
                     const isExpanded = expandedRows.has(contato.id);
                     const hasEmpresas = (contatoEmpresas[contato.id]?.length || 0) > 0;
@@ -687,44 +737,57 @@ export default function Todos() {
                       <>
                         <tr key={contato.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
                           <td className="p-3">
-                            {hasEmpresas && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => toggleRow(contato.id)}
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="w-4 h-4" />
-                                ) : (
-                                  <ChevronRight className="w-4 h-4" />
-                                )}
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-1">
+                              {hasEmpresas && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => toggleRow(contato.id)}
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="w-4 h-4" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </td>
                           {visibleContatosColumns.map(col => {
-                            if (col.id === "nome") {
-                              return <td key={col.id} className="p-3 font-medium">{contato.nome}</td>;
-                            }
-                            if (col.id === "email") {
-                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.email}</td>;
-                            }
-                            if (col.id === "telefone") {
-                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.telefone}</td>;
-                            }
-                            if (col.id === "position") {
-                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.custom_fields?.position || "-"}</td>;
-                            }
-                            if (col.id === "status") {
+                            if (col.id === "actions") {
                               return (
                                 <td key={col.id} className="p-3">
-                                  <Badge variant={contato.tipo_operador ? "default" : "secondary"}>
-                                    {contato.tipo_operador ? "Cliente" : "Prospect"}
-                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => navigate('/contatos')}
+                                    className="h-8 px-2 hover:bg-primary/10"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
                                 </td>
                               );
                             }
-                            return <td key={col.id} className="p-3">-</td>;
+                            
+                            // Campos fixos
+                            if (col.id === "name" || col.id === "nome") {
+                              return <td key={col.id} className="p-3 font-medium">{contato.nome}</td>;
+                            }
+                            if (col.id === "email") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.email || "-"}</td>;
+                            }
+                            if (col.id === "phone" || col.id === "telefone") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{contato.telefone || "-"}</td>;
+                            }
+                            
+                            // Campos customizados
+                            const customValue = contato.custom_fields?.[col.id];
+                            return (
+                              <td key={col.id} className="p-3 text-muted-foreground">
+                                {customValue || "-"}
+                              </td>
+                            );
                           })}
                         </tr>
                         {isExpanded && hasEmpresas && (
@@ -827,7 +890,7 @@ export default function Todos() {
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                 <tbody>
                   {sortedEmpresas.map(empresa => {
                     const isExpanded = expandedRows.has(empresa.id);
                     const hasContatos = (empresaContatos[empresa.id]?.length || 0) > 0;
@@ -836,30 +899,48 @@ export default function Todos() {
                       <>
                         <tr key={empresa.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
                           <td className="p-3">
-                            {hasContatos && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => toggleRow(empresa.id)}
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="w-4 h-4" />
-                                ) : (
-                                  <ChevronRight className="w-4 h-4" />
-                                )}
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-1">
+                              {hasContatos && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => toggleRow(empresa.id)}
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="w-4 h-4" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </td>
                           {visibleEmpresasColumns.map(col => {
-                            if (col.id === "nome_fantasia") {
+                            if (col.id === "actions") {
+                              return (
+                                <td key={col.id} className="p-3">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => navigate('/empresas')}
+                                    className="h-8 px-2 hover:bg-primary/10"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                </td>
+                              );
+                            }
+                            
+                            // Campos fixos da empresa
+                            if (col.id === "nome_fantasia" || col.id === "company_fantasia") {
                               return <td key={col.id} className="p-3 font-medium">{empresa.nome_fantasia}</td>;
                             }
-                            if (col.id === "nome") {
+                            if (col.id === "nome" || col.id === "company_name") {
                               return <td key={col.id} className="p-3 text-muted-foreground">{empresa.nome || "-"}</td>;
                             }
-                            if (col.id === "cnpj") {
-                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.cnpj || "-"}</td>;
+                            if (col.id === "cnpj" || col.id === "cpf_cnpj") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.cnpj || empresa.custom_fields?.cpf_cnpj || "-"}</td>;
                             }
                             if (col.id === "email") {
                               return <td key={col.id} className="p-3 text-muted-foreground">{empresa.email || "-"}</td>;
@@ -867,10 +948,29 @@ export default function Todos() {
                             if (col.id === "telefone") {
                               return <td key={col.id} className="p-3 text-muted-foreground">{empresa.telefone || "-"}</td>;
                             }
-                            if (col.id === "cidade") {
+                            if (col.id === "cidade" || col.id === "city") {
                               return <td key={col.id} className="p-3 text-muted-foreground">{empresa.cidade || "-"}</td>;
                             }
-                            return <td key={col.id} className="p-3">-</td>;
+                            if (col.id === "estado" || col.id === "state") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.estado || "-"}</td>;
+                            }
+                            if (col.id === "endereco" || col.id === "address") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.endereco || "-"}</td>;
+                            }
+                            if (col.id === "bairro" || col.id === "neighborhood") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.bairro || empresa.custom_fields?.bairro || "-"}</td>;
+                            }
+                            if (col.id === "cep") {
+                              return <td key={col.id} className="p-3 text-muted-foreground">{empresa.cep || "-"}</td>;
+                            }
+                            
+                            // Campos customizados
+                            const customValue = empresa.custom_fields?.[col.id];
+                            return (
+                              <td key={col.id} className="p-3 text-muted-foreground">
+                                {customValue || "-"}
+                              </td>
+                            );
                           })}
                         </tr>
                         {isExpanded && hasContatos && (
