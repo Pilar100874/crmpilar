@@ -729,7 +729,9 @@ export class FlowEngine {
           state: "estado",
         };
 
-        camposObrigatorios = fieldConfigs.map(fc => fieldMapping[fc.field_id] || fc.field_id);
+        camposObrigatorios = fieldConfigs
+          .map(fc => fieldMapping[fc.field_id] || fc.field_id)
+          .map((s: any) => (typeof s === 'string' ? s.toLowerCase().trim() : String(s))) as string[];
       }
 
       // Se não tem configuração, usar campos obrigatórios padrão
@@ -737,10 +739,10 @@ export class FlowEngine {
         camposObrigatorios = ['cnpj', 'razao_social', 'nome_fantasia'];
       }
 
-      console.log("✅ Campos obrigatórios identificados:", camposObrigatorios);
+      console.log("✅ Campos obrigatórios identificados (normalizados):", camposObrigatorios);
 
       // Filtrar "tipo" dos campos obrigatórios, pois é preenchido automaticamente
-      const camposParaValidar = camposObrigatorios.filter(campo => campo !== 'tipo');
+      const camposParaValidar = camposObrigatorios.filter(campo => campo !== 'tipo' && campo !== 'type');
       console.log("📋 Campos a validar (sem tipo):", camposParaValidar);
       console.log("📋 Valor do campo tipo:", customFields.tipo);
 
@@ -748,7 +750,8 @@ export class FlowEngine {
       const camposFaltando = camposParaValidar.filter(campo => {
         const isTableField = ['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(campo);
         if (isTableField) {
-          const faltando = !empresaData[campo] || empresaData[campo].trim() === '';
+          const valorTabela = empresaData[campo];
+          const faltando = !valorTabela || (typeof valorTabela === 'string' && valorTabela.trim() === '');
           if (faltando) console.log(`  ❌ Campo obrigatório faltando (tabela): ${campo}`);
           return faltando;
         } else {
