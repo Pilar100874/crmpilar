@@ -739,8 +739,13 @@ export class FlowEngine {
 
       console.log("✅ Campos obrigatórios identificados:", camposObrigatorios);
 
-      // Validar campos obrigatórios
-      const camposFaltando = camposObrigatorios.filter(campo => {
+      // Filtrar "tipo" dos campos obrigatórios, pois é preenchido automaticamente
+      const camposParaValidar = camposObrigatorios.filter(campo => campo !== 'tipo');
+      console.log("📋 Campos a validar (sem tipo):", camposParaValidar);
+      console.log("📋 Valor do campo tipo:", customFields.tipo);
+
+      // Validar campos obrigatórios (exceto tipo que é automático)
+      const camposFaltando = camposParaValidar.filter(campo => {
         const isTableField = ['cnpj', 'razao_social', 'nome_fantasia', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep'].includes(campo);
         if (isTableField) {
           const faltando = !empresaData[campo] || empresaData[campo].trim() === '';
