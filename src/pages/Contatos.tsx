@@ -695,16 +695,6 @@ export default function Contatos() {
     const handleFieldBlur = () => {
       const cleanValue = value.replace(/\D/g, '');
       
-      // Verificar duplicidade de WhatsApp
-      if (field.id === "phone" && value) {
-        checkDuplicate('phone', value);
-      }
-      
-      // Verificar duplicidade de Email
-      if (field.id === "email" && value) {
-        checkDuplicate('email', value);
-      }
-      
       // Validar CPF/CNPJ ao sair do campo
       if (field.id === "cpf_cnpj") {
         const companyType = formData.company_type;
@@ -741,6 +731,11 @@ export default function Contatos() {
         if (!validateEmail(value)) {
           setFieldErrors(prev => ({ ...prev, [field.id]: "E-mail inválido" }));
           toast.error("E-mail inválido. Verifique o formato (exemplo@dominio.com)");
+        } else {
+          // Só verificar duplicidade se o email for válido
+          if (field.id === "email") {
+            checkDuplicate('email', value);
+          }
         }
       }
       
@@ -749,6 +744,11 @@ export default function Contatos() {
         if (!validateWhatsApp(value)) {
           setFieldErrors(prev => ({ ...prev, [field.id]: "WhatsApp inválido" }));
           toast.error("WhatsApp deve estar no formato +55 (XX) XXXXX-XXXX");
+        } else {
+          // Só verificar duplicidade se o telefone for válido
+          if (field.id === "phone") {
+            checkDuplicate('phone', value);
+          }
         }
       }
       
