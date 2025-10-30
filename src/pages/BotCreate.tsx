@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Workflow, ArrowRight, MoreVertical, Trash2, Edit, Power, Smartphone } from "lucide-react";
+import { Plus, Workflow, ArrowRight, MoreVertical, Trash2, Edit, Power, Smartphone, QrCode } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +49,10 @@ export default function BotCreate() {
   // WhatsApp Sessions
   const [whatsappSessions, setWhatsappSessions] = useState<any[]>([]);
   const [selectedSessions, setSelectedSessions] = useState<Record<string, string>>({});
+  const [showQRDialog, setShowQRDialog] = useState(false);
+  const [selectedQRSession, setSelectedQRSession] = useState<any>(null);
+  const [qrCodeData, setQrCodeData] = useState<string>("");
+  const [isLoadingQR, setIsLoadingQR] = useState(false);
 
 
   // Fail-safe para fechar overlays caso algo fique preso
@@ -125,6 +129,105 @@ export default function BotCreate() {
     } catch (error) {
       console.error("Error updating session:", error);
       toast.error("Erro ao associar número");
+    }
+  };
+
+  const handleShowQRCode = async (sessionId: string) => {
+    const session = whatsappSessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    setSelectedQRSession(session);
+    setShowQRDialog(true);
+    setIsLoadingQR(true);
+
+    try {
+      // Busca a configuração WAHA
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      const { data: config } = await supabase
+        .from('whatsapp_config')
+        .select('waha_url, waha_api_key')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .maybeSingle();
+
+      if (!config?.waha_url || !config?.waha_api_key) {
+        toast.error("Configure o servidor WAHA primeiro em Configurações > Estabelecimento");
+        setShowQRDialog(false);
+        return;
+      }
+
+      // Se já tem QR code salvo e sessão não está conectada, mostra o QR
+      if (session.qr_code && session.status !== 'WORKING') {
+        setQrCodeData(session.qr_code);
+        setIsLoadingQR(false);
+        return;
+      }
+
+      // Se a sessão está conectada, informa ao usuário
+      if (session.status === 'WORKING') {
+        toast.success("WhatsApp já está conectado!");
+        setShowQRDialog(false);
+        return;
+      }
+
+      // Se não tem QR code ou sessão não está iniciada, inicia a sessão
+      if (session.status === 'STOPPED' || !session.qr_code) {
+        // Inicia a sessão no WAHA
+        await fetch(`${config.waha_url}/api/sessions/${session.session_name}/start`, {
+          method: 'POST',
+          headers: {
+            'X-Api-Key': config.waha_api_key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        // Aguarda um pouco para o QR code ser gerado
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      // Busca o QR code do WAHA
+      const qrResponse = await fetch(
+        `${config.waha_url}/api/sessions/${session.session_name}/auth/qr`,
+        {
+          headers: {
+            'X-Api-Key': config.waha_api_key
+          }
+        }
+      );
+
+      if (!qrResponse.ok) {
+        throw new Error('Erro ao buscar QR code');
+      }
+
+      const qrData = await qrResponse.json();
+      
+      if (qrData.qr) {
+        setQrCodeData(qrData.qr);
+        
+        // Salva o QR code no banco
+        await supabase
+          .from('whatsapp_sessions')
+          .update({ 
+            qr_code: qrData.qr,
+            status: 'SCAN_QR_CODE'
+          })
+          .eq('id', session.id);
+
+        // Atualiza a lista de sessões
+        await loadWhatsAppSessions();
+      } else {
+        throw new Error('QR code não disponível');
+      }
+    } catch (error) {
+      console.error("Error loading QR code:", error);
+      toast.error("Erro ao carregar QR code. Verifique se a sessão está iniciada no servidor WAHA.");
+      setShowQRDialog(false);
+    } finally {
+      setIsLoadingQR(false);
     }
   };
 
@@ -499,24 +602,39 @@ export default function BotCreate() {
                       <Smartphone className="h-3 w-3" />
                       Número WhatsApp
                     </Label>
-                    <Select
-                      value={selectedSessions[bot.id] || "none"}
-                      onValueChange={(value) => handleSessionChange(bot.id, value === "none" ? "" : value)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Nenhum número" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhum</SelectItem>
-                        {whatsappSessions
-                          .filter(s => !s.bot_flow_id || s.bot_flow_id === bot.id)
-                          .map(session => (
-                            <SelectItem key={session.id} value={session.id}>
-                              {session.phone_number || session.session_name} ({session.status})
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-2">
+                      <Select
+                        value={selectedSessions[bot.id] || "none"}
+                        onValueChange={(value) => handleSessionChange(bot.id, value === "none" ? "" : value)}
+                      >
+                        <SelectTrigger className="h-8 text-xs flex-1">
+                          <SelectValue placeholder="Nenhum número" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          <SelectItem value="none">Nenhum</SelectItem>
+                          {whatsappSessions
+                            .filter(s => !s.bot_flow_id || s.bot_flow_id === bot.id)
+                            .map(session => (
+                              <SelectItem key={session.id} value={session.id}>
+                                {session.phone_number || session.session_name} ({session.status})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedSessions[bot.id] && selectedSessions[bot.id] !== "none" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShowQRCode(selectedSessions[bot.id]);
+                          }}
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <Button variant="outline" className="w-full">
                     <Edit className="w-4 h-4 mr-2" />
@@ -744,6 +862,58 @@ export default function BotCreate() {
               {isRenaming ? "Renomeando..." : "Renomear Bot"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog open={showQRDialog} onOpenChange={setShowQRDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Conectar WhatsApp</DialogTitle>
+            <DialogDescription>
+              Escaneie o QR code com seu WhatsApp para conectar
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-6 space-y-4">
+            {isLoadingQR ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="text-sm text-muted-foreground">Gerando QR code...</p>
+              </div>
+            ) : qrCodeData ? (
+              <>
+                <div className="bg-white p-4 rounded-lg">
+                  <img 
+                    src={qrCodeData} 
+                    alt="QR Code WhatsApp" 
+                    className="w-64 h-64"
+                  />
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-sm font-medium">
+                    Sessão: {selectedQRSession?.session_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Status: {selectedQRSession?.status}
+                  </p>
+                  <div className="mt-4 p-3 bg-muted rounded-lg text-xs space-y-1">
+                    <p className="font-medium">Como conectar:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-left">
+                      <li>Abra o WhatsApp no seu celular</li>
+                      <li>Toque em Menu ou Configurações</li>
+                      <li>Toque em Dispositivos conectados</li>
+                      <li>Toque em Conectar um dispositivo</li>
+                      <li>Aponte seu celular para esta tela para escanear o QR code</li>
+                    </ol>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                QR code não disponível
+              </p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
