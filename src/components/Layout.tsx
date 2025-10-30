@@ -291,7 +291,7 @@ export default function Layout({ children }: LayoutProps) {
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
       <SidebarProvider defaultOpen={true} open={true}>
         <div className="min-h-screen flex w-full bg-background">
-        <div className="w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col">
+        <div className="fixed left-0 top-0 bottom-0 w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
           {/* Logo no topo */}
           <div className="flex flex-col items-center py-4 border-b border-sidebar-border">
             <img 
@@ -465,7 +465,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
 
-        <main className="flex-1 flex flex-col bg-background min-w-0">
+        <main className="flex-1 flex flex-col bg-background min-w-0 ml-20">
           <div className="flex-1 overflow-auto bg-background">
             {children}
           </div>
