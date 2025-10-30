@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Workflow, ArrowRight, MoreVertical, Trash2, Edit, Power } from "lucide-react";
+import { Plus, Workflow, ArrowRight, MoreVertical, Trash2, Edit, Power, Smartphone } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,10 @@ export default function BotCreate() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
+  // WhatsApp Sessions
+  const [whatsappSessions, setWhatsappSessions] = useState<any[]>([]);
+  const [selectedSessions, setSelectedSessions] = useState<Record<string, string>>({});
+
 
   // Fail-safe para fechar overlays caso algo fique preso
   const closeOverlays = () => {
@@ -56,7 +61,72 @@ export default function BotCreate() {
 
   useEffect(() => {
     loadBots();
+    loadWhatsAppSessions();
   }, []);
+
+  useEffect(() => {
+    // Carrega as sessões selecionadas para cada bot
+    const sessions: Record<string, string> = {};
+    for (const bot of bots) {
+      const session = whatsappSessions.find(s => s.bot_flow_id === bot.id);
+      if (session) {
+        sessions[bot.id] = session.id;
+      }
+    }
+    setSelectedSessions(sessions);
+  }, [whatsappSessions, bots]);
+
+  const loadWhatsAppSessions = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from("whatsapp_sessions")
+        .select("*")
+        .eq("estabelecimento_id", estabelecimentoId);
+
+      if (error) {
+        console.error("Error loading WhatsApp sessions:", error);
+      } else if (data) {
+        console.log("Loaded WhatsApp sessions:", data);
+        setWhatsappSessions(data);
+      }
+    } catch (error) {
+      console.error("Error loading WhatsApp sessions:", error);
+    }
+  };
+
+  const handleSessionChange = async (botId: string, sessionId: string) => {
+    try {
+      // Limpar vinculação anterior
+      const previousSession = whatsappSessions.find(s => s.bot_flow_id === botId);
+      if (previousSession) {
+        await supabase
+          .from("whatsapp_sessions")
+          .update({ bot_flow_id: null })
+          .eq("id", previousSession.id);
+      }
+
+      // Atribuir nova sessão
+      if (sessionId) {
+        await supabase
+          .from("whatsapp_sessions")
+          .update({ bot_flow_id: botId })
+          .eq("id", sessionId);
+        
+        toast.success("Número WhatsApp associado ao bot!");
+      } else {
+        toast.success("Número WhatsApp removido do bot!");
+      }
+
+      setSelectedSessions(prev => ({ ...prev, [botId]: sessionId }));
+      await loadWhatsAppSessions();
+    } catch (error) {
+      console.error("Error updating session:", error);
+      toast.error("Erro ao associar número");
+    }
+  };
 
   const loadBots = async () => {
     try {
@@ -423,7 +493,31 @@ export default function BotCreate() {
                     })}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="mt-auto p-4 pt-0">
+                <CardContent className="mt-auto p-4 pt-0 space-y-3">
+                  <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                    <Label className="text-xs flex items-center gap-1">
+                      <Smartphone className="h-3 w-3" />
+                      Número WhatsApp
+                    </Label>
+                    <Select
+                      value={selectedSessions[bot.id] || ""}
+                      onValueChange={(value) => handleSessionChange(bot.id, value)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Nenhum número" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhum</SelectItem>
+                        {whatsappSessions
+                          .filter(s => !s.bot_flow_id || s.bot_flow_id === bot.id)
+                          .map(session => (
+                            <SelectItem key={session.id} value={session.id}>
+                              {session.phone_number || session.session_name} ({session.status})
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button variant="outline" className="w-full">
                     <Edit className="w-4 h-4 mr-2" />
                     Abrir Editor
