@@ -654,6 +654,10 @@ export class FlowEngine {
 
     console.log("📋 Field mappings recebidos:", fieldMappings);
 
+    // Definir automaticamente o tipo como "Pessoa Jurídica" ANTES de processar outros campos
+    customFields.tipo = "Pessoa Jurídica";
+    console.log("✅ Tipo definido automaticamente como 'Pessoa Jurídica'");
+
     // Processar cada campo mapeado
     for (const [field, variableTemplate] of Object.entries(fieldMappings)) {
       if (variableTemplate && typeof variableTemplate === 'string') {
@@ -678,11 +682,7 @@ export class FlowEngine {
     }
 
     console.log("📦 Dados da empresa (tabela):", empresaData);
-    console.log("📦 Custom fields:", customFields);
-
-    // Definir automaticamente o tipo como "Pessoa Jurídica"
-    customFields.tipo = "Pessoa Jurídica";
-    console.log("✅ Tipo definido automaticamente como 'Pessoa Jurídica'");
+    console.log("📦 Custom fields (incluindo tipo):", customFields);
 
     // Adicionar custom_fields se houver
     if (Object.keys(customFields).length > 0) {
@@ -747,8 +747,9 @@ export class FlowEngine {
           if (faltando) console.log(`  ❌ Campo obrigatório faltando (tabela): ${campo}`);
           return faltando;
         } else {
-          const faltando = !customFields[campo] || customFields[campo].trim() === '';
-          if (faltando) console.log(`  ❌ Campo obrigatório faltando (custom): ${campo}`);
+          const valorCustom = customFields[campo];
+          const faltando = !valorCustom || (typeof valorCustom === 'string' && valorCustom.trim() === '');
+          if (faltando) console.log(`  ❌ Campo obrigatório faltando (custom): ${campo}, valor atual: ${valorCustom}`);
           return faltando;
         }
       });
