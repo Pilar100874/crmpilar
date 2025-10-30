@@ -19,7 +19,7 @@ export const AgendaRapidaConfig = ({ config, handleConfigChange }: ConfigProps) 
           </p>
           <VariableInput
             value={config.cnpjVariable || "cnpj"}
-            onChange={(value) => handleConfigChange("cnpjVariable", value)}
+            onChange={(e) => handleConfigChange("cnpjVariable", e.target.value)}
             placeholder="{{cnpj}}"
           />
         </div>
@@ -31,7 +31,7 @@ export const AgendaRapidaConfig = ({ config, handleConfigChange }: ConfigProps) 
           </p>
           <VariableInput
             value={config.observacaoVariable || "observacao"}
-            onChange={(value) => handleConfigChange("observacaoVariable", value)}
+            onChange={(e) => handleConfigChange("observacaoVariable", e.target.value)}
             placeholder="{{observacao}}"
           />
         </div>
