@@ -32,6 +32,9 @@ export default function MarketingAutomacoes() {
   const [duplicateDescription, setDuplicateDescription] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const [executeDialogOpen, setExecuteDialogOpen] = useState(false);
+  const [automacaoToExecute, setAutomacaoToExecute] = useState<any>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
 
   useEffect(() => {
     loadAutomacoes();
@@ -189,6 +192,55 @@ export default function MarketingAutomacoes() {
     }
   };
 
+  const handleExecute = async () => {
+    if (!automacaoToExecute) return;
+    
+    setIsExecuting(true);
+    try {
+      const webhookId = automacaoToExecute.config?.webhook_id;
+      if (!webhookId) {
+        toast.error("Webhook não configurado para esta automação");
+        return;
+      }
+
+      // Buscar o webhook para pegar URL e método
+      const { data: webhook, error: webhookError } = await supabase
+        .from("webhooks")
+        .select("url, method")
+        .eq("id", webhookId)
+        .single();
+
+      if (webhookError || !webhook) {
+        toast.error("Webhook não encontrado");
+        return;
+      }
+
+      // Executar o webhook com as variáveis configuradas
+      const variables = automacaoToExecute.config?.variaveis || {};
+      
+      const response = await fetch(webhook.url, {
+        method: webhook.method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(variables),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro na execução: ${response.statusText}`);
+      }
+
+      toast.success("Automação executada com sucesso!");
+      setExecuteDialogOpen(false);
+      setAutomacaoToExecute(null);
+    } catch (error) {
+      console.error("Erro ao executar automação:", error);
+      toast.error("Erro ao executar automação");
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
       <div>
@@ -336,6 +388,21 @@ export default function MarketingAutomacoes() {
                   })}
                 </CardDescription>
               </CardHeader>
+              {automacao.active && (
+                <CardContent className="mt-auto p-4 pt-0">
+                  <Button 
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAutomacaoToExecute(automacao);
+                      setExecuteDialogOpen(true);
+                    }}
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    Executar Automação
+                  </Button>
+                </CardContent>
+              )}
             </Card>
           ))
         )}
@@ -491,6 +558,54 @@ export default function MarketingAutomacoes() {
           <DialogFooter>
             <Button onClick={() => setVariablesDialogOpen(false)}>
               Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Confirmação de Execução */}
+      <Dialog open={executeDialogOpen} onOpenChange={setExecuteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Executar Automação</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja executar esta automação agora?
+            </DialogDescription>
+          </DialogHeader>
+          {automacaoToExecute && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                <p className="text-sm font-medium">Automação: {automacaoToExecute.name}</p>
+                {automacaoToExecute.description && (
+                  <p className="text-sm text-muted-foreground">{automacaoToExecute.description}</p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  Tipo: {getTipoDisparoLabel(automacaoToExecute.config?.tipo_disparo)}
+                </p>
+              </div>
+              {automacaoToExecute.config?.variaveis && Object.keys(automacaoToExecute.config.variaveis).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Variáveis que serão enviadas:</p>
+                  <div className="p-3 bg-muted/30 rounded text-xs font-mono">
+                    {JSON.stringify(automacaoToExecute.config.variaveis, null, 2)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setExecuteDialogOpen(false);
+                setAutomacaoToExecute(null);
+              }}
+              disabled={isExecuting}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleExecute} disabled={isExecuting}>
+              {isExecuting ? "Executando..." : "Executar Agora"}
             </Button>
           </DialogFooter>
         </DialogContent>
