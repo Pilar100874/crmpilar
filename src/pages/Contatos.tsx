@@ -107,6 +107,7 @@ export default function Contatos() {
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateContact, setDuplicateContact] = useState<any | null>(null);
   const [duplicateField, setDuplicateField] = useState<'phone' | 'email' | null>(null);
+  const [shouldCheckDuplicate, setShouldCheckDuplicate] = useState(true);
   
   // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
@@ -1281,6 +1282,7 @@ export default function Contatos() {
 
     setFormData(baseFormData);
     setSegmentosSelecionados(contact.segmentos || []);
+    setShouldCheckDuplicate(true);
     setShowForm(true);
   };
 
@@ -1323,7 +1325,7 @@ export default function Contatos() {
 
   // Função para verificar duplicidade de WhatsApp ou Email
   const checkDuplicate = async (field: 'phone' | 'email', value: string) => {
-    if (!value || !estabelecimentoId) return;
+    if (!value || !estabelecimentoId || !shouldCheckDuplicate) return;
     
     // Se estamos editando e o valor não mudou, não verificar
     if (editingContact && editingContact[field] === value) return;
@@ -1760,6 +1762,7 @@ export default function Contatos() {
                 Importação
               </Button>
               <Button onClick={() => {
+                setShouldCheckDuplicate(true);
                 setShowForm(true);
                 setEditingContact(null);
                 setFormData({});
@@ -1958,6 +1961,7 @@ export default function Contatos() {
                                       setEmpresasVinculadas(empresasFormatadas);
                                     }
                                     
+                                    setShouldCheckDuplicate(true);
                                     setShowForm(true);
                                   }}
                                   title="Editar cadastro completo"
@@ -2111,7 +2115,11 @@ export default function Contatos() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => setShowForm(false)}
+            onClick={() => {
+              setShouldCheckDuplicate(false);
+              setShowForm(false);
+              setTimeout(() => setShouldCheckDuplicate(true), 100);
+            }}
             className="hover:bg-accent/50"
           >
             <X className="w-5 h-5" />
@@ -2377,7 +2385,11 @@ export default function Contatos() {
             <div className="flex justify-end gap-3">
               <Button 
                 variant="outline" 
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShouldCheckDuplicate(false);
+                  setShowForm(false);
+                  setTimeout(() => setShouldCheckDuplicate(true), 100);
+                }}
                 className="border-border/40"
               >
                 Cancelar
