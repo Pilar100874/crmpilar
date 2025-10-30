@@ -578,13 +578,13 @@ export default function Todos() {
       <Sheet open={showConfigSheet} onOpenChange={setShowConfigSheet}>
         <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Configurações da Tabela</SheetTitle>
+            <SheetTitle>Configurar Colunas da Tabela</SheetTitle>
           </SheetHeader>
 
           <Tabs defaultValue="contatos" className="mt-6">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="contatos">Contatos</TabsTrigger>
-              <TabsTrigger value="empresas">Empresas</TabsTrigger>
+              <TabsTrigger value="contatos">Tabela de Contatos</TabsTrigger>
+              <TabsTrigger value="empresas">Tabela de Empresas</TabsTrigger>
             </TabsList>
 
             <TabsContent value="contatos" className="mt-4">
