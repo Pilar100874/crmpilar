@@ -668,7 +668,7 @@ export type Database = {
           estado: string | null
           id: string
           nome: string | null
-          nome_fantasia: string
+          nome_fantasia: string | null
           telefone: string | null
           updated_at: string | null
         }
@@ -685,7 +685,7 @@ export type Database = {
           estado?: string | null
           id?: string
           nome?: string | null
-          nome_fantasia: string
+          nome_fantasia?: string | null
           telefone?: string | null
           updated_at?: string | null
         }
@@ -702,7 +702,7 @@ export type Database = {
           estado?: string | null
           id?: string
           nome?: string | null
-          nome_fantasia?: string
+          nome_fantasia?: string | null
           telefone?: string | null
           updated_at?: string | null
         }
