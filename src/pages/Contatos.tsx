@@ -102,35 +102,13 @@ export default function Contatos() {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   
   // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
-  const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
-    const saved = localStorage.getItem("contactsTableColumns");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Garantir que a coluna actions sempre existe
-        const hasActions = parsed.some((col: TableColumn) => col.id === 'actions');
-        if (!hasActions) {
-          return [
-            { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
-            ...parsed
-          ];
-        }
-        // Garantir que actions está locked
-        return parsed.map((col: TableColumn) => 
-          col.id === 'actions' ? { ...col, locked: true, visible: true } : col
-        );
-      } catch {
-        // Se houver erro ao parsear, usar valores padrão
-      }
-    }
-    return [
-      { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
-      { id: "name", label: "Nome", visible: true, width: 250, locked: true },
-      { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
-      { id: "email", label: "E-mail", visible: true, width: 250 },
-      { id: "position", label: "Cargo", visible: true, width: 150 },
-    ];
-  });
+  const [tableColumns, setTableColumns] = useState<TableColumn[]>([
+    { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
+    { id: "name", label: "Nome", visible: true, width: 250, locked: true },
+    { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
+    { id: "email", label: "E-mail", visible: true, width: 250 },
+    { id: "position", label: "Cargo", visible: true, width: 150 },
+  ]);
 
   // Estado de ordenação
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -235,6 +213,56 @@ export default function Contatos() {
     tags: "",
   });
 
+  // Carregar colunas da tabela baseadas nos campos de contato configurados
+  const loadTableColumns = async (estabId: string) => {
+    try {
+      const { data: campos, error } = await supabase
+        .from("form_field_configs")
+        .select("*")
+        .eq("form_type", "contato")
+        .eq("estabelecimento_id", estabId)
+        .order("field_order", { ascending: true });
+
+      if (error) {
+        console.error("❌ Erro ao buscar campos de contato:", error);
+        return;
+      }
+
+      const saved = localStorage.getItem("contactsTableColumns");
+      let savedColumns: TableColumn[] = [];
+      
+      if (saved) {
+        try {
+          savedColumns = JSON.parse(saved);
+        } catch (e) {
+          console.error("Erro ao parsear colunas salvas:", e);
+        }
+      }
+
+      // Criar colunas baseadas nos campos configurados
+      const newColumns: TableColumn[] = [
+        { id: "actions", label: "Ações", visible: true, width: 120, locked: true }
+      ];
+
+      campos?.forEach((campo) => {
+        const savedColumn = savedColumns.find(col => col.id === campo.field_id);
+        
+        newColumns.push({
+          id: campo.field_id,
+          label: campo.field_label,
+          visible: savedColumn?.visible ?? (campo.field_id === 'name' || campo.field_id === 'phone' || campo.field_id === 'email' || campo.field_id === 'position'),
+          width: savedColumn?.width ?? 180,
+          locked: campo.field_id === 'name',
+        });
+      });
+
+      setTableColumns(newColumns);
+      localStorage.setItem("contactsTableColumns", JSON.stringify(newColumns));
+    } catch (error) {
+      console.error("❌ Erro ao carregar colunas:", error);
+    }
+  };
+
   // Carregar estabelecimento e segmentos
   useEffect(() => {
     const fetchEstabelecimentoAndSegmentos = async () => {
@@ -244,6 +272,10 @@ export default function Contatos() {
       
       if (estabId) {
         console.log("🔍 Contatos - Buscando segmentos para estabelecimento:", estabId);
+        
+        // Carregar colunas baseadas nos campos configurados
+        await loadTableColumns(estabId);
+        
         const { data, error } = await supabase
           .from("segmentos")
           .select("*")
@@ -2005,9 +2037,10 @@ export default function Contatos() {
             <div className="mt-6">
               <ContatoFieldsCRUD 
                 estabelecimentoId={estabelecimentoId} 
-                onChanged={() => {
+                onChanged={async () => {
                   console.log('🔄 ContatoFieldsCRUD onChange triggered');
-                  loadContacts();
+                  await loadTableColumns(estabelecimentoId);
+                  await loadContacts();
                 }}
               />
             </div>
