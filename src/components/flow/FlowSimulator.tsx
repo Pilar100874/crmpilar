@@ -663,6 +663,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           const fieldMappings = config.fieldMappings || {};
           const empresaData: Record<string, any> = {};
           const customFields: Record<string, any> = {};
+          // Definir tipo padrão como Pessoa Jurídica
+          customFields.tipo = "Pessoa Jurídica";
 
           const formatValue = (campo: string, valor: string): string => {
             if (!valor) return valor;
@@ -695,7 +697,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               if (raw && raw.trim()) {
                 const value = formatValue(field, raw);
                 if ([
-                  'tipo','cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'
+                  'cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'
                 ].includes(field)) {
                   empresaData[field] = value;
                 } else {
@@ -717,10 +719,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }
           empresaData.estabelecimento_id = estabId;
           
-          // Definir tipo como Pessoa Jurídica em custom_fields
+          // Garantir tipo padrão como Pessoa Jurídica em custom_fields
           empresaData.custom_fields = {
             ...(empresaData.custom_fields || {}),
-            company_type: "Pessoa Jurídica"
+            company_type: "Pessoa Jurídica",
+            tipo: "Pessoa Jurídica",
           };
 
           // Campos obrigatórios
@@ -729,7 +732,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             .from('form_field_configs')
             .select('field_id, required')
             .eq('estabelecimento_id', estabId)
-            .eq('form_type', 'company')
+            .eq('form_type', 'empresa')
             .eq('required', true);
 
           if (fieldConfigs && fieldConfigs.length > 0) {
@@ -744,15 +747,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               state: 'estado',
               cep: 'cep',
             };
-            camposObrigatorios = fieldConfigs.map((fc: any) => mapIds[fc.field_id] || fc.field_id);
+            const NORMALIZE = (s: any) => (typeof s === 'string' ? s.toLowerCase().trim() : String(s));
+            const EXCLUDE = new Set(['tipo','type','company_type','tipo_empresa','tipo_pessoa']);
+            camposObrigatorios = fieldConfigs
+              .map((fc: any) => mapIds[fc.field_id] || fc.field_id)
+              .map(NORMALIZE)
+              .filter((s: string) => !EXCLUDE.has(s));
           }
           if (camposObrigatorios.length === 0) {
             camposObrigatorios = ['cnpj','razao_social','nome_fantasia'];
           }
 
-          const faltando = camposObrigatorios.filter((campo) => {
-            const isTableField = ['tipo','cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'].includes(campo);
-            return isTableField ? !(empresaData as any)[campo] : !(customFields as any)[campo];
+          const camposParaValidar = camposObrigatorios;
+          const faltando = camposParaValidar.filter((campo) => {
+            const isTableField = ['cnpj','razao_social','nome_fantasia','email','telefone','endereco','cidade','estado','cep','bairro'].includes(campo);
+            if (isTableField) {
+              return !(empresaData as any)[campo];
+            }
+            const cfVal = (customFields as any)[campo] ?? (empresaData.custom_fields ? (empresaData.custom_fields as any)[campo] : undefined);
+            return !cfVal;
           });
           if (faltando.length > 0) {
             addSystemMessage(`❌ Campos obrigatórios faltando: ${faltando.join(', ')}`);
