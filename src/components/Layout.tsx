@@ -17,7 +17,6 @@ import {
   Workflow,
   Megaphone,
   LogOut,
-  Globe,
   Pencil,
   Building2,
   User as UserIcon,
@@ -94,7 +93,6 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Desenho", title: "Estatísticas", url: "/desenho", icon: Pencil },
-  { id: "Teste de Webhooks", title: "Webhooks", url: "/chat-webhook", icon: Globe },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
