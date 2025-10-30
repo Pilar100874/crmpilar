@@ -2001,15 +2001,23 @@ export default function Contatos() {
             <p id="config-description" className="sr-only">Configure campos personalizados para contatos</p>
           </SheetHeader>
           
-          <div className="mt-6">
-            <ContatoFieldsCRUD 
-              estabelecimentoId={estabelecimentoId} 
-              onChanged={() => {
-                console.log('🔄 ContatoFieldsCRUD onChange triggered');
-                loadContacts();
-              }}
-            />
-          </div>
+          {showConfigPanel && estabelecimentoId && (
+            <div className="mt-6">
+              <ContatoFieldsCRUD 
+                estabelecimentoId={estabelecimentoId} 
+                onChanged={() => {
+                  console.log('🔄 ContatoFieldsCRUD onChange triggered');
+                  loadContacts();
+                }}
+              />
+            </div>
+          )}
+          
+          {showConfigPanel && !estabelecimentoId && (
+            <div className="mt-6 text-center text-muted-foreground">
+              Carregando configurações...
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
