@@ -26,6 +26,8 @@ import {
   TestTube2,
   FileBarChart,
   Target,
+  Palette,
+  Zap,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -94,7 +96,16 @@ const menuItems: MenuItem[] = [
       { id: "Testar", title: "Testar", url: "/bot-test", icon: TestTube2 },
     ]
   },
-  { id: "Desenho", title: "Marketing", url: "/desenho", icon: Target },
+  { 
+    id: "Desenho", 
+    title: "Marketing", 
+    icon: Target,
+    subItems: [
+      { id: "Canvas", title: "Canvas", url: "/marketing/canvas", icon: Palette },
+      { id: "Automações", title: "Automações", url: "/marketing/automacoes", icon: Zap },
+      { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: Megaphone },
+    ]
+  },
   { 
     id: "Configurações", 
     title: "Configurações", 

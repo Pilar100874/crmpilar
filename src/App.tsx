@@ -22,6 +22,9 @@ import Todos from "./pages/Todos";
 import Config from "./pages/Config";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
+import MarketingCanvas from "./pages/MarketingCanvas";
+import MarketingAutomacoes from "./pages/MarketingAutomacoes";
+import MarketingCampanhas from "./pages/MarketingCampanhas";
 import ChatWebhook from "./pages/ChatWebhook";
 import MeusTextosProntos from "./pages/MeusTextosProntos";
 import MeusAnexos from "./pages/MeusAnexos";
@@ -70,6 +73,9 @@ const App = () => (
             <Route path="/config/campanhas" element={<Campanhas />} />
             <Route path="/global-variables" element={<GlobalVariables />} />
             <Route path="/desenho" element={<Desenho />} />
+            <Route path="/marketing/canvas" element={<MarketingCanvas />} />
+            <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
+            <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
             <Route path="/meus-anexos" element={<MeusAnexos />} />
