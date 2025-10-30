@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Deal, FunilStage } from '@/types/funil';
+import { supabase } from '@/integrations/supabase/client';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { X } from 'lucide-react';
+
+interface Empresa {
+  id: string;
+  nome_fantasia: string;
+  nome: string | null;
+  cnpj: string | null;
+  telefone: string | null;
+  email: string | null;
+  custom_fields?: any;
+}
 
 interface NewDealDialogProps {
   open: boolean;
@@ -35,6 +48,66 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
     cluster: '',
     stage: 'lead' as FunilStage,
   });
+
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showEmpresasList, setShowEmpresasList] = useState(false);
+  const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null);
+
+  // Carregar empresas
+  useEffect(() => {
+    if (open) {
+      loadEmpresas();
+    }
+  }, [open]);
+
+  const loadEmpresas = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (estabId) {
+      const { data } = await supabase
+        .from('empresas')
+        .select('*')
+        .eq('estabelecimento_id', estabId)
+        .order('nome_fantasia');
+      
+      if (data) {
+        setEmpresas(data);
+      }
+    }
+  };
+
+  // Filtrar empresas baseado na busca
+  const filteredEmpresas = empresas.filter(empresa => {
+    if (!searchQuery) return true;
+    
+    const searchTerm = searchQuery.toLowerCase();
+    const cnpj = (empresa.cnpj || '').toLowerCase();
+    const telefone = (empresa.telefone || '').toLowerCase();
+    const email = (empresa.email || '').toLowerCase();
+    const nomeFantasia = empresa.nome_fantasia.toLowerCase();
+    const razaoSocial = (empresa.nome || '').toLowerCase();
+    
+    return (
+      nomeFantasia.includes(searchTerm) ||
+      razaoSocial.includes(searchTerm) ||
+      cnpj.includes(searchTerm) ||
+      telefone.includes(searchTerm) ||
+      email.includes(searchTerm)
+    );
+  });
+
+  const handleSelectEmpresa = (empresa: Empresa) => {
+    setSelectedEmpresa(empresa);
+    setSearchQuery(empresa.nome_fantasia);
+    setFormData({ ...formData, cliente: empresa.nome_fantasia });
+    setShowEmpresasList(false);
+  };
+
+  const handleClearEmpresa = () => {
+    setSelectedEmpresa(null);
+    setSearchQuery('');
+    setFormData({ ...formData, cliente: '' });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +138,9 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
       cluster: '',
       stage: 'lead',
     });
+    setSelectedEmpresa(null);
+    setSearchQuery('');
+    setShowEmpresasList(false);
     
     onOpenChange(false);
   };
@@ -80,13 +156,60 @@ export function NewDealDialog({ open, onOpenChange, onSave }: NewDealDialogProps
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cliente">Nome do Cliente *</Label>
-              <Input
-                id="cliente"
-                required
-                value={formData.cliente}
-                onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
-                placeholder="Ex: Empresa XYZ"
-              />
+              <div className="relative">
+                <Input
+                  id="cliente"
+                  required
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setFormData({ ...formData, cliente: e.target.value });
+                    setShowEmpresasList(e.target.value.length > 0);
+                  }}
+                  onFocus={() => searchQuery.length > 0 && setShowEmpresasList(true)}
+                  placeholder="Pesquisar empresa por nome, CNPJ, WhatsApp, email..."
+                />
+                {selectedEmpresa && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                    onClick={handleClearEmpresa}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+                
+                {/* Lista de empresas */}
+                {showEmpresasList && filteredEmpresas.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {filteredEmpresas.map((empresa) => (
+                      <div
+                        key={empresa.id}
+                        className="p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 transition-colors"
+                        onClick={() => handleSelectEmpresa(empresa)}
+                      >
+                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
+                        <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                          {empresa.nome && empresa.nome !== empresa.nome_fantasia && (
+                            <div>Razão Social: {empresa.nome}</div>
+                          )}
+                          {empresa.cnpj && (
+                            <div>CNPJ: {empresa.cnpj}</div>
+                          )}
+                          {empresa.telefone && (
+                            <div>Tel: {empresa.telefone}</div>
+                          )}
+                          {empresa.email && (
+                            <div>Email: {empresa.email}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
