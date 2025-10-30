@@ -157,10 +157,10 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired, onChanged }: Sor
   );
 };
 
-export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => {
+export const EmpresaFieldsCRUD = ({ onChanged, estabelecimentoId: estabelecimentoIdProp }: { onChanged?: () => void; estabelecimentoId?: string | null }) => {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
-  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(estabelecimentoIdProp || null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fieldToDelete, setFieldToDelete] = useState<string | null>(null);
@@ -182,8 +182,13 @@ export const EmpresaFieldsCRUD = ({ onChanged }: { onChanged?: () => void }) => 
   );
 
   useEffect(() => {
+    if (estabelecimentoIdProp) {
+      console.log('➡️ Using estabelecimentoId from props:', estabelecimentoIdProp);
+      setEstabelecimentoId(estabelecimentoIdProp);
+      return;
+    }
     loadEstabelecimento();
-  }, []);
+  }, [estabelecimentoIdProp]);
 
   useEffect(() => {
     if (estabelecimentoId && !isInitializing) {

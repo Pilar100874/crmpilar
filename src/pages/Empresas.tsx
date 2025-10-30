@@ -1164,7 +1164,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </SheetHeader>
             
             <div className="mt-6">
-              <EmpresaFieldsCRUD onChanged={async () => {
+              <EmpresaFieldsCRUD estabelecimentoId={estabelecimentoId} onChanged={async () => {
                 console.log('📢 onChanged callback triggered');
                 if (estabelecimentoId) {
                   await loadFieldConfigs(estabelecimentoId);
