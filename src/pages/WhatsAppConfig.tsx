@@ -208,17 +208,29 @@ export default function WhatsAppConfig() {
         headers['x-api-key'] = config.waha_api_key; // compat WAHA-Plus
       }
 
-      // Garante que a sessão exista
+      const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
+
+      // Garante que a sessão exista (criação/atualização)
+      const createBody = JSON.stringify({
+        name: sessionName,
+        config: {
+          webhooks: [
+            { url: webhookUrl, events: ['message'] }
+          ],
+        },
+      });
       const createAttempts = [
-        { url: `${base}/api/sessions`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-        { url: `${base}/api/sessions/${sessionName}/`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-        { url: `${base}/api/${sessionName}`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+        { url: `${base}/api/sessions`, method: 'POST', body: createBody },
+        { url: `${base}/api/sessions/${sessionName}`, method: 'POST', body: createBody },
+        { url: `${base}/api/${sessionName}`, method: 'POST', body: createBody },
       ];
       for (const a of createAttempts) {
         try {
           const r = await fetch(a.url, { method: a.method, headers, body: a.body });
-          if (r.ok || r.status === 409 || r.status === 200 || r.status === 201) break;
-        } catch {}
+          const ok = r.ok || [200,201,202,204,409].includes(r.status);
+          console.log('WAHA create resp', a.url, r.status);
+          if (ok) break;
+        } catch (e) { console.warn('WAHA create error', a.url, e); }
       }
 
       // Inicia a sessão - tenta variações com/sem body
@@ -232,8 +244,9 @@ export default function WhatsAppConfig() {
       for (const a of startAttempts) {
         try {
           const r = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
+          console.log('WAHA start resp', a.url, r.status);
           if (r.ok || r.status === 201) { started = true; break; }
-        } catch {}
+        } catch (e) { console.warn('WAHA start error', a.url, e); }
       }
       if (!started) throw new Error('Failed to start session');
 
