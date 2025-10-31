@@ -140,16 +140,16 @@ export default function BotCreate() {
             const webhookUrl = `https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/whatsapp-webhook`;
             
             // Configurar webhook usando a API do WAHA
-            const webhookResponse = await fetch(`${config.waha_url}/api/webhooks`, {
+            const webhookResponse = await fetch(`${config.waha_url}/api/sessions/${session.session_name}/`, {
               method: 'POST',
               headers: {
                 'X-Api-Key': config.waha_api_key,
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                url: webhookUrl,
-                events: ['message'],
-                session: session.session_name
+                config: {
+                  webhooks: [{ url: webhookUrl, events: ['message'] }]
+                }
               })
             });
 
@@ -285,10 +285,12 @@ export default function BotCreate() {
         console.log(`Tentativa ${attempts} de buscar QR code...`);
         
         const qrResponse = await fetch(
-          `${config.waha_url}/api/sessions/${session.session_name}/auth/qr`,
+          `${config.waha_url}/api/${session.session_name}/auth/qr`,
           {
+            method: 'POST',
             headers: {
-              'X-Api-Key': config.waha_api_key
+              'X-Api-Key': config.waha_api_key,
+              'Content-Type': 'application/json'
             }
           }
         );
