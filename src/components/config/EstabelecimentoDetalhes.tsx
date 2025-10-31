@@ -751,19 +751,26 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {getStatusBadge(session.status)}
-                    {session.status === "SCAN_QR_CODE" && session.qr_code && (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        size="sm"
-                        onClick={() => setSelectedQrSession(session)}
-                      >
-                        <QrCode className="h-4 w-4 mr-2" />
-                        Ver QR Code
-                      </Button>
-                    )}
-                    {session.bot_flow_id && (
+                  {getStatusBadge(session.status)}
+                  {session.status === "SCAN_QR_CODE" && session.qr_code ? (
+                    <div className="flex justify-center p-2">
+                      <img
+                        src={session.qr_code}
+                        alt={`QR Code da sessão ${session.session_name}`}
+                        className="w-48 h-48 rounded border"
+                      />
+                    </div>
+                  ) : session.status !== 'WORKING' ? (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      size="sm"
+                      onClick={() => startSession(session.id, session.session_name)}
+                    >
+                      Gerar QR
+                    </Button>
+                  ) : null}
+                  {session.bot_flow_id && (
                       <p className="text-xs text-muted-foreground">
                         Em uso por bot
                       </p>
