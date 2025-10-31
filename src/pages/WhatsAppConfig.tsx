@@ -334,31 +334,40 @@ export default function WhatsAppConfig() {
       const session = sessions.find(s => s.id === sessionToDelete);
       if (!session) return;
 
-      // Para a sessão no WAHA
-      try {
-        await fetch(`${config?.waha_url}/api/sessions/${session.session_name}/stop`, {
-          method: "POST",
-          headers: {
-            ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-          },
-        });
-      } catch {}
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      
+      if (config?.waha_api_key) {
+        headers["X-Api-Key"] = config.waha_api_key;
+      }
 
-      // Exclui a sessão no WAHA (melhor esforço, compatível com WAHA-Plus)
-      try {
-        await fetch(`${config?.waha_url}/api/sessions/${session.session_name}`, {
-          method: "DELETE",
-          headers: {
-            ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-          },
-        });
-        await fetch(`${config?.waha_url}/api/${session.session_name}`, {
-          method: "DELETE",
-          headers: {
-            ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-          },
-        });
-      } catch {}
+      // Para a sessão no WAHA
+      const stopResponse = await fetch(`${config?.waha_url}/api/sessions/${session.session_name}/stop`, {
+        method: "POST",
+        headers,
+      });
+      
+      console.log("Stop session response:", stopResponse.status);
+
+      // Aguarda um pouco para garantir que parou
+      await new Promise(r => setTimeout(r, 500));
+
+      // Tenta excluir usando o endpoint principal do WAHA-Plus
+      const deleteResponse1 = await fetch(`${config?.waha_url}/api/sessions/${session.session_name}`, {
+        method: "DELETE",
+        headers,
+      });
+      
+      console.log("Delete session (sessions endpoint) response:", deleteResponse1.status);
+
+      // Tenta também o endpoint alternativo
+      const deleteResponse2 = await fetch(`${config?.waha_url}/api/${session.session_name}`, {
+        method: "DELETE",
+        headers,
+      });
+      
+      console.log("Delete session (alternative endpoint) response:", deleteResponse2.status);
 
       // Exclui do banco
       await supabase
@@ -366,12 +375,12 @@ export default function WhatsAppConfig() {
         .delete()
         .eq("id", sessionToDelete);
 
-      toast.success("Sessão excluída no servidor e no app.");
+      toast.success("Sessão excluída do WAHA e do banco de dados");
       setSessionToDelete(null);
       await refreshSessions();
     } catch (error) {
       console.error("Error deleting session:", error);
-      toast.error("Erro ao excluir sessão");
+      toast.error("Erro ao excluir sessão: " + (error as Error).message);
     }
   };
 
