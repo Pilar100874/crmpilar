@@ -170,6 +170,7 @@ export default function WhatsAppConfig() {
     }
 
     try {
+      // Cria a sessão no banco primeiro
       const { data, error } = await supabase
         .from("whatsapp_sessions")
         .insert({
@@ -182,12 +183,12 @@ export default function WhatsAppConfig() {
 
       if (error) throw error;
 
-      // Start the session via WAHA
-      await startSession(data.id, newSessionName);
-      
-      toast.success("Sessão criada com sucesso!");
+      toast.success("Sessão criada! Iniciando no WAHA...");
       setShowNewSessionDialog(false);
       setNewSessionName("");
+
+      // Inicia a sessão no WAHA e busca o QR code automaticamente
+      await startSession(data.id, newSessionName);
       await refreshSessions();
     } catch (error: any) {
       console.error("Error creating session:", error);
