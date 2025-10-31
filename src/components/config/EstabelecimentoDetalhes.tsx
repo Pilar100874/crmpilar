@@ -825,12 +825,23 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
                   <CardContent className="space-y-3">
                   {getStatusBadge(session.status)}
                   {session.status === "SCAN_QR_CODE" && session.qr_code ? (
-                    <div className="flex justify-center p-2">
-                      <img
-                        src={session.qr_code}
-                        alt={`QR Code da sessão ${session.session_name}`}
-                        className="w-48 h-48 rounded border"
-                      />
+                    <div className="space-y-2">
+                      <div className="flex justify-center p-2">
+                        <img
+                          src={session.qr_code}
+                          alt={`QR Code da sessão ${session.session_name}`}
+                          className="w-48 h-48 rounded border"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        size="sm"
+                        onClick={() => getQRCode(session.id, session.session_name)}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Regerar QR
+                      </Button>
                     </div>
                   ) : session.status !== 'WORKING' ? (
                     <Button
