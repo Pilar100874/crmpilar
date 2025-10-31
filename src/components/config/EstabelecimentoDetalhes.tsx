@@ -500,10 +500,9 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
   const getQRCode = async (sessionId: string, sessionName: string) => {
     try {
       const response = await fetch(`${config?.waha_url}/api/${sessionName}/auth/qr`, {
-        method: 'POST',
         headers: {
           ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-          'Content-Type': 'application/json'
+          'Accept': 'application/json'
         },
       });
 

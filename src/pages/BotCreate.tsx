@@ -287,10 +287,9 @@ export default function BotCreate() {
         const qrResponse = await fetch(
           `${config.waha_url}/api/${session.session_name}/auth/qr`,
           {
-            method: 'POST',
             headers: {
               'X-Api-Key': config.waha_api_key,
-              'Content-Type': 'application/json'
+              'Accept': 'application/json'
             }
           }
         );
