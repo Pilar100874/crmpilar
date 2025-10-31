@@ -486,8 +486,7 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
         'Content-Type': 'application/json',
       };
       if (config?.waha_api_key) {
-        headers['X-Api-Key'] = config.waha_api_key;
-        headers['x-api-key'] = config.waha_api_key; // compat WAHA-Plus
+        headers['x-api-key'] = config.waha_api_key;
       }
 
       const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
@@ -551,7 +550,6 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
         'Content-Type': 'application/json',
       };
       if (config?.waha_api_key) {
-        headers['X-Api-Key'] = config.waha_api_key;
         headers['x-api-key'] = config.waha_api_key;
       }
 

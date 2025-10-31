@@ -204,8 +204,7 @@ export default function WhatsAppConfig() {
         'Content-Type': 'application/json',
       };
       if (config?.waha_api_key) {
-        headers['X-Api-Key'] = config.waha_api_key;
-        headers['x-api-key'] = config.waha_api_key; // compat WAHA-Plus
+        headers['x-api-key'] = config.waha_api_key;
       }
 
       const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
@@ -265,7 +264,6 @@ export default function WhatsAppConfig() {
         'Content-Type': 'application/json',
       };
       if (config?.waha_api_key) {
-        headers['X-Api-Key'] = config.waha_api_key;
         headers['x-api-key'] = config.waha_api_key;
       }
 
@@ -329,7 +327,6 @@ export default function WhatsAppConfig() {
         'Content-Type': 'application/json',
       };
       if (config?.waha_api_key) {
-        headers['X-Api-Key'] = config.waha_api_key;
         headers['x-api-key'] = config.waha_api_key;
       }
       const attempts = [
@@ -359,7 +356,7 @@ export default function WhatsAppConfig() {
         for (const url of endpoints) {
           const resp = await fetch(url, {
             headers: {
-              ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+              ...(config?.waha_api_key && { 'x-api-key': config.waha_api_key }),
             },
           });
           if (resp.ok) {
@@ -403,8 +400,7 @@ export default function WhatsAppConfig() {
         Accept: "application/json",
       };
       if (config?.waha_api_key) {
-        headers["X-Api-Key"] = config.waha_api_key;
-        headers["x-api-key"] = config.waha_api_key; // WAHA-Plus pode exigir este header
+        headers['x-api-key'] = config.waha_api_key;
       }
 
       const base = config?.waha_url?.replace(/\/+$/, "") || "";
