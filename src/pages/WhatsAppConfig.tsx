@@ -217,27 +217,113 @@ export default function WhatsAppConfig() {
 
   const getQRCode = async (sessionId: string, sessionName: string) => {
     try {
-      const response = await fetch(`${config?.waha_url}/api/${sessionName}/auth/qr`, {
-        headers: {
-          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-        },
-      });
+      const maxAttempts = 20;
+      let attempt = 0;
+      let qrUrl: string | null = null;
 
-      if (!response.ok) throw new Error("Failed to get QR code");
+      while (attempt < maxAttempts && !qrUrl) {
+        attempt++;
+        const response = await fetch(`${config?.waha_url}/api/${sessionName}/auth/qr`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+          },
+        });
 
-      const data = await response.json();
-      
+        if (response.ok) {
+          const payload = await response.json();
+          const url: string | null = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
+          if (url) {
+            qrUrl = url;
+            break;
+          }
+        }
+
+        const backoff = Math.min(2500, 500 * attempt);
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+
+      if (!qrUrl) {
+        throw new Error(`QR code não disponível após ${attempt} tentativas. Verifique se o nome da sessão "${sessionName}" está correto no WAHA.`);
+      }
+
       await supabase
         .from("whatsapp_sessions")
         .update({
-          qr_code: data.qr,
+          qr_code: qrUrl,
           status: "SCAN_QR_CODE",
         })
         .eq("id", sessionId);
 
       await refreshSessions();
-    } catch (error) {
+
+      // Monitora a leitura do QR para iniciar a sessão automaticamente
+      monitorSessionAfterQr(sessionId, sessionName);
+    } catch (error: any) {
       console.error("Error getting QR code:", error);
+      toast.error(error.message || "Erro ao obter QR code");
+    }
+  };
+
+  // Inicia a sessão no WAHA sem buscar QR (uso interno)
+  const startSessionOnly = async (sessionName: string) => {
+    try {
+      await fetch(`${config?.waha_url}/api/sessions/${sessionName}/start`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+        },
+        body: JSON.stringify({ name: sessionName }),
+      });
+    } catch (e) {
+      console.warn("startSessionOnly failed", e);
+    }
+  };
+
+  // Após exibir o QR, monitora até conectar e inicia a sessão automaticamente
+  const monitorSessionAfterQr = async (sessionId: string, sessionName: string) => {
+    const maxChecks = 60; // ~2 minutos
+    for (let i = 0; i < maxChecks; i++) {
+      try {
+        const endpoints = [
+          `${config?.waha_url}/api/sessions/${sessionName}`,
+          `${config?.waha_url}/api/${sessionName}/status`,
+        ];
+        let status: string | null = null;
+        for (const url of endpoints) {
+          const resp = await fetch(url, {
+            headers: {
+              ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+            },
+          });
+          if (resp.ok) {
+            const payload = await resp.json().catch(() => null);
+            if (payload) {
+              status = payload.state || payload.status || payload.session?.state || payload.session?.status || null;
+              if (status) break;
+            }
+          }
+        }
+
+        if (status) {
+          const normalized = String(status).toUpperCase();
+          if (["WORKING", "CONNECTED", "AUTHENTICATED", "RUNNING", "READY"].includes(normalized)) {
+            await startSessionOnly(sessionName).catch(() => {});
+            await supabase
+              .from("whatsapp_sessions")
+              .update({ status: "WORKING", qr_code: null })
+              .eq("id", sessionId);
+            await refreshSessions();
+            toast.success(`Sessão ${sessionName} conectada`);
+            return;
+          }
+        }
+      } catch (e) {
+        // ignora e continua
+      }
+      await new Promise((r) => setTimeout(r, 2000));
     }
   };
 
@@ -248,21 +334,39 @@ export default function WhatsAppConfig() {
       const session = sessions.find(s => s.id === sessionToDelete);
       if (!session) return;
 
-      // Stop session in WAHA
-      await fetch(`${config?.waha_url}/api/sessions/${session.session_name}/stop`, {
-        method: "POST",
-        headers: {
-          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-        },
-      });
+      // Para a sessão no WAHA
+      try {
+        await fetch(`${config?.waha_url}/api/sessions/${session.session_name}/stop`, {
+          method: "POST",
+          headers: {
+            ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+          },
+        });
+      } catch {}
 
-      // Delete from database
+      // Exclui a sessão no WAHA (melhor esforço, compatível com WAHA-Plus)
+      try {
+        await fetch(`${config?.waha_url}/api/sessions/${session.session_name}`, {
+          method: "DELETE",
+          headers: {
+            ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+          },
+        });
+        await fetch(`${config?.waha_url}/api/${session.session_name}`, {
+          method: "DELETE",
+          headers: {
+            ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
+          },
+        });
+      } catch {}
+
+      // Exclui do banco
       await supabase
         .from("whatsapp_sessions")
         .delete()
         .eq("id", sessionToDelete);
 
-      toast.success("Sessão excluída com sucesso!");
+      toast.success("Sessão excluída no servidor e no app.");
       setSessionToDelete(null);
       await refreshSessions();
     } catch (error) {
