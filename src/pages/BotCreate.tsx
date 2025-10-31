@@ -278,7 +278,7 @@ export default function BotCreate() {
 
       // Tenta buscar o QR code com retry
       let attempts = 0;
-      let qrData = null;
+      let qrData: string | null = null;
       
       while (attempts < 5 && !qrData) {
         attempts++;
@@ -296,8 +296,9 @@ export default function BotCreate() {
 
         if (qrResponse.ok) {
           const data = await qrResponse.json();
-          if (data.qr) {
-            qrData = data;
+          const url = data.qr || (data.data ? `data:${data.mimetype || 'image/png'};base64,${data.data}` : null);
+          if (url) {
+            qrData = url;
             break;
           }
         }
@@ -308,14 +309,13 @@ export default function BotCreate() {
         }
       }
       
-      if (qrData?.qr) {
-        setQrCodeData(qrData.qr);
-        
+      if (qrData) {
+        setQrCodeData(qrData);
         // Salva o QR code no banco
         await supabase
           .from('whatsapp_sessions')
           .update({ 
-            qr_code: qrData.qr,
+            qr_code: qrData,
             status: 'SCAN_QR_CODE'
           })
           .eq('id', session.id);

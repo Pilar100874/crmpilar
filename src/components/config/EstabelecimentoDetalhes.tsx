@@ -508,12 +508,14 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
 
       if (!response.ok) throw new Error("Failed to get QR code");
 
-      const data = await response.json();
+      const payload = await response.json();
+      const qrUrl = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
+      if (!qrUrl) throw new Error('QR inválido retornado pelo WAHA');
       
       await supabase
         .from("whatsapp_sessions")
         .update({
-          qr_code: data.qr,
+          qr_code: qrUrl,
           status: "SCAN_QR_CODE",
         })
         .eq("id", sessionId);
