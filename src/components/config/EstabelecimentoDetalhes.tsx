@@ -480,49 +480,115 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
 
   const startSession = async (sessionId: string, sessionName: string) => {
     try {
-      const response = await fetch(`${config?.waha_url}/api/sessions/${sessionName}/start`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-        },
-        body: JSON.stringify({ name: sessionName }),
-      });
+      const base = (config?.waha_url || '').replace(/\/+$/, '');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+      if (config?.waha_api_key) {
+        headers['X-Api-Key'] = config.waha_api_key;
+        headers['x-api-key'] = config.waha_api_key; // compat WAHA-Plus
+      }
 
-      if (!response.ok) throw new Error("Failed to start session");
+      // Garante que a sessão existe (WAHA-Plus pode exigir criação explícita)
+      const existsResp = await fetch(`${base}/api/sessions/${sessionName}`, { headers });
+      if (!existsResp.ok) {
+        const createAttempts = [
+          { url: `${base}/api/sessions`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+          { url: `${base}/api/sessions/${sessionName}`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+          { url: `${base}/api/${sessionName}`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+        ];
+        for (const a of createAttempts) {
+          try {
+            const r = await fetch(a.url, { method: a.method, headers, body: a.body });
+            if (r.ok || r.status === 409) break; // criado ou já existe
+          } catch {}
+        }
+      }
+
+      // Inicia a sessão (tenta múltiplas rotas)
+      const startUrls = [
+        `${base}/api/sessions/${sessionName}/start`,
+        `${base}/api/${sessionName}/start`,
+      ];
+      let started = false;
+      for (const url of startUrls) {
+        try {
+          const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ name: sessionName }) });
+          if (r.ok || r.status === 201) { started = true; break; }
+        } catch {}
+      }
+      if (!started) throw new Error('Failed to start session');
 
       await getQRCode(sessionId, sessionName);
     } catch (error) {
-      console.error("Error starting session:", error);
+      console.error('Error starting session:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao iniciar sessão no WAHA",
+        variant: "destructive",
+      });
     }
   };
 
   const getQRCode = async (sessionId: string, sessionName: string) => {
     try {
-      const response = await fetch(`${config?.waha_url}/api/${sessionName}/auth/qr`, {
-        headers: {
-          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-          'Accept': 'application/json'
-        },
-      });
+      const base = (config?.waha_url || '').replace(/\/+$/, '');
+      const headers: Record<string, string> = {
+        Accept: 'application/json',
+      };
+      if (config?.waha_api_key) {
+        headers['X-Api-Key'] = config.waha_api_key;
+        headers['x-api-key'] = config.waha_api_key;
+      }
 
-      if (!response.ok) throw new Error("Failed to get QR code");
+      const maxAttempts = 20;
+      let attempt = 0;
+      let qrUrl: string | null = null;
 
-      const payload = await response.json();
-      const qrUrl = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
-      if (!qrUrl) throw new Error('QR inválido retornado pelo WAHA');
-      
+      while (attempt < maxAttempts && !qrUrl) {
+        attempt++;
+        const urls = [
+          `${base}/api/${sessionName}/auth/qr`,
+          `${base}/api/sessions/${sessionName}/auth/qr`,
+        ];
+        for (const url of urls) {
+          try {
+            const response = await fetch(url, { method: 'GET', headers });
+            if (response.ok) {
+              const payload = await response.json();
+              const urlFound: string | null = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
+              if (urlFound) { qrUrl = urlFound; break; }
+            }
+          } catch {}
+        }
+
+        if (!qrUrl) {
+          const backoff = Math.min(2500, 500 * attempt);
+          await new Promise((r) => setTimeout(r, backoff));
+        }
+      }
+
+      if (!qrUrl) {
+        throw new Error(`QR code não disponível após ${attempt} tentativas. Verifique se o nome da sessão "${sessionName}" está correto no WAHA.`);
+      }
+
       await supabase
-        .from("whatsapp_sessions")
+        .from('whatsapp_sessions')
         .update({
           qr_code: qrUrl,
-          status: "SCAN_QR_CODE",
+          status: 'SCAN_QR_CODE',
         })
-        .eq("id", sessionId);
+        .eq('id', sessionId);
 
       await refreshSessions();
-    } catch (error) {
-      console.error("Error getting QR code:", error);
+    } catch (error: any) {
+      console.error('Error getting QR code:', error);
+      toast({
+        title: "Erro",
+        description: error.message || 'Erro ao obter QR code',
+        variant: "destructive",
+      });
     }
   };
 
