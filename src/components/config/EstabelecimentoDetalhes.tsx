@@ -612,30 +612,91 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
       const session = sessions.find(s => s.id === sessionToDelete);
       if (!session) return;
 
-      await fetch(`${config?.waha_url}/api/sessions/${session.session_name}/stop`, {
-        method: "POST",
-        headers: {
-          ...(config?.waha_api_key && { "X-Api-Key": config.waha_api_key }),
-        },
-      });
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+      if (config?.waha_api_key) {
+        headers['x-api-key'] = config.waha_api_key;
+      }
 
+      const base = config?.waha_url?.replace(/\/+$/, '') || '';
+
+      // Para a sessão
+      const stopUrls = [
+        `${base}/api/sessions/${session.session_name}/stop`,
+        `${base}/api/${session.session_name}/stop`,
+      ];
+      for (const url of stopUrls) {
+        try {
+          const resp = await fetch(url, { method: 'POST', headers });
+          console.log('Stop session', url, resp.status);
+          if (resp.ok || resp.status === 201 || resp.status === 404) break;
+        } catch (e) {
+          console.warn('Stop failed:', url, e);
+        }
+      }
+
+      // Faz logout
+      const logoutUrls = [
+        `${base}/api/sessions/${session.session_name}/logout`,
+        `${base}/api/${session.session_name}/logout`,
+      ];
+      for (const url of logoutUrls) {
+        try {
+          const resp = await fetch(url, { method: 'POST', headers });
+          console.log('Logout session', url, resp.status);
+          if (resp.ok || resp.status === 404) break;
+        } catch (e) {
+          console.warn('Logout failed:', url, e);
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 500));
+
+      // Exclui a sessão no WAHA
+      const deleteAttempts = [
+        { url: `${base}/api/sessions/${session.session_name}?force=true`, method: 'DELETE' },
+        { url: `${base}/api/sessions/${session.session_name}`, method: 'DELETE' },
+        { url: `${base}/api/${session.session_name}`, method: 'DELETE' },
+        { url: `${base}/api/sessions/${session.session_name}/delete`, method: 'POST' },
+        { url: `${base}/api/${session.session_name}/delete`, method: 'POST' },
+      ];
+
+      let deletedOnServer = false;
+      for (const attempt of deleteAttempts) {
+        try {
+          const resp = await fetch(attempt.url, { method: attempt.method, headers });
+          console.log('Delete attempt', attempt.method, attempt.url, resp.status);
+          if (resp.ok || resp.status === 404) {
+            deletedOnServer = true;
+            break;
+          }
+        } catch (e) {
+          console.warn('Delete attempt failed:', attempt, e);
+        }
+      }
+
+      // Exclui do banco
       await supabase
-        .from("whatsapp_sessions")
+        .from('whatsapp_sessions')
         .delete()
-        .eq("id", sessionToDelete);
+        .eq('id', sessionToDelete);
 
       toast({
-        title: "✓ Sessão excluída!",
-        description: "Sessão excluída com sucesso!",
+        title: '✓ Sessão excluída!',
+        description: deletedOnServer
+          ? 'Sessão excluída do WAHA e do banco de dados'
+          : 'Sessão removida do app; não foi possível confirmar exclusão no WAHA-Plus',
       });
       setSessionToDelete(null);
       await refreshSessions();
     } catch (error) {
-      console.error("Error deleting session:", error);
+      console.error('Error deleting session:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao excluir sessão",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Erro ao excluir sessão',
+        variant: 'destructive',
       });
     }
   };
