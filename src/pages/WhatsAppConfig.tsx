@@ -250,6 +250,7 @@ export default function WhatsAppConfig() {
       const base = (config?.waha_url || '').replace(/\/+$/, '');
       const headers: Record<string, string> = {
         Accept: 'application/json',
+        'Content-Type': 'application/json',
       };
       if (config?.waha_api_key) {
         headers['X-Api-Key'] = config.waha_api_key;
@@ -262,13 +263,15 @@ export default function WhatsAppConfig() {
 
       while (attempt < maxAttempts && !qrUrl) {
         attempt++;
-        const urls = [
-          `${base}/api/${sessionName}/auth/qr`,
-          `${base}/api/sessions/${sessionName}/auth/qr`,
+        const attempts = [
+          { method: 'POST', url: `${base}/api/${sessionName}/auth/qr`, body: '{}' },
+          { method: 'POST', url: `${base}/api/sessions/${sessionName}/auth/qr`, body: '{}' },
+          { method: 'GET',  url: `${base}/api/${sessionName}/auth/qr` },
+          { method: 'GET',  url: `${base}/api/sessions/${sessionName}/auth/qr` },
         ];
-        for (const url of urls) {
+        for (const a of attempts) {
           try {
-            const response = await fetch(url, { method: 'GET', headers });
+            const response = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
             if (response.ok) {
               const payload = await response.json();
               const urlFound: string | null = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
