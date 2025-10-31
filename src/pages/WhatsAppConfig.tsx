@@ -607,16 +607,23 @@ export default function WhatsAppConfig() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {getStatusBadge(session.status)}
-                      {session.status === "SCAN_QR_CODE" && (
+                      {session.status === "SCAN_QR_CODE" && session.qr_code ? (
+                        <div className="flex justify-center p-2">
+                          <img
+                            src={session.qr_code}
+                            alt={`QR Code da sessão ${session.session_name}`}
+                            className="w-48 h-48 rounded border"
+                          />
+                        </div>
+                      ) : session.status !== 'WORKING' ? (
                         <Button
                           variant="outline"
                           className="w-full"
-                          onClick={() => setSelectedQrSessionId(session.id)}
+                          onClick={() => startSession(session.id, session.session_name)}
                         >
-                          <QrCode className="h-4 w-4 mr-2" />
-                          Ver QR Code
+                          Gerar QR
                         </Button>
-                      )}
+                      ) : null}
                       {session.bot_flow_id && (
                         <p className="text-xs text-muted-foreground">
                           Em uso por bot
@@ -641,37 +648,6 @@ export default function WhatsAppConfig() {
           </Card>
         )}
 
-        {/* QR Code Dialog */}
-        <Dialog open={!!selectedQrSessionId} onOpenChange={(open) => { if (!open) setSelectedQrSessionId(null); }}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Escaneie o QR Code</DialogTitle>
-              <DialogDescription>
-                Use o WhatsApp no seu celular para escanear o código
-              </DialogDescription>
-            </DialogHeader>
-            {(() => {
-              const s = sessions.find(ss => ss.id === selectedQrSessionId);
-              if (s?.qr_code) {
-                return (
-                  <div className="flex justify-center p-4">
-                    <img
-                      src={s.qr_code}
-                      alt="QR Code"
-                      className="w-64 h-64"
-                    />
-                  </div>
-                );
-              }
-              return (
-                <div className="flex items-center justify-center p-6 text-muted-foreground">
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Aguardando QR Code...
-                </div>
-              );
-            })()}
-          </DialogContent>
-        </Dialog>
 
         {/* Delete Confirmation */}
         <AlertDialog open={!!sessionToDelete} onOpenChange={() => setSessionToDelete(null)}>
