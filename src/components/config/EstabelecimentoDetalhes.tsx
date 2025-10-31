@@ -482,39 +482,38 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
     try {
       const base = (config?.waha_url || '').replace(/\/+$/, '');
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
         Accept: 'application/json',
+        'Content-Type': 'application/json',
       };
       if (config?.waha_api_key) {
         headers['X-Api-Key'] = config.waha_api_key;
         headers['x-api-key'] = config.waha_api_key; // compat WAHA-Plus
       }
 
-      // Garante que a sessão existe (WAHA-Plus pode exigir criação explícita)
-      const existsResp = await fetch(`${base}/api/sessions/${sessionName}`, { headers });
-      if (!existsResp.ok) {
-        const createAttempts = [
-          { url: `${base}/api/sessions`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-          { url: `${base}/api/sessions/${sessionName}`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-          { url: `${base}/api/${sessionName}`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-        ];
-        for (const a of createAttempts) {
-          try {
-            const r = await fetch(a.url, { method: a.method, headers, body: a.body });
-            if (r.ok || r.status === 409) break; // criado ou já existe
-          } catch {}
-        }
+      // Garante que a sessão exista (criação/atualização)
+      const createAttempts = [
+        { url: `${base}/api/sessions`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+        { url: `${base}/api/sessions/${sessionName}/`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+        { url: `${base}/api/${sessionName}`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+      ];
+      for (const a of createAttempts) {
+        try {
+          const r = await fetch(a.url, { method: a.method, headers, body: a.body });
+          if (r.ok || r.status === 409 || r.status === 200 || r.status === 201) break;
+        } catch {}
       }
 
-      // Inicia a sessão (tenta múltiplas rotas)
-      const startUrls = [
-        `${base}/api/sessions/${sessionName}/start`,
-        `${base}/api/${sessionName}/start`,
+      // Inicia a sessão - variações com/sem body
+      const startAttempts = [
+        { url: `${base}/api/sessions/${sessionName}/start`, method: 'POST' },
+        { url: `${base}/api/${sessionName}/start`, method: 'POST' },
+        { url: `${base}/api/sessions/${sessionName}/start`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
+        { url: `${base}/api/${sessionName}/start`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
       ];
       let started = false;
-      for (const url of startUrls) {
+      for (const a of startAttempts) {
         try {
-          const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ name: sessionName }) });
+          const r = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
           if (r.ok || r.status === 201) { started = true; break; }
         } catch {}
       }
@@ -524,9 +523,9 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
     } catch (error) {
       console.error('Error starting session:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao iniciar sessão no WAHA",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Erro ao iniciar sessão no WAHA',
+        variant: 'destructive',
       });
     }
   };
