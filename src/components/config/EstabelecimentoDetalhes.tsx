@@ -365,6 +365,88 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
 
     if (sessionsData) {
       setSessions(sessionsData);
+      // Sincronizar status com WAHA
+      await syncSessionStatus(sessionsData);
+    }
+  };
+
+  const syncSessionStatus = async (sessionsToSync: any[]) => {
+    if (!config?.waha_url) return;
+
+    const base = config.waha_url.replace(/\/+$/, '');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (config.waha_api_key) {
+      headers['x-api-key'] = config.waha_api_key;
+    }
+
+    for (const session of sessionsToSync) {
+      try {
+        // Tentar diferentes endpoints para obter status
+        const statusUrls = [
+          `${base}/api/sessions/${session.session_name}`,
+          `${base}/api/${session.session_name}`,
+          `${base}/api/sessions/${session.session_name}/status`,
+          `${base}/api/${session.session_name}/status`,
+        ];
+
+        let statusFound = false;
+        for (const url of statusUrls) {
+          try {
+            const response = await fetch(url, { method: 'GET', headers });
+            if (response.ok) {
+              const data = await response.json();
+              const wahaStatus = data.status || data.state;
+              
+              if (wahaStatus) {
+                // Mapear status do WAHA para nosso sistema
+                let mappedStatus = 'STOPPED';
+                if (wahaStatus === 'WORKING' || wahaStatus === 'AUTHENTICATED') {
+                  mappedStatus = 'WORKING';
+                } else if (wahaStatus === 'SCAN_QR_CODE' || wahaStatus === 'STARTING') {
+                  mappedStatus = 'SCAN_QR_CODE';
+                } else if (wahaStatus === 'FAILED') {
+                  mappedStatus = 'FAILED';
+                }
+
+                // Atualizar apenas se o status mudou
+                if (session.status !== mappedStatus) {
+                  await supabase
+                    .from('whatsapp_sessions')
+                    .update({ status: mappedStatus })
+                    .eq('id', session.id);
+                  
+                  console.log(`Status atualizado: ${session.session_name} -> ${mappedStatus}`);
+                }
+                
+                statusFound = true;
+                break;
+              }
+            }
+          } catch (e) {
+            // Tentar próximo endpoint
+            continue;
+          }
+        }
+
+        if (!statusFound) {
+          console.log(`Não foi possível obter status da sessão ${session.session_name}`);
+        }
+      } catch (error) {
+        console.error(`Erro ao sincronizar status da sessão ${session.session_name}:`, error);
+      }
+    }
+
+    // Recarregar sessões após sincronização
+    const { data: updatedSessions } = await supabase
+      .from("whatsapp_sessions")
+      .select("*")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .order("created_at", { ascending: false });
+
+    if (updatedSessions) {
+      setSessions(updatedSessions);
     }
   };
 
