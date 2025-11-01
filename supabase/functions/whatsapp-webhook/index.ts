@@ -403,6 +403,65 @@ async function sendWhatsAppMessage(
   }
 }
 
+async function sendWahaMessage(to: string, text: string, sessionName: string) {
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
+  // Get WAHA config from whatsapp_sessions
+  const { data: session } = await supabase
+    .from("whatsapp_sessions")
+    .select("*")
+    .eq("session_name", sessionName)
+    .maybeSingle();
+
+  if (!session || !session.waha_url || !session.waha_api_key) {
+    console.log("WAHA session not configured");
+    return;
+  }
+
+  try {
+    // Try multiple WAHA API endpoints
+    const possibleEndpoints = [
+      `${session.waha_url}/api/sendText`,
+      `${session.waha_url}/api/${sessionName}/sendText`,
+    ];
+
+    for (const url of possibleEndpoints) {
+      try {
+        console.log(`Trying WAHA endpoint: ${url}`);
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": session.waha_api_key,
+          },
+          body: JSON.stringify({
+            chatId: `${to}@c.us`,
+            text: text,
+            session: sessionName,
+          }),
+        });
+
+        const result = await response.json();
+        console.log("WAHA message sent:", result);
+        
+        if (response.ok) {
+          return; // Success, exit
+        }
+      } catch (error) {
+        console.log(`Failed with endpoint ${url}:`, error);
+        continue; // Try next endpoint
+      }
+    }
+    
+    console.error("All WAHA endpoints failed");
+  } catch (error) {
+    console.error("Error sending WAHA message:", error);
+  }
+}
+
 async function sendWhatsAppMedia(
   phoneNumberId: string,
   to: string,
