@@ -45,12 +45,17 @@ serve(async (req) => {
 
     const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "conversa_botique_verify";
 
-    if (mode === "subscribe" && token === verifyToken) {
-      console.log("Webhook verified");
-      return new Response(challenge, { status: 200 });
+    // Meta (WhatsApp Business API) verification flow
+    if (mode === "subscribe" && token === verifyToken && challenge) {
+      console.log("Webhook verified (Meta)");
+      return new Response(challenge, { status: 200, headers: corsHeaders });
     }
 
-    return new Response("Forbidden", { status: 403 });
+    // Generic healthcheck (e.g., WAHA workers ping this endpoint)
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -63,32 +68,63 @@ serve(async (req) => {
     let from = "";
     let body = "";
     let isTwilio = false;
-    let phoneNumberId = "";
+    let phoneNumberId = ""; // Meta Graph API phone number id
+    let transport: "twilio" | "meta" | "waha" = "meta";
+    let wahaSession = "";
 
     // Check if it's Twilio (form data) or WhatsApp Business API (JSON)
     if (contentType.includes("application/x-www-form-urlencoded")) {
       // Twilio Sandbox format
       isTwilio = true;
+      transport = "twilio";
       const formData = await req.formData();
       from = (formData.get("From") as string || "").replace("whatsapp:", "");
       body = formData.get("Body") as string || "";
       console.log("Received Twilio webhook:", { from, body });
     } else {
-      // WhatsApp Business API format
-      const payload: WhatsAppWebhookPayload = await req.json();
-      console.log("Received WhatsApp webhook:", JSON.stringify(payload, null, 2));
+      // JSON payload: could be Meta (Graph) OR WAHA (Baileys)
+      const raw: any = await req.json().catch(() => ({}));
+      console.log("Received JSON webhook:", JSON.stringify(raw, null, 2));
 
-      if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
-        console.log("No message in webhook");
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      // Try to detect WAHA/BAILEYS style first
+      let isWaha = false;
+      // Case A: { event: 'message', data: { from, text }, session: '...' }
+      if ((raw?.event === 'message' || raw?.type === 'message') && (raw?.data || raw?.message)) {
+        isWaha = true;
+        transport = "waha";
+        from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/\D/g, "");
+        body = raw.data?.text || raw.message?.text || raw.data?.message?.conversation || raw.message?.conversation || "";
+        wahaSession = String(raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || raw.instance || "");
+      }
+      // Case B: { messages: [ { key: { remoteJid }, message: { conversation | extendedTextMessage.text } } ] }
+      if (!isWaha && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
+        isWaha = true;
+        transport = "waha";
+        const msg0 = raw.messages[0];
+        const remote = msg0.key?.remoteJid || "";
+        from = String(remote).split("@")[0].replace(/\D/g, "");
+        body = msg0.message?.conversation || msg0.message?.extendedTextMessage?.text || msg0.message?.imageMessage?.caption || "";
+        wahaSession = String(raw.session || raw.instanceId || raw.instance?.name || "");
       }
 
-      const messageData = payload.entry[0].changes[0].value.messages[0];
-      from = messageData.from;
-      body = messageData.text?.body || "";
-      phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
+      if (!isWaha) {
+        // WhatsApp Business API (Meta) format
+        const payload: WhatsAppWebhookPayload = raw;
+        console.log("Received WhatsApp (Meta) webhook:", JSON.stringify(payload, null, 2));
+
+        if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
+          console.log("No message in webhook");
+          return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const messageData = payload.entry[0].changes[0].value.messages[0];
+        from = messageData.from;
+        body = messageData.text?.body || "";
+        phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
+        transport = "meta";
+      }
     }
 
     console.log("Processed message:", { from, body, phoneNumberId, isTwilio });
@@ -196,13 +232,17 @@ serve(async (req) => {
                 flowData.flow_data.nodes, 
                 flowData.flow_data.edges, 
                 context, 
-                async (message: string, mediaUrl?: string, mediaType?: string) => {
+                    async (message: string, mediaUrl?: string, mediaType?: string) => {
                   responses.push(message);
-                  if (isTwilio) {
+                  if (transport === "twilio") {
                     if (mediaUrl) {
                       await sendTwilioMessage(from, message || "", mediaUrl);
                     } else if (message) {
                       await sendTwilioMessage(from, message);
+                    }
+                  } else if (transport === "waha") {
+                    if (message) {
+                      await sendWahaMessage(from, message, wahaSession);
                     }
                   } else {
                     if (mediaUrl && mediaType) {
