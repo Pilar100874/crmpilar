@@ -35,7 +35,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // GET = verificação / healthcheck
+  // Handle GET request for webhook verification
   if (req.method === "GET") {
     const url = new URL(req.url);
     const mode = url.searchParams.get("hub.mode");
@@ -44,13 +44,13 @@ serve(async (req) => {
 
     const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "conversa_botique_verify";
 
-    // Verificação Meta (WhatsApp Cloud API)
+    // Meta (WhatsApp Business API) verification flow
     if (mode === "subscribe" && token === verifyToken && challenge) {
       console.log("Webhook verified (Meta)");
       return new Response(challenge, { status: 200, headers: corsHeaders });
     }
 
-    // Healthcheck genérico
+    // Generic healthcheck (e.g., WAHA workers ping this endpoint)
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -64,12 +64,13 @@ serve(async (req) => {
     let from = "";
     let body = "";
     let isTwilio = false;
-    let phoneNumberId = ""; // Meta Graph API phone_number_id
+    let phoneNumberId = ""; // Meta Graph API phone number id
     let transport: "twilio" | "meta" | "waha" = "meta";
     let wahaSession = "";
 
-    // 1. Twilio (form-urlencoded)
+    // Check if it's Twilio (form data) or WhatsApp Business API (JSON)
     if (contentType.includes("application/x-www-form-urlencoded")) {
+      // Twilio Sandbox format
       isTwilio = true;
       transport = "twilio";
       const formData = await req.formData();
@@ -77,25 +78,24 @@ serve(async (req) => {
       body = (formData.get("Body") as string) || "";
       console.log("Received Twilio webhook:", { from, body });
     } else {
-      // 2. JSON: pode ser Meta oficial OU WAHA
+      // JSON payload: could be Meta (Graph) OR WAHA (Baileys)
       const raw: any = await req.json().catch(() => ({}));
       console.log("Received JSON webhook:", JSON.stringify(raw, null, 2));
 
-      // --- tentar identificar WAHA primeiro ---
-      // Padrão A: { event: 'message', data: { from, text }, session: '...' }
+      // Try to detect WAHA/BAILEYS style first
       let isWaha = false;
+      // Case A: { event: 'message', data: { from, text }, session: '...' }
       if ((raw?.event === "message" || raw?.type === "message") && (raw?.data || raw?.message)) {
         isWaha = true;
         transport = "waha";
-        from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/\D/g, ""); // só números
+        from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/\D/g, "");
         body =
           raw.data?.text || raw.message?.text || raw.data?.message?.conversation || raw.message?.conversation || "";
         wahaSession = String(
           raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || raw.instance || "",
         );
       }
-
-      // Padrão B WAHA (baileys-like): { messages: [ { key: { remoteJid }, message: {...} } ] }
+      // Case B: { messages: [ { key: { remoteJid }, message: { conversation | extendedTextMessage.text } } ] }
       if (!isWaha && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
         isWaha = true;
         transport = "waha";
@@ -110,18 +110,15 @@ serve(async (req) => {
         wahaSession = String(raw.session || raw.instanceId || raw.instance?.name || "");
       }
 
-      // Se NÃO for WAHA, então é Meta oficial (Cloud API)
       if (!isWaha) {
+        // WhatsApp Business API (Meta) format
         const payload: WhatsAppWebhookPayload = raw;
         console.log("Received WhatsApp (Meta) webhook:", JSON.stringify(payload, null, 2));
 
         if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
           console.log("No message in webhook");
           return new Response(JSON.stringify({ success: true }), {
-            headers: {
-              ...corsHeaders,
-              "Content-Type": "application/json",
-            },
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
@@ -133,23 +130,9 @@ serve(async (req) => {
       }
     }
 
-    console.log("Processed message:", {
-      from,
-      body,
-      phoneNumberId,
-      transport,
-      wahaSession,
-      isTwilio,
-    });
+    console.log("Processed message:", { from, body, phoneNumberId, isTwilio });
 
-    // fallback: se o WAHA não mandou nome da sessão, força sua sessão "Pilar"
-    if (transport === "waha" && !wahaSession) {
-      wahaSession = "Pilar";
-    }
-
-    // ------------------------------------------------------------------
-    // 3. FLUXO / BOT
-    // carrega o fluxo ativo do banco
+    // Load active bot flow from database
     const { data: flowData, error: flowError } = await supabase
       .from("bot_flows")
       .select("*")
@@ -159,32 +142,16 @@ serve(async (req) => {
     if (flowError || !flowData) {
       console.log("No active flow found, using default response");
 
-      // Sem flow configurado: manda uma resposta default
-      if (transport === "twilio") {
-        await sendTwilioMessage(from, "Bot sem fluxo ativo 🙃");
-      } else if (transport === "waha") {
-        // responde via WAHA (texto)
-        await sendWahaTextMessage(from, "Bot sem fluxo ativo 🙃", wahaSession);
-      } else {
-        // Meta oficial
-        await sendWhatsAppMessage(
-          phoneNumberId,
-          from,
-          "Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.",
-        );
-      }
+      await sendWhatsAppMessage(phoneNumberId, from, "Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.");
 
       return new Response(JSON.stringify({ success: true }), {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     console.log("Active bot found:", flowData.name);
 
-    // 4. sessão no banco
+    // Get or create session context
     const sessionId = `whatsapp_${from}`;
     console.log("[SESSION] Looking for session:", sessionId);
 
@@ -203,7 +170,7 @@ serve(async (req) => {
 
     let context = sessionData?.context || { vars: {} };
 
-    // conversa nova? reseta contexto
+    // If no pending node, this is a fresh start - reset context
     if (!context.pendingNodeId) {
       console.log("Fresh conversation start - resetting context");
       context = { vars: {} };
@@ -221,43 +188,11 @@ serve(async (req) => {
       hasVars: !!context.vars,
     });
 
-    // 5. Executar o fluxo
+    // Execute flow
     const responses: string[] = [];
 
-    // Função util interna pra mandar a resposta PRA PESSOA CERTA dependendo do canal
-    const deliverResponse = async (message: string, mediaUrl?: string, mediaType?: string) => {
-      responses.push(message);
-
-      if (transport === "twilio") {
-        // Twilio
-        if (mediaUrl) {
-          await sendTwilioMessage(from, message || "", mediaUrl);
-        } else if (message) {
-          await sendTwilioMessage(from, message);
-        }
-        return;
-      }
-
-      if (transport === "waha") {
-        // WAHA (se veio do seu bot WAHA)
-        if (mediaUrl && mediaType === "image") {
-          await sendWahaImageMessage(from, mediaUrl, message, wahaSession);
-        } else if (message) {
-          await sendWahaTextMessage(from, message, wahaSession);
-        }
-        return;
-      }
-
-      // Meta oficial (WhatsApp Cloud API)
-      if (mediaUrl && mediaType) {
-        await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
-      } else if (message) {
-        await sendWhatsAppMessage(phoneNumberId, from, message);
-      }
-    };
-
     if (context.pendingNodeId) {
-      // retomando nó pendente (ex: botões)
+      // Resuming from a pending button node - process only that node
       console.log("Resuming from pending button node:", context.pendingNodeId);
 
       const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
@@ -265,27 +200,27 @@ serve(async (req) => {
         const config = pendingNode.data.config || {};
         const variable = config.variable || "button_response";
 
-        // interpretar resposta do usuário
+        // Process user's button selection
         const userResponse = context.vars.userMessage?.trim() || "";
         const buttonIndex = parseInt(userResponse) - 1;
 
-        if (buttonIndex >= 0 && buttonIndex < (config.buttons?.length || 0)) {
+        if (buttonIndex >= 0 && buttonIndex < config.buttons.length) {
           context.vars[variable] = config.buttons[buttonIndex].value;
           console.log(`Button selected: ${config.buttons[buttonIndex].value}`);
         } else {
-          const matchedButton = config.buttons?.find(
-            (btn: any) => btn.text?.toLowerCase() === userResponse.toLowerCase(),
+          const matchedButton = config.buttons.find(
+            (btn: any) => btn.text.toLowerCase() === userResponse.toLowerCase(),
           );
           context.vars[variable] = matchedButton ? matchedButton.value : userResponse;
         }
 
-        // limpa pendência
+        // Clear pending state
         delete context.pendingNodeId;
 
-        // segue pro próximo nó específico dessa escolha
-        const selectedButtonIndex = config.buttons?.findIndex((btn: any) => btn.value === context.vars[variable]);
+        // Find and execute ONLY the next node based on button selection
+        const selectedButtonIndex = config.buttons.findIndex((btn: any) => btn.value === context.vars[variable]);
 
-        if (selectedButtonIndex !== undefined && selectedButtonIndex >= 0) {
+        if (selectedButtonIndex >= 0) {
           const buttonHandle = `button_${selectedButtonIndex}`;
           const matchingEdge = flowData.flow_data.edges.find(
             (e: any) => e.source === pendingNode.id && e.sourceHandle === buttonHandle,
@@ -295,13 +230,38 @@ serve(async (req) => {
             const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === matchingEdge.target);
             if (nextNode) {
               console.log(`Executing next node: ${nextNode.id} (${nextNode.data.type})`);
-              await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, deliverResponse);
+              await executeNode(
+                nextNode,
+                flowData.flow_data.nodes,
+                flowData.flow_data.edges,
+                context,
+                async (message: string, mediaUrl?: string, mediaType?: string) => {
+                  responses.push(message);
+                  if (transport === "twilio") {
+                    if (mediaUrl) {
+                      await sendTwilioMessage(from, message || "", mediaUrl);
+                    } else if (message) {
+                      await sendTwilioMessage(from, message);
+                    }
+                  } else if (transport === "waha") {
+                    if (message) {
+                      await sendWahaMessage(from, message, wahaSession);
+                    }
+                  } else {
+                    if (mediaUrl && mediaType) {
+                      await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
+                    } else if (message) {
+                      await sendWhatsAppMessage(phoneNumberId, from, message);
+                    }
+                  }
+                },
+              );
             }
           }
         }
       }
     } else {
-      // conversa nova -> roda fluxo normal
+      // Fresh start - execute full flow
       console.log("Starting fresh flow");
       const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
 
@@ -309,11 +269,26 @@ serve(async (req) => {
         { nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges },
         context,
         startNode,
-        deliverResponse,
+        async (message: string, mediaUrl?: string, mediaType?: string) => {
+          responses.push(message);
+          if (isTwilio) {
+            if (mediaUrl) {
+              await sendTwilioMessage(from, message || "", mediaUrl);
+            } else if (message) {
+              await sendTwilioMessage(from, message);
+            }
+          } else {
+            if (mediaUrl && mediaType) {
+              await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
+            } else if (message) {
+              await sendWhatsAppMessage(phoneNumberId, from, message);
+            }
+          }
+        },
       );
     }
 
-    // Se NÃO estamos aguardando botão, salva contexto atualizado
+    // Save session only if not already saved by a node (e.g., reply_buttons)
     if (!context.pendingNodeId) {
       await supabase.from("chat_sessions").upsert(
         {
@@ -340,9 +315,6 @@ serve(async (req) => {
   }
 });
 
-// -----------------
-// Envio Twilio
-// -----------------
 async function sendTwilioMessage(to: string, text: string, mediaUrl?: string) {
   const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
@@ -361,6 +333,7 @@ async function sendTwilioMessage(to: string, text: string, mediaUrl?: string) {
     formData.append("To", `whatsapp:${to}`);
     formData.append("Body", text || " ");
 
+    // Add media if provided
     if (mediaUrl) {
       formData.append("MediaUrl", mediaUrl);
       console.log("Sending media:", mediaUrl);
@@ -386,12 +359,10 @@ async function sendTwilioMessage(to: string, text: string, mediaUrl?: string) {
   }
 }
 
-// -----------------
-// Envio via Meta Cloud API oficial
-// -----------------
 async function sendWhatsAppMessage(phoneNumberId: string, to: string, text: string) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
+  // Get WhatsApp config
   const { data: config } = await supabase.from("whatsapp_config").select("*").limit(1).maybeSingle();
 
   if (!config || !config.business_token) {
@@ -427,9 +398,59 @@ async function sendWhatsAppMessage(phoneNumberId: string, to: string, text: stri
   }
 }
 
-// -----------------
-// Envio via Meta Cloud API para mídia
-// -----------------
+async function sendWahaMessage(to: string, text: string, sessionName: string) {
+  const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+
+  // Get WAHA config from whatsapp_sessions
+  const { data: session } = await supabase
+    .from("whatsapp_sessions")
+    .select("*")
+    .eq("session_name", sessionName)
+    .maybeSingle();
+
+  if (!session || !session.waha_url || !session.waha_api_key) {
+    console.log("WAHA session not configured");
+    return;
+  }
+
+  try {
+    // Try multiple WAHA API endpoints
+    const possibleEndpoints = [`${session.waha_url}/api/sendText`, `${session.waha_url}/api/${sessionName}/sendText`];
+
+    for (const url of possibleEndpoints) {
+      try {
+        console.log(`Trying WAHA endpoint: ${url}`);
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": session.waha_api_key,
+          },
+          body: JSON.stringify({
+            chatId: `${to}@c.us`,
+            text: text,
+            session: sessionName,
+          }),
+        });
+
+        const result = await response.json();
+        console.log("WAHA message sent:", result);
+
+        if (response.ok) {
+          return; // Success, exit
+        }
+      } catch (error) {
+        console.log(`Failed with endpoint ${url}:`, error);
+        continue; // Try next endpoint
+      }
+    }
+
+    console.error("All WAHA endpoints failed");
+  } catch (error) {
+    console.error("Error sending WAHA message:", error);
+  }
+}
+
 async function sendWhatsAppMedia(
   phoneNumberId: string,
   to: string,
@@ -491,78 +512,6 @@ async function sendWhatsAppMedia(
   }
 }
 
-// -----------------
-// Envio via WAHA (TEXTO)
-// -----------------
-async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string) {
-  try {
-    // WAHA normalmente exige o formato chatId = "<numero>@c.us"
-    const chatId = `${toNumberOnly}@c.us`;
-
-    // TODO: se sua API WAHA não usa Bearer e sim X-Api-Key, ajuste headers abaixo
-    const response = await fetch(`https://waha.pilar.com.br/api/sessions/${sessionName}/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer Ceotto2468",
-      },
-      body: JSON.stringify({
-        type: "text",
-        to: chatId,
-        text: text,
-      }),
-    });
-
-    const result = await response.json().catch(() => ({}));
-    console.log("WAHA text sent:", result);
-
-    if (!response.ok) {
-      console.error("WAHA API error (text):", result);
-    }
-  } catch (error) {
-    console.error("Error sending WAHA text:", error);
-  }
-}
-
-// -----------------
-// Envio via WAHA (IMAGEM)
-// -----------------
-async function sendWahaImageMessage(toNumberOnly: string, imageUrl: string, caption: string, sessionName: string) {
-  try {
-    const chatId = `${toNumberOnly}@c.us`;
-
-    // TODO: confirme se sua rota aceita "type: image" com { url, caption }
-    // Algumas builds usam {image:{url:'...',caption:'...'}} em vez de {imageUrl:'...'}
-    const response = await fetch(`https://waha.pilar.com.br/api/sessions/${sessionName}/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer Ceotto2468",
-      },
-      body: JSON.stringify({
-        type: "image",
-        to: chatId,
-        image: {
-          url: imageUrl,
-          caption: caption || "",
-        },
-      }),
-    });
-
-    const result = await response.json().catch(() => ({}));
-    console.log("WAHA image sent:", result);
-
-    if (!response.ok) {
-      console.error("WAHA API error (image):", result);
-    }
-  } catch (error) {
-    console.error("Error sending WAHA image:", error);
-  }
-}
-
-// -----------------
-// Flow executor (igual ao seu, só passando deliverResponse)
-// -----------------
 async function executeFlow(
   flowData: any,
   context: any,
@@ -646,6 +595,7 @@ async function executeNode(
 
       if (mediaUrl) {
         await onResponse(caption, mediaUrl, mediaType);
+        // Aguardar 1 segundo para garantir que a mídia seja enviada antes dos próximos nós
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
@@ -659,6 +609,7 @@ async function executeNode(
     case "goodbye": {
       const text = interpolate(config.text || "Até logo!");
       await onResponse(text);
+      // Don't continue to next nodes - end conversation
       break;
     }
 
@@ -676,7 +627,7 @@ async function executeNode(
 
       await onResponse(question);
 
-      // grava a última mensagem do user naquela variável
+      // Save user message to variable
       if (context.vars.userMessage) {
         context.vars[variable] = context.vars.userMessage;
       }
@@ -707,7 +658,7 @@ async function executeNode(
     case "reply_buttons": {
       const variable = config.variable || "button_response";
 
-      // monta texto de botões como lista numerada simples
+      // Send buttons and wait for response
       let buttonText = "Escolha uma opção:";
       if (config.buttons && config.buttons.length > 0) {
         config.buttons.forEach((btn: any, idx: number) => {
@@ -717,10 +668,11 @@ async function executeNode(
 
       await onResponse(buttonText);
 
-      // marca conversa como "aguardando escolha"
+      // Mark as pending and SAVE IMMEDIATELY before stopping execution
       context.pendingNodeId = node.id;
       console.log(`[BUTTON] Setting pendingNodeId to: ${node.id}`);
 
+      // Save session immediately with pending state
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -739,10 +691,11 @@ async function executeNode(
       );
 
       console.log(`[BUTTON] Session saved with pendingNodeId: ${node.id}`);
-      return;
+      return; // Stop here and wait for user response
     }
 
     case "list_buttons": {
+      // Send text message with list items as simple text
       let listText = interpolate(config.text || config.headerText || "");
       if (config.items && config.items.length > 0) {
         listText += "\n\nEscolha uma opção:";
@@ -765,12 +718,11 @@ async function executeNode(
       break;
     }
 
-    default: {
+    default:
       console.log(`Node type ${data.type} - passing through`);
       const nextNodes = getNextNodes(node.id);
       for (const next of nextNodes) {
         await executeNode(next, nodes, edges, context, onResponse);
       }
-    }
   }
 }
