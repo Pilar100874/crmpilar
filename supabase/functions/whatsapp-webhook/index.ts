@@ -88,11 +88,11 @@ serve(async (req) => {
       if ((raw?.event === "message" || raw?.type === "message") && (raw?.data || raw?.message)) {
         isWaha = true;
         transport = "waha";
-        from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/\D/g, "");
+        from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/[@\D]/g, "");
         body =
           raw.data?.text || raw.message?.text || raw.data?.message?.conversation || raw.message?.conversation || "";
         wahaSession = String(
-          raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || raw.instance || "",
+          raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || raw.instance || "Pilar",
         );
       }
       // Case B: { messages: [ { key: { remoteJid }, message: { conversation | extendedTextMessage.text } } ] }
@@ -107,7 +107,12 @@ serve(async (req) => {
           msg0.message?.extendedTextMessage?.text ||
           msg0.message?.imageMessage?.caption ||
           "";
-        wahaSession = String(raw.session || raw.instanceId || raw.instance?.name || "");
+        wahaSession = String(raw.session || raw.instanceId || raw.instance?.name || "Pilar");
+      }
+
+      // Log WAHA message received
+      if (isWaha) {
+        console.log("[WAHA] Message received:", { sessionName: wahaSession, fromNumber: from, text: body });
       }
 
       if (!isWaha) {
@@ -244,9 +249,8 @@ serve(async (req) => {
                       await sendTwilioMessage(from, message);
                     }
                   } else if (transport === "waha") {
-                    if (message) {
-                      await sendWahaMessage(from, message, wahaSession);
-                    }
+                    // Para WAHA, sempre enviar imagem automaticamente
+                    await sendWahaImageMessage(from, wahaSession);
                   } else {
                     if (mediaUrl && mediaType) {
                       await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
@@ -271,12 +275,15 @@ serve(async (req) => {
         startNode,
         async (message: string, mediaUrl?: string, mediaType?: string) => {
           responses.push(message);
-          if (isTwilio) {
+          if (transport === "twilio") {
             if (mediaUrl) {
               await sendTwilioMessage(from, message || "", mediaUrl);
             } else if (message) {
               await sendTwilioMessage(from, message);
             }
+          } else if (transport === "waha") {
+            // Para WAHA, sempre enviar imagem automaticamente
+            await sendWahaImageMessage(from, wahaSession);
           } else {
             if (mediaUrl && mediaType) {
               await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
@@ -302,14 +309,16 @@ serve(async (req) => {
       );
     }
 
+    // SEMPRE retornar 200 OK para evitar reenvios do WAHA
     return new Response(JSON.stringify({ success: true }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error processing webhook:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
+    // SEMPRE retornar 200 mesmo com erro para evitar reenvios do WAHA
+    return new Response(JSON.stringify({ success: true, error: "processed" }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -398,56 +407,72 @@ async function sendWhatsAppMessage(phoneNumberId: string, to: string, text: stri
   }
 }
 
-async function sendWahaMessage(to: string, text: string, sessionName: string) {
-  const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
-
-  // Get WAHA config from whatsapp_sessions
-  const { data: session } = await supabase
-    .from("whatsapp_sessions")
-    .select("*")
-    .eq("session_name", sessionName)
-    .maybeSingle();
-
-  if (!session || !session.waha_url || !session.waha_api_key) {
-    console.log("WAHA session not configured");
-    return;
-  }
+async function sendWahaImageMessage(toNumberOnly: string, sessionName: string) {
+  const wahaUrl = "https://waha.pilar.com.br";
+  const wahaApiKey = "Ceotto2468";
+  const chatId = `${toNumberOnly}@c.us`;
 
   try {
-    // Try multiple WAHA API endpoints
-    const possibleEndpoints = [`${session.waha_url}/api/sendText`, `${session.waha_url}/api/${sessionName}/sendText`];
+    const url = `${wahaUrl}/api/sessions/${sessionName}/messages`;
+    console.log(`[WAHA] Sending image to ${chatId} via session ${sessionName}`);
 
-    for (const url of possibleEndpoints) {
-      try {
-        console.log(`Trying WAHA endpoint: ${url}`);
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Api-Key": session.waha_api_key,
-          },
-          body: JSON.stringify({
-            chatId: `${to}@c.us`,
-            text: text,
-            session: sessionName,
-          }),
-        });
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${wahaApiKey}`,
+      },
+      body: JSON.stringify({
+        type: "image",
+        to: chatId,
+        image: {
+          url: "https://picsum.photos/400/300",
+          caption: "Recebido com sucesso! ✅",
+        },
+      }),
+    });
 
-        const result = await response.json();
-        console.log("WAHA message sent:", result);
+    const result = await response.json().catch(() => ({ status: response.status }));
+    console.log(`[WAHA] Image sent:`, { sessionName, to: chatId, statusCode: response.status, result });
 
-        if (response.ok) {
-          return; // Success, exit
-        }
-      } catch (error) {
-        console.log(`Failed with endpoint ${url}:`, error);
-        continue; // Try next endpoint
-      }
+    if (!response.ok) {
+      console.error(`[WAHA] Failed to send image:`, result);
     }
-
-    console.error("All WAHA endpoints failed");
   } catch (error) {
-    console.error("Error sending WAHA message:", error);
+    console.error(`[WAHA] Error sending image:`, error);
+  }
+}
+
+async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string) {
+  const wahaUrl = "https://waha.pilar.com.br";
+  const wahaApiKey = "Ceotto2468";
+  const chatId = `${toNumberOnly}@c.us`;
+
+  try {
+    const url = `${wahaUrl}/api/sessions/${sessionName}/messages`;
+    console.log(`[WAHA] Sending text to ${chatId} via session ${sessionName}`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${wahaApiKey}`,
+      },
+      body: JSON.stringify({
+        type: "text",
+        to: chatId,
+        text: text,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({ status: response.status }));
+    console.log(`[WAHA] Text sent:`, { sessionName, to: chatId, statusCode: response.status });
+
+    if (!response.ok) {
+      console.error(`[WAHA] Failed to send text:`, result);
+    }
+  } catch (error) {
+    console.error(`[WAHA] Error sending text:`, error);
   }
 }
 
