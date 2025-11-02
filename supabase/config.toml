@@ -14,3 +14,7 @@ verify_jwt = false
 
 [functions.suggest-products]
 verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
