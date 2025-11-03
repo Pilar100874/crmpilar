@@ -235,6 +235,8 @@ serve(async (req) => {
     // ====== Execução do fluxo ======
     if (context.pendingNodeId) {
       const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
+      
+      // Processa resposta para reply_buttons
       if (pendingNode?.data?.type === "reply_buttons") {
         const cfg = pendingNode.data.config || {};
         const variable = cfg.variable || "button_response";
@@ -257,18 +259,33 @@ serve(async (req) => {
           if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
         }
       }
+      // Processa resposta para blocos ask_*
+      else if (pendingNode?.data?.type?.startsWith("ask_")) {
+        const cfg = pendingNode.data.config || {};
+        const variable = cfg.variable || "resposta";
+        const userResponse = (context.vars.userMessage || "").trim();
+        
+        // Salva a resposta do usuário
+        context.vars[variable] = userResponse;
+        delete context.pendingNodeId;
+        
+        // Continua para o próximo nó
+        const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+        if (nextEdge) {
+          const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
+          if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+        }
+      }
     } else {
       const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
       await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
     }
 
-    // Salva contexto (se não estiver aguardando botão)
-    if (!context.pendingNodeId) {
-      await supabase.from("chat_sessions").upsert(
-        { session_id: sessionKey, context, updated_at: new Date().toISOString() },
-        { onConflict: "session_id" },
-      );
-    }
+    // Salva contexto
+    await supabase.from("chat_sessions").upsert(
+      { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+      { onConflict: "session_id" },
+    );
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
@@ -500,13 +517,23 @@ async function executeNode(
     case "ask_date":
     case "ask_file":
     case "ask_address":
-    case "ask_url": {
+    case "ask_url":
+    case "ask_cnpj":
+    case "ask_cep": {
       const q = itp(cfg.question || "Por favor, responda:");
-      const variable = cfg.variable || "resposta";
       await onResponse(q);
-      if (context.vars.userMessage) context.vars[variable] = context.vars.userMessage;
-      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-      break;
+      
+      // Define este nó como pendente e para a execução
+      context.pendingNodeId = node.id;
+      
+      // Salva o contexto com o nó pendente
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+      await supabase.from("chat_sessions").upsert(
+        { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+        { onConflict: "session_id" },
+      );
+      return;
     }
     case "set_field": {
       const name = cfg.fieldName || "";
