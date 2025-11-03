@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RotateCcw, MessageSquare, Smartphone, Zap, AlertCircle, Power } from "lucide-react";
+import { RotateCcw, MessageSquare, Smartphone, AlertCircle, Power } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
 import { WhatsAppQRCode } from "@/components/WhatsAppQRCode";
-import { TwilioSandbox } from "@/components/TwilioSandbox";
+
 import { Node, Edge } from "@xyflow/react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
@@ -205,10 +205,6 @@ export default function BotTest() {
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Simulador Web
                 </TabsTrigger>
-                <TabsTrigger value="twilio">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Twilio Sandbox
-                </TabsTrigger>
                 <TabsTrigger value="whatsapp">
                   <Smartphone className="w-4 h-4 mr-2" />
                   WhatsApp Oficial
@@ -235,19 +231,6 @@ export default function BotTest() {
               )}
             </TabsContent>
 
-            <TabsContent value="twilio" className="flex-1 m-0 overflow-auto">
-              <div className="max-w-3xl mx-auto p-4">
-                <div className="mb-4 text-center">
-                  <h3 className="text-lg font-bold text-foreground mb-2">
-                    ⚡ Teste Grátis com Twilio Sandbox
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    Método RECOMENDADO - 100% gratuito e sem risco de ban
-                  </p>
-                </div>
-                <TwilioSandbox />
-              </div>
-            </TabsContent>
 
             <TabsContent value="whatsapp" className="flex-1 m-0 overflow-auto">
               <div className="max-w-3xl mx-auto p-4">

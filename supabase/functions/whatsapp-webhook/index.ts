@@ -65,11 +65,11 @@ serve(async (req) => {
     let body = "";
     let isTwilio = false;
     let phoneNumberId = ""; // Meta Graph API phone number id
-    let transport: "twilio" | "meta" | "waha" = "meta";
+    let transport: "meta" | "waha" = "meta";
     let wahaSession = "";
 
     // Check if it's Twilio (form data) or WhatsApp Business API (JSON)
-    if (contentType.includes("application/x-www-form-urlencoded")) {
+    if (false /* Twilio disabled */) {
       // Twilio Sandbox format
       isTwilio = true;
       transport = "twilio";
@@ -92,7 +92,7 @@ serve(async (req) => {
         body =
           raw.data?.text || raw.message?.text || raw.data?.message?.conversation || raw.message?.conversation || "";
         wahaSession = String(
-          raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || raw.instance || "Pilar",
+          raw.data?.session || raw.data?.sessionId || raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || raw.instance || "default",
         );
       }
       // Case B: { messages: [ { key: { remoteJid }, message: { conversation | extendedTextMessage.text } } ] }
@@ -107,7 +107,7 @@ serve(async (req) => {
           msg0.message?.extendedTextMessage?.text ||
           msg0.message?.imageMessage?.caption ||
           "";
-        wahaSession = String(raw.session || raw.instanceId || raw.instance?.name || "Pilar");
+        wahaSession = String(raw.data?.session || raw.data?.sessionId || raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || "default");
       }
 
       // Log WAHA message received
@@ -157,7 +157,8 @@ serve(async (req) => {
     console.log("Active bot found:", flowData.name);
 
     // Get or create session context
-    const sessionId = `whatsapp_${from}`;
+    const sessionPart = transport === "waha" ? (wahaSession || "default") : "meta";
+    const sessionId = `whatsapp_${sessionPart}_${from}`;
     console.log("[SESSION] Looking for session:", sessionId);
 
     const { data: sessionData } = await supabase
@@ -186,6 +187,7 @@ serve(async (req) => {
     context.vars.userMessage = body;
     context.vars.from = from;
     context.vars.phoneNumber = from;
+    if (wahaSession) context.vars.sessionName = wahaSession;
 
     console.log("Context state:", {
       pendingNodeId: context.pendingNodeId,
@@ -249,8 +251,11 @@ serve(async (req) => {
                       await sendTwilioMessage(from, message);
                     }
                   } else if (transport === "waha") {
-                    // Para WAHA, sempre enviar imagem automaticamente
-                    await sendWahaImageMessage(from, wahaSession);
+                    if (mediaUrl && mediaType) {
+                      await sendWahaMediaMessage(from, mediaUrl, mediaType, message, wahaSession);
+                    } else if (message) {
+                      await sendWahaTextMessage(from, message, wahaSession);
+                    }
                   } else {
                     if (mediaUrl && mediaType) {
                       await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
@@ -281,16 +286,19 @@ serve(async (req) => {
             } else if (message) {
               await sendTwilioMessage(from, message);
             }
-          } else if (transport === "waha") {
-            // Para WAHA, sempre enviar imagem automaticamente
-            await sendWahaImageMessage(from, wahaSession);
-          } else {
-            if (mediaUrl && mediaType) {
-              await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
-            } else if (message) {
-              await sendWhatsAppMessage(phoneNumberId, from, message);
-            }
-          }
+           } else if (transport === "waha") {
+             if (mediaUrl && mediaType) {
+               await sendWahaMediaMessage(from, mediaUrl, mediaType, message, wahaSession);
+             } else if (message) {
+               await sendWahaTextMessage(from, message, wahaSession);
+             }
+           } else {
+             if (mediaUrl && mediaType) {
+               await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, message);
+             } else if (message) {
+               await sendWhatsAppMessage(phoneNumberId, from, message);
+             }
+           }
         },
       );
     }
@@ -324,49 +332,8 @@ serve(async (req) => {
   }
 });
 
-async function sendTwilioMessage(to: string, text: string, mediaUrl?: string) {
-  const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-  const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-  const twilioNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "+14155238886";
-
-  if (!accountSid || !authToken) {
-    console.log("Twilio not configured");
-    return;
-  }
-
-  try {
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-
-    const formData = new URLSearchParams();
-    formData.append("From", `whatsapp:${twilioNumber}`);
-    formData.append("To", `whatsapp:${to}`);
-    formData.append("Body", text || " ");
-
-    // Add media if provided
-    if (mediaUrl) {
-      formData.append("MediaUrl", mediaUrl);
-      console.log("Sending media:", mediaUrl);
-    }
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: formData,
-    });
-
-    const result = await response.json();
-    console.log("Twilio message sent:", result);
-
-    if (!response.ok) {
-      console.error("Twilio API error:", result);
-    }
-  } catch (error) {
-    console.error("Error sending Twilio message:", error);
-  }
-}
+// Twilio support removed from this endpoint (stub to satisfy types)
+async function sendTwilioMessage(to: string, text: string, mediaUrl?: string) { return; }
 
 async function sendWhatsAppMessage(phoneNumberId: string, to: string, text: string) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
@@ -407,46 +374,72 @@ async function sendWhatsAppMessage(phoneNumberId: string, to: string, text: stri
   }
 }
 
-async function sendWahaImageMessage(toNumberOnly: string, sessionName: string) {
-  const wahaUrl = "https://waha.pilar.com.br";
-  const wahaApiKey = "Ceotto2468";
+async function sendWahaMediaMessage(
+  toNumberOnly: string,
+  mediaUrl: string,
+  mediaType: string,
+  caption: string | undefined,
+  sessionName: string,
+) {
+  const wahaUrl = Deno.env.get("WAHA_URL") || "";
+  const wahaApiKey = Deno.env.get("WAHA_API_KEY") || "";
   const chatId = `${toNumberOnly}@c.us`;
+
+  if (!wahaUrl || !wahaApiKey) {
+    console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY env vars");
+    return;
+  }
 
   try {
     const url = `${wahaUrl}/api/sessions/${sessionName}/messages`;
-    console.log(`[WAHA] Sending image to ${chatId} via session ${sessionName}`);
+    console.log(`[WAHA] Sending media to ${chatId} via session ${sessionName}`);
+
+    const type = mediaType?.toLowerCase();
+    let payload: any = { type: "text", to: chatId, text: caption || "" };
+
+    if (type === "image") {
+      payload = {
+        type: "image",
+        to: chatId,
+        image: { url: mediaUrl, caption: caption || undefined },
+      };
+    } else if (type === "video") {
+      payload = { type: "video", to: chatId, video: { url: mediaUrl, caption: caption || undefined } };
+    } else if (type === "audio") {
+      payload = { type: "audio", to: chatId, audio: { url: mediaUrl } };
+    } else if (type === "document") {
+      const fileName = mediaUrl.split("/").pop() || "document";
+      payload = { type: "document", to: chatId, document: { url: mediaUrl, fileName } };
+    } else {
+      // Fallback: send link as text
+      payload = { type: "text", to: chatId, text: `${caption ? caption + "\n" : ""}${mediaUrl}` };
+    }
 
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${wahaApiKey}`,
+        Authorization: `Bearer ${wahaApiKey}`,
       },
-      body: JSON.stringify({
-        type: "image",
-        to: chatId,
-        image: {
-          url: "https://picsum.photos/400/300",
-          caption: "Recebido com sucesso! ✅",
-        },
-      }),
+      body: JSON.stringify(payload),
     });
 
     const result = await response.json().catch(() => ({ status: response.status }));
-    console.log(`[WAHA] Image sent:`, { sessionName, to: chatId, statusCode: response.status, result });
+    console.log(`[WAHA] Media sent:`, { sessionName, to: chatId, statusCode: response.status, result });
 
     if (!response.ok) {
-      console.error(`[WAHA] Failed to send image:`, result);
+      console.error(`[WAHA] Failed to send media:`, result);
     }
   } catch (error) {
-    console.error(`[WAHA] Error sending image:`, error);
+    console.error(`[WAHA] Error sending media:`, error);
   }
 }
 
 async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string) {
-  const wahaUrl = "https://waha.pilar.com.br";
-  const wahaApiKey = "Ceotto2468";
+  const wahaUrl = Deno.env.get("WAHA_URL") || "";
+  const wahaApiKey = Deno.env.get("WAHA_API_KEY") || "";
   const chatId = `${toNumberOnly}@c.us`;
+
 
   try {
     const url = `${wahaUrl}/api/sessions/${sessionName}/messages`;
@@ -703,7 +696,8 @@ async function executeNode(
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       );
 
-      const sessionId = `whatsapp_${context.vars.from}`;
+      const sessionPart = context.vars.sessionName || "meta";
+      const sessionId = `whatsapp_${sessionPart}_${context.vars.from}`;
       await supabase.from("chat_sessions").upsert(
         {
           session_id: sessionId,
