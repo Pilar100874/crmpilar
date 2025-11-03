@@ -416,6 +416,7 @@ async function sendWahaMediaMessage(
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${wahaApiKey}`,
+        "X-API-KEY": wahaApiKey,
       },
       body: JSON.stringify(payload),
     });
@@ -446,6 +447,7 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${wahaApiKey}`,
+        "X-API-KEY": wahaApiKey,
       },
       body: JSON.stringify({
         type: "text",
