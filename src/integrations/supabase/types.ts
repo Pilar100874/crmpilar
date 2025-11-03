@@ -2439,6 +2439,7 @@ export type Database = {
           updated_at: string
           waha_api_key: string | null
           waha_url: string | null
+          webhook_url: string | null
         }
         Insert: {
           bot_flow_id?: string | null
@@ -2452,6 +2453,7 @@ export type Database = {
           updated_at?: string
           waha_api_key?: string | null
           waha_url?: string | null
+          webhook_url?: string | null
         }
         Update: {
           bot_flow_id?: string | null
@@ -2465,6 +2467,7 @@ export type Database = {
           updated_at?: string
           waha_api_key?: string | null
           waha_url?: string | null
+          webhook_url?: string | null
         }
         Relationships: [
           {

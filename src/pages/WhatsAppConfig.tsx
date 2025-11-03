@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Smartphone, QrCode, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Smartphone, QrCode, Trash2, RefreshCw, Settings } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,7 @@ interface WhatsAppSession {
   bot_flow_id: string | null;
   waha_url: string | null;
   waha_api_key: string | null;
+  webhook_url: string | null;
 }
 
 export default function WhatsAppConfig() {
@@ -46,10 +47,15 @@ export default function WhatsAppConfig() {
   // Form states
   const [wahaUrl, setWahaUrl] = useState("");
   const [wahaApiKey, setWahaApiKey] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [newSessionName, setNewSessionName] = useState("");
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
+  const [editingSession, setEditingSession] = useState<WhatsAppSession | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedQrSessionId, setSelectedQrSessionId] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+
+  const getDefaultWebhookUrl = () => `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
 
   useEffect(() => {
     loadConfig();
@@ -116,6 +122,8 @@ export default function WhatsAppConfig() {
     }
 
     try {
+      const finalWebhookUrl = webhookUrl || getDefaultWebhookUrl();
+      
       // Cria a sessão no banco primeiro
       const { data, error } = await supabase
         .from("whatsapp_sessions")
@@ -125,6 +133,7 @@ export default function WhatsAppConfig() {
           status: "STOPPED",
           waha_url: wahaUrl,
           waha_api_key: wahaApiKey,
+          webhook_url: finalWebhookUrl,
         })
         .select()
         .single();
@@ -136,6 +145,7 @@ export default function WhatsAppConfig() {
       setNewSessionName("");
       setWahaUrl("");
       setWahaApiKey("");
+      setWebhookUrl("");
 
       // Inicia a sessão no WAHA e busca o QR code automaticamente
       await startSession(data.id, newSessionName);
@@ -151,7 +161,7 @@ export default function WhatsAppConfig() {
       // Busca a configuração da sessão
       const { data: sessionData } = await supabase
         .from("whatsapp_sessions")
-        .select("waha_url, waha_api_key")
+        .select("waha_url, waha_api_key, webhook_url")
         .eq("id", sessionId)
         .single();
       
@@ -169,7 +179,7 @@ export default function WhatsAppConfig() {
         headers['x-api-key'] = sessionData.waha_api_key;
       }
 
-      const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
+      const webhookUrl = sessionData.webhook_url || getDefaultWebhookUrl();
 
       // Garante que a sessão exista (criação/atualização)
       const createBody = JSON.stringify({
@@ -472,6 +482,50 @@ export default function WhatsAppConfig() {
     }
   };
 
+  const openEditDialog = (session: WhatsAppSession) => {
+    setEditingSession(session);
+    setWahaUrl(session.waha_url || "");
+    setWahaApiKey(session.waha_api_key || "");
+    setWebhookUrl(session.webhook_url || "");
+    setShowEditDialog(true);
+  };
+
+  const closeEditDialog = () => {
+    setShowEditDialog(false);
+    setEditingSession(null);
+    setWahaUrl("");
+    setWahaApiKey("");
+    setWebhookUrl("");
+  };
+
+  const saveSessionConfig = async () => {
+    if (!editingSession) return;
+
+    try {
+      const finalWebhookUrl = webhookUrl || getDefaultWebhookUrl();
+      
+      await supabase
+        .from("whatsapp_sessions")
+        .update({
+          waha_url: wahaUrl,
+          waha_api_key: wahaApiKey || null,
+          webhook_url: finalWebhookUrl,
+        })
+        .eq("id", editingSession.id);
+
+      toast.success("Configuração atualizada!");
+      closeEditDialog();
+      await refreshSessions();
+    } catch (error) {
+      console.error("Error updating session:", error);
+      toast.error("Erro ao atualizar configuração");
+    }
+  };
+
+  const restoreDefaultWebhook = () => {
+    setWebhookUrl(getDefaultWebhookUrl());
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
       "STOPPED": { variant: "secondary", label: "Parado" },
@@ -553,6 +607,29 @@ export default function WhatsAppConfig() {
                         onChange={(e) => setWahaApiKey(e.target.value)}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="webhook-url">URL do Webhook</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={restoreDefaultWebhook}
+                          className="text-xs"
+                        >
+                          Restaurar Padrão
+                        </Button>
+                      </div>
+                      <Input
+                        id="webhook-url"
+                        placeholder={getDefaultWebhookUrl()}
+                        value={webhookUrl}
+                        onChange={(e) => setWebhookUrl(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Padrão: {getDefaultWebhookUrl()}
+                      </p>
+                    </div>
                     <Button onClick={createSession} className="w-full">
                       Criar Sessão
                     </Button>
@@ -574,17 +651,36 @@ export default function WhatsAppConfig() {
                         <Smartphone className="h-5 w-5" />
                         <CardTitle className="text-lg">{session.session_name}</CardTitle>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSessionToDelete(session.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(session)}
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSessionToDelete(session.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                     <CardDescription>
                       {session.phone_number || "Aguardando conexão"}
                     </CardDescription>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className={`w-2 h-2 rounded-full ${
+                        session.webhook_url && session.webhook_url !== getDefaultWebhookUrl()
+                          ? 'bg-orange-500 animate-pulse' 
+                          : 'bg-green-500'
+                      }`} />
+                      <span className="text-xs text-muted-foreground">
+                        Webhook: {session.webhook_url && session.webhook_url !== getDefaultWebhookUrl() ? 'Customizado' : 'Padrão'}
+                      </span>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {getStatusBadge(session.status)}
@@ -616,6 +712,75 @@ export default function WhatsAppConfig() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Session Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={(open) => !open && closeEditDialog()}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Configurar Sessão</DialogTitle>
+              <DialogDescription>
+                Edite as configurações da sessão {editingSession?.session_name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-waha-url">URL do Servidor WAHA</Label>
+                <Input
+                  id="edit-waha-url"
+                  placeholder="https://waha.exemplo.com"
+                  value={wahaUrl}
+                  onChange={(e) => setWahaUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-waha-key">Chave de API</Label>
+                <Input
+                  id="edit-waha-key"
+                  type="password"
+                  placeholder="Sua chave de API"
+                  value={wahaApiKey}
+                  onChange={(e) => setWahaApiKey(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="edit-webhook-url">URL do Webhook</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={restoreDefaultWebhook}
+                    className="text-xs"
+                  >
+                    Restaurar Padrão
+                  </Button>
+                </div>
+                <Input
+                  id="edit-webhook-url"
+                  placeholder={getDefaultWebhookUrl()}
+                  value={webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Padrão: {getDefaultWebhookUrl()}
+                </p>
+                <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                  <div className={`w-2 h-2 rounded-full ${
+                    webhookUrl && webhookUrl !== getDefaultWebhookUrl()
+                      ? 'bg-orange-500 animate-pulse' 
+                      : 'bg-green-500'
+                  }`} />
+                  <span className="text-xs">
+                    Status: {webhookUrl && webhookUrl !== getDefaultWebhookUrl() ? 'Webhook Customizado' : 'Webhook Padrão Ativo'}
+                  </span>
+                </div>
+              </div>
+              <Button onClick={saveSessionConfig} className="w-full">
+                Salvar Configuração
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Delete Confirmation */}
         <AlertDialog open={!!sessionToDelete} onOpenChange={() => setSessionToDelete(null)}>
