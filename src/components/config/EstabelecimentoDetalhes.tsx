@@ -318,6 +318,7 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
   
   const [wahaUrl, setWahaUrl] = useState("");
   const [wahaApiKey, setWahaApiKey] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [newSessionName, setNewSessionName] = useState("");
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
@@ -347,6 +348,7 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
           setConfig(cfg);
           setWahaUrl(cfg.waha_url);
           setWahaApiKey(cfg.waha_api_key || "");
+          setWebhookUrl(cfg.webhook_url || "");
         }
       }
 
@@ -475,6 +477,7 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
           .update({
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
+            webhook_url: webhookUrl || null,
           } as any)
           .eq("id", existingConfig.id);
 
@@ -486,6 +489,7 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
             estabelecimento_id: estabelecimentoId,
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
+            webhook_url: webhookUrl || null,
           } as any);
 
         if (error) throw error;
@@ -571,7 +575,7 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
         headers['x-api-key'] = config.waha_api_key;
       }
 
-      const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
+      const webhookUrl = config?.webhook_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
 
       // Garante que a sessão exista (criação/atualização)
       const createBody = JSON.stringify({
@@ -833,6 +837,32 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
                   value={wahaApiKey}
                   onChange={(e) => setWahaApiKey(e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="webhook-url">URL do Webhook</Label>
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${webhookUrl ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
+                    <span className="text-xs text-muted-foreground">
+                      {webhookUrl ? 'Customizado' : 'Padrão'}
+                    </span>
+                  </div>
+                </div>
+                <Input
+                  id="webhook-url"
+                  placeholder={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`}
+                  value={webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setWebhookUrl("")}
+                  className="text-xs"
+                >
+                  Restaurar Padrão
+                </Button>
               </div>
               <Button onClick={saveConfig} className="w-full" disabled={loading}>
                 {loading ? "Salvando..." : "Salvar Configuração"}
