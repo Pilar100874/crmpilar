@@ -69,15 +69,7 @@ serve(async (req) => {
     let wahaSession = "";
 
     // Check if it's Twilio (form data) or WhatsApp Business API (JSON)
-    if (false /* Twilio disabled */) {
-      // Twilio Sandbox format
-      isTwilio = true;
-      transport = "twilio";
-      const formData = await req.formData();
-      from = ((formData.get("From") as string) || "").replace("whatsapp:", "");
-      body = (formData.get("Body") as string) || "";
-      console.log("Received Twilio webhook:", { from, body });
-    } else {
+    {
       // JSON payload: could be Meta (Graph) OR WAHA (Baileys)
       const raw: any = await req.json().catch(() => ({}));
       console.log("Received JSON webhook:", JSON.stringify(raw, null, 2));
@@ -244,13 +236,7 @@ serve(async (req) => {
                 context,
                 async (message: string, mediaUrl?: string, mediaType?: string) => {
                   responses.push(message);
-                  if (transport === "twilio") {
-                    if (mediaUrl) {
-                      await sendTwilioMessage(from, message || "", mediaUrl);
-                    } else if (message) {
-                      await sendTwilioMessage(from, message);
-                    }
-                  } else if (transport === "waha") {
+                  if (transport === "waha") {
                     if (mediaUrl && mediaType) {
                       await sendWahaMediaMessage(from, mediaUrl, mediaType, message, wahaSession);
                     } else if (message) {
@@ -280,13 +266,7 @@ serve(async (req) => {
         startNode,
         async (message: string, mediaUrl?: string, mediaType?: string) => {
           responses.push(message);
-          if (transport === "twilio") {
-            if (mediaUrl) {
-              await sendTwilioMessage(from, message || "", mediaUrl);
-            } else if (message) {
-              await sendTwilioMessage(from, message);
-            }
-           } else if (transport === "waha") {
+          if (transport === "waha") {
              if (mediaUrl && mediaType) {
                await sendWahaMediaMessage(from, mediaUrl, mediaType, message, wahaSession);
              } else if (message) {
