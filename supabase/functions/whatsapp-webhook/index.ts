@@ -21,38 +21,43 @@ interface WhatsAppWebhookPayload {
   }>;
 }
 
-/** ---- Utils ---- */
+/* ===== Helpers / ENVs ===== */
 const env = (k: string, d = "") => (Deno.env.get(k) ?? d).trim();
+const SUPABASE_URL = env("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY");
 const WAHA_URL = env("WAHA_URL");
 const WAHA_API_KEY = env("WAHA_API_KEY");
+const VERIFY_TOKEN = env("WHATSAPP_VERIFY_TOKEN", "conversa_botique_verify");
 const JID_SUFFIX = env("WAHA_JID_SUFFIX", "@c.us"); // "@c.us" (WEBJS) ou "@s.whatsapp.net" (Baileys)
 
 const toJid = (numOnly: string) => `${String(numOnly).replace(/\D/g, "")}${JID_SUFFIX}`;
-const resolveWahaSession = (raw: any) =>
-  String(
+
+function resolveWahaSession(raw: any): string {
+  return String(
     raw?.data?.session ||
       raw?.data?.sessionId ||
+      raw?.payload?.session ||
       raw?.session ||
       raw?.sessionId ||
-      raw?.instanceId ||
       raw?.instance?.name ||
-      raw?.instance ||
-      raw?.payload?.session ||
+      raw?.instanceId ||
+      raw?.data?.instance ||
       raw?.payload?.instance ||
       "default",
-  );
+  ).trim();
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // GET = verificação (Meta) + healthcheck
+  // Healthcheck + verificação (Meta)
   if (req.method === "GET") {
     const url = new URL(req.url);
     const mode = url.searchParams.get("hub.mode");
     const token = url.searchParams.get("hub.verify_token");
     const challenge = url.searchParams.get("hub.challenge");
-    const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "conversa_botique_verify";
-    if (mode === "subscribe" && token === verifyToken && challenge) {
+    if (mode === "subscribe" && token === VERIFY_TOKEN && challenge) {
+      console.log("Webhook verified (Meta)");
       return new Response(challenge, { status: 200, headers: corsHeaders });
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -62,25 +67,30 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
-    const contentType = req.headers.get("content-type") || "";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    let from = "";
-    let body = "";
-    let phoneNumberId = ""; // Meta
-    let transport: "waha" | "meta" = "meta";
+    // ====== Parse do corpo robusto ======
+    let rawText = "";
+    let raw: any = {};
+    try {
+      rawText = await req.text();                 // lê o corpo cru
+      raw = rawText ? JSON.parse(rawText) : {};   // tenta parsear
+    } catch {
+      raw = {};
+    }
+    console.log("RAW body:", rawText);
+    console.log("Received JSON webhook:", JSON.stringify(raw, null, 2));
+
+    let from = "";                 // número do remetente (apenas dígitos)
+    let body = "";                 // texto recebido
+    let phoneNumberId = "";        // Meta Graph API phone number id
+    let transport: "waha" | "meta" | "twilio" = "meta";
     let wahaSession = "default";
 
-    // Sempre JSON (WAHA/Meta)
-    const raw: any = await req.json().catch(() => ({}));
-    console.log("Webhook JSON:", JSON.stringify(raw, null, 2));
-
-    // --- Heurísticas WAHA ---
-    let isWaha = false;
+    // ====== Heurística WAHA ======
 
     // A) { event:'message' | type:'message', data/message... }
     if ((raw?.event === "message" || raw?.type === "message") && (raw?.data || raw?.message)) {
-      isWaha = true;
       transport = "waha";
       from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/\D/g, "");
       body =
@@ -91,11 +101,11 @@ serve(async (req) => {
         raw.data?.message?.extendedTextMessage?.text ||
         "";
       wahaSession = resolveWahaSession(raw);
+      console.log("[WAHA] Message received:", { sessionName: wahaSession, fromNumber: from, text: body });
     }
 
     // B) Baileys: { messages:[{ key:{remoteJid}, message:{...} }], ... }
-    if (!isWaha && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
-      isWaha = true;
+    if (transport !== "waha" && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
       transport = "waha";
       const msg0 = raw.messages[0];
       const remote = msg0.key?.remoteJid || "";
@@ -106,23 +116,26 @@ serve(async (req) => {
         msg0.message?.imageMessage?.caption ||
         "";
       wahaSession = resolveWahaSession(raw);
+      console.log("[WAHA] Message received (baileys):", { sessionName: wahaSession, fromNumber: from, text: body });
     }
 
-    // C) WAHA Plus WEBJS: { event:'message', session, payload:{ from, body } }
-    if (!isWaha && (raw?.event === "message" || raw?.type === "message") && raw?.payload) {
-      isWaha = true;
+    // C) WEBJS: { event:'message', payload:{ from, body }, session: ... }
+    if (transport !== "waha" && (raw?.event === "message" || raw?.type === "message") && raw?.payload) {
       transport = "waha";
       const p = raw.payload || {};
       const fromJid = String(p.from || p._data?.id?.remote || "");
       from = fromJid.split("@")[0].replace(/\D/g, "");
       body = String(p.body || p.text || p.message?.conversation || p._data?.body || "");
       wahaSession = resolveWahaSession(raw);
+      console.log("[WAHA] Message received (webjs):", { sessionName: wahaSession, fromNumber: from, text: body });
     }
 
-    if (!isWaha) {
-      // Meta (oficial)
+    // ====== Meta oficial (se não caiu em WAHA) ======
+    if (transport !== "waha") {
       const payload: WhatsAppWebhookPayload = raw;
       if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
+        console.log("Received WhatsApp (Meta) webhook:", JSON.stringify(raw));
+        console.log("No message in webhook");
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -134,14 +147,10 @@ serve(async (req) => {
       transport = "meta";
     }
 
-    console.log("Processed:", { transport, wahaSession, from, body });
+    console.log("Processed message:", { from, body, phoneNumberId, transport });
 
-    // --- Carrega fluxo ativo ---
-    const { data: flowData, error: flowError } = await supabase
-      .from("bot_flows")
-      .select("*")
-      .eq("active", true)
-      .maybeSingle();
+    // ====== Carrega fluxo ativo ======
+    const { data: flowData } = await supabase.from("bot_flows").select("*").eq("active", true).maybeSingle();
 
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string) => {
       if (transport === "waha") {
@@ -156,16 +165,29 @@ serve(async (req) => {
       }
     };
 
-    if (flowError || !flowData) {
+    if (!flowData) {
       await respond("Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.");
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // --- Contexto por sessão ---
+    // ====== Contexto por sessão (isola por WAHA) ======
     const sessionKey = transport === "waha" ? `whatsapp_${wahaSession}_${from}` : `whatsapp_meta_${from}`;
-    const { data: sessionData } = await supabase.from("chat_sessions").select("*").eq("session_id", sessionKey).maybeSingle();
+    console.log("[SESSION] Looking for session:", sessionKey);
+
+    const { data: sessionData } = await supabase
+      .from("chat_sessions")
+      .select("*")
+      .eq("session_id", sessionKey)
+      .maybeSingle();
+
+    console.log("[SESSION] Session data found:", {
+      exists: !!sessionData,
+      hasPendingNode: !!sessionData?.context?.pendingNodeId,
+      pendingNodeId: sessionData?.context?.pendingNodeId,
+      fullContext: sessionData?.context ? true : false,
+    });
 
     let context: any = sessionData?.context || { vars: {} };
     if (!context.pendingNodeId) context = { vars: {} };
@@ -175,12 +197,12 @@ serve(async (req) => {
     context.vars.phoneNumber = from;
     context.vars.session = wahaSession;
 
-    // --- Execução do fluxo ---
     const onResponse = async (message: string, mediaUrl?: string, mediaType?: string) => {
       if (message) await respond(message);
       if (mediaUrl) await respond(undefined, mediaUrl, mediaType);
     };
 
+    // ====== Execução do fluxo ======
     if (context.pendingNodeId) {
       const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
       if (pendingNode?.data?.type === "reply_buttons") {
@@ -231,7 +253,7 @@ serve(async (req) => {
   }
 });
 
-/** ---- Senders ---- */
+/* ======= Senders ======= */
 
 // Meta (oficial)
 async function sendWhatsAppMessage(phoneNumberId: string, to: string, text: string) {
@@ -244,7 +266,7 @@ async function sendWhatsAppMessage(phoneNumberId: string, to: string, text: stri
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.business_token}` },
     body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
   });
-  const res = await r.json();
+  const res = await r.json().catch(() => ({}));
   if (!r.ok) console.error("Meta send error:", res);
 }
 
@@ -253,34 +275,61 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
   const { data: config } = await supabase.from("whatsapp_config").select("*").limit(1).maybeSingle();
   if (!config?.business_token) return;
   const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
-  const typeMap: Record<string,string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
-  const t = typeMap[mediaType] || "document";
+  const typeMap: Record<string, string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
+  const t = typeMap[(mediaType || "").toLowerCase()] || "document";
   const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
   if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
-  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.business_token}` }, body: JSON.stringify(body) });
-  const res = await r.json();
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.business_token}` },
+    body: JSON.stringify(body),
+  });
+  const res = await r.json().catch(() => ({}));
   if (!r.ok) console.error("Meta media error:", res);
 }
 
-// WAHA – texto
+/* ======= WAHA – tenta múltiplos endpoints ======= */
+
 async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string) {
   if (!WAHA_URL || !WAHA_API_KEY) {
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
     return;
   }
   const chatId = toJid(toNumberOnly);
-  const url = `${WAHA_URL}/api/sessions/${sessionName}/messages`;
-  console.log(`[WAHA] Text -> ${chatId} @ ${sessionName}`);
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${WAHA_API_KEY}`, "X-API-KEY": WAHA_API_KEY },
-    body: JSON.stringify({ type: "text", to: chatId, text }),
-  });
-  const res = await r.json().catch(() => ({}));
-  if (!r.ok) console.error("[WAHA] send text error:", res);
+
+  const endpoints = [
+    `${WAHA_URL}/api/sessions/${sessionName}/messages`,      // alguns builds
+    `${WAHA_URL}/api/sessions/${sessionName}/sendText`,      // WAHA Plus comum
+    `${WAHA_URL}/api/sessions/${sessionName}/sendMessage`,   // forks
+    `${WAHA_URL}/api/sessions/${sessionName}/messages/send`, // outros
+  ];
+
+  const payload = { type: "text", to: chatId, text };
+
+  for (const url of endpoints) {
+    try {
+      console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url}`);
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${WAHA_API_KEY}`,
+          "X-API-KEY": WAHA_API_KEY,
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await resp.json().catch(() => ({}));
+      console.log("[WAHA] TEXT result:", resp.status, result);
+      if (resp.ok) return;
+      if (resp.status === 404) continue;
+      break;
+    } catch (err) {
+      console.error("[WAHA] error sending text via", err);
+    }
+  }
+  console.error("[WAHA] all text endpoints failed for session:", sessionName);
 }
 
-// WAHA – mídia (image/video/audio/document)
 async function sendWahaMediaMessage(
   toNumberOnly: string,
   caption: string | undefined,
@@ -293,21 +342,45 @@ async function sendWahaMediaMessage(
     return;
   }
   const chatId = toJid(toNumberOnly);
-  const url = `${WAHA_URL}/api/sessions/${sessionName}/messages`;
-  const t = ["image", "video", "audio", "document"].includes((mediaType || "").toLowerCase()) ? mediaType.toLowerCase() : "document";
-  const payload: any = { type: t, to: chatId, [t]: t === "document" ? { url: mediaUrl, fileName: mediaUrl.split("/").pop() || "file" } : { url: mediaUrl } };
-  if (caption && (t === "image" || t === "video" || t === "document")) payload[t].caption = caption;
-  console.log(`[WAHA] ${t} -> ${chatId} @ ${sessionName}`);
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${WAHA_API_KEY}`, "X-API-KEY": WAHA_API_KEY },
-    body: JSON.stringify(payload),
-  });
-  const res = await r.json().catch(() => ({}));
-  if (!r.ok) console.error("[WAHA] send media error:", res);
+  const t = ["image", "video", "audio", "document"].includes((mediaType || "").toLowerCase())
+    ? mediaType.toLowerCase()
+    : "document";
+
+  const endpoints = [
+    `${WAHA_URL}/api/sessions/${sessionName}/messages`,
+    `${WAHA_URL}/api/sessions/${sessionName}/sendMessage`,
+    `${WAHA_URL}/api/sessions/${sessionName}/messages/send`,
+  ];
+
+  const base: any = { type: t, to: chatId, [t]: { url: mediaUrl } };
+  if (caption && (t === "image" || t === "video" || t === "document")) base[t].caption = caption;
+
+  for (const url of endpoints) {
+    try {
+      console.log(`[WAHA] Trying MEDIA(${t}) -> ${chatId} via ${url}`);
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${WAHA_API_KEY}`,
+          "X-API-KEY": WAHA_API_KEY,
+        },
+        body: JSON.stringify(base),
+      });
+      const result = await resp.json().catch(() => ({}));
+      console.log("[WAHA] MEDIA result:", resp.status, result);
+      if (resp.ok) return;
+      if (resp.status === 404) continue;
+      break;
+    } catch (err) {
+      console.error("[WAHA] error sending media via", err);
+    }
+  }
+  console.error("[WAHA] all media endpoints failed for session:", sessionName);
 }
 
-/** ---- Executor de fluxo ---- */
+/* ======= Engine do fluxo ======= */
+
 async function executeFlow(
   flowData: any,
   context: any,
@@ -319,6 +392,7 @@ async function executeFlow(
     startNode = nodes.find((n: any) => n.data.type === "start");
     if (!startNode) throw new Error("No start node found");
   }
+  console.log(`[FLOW] Starting from node: ${startNode.id} (${startNode.data.type})`);
   await executeNode(startNode, flowData.nodes, flowData.edges, context, onResponse);
 }
 
@@ -338,7 +412,11 @@ async function executeNode(
       return context.vars[key] !== undefined ? String(context.vars[key]) : "";
     });
 
-  const nexts = (id: string) => edges.filter((e: any) => e.source === id).map((e: any) => nodes.find((n: any) => n.id === e.target)).filter(Boolean);
+  const nexts = (id: string) =>
+    edges
+      .filter((e: any) => e.source === id)
+      .map((e: any) => nodes.find((n: any) => n.id === e.target))
+      .filter(Boolean);
 
   switch (data.type) {
     case "start": {
@@ -403,7 +481,7 @@ async function executeNode(
       await onResponse(txt);
       context.pendingNodeId = node.id;
 
-      const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
       await supabase.from("chat_sessions").upsert(
         { session_id: sessionKey, context, updated_at: new Date().toISOString() },
@@ -428,4 +506,5 @@ async function executeNode(
     }
   }
 }
+
 
