@@ -295,53 +295,38 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
     return;
   }
+  
+  const baseUrl = WAHA_URL.replace(/\/$/, '');
   const chatId = toJid(toNumberOnly);
+  
+  // WAHA Plus official API format
+  const url = `${baseUrl}/api/sendText`;
+  const payload = {
+    session: sessionName,
+    chatId: chatId,
+    text: text
+  };
 
-  // Try several known WAHA/WAHA Plus endpoints
-  const endpoints = [
-    `${WAHA_URL}/api/sessions/${sessionName}/messages`,
-    `${WAHA_URL}/api/sessions/${sessionName}/sendText`,
-    `${WAHA_URL}/api/sessions/${sessionName}/sendMessage`,
-    `${WAHA_URL}/api/sessions/${sessionName}/messages/send`,
-    `${WAHA_URL}/api/sessions/${sessionName}/messages/text`,
-    `${WAHA_URL}/api/session/${sessionName}/sendText`,
-    `${WAHA_URL}/api/messages/send?session=${encodeURIComponent(sessionName)}`,
-  ];
-
-  // Different bodies expected by different builds
-  const payloadVariants: any[] = [
-    { type: "text", to: chatId, text },
-    { chatId, text },
-    { jid: chatId, text },
-    { to: chatId, message: text },
-    { receiver: chatId, message: text },
-    { number: toNumberOnly, message: text },
-  ];
-
-  for (const url of endpoints) {
-    for (const body of payloadVariants) {
-      try {
-        console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${WAHA_API_KEY}`,
-            "X-API-KEY": WAHA_API_KEY,
-          },
-          body: JSON.stringify(body),
-        });
-        const result = await resp.json().catch(() => ({}));
-        console.log("[WAHA] TEXT result:", resp.status, result);
-        if (resp.ok) return;
-        if (resp.status === 404) break; // try next endpoint
-      } catch (err) {
-        console.error("[WAHA] error sending text via", url, err);
-      }
-    }
+  try {
+    console.log(`[WAHA] POST to ${url} with payload:`, JSON.stringify(payload));
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Api-Key": WAHA_API_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+    
+    const result = await resp.text();
+    console.log(`[WAHA] Response status: ${resp.status}, body: ${result}`);
+    
+    if (resp.ok) return;
+  } catch (err) {
+    console.error(`[WAHA] Error:`, err);
   }
-  console.error("[WAHA] all text endpoints/payloads failed for session:", sessionName);
+  
+  console.error("[WAHA] Failed to send message for session:", sessionName);
 }
 
 async function sendWahaMediaMessage(
