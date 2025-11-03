@@ -102,6 +102,17 @@ serve(async (req) => {
         wahaSession = String(raw.data?.session || raw.data?.sessionId || raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || "default");
       }
 
+      // Case C: WAHA Plus WEBJS: { event:'message', session, payload:{ from, body, ... } }
+      if (!isWaha && (raw?.event === "message" || raw?.type === "message") && raw?.payload) {
+        isWaha = true;
+        transport = "waha";
+        const p = raw.payload || {};
+        const fromJid = String(p.from || p._data?.id?.remote || "");
+        from = fromJid.split("@")[0].replace(/\D/g, "");
+        body = String(p.body || p.text || p.message?.conversation || p._data?.body || "");
+        wahaSession = String(raw.data?.session || raw.data?.sessionId || raw.session || raw.sessionId || raw.instanceId || raw.instance?.name || "default");
+      }
+
       // Log WAHA message received
       if (isWaha) {
         console.log("[WAHA] Message received:", { sessionName: wahaSession, fromNumber: from, text: body });
@@ -139,7 +150,12 @@ serve(async (req) => {
     if (flowError || !flowData) {
       console.log("No active flow found, using default response");
 
-      await sendWhatsAppMessage(phoneNumberId, from, "Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.");
+      const fallbackText = "Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.";
+      if (transport === "waha") {
+        await sendWahaTextMessage(from, fallbackText, wahaSession || "default");
+      } else {
+        await sendWhatsAppMessage(phoneNumberId, from, fallbackText);
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
