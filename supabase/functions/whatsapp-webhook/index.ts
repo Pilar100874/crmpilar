@@ -25,8 +25,6 @@ interface WhatsAppWebhookPayload {
 const env = (k: string, d = "") => (Deno.env.get(k) ?? d).trim();
 const SUPABASE_URL = env("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY");
-const WAHA_URL = env("WAHA_URL");
-const WAHA_API_KEY = env("WAHA_API_KEY");
 const VERIFY_TOKEN = env("WHATSAPP_VERIFY_TOKEN", "conversa_botique_verify");
 const JID_SUFFIX = env("WAHA_JID_SUFFIX", "@c.us"); // "@c.us" (WEBJS) ou "@s.whatsapp.net" (Baileys)
 
@@ -149,15 +147,35 @@ serve(async (req) => {
 
     console.log("Processed message:", { from, body, phoneNumberId, transport });
 
+    // ====== Busca configuração do WAHA da sessão ======
+    let WAHA_URL = "";
+    let WAHA_API_KEY = "";
+    
+    if (transport === "waha") {
+      const { data: sessionConfig } = await supabase
+        .from("whatsapp_sessions")
+        .select("waha_url, waha_api_key")
+        .eq("session_name", wahaSession)
+        .maybeSingle();
+      
+      if (sessionConfig) {
+        WAHA_URL = sessionConfig.waha_url || "";
+        WAHA_API_KEY = sessionConfig.waha_api_key || "";
+        console.log("[WAHA] Using config from session:", { sessionName: wahaSession, hasUrl: !!WAHA_URL, hasApiKey: !!WAHA_API_KEY });
+      } else {
+        console.error("[WAHA] No configuration found for session:", wahaSession);
+      }
+    }
+    
     // ====== Carrega fluxo ativo ======
     const { data: flowData } = await supabase.from("bot_flows").select("*").eq("active", true).maybeSingle();
 
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string) => {
       if (transport === "waha") {
         if (mediaUrl && mediaType) {
-          await sendWahaMediaMessage(from, text, mediaType, mediaUrl, wahaSession);
+          await sendWahaMediaMessage(from, text, mediaType, mediaUrl, wahaSession, WAHA_URL, WAHA_API_KEY);
         } else if (text) {
-          await sendWahaTextMessage(from, text, wahaSession);
+          await sendWahaTextMessage(from, text, wahaSession, WAHA_URL, WAHA_API_KEY);
         }
       } else {
         if (mediaUrl && mediaType) await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, text);
@@ -290,13 +308,13 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
 
 /* ======= WAHA – tenta múltiplos endpoints ======= */
 
-async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string) {
-  if (!WAHA_URL || !WAHA_API_KEY) {
+async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string, wahaUrl: string, wahaApiKey: string) {
+  if (!wahaUrl || !wahaApiKey) {
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
     return;
   }
   
-  const baseUrl = WAHA_URL.replace(/\/$/, '');
+  const baseUrl = wahaUrl.replace(/\/$/, '');
   const chatId = toJid(toNumberOnly);
   
   // WAHA Plus official API format
@@ -313,7 +331,7 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Api-Key": WAHA_API_KEY,
+        "X-Api-Key": wahaApiKey,
       },
       body: JSON.stringify(payload),
     });
@@ -335,8 +353,10 @@ async function sendWahaMediaMessage(
   mediaType: string,
   mediaUrl: string,
   sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
 ) {
-  if (!WAHA_URL || !WAHA_API_KEY) {
+  if (!wahaUrl || !wahaApiKey) {
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
     return;
   }
@@ -346,10 +366,10 @@ async function sendWahaMediaMessage(
     : "document";
 
   const endpoints = [
-    `${WAHA_URL}/api/sessions/${sessionName}/messages`,
-    `${WAHA_URL}/api/sessions/${sessionName}/sendMessage`,
-    `${WAHA_URL}/api/sessions/${sessionName}/messages/send`,
-    `${WAHA_URL}/api/sessions/${sessionName}/messages/${t}`,
+    `${wahaUrl}/api/sessions/${sessionName}/messages`,
+    `${wahaUrl}/api/sessions/${sessionName}/sendMessage`,
+    `${wahaUrl}/api/sessions/${sessionName}/messages/send`,
+    `${wahaUrl}/api/sessions/${sessionName}/messages/${t}`,
   ];
 
   const variantBase: any[] = [];
@@ -370,8 +390,8 @@ async function sendWahaMediaMessage(
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${WAHA_API_KEY}`,
-            "X-API-KEY": WAHA_API_KEY,
+            Authorization: `Bearer ${wahaApiKey}`,
+            "X-API-KEY": wahaApiKey,
           },
           body: JSON.stringify(body),
         });
