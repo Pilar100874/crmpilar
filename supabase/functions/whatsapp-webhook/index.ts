@@ -297,37 +297,51 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
   }
   const chatId = toJid(toNumberOnly);
 
+  // Try several known WAHA/WAHA Plus endpoints
   const endpoints = [
-    `${WAHA_URL}/api/sessions/${sessionName}/messages`,      // alguns builds
-    `${WAHA_URL}/api/sessions/${sessionName}/sendText`,      // WAHA Plus comum
-    `${WAHA_URL}/api/sessions/${sessionName}/sendMessage`,   // forks
-    `${WAHA_URL}/api/sessions/${sessionName}/messages/send`, // outros
+    `${WAHA_URL}/api/sessions/${sessionName}/messages`,
+    `${WAHA_URL}/api/sessions/${sessionName}/sendText`,
+    `${WAHA_URL}/api/sessions/${sessionName}/sendMessage`,
+    `${WAHA_URL}/api/sessions/${sessionName}/messages/send`,
+    `${WAHA_URL}/api/sessions/${sessionName}/messages/text`,
+    `${WAHA_URL}/api/session/${sessionName}/sendText`,
+    `${WAHA_URL}/api/messages/send?session=${encodeURIComponent(sessionName)}`,
   ];
 
-  const payload = { type: "text", to: chatId, text };
+  // Different bodies expected by different builds
+  const payloadVariants: any[] = [
+    { type: "text", to: chatId, text },
+    { chatId, text },
+    { jid: chatId, text },
+    { to: chatId, message: text },
+    { receiver: chatId, message: text },
+    { number: toNumberOnly, message: text },
+  ];
 
   for (const url of endpoints) {
-    try {
-      console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url}`);
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${WAHA_API_KEY}`,
-          "X-API-KEY": WAHA_API_KEY,
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await resp.json().catch(() => ({}));
-      console.log("[WAHA] TEXT result:", resp.status, result);
-      if (resp.ok) return;
-      if (resp.status === 404) continue;
-      break;
-    } catch (err) {
-      console.error("[WAHA] error sending text via", err);
+    for (const body of payloadVariants) {
+      try {
+        console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${WAHA_API_KEY}`,
+            "X-API-KEY": WAHA_API_KEY,
+          },
+          body: JSON.stringify(body),
+        });
+        const result = await resp.json().catch(() => ({}));
+        console.log("[WAHA] TEXT result:", resp.status, result);
+        if (resp.ok) return;
+        if (resp.status === 404) break; // try next endpoint
+      } catch (err) {
+        console.error("[WAHA] error sending text via", url, err);
+      }
     }
   }
-  console.error("[WAHA] all text endpoints failed for session:", sessionName);
+  console.error("[WAHA] all text endpoints/payloads failed for session:", sessionName);
 }
 
 async function sendWahaMediaMessage(
@@ -350,33 +364,42 @@ async function sendWahaMediaMessage(
     `${WAHA_URL}/api/sessions/${sessionName}/messages`,
     `${WAHA_URL}/api/sessions/${sessionName}/sendMessage`,
     `${WAHA_URL}/api/sessions/${sessionName}/messages/send`,
+    `${WAHA_URL}/api/sessions/${sessionName}/messages/${t}`,
   ];
 
-  const base: any = { type: t, to: chatId, [t]: { url: mediaUrl } };
-  if (caption && (t === "image" || t === "video" || t === "document")) base[t].caption = caption;
+  const variantBase: any[] = [];
+  // Common shapes
+  variantBase.push({ type: t, to: chatId, [t]: { url: mediaUrl, caption } });
+  variantBase.push({ chatId, type: t, [t]: { url: mediaUrl, caption } });
+  variantBase.push({ jid: chatId, type: t, [t]: { url: mediaUrl, caption } });
+  variantBase.push({ to: chatId, [t]: { url: mediaUrl, caption } });
+  // Some builds expect simplified fields
+  variantBase.push({ number: toNumberOnly, type: t, url: mediaUrl, caption });
 
   for (const url of endpoints) {
-    try {
-      console.log(`[WAHA] Trying MEDIA(${t}) -> ${chatId} via ${url}`);
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${WAHA_API_KEY}`,
-          "X-API-KEY": WAHA_API_KEY,
-        },
-        body: JSON.stringify(base),
-      });
-      const result = await resp.json().catch(() => ({}));
-      console.log("[WAHA] MEDIA result:", resp.status, result);
-      if (resp.ok) return;
-      if (resp.status === 404) continue;
-      break;
-    } catch (err) {
-      console.error("[WAHA] error sending media via", err);
+    for (const body of variantBase) {
+      try {
+        console.log(`[WAHA] Trying MEDIA(${t}) -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${WAHA_API_KEY}`,
+            "X-API-KEY": WAHA_API_KEY,
+          },
+          body: JSON.stringify(body),
+        });
+        const result = await resp.json().catch(() => ({}));
+        console.log("[WAHA] MEDIA result:", resp.status, result);
+        if (resp.ok) return;
+        if (resp.status === 404) break;
+      } catch (err) {
+        console.error("[WAHA] error sending media via", url, err);
+      }
     }
   }
-  console.error("[WAHA] all media endpoints failed for session:", sessionName);
+  console.error("[WAHA] all media endpoints/payloads failed for session:", sessionName);
 }
 
 /* ======= Engine do fluxo ======= */
