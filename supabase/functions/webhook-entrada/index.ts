@@ -113,6 +113,63 @@ serve(async (req) => {
           message: 'Automação disparada com sucesso' 
         };
       }
+    } else if (webhook.acao_tipo === 'rodar_bot' && webhook.bot_id) {
+      console.log('[WEBHOOK-ENTRADA] Executando bot:', webhook.bot_id);
+      
+      // Buscar configuração do bot
+      const { data: bot, error: botError } = await supabase
+        .from('bot_flows')
+        .select('*')
+        .eq('id', webhook.bot_id)
+        .eq('active', true)
+        .single();
+
+      if (botError || !bot) {
+        console.error('[WEBHOOK-ENTRADA] Bot não encontrado:', botError);
+        actionResult = { 
+          success: false, 
+          error: 'Bot não encontrado ou inativo' 
+        };
+      } else {
+        console.log('[WEBHOOK-ENTRADA] Bot encontrado:', bot.name);
+        
+        // Criar uma sessão temporária para execução do bot via webhook
+        const sessionId = `webhook_${webhook.id}_${Date.now()}`;
+        
+        // Criar contexto inicial com dados do payload
+        const initialContext = {
+          vars: {
+            webhook_data: payload,
+            webhook_name: webhook.nome,
+            triggered_at: new Date().toISOString(),
+            ...payload // Adicionar todos os campos do payload como variáveis
+          }
+        };
+
+        // Inserir sessão para o bot
+        const { error: sessionError } = await supabase
+          .from('chat_sessions')
+          .insert({
+            session_id: sessionId,
+            context: initialContext
+          });
+
+        if (sessionError) {
+          console.error('[WEBHOOK-ENTRADA] Erro ao criar sessão:', sessionError);
+          actionResult = { 
+            success: false, 
+            error: 'Erro ao criar sessão para o bot' 
+          };
+        } else {
+          actionResult = { 
+            success: true, 
+            bot: bot.name,
+            session_id: sessionId,
+            message: 'Bot iniciado com sucesso',
+            context: initialContext
+          };
+        }
+      }
     } else if (webhook.acao_tipo === 'url_customizada' && webhook.url_customizada) {
       console.log('[WEBHOOK-ENTRADA] Chamando URL customizada:', webhook.url_customizada);
       

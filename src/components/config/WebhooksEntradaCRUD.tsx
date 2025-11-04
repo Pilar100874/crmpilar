@@ -26,6 +26,7 @@ interface WebhookEntrada {
   acao_tipo: string;
   automacao_id?: string;
   url_customizada?: string;
+  bot_id?: string;
   ultimo_trigger?: string;
   total_triggers: number;
   created_at: string;
@@ -38,9 +39,16 @@ interface MarketingAutomation {
   active: boolean;
 }
 
+interface BotFlow {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
 export function WebhooksEntradaCRUD() {
   const [webhooks, setWebhooks] = useState<WebhookEntrada[]>([]);
   const [automacoes, setAutomacoes] = useState<MarketingAutomation[]>([]);
+  const [bots, setBots] = useState<BotFlow[]>([]);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<string | null>(null);
   const [testingWebhook, setTestingWebhook] = useState<string | null>(null);
@@ -54,11 +62,13 @@ export function WebhooksEntradaCRUD() {
     acao_tipo: "url_customizada",
     automacao_id: "",
     url_customizada: "",
+    bot_id: "",
   });
 
   useEffect(() => {
     loadWebhooks();
     loadAutomacoes();
+    loadBots();
   }, []);
 
   const loadWebhooks = async () => {
@@ -102,6 +112,25 @@ export function WebhooksEntradaCRUD() {
     }
   };
 
+  const loadBots = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from("bot_flows")
+        .select("id, name, active")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("active", true)
+        .order("name");
+
+      if (error) throw error;
+      setBots(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar bots:", error);
+    }
+  };
+
   const generateUniqueUrl = () => {
     const randomStr = Math.random().toString(36).substring(2, 15);
     return `webhook-${randomStr}`;
@@ -132,6 +161,11 @@ export function WebhooksEntradaCRUD() {
         return;
       }
 
+      if (formData.acao_tipo === "rodar_bot" && !formData.bot_id) {
+        toast.error("Selecione um bot");
+        return;
+      }
+
       const webhookData = {
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome,
@@ -143,6 +177,7 @@ export function WebhooksEntradaCRUD() {
         acao_tipo: formData.acao_tipo,
         automacao_id: formData.acao_tipo === "automacao_marketing" ? formData.automacao_id : null,
         url_customizada: formData.acao_tipo === "url_customizada" ? formData.url_customizada : null,
+        bot_id: formData.acao_tipo === "rodar_bot" ? formData.bot_id : null,
         url_gerada: editingWebhook ? undefined : generateUniqueUrl(),
       };
 
@@ -183,6 +218,7 @@ export function WebhooksEntradaCRUD() {
       acao_tipo: webhook.acao_tipo,
       automacao_id: webhook.automacao_id || "",
       url_customizada: webhook.url_customizada || "",
+      bot_id: webhook.bot_id || "",
     });
     setIsFormDialogOpen(true);
   };
@@ -261,6 +297,7 @@ export function WebhooksEntradaCRUD() {
       acao_tipo: "url_customizada",
       automacao_id: "",
       url_customizada: "",
+      bot_id: "",
     });
     setEditingWebhook(null);
     setIsFormDialogOpen(false);
@@ -378,6 +415,7 @@ export function WebhooksEntradaCRUD() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="automacao_marketing">Automação de Marketing</SelectItem>
+                    <SelectItem value="rodar_bot">Rodar Bot</SelectItem>
                     <SelectItem value="url_customizada">URL Customizada</SelectItem>
                   </SelectContent>
                 </Select>
@@ -404,6 +442,32 @@ export function WebhooksEntradaCRUD() {
                   {automacoes.length === 0 && (
                     <p className="text-sm text-muted-foreground">
                       Nenhuma automação ativa encontrada
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {formData.acao_tipo === "rodar_bot" && (
+                <div className="space-y-2">
+                  <Label htmlFor="bot_id">Bot *</Label>
+                  <Select
+                    value={formData.bot_id}
+                    onValueChange={(value) => setFormData({ ...formData, bot_id: value })}
+                  >
+                    <SelectTrigger id="bot_id">
+                      <SelectValue placeholder="Selecione um bot" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bots.map((bot) => (
+                        <SelectItem key={bot.id} value={bot.id}>
+                          {bot.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {bots.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum bot ativo encontrado
                     </p>
                   )}
                 </div>
@@ -526,7 +590,11 @@ export function WebhooksEntradaCRUD() {
                   <div>
                     <span className="text-muted-foreground">Tipo de Ação:</span>
                     <p className="font-medium">
-                      {webhook.acao_tipo === "automacao_marketing" ? "Automação de Marketing" : "URL Customizada"}
+                      {webhook.acao_tipo === "automacao_marketing" 
+                        ? "Automação de Marketing" 
+                        : webhook.acao_tipo === "rodar_bot"
+                        ? "Rodar Bot"
+                        : "URL Customizada"}
                     </p>
                   </div>
                   <div>

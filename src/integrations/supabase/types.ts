@@ -2389,6 +2389,7 @@ export type Database = {
           aceita_json: boolean
           ativo: boolean
           automacao_id: string | null
+          bot_id: string | null
           created_at: string
           descricao: string | null
           estabelecimento_id: string
@@ -2407,6 +2408,7 @@ export type Database = {
           aceita_json?: boolean
           ativo?: boolean
           automacao_id?: string | null
+          bot_id?: string | null
           created_at?: string
           descricao?: string | null
           estabelecimento_id: string
@@ -2425,6 +2427,7 @@ export type Database = {
           aceita_json?: boolean
           ativo?: boolean
           automacao_id?: string | null
+          bot_id?: string | null
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string
@@ -2438,6 +2441,13 @@ export type Database = {
           url_gerada?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "webhooks_entrada_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bot_flows"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "webhooks_entrada_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
