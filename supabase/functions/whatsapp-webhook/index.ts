@@ -90,6 +90,16 @@ serve(async (req) => {
     // A) { event:'message' | type:'message', data/message... }
     if ((raw?.event === "message" || raw?.type === "message") && (raw?.data || raw?.message)) {
       transport = "waha";
+      const fromMe = raw.payload?.fromMe || raw.data?.fromMe || raw.message?.fromMe || false;
+      
+      // Ignora mensagens enviadas pelo próprio bot
+      if (fromMe) {
+        console.log("[WAHA] Ignoring message from bot itself");
+        return new Response(JSON.stringify({ success: true, ignored: "fromMe" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
       from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/\D/g, "");
       body =
         raw.data?.text ||
@@ -121,6 +131,15 @@ serve(async (req) => {
     if (transport !== "waha" && (raw?.event === "message" || raw?.type === "message") && raw?.payload) {
       transport = "waha";
       const p = raw.payload || {};
+      
+      // Ignora mensagens enviadas pelo próprio bot
+      if (p.fromMe) {
+        console.log("[WAHA] Ignoring message from bot itself (webjs)");
+        return new Response(JSON.stringify({ success: true, ignored: "fromMe" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
       const fromJid = String(p.from || p._data?.id?.remote || "");
       from = fromJid.split("@")[0].replace(/\D/g, "");
       body = String(p.body || p.text || p.message?.conversation || p._data?.body || "");
@@ -179,8 +198,32 @@ serve(async (req) => {
       }
     }
     
-    // ====== Carrega fluxo ativo ======
-    const { data: flowData } = await supabase.from("bot_flows").select("*").eq("active", true).maybeSingle();
+    // ====== Carrega fluxo ativo para a sessão ======
+    let flowData = null;
+    
+    if (transport === "waha") {
+      // Busca o estabelecimento_id da sessão
+      const { data: sessionData } = await supabase
+        .from("whatsapp_sessions")
+        .select("estabelecimento_id")
+        .eq("session_name", wahaSession)
+        .maybeSingle();
+      
+      if (sessionData?.estabelecimento_id) {
+        // Busca o bot ativo desse estabelecimento
+        const { data } = await supabase
+          .from("bot_flows")
+          .select("*")
+          .eq("active", true)
+          .eq("estabelecimento_id", sessionData.estabelecimento_id)
+          .maybeSingle();
+        flowData = data;
+      }
+    } else {
+      // Para Meta, busca qualquer bot ativo (comportamento antigo)
+      const { data } = await supabase.from("bot_flows").select("*").eq("active", true).maybeSingle();
+      flowData = data;
+    }
 
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string) => {
       if (transport === "waha") {
@@ -264,16 +307,53 @@ serve(async (req) => {
         const cfg = pendingNode.data.config || {};
         const variable = cfg.variable || "resposta";
         const userResponse = (context.vars.userMessage || "").trim();
+        const blockType = pendingNode.data.type;
         
-        // Salva a resposta do usuário
-        context.vars[variable] = userResponse;
-        delete context.pendingNodeId;
+        // Validação baseada no tipo de bloco
+        let isValid = true;
+        let errorMessage = "";
         
-        // Continua para o próximo nó
-        const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
-        if (nextEdge) {
-          const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
-          if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+        if (blockType === "ask_email") {
+          isValid = validateEmail(userResponse);
+          errorMessage = cfg.errorMessage || "Por favor, informe um email válido.";
+        } else if (blockType === "ask_phone") {
+          isValid = validatePhone(userResponse);
+          errorMessage = cfg.errorMessage || "Por favor, informe um telefone válido.";
+        } else if (blockType === "ask_cnpj") {
+          isValid = validateCNPJ(userResponse);
+          errorMessage = cfg.errorMessage || "Por favor, informe um CNPJ válido.";
+        } else if (blockType === "ask_cep") {
+          isValid = validateCEP(userResponse);
+          errorMessage = cfg.errorMessage || "Por favor, informe um CEP válido.";
+        } else if (blockType === "ask_number") {
+          const num = parseFloat(userResponse);
+          if (isNaN(num)) {
+            isValid = false;
+            errorMessage = cfg.errorMessage || "Por favor, informe um número válido.";
+          } else if (cfg.min !== undefined && num < cfg.min) {
+            isValid = false;
+            errorMessage = cfg.errorMessage || `Por favor, informe um número maior ou igual a ${cfg.min}.`;
+          } else if (cfg.max !== undefined && num > cfg.max) {
+            isValid = false;
+            errorMessage = cfg.errorMessage || `Por favor, informe um número menor ou igual a ${cfg.max}.`;
+          }
+        }
+        
+        if (!isValid) {
+          // Validação falhou - envia mensagem de erro e mantém o nó pendente
+          await respond(errorMessage);
+          // Mantém pendingNodeId para reperguntar
+        } else {
+          // Validação passou - salva resposta e continua
+          context.vars[variable] = userResponse;
+          delete context.pendingNodeId;
+          
+          // Continua para o próximo nó
+          const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+          if (nextEdge) {
+            const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
+            if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          }
         }
       }
     } else {
@@ -434,6 +514,72 @@ async function sendWahaMediaMessage(
     }
   }
   console.error("[WAHA] all media endpoints/payloads failed for session:", sessionName);
+}
+
+/* ======= Validadores ======= */
+
+function validateEmail(email: string): boolean {
+  if (!email || typeof email !== "string") return false;
+  const trimmedEmail = email.trim();
+  if (trimmedEmail.length === 0 || trimmedEmail.length > 254) return false;
+  if (trimmedEmail.startsWith(".") || trimmedEmail.endsWith(".")) return false;
+  if (trimmedEmail.includes("..")) return false;
+  const emailRegex = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(trimmedEmail)) return false;
+  const atCount = (trimmedEmail.match(/@/g) || []).length;
+  if (atCount !== 1) return false;
+  const [localPart, domain] = trimmedEmail.split("@");
+  if (localPart.length === 0 || localPart.length > 64) return false;
+  if (domain.length === 0 || domain.length > 253) return false;
+  if (!domain.includes(".")) return false;
+  const domainParts = domain.split(".");
+  for (const part of domainParts) {
+    if (part.length === 0) return false;
+    if (part.startsWith("-") || part.endsWith("-")) return false;
+  }
+  return true;
+}
+
+function validatePhone(phone: string): boolean {
+  if (!phone || typeof phone !== "string") return false;
+  const cleanPhone = phone.replace(/\D/g, "");
+  if (cleanPhone.startsWith("55")) {
+    return cleanPhone.length === 12 || cleanPhone.length === 13;
+  }
+  return cleanPhone.length >= 10 && cleanPhone.length <= 11;
+}
+
+function validateCNPJ(cnpj: string): boolean {
+  const cleanCNPJ = cnpj.replace(/\D/g, "");
+  if (cleanCNPJ.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
+  let length = cleanCNPJ.length - 2;
+  let numbers = cleanCNPJ.substring(0, length);
+  const digits = cleanCNPJ.substring(length);
+  let sum = 0;
+  let pos = length - 7;
+  for (let i = length; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(length - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(0))) return false;
+  length = length + 1;
+  numbers = cleanCNPJ.substring(0, length);
+  sum = 0;
+  pos = length - 7;
+  for (let i = length; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(length - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(1))) return false;
+  return true;
+}
+
+function validateCEP(cep: string): boolean {
+  const cleanCEP = cep.replace(/\D/g, "");
+  return cleanCEP.length === 8;
 }
 
 /* ======= Engine do fluxo ======= */
