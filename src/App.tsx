@@ -31,6 +31,7 @@ import Orcamentos from "./pages/Orcamentos";
 import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
+import Relatorios from "./pages/Relatorios";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/marketing/canvas" element={<MarketingCanvas />} />
             <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
             <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
+            <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
             <Route path="/meus-anexos" element={<MeusAnexos />} />
