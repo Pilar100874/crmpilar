@@ -2382,6 +2382,71 @@ export type Database = {
           },
         ]
       }
+      webhooks_entrada: {
+        Row: {
+          acao_tipo: string
+          aceita_form_data: boolean
+          aceita_json: boolean
+          ativo: boolean
+          automacao_id: string | null
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          metodo: string
+          nome: string
+          total_triggers: number
+          ultimo_trigger: string | null
+          updated_at: string
+          url_customizada: string | null
+          url_gerada: string
+        }
+        Insert: {
+          acao_tipo: string
+          aceita_form_data?: boolean
+          aceita_json?: boolean
+          ativo?: boolean
+          automacao_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          metodo?: string
+          nome: string
+          total_triggers?: number
+          ultimo_trigger?: string | null
+          updated_at?: string
+          url_customizada?: string | null
+          url_gerada: string
+        }
+        Update: {
+          acao_tipo?: string
+          aceita_form_data?: boolean
+          aceita_json?: boolean
+          ativo?: boolean
+          automacao_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          metodo?: string
+          nome?: string
+          total_triggers?: number
+          ultimo_trigger?: string | null
+          updated_at?: string
+          url_customizada?: string | null
+          url_gerada?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_entrada_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_config: {
         Row: {
           business_account_id: string | null

@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File } from "lucide-react";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
+import { WebhooksEntradaCRUD } from "@/components/config/WebhooksEntradaCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 
@@ -40,8 +41,12 @@ export default function Config() {
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
+            <AccordionContent className="px-6 pb-6 space-y-8">
               <EstabelecimentosCRUD />
+              
+              <div className="pt-8 border-t">
+                <WebhooksEntradaCRUD />
+              </div>
             </AccordionContent>
           </AccordionItem>
 
