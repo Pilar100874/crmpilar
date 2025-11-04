@@ -9,6 +9,7 @@ import QuickRepliesCRUD from "./QuickRepliesCRUD";
 import QuickAttachmentsCRUD from "./QuickAttachmentsCRUD";
 import { APIGeneratorCRUD } from "./APIGeneratorCRUD";
 import { WebhooksCRUD } from "./WebhooksCRUD";
+import { WebhooksEntradaCRUD } from "./WebhooksEntradaCRUD";
 import { CanaisAtendimentoCRUD } from "./CanaisAtendimentoCRUD";
 import { NotificacoesCRUD } from "./NotificacoesCRUD";
 import { SegurancaCRUD } from "./SegurancaCRUD";
@@ -1428,6 +1429,18 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <WebhooksCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="cadastro-webhooks-entrada" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Webhook className="w-4 h-4 text-primary" />
+              <span className="font-medium">Cadastro de Webhooks de Entrada</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <WebhooksEntradaCRUD />
           </AccordionContent>
         </AccordionItem>
 
