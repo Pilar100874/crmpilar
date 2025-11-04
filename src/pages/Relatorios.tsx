@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, FileDown, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Table,
@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ReportBuilder } from "@/components/report/ReportBuilder";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface Report {
@@ -52,8 +51,6 @@ export default function Relatorios() {
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
-  const [showBuilderDialog, setShowBuilderDialog] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
@@ -126,18 +123,9 @@ export default function Relatorios() {
       setShowNewDialog(false);
       setFormData({ nome: "", descricao: "", conexao_id: "" });
       loadReports();
-      
-      // Abrir editor
-      setSelectedReport(data);
-      setShowBuilderDialog(true);
     } catch (error: any) {
       toast.error("Erro ao criar relatório: " + error.message);
     }
-  };
-
-  const handleEdit = (report: Report) => {
-    setSelectedReport(report);
-    setShowBuilderDialog(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -158,27 +146,6 @@ export default function Relatorios() {
     }
   };
 
-  const handleSaveReport = async (reportData: any) => {
-    try {
-      const { error } = await supabase
-        .from("relatorios")
-        .update({
-          layout_json: reportData.layout_json,
-          query_sql: reportData.query_sql,
-          parametros: reportData.parametros,
-          configuracoes: reportData.configuracoes,
-        })
-        .eq("id", selectedReport?.id);
-
-      if (error) throw error;
-
-      toast.success("Relatório salvo com sucesso");
-      loadReports();
-    } catch (error: any) {
-      toast.error("Erro ao salvar relatório: " + error.message);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -193,7 +160,7 @@ export default function Relatorios() {
         <div>
           <h1 className="text-3xl font-bold">Relatórios</h1>
           <p className="text-muted-foreground">
-            Crie e gerencie relatórios personalizados
+            Crie e gerencie relatórios personalizados - Sistema em desenvolvimento
           </p>
         </div>
         <Button onClick={() => setShowNewDialog(true)}>
@@ -238,7 +205,7 @@ export default function Relatorios() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleEdit(report)}
+                          onClick={() => toast.info("Editor em desenvolvimento")}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -309,22 +276,6 @@ export default function Relatorios() {
               <Button onClick={handleCreate}>Criar</Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog do Report Builder */}
-      <Dialog open={showBuilderDialog} onOpenChange={setShowBuilderDialog}>
-        <DialogContent className="max-w-[95vw] h-[95vh]">
-          <DialogHeader>
-            <DialogTitle>{selectedReport?.nome}</DialogTitle>
-          </DialogHeader>
-          {selectedReport && (
-            <ReportBuilder
-              report={selectedReport}
-              onSave={handleSaveReport}
-              onClose={() => setShowBuilderDialog(false)}
-            />
-          )}
         </DialogContent>
       </Dialog>
     </div>
