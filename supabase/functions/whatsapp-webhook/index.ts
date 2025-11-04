@@ -276,6 +276,9 @@ serve(async (req) => {
     };
 
     // ====== Execução do fluxo ======
+    let shouldSaveContext = true;
+    let shouldReturn = false;
+    
     if (context.pendingNodeId) {
       const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
       console.log("[FLOW] Processing pending node:", {
@@ -340,10 +343,10 @@ serve(async (req) => {
           errorMessage = cfg.errorMessage || "Por favor, informe um telefone válido.";
         } else if (blockType === "ask_cnpj") {
           isValid = validateCNPJ(userResponse);
-          errorMessage = cfg.errorMessage || "Por favor, informe um CNPJ válido.";
+          errorMessage = cfg.errorMessage || "Por favor, informe um CNPJ válido no formato XX.XXX.XXX/XXXX-XX.";
         } else if (blockType === "ask_cep") {
           isValid = validateCEP(userResponse);
-          errorMessage = cfg.errorMessage || "Por favor, informe um CEP válido.";
+          errorMessage = cfg.errorMessage || "Por favor, informe um CEP válido no formato XXXXX-XXX.";
         } else if (blockType === "ask_number") {
           const num = parseFloat(userResponse);
           if (isNaN(num)) {
@@ -365,24 +368,108 @@ serve(async (req) => {
           console.log("[FLOW] Validation failed, sending error:", errorMessage);
           await respond(errorMessage);
           // Mantém pendingNodeId para reperguntar
+          shouldReturn = true;
         } else {
           // Validação passou - salva resposta e continua
           console.log("[FLOW] Validation passed, saving variable:", variable, "=", userResponse);
           context.vars[variable] = userResponse;
-          delete context.pendingNodeId;
           
-          // Continua para o próximo nó
-          const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
-          console.log("[FLOW] Looking for next edge:", { hasEdge: !!nextEdge, sourceId: pendingNode.id });
-          
-          if (nextEdge) {
-            const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
-            console.log("[FLOW] Found next node:", { hasNode: !!nextNode, nodeId: nextEdge.target, nodeType: nextNode?.data?.type });
-            if (nextNode) {
-              await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          // Para ask_cnpj, chama a API e aguarda os dados
+          if (blockType === "ask_cnpj") {
+            console.log("[FLOW] Calling CNPJ API...");
+            await respond("Aguarde, consultando CNPJ...");
+            
+            try {
+              const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+              const { data: cnpjData, error: cnpjError } = await supabaseClient.functions.invoke('consultar-cnpj', {
+                body: { cnpj: userResponse }
+              });
+              
+              console.log("[FLOW] CNPJ API response:", { success: !cnpjError, hasData: !!cnpjData });
+              
+              if (cnpjError || !cnpjData?.success) {
+                console.error("[FLOW] CNPJ API error:", cnpjError);
+                await respond("Erro ao consultar CNPJ. Por favor, tente novamente.");
+                shouldReturn = true;
+              } else {
+                // Mapeia os campos do CNPJ para variáveis conforme configuração
+                const cnpjInfo = cnpjData.data;
+                const fieldMapping = cfg.fields || {};
+                
+                // Salva todas as variáveis configuradas
+                for (const [apiField, varName] of Object.entries(fieldMapping)) {
+                  const varNameStr = String(varName);
+                  const apiFieldStr = String(apiField);
+                  if (varNameStr && cnpjInfo[apiFieldStr]) {
+                    context.vars[varNameStr] = cnpjInfo[apiFieldStr];
+                    console.log(`[FLOW] Saved CNPJ field: ${varNameStr} = ${cnpjInfo[apiFieldStr]}`);
+                  }
+                }
+                
+                await respond("CNPJ consultado com sucesso!");
+              }
+            } catch (err) {
+              console.error("[FLOW] CNPJ API exception:", err);
+              await respond("Erro ao consultar CNPJ. Por favor, tente novamente.");
+              shouldReturn = true;
             }
-          } else {
-            console.log("[FLOW] No next edge found, flow ends here");
+          }
+          
+          // Para ask_cep, chama a API ViaCEP e aguarda os dados
+          if (blockType === "ask_cep") {
+            console.log("[FLOW] Calling CEP API...");
+            await respond("Aguarde, consultando CEP...");
+            
+            try {
+              const cleanCEP = userResponse.replace(/\D/g, '');
+              const cepResponse = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
+              const cepData = await cepResponse.json();
+              
+              console.log("[FLOW] CEP API response:", { hasError: !!cepData.erro, cep: cleanCEP });
+              
+              if (cepData.erro) {
+                await respond("CEP não encontrado. Por favor, tente novamente.");
+                shouldReturn = true;
+              } else {
+                // Mapeia os campos do CEP para variáveis conforme configuração
+                const fieldMapping = cfg.fields || {};
+                
+                // Salva todas as variáveis configuradas
+                for (const [apiField, varName] of Object.entries(fieldMapping)) {
+                  const varNameStr = String(varName);
+                  const apiFieldStr = String(apiField);
+                  if (varNameStr && cepData[apiFieldStr]) {
+                    context.vars[varNameStr] = cepData[apiFieldStr];
+                    console.log(`[FLOW] Saved CEP field: ${varNameStr} = ${cepData[apiFieldStr]}`);
+                  }
+                }
+                
+                await respond("CEP consultado com sucesso!");
+              }
+            } catch (err) {
+              console.error("[FLOW] CEP API exception:", err);
+              await respond("Erro ao consultar CEP. Por favor, tente novamente.");
+              shouldReturn = true;
+            }
+          }
+          
+          // Se não houver erro, prossegue para o próximo nó
+          if (!shouldReturn) {
+            delete context.pendingNodeId;
+            
+            // Continua para o próximo nó
+            const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+            console.log("[FLOW] Looking for next edge:", { hasEdge: !!nextEdge, sourceId: pendingNode.id });
+            
+            if (nextEdge) {
+              const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
+              console.log("[FLOW] Found next node:", { hasNode: !!nextNode, nodeId: nextEdge.target, nodeType: nextNode?.data?.type });
+              if (nextNode) {
+                await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+              }
+            } else {
+              console.log("[FLOW] No next edge found, flow ends here");
+            }
           }
         }
       }
