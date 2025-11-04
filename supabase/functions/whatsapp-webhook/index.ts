@@ -278,9 +278,21 @@ serve(async (req) => {
     // ====== Execução do fluxo ======
     if (context.pendingNodeId) {
       const pendingNode = flowData.flow_data.nodes.find((n: any) => n.id === context.pendingNodeId);
+      console.log("[FLOW] Processing pending node:", {
+        pendingNodeId: context.pendingNodeId,
+        foundNode: !!pendingNode,
+        nodeType: pendingNode?.data?.type,
+        userResponse: body
+      });
       
+      if (!pendingNode) {
+        console.error("[FLOW] Pending node not found, resetting context");
+        delete context.pendingNodeId;
+        const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
+        if (startNode) await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
+      }
       // Processa resposta para reply_buttons
-      if (pendingNode?.data?.type === "reply_buttons") {
+      else if (pendingNode?.data?.type === "reply_buttons") {
         const cfg = pendingNode.data.config || {};
         const variable = cfg.variable || "button_response";
         const userResponse = (context.vars.userMessage || "").trim();
@@ -308,6 +320,13 @@ serve(async (req) => {
         const variable = cfg.variable || "resposta";
         const userResponse = (context.vars.userMessage || "").trim();
         const blockType = pendingNode.data.type;
+        
+        console.log("[FLOW] Processing ask block:", {
+          blockType,
+          variable,
+          userResponse,
+          hasConfig: !!cfg
+        });
         
         // Validação baseada no tipo de bloco
         let isValid = true;
@@ -339,20 +358,31 @@ serve(async (req) => {
           }
         }
         
+        console.log("[FLOW] Validation result:", { isValid, blockType });
+        
         if (!isValid) {
           // Validação falhou - envia mensagem de erro e mantém o nó pendente
+          console.log("[FLOW] Validation failed, sending error:", errorMessage);
           await respond(errorMessage);
           // Mantém pendingNodeId para reperguntar
         } else {
           // Validação passou - salva resposta e continua
+          console.log("[FLOW] Validation passed, saving variable:", variable, "=", userResponse);
           context.vars[variable] = userResponse;
           delete context.pendingNodeId;
           
           // Continua para o próximo nó
           const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+          console.log("[FLOW] Looking for next edge:", { hasEdge: !!nextEdge, sourceId: pendingNode.id });
+          
           if (nextEdge) {
             const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
-            if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+            console.log("[FLOW] Found next node:", { hasNode: !!nextNode, nodeId: nextEdge.target, nodeType: nextNode?.data?.type });
+            if (nextNode) {
+              await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+            }
+          } else {
+            console.log("[FLOW] No next edge found, flow ends here");
           }
         }
       }
