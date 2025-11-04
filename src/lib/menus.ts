@@ -23,6 +23,7 @@ export const MENU_CONFIG = [
   { id: "Canvas", label: "Canvas" },
   { id: "Automações", label: "Automações" },
   { id: "Campanhas Marketing", label: "Campanhas" },
+  { id: "Relatórios", label: "Relatórios" },
   { id: "Configurações", label: "Configurações" },
   { id: "Config Geral", label: "Configurações Gerais" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },

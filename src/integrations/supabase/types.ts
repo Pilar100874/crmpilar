@@ -1764,6 +1764,63 @@ export type Database = {
           },
         ]
       }
+      relatorios: {
+        Row: {
+          conexao_id: string | null
+          configuracoes: Json | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string | null
+          id: string
+          layout_json: Json
+          nome: string
+          parametros: Json | null
+          query_sql: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          conexao_id?: string | null
+          configuracoes?: Json | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          layout_json?: Json
+          nome: string
+          parametros?: Json | null
+          query_sql?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          conexao_id?: string | null
+          configuracoes?: Json | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          layout_json?: Json
+          nome?: string
+          parametros?: Json | null
+          query_sql?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_conexao_id_fkey"
+            columns: ["conexao_id"]
+            isOneToOne: false
+            referencedRelation: "database_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relatorios_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resend_config: {
         Row: {
           api_key: string

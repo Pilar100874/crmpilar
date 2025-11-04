@@ -106,6 +106,7 @@ const menuItems: MenuItem[] = [
       { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: Megaphone },
     ]
   },
+  { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
   { 
     id: "Configurações", 
     title: "Configurações", 
