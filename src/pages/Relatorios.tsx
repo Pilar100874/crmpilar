@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ReportDesigner } from "@/components/report/ReportDesigner";
 import {
   Table,
   TableBody,
@@ -51,6 +52,8 @@ export default function Relatorios() {
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
+  const [showDesigner, setShowDesigner] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
@@ -123,8 +126,37 @@ export default function Relatorios() {
       setShowNewDialog(false);
       setFormData({ nome: "", descricao: "", conexao_id: "" });
       loadReports();
+      
+      // Abrir o designer
+      setSelectedReport(data);
+      setShowDesigner(true);
     } catch (error: any) {
       toast.error("Erro ao criar relatório: " + error.message);
+    }
+  };
+
+  const handleEdit = (report: Report) => {
+    setSelectedReport(report);
+    setShowDesigner(true);
+  };
+
+  const handleSaveReport = async (reportData: any) => {
+    try {
+      const { error } = await supabase
+        .from("relatorios")
+        .update({
+          layout_json: reportData.layout_json,
+          query_sql: reportData.query_sql,
+        })
+        .eq("id", selectedReport?.id);
+
+      if (error) throw error;
+
+      toast.success("Relatório salvo com sucesso");
+      setShowDesigner(false);
+      loadReports();
+    } catch (error: any) {
+      toast.error("Erro ao salvar relatório: " + error.message);
     }
   };
 
@@ -154,13 +186,23 @@ export default function Relatorios() {
     );
   }
 
+  if (showDesigner && selectedReport) {
+    return (
+      <ReportDesigner
+        report={selectedReport}
+        onSave={handleSaveReport}
+        onClose={() => setShowDesigner(false)}
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Relatórios</h1>
           <p className="text-muted-foreground">
-            Crie e gerencie relatórios personalizados - Sistema em desenvolvimento
+            Crie e gerencie relatórios personalizados com editor visual
           </p>
         </div>
         <Button onClick={() => setShowNewDialog(true)}>
@@ -205,7 +247,7 @@ export default function Relatorios() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => toast.info("Editor em desenvolvimento")}
+                          onClick={() => handleEdit(report)}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
