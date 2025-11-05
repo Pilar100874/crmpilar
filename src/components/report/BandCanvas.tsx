@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Type, Image, Minus, Database, Trash2 } from "lucide-react";
+import { Type, Image, Minus, Database, Trash2, BarChart3 } from "lucide-react";
 
 interface ReportElement {
   id: string;
@@ -26,6 +26,7 @@ interface BandCanvasProps {
   onSelectElement: (id: string | null) => void;
   onAddElement: (bandId: string, element: ReportElement) => void;
   onUpdateBands: (bands: Band[]) => void;
+  onDrop: (bandId: string, e: React.DragEvent) => void;
 }
 
 const bandLabels = {
@@ -36,8 +37,9 @@ const bandLabels = {
   "report-footer": "Report Footer",
 };
 
-export function BandCanvas({ bands, selectedElement, onSelectElement, onAddElement, onUpdateBands }: BandCanvasProps) {
+export function BandCanvas({ bands, selectedElement, onSelectElement, onAddElement, onUpdateBands, onDrop }: BandCanvasProps) {
   const [activeBand, setActiveBand] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
 
   const handleAddText = (bandId: string) => {
     const newElement: ReportElement = {
@@ -74,6 +76,21 @@ export function BandCanvas({ bands, selectedElement, onSelectElement, onAddEleme
 
   const handleRemoveBand = (bandId: string) => {
     onUpdateBands(bands.filter(b => b.id !== bandId));
+  };
+
+  const handleDragOver = (e: React.DragEvent, bandId: string) => {
+    e.preventDefault();
+    setDragOver(bandId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOver(null);
+  };
+
+  const handleDrop = (bandId: string, e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(null);
+    onDrop(bandId, e);
   };
 
   return (
@@ -122,8 +139,11 @@ export function BandCanvas({ bands, selectedElement, onSelectElement, onAddEleme
 
           {/* Band Content */}
           <div
-            className="relative bg-card"
+            className={`relative bg-card ${dragOver === band.id ? "ring-2 ring-primary" : ""}`}
             style={{ height: `${band.height}px`, minHeight: "60px" }}
+            onDragOver={(e) => handleDragOver(e, band.id)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(band.id, e)}
           >
             {band.elements.map((element) => (
               <div
@@ -148,6 +168,17 @@ export function BandCanvas({ bands, selectedElement, onSelectElement, onAddEleme
                   <span className="px-2 truncate text-muted-foreground">
                     {element.properties.fieldName}
                   </span>
+                )}
+                {element.type?.startsWith("chart-") && (
+                  <div className="flex items-center justify-center w-full h-full bg-muted/20">
+                    <BarChart3 className="h-6 w-6 text-primary" />
+                    <span className="ml-2 text-xs">{element.properties.title || "Gráfico"}</span>
+                  </div>
+                )}
+                {element.type?.startsWith("aggregate-") && (
+                  <div className="flex items-center justify-center w-full h-full bg-muted/20">
+                    <span className="text-xs font-mono">{element.properties.expression}</span>
+                  </div>
                 )}
               </div>
             ))}

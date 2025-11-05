@@ -1,6 +1,11 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartConfig } from "./ChartConfig";
+import { Button } from "@/components/ui/button";
+import { Calculator } from "lucide-react";
+import { useState } from "react";
+import { ExpressionEditor } from "./ExpressionEditor";
 
 interface ReportElement {
   id: string;
@@ -26,6 +31,8 @@ interface PropertiesPanelProps {
 }
 
 export function PropertiesPanel({ selectedElement, bands, onUpdateBands }: PropertiesPanelProps) {
+  const [showExpressionEditor, setShowExpressionEditor] = useState(false);
+  
   const element = bands
     .flatMap(b => b.elements)
     .find(e => e.id === selectedElement);
@@ -52,13 +59,45 @@ export function PropertiesPanel({ selectedElement, bands, onUpdateBands }: Prope
     onUpdateBands(updatedBands);
   };
 
+  const updateElement = (properties: any) => {
+    const updatedBands = bands.map(band => ({
+      ...band,
+      elements: band.elements.map(el =>
+        el.id === selectedElement
+          ? { ...el, properties }
+          : el
+      ),
+    }));
+    onUpdateBands(updatedBands);
+  };
+
+  // Renderizar configuração específica para gráficos
+  if (element?.type?.startsWith("chart-")) {
+    return (
+      <div className="p-4 space-y-4">
+        <ChartConfig element={element} onUpdate={updateElement} />
+        <Card>
+          <CardContent className="p-3">
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div>X: {element.x}px</div>
+              <div>Y: {element.y}px</div>
+              <div>Largura: {element.width}px</div>
+              <div>Altura: {element.height}px</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Propriedades</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+    <>
+      <div className="p-4 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Propriedades</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
           {element.type === "text" && (
             <>
               <div>
@@ -108,6 +147,29 @@ export function PropertiesPanel({ selectedElement, bands, onUpdateBands }: Prope
             </>
           )}
 
+          {element.type?.startsWith("aggregate-") && (
+            <>
+              <div>
+                <Label className="text-xs">Expressão</Label>
+                <div className="flex gap-1">
+                  <Input
+                    value={element.properties.expression || ""}
+                    onChange={(e) => updateProperty("expression", e.target.value)}
+                    className="h-8 font-mono text-xs"
+                    placeholder="SUM([campo])"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowExpressionEditor(true)}
+                  >
+                    <Calculator className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="pt-3 border-t">
             <div className="text-xs text-muted-foreground space-y-1">
               <div>X: {element.x}px</div>
@@ -119,5 +181,13 @@ export function PropertiesPanel({ selectedElement, bands, onUpdateBands }: Prope
         </CardContent>
       </Card>
     </div>
+
+    <ExpressionEditor
+      open={showExpressionEditor}
+      onClose={() => setShowExpressionEditor(false)}
+      onSave={(expression) => updateProperty("expression", expression)}
+      initialValue={element?.properties.expression || ""}
+    />
+  </>
   );
 }

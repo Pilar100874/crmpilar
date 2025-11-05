@@ -8,6 +8,8 @@ import { BandCanvas } from "./BandCanvas";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { DataSourcePanel } from "./DataSourcePanel";
 import { ReportPreview } from "./ReportPreview";
+import { DatabaseExplorer } from "./DatabaseExplorer";
+import { ComponentLibrary } from "./ComponentLibrary";
 
 interface Band {
   id: string;
@@ -60,6 +62,77 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
     ));
   };
 
+  const handleDrop = (bandId: string, e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData("application/json");
+    if (!data) return;
+
+    const dropData = JSON.parse(data);
+    
+    let newElement: ReportElement;
+    
+    if (dropData.type === "field") {
+      // Campo arrastado do Database Explorer
+      newElement = {
+        id: `field-${Date.now()}`,
+        type: "field",
+        x: 20,
+        y: 20,
+        width: 150,
+        height: 25,
+        properties: {
+          fieldName: `[${dropData.table}.${dropData.field}]`,
+          fontSize: 11,
+        },
+      };
+    } else if (dropData.type?.startsWith("chart-")) {
+      // Gráfico da Component Library
+      newElement = {
+        id: `${dropData.type}-${Date.now()}`,
+        type: dropData.type,
+        x: 20,
+        y: 20,
+        width: 400,
+        height: 250,
+        properties: {
+          chartType: dropData.type.replace("chart-", ""),
+          title: "Novo Gráfico",
+          xField: "",
+          yField: "",
+          colorScheme: "blue",
+        },
+      };
+    } else if (dropData.type?.startsWith("aggregate-")) {
+      // Agregação da Component Library
+      const aggType = dropData.type.replace("aggregate-", "").toUpperCase();
+      newElement = {
+        id: `${dropData.type}-${Date.now()}`,
+        type: dropData.type,
+        x: 20,
+        y: 20,
+        width: 150,
+        height: 30,
+        properties: {
+          expression: `${aggType}([campo])`,
+          fontSize: 12,
+        },
+      };
+    } else {
+      // Outros componentes
+      newElement = {
+        id: `${dropData.type}-${Date.now()}`,
+        type: dropData.type,
+        x: 20,
+        y: 20,
+        width: dropData.type === "table" ? 500 : 200,
+        height: dropData.type === "table" ? 200 : 30,
+        properties: {},
+      };
+    }
+    
+    handleAddElement(bandId, newElement);
+  };
+
   const handleSave = () => {
     onSave({
       layout_json: { bands },
@@ -100,13 +173,31 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel - Data Source */}
-        <div className="w-64 border-r bg-muted/20 overflow-y-auto">
-          <DataSourcePanel 
-            connectionId={report.conexao_id}
-            query={query}
-            onQueryChange={setQuery}
-          />
+        {/* Left Panel - Database & Components */}
+        <div className="w-72 border-r bg-muted/20 overflow-y-auto">
+          <Tabs defaultValue="database" className="h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-3 mx-4 mt-4">
+              <TabsTrigger value="database">BD</TabsTrigger>
+              <TabsTrigger value="components">Componentes</TabsTrigger>
+              <TabsTrigger value="query">Query</TabsTrigger>
+            </TabsList>
+            <TabsContent value="database" className="flex-1 p-4">
+              <DatabaseExplorer 
+                connectionId={report.conexao_id}
+                onDragStart={(data) => {}}
+              />
+            </TabsContent>
+            <TabsContent value="components" className="flex-1 p-4">
+              <ComponentLibrary onDragStart={(component) => {}} />
+            </TabsContent>
+            <TabsContent value="query" className="flex-1 p-4">
+              <DataSourcePanel 
+                connectionId={report.conexao_id}
+                query={query}
+                onQueryChange={setQuery}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Center - Canvas */}
@@ -118,6 +209,7 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
               onSelectElement={setSelectedElement}
               onAddElement={handleAddElement}
               onUpdateBands={setBands}
+              onDrop={handleDrop}
             />
           </Card>
         </div>
