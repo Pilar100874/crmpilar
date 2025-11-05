@@ -89,6 +89,7 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
         properties: {
           fieldName: `[${dropData.table}.${dropData.field}]`,
           fontSize: 11,
+          dataSourceId: selectedDataSourceId,
         },
       };
     } else if (dropData.type?.startsWith("chart-")) {
@@ -106,6 +107,7 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
           xField: "",
           yField: "",
           colorScheme: "blue",
+          dataSourceId: selectedDataSourceId,
         },
       };
     } else if (dropData.type?.startsWith("aggregate-")) {
@@ -121,6 +123,7 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
         properties: {
           expression: `${aggType}([campo])`,
           fontSize: 12,
+          dataSourceId: selectedDataSourceId,
         },
       };
     } else {
@@ -132,7 +135,7 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
         y: 20,
         width: dropData.type === "table" ? 500 : 200,
         height: dropData.type === "table" ? 200 : 30,
-        properties: {},
+        properties: { dataSourceId: selectedDataSourceId },
       };
     }
     
@@ -225,6 +228,7 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
                 connectionId={currentDataSource.connectionId}
                 query={currentDataSource.query}
                 onQueryChange={handleDataSourceQueryChange}
+                dataSourceId={currentDataSource.id}
               />
             </TabsContent>
           </Tabs>

@@ -1,18 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
-import { Play, Save, Database, FileDown } from "lucide-react";
+import { Play, Database, FileDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SQLEditorProps {
   connectionId: string | null;
   query: string;
   onQueryChange: (query: string) => void;
   onExecute?: (results: any[]) => void;
+  dataSourceId: string;
 }
 
-export function SQLEditor({ connectionId, query, onQueryChange, onExecute }: SQLEditorProps) {
+export function SQLEditor({ connectionId, query, onQueryChange, onExecute, dataSourceId }: SQLEditorProps) {
   const [executing, setExecuting] = useState(false);
   const [results, setResults] = useState<any[]>([]);
 
