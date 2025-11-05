@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Database } from "lucide-react";
 import { toast } from "sonner";
-import { ReportDesigner } from "@/components/report/ReportDesigner";
+import { ActiveReportsDesigner } from "@/components/report/ActiveReportsDesigner";
+import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 import {
   Table,
   TableBody,
@@ -53,6 +54,7 @@ export default function Relatorios() {
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
+  const [showDataSourceConfig, setShowDataSourceConfig] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
@@ -186,9 +188,27 @@ export default function Relatorios() {
     );
   }
 
+  if (showDataSourceConfig && selectedReport) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <Button variant="outline" onClick={() => setShowDataSourceConfig(false)}>
+            Voltar
+          </Button>
+        </div>
+        <DataSourceConfigurator
+          reportId={selectedReport.id}
+          onDataSourcesChange={(ds) => {
+            console.log("Data sources updated:", ds);
+          }}
+        />
+      </div>
+    );
+  }
+
   if (showDesigner && selectedReport) {
     return (
-      <ReportDesigner
+      <ActiveReportsDesigner
         report={selectedReport}
         onSave={handleSaveReport}
         onClose={() => setShowDesigner(false)}
@@ -244,6 +264,17 @@ export default function Relatorios() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedReport(report);
+                            setShowDataSourceConfig(true);
+                          }}
+                          title="Configurar Data Sources"
+                        >
+                          <Database className="h-4 w-4" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
