@@ -11,10 +11,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+// Importar estilos do ActiveReportsJS
 // @ts-ignore - ActiveReportsJS types
 import { Designer } from "@mescius/activereportsjs-react";
 import "@mescius/activereportsjs/styles/ar-js-ui.css";
 import "@mescius/activereportsjs/styles/ar-js-designer.css";
+import { applyPortugueseLocale } from "@/lib/activereports-locale-pt-br";
 
 interface ActiveReportsDesignerProps {
   report: any;
@@ -30,6 +32,8 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
   const [currentReport, setCurrentReport] = useState(report);
 
   useEffect(() => {
+    // Aplicar localização em português
+    applyPortugueseLocale();
     initializeDesigner();
   }, [currentReport]);
 
@@ -163,9 +167,9 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
     return (
       <div className="flex items-center justify-center h-screen bg-muted/10">
         <div className="text-center">
-          <div className="text-lg font-medium mb-2">Carregando Designer ActiveReports...</div>
+          <div className="text-lg font-medium mb-2">Carregando Designer de Relatórios...</div>
           <div className="text-sm text-muted-foreground">
-            Inicializando editor profissional de relatórios
+            Inicializando editor profissional ActiveReports
           </div>
         </div>
       </div>
@@ -214,16 +218,18 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
         </div>
       </div>
 
-      {/* ActiveReports Designer - Controle Total Integrado */}
+      {/* ActiveReports Designer com Configuração em Português */}
       <div className="flex-1 relative overflow-hidden">
-        <Designer ref={designerRef} />
+        <Designer 
+          ref={designerRef}
+        />
       </div>
 
-      {/* Sheet de Configuração de Data Source */}
+      {/* Painel de Configuração de Fonte de Dados SQL Server */}
       <Sheet open={showDataSource} onOpenChange={setShowDataSource}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Configurar Fonte de Dados</SheetTitle>
+            <SheetTitle>Configurar Fonte de Dados SQL Server</SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             <SimpleDataSourceConfig
