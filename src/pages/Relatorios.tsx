@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Eye, Database } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { ActiveReportsDesigner } from "@/components/report/ActiveReportsDesigner";
-import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 import {
   Table,
   TableBody,
@@ -54,7 +53,6 @@ export default function Relatorios() {
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
-  const [showDataSourceConfig, setShowDataSourceConfig] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
@@ -163,7 +161,7 @@ export default function Relatorios() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este relatório?")) return;
+    if (!confirm("Tem certeza que deseja excluir este modelo de relatório?")) return;
 
     try {
       const { error } = await supabase
@@ -173,10 +171,35 @@ export default function Relatorios() {
 
       if (error) throw error;
 
-      toast.success("Relatório excluído com sucesso");
+      toast.success("Modelo excluído com sucesso");
       loadReports();
     } catch (error: any) {
-      toast.error("Erro ao excluir relatório: " + error.message);
+      toast.error("Erro ao excluir: " + error.message);
+    }
+  };
+
+  const handleDuplicate = async (report: Report) => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      const { data, error } = await supabase
+        .from("relatorios")
+        .insert([{
+          estabelecimento_id: estabelecimentoId,
+          nome: `${report.nome} (cópia)`,
+          descricao: report.descricao,
+          conexao_id: report.conexao_id,
+          layout_json: report.layout_json,
+          query_sql: report.query_sql,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Modelo duplicado com sucesso");
+      loadReports();
+    } catch (error: any) {
+      toast.error("Erro ao duplicar: " + error.message);
     }
   };
 
@@ -188,122 +211,123 @@ export default function Relatorios() {
     );
   }
 
-  if (showDataSourceConfig && selectedReport) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <Button variant="outline" onClick={() => setShowDataSourceConfig(false)}>
-            Voltar
-          </Button>
-        </div>
-        <DataSourceConfigurator
-          reportId={selectedReport.id}
-          onDataSourcesChange={(ds) => {
-            console.log("Data sources updated:", ds);
-          }}
-        />
-      </div>
-    );
-  }
-
   if (showDesigner && selectedReport) {
     return (
       <ActiveReportsDesigner
         report={selectedReport}
         onSave={handleSaveReport}
-        onClose={() => setShowDesigner(false)}
+        onClose={() => {
+          setShowDesigner(false);
+          setSelectedReport(null);
+        }}
       />
     );
   }
+  }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Relatórios</h1>
-          <p className="text-muted-foreground">
-            Crie e gerencie relatórios personalizados com editor visual
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <FileText className="h-8 w-8" />
+            Modelos de Relatório
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gerencie templates de relatórios profissionais com ActiveReportsJS
           </p>
         </div>
-        <Button onClick={() => setShowNewDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Relatório
+        <Button onClick={() => setShowNewDialog(true)} size="lg">
+          <Plus className="mr-2 h-5 w-5" />
+          Novo Modelo
         </Button>
       </div>
 
-      <div className="bg-card rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Conexão</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reports.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  Nenhum relatório cadastrado
-                </TableCell>
-              </TableRow>
-            ) : (
-              reports.map((report) => {
-                const connection = connections.find(c => c.id === report.conexao_id);
-                return (
-                  <TableRow key={report.id}>
-                    <TableCell className="font-medium">{report.nome}</TableCell>
-                    <TableCell>{report.descricao}</TableCell>
-                    <TableCell>
-                      {connection ? `${connection.name} (${connection.database_type})` : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(report.created_at).toLocaleDateString("pt-BR")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedReport(report);
-                            setShowDataSourceConfig(true);
-                          }}
-                          title="Configurar Data Sources"
-                        >
-                          <Database className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(report)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(report.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+      {/* Grid de Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {reports.length === 0 ? (
+          <div className="col-span-full text-center py-12 border-2 border-dashed rounded-lg">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground mb-4">
+              Nenhum modelo de relatório cadastrado
+            </p>
+            <Button onClick={() => setShowNewDialog(true)} variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              Criar Primeiro Modelo
+            </Button>
+          </div>
+        ) : (
+          reports.map((report) => {
+            const connection = connections.find(c => c.id === report.conexao_id);
+            return (
+              <div
+                key={report.id}
+                className="group border rounded-lg p-6 hover:shadow-lg transition-all bg-card hover:border-primary/50"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
+                      {report.nome}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {report.descricao || "Sem descrição"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <span className="font-medium mr-2">Conexão:</span>
+                    {connection ? (
+                      <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs">
+                        {connection.name}
+                      </span>
+                    ) : (
+                      <span className="text-xs">Não configurada</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Criado em {new Date(report.created_at).toLocaleDateString("pt-BR")}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleEdit(report)}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDuplicate(report)}
+                    title="Duplicar modelo"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(report.id)}
+                    title="Excluir modelo"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
-      {/* Dialog de Novo Relatório */}
+      {/* Dialog de Novo Modelo */}
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Novo Relatório</DialogTitle>
+            <DialogTitle>Novo Modelo de Relatório</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -312,7 +336,7 @@ export default function Relatorios() {
                 id="nome"
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                placeholder="Nome do relatório"
+                placeholder="Ex: Relatório de Vendas Mensal"
               />
             </div>
             <div>
@@ -321,11 +345,12 @@ export default function Relatorios() {
                 id="descricao"
                 value={formData.descricao}
                 onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                placeholder="Descrição do relatório"
+                placeholder="Descrição detalhada do modelo..."
+                rows={3}
               />
             </div>
             <div>
-              <Label htmlFor="conexao">Conexão de Banco de Dados</Label>
+              <Label htmlFor="conexao">Conexão SQL Server (opcional)</Label>
               <Select
                 value={formData.conexao_id}
                 onValueChange={(value) => setFormData({ ...formData, conexao_id: value })}

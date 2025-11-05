@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, Eye, ArrowLeft, Download } from "lucide-react";
+import { Save, ArrowLeft, Download, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-// @ts-ignore
+// @ts-ignore - ActiveReportsJS types
 import { Designer } from "@mescius/activereportsjs-react";
 import "@mescius/activereportsjs/styles/ar-js-ui.css";
 import "@mescius/activereportsjs/styles/ar-js-designer.css";
@@ -18,7 +18,7 @@ interface ActiveReportsDesignerProps {
 export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReportsDesignerProps) {
   const designerRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showPreview, setShowPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     initializeDesigner();
@@ -92,57 +92,41 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
   };
 
   const handleSave = async () => {
-    try {
-      if (!designerRef.current) {
-        toast.error("Designer não inicializado");
-        return;
-      }
+    if (!designerRef.current) {
+      toast.error("Designer não está pronto");
+      return;
+    }
 
-      // Obter definição do relatório do designer
+    setSaving(true);
+    try {
+      // Obter definição completa do relatório do ActiveReports
       const reportDefinition = await designerRef.current.getReport();
       
       onSave({
         layout_json: {
           activeReportsDefinition: reportDefinition,
-          version: "activereports-js"
+          version: "activereportsjs",
+          lastModified: new Date().toISOString()
         },
-        query_sql: report.query_sql
+        query_sql: report.query_sql || ""
       });
 
-      toast.success("Relatório salvo com sucesso!");
+      toast.success("Modelo salvo com sucesso!");
     } catch (error: any) {
       console.error("Error saving report:", error);
-      toast.error("Erro ao salvar relatório: " + error.message);
+      toast.error("Erro ao salvar: " + error.message);
+    } finally {
+      setSaving(false);
     }
-  };
-
-  const handlePreview = () => {
-    setShowPreview(true);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Carregando ActiveReports Designer...</div>
-      </div>
-    );
-  }
-
-  if (showPreview) {
-    return (
-      <div className="h-screen flex flex-col">
-        <div className="flex items-center gap-2 p-4 border-b bg-background">
-          <Button variant="outline" onClick={() => setShowPreview(false)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Designer
-          </Button>
-        </div>
-        <div className="flex-1">
-          {/* Viewer será implementado aqui */}
-          <div className="flex items-center justify-center h-full">
-            <div className="text-muted-foreground">
-              Preview em desenvolvimento - use o Designer para visualizar
-            </div>
+      <div className="flex items-center justify-center h-screen bg-muted/10">
+        <div className="text-center">
+          <div className="text-lg font-medium mb-2">Carregando ActiveReports Designer...</div>
+          <div className="text-sm text-muted-foreground">
+            Inicializando editor profissional de relatórios
           </div>
         </div>
       </div>
@@ -150,35 +134,42 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between p-4 border-b bg-background z-10">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={onClose}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
+    <div className="h-screen flex flex-col bg-background">
+      {/* Toolbar Customizada */}
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-card shadow-sm">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={onClose}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar aos Modelos
           </Button>
-          <div className="text-sm text-muted-foreground">
-            Editando: <span className="font-medium text-foreground">{report.nome}</span>
+          <div className="h-6 w-px bg-border" />
+          <div>
+            <div className="font-semibold text-sm">{report.nome}</div>
+            <div className="text-xs text-muted-foreground">
+              {report.descricao || "Modelo de relatório"}
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePreview}>
-            <Eye className="h-4 w-4 mr-2" />
-            Preview
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Salvar
+          <Button 
+            onClick={handleSave} 
+            disabled={saving}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Salvando..." : "Salvar Modelo"}
           </Button>
         </div>
       </div>
 
-      {/* ActiveReports Designer */}
-      <div className="flex-1 relative">
-        <Designer
-          ref={designerRef}
-        />
+      {/* ActiveReports Designer - Controle Total Integrado */}
+      <div className="flex-1 relative overflow-hidden">
+        <Designer ref={designerRef} />
       </div>
     </div>
   );
