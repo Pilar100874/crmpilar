@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { StimulsoftSidebar } from "@/components/stimulsoft/StimulsoftSidebar";
 import { toast } from "sonner";
 
@@ -12,9 +13,14 @@ export default function StimulsoftDesigner() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentReport, setCurrentReport] = useState<any>(null);
+  const [currentReportId, setCurrentReportId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Carregar scripts do Stimulsoft
+    // Verificar se há um relatório do Supabase para carregar
+    const reportId = localStorage.getItem('stimulsoft_current_report_id');
+    if (reportId) {
+      setCurrentReportId(reportId);
+    }
     loadStimulsoftScripts();
   }, []);
 
@@ -78,11 +84,29 @@ export default function StimulsoftDesigner() {
       designer.report = report;
       setCurrentReport(report);
 
-      // Evento de salvamento automático
-      designer.onSaveReport = () => {
+      // Evento de salvamento automático no Supabase
+      designer.onSaveReport = async () => {
         const reportJson = designer.report.saveToJsonString();
         localStorage.setItem('stimulsoft_current_report', reportJson);
-        toast.success('Rascunho salvo automaticamente');
+        
+        // Salvar no Supabase se tiver ID
+        if (currentReportId) {
+          try {
+            const { error } = await supabase
+              .from("relatorios")
+              .update({
+                layout_json: reportJson,
+              })
+              .eq("id", currentReportId);
+
+            if (error) throw error;
+            toast.success('Relatório salvo automaticamente');
+          } catch (error: any) {
+            toast.error('Erro ao salvar: ' + error.message);
+          }
+        } else {
+          toast.success('Rascunho salvo automaticamente');
+        }
       };
 
       // Renderizar designer
@@ -127,6 +151,19 @@ export default function StimulsoftDesigner() {
 
     try {
       const reportJson = designerRef.current.report.saveToJsonString();
+      
+      // Salvar também no Supabase se tiver ID
+      if (currentReportId) {
+        const { error } = await supabase
+          .from("relatorios")
+          .update({
+            layout_json: reportJson,
+          })
+          .eq("id", currentReportId);
+
+        if (error) throw error;
+      }
+      
       return reportJson;
     } catch (error) {
       console.error('Erro ao salvar relatório:', error);

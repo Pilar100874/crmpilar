@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Copy, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { ActiveReportsDesigner } from "@/components/report/ActiveReportsDesigner";
 import {
   Table,
   TableBody,
@@ -41,11 +41,10 @@ interface DatabaseConnection {
 }
 
 export default function Relatorios() {
+  const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
-  const [showDesigner, setShowDesigner] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
@@ -101,38 +100,35 @@ export default function Relatorios() {
       setFormData({ nome: "", descricao: "" });
       loadReports();
       
-      // Abrir o designer
-      setSelectedReport(data);
-      setShowDesigner(true);
+      // Salvar ID do relatório e abrir designer Stimulsoft
+      localStorage.setItem('stimulsoft_current_report_id', data.id);
+      navigate('/stimulsoft-designer');
     } catch (error: any) {
       toast.error("Erro ao criar relatório: " + error.message);
     }
   };
 
   const handleEdit = (report: Report) => {
-    setSelectedReport(report);
-    setShowDesigner(true);
-  };
-
-  const handleSaveReport = async (reportData: any) => {
-    try {
-      const { error } = await supabase
-        .from("relatorios")
-        .update({
-          layout_json: reportData.layout_json,
-          query_sql: reportData.query_sql,
-        })
-        .eq("id", selectedReport?.id);
-
-      if (error) throw error;
-
-      toast.success("Relatório salvo com sucesso");
-      setShowDesigner(false);
-      loadReports();
-    } catch (error: any) {
-      toast.error("Erro ao salvar relatório: " + error.message);
+    // Salvar relatório no localStorage e navegar para o designer
+    localStorage.setItem('stimulsoft_current_report_id', report.id);
+    if (report.layout_json && typeof report.layout_json === 'string') {
+      localStorage.setItem('stimulsoft_current_report', report.layout_json);
+    } else if (report.layout_json) {
+      localStorage.setItem('stimulsoft_current_report', JSON.stringify(report.layout_json));
     }
+    navigate('/stimulsoft-designer');
   };
+
+  const handlePreview = (report: Report) => {
+    // Salvar relatório no localStorage e navegar para o viewer
+    if (report.layout_json && typeof report.layout_json === 'string') {
+      localStorage.setItem('stimulsoft_preview_report', report.layout_json);
+    } else if (report.layout_json) {
+      localStorage.setItem('stimulsoft_preview_report', JSON.stringify(report.layout_json));
+    }
+    navigate('/stimulsoft-viewer');
+  };
+
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este modelo de relatório?")) return;
@@ -185,19 +181,6 @@ export default function Relatorios() {
     );
   }
 
-  if (showDesigner && selectedReport) {
-    return (
-      <ActiveReportsDesigner
-        report={selectedReport}
-        onSave={handleSaveReport}
-        onClose={() => {
-          setShowDesigner(false);
-          setSelectedReport(null);
-        }}
-      />
-    );
-  }
-
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
@@ -207,7 +190,7 @@ export default function Relatorios() {
             Modelos de Relatório
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie templates de relatórios profissionais com ActiveReportsJS
+            Gerencie templates de relatórios profissionais com Stimulsoft
           </p>
         </div>
         <Button onClick={() => setShowNewDialog(true)} size="lg">
@@ -260,6 +243,14 @@ export default function Relatorios() {
                 >
                   <Pencil className="h-3 w-3 mr-1" />
                   Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handlePreview(report)}
+                  title="Visualizar relatório"
+                >
+                  <Eye className="h-3 w-3" />
                 </Button>
                 <Button
                   size="sm"
