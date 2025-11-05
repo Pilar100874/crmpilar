@@ -32,6 +32,8 @@ import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import Relatorios from "./pages/Relatorios";
+import StimulsoftDesigner from "./pages/StimulsoftDesigner";
+import StimulsoftViewer from "./pages/StimulsoftViewer";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +81,8 @@ const App = () => (
             <Route path="/chat-webhook" element={<ChatWebhook />} />
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
             <Route path="/meus-anexos" element={<MeusAnexos />} />
+            <Route path="/stimulsoft-designer" element={<StimulsoftDesigner />} />
+            <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
