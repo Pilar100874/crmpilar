@@ -16,7 +16,10 @@ import {
 import { Designer } from "@mescius/activereportsjs-react";
 import "@mescius/activereportsjs/styles/ar-js-ui.css";
 import "@mescius/activereportsjs/styles/ar-js-designer.css";
-import { applyPortugueseLocale } from "@/lib/activereports-locale-pt-br";
+
+// Importar localização
+import "@grapecity/activereports-localization";
+import { configureActiveReportsLocale } from "@/lib/activereports-config";
 
 interface ActiveReportsDesignerProps {
   report: any;
@@ -32,9 +35,15 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
   const [currentReport, setCurrentReport] = useState(report);
 
   useEffect(() => {
-    // Aplicar localização em português
-    applyPortugueseLocale();
-    initializeDesigner();
+    // Configurar localização
+    configureActiveReportsLocale();
+    
+    // Pequeno delay para garantir que a localização foi aplicada
+    const timer = setTimeout(() => {
+      initializeDesigner();
+    }, 200);
+    
+    return () => clearTimeout(timer);
   }, [currentReport]);
 
   const initializeDesigner = async () => {

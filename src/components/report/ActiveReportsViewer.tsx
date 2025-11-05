@@ -8,6 +8,9 @@ import { Viewer } from "@mescius/activereportsjs-react";
 import "@mescius/activereportsjs/styles/ar-js-ui.css";
 import "@mescius/activereportsjs/styles/ar-js-viewer.css";
 
+// Importar localização
+import "@grapecity/activereports-localization";
+
 interface ActiveReportsViewerProps {
   reportDefinition: any;
   data?: any[];
