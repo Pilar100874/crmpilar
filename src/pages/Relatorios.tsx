@@ -21,13 +21,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface Report {
@@ -49,7 +42,6 @@ interface DatabaseConnection {
 
 export default function Relatorios() {
   const [reports, setReports] = useState<Report[]>([]);
-  const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
@@ -57,12 +49,10 @@ export default function Relatorios() {
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
-    conexao_id: "",
   });
 
   useEffect(() => {
     loadReports();
-    loadConnections();
   }, []);
 
   const loadReports = async () => {
@@ -83,22 +73,6 @@ export default function Relatorios() {
     }
   };
 
-  const loadConnections = async () => {
-    try {
-      const estabelecimentoId = await getEstabelecimentoId();
-      const { data, error } = await supabase
-        .from("database_connections")
-        .select("id, name, database_type")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .eq("active", true);
-
-      if (error) throw error;
-      setConnections(data || []);
-    } catch (error: any) {
-      toast.error("Erro ao carregar conexões: " + error.message);
-    }
-  };
-
   const handleCreate = async () => {
     if (!formData.nome) {
       toast.error("Nome é obrigatório");
@@ -113,7 +87,7 @@ export default function Relatorios() {
           estabelecimento_id: estabelecimentoId,
           nome: formData.nome,
           descricao: formData.descricao,
-          conexao_id: formData.conexao_id || null,
+          conexao_id: null,
           layout_json: {},
           query_sql: "",
         }])
@@ -124,7 +98,7 @@ export default function Relatorios() {
 
       toast.success("Relatório criado com sucesso");
       setShowNewDialog(false);
-      setFormData({ nome: "", descricao: "", conexao_id: "" });
+      setFormData({ nome: "", descricao: "" });
       loadReports();
       
       // Abrir o designer
@@ -256,69 +230,56 @@ export default function Relatorios() {
             </Button>
           </div>
         ) : (
-          reports.map((report) => {
-            const connection = connections.find(c => c.id === report.conexao_id);
-            return (
-              <div
-                key={report.id}
-                className="group border rounded-lg p-6 hover:shadow-lg transition-all bg-card hover:border-primary/50"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
-                      {report.nome}
-                    </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {report.descricao || "Sem descrição"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <span className="font-medium mr-2">Conexão:</span>
-                    {connection ? (
-                      <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs">
-                        {connection.name}
-                      </span>
-                    ) : (
-                      <span className="text-xs">Não configurada</span>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Criado em {new Date(report.created_at).toLocaleDateString("pt-BR")}
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleEdit(report)}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Editar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDuplicate(report)}
-                    title="Duplicar modelo"
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(report.id)}
-                    title="Excluir modelo"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+          reports.map((report) => (
+            <div
+              key={report.id}
+              className="group border rounded-lg p-6 hover:shadow-lg transition-all bg-card hover:border-primary/50"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
+                    {report.nome}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {report.descricao || "Sem descrição"}
+                  </p>
                 </div>
               </div>
-            );
-          })
+
+              <div className="space-y-2 mb-4">
+                <div className="text-xs text-muted-foreground">
+                  Criado em {new Date(report.created_at).toLocaleDateString("pt-BR")}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handleEdit(report)}
+                >
+                  <Pencil className="h-3 w-3 mr-1" />
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDuplicate(report)}
+                  title="Duplicar modelo"
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleDelete(report.id)}
+                  title="Excluir modelo"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))
         )}
       </div>
 
@@ -347,24 +308,6 @@ export default function Relatorios() {
                 placeholder="Descrição detalhada do modelo..."
                 rows={3}
               />
-            </div>
-            <div>
-              <Label htmlFor="conexao">Conexão SQL Server (opcional)</Label>
-              <Select
-                value={formData.conexao_id}
-                onValueChange={(value) => setFormData({ ...formData, conexao_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma conexão" />
-                </SelectTrigger>
-                <SelectContent>
-                  {connections.map((conn) => (
-                    <SelectItem key={conn.id} value={conn.id}>
-                      {conn.name} ({conn.database_type})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowNewDialog(false)}>

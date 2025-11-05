@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, ArrowLeft, Download, Settings } from "lucide-react";
+import { Save, ArrowLeft, Database } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SimpleDataSourceConfig } from "./SimpleDataSourceConfig";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 // @ts-ignore - ActiveReportsJS types
 import { Designer } from "@mescius/activereportsjs-react";
@@ -19,18 +26,20 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
   const designerRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDataSource, setShowDataSource] = useState(false);
+  const [currentReport, setCurrentReport] = useState(report);
 
   useEffect(() => {
     initializeDesigner();
-  }, []);
+  }, [currentReport]);
 
   const initializeDesigner = async () => {
     try {
       setLoading(true);
       
       // Carregar definição do relatório se existir
-      let reportDefinition = report.layout_json?.activeReportsDefinition || {
-        Name: report.nome,
+      let reportDefinition = currentReport.layout_json?.activeReportsDefinition || {
+        Name: currentReport.nome,
         Body: {
           ReportItems: []
         },
@@ -39,11 +48,11 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
       };
 
       // Configurar data sources baseado nas conexões SQL Server
-      if (report.conexao_id) {
+      if (currentReport.conexao_id) {
         const { data: connection } = await supabase
           .from("database_connections")
           .select("*")
-          .eq("id", report.conexao_id)
+          .eq("id", currentReport.conexao_id)
           .maybeSingle();
 
         if (connection) {
@@ -64,12 +73,12 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
           reportDefinition.DataSources.push(dataSource);
 
           // Adicionar dataset com a query SQL
-          if (report.query_sql) {
+          if (currentReport.query_sql) {
             const dataSet = {
               Name: "DataSet1",
               Query: {
                 DataSourceName: connection.name,
-                CommandText: report.query_sql,
+                CommandText: currentReport.query_sql,
                 CommandType: "Text"
               },
               Fields: []
@@ -91,6 +100,36 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
     }
   };
 
+  const handleDataSourceSave = async (conexaoId: string | null, querySql: string) => {
+    try {
+      const { error } = await supabase
+        .from("relatorios")
+        .update({
+          conexao_id: conexaoId,
+          query_sql: querySql,
+        })
+        .eq("id", currentReport.id);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setCurrentReport({
+        ...currentReport,
+        conexao_id: conexaoId,
+        query_sql: querySql,
+      });
+
+      toast.success("Fonte de dados configurada!");
+      setShowDataSource(false);
+      
+      // Reinicializar designer com nova configuração
+      initializeDesigner();
+    } catch (error: any) {
+      console.error("Error saving data source:", error);
+      toast.error("Erro ao salvar fonte de dados: " + error.message);
+    }
+  };
+
   const handleSave = async () => {
     if (!designerRef.current) {
       toast.error("Designer não está pronto");
@@ -108,7 +147,7 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
           version: "activereportsjs",
           lastModified: new Date().toISOString()
         },
-        query_sql: report.query_sql || ""
+        query_sql: currentReport.query_sql || ""
       });
 
       toast.success("Modelo salvo com sucesso!");
@@ -124,7 +163,7 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
     return (
       <div className="flex items-center justify-center h-screen bg-muted/10">
         <div className="text-center">
-          <div className="text-lg font-medium mb-2">Carregando ActiveReports Designer...</div>
+          <div className="text-lg font-medium mb-2">Carregando Designer ActiveReports...</div>
           <div className="text-sm text-muted-foreground">
             Inicializando editor profissional de relatórios
           </div>
@@ -149,13 +188,21 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
           </Button>
           <div className="h-6 w-px bg-border" />
           <div>
-            <div className="font-semibold text-sm">{report.nome}</div>
+            <div className="font-semibold text-sm">{currentReport.nome}</div>
             <div className="text-xs text-muted-foreground">
-              {report.descricao || "Modelo de relatório"}
+              {currentReport.descricao || "Modelo de relatório"}
             </div>
           </div>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setShowDataSource(true)}
+            className="gap-2"
+          >
+            <Database className="h-4 w-4" />
+            Configurar Fonte de Dados
+          </Button>
           <Button 
             onClick={handleSave} 
             disabled={saving}
@@ -171,6 +218,24 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
       <div className="flex-1 relative overflow-hidden">
         <Designer ref={designerRef} />
       </div>
+
+      {/* Sheet de Configuração de Data Source */}
+      <Sheet open={showDataSource} onOpenChange={setShowDataSource}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Configurar Fonte de Dados</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <SimpleDataSourceConfig
+              reportId={currentReport.id}
+              currentConexaoId={currentReport.conexao_id}
+              currentQuerySql={currentReport.query_sql}
+              onSave={handleDataSourceSave}
+              onCancel={() => setShowDataSource(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
