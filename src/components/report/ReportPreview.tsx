@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { ChartRenderer } from "./ChartRenderer";
+import { DataTable } from "./DataTable";
+import { ExportToolbar } from "./ExportToolbar";
 
 interface Band {
   id: string;
@@ -63,7 +66,7 @@ export function ReportPreview({ bands, query, connectionId, onClose }: ReportPre
     }
 
     if (element.type === "field" && rowData) {
-      const fieldName = element.properties.fieldName.replace(/[\[\]]/g, "");
+      const fieldName = element.properties.fieldName.replace(/[\[\]]/g, "").split(".").pop();
       const value = rowData[fieldName] || element.properties.fieldName;
       return (
         <div
@@ -81,6 +84,87 @@ export function ReportPreview({ bands, query, connectionId, onClose }: ReportPre
       );
     }
 
+    if (element.type?.startsWith("chart-") && data.length > 0) {
+      return (
+        <div
+          style={{
+            position: "absolute",
+            left: `${element.x}px`,
+            top: `${element.y}px`,
+          }}
+        >
+          <ChartRenderer
+            type={element.properties.chartType || "bar"}
+            title={element.properties.title || "Gráfico"}
+            data={data}
+            xField={element.properties.xField || "nome"}
+            yField={element.properties.yField || "valor"}
+            colorScheme={element.properties.colorScheme || "blue"}
+            width={element.width}
+            height={element.height}
+          />
+        </div>
+      );
+    }
+
+    if (element.type === "table" && data.length > 0) {
+      return (
+        <div
+          style={{
+            position: "absolute",
+            left: `${element.x}px`,
+            top: `${element.y}px`,
+          }}
+        >
+          <DataTable
+            data={data}
+            width={element.width}
+            height={element.height}
+          />
+        </div>
+      );
+    }
+
+    if (element.type?.startsWith("aggregate-")) {
+      const expression = element.properties.expression || "";
+      let result = "";
+      
+      if (expression.startsWith("SUM")) {
+        const field = expression.match(/\[([^\]]+)\]/)?.[1];
+        if (field && data.length > 0) {
+          const sum = data.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
+          result = sum.toFixed(2);
+        }
+      } else if (expression.startsWith("COUNT")) {
+        result = data.length.toString();
+      } else if (expression.startsWith("AVG")) {
+        const field = expression.match(/\[([^\]]+)\]/)?.[1];
+        if (field && data.length > 0) {
+          const sum = data.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
+          result = (sum / data.length).toFixed(2);
+        }
+      }
+      
+      return (
+        <div
+          style={{
+            position: "absolute",
+            left: `${element.x}px`,
+            top: `${element.y}px`,
+            width: `${element.width}px`,
+            height: `${element.height}px`,
+            fontSize: `${element.properties.fontSize || 12}px`,
+            fontWeight: "bold",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {result}
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -92,10 +176,10 @@ export function ReportPreview({ bands, query, connectionId, onClose }: ReportPre
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar ao Editor
         </Button>
-        <Button disabled>
-          <Download className="h-4 w-4 mr-2" />
-          Exportar PDF
-        </Button>
+        <ExportToolbar 
+          reportData={{ tableData: data }}
+          reportName="relatorio"
+        />
       </div>
 
       {/* Preview Content */}
