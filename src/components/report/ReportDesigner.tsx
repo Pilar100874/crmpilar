@@ -10,6 +10,7 @@ import { DataSourcePanel } from "./DataSourcePanel";
 import { ReportPreview } from "./ReportPreview";
 import { DatabaseExplorer } from "./DatabaseExplorer";
 import { ComponentLibrary } from "./ComponentLibrary";
+import { DataSourceManager } from "./DataSourceManager";
 
 interface Band {
   id: string;
@@ -35,14 +36,19 @@ interface ReportDesignerProps {
 }
 
 export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps) {
-  const [bands, setBands] = useState<Band[]>([
-    { id: "page-header", type: "page-header", height: 60, elements: [] },
-    { id: "data", type: "data", height: 120, elements: [] },
-    { id: "page-footer", type: "page-footer", height: 40, elements: [] },
-  ]);
+  const [bands, setBands] = useState<Band[]>(
+    report.layout_json?.bands || [
+      { id: "page-header", type: "page-header", height: 60, elements: [] },
+      { id: "data", type: "data", height: 120, elements: [] },
+      { id: "page-footer", type: "page-footer", height: 40, elements: [] },
+    ]
+  );
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [query, setQuery] = useState(report.query_sql || "");
+  const [dataSources, setDataSources] = useState<Array<{id: string, name: string, query: string, connectionId: string}>>([
+    { id: "main", name: "Principal", query: report.query_sql || "", connectionId: report.conexao_id || "" }
+  ]);
 
   const handleAddBand = (type: Band["type"]) => {
     const newBand: Band = {
@@ -134,18 +140,33 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
   };
 
   const handleSave = () => {
+    const mainSource = dataSources.find(ds => ds.id === "main");
     onSave({
-      layout_json: { bands },
-      query_sql: query,
+      layout_json: { bands, dataSources },
+      query_sql: mainSource?.query || query,
     });
   };
+
+  const [selectedDataSourceId, setSelectedDataSourceId] = useState("main");
+
+  const handleDataSourceQueryChange = (newQuery: string) => {
+    setDataSources(dataSources.map(ds => 
+      ds.id === selectedDataSourceId 
+        ? { ...ds, query: newQuery }
+        : ds
+    ));
+    if (selectedDataSourceId === "main") {
+      setQuery(newQuery);
+    }
+  };
+
+  const currentDataSource = dataSources.find(ds => ds.id === selectedDataSourceId) || dataSources[0];
 
   if (showPreview) {
     return (
       <ReportPreview 
         bands={bands} 
-        query={query}
-        connectionId={report.conexao_id}
+        dataSources={dataSources}
         onClose={() => setShowPreview(false)}
       />
     );
@@ -174,16 +195,25 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Database & Components */}
-        <div className="w-72 border-r bg-muted/20 overflow-y-auto">
-          <Tabs defaultValue="database" className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-3 mx-4 mt-4">
+        <div className="w-80 border-r bg-muted/20 overflow-y-auto">
+          <Tabs defaultValue="sources" className="h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-4 mx-4 mt-4">
+              <TabsTrigger value="sources">Fontes</TabsTrigger>
               <TabsTrigger value="database">BD</TabsTrigger>
-              <TabsTrigger value="components">Componentes</TabsTrigger>
+              <TabsTrigger value="components">Comp</TabsTrigger>
               <TabsTrigger value="query">Query</TabsTrigger>
             </TabsList>
+            <TabsContent value="sources" className="flex-1 p-4">
+              <DataSourceManager
+                dataSources={dataSources}
+                onDataSourcesChange={setDataSources}
+                onSelectDataSource={setSelectedDataSourceId}
+                selectedDataSourceId={selectedDataSourceId}
+              />
+            </TabsContent>
             <TabsContent value="database" className="flex-1 p-4">
               <DatabaseExplorer 
-                connectionId={report.conexao_id}
+                connectionId={currentDataSource.connectionId}
                 onDragStart={(data) => {}}
               />
             </TabsContent>
@@ -192,9 +222,9 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
             </TabsContent>
             <TabsContent value="query" className="flex-1 p-4">
               <DataSourcePanel 
-                connectionId={report.conexao_id}
-                query={query}
-                onQueryChange={setQuery}
+                connectionId={currentDataSource.connectionId}
+                query={currentDataSource.query}
+                onQueryChange={handleDataSourceQueryChange}
               />
             </TabsContent>
           </Tabs>

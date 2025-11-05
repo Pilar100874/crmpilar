@@ -14,31 +14,45 @@ interface Band {
   elements: any[];
 }
 
+interface DataSource {
+  id: string;
+  name: string;
+  query: string;
+  connectionId: string;
+}
+
 interface ReportPreviewProps {
   bands: Band[];
-  query: string;
-  connectionId: string | null;
+  dataSources: DataSource[];
   onClose: () => void;
 }
 
-export function ReportPreview({ bands, query, connectionId, onClose }: ReportPreviewProps) {
-  const [data, setData] = useState<any[]>([]);
+export function ReportPreview({ bands, dataSources, onClose }: ReportPreviewProps) {
+  const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (query && connectionId) {
-      loadData();
-    }
-  }, [query, connectionId]);
+    loadAllData();
+  }, [dataSources]);
 
-  const loadData = async () => {
+  const loadAllData = async () => {
     setLoading(true);
     try {
-      // Simulação - substituir pela chamada real à API
-      setData([
-        { id: 1, nome: "Exemplo 1", valor: 100 },
-        { id: 2, nome: "Exemplo 2", valor: 200 },
-      ]);
+      const dataMap: Record<string, any[]> = {};
+      
+      for (const source of dataSources) {
+        if (source.query && source.connectionId) {
+          // Aqui você faria a chamada real à API execute-dynamic-query
+          // Por enquanto, dados de exemplo
+          dataMap[source.id] = [
+            { id: 1, nome: `${source.name} Item 1`, valor: 100, quantidade: 5 },
+            { id: 2, nome: `${source.name} Item 2`, valor: 200, quantidade: 3 },
+            { id: 3, nome: `${source.name} Item 3`, valor: 150, quantidade: 8 },
+          ];
+        }
+      }
+      
+      setData(dataMap);
     } catch (error: any) {
       toast.error("Erro ao carregar dados: " + error.message);
     } finally {
@@ -84,64 +98,76 @@ export function ReportPreview({ bands, query, connectionId, onClose }: ReportPre
       );
     }
 
-    if (element.type?.startsWith("chart-") && data.length > 0) {
-      return (
-        <div
-          style={{
-            position: "absolute",
-            left: `${element.x}px`,
-            top: `${element.y}px`,
-          }}
-        >
-          <ChartRenderer
-            type={element.properties.chartType || "bar"}
-            title={element.properties.title || "Gráfico"}
-            data={data}
-            xField={element.properties.xField || "nome"}
-            yField={element.properties.yField || "valor"}
-            colorScheme={element.properties.colorScheme || "blue"}
-            width={element.width}
-            height={element.height}
-          />
-        </div>
-      );
+    if (element.type?.startsWith("chart-")) {
+      const sourceId = element.properties.dataSourceId || "main";
+      const sourceData = data[sourceId] || [];
+      
+      if (sourceData.length > 0) {
+        return (
+          <div
+            style={{
+              position: "absolute",
+              left: `${element.x}px`,
+              top: `${element.y}px`,
+            }}
+          >
+            <ChartRenderer
+              type={element.properties.chartType || "bar"}
+              title={element.properties.title || "Gráfico"}
+              data={sourceData}
+              xField={element.properties.xField || "nome"}
+              yField={element.properties.yField || "valor"}
+              colorScheme={element.properties.colorScheme || "blue"}
+              width={element.width}
+              height={element.height}
+            />
+          </div>
+        );
+      }
     }
 
-    if (element.type === "table" && data.length > 0) {
-      return (
-        <div
-          style={{
-            position: "absolute",
-            left: `${element.x}px`,
-            top: `${element.y}px`,
-          }}
-        >
-          <DataTable
-            data={data}
-            width={element.width}
-            height={element.height}
-          />
-        </div>
-      );
+    if (element.type === "table") {
+      const sourceId = element.properties.dataSourceId || "main";
+      const sourceData = data[sourceId] || [];
+      
+      if (sourceData.length > 0) {
+        return (
+          <div
+            style={{
+              position: "absolute",
+              left: `${element.x}px`,
+              top: `${element.y}px`,
+            }}
+          >
+            <DataTable
+              data={sourceData}
+              width={element.width}
+              height={element.height}
+            />
+          </div>
+        );
+      }
     }
 
     if (element.type?.startsWith("aggregate-")) {
+      const sourceId = element.properties.dataSourceId || "main";
+      const sourceData = data[sourceId] || [];
       const expression = element.properties.expression || "";
       let result = "";
       
       if (expression.startsWith("SUM")) {
         const field = expression.match(/\[([^\]]+)\]/)?.[1];
-        if (field && data.length > 0) {
-          const sum = data.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
+        if (field && sourceData.length > 0) {
+          const sum = sourceData.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
           result = sum.toFixed(2);
         }
       } else if (expression.startsWith("COUNT")) {
-        result = data.length.toString();
+        result = sourceData.length.toString();
       } else if (expression.startsWith("AVG")) {
         const field = expression.match(/\[([^\]]+)\]/)?.[1];
-        if (field && data.length > 0) {
-          const sum = data.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
-          result = (sum / data.length).toFixed(2);
+        if (field && sourceData.length > 0) {
+          const sum = sourceData.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
+          result = (sum / sourceData.length).toFixed(2);
         }
       }
       
@@ -177,7 +203,7 @@ export function ReportPreview({ bands, query, connectionId, onClose }: ReportPre
           Voltar ao Editor
         </Button>
         <ExportToolbar 
-          reportData={{ tableData: data }}
+          reportData={{ tableData: data["main"] || [] }}
           reportName="relatorio"
         />
       </div>
@@ -201,7 +227,7 @@ export function ReportPreview({ bands, query, connectionId, onClose }: ReportPre
                 ))}
 
               {/* Data Rows */}
-              {data.map((row, idx) => (
+              {(data["main"] || []).map((row, idx) => (
                 <div key={idx}>
                   {bands
                     .filter(b => b.type === "data")

@@ -78,6 +78,16 @@ export function BandCanvas({ bands, selectedElement, onSelectElement, onAddEleme
     onUpdateBands(bands.filter(b => b.id !== bandId));
   };
 
+  const handleDeleteElement = (bandId: string, elementId: string) => {
+    const updatedBands = bands.map(band => 
+      band.id === bandId 
+        ? { ...band, elements: band.elements.filter(el => el.id !== elementId) }
+        : band
+    );
+    onUpdateBands(updatedBands);
+    onSelectElement(null);
+  };
+
   const handleDragOver = (e: React.DragEvent, bandId: string) => {
     e.preventDefault();
     setDragOver(bandId);
@@ -148,7 +158,7 @@ export function BandCanvas({ bands, selectedElement, onSelectElement, onAddEleme
             {band.elements.map((element) => (
               <div
                 key={element.id}
-                className={`absolute border-2 cursor-move flex items-center justify-center text-sm ${
+                className={`group absolute border-2 cursor-move flex items-center justify-center text-sm ${
                   selectedElement === element.id
                     ? "border-primary bg-primary/10"
                     : "border-border bg-background hover:border-primary/50"
@@ -161,6 +171,19 @@ export function BandCanvas({ bands, selectedElement, onSelectElement, onAddEleme
                 }}
                 onClick={() => onSelectElement(element.id)}
               >
+                {selectedElement === element.id && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="absolute -top-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity h-6 px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteElement(band.id, element.id);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
                 {element.type === "text" && (
                   <span className="px-2 truncate">{element.properties.text}</span>
                 )}
