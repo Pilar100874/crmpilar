@@ -22,3 +22,6 @@ verify_jwt = false
 [functions.webhook-entrada]
 verify_jwt = false
 
+[functions.test-report-query]
+verify_jwt = false
+

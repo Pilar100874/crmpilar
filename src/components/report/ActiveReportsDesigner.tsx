@@ -38,21 +38,23 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
         DataSets: []
       };
 
-      // Configurar data sources baseado nas conexões
+      // Configurar data sources baseado nas conexões SQL Server
       if (report.conexao_id) {
         const { data: connection } = await supabase
           .from("database_connections")
           .select("*")
           .eq("id", report.conexao_id)
-          .single();
+          .maybeSingle();
 
         if (connection) {
-          // Adicionar data source customizado
+          console.log("Configuring SQL Server data source:", connection.name);
+          
+          // Adicionar data source SQL Server
           const dataSource = {
-            Name: "MainDataSource",
+            Name: connection.name,
             ConnectionProperties: {
-              ConnectString: `Provider=Custom;Data Source=${connection.name}`,
-              DataProvider: "Custom"
+              ConnectString: `Data Source=${connection.sql_server};Initial Catalog=${connection.sql_database};User ID=${connection.sql_username};Password=${connection.sql_password}`,
+              DataProvider: "SQL"
             }
           };
 
@@ -61,13 +63,14 @@ export function ActiveReportsDesigner({ report, onSave, onClose }: ActiveReports
           }
           reportDefinition.DataSources.push(dataSource);
 
-          // Adicionar dataset com a query
+          // Adicionar dataset com a query SQL
           if (report.query_sql) {
             const dataSet = {
-              Name: "MainDataSet",
+              Name: "DataSet1",
               Query: {
-                DataSourceName: "MainDataSource",
-                CommandText: report.query_sql
+                DataSourceName: connection.name,
+                CommandText: report.query_sql,
+                CommandType: "Text"
               },
               Fields: []
             };

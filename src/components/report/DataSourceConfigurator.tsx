@@ -99,43 +99,34 @@ export function DataSourceConfigurator({
         throw new Error("Conexão não encontrada");
       }
 
-      // Executar query via edge function
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/execute-dynamic-query/test-query`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            server: connection.sql_server,
-            database: connection.sql_database,
-            username: connection.sql_username,
-            password: connection.sql_password,
-            query: ds.query,
-            database_type: connection.database_type
-          })
-        }
-      );
+      console.log("Testing query with connection:", connection.database_type);
 
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        setTestResults({ ...testResults, [dsId]: result.data });
+      // Usar a nova edge function dedicada para teste de queries
+      const { data, error } = await supabase.functions.invoke('test-report-query', {
+        body: {
+          connectionId: connection.id,
+          query: ds.query,
+          type: 'test'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.data) {
+        setTestResults({ ...testResults, [dsId]: data.data });
         
         // Extrair campos automaticamente
-        if (result.data.length > 0) {
-          const fields = Object.keys(result.data[0]).map(key => ({
+        if (data.data.length > 0) {
+          const fields = Object.keys(data.data[0]).map(key => ({
             name: key,
-            type: typeof result.data[0][key]
+            type: typeof data.data[0][key]
           }));
           handleUpdateDataSource(dsId, { fields });
         }
         
-        toast.success(`Query executada: ${result.data.length} registros`);
+        toast.success(`Query executada com sucesso! ${data.data.length} registros retornados`);
       } else {
-        throw new Error(result.error || "Erro ao executar query");
+        throw new Error(data?.error || "Erro ao executar query");
       }
     } catch (error: any) {
       console.error("Error testing query:", error);
