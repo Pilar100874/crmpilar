@@ -2,27 +2,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  FileText, 
-  FolderOpen, 
-  Save, 
-  Eye, 
-  Download, 
-  LogIn,
-  Cloud,
   Plus,
+  Eye, 
+  Download,
   Link as LinkIcon
 } from "lucide-react";
-import { cloudAPI, type CloudFile } from "@/services/stimulsoftCloudApi";
 import { toast } from "sonner";
 
 interface StimulsoftSidebarProps {
   onNew: () => void;
-  onOpenCloud: (content: string) => void;
-  onSaveCloud: () => Promise<string | null>;
   onPreview: () => void;
   onExportPDF: () => void;
   onExportExcel: () => void;
@@ -31,85 +21,13 @@ interface StimulsoftSidebarProps {
 
 export function StimulsoftSidebar({
   onNew,
-  onOpenCloud,
-  onSaveCloud,
   onPreview,
   onExportPDF,
   onExportExcel,
   onLoadExternalJSON,
 }: StimulsoftSidebarProps) {
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isCloudFilesOpen, setIsCloudFilesOpen] = useState(false);
   const [isExternalDataOpen, setIsExternalDataOpen] = useState(false);
-  const [cloudFiles, setCloudFiles] = useState<CloudFile[]>([]);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginApiKey, setLoginApiKey] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
-
-  const handleLogin = async () => {
-    const success = await cloudAPI.login({
-      email: loginEmail,
-      password: loginPassword,
-      apiKey: loginApiKey,
-    });
-
-    if (success) {
-      toast.success("Login realizado com sucesso!");
-      setIsLoginOpen(false);
-      setLoginEmail("");
-      setLoginPassword("");
-      setLoginApiKey("");
-    } else {
-      toast.error("Falha no login. Verifique suas credenciais.");
-    }
-  };
-
-  const handleOpenCloudFiles = async () => {
-    if (!cloudAPI.isAuthenticated()) {
-      toast.error("Faça login primeiro!");
-      setIsLoginOpen(true);
-      return;
-    }
-
-    const files = await cloudAPI.listReports();
-    setCloudFiles(files);
-    setIsCloudFilesOpen(true);
-  };
-
-  const handleOpenCloudFile = async (fileId: string) => {
-    const content = await cloudAPI.openReport(fileId);
-    if (content) {
-      onOpenCloud(content);
-      setIsCloudFilesOpen(false);
-      toast.success("Relatório carregado do Cloud!");
-    } else {
-      toast.error("Erro ao abrir relatório do Cloud.");
-    }
-  };
-
-  const handleSaveToCloud = async () => {
-    if (!cloudAPI.isAuthenticated()) {
-      toast.error("Faça login primeiro!");
-      setIsLoginOpen(true);
-      return;
-    }
-
-    const content = await onSaveCloud();
-    if (!content) {
-      toast.error("Erro ao obter conteúdo do relatório.");
-      return;
-    }
-
-    const fileName = `Relatório ${new Date().toLocaleString('pt-BR')}`;
-    const success = await cloudAPI.saveReport(fileName, content);
-    
-    if (success) {
-      toast.success("Relatório salvo no Cloud!");
-    } else {
-      toast.error("Erro ao salvar no Cloud.");
-    }
-  };
 
   const handleLoadExternalData = async () => {
     if (!externalUrl) {
@@ -117,13 +35,18 @@ export function StimulsoftSidebar({
       return;
     }
 
-    const data = await cloudAPI.loadExternalJSON(externalUrl);
-    if (data) {
+    try {
+      const response = await fetch(externalUrl);
+      if (!response.ok) {
+        throw new Error('Falha ao carregar dados externos');
+      }
+      const data = await response.json();
       onLoadExternalJSON(data);
       setIsExternalDataOpen(false);
       setExternalUrl("");
       toast.success("Dados externos carregados!");
-    } else {
+    } catch (error) {
+      console.error('Erro ao carregar dados externos:', error);
       toast.error("Erro ao carregar dados externos.");
     }
   };
@@ -135,97 +58,6 @@ export function StimulsoftSidebar({
       <Button onClick={onNew} variant="outline" className="w-full justify-start">
         <Plus className="mr-2 h-4 w-4" />
         Novo Relatório
-      </Button>
-
-      <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start">
-            <LogIn className="mr-2 h-4 w-4" />
-            Login Cloud
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Login Stimulsoft BI Cloud</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="seu-email@exemplo.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="sua-senha"
-              />
-            </div>
-            <div>
-              <Label htmlFor="apikey">API Key (opcional)</Label>
-              <Input
-                id="apikey"
-                value={loginApiKey}
-                onChange={(e) => setLoginApiKey(e.target.value)}
-                placeholder="sua-api-key"
-              />
-            </div>
-            <Button onClick={handleLogin} className="w-full">
-              Entrar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Sheet open={isCloudFilesOpen} onOpenChange={setIsCloudFilesOpen}>
-        <SheetTrigger asChild>
-          <Button onClick={handleOpenCloudFiles} variant="outline" className="w-full justify-start">
-            <FolderOpen className="mr-2 h-4 w-4" />
-            Abrir do Cloud
-          </Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Relatórios do Cloud</SheetTitle>
-          </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-120px)] mt-4">
-            <div className="space-y-2">
-              {cloudFiles.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum relatório encontrado</p>
-              ) : (
-                cloudFiles.map((file) => (
-                  <Button
-                    key={file.id}
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => handleOpenCloudFile(file.id)}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    <div className="text-left flex-1">
-                      <div className="font-medium">{file.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(file.modified).toLocaleString('pt-BR')}
-                      </div>
-                    </div>
-                  </Button>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-
-      <Button onClick={handleSaveToCloud} variant="outline" className="w-full justify-start">
-        <Save className="mr-2 h-4 w-4" />
-        Salvar no Cloud
       </Button>
 
       <Dialog open={isExternalDataOpen} onOpenChange={setIsExternalDataOpen}>

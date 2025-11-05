@@ -131,45 +131,6 @@ export default function StimulsoftDesigner() {
     toast.success('Novo relatório criado');
   };
 
-  const handleOpenCloud = (content: string) => {
-    if (!designerRef.current) return;
-
-    try {
-      const report = new Stimulsoft.Report.StiReport();
-      report.load(content);
-      designerRef.current.report = report;
-      setCurrentReport(report);
-      localStorage.setItem('stimulsoft_current_report', content);
-    } catch (error) {
-      console.error('Erro ao abrir relatório:', error);
-      toast.error('Erro ao abrir relatório');
-    }
-  };
-
-  const handleSaveCloud = async (): Promise<string | null> => {
-    if (!designerRef.current) return null;
-
-    try {
-      const reportJson = designerRef.current.report.saveToJsonString();
-      
-      // Salvar também no Supabase se tiver ID
-      if (currentReportId) {
-        const { error } = await supabase
-          .from("relatorios")
-          .update({
-            layout_json: reportJson,
-          })
-          .eq("id", currentReportId);
-
-        if (error) throw error;
-      }
-      
-      return reportJson;
-    } catch (error) {
-      console.error('Erro ao salvar relatório:', error);
-      return null;
-    }
-  };
 
   const handlePreview = () => {
     if (!designerRef.current) return;
@@ -233,8 +194,6 @@ export default function StimulsoftDesigner() {
     <div className="flex h-screen w-full overflow-hidden">
       <StimulsoftSidebar
         onNew={handleNew}
-        onOpenCloud={handleOpenCloud}
-        onSaveCloud={handleSaveCloud}
         onPreview={handlePreview}
         onExportPDF={handleExportPDF}
         onExportExcel={handleExportExcel}
