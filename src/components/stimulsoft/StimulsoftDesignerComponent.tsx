@@ -82,11 +82,23 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
       designerScript.src = 'https://cdn.stimulsoft.com/lib/2024.2.3/js/stimulsoft.designer.js';
       designerScript.async = true;
       designerScript.onload = () => initializeDesigner();
+      designerScript.onerror = () => {
+        toast.error('Falha ao carregar designer do Stimulsoft');
+      };
       document.head.appendChild(designerScript);
     };
+    script.onerror = () => {
+      toast.error('Falha ao carregar bibliotecas do Stimulsoft');
+    };
     document.head.appendChild(script);
-  };
 
+    // Fallback: se por algum motivo já carregou no cache
+    setTimeout(() => {
+      if (typeof Stimulsoft !== 'undefined' && !isLoaded) {
+        initializeDesigner();
+      }
+    }, 1500);
+  };
   const initializeDesigner = () => {
     if (!containerRef.current || typeof Stimulsoft === 'undefined') return;
 
@@ -216,7 +228,7 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex">
+    <div className="fixed inset-0 z-[9999] bg-background flex">
       <StimulsoftSidebar
         onNew={handleNew}
         onPreview={handlePreview}
@@ -234,7 +246,7 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
         >
           <X className="h-4 w-4" />
         </Button>
-        <div ref={containerRef} className="w-full h-full" />
+        <div ref={containerRef} className="w-full h-full min-h-screen" />
         {!isLoaded && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
