@@ -42,7 +42,9 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
       if (error) throw error;
 
       if (data?.layout_json && designerRef.current) {
-        const report = new Stimulsoft.Report.StiReport();
+        const S = (window as any).Stimulsoft;
+        if (!S) return;
+        const report = new S.Report.StiReport();
         const layoutJson = typeof data.layout_json === 'string' 
           ? data.layout_json 
           : JSON.stringify(data.layout_json);
@@ -62,7 +64,7 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
 
   const loadStimulsoftScripts = async () => {
     // Já carregado
-    if (typeof Stimulsoft !== 'undefined') {
+    if ((window as any).Stimulsoft) {
       initializeDesigner();
       return;
     }
@@ -114,7 +116,7 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
 
     const ok = await loadFromNpm();
     // Só inicializa se a lib realmente expôs o global
-    if (ok && typeof Stimulsoft !== 'undefined') {
+    if (ok && (window as any).Stimulsoft) {
       initializeDesigner();
       return;
     }
@@ -141,17 +143,21 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     document.head.appendChild(script);
 
     setTimeout(() => {
-      if (typeof Stimulsoft !== 'undefined' && !isLoaded) initializeDesigner();
+      if ((window as any).Stimulsoft && !isLoaded) initializeDesigner();
     }, 1500);
   };
   const initializeDesigner = () => {
-    if (!containerRef.current || typeof Stimulsoft === 'undefined') return;
+    const Stimulsoft = (window as any).Stimulsoft;
+    if (!containerRef.current || !Stimulsoft) return;
 
     try {
-      // Configurar localização para português
-      Stimulsoft.Base.Localization.StiLocalization.setLocalizationFile(
-        'https://cdn.stimulsoft.com/lib/2024.2.3/localization/pt-BR.xml'
-      );
+      // Configurar localização para português (usar cópia local, com fallback silencioso)
+      try {
+        const localLoc = '/stimulsoft/localization/pt-BR.xml';
+        Stimulsoft.Base.Localization.StiLocalization.setLocalizationFile(localLoc);
+      } catch (e) {
+        console.warn('Falha ao aplicar localização PT-BR, seguindo com padrão.', e);
+      }
 
       // Criar opções do designer
       const options = new Stimulsoft.Designer.StiDesignerOptions();
@@ -207,7 +213,9 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
   const handleNew = () => {
     if (!designerRef.current) return;
     
-    const newReport = new Stimulsoft.Report.StiReport();
+    const S = (window as any).Stimulsoft;
+    if (!S) return;
+    const newReport = new S.Report.StiReport();
     designerRef.current.report = newReport;
     setCurrentReport(newReport);
     localStorage.removeItem('stimulsoft_current_report');
@@ -226,12 +234,14 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     if (!designerRef.current) return;
 
     try {
+      const S = (window as any).Stimulsoft;
+      if (!S) return;
       const report = designerRef.current.report;
       report.renderAsync(() => {
         report.exportDocumentAsync((pdfData: any) => {
-          Stimulsoft.System.StiObject.saveAs(pdfData, 'relatorio.pdf', 'application/pdf');
+          S.System.StiObject.saveAs(pdfData, 'relatorio.pdf', 'application/pdf');
           toast.success('PDF exportado com sucesso!');
-        }, Stimulsoft.Report.StiExportFormat.Pdf);
+        }, S.Report.StiExportFormat.Pdf);
       });
     } catch (error) {
       console.error('Erro ao exportar PDF:', error);
@@ -243,12 +253,14 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     if (!designerRef.current) return;
 
     try {
+      const S = (window as any).Stimulsoft;
+      if (!S) return;
       const report = designerRef.current.report;
       report.renderAsync(() => {
         report.exportDocumentAsync((excelData: any) => {
-          Stimulsoft.System.StiObject.saveAs(excelData, 'relatorio.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          S.System.StiObject.saveAs(excelData, 'relatorio.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
           toast.success('Excel exportado com sucesso!');
-        }, Stimulsoft.Report.StiExportFormat.Excel2007);
+        }, S.Report.StiExportFormat.Excel2007);
       });
     } catch (error) {
       console.error('Erro ao exportar Excel:', error);
@@ -260,8 +272,10 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     if (!designerRef.current) return;
 
     try {
+      const S = (window as any).Stimulsoft;
+      if (!S) return;
       const report = designerRef.current.report;
-      const dataSource = new Stimulsoft.System.Data.DataSet('ExternalData');
+      const dataSource = new S.System.Data.DataSet('ExternalData');
       dataSource.readJson(JSON.stringify(data));
       report.dictionary.databases.clear();
       report.regData('ExternalData', 'ExternalData', dataSource);
