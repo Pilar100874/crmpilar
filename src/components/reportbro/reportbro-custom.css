@@ -82,24 +82,24 @@
 #rbro_header {
   background: hsl(var(--card)) !important;
   border-bottom: 1px solid hsl(var(--border)) !important;
-  padding: 10px 16px !important;
+  padding: 8px 12px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 2px !important;
 }
 
 .rbroToolbarItem,
 .rbroButton.rbroToolbarButton {
   background: hsl(var(--background)) !important;
   border: 1px solid hsl(var(--border)) !important;
-  border-radius: 8px !important;
-  padding: 10px 16px !important;
-  margin: 0 !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  margin: 0 2px !important;
   transition: all 0.2s ease !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
-  height: 40px !important;
-  min-width: 40px !important;
+  height: 36px !important;
+  min-width: 36px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -128,15 +128,15 @@
 .rbroToolbarItem i,
 .rbroButton.rbroToolbarButton svg,
 .rbroButton.rbroToolbarButton i {
-  width: 18px !important;
-  height: 18px !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 
 /* Grupos de botões na toolbar */
 .rbroToolbarGroup {
   display: flex !important;
-  gap: 4px !important;
-  padding: 0 8px !important;
+  gap: 2px !important;
+  padding: 0 6px !important;
   border-right: 1px solid hsl(var(--border)) !important;
 }
 
