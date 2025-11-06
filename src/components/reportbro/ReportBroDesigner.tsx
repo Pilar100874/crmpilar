@@ -54,7 +54,8 @@ const [isLoaded, setIsLoaded] = useState(false);
       
       if (!containerRef.current) return;
 
-      const reportDefinition = reportId ? undefined : getEmptyReport();
+      // Sempre inicia com relatório vazio (sem template selection)
+      const reportDefinition = getEmptyReport();
 
       // Destroi instância anterior se existir
       if (reportBroRef.current?.destroy) {
@@ -62,14 +63,14 @@ const [isLoaded, setIsLoaded] = useState(false);
       }
 
       reportBroRef.current = new ReportBro(containerRef.current, {
-        reportServerUrl: "", // Não usado, vamos exportar localmente
+        reportServerUrl: "",
         locale: "pt_BR",
         saveCallback: handleSave,
         report: reportDefinition,
       });
 
       setIsLoaded(true);
-      toast.success("Designer carregado com sucesso!");
+      toast.success("Designer carregado!");
     } catch (error) {
       console.error("Erro ao carregar ReportBro:", error);
       toast.error(error instanceof Error ? error.message : "Erro ao carregar o designer");

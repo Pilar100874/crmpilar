@@ -38,8 +38,11 @@
 /* ===== MENU LATERAL ESQUERDO ===== */
 #rbro_menu_panel {
   padding: 8px 0 !important;
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
 }
 
+/* Itens do menu lateral com boa legibilidade */
 .rbroMenuItem {
   color: hsl(var(--foreground)) !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -52,6 +55,7 @@
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
+  background: hsl(var(--card)) !important;
 }
 
 .rbroMenuItem:hover {
@@ -62,7 +66,8 @@
   box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1) !important;
 }
 
-.rbroMenuItem.rbroMenuItemActive {
+.rbroMenuItem.rbroMenuItemActive,
+.rbroMenuItem.rbroActive {
   background: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
   box-shadow: 0 2px 8px hsl(var(--primary) / 0.3) !important;
@@ -293,17 +298,28 @@ textarea.rbroInput:hover:not(:focus) {
 
 /* ===== SEÇÕES E CABEÇALHOS ===== */
 .rbroSectionHeader {
-  background: hsl(var(--muted) / 0.5) !important;
+  background: hsl(var(--muted)) !important;
   color: hsl(var(--foreground)) !important;
   border: none !important;
   border-bottom: 2px solid hsl(var(--primary) / 0.2) !important;
   font-weight: 600 !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
-  padding: 10px 12px !important;
+  padding: 12px 14px !important;
   border-radius: 0 !important;
   margin-bottom: 0 !important;
+}
+
+/* Texto do painel de propriedades */
+#rbro_detail_panel {
+  color: hsl(var(--foreground)) !important;
+}
+
+#rbro_detail_panel label,
+#rbro_detail_panel .rbroControlLabel {
+  color: hsl(var(--foreground)) !important;
+  font-weight: 500 !important;
 }
 
 .rbroCollapsibleSection {

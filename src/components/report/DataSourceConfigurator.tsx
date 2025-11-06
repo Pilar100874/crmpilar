@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DatabaseTableExplorer } from "./DatabaseTableExplorer";
 
 interface DataSource {
   id: string;
@@ -143,8 +144,49 @@ export function DataSourceConfigurator({
 
   const currentDs = dataSources.find(ds => ds.id === selectedDs);
 
+  const handleInsertFieldFromExplorer = (tableName: string, fieldName: string) => {
+    if (!currentDs) return;
+    
+    const fieldRef = `${tableName}.${fieldName}`;
+    const currentQuery = currentDs.query;
+    
+    // Insere o campo na query de forma inteligente
+    if (currentQuery.trim().toUpperCase().includes('SELECT *')) {
+      // Substitui SELECT * por SELECT campo
+      const newQuery = currentQuery.replace(/SELECT\s+\*/i, `SELECT ${fieldRef}`);
+      handleUpdateDataSource(currentDs.id, { query: newQuery });
+    } else if (currentQuery.trim().toUpperCase().includes('SELECT')) {
+      // Adiciona o campo após o SELECT
+      const selectIndex = currentQuery.toUpperCase().indexOf('SELECT');
+      const fromIndex = currentQuery.toUpperCase().indexOf('FROM');
+      if (fromIndex > selectIndex) {
+        const before = currentQuery.substring(0, fromIndex).trim();
+        const after = currentQuery.substring(fromIndex);
+        const newQuery = `${before}, ${fieldRef} ${after}`;
+        handleUpdateDataSource(currentDs.id, { query: newQuery });
+      } else {
+        handleUpdateDataSource(currentDs.id, { query: currentQuery + `, ${fieldRef}` });
+      }
+    } else {
+      // Cria uma nova query
+      handleUpdateDataSource(currentDs.id, { 
+        query: `SELECT ${fieldRef} FROM ${tableName}` 
+      });
+    }
+    
+    toast.success(`Campo ${fieldRef} adicionado à query`);
+  };
+
   return (
-    <div className="grid grid-cols-3 gap-4 h-full">
+    <div className="grid grid-cols-4 gap-4 h-full">
+      {/* Explorador de Tabelas */}
+      <div className="col-span-1">
+        <DatabaseTableExplorer 
+          connections={connections}
+          onInsertField={handleInsertFieldFromExplorer}
+        />
+      </div>
+
       {/* Lista de Data Sources */}
       <Card className="col-span-1">
         <CardHeader className="pb-3">
