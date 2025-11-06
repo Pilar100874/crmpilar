@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { X, Save, Eye, FileDown } from "lucide-react";
+import { X, Save, Eye, FileDown, Database } from "lucide-react";
 import "reportbro-designer/dist/reportbro.css";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -13,7 +15,11 @@ interface ReportBroDesignerProps {
 export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const reportBroRef = useRef<any>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+const [isLoaded, setIsLoaded] = useState(false);
+  const [showDsDialog, setShowDsDialog] = useState(false);
+  const [initialSources, setInitialSources] = useState<any[]>([]);
+  const [currentSources, setCurrentSources] = useState<any[]>([]);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     loadReportBro();
@@ -81,14 +87,33 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
 
       if (error) throw error;
 
-      if (data?.layout_json && reportBroRef.current) {
-        const layoutData = typeof data.layout_json === "string" 
-          ? JSON.parse(data.layout_json) 
-          : data.layout_json;
-        
+      if (reportBroRef.current) {
+        let layoutData: any = getEmptyReport();
+        if (data?.layout_json) {
+          try {
+            layoutData = typeof data.layout_json === "string"
+              ? JSON.parse(data.layout_json)
+              : data.layout_json;
+          } catch (e) {
+            console.warn("Layout inválido, carregando vazio.", e);
+          }
+        }
         reportBroRef.current.load(layoutData);
         toast.success("Relatório carregado!");
       }
+
+      // Prepara fontes iniciais a partir das colunas do relatório
+      const initSources: any[] = [];
+      if (data?.conexao_id || data?.query_sql) {
+        initSources.push({
+          id: "ds-main",
+          name: "Principal",
+          connectionId: data?.conexao_id || "",
+          query: data?.query_sql || "",
+          fields: []
+        });
+      }
+      setInitialSources(initSources);
     } catch (error) {
       console.error("Erro ao carregar relatório:", error);
       toast.error("Erro ao carregar relatório");
@@ -151,6 +176,31 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
     }
   };
 
+  const applyDataSources = async () => {
+    if (!reportId) return;
+    try {
+      setApplying(true);
+      const main = currentSources[0];
+      const updates: any = {};
+      if (main) {
+        updates.conexao_id = main.connectionId || null;
+        updates.query_sql = main.query || "";
+      }
+      const { error } = await supabase
+        .from("relatorios")
+        .update(updates)
+        .eq("id", reportId);
+      if (error) throw error;
+      toast.success("Fontes aplicadas ao relatório");
+      setShowDsDialog(false);
+    } catch (error: any) {
+      console.error("Erro ao aplicar fontes:", error);
+      toast.error("Erro ao aplicar fontes: " + error.message);
+    } finally {
+      setApplying(false);
+    }
+  };
+
   const getEmptyReport = () => ({
     docElements: [
       {
@@ -182,6 +232,10 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
             <Eye className="h-4 w-4 mr-2" />
             Visualizar
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowDsDialog(true)}>
+            <Database className="h-4 w-4 mr-2" />
+            Fontes de Dados
+          </Button>
           <Button size="sm" variant="outline" onClick={handleExportPDF}>
             <FileDown className="h-4 w-4 mr-2" />
             Exportar PDF
@@ -204,6 +258,30 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
         )}
         <div ref={containerRef} className="w-full h-full" />
       </div>
+      <Dialog open={showDsDialog} onOpenChange={setShowDsDialog}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Fontes de Dados do Relatório</DialogTitle>
+          </DialogHeader>
+          {reportId ? (
+            <div className="h-[70vh]">
+              <DataSourceConfigurator
+                reportId={reportId}
+                initialDataSources={initialSources}
+                onDataSourcesChange={setCurrentSources}
+              />
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Salve o relatório para configurar as fontes de dados.
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDsDialog(false)}>Fechar</Button>
+            <Button onClick={applyDataSources} disabled={applying || !reportId}>Aplicar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
