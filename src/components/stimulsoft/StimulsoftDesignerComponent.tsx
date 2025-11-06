@@ -60,20 +60,38 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     }
   };
 
-  const loadStimulsoftScripts = () => {
-    // Verificar se já está carregado
+  const loadStimulsoftScripts = async () => {
+    // Já carregado
     if (typeof Stimulsoft !== 'undefined') {
       initializeDesigner();
       return;
     }
 
-    // Carregar CSS
+    // 1) Tentar carregar via pacote local (sem CDN)
+    const loadFromNpm = async () => {
+      try {
+        await import('stimulsoft-reports-js/Css/stimulsoft.designer.office2013.whiteblue.css');
+        await import('stimulsoft-reports-js/Scripts/stimulsoft.reports');
+        await import('stimulsoft-reports-js/Scripts/stimulsoft.designer');
+        return true;
+      } catch (e) {
+        console.warn('Falha ao carregar libs locais do Stimulsoft, usando CDN...', e);
+        return false;
+      }
+    };
+
+    const ok = await loadFromNpm();
+    if (ok) {
+      initializeDesigner();
+      return;
+    }
+
+    // 2) Fallback para CDN
     const cssLink = document.createElement('link');
     cssLink.rel = 'stylesheet';
     cssLink.href = 'https://cdn.stimulsoft.com/lib/2024.2.3/css/stimulsoft.designer.office2013.whiteblue.css';
     document.head.appendChild(cssLink);
 
-    // Carregar JS
     const script = document.createElement('script');
     script.src = 'https://cdn.stimulsoft.com/lib/2024.2.3/js/stimulsoft.reports.js';
     script.async = true;
@@ -82,21 +100,14 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
       designerScript.src = 'https://cdn.stimulsoft.com/lib/2024.2.3/js/stimulsoft.designer.js';
       designerScript.async = true;
       designerScript.onload = () => initializeDesigner();
-      designerScript.onerror = () => {
-        toast.error('Falha ao carregar designer do Stimulsoft');
-      };
+      designerScript.onerror = () => toast.error('Falha ao carregar designer do Stimulsoft (CDN)');
       document.head.appendChild(designerScript);
     };
-    script.onerror = () => {
-      toast.error('Falha ao carregar bibliotecas do Stimulsoft');
-    };
+    script.onerror = () => toast.error('Falha ao carregar bibliotecas do Stimulsoft (CDN)');
     document.head.appendChild(script);
 
-    // Fallback: se por algum motivo já carregou no cache
     setTimeout(() => {
-      if (typeof Stimulsoft !== 'undefined' && !isLoaded) {
-        initializeDesigner();
-      }
+      if (typeof Stimulsoft !== 'undefined' && !isLoaded) initializeDesigner();
     }, 1500);
   };
   const initializeDesigner = () => {
