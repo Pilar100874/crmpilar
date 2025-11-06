@@ -67,6 +67,7 @@ const [isLoaded, setIsLoaded] = useState(false);
         locale: "pt_BR",
         saveCallback: handleSave,
         report: reportDefinition,
+        showTemplateSelection: false,
       });
 
       setIsLoaded(true);
