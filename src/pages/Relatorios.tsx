@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { StimulsoftDesignerComponent } from "@/components/stimulsoft/StimulsoftDesignerComponent";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Copy, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -45,6 +46,8 @@ export default function Relatorios() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
+  const [showDesigner, setShowDesigner] = useState(false);
+  const [currentReportId, setCurrentReportId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
@@ -98,25 +101,27 @@ export default function Relatorios() {
       toast.success("Relatório criado com sucesso");
       setShowNewDialog(false);
       setFormData({ nome: "", descricao: "" });
-      loadReports();
       
-      // Salvar ID do relatório e abrir designer Stimulsoft
+      // Abrir designer Stimulsoft inline
       localStorage.setItem('stimulsoft_current_report_id', data.id);
-      navigate('/stimulsoft-designer');
+      localStorage.removeItem('stimulsoft_current_report');
+      setCurrentReportId(data.id);
+      setShowDesigner(true);
     } catch (error: any) {
       toast.error("Erro ao criar relatório: " + error.message);
     }
   };
 
   const handleEdit = (report: Report) => {
-    // Salvar relatório no localStorage e navegar para o designer
+    // Abrir designer Stimulsoft inline
     localStorage.setItem('stimulsoft_current_report_id', report.id);
     if (report.layout_json && typeof report.layout_json === 'string') {
       localStorage.setItem('stimulsoft_current_report', report.layout_json);
     } else if (report.layout_json) {
       localStorage.setItem('stimulsoft_current_report', JSON.stringify(report.layout_json));
     }
-    navigate('/stimulsoft-designer');
+    setCurrentReportId(report.id);
+    setShowDesigner(true);
   };
 
   const handlePreview = (report: Report) => {
@@ -173,6 +178,14 @@ export default function Relatorios() {
     }
   };
 
+  const handleCloseDesigner = () => {
+    setShowDesigner(false);
+    setCurrentReportId(null);
+    localStorage.removeItem('stimulsoft_current_report_id');
+    localStorage.removeItem('stimulsoft_current_report');
+    loadReports();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -182,6 +195,14 @@ export default function Relatorios() {
   }
 
   return (
+    <>
+      {showDesigner && (
+        <StimulsoftDesignerComponent
+          reportId={currentReportId}
+          onClose={handleCloseDesigner}
+        />
+      )}
+      
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -310,5 +331,6 @@ export default function Relatorios() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }
