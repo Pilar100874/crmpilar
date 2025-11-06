@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { StimulsoftDesignerComponent } from "@/components/stimulsoft/StimulsoftDesignerComponent";
+import { ReportBroDesigner } from "@/components/reportbro/ReportBroDesigner";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Copy, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -187,7 +187,7 @@ export default function Relatorios() {
   return (
     <>
       {showDesigner && (
-        <StimulsoftDesignerComponent
+        <ReportBroDesigner
           reportId={currentReportId}
           onClose={handleCloseDesigner}
         />
