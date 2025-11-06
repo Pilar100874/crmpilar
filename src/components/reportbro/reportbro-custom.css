@@ -1,37 +1,27 @@
 /* ReportBro Designer Customização - Visual moderno alinhado ao sistema */
 
 /* ===== LAYOUT PRINCIPAL ===== */
-/* Move o painel lateral para a DIREITA */
 #rbro_container {
-  display: flex !important;
-  flex-direction: row-reverse !important;
   background-color: hsl(var(--background)) !important;
-  height: 100% !important;
 }
 
-/* Painel lateral direito */
+/* Painel lateral (mantém posição original) */
 #rbro_menu_panel {
-  order: 1 !important;
-  border-left: 1px solid hsl(var(--border)) !important;
-  border-right: none !important;
   background: hsl(var(--card)) !important;
-  width: 280px !important;
-  box-shadow: -2px 0 8px hsl(var(--foreground) / 0.05) !important;
-}
-
-/* Painel de propriedades central */
-#rbro_detail_panel {
-  order: 2 !important;
-  background-color: hsl(var(--card)) !important;
   border-right: 1px solid hsl(var(--border)) !important;
-  border-left: none !important;
+  box-shadow: 2px 0 8px hsl(var(--foreground) / 0.05) !important;
 }
 
-/* Área do documento à esquerda */
+/* Painel de propriedades */
+#rbro_detail_panel {
+  background-color: hsl(var(--card)) !important;
+  border-left: 1px solid hsl(var(--border)) !important;
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Área do documento */
 #rbro_document_panel {
-  order: 3 !important;
   background-color: hsl(var(--muted) / 0.2) !important;
-  flex: 1 !important;
 }
 
 /* Esconde o logo do ReportBro */
