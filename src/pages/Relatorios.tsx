@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ReportDesigner } from "@/components/report/ReportDesigner";
+import { ReportBroDesigner } from "@/components/reportbro/ReportBroDesigner";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Copy, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -47,7 +47,7 @@ export default function Relatorios() {
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
-  const [currentReport, setCurrentReport] = useState<Report | null>(null);
+  const [currentReportId, setCurrentReportId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
@@ -102,8 +102,8 @@ export default function Relatorios() {
       setShowNewDialog(false);
       setFormData({ nome: "", descricao: "" });
       
-      // Abrir designer inline
-      setCurrentReport(data);
+      // Abrir designer Stimulsoft inline
+      setCurrentReportId(data.id);
       setShowDesigner(true);
     } catch (error: any) {
       toast.error("Erro ao criar relatório: " + error.message);
@@ -111,8 +111,8 @@ export default function Relatorios() {
   };
 
   const handleEdit = (report: Report) => {
-    // Abrir designer inline
-    setCurrentReport(report);
+    // Abrir designer Stimulsoft inline
+    setCurrentReportId(report.id);
     setShowDesigner(true);
   };
 
@@ -170,31 +170,9 @@ export default function Relatorios() {
     }
   };
 
-  const handleSaveReport = async (data: any) => {
-    if (!currentReport) return;
-    
-    try {
-      const { error } = await supabase
-        .from("relatorios")
-        .update({
-          layout_json: data.layout_json,
-          query_sql: data.query_sql,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", currentReport.id);
-
-      if (error) throw error;
-
-      toast.success("Relatório salvo com sucesso");
-      loadReports();
-    } catch (error: any) {
-      toast.error("Erro ao salvar relatório: " + error.message);
-    }
-  };
-
   const handleCloseDesigner = () => {
     setShowDesigner(false);
-    setCurrentReport(null);
+    setCurrentReportId(null);
     loadReports();
   };
 
@@ -208,14 +186,11 @@ export default function Relatorios() {
 
   return (
     <>
-      {showDesigner && currentReport && (
-        <div className="fixed inset-0 z-50 bg-background">
-          <ReportDesigner
-            report={currentReport}
-            onSave={handleSaveReport}
-            onClose={handleCloseDesigner}
-          />
-        </div>
+      {showDesigner && (
+        <ReportBroDesigner
+          reportId={currentReportId}
+          onClose={handleCloseDesigner}
+        />
       )}
       
     <div className="container mx-auto p-6 max-w-7xl">
