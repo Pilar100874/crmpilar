@@ -27,7 +27,13 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
 
   const loadReportBro = async () => {
     try {
-      const ReportBro = (await import("reportbro-designer")).default;
+      // Carrega o build UMD para expor ReportBro em window
+      await import("reportbro-designer/dist/reportbro.js");
+      const ReportBro = (window as any).ReportBro;
+
+      if (!ReportBro) {
+        throw new Error("ReportBro UMD não encontrado após importação");
+      }
       
       if (!containerRef.current) return;
 
