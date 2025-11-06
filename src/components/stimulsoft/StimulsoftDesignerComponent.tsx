@@ -23,6 +23,43 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     loadStimulsoftScripts();
   }, []);
 
+  useEffect(() => {
+    if (reportId && isLoaded) {
+      loadReportFromSupabase();
+    }
+  }, [reportId, isLoaded]);
+
+  const loadReportFromSupabase = async () => {
+    if (!reportId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("relatorios")
+        .select("layout_json")
+        .eq("id", reportId)
+        .single();
+
+      if (error) throw error;
+
+      if (data?.layout_json && designerRef.current) {
+        const report = new Stimulsoft.Report.StiReport();
+        const layoutJson = typeof data.layout_json === 'string' 
+          ? data.layout_json 
+          : JSON.stringify(data.layout_json);
+        
+        if (layoutJson && layoutJson !== '{}') {
+          report.load(layoutJson);
+        }
+        
+        designerRef.current.report = report;
+        setCurrentReport(report);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar relatório:', error);
+      toast.error('Erro ao carregar relatório: ' + error.message);
+    }
+  };
+
   const loadStimulsoftScripts = () => {
     // Verificar se já está carregado
     if (typeof Stimulsoft !== 'undefined') {
@@ -68,18 +105,8 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
       // Criar designer
       const designer = new Stimulsoft.Designer.StiDesigner(options, 'StiDesigner', false);
       
-      // Criar novo relatório ou carregar do localStorage
-      let report = new Stimulsoft.Report.StiReport();
-      const savedReport = localStorage.getItem('stimulsoft_current_report');
-      
-      if (savedReport) {
-        try {
-          report.load(savedReport);
-        } catch (e) {
-          console.error('Erro ao carregar relatório salvo:', e);
-        }
-      }
-
+      // Criar novo relatório
+      const report = new Stimulsoft.Report.StiReport();
       designer.report = report;
       setCurrentReport(report);
 

@@ -103,8 +103,6 @@ export default function Relatorios() {
       setFormData({ nome: "", descricao: "" });
       
       // Abrir designer Stimulsoft inline
-      localStorage.setItem('stimulsoft_current_report_id', data.id);
-      localStorage.removeItem('stimulsoft_current_report');
       setCurrentReportId(data.id);
       setShowDesigner(true);
     } catch (error: any) {
@@ -114,12 +112,6 @@ export default function Relatorios() {
 
   const handleEdit = (report: Report) => {
     // Abrir designer Stimulsoft inline
-    localStorage.setItem('stimulsoft_current_report_id', report.id);
-    if (report.layout_json && typeof report.layout_json === 'string') {
-      localStorage.setItem('stimulsoft_current_report', report.layout_json);
-    } else if (report.layout_json) {
-      localStorage.setItem('stimulsoft_current_report', JSON.stringify(report.layout_json));
-    }
     setCurrentReportId(report.id);
     setShowDesigner(true);
   };
@@ -181,8 +173,6 @@ export default function Relatorios() {
   const handleCloseDesigner = () => {
     setShowDesigner(false);
     setCurrentReportId(null);
-    localStorage.removeItem('stimulsoft_current_report_id');
-    localStorage.removeItem('stimulsoft_current_report');
     loadReports();
   };
 
