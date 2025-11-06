@@ -27,10 +27,20 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
 
   const loadReportBro = async () => {
     try {
-      // Carrega o build UMD para expor ReportBro em window
-      await import("reportbro-designer/dist/reportbro.js");
-      const ReportBro = (window as any).ReportBro;
+      // Garante carregamento do UMD via URL gerado pelo Vite
+      if (!(window as any).ReportBro) {
+        const rbUrl = (await import("reportbro-designer/dist/reportbro.js?url")).default as string;
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = rbUrl;
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error("Falha ao carregar script do ReportBro"));
+          document.head.appendChild(script);
+        });
+      }
 
+      const ReportBro = (window as any).ReportBro;
       if (!ReportBro) {
         throw new Error("ReportBro UMD não encontrado após importação");
       }
@@ -38,6 +48,11 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       if (!containerRef.current) return;
 
       const reportDefinition = reportId ? undefined : getEmptyReport();
+
+      // Destroi instância anterior se existir
+      if (reportBroRef.current?.destroy) {
+        try { reportBroRef.current.destroy(); } catch {}
+      }
 
       reportBroRef.current = new ReportBro(containerRef.current, {
         reportServerUrl: "", // Não usado, vamos exportar localmente
@@ -50,7 +65,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       toast.success("Designer carregado com sucesso!");
     } catch (error) {
       console.error("Erro ao carregar ReportBro:", error);
-      toast.error("Erro ao carregar o designer");
+      toast.error(error instanceof Error ? error.message : "Erro ao carregar o designer");
     }
   };
 
