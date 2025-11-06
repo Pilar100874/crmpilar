@@ -55,6 +55,11 @@ export function DataSourceConfigurator({
 
       if (error) throw error;
       setConnections(data || []);
+      
+      // Inicializa um data source vazio se não houver nenhum
+      if (initialDataSources.length === 0 && (data || []).length > 0) {
+        handleAddDataSource();
+      }
     } catch (error: any) {
       toast.error("Erro ao carregar conexões: " + error.message);
     }
@@ -154,8 +159,24 @@ export function DataSourceConfigurator({
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          <ScrollArea className="h-[500px]">
-            {dataSources.map(ds => (
+          {connections.length === 0 ? (
+            <div className="text-center py-8">
+              <Database className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground mb-4">
+                Nenhuma conexão de banco configurada.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Acesse <strong>Configurações → Conexões</strong> para adicionar bancos de dados.
+              </p>
+            </div>
+          ) : (
+            <ScrollArea className="h-[500px]">
+              {dataSources.length === 0 ? (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  Clique em <Plus className="inline h-3 w-3 mx-1" /> para adicionar um Data Source
+                </div>
+              ) : null}
+              {dataSources.map(ds => (
               <div
                 key={ds.id}
                 className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer mb-2 ${
@@ -181,8 +202,9 @@ export function DataSourceConfigurator({
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
-            ))}
-          </ScrollArea>
+              ))}
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
 
