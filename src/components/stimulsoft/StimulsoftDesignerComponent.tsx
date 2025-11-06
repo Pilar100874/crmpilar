@@ -81,10 +81,12 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     };
 
     const ok = await loadFromNpm();
-    if (ok) {
+    // Só inicializa se a lib realmente expôs o global
+    if (ok && typeof Stimulsoft !== 'undefined') {
       initializeDesigner();
       return;
     }
+    // Caso o pacote local não exponha o global, fazemos fallback para CDN
 
     // 2) Fallback para CDN
     const cssLink = document.createElement('link');
