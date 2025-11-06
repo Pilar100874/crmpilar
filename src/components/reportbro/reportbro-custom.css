@@ -1,0 +1,132 @@
+/* ReportBro Designer Customização */
+
+/* Esconde o logo do ReportBro */
+.rbroLogo,
+.rbroPro,
+.rbro-logo,
+.rbro-branding,
+[class*="logo" i][class*="reportbro" i],
+[class*="branding" i][class*="reportbro" i] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Aplica cores do tema do sistema */
+#rbro_menu_panel {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.rbroMenuItem {
+  color: hsl(var(--foreground)) !important;
+}
+
+.rbroMenuItem:hover,
+.rbroMenuItem.rbroMenuItemActive {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+#rbro_detail_panel {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.rbroFormRow label {
+  color: hsl(var(--foreground)) !important;
+}
+
+.rbroButton {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: none !important;
+  border-radius: 0.375rem !important;
+}
+
+.rbroButton:hover {
+  opacity: 0.9;
+}
+
+.rbroDocElement {
+  border-color: hsl(var(--primary)) !important;
+}
+
+.rbroDocElementSelected {
+  outline-color: hsl(var(--primary)) !important;
+}
+
+input.rbroInput,
+select.rbroInput,
+textarea.rbroInput {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--input)) !important;
+  border-radius: 0.375rem !important;
+}
+
+input.rbroInput:focus,
+select.rbroInput:focus,
+textarea.rbroInput:focus {
+  border-color: hsl(var(--ring)) !important;
+  outline: 2px solid hsl(var(--ring) / 0.2) !important;
+}
+
+.rbroColorPicker {
+  border-color: hsl(var(--border)) !important;
+}
+
+#rbro_document_panel {
+  background-color: hsl(var(--muted) / 0.3) !important;
+}
+
+.rbroDocumentTab {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.rbroDocumentTab.rbroActive {
+  background-color: hsl(var(--background)) !important;
+  border-bottom-color: transparent !important;
+}
+
+.rbroPopupPanel {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+  box-shadow: 0 10px 15px -3px hsl(var(--foreground) / 0.1) !important;
+}
+
+.rbroControlLabel {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.rbroSectionHeader {
+  background-color: hsl(var(--muted)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Melhora o contraste e legibilidade */
+.rbroMenuItem svg,
+.rbroButton svg {
+  fill: currentColor !important;
+}
+
+/* Scrollbars customizadas */
+.rbroScrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.rbroScrollable::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.rbroScrollable::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+.rbroScrollable::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
