@@ -70,9 +70,41 @@ export function StimulsoftDesignerComponent({ reportId, onClose }: StimulsoftDes
     // 1) Tentar carregar via pacote local (sem CDN)
     const loadFromNpm = async () => {
       try {
+        // Carrega CSS pelo bundler
         await import('stimulsoft-reports-js/Css/stimulsoft.designer.office2013.whiteblue.css');
-        await import('stimulsoft-reports-js/Scripts/stimulsoft.reports');
-        await import('stimulsoft-reports-js/Scripts/stimulsoft.designer');
+
+        // Obtém URLs dos scripts como assets para executarem no escopo global (window)
+        const reportsUrlMod: any = await import('stimulsoft-reports-js/Scripts/stimulsoft.reports.js?url');
+        const designerUrlMod: any = await import('stimulsoft-reports-js/Scripts/stimulsoft.designer.js?url');
+        const reportsUrl = reportsUrlMod.default || reportsUrlMod;
+        const designerUrl = designerUrlMod.default || designerUrlMod;
+
+        // Injeta os scripts em sequência
+        await new Promise<void>((resolve, reject) => {
+          const s1 = document.createElement('script');
+          s1.src = reportsUrl;
+          s1.async = true;
+          s1.onload = () => resolve();
+          s1.onerror = () => reject(new Error('Falha no script local: reports'));
+          document.head.appendChild(s1);
+        });
+
+        await new Promise<void>((resolve, reject) => {
+          const s2 = document.createElement('script');
+          s2.src = designerUrl;
+          s2.async = true;
+          s2.onload = () => resolve();
+          s2.onerror = () => reject(new Error('Falha no script local: designer'));
+          document.head.appendChild(s2);
+        });
+
+        // Garante que o global esteja definido
+        const maybeGlobal: any = (window as any).Stimulsoft || (globalThis as any).Stimulsoft;
+        if (!maybeGlobal) {
+          console.warn('Bibliotecas locais carregadas, mas Stimulsoft global não encontrado.');
+          return false;
+        }
+        (window as any).Stimulsoft = maybeGlobal;
         return true;
       } catch (e) {
         console.warn('Falha ao carregar libs locais do Stimulsoft, usando CDN...', e);
