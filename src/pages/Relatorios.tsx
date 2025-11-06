@@ -185,142 +185,159 @@ export default function Relatorios() {
   }
 
   return (
-    <>
-      {showDesigner && (
-        <ReportBroDesigner
-          reportId={currentReportId}
-          onClose={handleCloseDesigner}
-        />
-      )}
-      
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <FileText className="h-8 w-8" />
-            Modelos de Relatório
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie templates de relatórios profissionais com Stimulsoft
-          </p>
+    <div className={`flex gap-4 p-4 ${showDesigner ? 'h-screen overflow-hidden' : 'container mx-auto max-w-7xl'}`}>
+      {/* Coluna da Lista - fica menor quando designer está aberto */}
+      <div className={`transition-all ${showDesigner ? 'w-80 flex-shrink-0 overflow-y-auto' : 'flex-1'}`}>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className={`font-bold flex items-center gap-2 ${showDesigner ? 'text-xl' : 'text-3xl'}`}>
+              <FileText className={showDesigner ? 'h-5 w-5' : 'h-8 w-8'} />
+              {showDesigner ? 'Modelos' : 'Modelos de Relatório'}
+            </h1>
+            {!showDesigner && (
+              <p className="text-muted-foreground mt-1">
+                Gerencie templates de relatórios profissionais com Stimulsoft
+              </p>
+            )}
+          </div>
+          <Button onClick={() => setShowNewDialog(true)} size={showDesigner ? 'sm' : 'lg'}>
+            <Plus className={`mr-2 ${showDesigner ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            {showDesigner ? 'Novo' : 'Novo Modelo'}
+          </Button>
         </div>
-        <Button onClick={() => setShowNewDialog(true)} size="lg">
-          <Plus className="mr-2 h-5 w-5" />
-          Novo Modelo
-        </Button>
-      </div>
 
-      {/* Grid de Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {reports.length === 0 ? (
-          <div className="col-span-full text-center py-12 border-2 border-dashed rounded-lg">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">
-              Nenhum modelo de relatório cadastrado
-            </p>
-            <Button onClick={() => setShowNewDialog(true)} variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Criar Primeiro Modelo
-            </Button>
-          </div>
-        ) : (
-          reports.map((report) => (
-            <div
-              key={report.id}
-              className="group border rounded-lg p-6 hover:shadow-lg transition-all bg-card hover:border-primary/50"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
-                    {report.nome}
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {report.descricao || "Sem descrição"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-4">
-                <div className="text-xs text-muted-foreground">
-                  Criado em {new Date(report.created_at).toLocaleDateString("pt-BR")}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleEdit(report)}
-                >
-                  <Pencil className="h-3 w-3 mr-1" />
-                  Editar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePreview(report)}
-                  title="Visualizar relatório"
-                >
-                  <Eye className="h-3 w-3" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDuplicate(report)}
-                  title="Duplicar modelo"
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(report.id)}
-                  title="Excluir modelo"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Dialog de Novo Modelo */}
-      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Novo Modelo de Relatório</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="nome">Nome *</Label>
-              <Input
-                id="nome"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                placeholder="Ex: Relatório de Vendas Mensal"
-              />
-            </div>
-            <div>
-              <Label htmlFor="descricao">Descrição</Label>
-              <Textarea
-                id="descricao"
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                placeholder="Descrição detalhada do modelo..."
-                rows={3}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNewDialog(false)}>
-                Cancelar
+        {/* Grid de Cards */}
+        <div className={`grid gap-4 ${showDesigner ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
+          {reports.length === 0 ? (
+            <div className="col-span-full text-center py-12 border-2 border-dashed rounded-lg">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">
+                Nenhum modelo de relatório cadastrado
+              </p>
+              <Button onClick={() => setShowNewDialog(true)} variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Criar Primeiro Modelo
               </Button>
-              <Button onClick={handleCreate}>Criar</Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          ) : (
+            reports.map((report) => (
+              <div
+                key={report.id}
+                className={`group border rounded-lg hover:shadow-lg transition-all bg-card hover:border-primary/50 ${
+                  showDesigner ? 'p-3' : 'p-6'
+                } ${currentReportId === report.id ? 'border-primary shadow-md' : ''}`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className={`font-semibold group-hover:text-primary transition-colors ${showDesigner ? 'text-sm mb-0' : 'text-lg mb-1'}`}>
+                      {report.nome}
+                    </h3>
+                    {!showDesigner && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {report.descricao || "Sem descrição"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {!showDesigner && (
+                  <div className="space-y-2 mb-4">
+                    <div className="text-xs text-muted-foreground">
+                      Criado em {new Date(report.created_at).toLocaleDateString("pt-BR")}
+                    </div>
+                  </div>
+                )}
+
+                <div className={`flex gap-2 ${showDesigner ? 'flex-col' : ''}`}>
+                  <Button
+                    size="sm"
+                    className={showDesigner ? 'w-full justify-start' : 'flex-1'}
+                    onClick={() => handleEdit(report)}
+                    variant={currentReportId === report.id ? 'default' : 'outline'}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Editar
+                  </Button>
+                  {!showDesigner && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePreview(report)}
+                        title="Visualizar relatório"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDuplicate(report)}
+                        title="Duplicar modelo"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(report.id)}
+                        title="Excluir modelo"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Dialog de Novo Modelo */}
+        <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Novo Modelo de Relatório</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="nome">Nome *</Label>
+                <Input
+                  id="nome"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  placeholder="Ex: Relatório de Vendas Mensal"
+                />
+              </div>
+              <div>
+                <Label htmlFor="descricao">Descrição</Label>
+                <Textarea
+                  id="descricao"
+                  value={formData.descricao}
+                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                  placeholder="Descrição detalhada do modelo..."
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowNewDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreate}>Criar</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Coluna do Designer - ocupa o resto do espaço */}
+      {showDesigner && (
+        <div className="flex-1 border-l overflow-hidden">
+          <ReportBroDesigner
+            reportId={currentReportId}
+            onClose={handleCloseDesigner}
+          />
+        </div>
+      )}
     </div>
-    </>
   );
 }
