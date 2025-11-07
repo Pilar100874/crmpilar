@@ -24,6 +24,7 @@ export const MENU_CONFIG = [
   { id: "Automações", label: "Automações" },
   { id: "Campanhas Marketing", label: "Campanhas" },
   { id: "Relatórios", label: "Relatórios" },
+  { id: "Rel2", label: "Rel2" },
   { id: "Configurações", label: "Configurações" },
   { id: "Config Geral", label: "Configurações Gerais" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },

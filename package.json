@@ -16,6 +16,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@grapecity/activereports-localization": "^5.2.6",
     "@hookform/resolvers": "^3.10.0",
+    "@jsreport/browser-client": "^3.1.1",
     "@mescius/activereportsjs": "^5.2.6",
     "@mescius/activereportsjs-angular": "^5.2.6",
     "@mescius/activereportsjs-react": "^5.2.6",
