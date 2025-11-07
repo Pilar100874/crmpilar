@@ -123,6 +123,15 @@ export default function Rel2() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Check if user is admin
+      const { data: adminData } = await supabase
+        .from('administradores')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const isAdmin = !!adminData;
+
       // Try to get from usuarios first
       const { data: userData } = await supabase
         .from('usuarios')
@@ -132,12 +141,13 @@ export default function Rel2() {
 
       let estabelecimentoId = userData?.estabelecimento_id;
 
-      // If not found, user might be selecting from localStorage
+      // If not found, try localStorage
       if (!estabelecimentoId) {
         estabelecimentoId = localStorage.getItem('selected_estabelecimento_id');
       }
 
-      if (!estabelecimentoId) {
+      // If still not found and not admin, show error
+      if (!estabelecimentoId && !isAdmin) {
         toast.error('Estabelecimento não encontrado');
         return;
       }
@@ -153,7 +163,7 @@ export default function Rel2() {
             recipe: 'chrome-pdf'
           },
           database_connection_id: selectedDbConnection || null,
-          estabelecimento_id: estabelecimentoId
+          estabelecimento_id: estabelecimentoId || null
         })
         .select()
         .single();
