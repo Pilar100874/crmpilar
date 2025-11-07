@@ -190,35 +190,37 @@ export function JSReportDesigner({ report, onClose }: JSReportDesignerProps) {
     setTemplate(prev => prev + '\n' + componentHtml);
   };
 
-  const handleTableOrColumnClick = (tableOrColumn: string, isTable: boolean) => {
-    if (isTable) {
+  const handleTableOrColumnClick = (tableName: string, fieldName?: string) => {
+    if (fieldName) {
+      // É uma coluna
       setDataSourceQuery(prev => {
         if (!prev.trim()) {
-          return `SELECT * FROM ${tableOrColumn}`;
+          return `SELECT ${fieldName}`;
         }
         if (prev.trim().toUpperCase().startsWith('SELECT *')) {
-          return prev.replace(/FROM\s+\w+/i, `FROM ${tableOrColumn}`);
-        }
-        return `${prev}\nFROM ${tableOrColumn}`;
-      });
-    } else {
-      setDataSourceQuery(prev => {
-        if (!prev.trim()) {
-          return `SELECT ${tableOrColumn}`;
-        }
-        if (prev.trim().toUpperCase().startsWith('SELECT *')) {
-          return prev.replace('SELECT *', `SELECT ${tableOrColumn}`);
+          return prev.replace('SELECT *', `SELECT ${fieldName}`);
         }
         if (prev.trim().toUpperCase().startsWith('SELECT')) {
           const fromIndex = prev.toUpperCase().indexOf('FROM');
           if (fromIndex !== -1) {
             const selectPart = prev.substring(0, fromIndex).trim();
             const fromPart = prev.substring(fromIndex);
-            return `${selectPart}, ${tableOrColumn}\n${fromPart}`;
+            return `${selectPart}, ${fieldName}\n${fromPart}`;
           }
-          return `${prev}, ${tableOrColumn}`;
+          return `${prev}, ${fieldName}`;
         }
-        return `${prev}\nSELECT ${tableOrColumn}`;
+        return `${prev}\nSELECT ${fieldName}`;
+      });
+    } else {
+      // É uma tabela
+      setDataSourceQuery(prev => {
+        if (!prev.trim()) {
+          return `SELECT * FROM ${tableName}`;
+        }
+        if (prev.trim().toUpperCase().startsWith('SELECT *')) {
+          return prev.replace(/FROM\s+\w+/i, `FROM ${tableName}`);
+        }
+        return `${prev}\nFROM ${tableName}`;
       });
     }
   };
@@ -406,9 +408,8 @@ export function JSReportDesigner({ report, onClose }: JSReportDesignerProps) {
 
               {report.database_connection_id && (
                 <DatabaseTableExplorer
-                  connections={[{ id: report.database_connection_id, name: 'Conexão Atual' }]}
-                  onTableClick={(table) => handleTableOrColumnClick(table, true)}
-                  onColumnClick={(column) => handleTableOrColumnClick(column, false)}
+                  connections={[{ id: report.database_connection_id, name: 'Conexão Atual', database_type: 'SQL Server' }]}
+                  onInsertField={(tableName, fieldName) => handleTableOrColumnClick(tableName, fieldName)}
                 />
               )}
 

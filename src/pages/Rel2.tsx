@@ -47,18 +47,26 @@ export default function Rel2() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Try to get from usuarios first
       const { data: userData } = await supabase
         .from('usuarios')
         .select('estabelecimento_id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!userData?.estabelecimento_id) return;
+      let estabelecimentoId = userData?.estabelecimento_id;
+
+      // If not found, user might be selecting from localStorage
+      if (!estabelecimentoId) {
+        estabelecimentoId = localStorage.getItem('selected_estabelecimento_id');
+      }
+
+      if (!estabelecimentoId) return;
 
       const { data, error } = await supabase
         .from('database_connections')
         .select('id, name')
-        .eq('estabelecimento_id', userData.estabelecimento_id);
+        .eq('estabelecimento_id', estabelecimentoId);
 
       if (error) throw error;
       setDatabaseConnections(data?.map(d => ({ id: d.id, nome: d.name })) || []);
@@ -73,18 +81,26 @@ export default function Rel2() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Try to get from usuarios first
       const { data: userData } = await supabase
         .from('usuarios')
         .select('estabelecimento_id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!userData?.estabelecimento_id) return;
+      let estabelecimentoId = userData?.estabelecimento_id;
+
+      // If not found, user might be selecting from localStorage
+      if (!estabelecimentoId) {
+        estabelecimentoId = localStorage.getItem('selected_estabelecimento_id');
+      }
+
+      if (!estabelecimentoId) return;
 
       const { data, error } = await supabase
         .from('report_templates_jsreport')
         .select('*')
-        .eq('estabelecimento_id', userData.estabelecimento_id)
+        .eq('estabelecimento_id', estabelecimentoId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -107,13 +123,24 @@ export default function Rel2() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Try to get from usuarios first
       const { data: userData } = await supabase
         .from('usuarios')
         .select('estabelecimento_id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!userData?.estabelecimento_id) return;
+      let estabelecimentoId = userData?.estabelecimento_id;
+
+      // If not found, user might be selecting from localStorage
+      if (!estabelecimentoId) {
+        estabelecimentoId = localStorage.getItem('selected_estabelecimento_id');
+      }
+
+      if (!estabelecimentoId) {
+        toast.error('Estabelecimento não encontrado');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('report_templates_jsreport')
@@ -126,7 +153,7 @@ export default function Rel2() {
             recipe: 'chrome-pdf'
           },
           database_connection_id: selectedDbConnection || null,
-          estabelecimento_id: userData.estabelecimento_id
+          estabelecimento_id: estabelecimentoId
         })
         .select()
         .single();
@@ -176,13 +203,21 @@ export default function Rel2() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Try to get from usuarios first
       const { data: userData } = await supabase
         .from('usuarios')
         .select('estabelecimento_id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!userData?.estabelecimento_id) return;
+      let estabelecimentoId = userData?.estabelecimento_id;
+
+      // If not found, user might be selecting from localStorage
+      if (!estabelecimentoId) {
+        estabelecimentoId = localStorage.getItem('selected_estabelecimento_id');
+      }
+
+      if (!estabelecimentoId) return;
 
       const { error } = await supabase
         .from('report_templates_jsreport')
@@ -191,7 +226,7 @@ export default function Rel2() {
           descricao: report.descricao,
           template: report.template,
           database_connection_id: report.database_connection_id,
-          estabelecimento_id: userData.estabelecimento_id
+          estabelecimento_id: estabelecimentoId
         });
 
       if (error) throw error;
