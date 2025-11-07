@@ -1821,6 +1821,54 @@ export type Database = {
           },
         ]
       }
+      report_templates_jsreport: {
+        Row: {
+          created_at: string
+          database_connection_id: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          template: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          database_connection_id?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          template?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          database_connection_id?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          template?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_templates_jsreport_database_connection_id_fkey"
+            columns: ["database_connection_id"]
+            isOneToOne: false
+            referencedRelation: "database_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_templates_jsreport_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resend_config: {
         Row: {
           api_key: string

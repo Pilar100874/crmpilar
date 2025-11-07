@@ -83,8 +83,8 @@ export function JSReportDesigner({ report, onClose }: JSReportDesignerProps) {
       };
 
       const { error } = await supabase
-        .from('report_templates')
-        .update({ template: updatedTemplate })
+        .from('report_templates_jsreport')
+        .update({ template: updatedTemplate as any })
         .eq('id', report.id);
 
       if (error) throw error;
@@ -406,7 +406,7 @@ export function JSReportDesigner({ report, onClose }: JSReportDesignerProps) {
 
               {report.database_connection_id && (
                 <DatabaseTableExplorer
-                  connectionId={report.database_connection_id}
+                  connections={[{ id: report.database_connection_id, name: 'Conexão Atual' }]}
                   onTableClick={(table) => handleTableOrColumnClick(table, true)}
                   onColumnClick={(column) => handleTableOrColumnClick(column, false)}
                 />

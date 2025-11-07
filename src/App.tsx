@@ -32,6 +32,7 @@ import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import Relatorios from "./pages/Relatorios";
+import Rel2 from "./pages/Rel2";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
 
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
             <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
             <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/rel2" element={<Rel2 />} />
             <Route path="/relatorios/viewer" element={<ReportBroViewerPage />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />

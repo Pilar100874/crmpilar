@@ -57,11 +57,11 @@ export default function Rel2() {
 
       const { data, error } = await supabase
         .from('database_connections')
-        .select('id, nome')
+        .select('id, name')
         .eq('estabelecimento_id', userData.estabelecimento_id);
 
       if (error) throw error;
-      setDatabaseConnections(data || []);
+      setDatabaseConnections(data?.map(d => ({ id: d.id, nome: d.name })) || []);
     } catch (error) {
       console.error('Erro ao carregar conexões:', error);
     }
@@ -82,7 +82,7 @@ export default function Rel2() {
       if (!userData?.estabelecimento_id) return;
 
       const { data, error } = await supabase
-        .from('report_templates')
+        .from('report_templates_jsreport')
         .select('*')
         .eq('estabelecimento_id', userData.estabelecimento_id)
         .order('created_at', { ascending: false });
@@ -116,7 +116,7 @@ export default function Rel2() {
       if (!userData?.estabelecimento_id) return;
 
       const { data, error } = await supabase
-        .from('report_templates')
+        .from('report_templates_jsreport')
         .insert({
           nome: newReportName,
           descricao: newReportDescription,
@@ -157,7 +157,7 @@ export default function Rel2() {
 
     try {
       const { error } = await supabase
-        .from('report_templates')
+        .from('report_templates_jsreport')
         .delete()
         .eq('id', id);
 
@@ -185,7 +185,7 @@ export default function Rel2() {
       if (!userData?.estabelecimento_id) return;
 
       const { error } = await supabase
-        .from('report_templates')
+        .from('report_templates_jsreport')
         .insert({
           nome: `${report.nome} (Cópia)`,
           descricao: report.descricao,
