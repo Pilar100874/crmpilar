@@ -22,6 +22,27 @@ const [isLoaded, setIsLoaded] = useState(false);
   const [currentSources, setCurrentSources] = useState<any[]>([]);
   const [applying, setApplying] = useState(false);
 
+  // Traduz tooltips do ReportBro para pt-BR dinamicamente
+  const translateTooltipsPtBR = () => {
+    const root = containerRef.current;
+    if (!root) return;
+    const map: Record<string, string> = {
+      'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir',
+      'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 'Properties': 'Propriedades',
+      'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir',
+      'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%', 'Align left': 'Alinhar à esquerda',
+      'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita', 'Bold': 'Negrito',
+      'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Add text': 'Adicionar texto',
+      'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha'
+    };
+    root.querySelectorAll('[title]').forEach((el) => {
+      const t = (el as HTMLElement).getAttribute('title');
+      if (!t) return;
+      const translated = map[t.trim()];
+      if (translated) (el as HTMLElement).setAttribute('title', translated);
+    });
+  };
+
   useEffect(() => {
     loadReportBro();
   }, []);
@@ -113,6 +134,7 @@ const [isLoaded, setIsLoaded] = useState(false);
           }
         `;
         document.head.appendChild(style);
+        translateTooltipsPtBR();
       }, 500);
 
       setIsLoaded(true);
@@ -165,8 +187,19 @@ const [isLoaded, setIsLoaded] = useState(false);
             console.warn("Layout inválido, carregando vazio.", e);
           }
         }
-        reportBroRef.current.load(layoutData);
-        toast.success("Relatório carregado!");
+        try {
+          reportBroRef.current.load(layoutData);
+          toast.success("Relatório carregado!");
+        } catch (e) {
+          console.warn("Falha ao carregar layout do banco, usando layout vazio.", e);
+          try {
+            reportBroRef.current.load(getEmptyReport());
+            toast.message("Layout inválido: carregado modelo vazio");
+          } catch (e2) {
+            console.error("Erro ao aplicar layout vazio:", e2);
+          }
+        }
+        translateTooltipsPtBR();
       }
 
       // Prepara fontes iniciais a partir das colunas do relatório
