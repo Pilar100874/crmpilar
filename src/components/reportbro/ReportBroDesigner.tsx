@@ -455,19 +455,11 @@ const [isLoaded, setIsLoaded] = useState(false);
       
       if (!containerRef.current) return;
 
-      // Sempre inicia com relatório vazio (sem template selection)
-      const reportDefinition = getEmptyReport();
-
-      // Destroi instância anterior se existir
-      if (reportBroRef.current?.destroy) {
-        try { reportBroRef.current.destroy(); } catch {}
-      }
-
+      // Sempre inicia sem report explícito para que o ReportBro crie um padrão válido
       reportBroRef.current = new ReportBro(containerRef.current, {
         reportServerUrl: "",
         locale: "pt_BR",
         saveCallback: handleSave,
-        report: reportDefinition,
         showTemplateSelection: false,
       });
 
@@ -529,7 +521,7 @@ const [isLoaded, setIsLoaded] = useState(false);
       }
 
       if (reportBroRef.current) {
-        let layoutData: any = getEmptyReport();
+        let layoutData: any = null;
         if (data?.layout_json) {
           try {
             const parsed = typeof data.layout_json === "string"
@@ -555,16 +547,13 @@ const [isLoaded, setIsLoaded] = useState(false);
           }
         }
         try {
-          reportBroRef.current.load(layoutData);
-          toast.success("Relatório carregado!");
-        } catch (e) {
-          console.warn("Falha ao carregar layout do banco, usando layout vazio.", e);
-          try {
-            reportBroRef.current.load(getEmptyReport());
-            toast.message("Layout inválido: carregado modelo vazio");
-          } catch (e2) {
-            console.error("Erro ao aplicar layout vazio:", e2);
+          if (layoutData) {
+            reportBroRef.current.load(layoutData);
+            toast.success("Relatório carregado!");
           }
+        } catch (e) {
+          console.warn("Falha ao carregar layout do banco, mantendo layout padrão do designer.", e);
+          // Não força layout vazio: mantém o padrão válido do ReportBro
         }
         translateInterfacePtBR();
       }
@@ -685,39 +674,8 @@ const [isLoaded, setIsLoaded] = useState(false);
     version: 3,
   });
 
-  // Hotfix: manter experiência original (tecla Delete) sem botão extra
-  useEffect(() => {
-    const host = containerRef.current;
-    if (!host) return;
-    // Garantir foco para receber teclas
-    host.tabIndex = 0;
-
-    const onKeyDownCapture = (e: KeyboardEvent) => {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        // Sempre captura para evitar erro interno do ReportBro quando não há seleção
-        e.stopPropagation();
-        const rb = reportBroRef.current;
-        if (!rb) { e.preventDefault(); return; }
-        const getSel = rb.getSelectedObjects?.bind(rb);
-        const delObj = rb.deleteObject?.bind(rb);
-        if (!getSel || !delObj) { e.preventDefault(); return; }
-        const sel = getSel() || [];
-        if (sel.length > 0) {
-          sel.forEach((o: any) => o?.id && delObj(o.id));
-        }
-        e.preventDefault();
-      }
-    };
-
-    const onClick = () => host.focus();
-
-    host.addEventListener('keydown', onKeyDownCapture, true);
-    host.addEventListener('click', onClick);
-    return () => {
-      host.removeEventListener('keydown', onKeyDownCapture, true);
-      host.removeEventListener('click', onClick);
-    };
-  }, [isLoaded]);
+  // Mantém comportamento original de exclusão via ReportBro (tecla Delete/Backspace e botão padrão)
+  // Nenhuma captura adicional de teclado para não interferir nos handlers internos do designer.
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Designer Container - ReportBro com toolbar padrão */}
