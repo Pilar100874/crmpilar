@@ -673,49 +673,8 @@ const [isLoaded, setIsLoaded] = useState(false);
     version: 3,
   });
 
-  const handleDeleteSelected = () => {
-    if (!reportBroRef.current) return;
-    
-    try {
-      // Simula tecla Delete para remover elemento selecionado
-      const deleteEvent = new KeyboardEvent('keydown', {
-        key: 'Delete',
-        code: 'Delete',
-        keyCode: 46,
-        bubbles: true,
-        cancelable: true
-      });
-      
-      containerRef.current?.dispatchEvent(deleteEvent);
-      toast.success("Elemento excluído");
-    } catch (error) {
-      console.error("Erro ao excluir:", error);
-      toast.error("Erro ao excluir elemento");
-    }
-  };
-
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Toolbar Customizada */}
-      {isLoaded && (
-        <div className="flex items-center gap-2 p-2 bg-muted/30 border-b">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDeleteSelected}
-            title="Excluir elemento selecionado (Delete)"
-            className="gap-2"
-          >
-            <span className="text-destructive">🗑️</span>
-            Excluir Selecionado
-          </Button>
-          <div className="flex-1" />
-          <span className="text-xs text-muted-foreground">
-            Dica: Selecione um elemento e clique em "Excluir" ou pressione a tecla Delete
-          </span>
-        </div>
-      )}
-      
       {/* Designer Container - ReportBro com toolbar padrão */}
       <div className="flex-1 relative overflow-hidden">
         {!isLoaded && (
