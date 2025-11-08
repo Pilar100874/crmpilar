@@ -26,21 +26,38 @@ const [isLoaded, setIsLoaded] = useState(false);
   const translateTooltipsPtBR = () => {
     const root: ParentNode = containerRef.current || document;
     const map: Record<string, string> = {
-      'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir',
-      'Preview report': 'Visualizar relatório', 'Run': 'Executar',
+      // Toolbar
+      'File': 'Arquivo', 'Edit': 'Editar', 'View': 'Exibir', 'Help': 'Ajuda',
+      'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir', 'Run': 'Executar',
       'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 'Properties': 'Propriedades',
-      'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar',
-      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%',
+      'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 'Close': 'Fechar', 'Settings': 'Configurações',
+      // Zoom / Align
+      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%', 'Zoom': 'Zoom',
       'Align left': 'Alinhar à esquerda', 'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita',
       'Align top': 'Alinhar ao topo', 'Align middle': 'Alinhar ao meio', 'Align bottom': 'Alinhar à base',
+      // Insert
       'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha',
       'Add rectangle': 'Adicionar retângulo', 'Add circle': 'Adicionar elipse', 'Add barcode': 'Adicionar código de barras',
+      // Arrange / Grid
       'Grid': 'Grade', 'Show grid': 'Mostrar grade', 'Hide grid': 'Ocultar grade', 'Snap to grid': 'Ajustar à grade',
-      'Bring to front': 'Trazer para frente', 'Send to back': 'Enviar para trás',
-      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado'
+      'Bring to front': 'Trazer para frente', 'Send to back': 'Enviar para trás', 'Group': 'Agrupar', 'Ungroup': 'Desagrupar',
+      'Lock': 'Bloquear', 'Unlock': 'Desbloquear',
+      // Text styles
+      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Font': 'Fonte', 'Font size': 'Tamanho da fonte',
+      'Text color': 'Cor do texto', 'Background color': 'Cor de fundo', 'Opacity': 'Opacidade',
+      // Common property labels
+      'Name': 'Nome', 'Type': 'Tipo', 'X': 'X', 'Y': 'Y', 'Width': 'Largura', 'Height': 'Altura', 'Color': 'Cor',
+      'Border': 'Borda', 'Borders': 'Bordas', 'None': 'Nenhum', 'All': 'Todos', 'Left': 'Esquerda', 'Right': 'Direita', 'Top': 'Superior', 'Bottom': 'Inferior',
+      'Padding': 'Preenchimento', 'Margin': 'Margem', 'Alignment': 'Alinhamento', 'Horizontal alignment': 'Alinhamento horizontal', 'Vertical alignment': 'Alinhamento vertical',
+      'Content': 'Conteúdo', 'Image': 'Imagem', 'Table': 'Tabela', 'Row': 'Linha', 'Column': 'Coluna', 'Columns': 'Colunas', 'Rows': 'Linhas',
+      'Data source': 'Fonte de dados', 'Parameter': 'Parâmetro', 'Parameters': 'Parâmetros', 'Value': 'Valor', 'Values': 'Valores',
+      'Header': 'Cabeçalho', 'Footer': 'Rodapé', 'Page': 'Página', 'Report': 'Relatório', 'Detail': 'Detalhe',
+      'Preview report': 'Visualizar relatório', 'Export': 'Exportar', 'PDF': 'PDF', 'PNG': 'PNG', 'JPG': 'JPG',
+      // Dialog buttons
+      'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Yes': 'Sim', 'No': 'Não', 'Close dialog': 'Fechar janela'
     };
 
-    const applyAttr = (attr: 'title' | 'aria-label' | 'data-title') => {
+    const applyAttr = (attr: 'title' | 'aria-label' | 'data-title' | 'placeholder') => {
       root.querySelectorAll(`[${attr}]`).forEach((el) => {
         const t = (el as HTMLElement).getAttribute(attr);
         if (!t) return;
@@ -52,20 +69,35 @@ const [isLoaded, setIsLoaded] = useState(false);
     applyAttr('title');
     applyAttr('aria-label');
     applyAttr('data-title');
+    applyAttr('placeholder');
 
-    // Alguns textos visíveis em labels/headers
-    root.querySelectorAll('.rbroControlLabel, .rbroSectionHeader').forEach((el) => {
-      const text = el.textContent?.trim();
-      if (!text) return;
-      const translated = map[text];
-      if (translated) el.textContent = translated;
+    // Text content in visible labels/buttons/tabs
+    const textSelectors = [
+      '.rbroControlLabel', '.rbroSectionHeader', '.rbroToolbar button', '.rbroToolbar .rbroToolLabel',
+      '.rbroButton', '.rbroMenuItem', '.rbroPropertyLabel', '.rbroTabs .rbroTab', 'label', 'th', 'td'
+    ];
+    root.querySelectorAll(textSelectors.join(',')).forEach((el) => {
+      const node = el as HTMLElement;
+      const txt = node.textContent?.trim();
+      if (!txt) return;
+      const translated = map[txt];
+      if (translated) node.textContent = translated;
+    });
+
+    // Option elements in selects
+    root.querySelectorAll('select option').forEach((opt) => {
+      const o = opt as HTMLOptionElement;
+      const txt = o.textContent?.trim();
+      if (!txt) return;
+      const translated = map[txt];
+      if (translated) o.textContent = translated;
     });
   };
 
   const setupTranslationsObserver = () => {
     if (!containerRef.current) return;
     const observer = new MutationObserver(() => translateTooltipsPtBR());
-    observer.observe(containerRef.current, { childList: true, subtree: true });
+    observer.observe(containerRef.current, { childList: true, subtree: true, attributes: true, attributeFilter: ['title','aria-label','data-title','placeholder'] });
   };
 
   // Aplica traduções repetidamente nos primeiros segundos (evita perder tooltips criados tardiamente)
@@ -74,7 +106,7 @@ const [isLoaded, setIsLoaded] = useState(false);
     const intId = window.setInterval(() => {
       translateTooltipsPtBR();
       count++;
-      if (count >= 12) window.clearInterval(intId); // ~2.4s
+      if (count >= 50) window.clearInterval(intId); // ~10s cobrindo elementos tardios
     }, 200);
   };
 
@@ -84,7 +116,11 @@ const [isLoaded, setIsLoaded] = useState(false);
     if (document.getElementById(id)) return;
     const style = document.createElement("style");
     style.id = id;
-    style.textContent = `.rbroLogo, .rbroPro, .rbro-logo, .rbro-branding, [class*="logo" i][class*="reportbro" i], [class*="branding" i][class*="reportbro" i] { display: none !important; visibility: hidden !important; }`;
+    style.textContent = `.rbroLogo, .rbroPro, .rbro-logo, .rbro-branding,
+      [class*="logo" i][class*="reportbro" i], [class*="branding" i][class*="reportbro" i],
+      img[alt*="reportbro" i], img[src*="reportbro" i] {
+        display: none !important; visibility: hidden !important;
+      }`;
     document.head.appendChild(style);
   };
 
