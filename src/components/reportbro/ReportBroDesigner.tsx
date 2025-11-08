@@ -251,7 +251,36 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Template': 'Modelo', 'Templates': 'Modelos',
       'Layout': 'Layout', 'Design': 'Design',
       'Preview mode': 'Modo de visualização',
-      'Edit mode': 'Modo de edição'
+      'Edit mode': 'Modo de edição',
+      
+      // Termos adicionais dos painéis de propriedades
+      'Rich text': 'Texto rico',
+      'Requires commercial PLUS version': 'Requer versão comercial PLUS',
+      'Evaluate': 'Avaliar',
+      'Position (x, y)': 'Posição (x, y)',
+      'Size (width, height)': 'Tamanho (largura, altura)',
+      'Bar width': 'Largura da barra',
+      'Rotate': 'Rotacionar',
+      'PRINT SETTINGS': 'CONFIGURAÇÕES DE IMPRESSÃO',
+      'Remove when empty': 'Remover quando vazio',
+      'SPREADSHEET': 'PLANILHA',
+      'Hide': 'Ocultar',
+      'Fixed column': 'Coluna fixa',
+      'Colspan': 'Colspan',
+      'Add empty row below': 'Adicionar linha vazia abaixo',
+      'Choose file': 'Escolher arquivo',
+      'Browse': 'Procurar',
+      'No file chosen': 'Nenhum arquivo escolhido',
+      
+      // Seções em maiúsculas
+      'STYLE': 'ESTILO',
+      'ESTILO': 'ESTILO',
+      'Print settings': 'Configurações de impressão',
+      'Spreadsheet': 'Planilha',
+      
+      // Medidas e unidades
+      'width': 'largura',
+      'height': 'altura'
     };
     
     // Traduz atributos title
@@ -278,8 +307,11 @@ const [isLoaded, setIsLoaded] = useState(false);
       '.rbroSelect option',
       '.rbroButton',
       '.rbroFormRowLabel',
+      '.rbroFormRow > div:first-child',
       'th',
-      'td'
+      'td',
+      'h3',
+      'h4'
     ];
     
     root.querySelectorAll(selectors.join(', ')).forEach((el) => {
@@ -299,6 +331,12 @@ const [isLoaded, setIsLoaded] = useState(false);
             }
           }
         });
+      }
+      
+      // Traduz também atributos data-label se existirem
+      const dataLabel = (el as HTMLElement).getAttribute('data-label');
+      if (dataLabel && translationMap[dataLabel.trim()]) {
+        (el as HTMLElement).setAttribute('data-label', translationMap[dataLabel.trim()]);
       }
     });
     
