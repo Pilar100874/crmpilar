@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import "reportbro-designer/dist/reportbro.css";
-import "./reportbro-custom.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 

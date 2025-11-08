@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ReportBroDesigner } from "@/components/reportbro/ReportBroDesigner";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Copy, FileText, Eye, Rocket } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
   Table,
@@ -205,16 +205,6 @@ export default function Relatorios() {
             )}
           </div>
           <div className="flex gap-2">
-            {!showDesigner && (
-              <Button 
-                onClick={() => navigate('/report-studio/reports')} 
-                variant="outline"
-                size="lg"
-              >
-                <Rocket className="mr-2 h-5 w-5" />
-                Report Studio Demo
-              </Button>
-            )}
             <Button onClick={() => setShowNewDialog(true)} size={showDesigner ? 'sm' : 'lg'}>
               <Plus className={`mr-2 ${showDesigner ? 'h-4 w-4' : 'h-5 w-5'}`} />
               {showDesigner ? 'Novo' : 'Novo Modelo'}
