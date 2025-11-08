@@ -178,18 +178,32 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-4 border-b bg-background">
+      <div className="flex items-center justify-between p-4 border-b bg-card">
         <BandToolbar onAddBand={handleAddBand} />
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPreview(true)}>
-            <Eye className="h-4 w-4 mr-2" />
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="default"
+            onClick={() => setShowPreview(true)}
+            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+          >
+            <Eye className="h-5 w-5 mr-2" />
             Preview
           </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
+          <Button 
+            size="default"
+            onClick={handleSave}
+            className="h-10 px-4 rounded-xl transition-all hover:scale-105 bg-primary hover:bg-primary/90 shadow-lg"
+          >
+            <Save className="h-5 w-5 mr-2" />
             Salvar
           </Button>
-          <Button variant="outline" onClick={onClose}>
+          <Button 
+            variant="outline" 
+            size="default"
+            onClick={onClose}
+            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+          >
             Fechar
           </Button>
         </div>
@@ -200,11 +214,11 @@ export function ReportDesigner({ report, onSave, onClose }: ReportDesignerProps)
         {/* Left Panel - Database & Components */}
         <div className="w-80 border-r bg-muted/20 overflow-y-auto">
           <Tabs defaultValue="sources" className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-4 mx-4 mt-4">
-              <TabsTrigger value="sources">Fontes</TabsTrigger>
-              <TabsTrigger value="database">BD</TabsTrigger>
-              <TabsTrigger value="components">Comp</TabsTrigger>
-              <TabsTrigger value="query">Query</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 mx-4 mt-4 h-12 rounded-xl bg-muted p-1">
+              <TabsTrigger value="sources" className="rounded-lg transition-all data-[state=active]:shadow-md">Fontes</TabsTrigger>
+              <TabsTrigger value="database" className="rounded-lg transition-all data-[state=active]:shadow-md">BD</TabsTrigger>
+              <TabsTrigger value="components" className="rounded-lg transition-all data-[state=active]:shadow-md">Comp</TabsTrigger>
+              <TabsTrigger value="query" className="rounded-lg transition-all data-[state=active]:shadow-md">Query</TabsTrigger>
             </TabsList>
             <TabsContent value="sources" className="flex-1 p-4">
               <DataSourceManager
