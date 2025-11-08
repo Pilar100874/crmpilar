@@ -86,17 +86,36 @@ const [isLoaded, setIsLoaded] = useState(false);
         .from("relatorios")
         .select("*")
         .eq("id", reportId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        toast.error("Relatório não encontrado");
+        return;
+      }
 
       if (reportBroRef.current) {
         let layoutData: any = getEmptyReport();
         if (data?.layout_json) {
           try {
-            layoutData = typeof data.layout_json === "string"
+            const parsed = typeof data.layout_json === "string"
               ? JSON.parse(data.layout_json)
               : data.layout_json;
+            
+            // Valida se o objeto tem a estrutura mínima necessária
+            if (parsed && typeof parsed === 'object') {
+              // Garantir que docElements existe e é um array
+              if (!Array.isArray(parsed.docElements)) {
+                parsed.docElements = [];
+              }
+              if (!Array.isArray(parsed.parameters)) {
+                parsed.parameters = [];
+              }
+              if (!Array.isArray(parsed.styles)) {
+                parsed.styles = [];
+              }
+              layoutData = parsed;
+            }
           } catch (e) {
             console.warn("Layout inválido, carregando vazio.", e);
           }
@@ -222,24 +241,26 @@ const [isLoaded, setIsLoaded] = useState(false);
   });
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header compacto */}
-      <div className="h-12 border-b flex items-center justify-between px-3 bg-card shrink-0">
-        <h2 className="text-sm font-semibold">Designer de Relatórios</h2>
-        <div className="flex items-center gap-1.5">
-          <Button size="sm" variant="outline" onClick={handleSave} className="h-8">
-            <Save className="h-3.5 w-3.5 mr-1.5" />
+    <div className="h-full flex flex-col bg-muted/30">
+      {/* Header minimalista */}
+      <div className="h-14 border-b flex items-center justify-between px-6 bg-card/50 backdrop-blur-sm shrink-0">
+        <div className="flex items-center gap-3">
+          <h2 className="text-base font-semibold text-foreground">Designer de Relatórios</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" onClick={handleSave} className="h-9 px-3">
+            <Save className="h-4 w-4 mr-2" />
             Salvar
           </Button>
-          <Button size="sm" variant="outline" onClick={handlePreview} className="h-8">
-            <Eye className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="sm" variant="ghost" onClick={handlePreview} className="h-9 px-3">
+            <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowDsDialog(true)} className="h-8">
-            <Database className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="sm" variant="ghost" onClick={() => setShowDsDialog(true)} className="h-9 px-3">
+            <Database className="h-4 w-4 mr-2" />
             Dados
           </Button>
-          <Button size="sm" variant="ghost" onClick={onClose} className="h-8 w-8 p-0" title="Fechar designer">
+          <Button size="sm" variant="ghost" onClick={onClose} className="h-9 w-9 p-0" title="Fechar designer">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -248,10 +269,10 @@ const [isLoaded, setIsLoaded] = useState(false);
       {/* Designer Container */}
       <div className="flex-1 relative overflow-hidden">
         {!isLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Carregando designer...</p>
+              <p className="text-sm text-muted-foreground">Carregando designer...</p>
             </div>
           </div>
         )}
