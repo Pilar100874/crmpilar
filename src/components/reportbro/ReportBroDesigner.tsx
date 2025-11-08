@@ -45,16 +45,60 @@ const [isLoaded, setIsLoaded] = useState(false);
       // Text styles
       'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Font': 'Fonte', 'Font size': 'Tamanho da fonte',
       'Text color': 'Cor do texto', 'Background color': 'Cor de fundo', 'Opacity': 'Opacidade',
-      // Common property labels
+      // Common property labels (sem duplicatas)
       'Name': 'Nome', 'Type': 'Tipo', 'X': 'X', 'Y': 'Y', 'Width': 'Largura', 'Height': 'Altura', 'Color': 'Cor',
-      'Border': 'Borda', 'Borders': 'Bordas', 'None': 'Nenhum', 'All': 'Todos', 'Left': 'Esquerda', 'Right': 'Direita', 'Top': 'Superior', 'Bottom': 'Inferior',
-      'Padding': 'Preenchimento', 'Margin': 'Margem', 'Alignment': 'Alinhamento', 'Horizontal alignment': 'Alinhamento horizontal', 'Vertical alignment': 'Alinhamento vertical',
-      'Content': 'Conteúdo', 'Image': 'Imagem', 'Table': 'Tabela', 'Row': 'Linha', 'Column': 'Coluna', 'Columns': 'Colunas', 'Rows': 'Linhas',
-      'Data source': 'Fonte de dados', 'Parameter': 'Parâmetro', 'Parameters': 'Parâmetros', 'Value': 'Valor', 'Values': 'Valores',
-      'Header': 'Cabeçalho', 'Footer': 'Rodapé', 'Page': 'Página', 'Report': 'Relatório', 'Detail': 'Detalhe',
-      'Preview report': 'Visualizar relatório', 'Export': 'Exportar', 'PDF': 'PDF', 'PNG': 'PNG', 'JPG': 'JPG',
+      'Border': 'Borda', 'Borders': 'Bordas', 'None': 'Nenhum', 'All': 'Todos', 'Left': 'Esquerda', 'Right': 'Direita', 
+      'Top': 'Superior', 'Bottom': 'Inferior', 'Padding': 'Preenchimento', 'Margin': 'Margem', 
+      'Alignment': 'Alinhamento', 'Horizontal alignment': 'Alinhamento horizontal', 'Vertical alignment': 'Alinhamento vertical',
+      'Content': 'Conteúdo', 'Image': 'Imagem', 'Table': 'Tabela', 'Row': 'Linha', 'Column': 'Coluna', 
+      'Columns': 'Colunas', 'Rows': 'Linhas', 'Data source': 'Fonte de dados', 'Parameter': 'Parâmetro', 
+      'Parameters': 'Parâmetros', 'Value': 'Valor', 'Values': 'Valores', 'Header': 'Cabeçalho', 'Footer': 'Rodapé', 
+      'Page': 'Página', 'Report': 'Relatório', 'Detail': 'Detalhe', 'Preview report': 'Visualizar relatório', 
+      'Export': 'Exportar', 'PDF': 'PDF', 'PNG': 'PNG', 'JPG': 'JPG',
       // Dialog buttons
-      'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Yes': 'Sim', 'No': 'Não', 'Close dialog': 'Fechar janela'
+      'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Yes': 'Sim', 'No': 'Não', 'Close dialog': 'Fechar janela',
+      // Element Properties Panel
+      'Position': 'Posição', 'Size': 'Tamanho', 'Style': 'Estilo', 'Print if': 'Imprimir se', 
+      'Remove empty element': 'Remover elemento vazio', 'Spreadsheet hide': 'Ocultar na planilha', 
+      'Spreadsheet column': 'Coluna da planilha', 'Spreadsheet colspan': 'Mesclar colunas',
+      'Spreadsheet add empty row': 'Adicionar linha vazia', 'Link': 'Link', 'Pattern': 'Padrão', 
+      'Expression': 'Expressão', 'Grow weight': 'Peso de crescimento', 'Text': 'Texto', 'Format': 'Formato', 
+      'Line': 'Linha', 'Line width': 'Largura da linha', 'Line color': 'Cor da linha', 'Line style': 'Estilo da linha', 
+      'Fill': 'Preenchimento', 'Fill color': 'Cor de preenchimento',
+      // Text & Line Elements
+      'Text element': 'Elemento de texto', 'Rich text': 'Texto rico', 'Eval': 'Avaliar', 'Strikethrough': 'Tachado',
+      'Horizontal line': 'Linha horizontal', 'Vertical line': 'Linha vertical', 'Text style': 'Estilo de texto',
+      'Line spacing': 'Espaçamento de linha', 'Border width': 'Largura da borda', 'Border color': 'Cor da borda',
+      'Border style': 'Estilo da borda', 'Radius': 'Raio', 'Background': 'Fundo', 'Line element': 'Elemento de linha',
+      // Image Properties
+      'Image element': 'Elemento de imagem', 'Source': 'Origem', 'Image file': 'Arquivo de imagem', 'Image URL': 'URL da imagem',
+      // Table & Band Properties
+      'Table element': 'Elemento de tabela', 'Data': 'Dados', 'Print header': 'Imprimir cabeçalho', 
+      'Print footer': 'Imprimir rodapé', 'Content rows': 'Linhas de conteúdo', 'Band element': 'Elemento de banda',
+      'Always print on same page': 'Sempre imprimir na mesma página', 'Shrink': 'Encolher',
+      // Barcode & Frame Properties
+      'Barcode element': 'Elemento de código de barras', 'Barcode type': 'Tipo de código de barras', 
+      'Display value': 'Exibir valor', 'Frame element': 'Elemento de moldura', 'Label': 'Rótulo',
+      // Section Properties
+      'Section element': 'Elemento de seção', 'Section': 'Seção', 'Band': 'Banda',
+      // Page Properties
+      'Page format': 'Formato da página', 'Page width': 'Largura da página', 'Page height': 'Altura da página',
+      'Content height': 'Altura do conteúdo', 'Orientation': 'Orientação', 'Portrait': 'Retrato', 'Landscape': 'Paisagem',
+      'Page header': 'Cabeçalho da página', 'Page footer': 'Rodapé da página', 'Page header size': 'Tamanho do cabeçalho',
+      'Page footer size': 'Tamanho do rodapé', 'Margin left': 'Margem esquerda', 'Margin top': 'Margem superior',
+      'Margin right': 'Margem direita', 'Margin bottom': 'Margem inferior',
+      // Document Properties
+      'Document properties': 'Propriedades do documento', 'Page size': 'Tamanho da página', 'Unit': 'Unidade',
+      'Pixels': 'Pixels', 'Millimeters': 'Milímetros', 'Inches': 'Polegadas',
+      // General UI
+      'General': 'Geral', 'Options': 'Opções', 'Visible': 'Visível', 'Enabled': 'Habilitado',
+      'Center': 'Centro', 'Middle': 'Meio', 'Justify': 'Justificar',
+      'Solid': 'Sólido', 'Dashed': 'Tracejado', 'Dotted': 'Pontilhado', 'Double': 'Duplo',
+      'Add': 'Adicionar', 'Remove': 'Remover', 'Up': 'Subir', 'Down': 'Descer',
+      'Select': 'Selecionar', 'Upload': 'Enviar', 'Browse': 'Procurar', 'Clear': 'Limpar',
+      'Insert': 'Inserir', 'Update': 'Atualizar', 'Duplicate': 'Duplicar',
+      'Elements': 'Elementos', 'Layout': 'Layout', 'Design': 'Design', 
+      'Advanced': 'Avançado', 'Show': 'Mostrar', 'Hide': 'Ocultar'
     };
 
     const applyAttr = (attr: 'title' | 'aria-label' | 'data-title' | 'placeholder') => {
