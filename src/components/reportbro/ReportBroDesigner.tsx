@@ -184,7 +184,7 @@ const [isLoaded, setIsLoaded] = useState(false);
   const setupTranslationsObserver = () => {
     if (!containerRef.current) return;
     const observer = new MutationObserver(() => translateTooltipsPtBR());
-    observer.observe(containerRef.current, { childList: true, subtree: true, attributes: true, attributeFilter: ['title','aria-label','data-title','placeholder'] });
+    observer.observe(containerRef.current, { childList: true, subtree: true });
   };
 
   // Aplica traduções repetidamente nos primeiros segundos (evita perder tooltips criados tardiamente)
