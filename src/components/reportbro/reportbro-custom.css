@@ -85,25 +85,84 @@
 /* ===== TOOLBAR HORIZONTAL ===== */
 .rbroToolbar,
 #rbro_header {
-  display: none !important; /* Esconde a barra superior padrão */
-}
-
-/* Mantém apenas a barra lateral e área de trabalho */
-#rbro_menu_panel {
   background: hsl(var(--card)) !important;
-  border-right: 1px solid hsl(var(--border)) !important;
-  box-shadow: 2px 0 8px hsl(var(--foreground) / 0.05) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
 }
 
-/* Esconde botões da toolbar antiga */
+/* Botões do header/toolbar */
 #rbro_header .rbroButton,
 #rbro_header button,
 .rbroToolbar .rbroButton,
 .rbroToolbar button,
 .rbroButton.rbroToolbarButton,
-.rbroToolbarItem,
+.rbroToolbarItem {
+  background: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  margin: 0 2px !important;
+  transition: all 0.2s ease !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+#rbro_header .rbroButton:hover,
+#rbro_header button:hover,
+.rbroToolbar .rbroButton:hover,
+.rbroToolbar button:hover,
+.rbroButton.rbroToolbarButton:hover,
+.rbroToolbarItem:hover {
+  background: hsl(var(--accent)) !important;
+  border-color: hsl(var(--primary) / 0.4) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px hsl(var(--foreground) / 0.1) !important;
+}
+
+#rbro_header .rbroButton:active,
+#rbro_header button:active,
+.rbroToolbar .rbroButton:active,
+.rbroToolbar button:active,
+.rbroToolbarItem.rbroActive,
+.rbroButton.rbroToolbarButton:active {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+  transform: translateY(0) !important;
+}
+
+/* Ícones nos botões */
+#rbro_header .rbroButton svg,
+#rbro_header button svg,
+.rbroToolbar .rbroButton svg,
+.rbroToolbar button svg,
+.rbroToolbarItem svg,
+.rbroButton.rbroToolbarButton svg,
+#rbro_header .rbroButton i,
+#rbro_header button i {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Grupos de botões na toolbar */
 .rbroToolbarGroup {
-  display: none !important;
+  display: flex !important;
+  gap: 2px !important;
+  padding: 0 6px !important;
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+.rbroToolbarGroup:last-child {
+  border-right: none !important;
 }
 
 /* ===== PAINEL DE PROPRIEDADES ===== */

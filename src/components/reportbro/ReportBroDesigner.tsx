@@ -68,9 +68,6 @@ const [isLoaded, setIsLoaded] = useState(false);
         saveCallback: handleSave,
         report: reportDefinition,
         showTemplateSelection: false,
-        menuShowButtonLabels: false,
-        menuSidebar: true,
-        enableSpreadsheet: false,
       });
 
       setIsLoaded(true);
