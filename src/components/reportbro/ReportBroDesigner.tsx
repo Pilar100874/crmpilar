@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { X, Save, Eye, FileDown, Database } from "lucide-react";
 import "reportbro-designer/dist/reportbro.css";
-// import "./reportbro-custom.css"; // desabilitado para manter a barra original do ReportBro
+import "./reportbro-custom.css"; // habilitado para estilizar o menu esquerdo
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 
@@ -22,9 +22,10 @@ const [isLoaded, setIsLoaded] = useState(false);
   const [currentSources, setCurrentSources] = useState<any[]>([]);
   const [applying, setApplying] = useState(false);
 
-  // Traduz tooltips do ReportBro para pt-BR dinamicamente
+  // Traduz tooltips do ReportBro para pt-BR dinamicamente (inclui rótulos e propriedades)
   const translateTooltipsPtBR = () => {
     const root: ParentNode = containerRef.current || document;
+
     const map: Record<string, string> = {
       // === Menu Principal ===
       'File': 'Arquivo', 'Edit': 'Editar', 'View': 'Exibir', 'Help': 'Ajuda',
@@ -32,29 +33,24 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Run': 'Executar', 'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 
       'Properties': 'Propriedades', 'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 
       'Close': 'Fechar', 'Settings': 'Configurações',
-      
       // === Zoom / Alinhamento ===
       'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 
       'Zoom 100%': 'Zoom 100%', 'Zoom': 'Zoom', 'Align left': 'Alinhar à esquerda', 
       'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita',
       'Align top': 'Alinhar ao topo', 'Align middle': 'Alinhar ao meio', 'Align bottom': 'Alinhar à base',
-      
       // === Inserir Elementos ===
       'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 
       'Add line': 'Adicionar linha', 'Add rectangle': 'Adicionar retângulo', 'Add circle': 'Adicionar elipse', 
       'Add barcode': 'Adicionar código de barras',
-      
       // === Grade / Organizar ===
       'Grid': 'Grade', 'Show grid': 'Mostrar grade', 'Hide grid': 'Ocultar grade', 
       'Snap to grid': 'Ajustar à grade', 'Bring to front': 'Trazer para frente', 
       'Send to back': 'Enviar para trás', 'Group': 'Agrupar', 'Ungroup': 'Desagrupar',
       'Lock': 'Bloquear', 'Unlock': 'Desbloquear',
-      
       // === Estilos de Texto ===
       'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Strikethrough': 'Tachado',
       'Font': 'Fonte', 'Font size': 'Tamanho da fonte', 'Text color': 'Cor do texto', 
       'Background color': 'Cor de fundo', 'Opacity': 'Opacidade',
-      
       // === Propriedades Comuns ===
       'Name': 'Nome', 'Type': 'Tipo', 'X': 'X', 'Y': 'Y', 'Width': 'Largura', 'Height': 'Altura', 
       'Color': 'Cor', 'Border': 'Borda', 'Borders': 'Bordas', 'None': 'Nenhum', 'All': 'Todos', 
@@ -66,11 +62,9 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Parameters': 'Parâmetros', 'Value': 'Valor', 'Values': 'Valores', 'Header': 'Cabeçalho', 
       'Footer': 'Rodapé', 'Page': 'Página', 'Report': 'Relatório', 'Detail': 'Detalhe', 
       'Preview report': 'Visualizar relatório', 'Export': 'Exportar', 'PDF': 'PDF', 'PNG': 'PNG', 'JPG': 'JPG',
-      
       // === Diálogos ===
       'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Yes': 'Sim', 'No': 'Não', 
       'Close dialog': 'Fechar janela',
-      
       // === Painel de Propriedades - Geral ===
       'Position': 'Posição', 'Size': 'Tamanho', 'Style': 'Estilo', 'Print if': 'Imprimir se', 
       'Remove empty element': 'Remover elemento vazio', 'Spreadsheet hide': 'Ocultar na planilha', 
@@ -80,7 +74,6 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Format': 'Formato', 'Line': 'Linha', 'Line width': 'Largura da linha', 
       'Line color': 'Cor da linha', 'Line style': 'Estilo da linha', 
       'Fill': 'Preenchimento', 'Fill color': 'Cor de preenchimento',
-      
       // === Elementos de Texto ===
       'Text element': 'Elemento de texto', 'Rich text': 'Texto rico', 'Eval': 'Avaliar',
       'Horizontal line': 'Linha horizontal', 'Vertical line': 'Linha vertical', 
@@ -88,27 +81,21 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Border width': 'Largura da borda', 'Border color': 'Cor da borda',
       'Border style': 'Estilo da borda', 'Radius': 'Raio', 'Background': 'Fundo', 
       'Line element': 'Elemento de linha',
-      
       // === Imagens ===
       'Image element': 'Elemento de imagem', 'Source': 'Origem', 'Image file': 'Arquivo de imagem', 
       'Image URL': 'URL da imagem',
-      
       // === Tabelas e Bandas ===
       'Table element': 'Elemento de tabela', 'Data': 'Dados', 'Print header': 'Imprimir cabeçalho', 
       'Print footer': 'Imprimir rodapé', 'Content rows': 'Linhas de conteúdo', 
       'Band element': 'Elemento de banda', 'Always print on same page': 'Sempre imprimir na mesma página', 
       'Shrink': 'Encolher',
-      
       // === Código de Barras ===
       'Barcode element': 'Elemento de código de barras', 'Barcode type': 'Tipo de código de barras', 
       'Display value': 'Exibir valor',
-      
       // === Moldura ===
       'Frame element': 'Elemento de moldura', 'Label': 'Rótulo',
-      
       // === Seção ===
       'Section element': 'Elemento de seção', 'Section': 'Seção', 'Band': 'Banda',
-      
       // === Página ===
       'Page format': 'Formato da página', 'Page width': 'Largura da página', 
       'Page height': 'Altura da página', 'Content height': 'Altura do conteúdo', 
@@ -117,11 +104,9 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Page header size': 'Tamanho do cabeçalho', 'Page footer size': 'Tamanho do rodapé', 
       'Margin left': 'Margem esquerda', 'Margin top': 'Margem superior',
       'Margin right': 'Margem direita', 'Margin bottom': 'Margem inferior',
-      
       // === Documento ===
       'Document properties': 'Propriedades do documento', 'Page size': 'Tamanho da página', 
       'Unit': 'Unidade', 'Pixels': 'Pixels', 'Millimeters': 'Milímetros', 'Inches': 'Polegadas',
-      
       // === UI Geral ===
       'General': 'Geral', 'Options': 'Opções', 'Visible': 'Visível', 'Enabled': 'Habilitado',
       'Center': 'Centro', 'Middle': 'Meio', 'Justify': 'Justificar',
@@ -131,7 +116,6 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Insert': 'Inserir', 'Update': 'Atualizar', 'Duplicate': 'Duplicar',
       'Elements': 'Elementos', 'Layout': 'Layout', 'Design': 'Design', 
       'Advanced': 'Avançado', 'Show': 'Mostrar', 'Hide': 'Ocultar',
-      
       // === Propriedades Específicas ===
       'Fixed width': 'Largura fixa', 'Minimum width': 'Largura mínima', 'Maximum width': 'Largura máxima',
       'Auto width': 'Largura automática', 'Fixed height': 'Altura fixa', 'Auto height': 'Altura automática',
@@ -148,21 +132,36 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Horizontal': 'Horizontal', 'Vertical': 'Vertical', 'Diagonal': 'Diagonal'
     };
 
-    const applyAttr = (attr: 'title' | 'aria-label' | 'data-title' | 'placeholder') => {
-      root.querySelectorAll(`[${attr}]`).forEach((el) => {
-        const t = (el as HTMLElement).getAttribute(attr);
-        if (!t) return;
-        const translated = map[t.trim()];
-        if (translated) (el as HTMLElement).setAttribute(attr, translated);
-      });
+    const normalize = (s: string) => s.replace(/\s+/g, ' ').trim().replace(/:$/, '');
+    const hasColon = (s: string) => /:$/.test(s);
+    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const translateVal = (val: string | null) => {
+      if (!val) return null;
+      const original = val;
+      const key = normalize(val);
+      const translated = map[key];
+      if (translated) return translated + (hasColon(original) ? ':' : '');
+      // fallback: substituição parcial com limites de palavra
+      let result = original;
+      for (const [k, v] of Object.entries(map)) {
+        const re = new RegExp(`\\b${escapeRegExp(k)}\\b`, 'g');
+        if (re.test(result)) result = result.replace(re, v);
+      }
+      return result === original ? null : result;
     };
 
-    applyAttr('title');
-    applyAttr('aria-label');
-    applyAttr('data-title');
-    applyAttr('placeholder');
+    // Atributos
+    (['title','aria-label','data-title','placeholder'] as const).forEach((attr) => {
+      root.querySelectorAll(`[${attr}]`).forEach((el) => {
+        const node = el as HTMLElement;
+        const t = node.getAttribute(attr);
+        const tr = translateVal(t);
+        if (tr) node.setAttribute(attr, tr);
+      });
+    });
 
-    // Text content in visible labels/buttons/tabs
+    // Textos visíveis
     const textSelectors = [
       '.rbroControlLabel', '.rbroSectionHeader', '.rbroToolbar button', '.rbroToolbar .rbroToolLabel',
       '.rbroButton', '.rbroMenuItem', '.rbroPropertyLabel', '.rbroTabs .rbroTab', 'label', 'th', 'td'
@@ -170,18 +169,15 @@ const [isLoaded, setIsLoaded] = useState(false);
     root.querySelectorAll(textSelectors.join(',')).forEach((el) => {
       const node = el as HTMLElement;
       const txt = node.textContent?.trim();
-      if (!txt) return;
-      const translated = map[txt];
-      if (translated) node.textContent = translated;
+      const tr = translateVal(txt || null);
+      if (tr) node.textContent = tr;
     });
 
-    // Option elements in selects
+    // Options
     root.querySelectorAll('select option').forEach((opt) => {
       const o = opt as HTMLOptionElement;
-      const txt = o.textContent?.trim();
-      if (!txt) return;
-      const translated = map[txt];
-      if (translated) o.textContent = translated;
+      const tr = translateVal(o.textContent?.trim() || null);
+      if (tr) o.textContent = tr;
     });
   };
 

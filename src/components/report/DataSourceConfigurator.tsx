@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Database, Plus, Trash2, Play, Table } from "lucide-react";
+import { Database, Plus, Trash2, Play, Table, Plug } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DatabaseTableExplorer } from "./DatabaseTableExplorer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DatabaseConnectionsCRUD } from "@/components/config/DatabaseConnectionsCRUD";
 
 interface DataSource {
   id: string;
@@ -36,6 +38,7 @@ export function DataSourceConfigurator({
   const [selectedDs, setSelectedDs] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(false);
+  const [showConnManager, setShowConnManager] = useState(false);
 
   useEffect(() => {
     loadConnections();
@@ -190,15 +193,20 @@ export function DataSourceConfigurator({
       {/* Lista de Data Sources */}
       <Card className="col-span-1">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Data Sources
-            </CardTitle>
-            <Button size="sm" onClick={handleAddDataSource}>
-              <Plus className="h-3 w-3" />
-            </Button>
-          </div>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                Data Sources
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowConnManager(true)}>
+                  <Plug className="h-3 w-3 mr-1" /> Conexões
+                </Button>
+                <Button size="sm" onClick={handleAddDataSource}>
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
         </CardHeader>
         <CardContent className="space-y-2">
           {connections.length === 0 ? (
@@ -368,6 +376,17 @@ export function DataSourceConfigurator({
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={showConnManager} onOpenChange={(o) => { setShowConnManager(o); if (!o) loadConnections(); }}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Gerenciar Conexões de Banco</DialogTitle>
+          </DialogHeader>
+          <div className="h-[70vh] overflow-auto">
+            <DatabaseConnectionsCRUD onConnectionsChange={loadConnections} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

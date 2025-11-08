@@ -39,13 +39,18 @@ export function DatabaseTableExplorer({ connections, onInsertField }: DatabaseTa
 
   const loadTables = async () => {
     if (!selectedConnection) return;
+    const conn = connections.find((c) => c.id === selectedConnection);
+    const isSqlServer = conn?.database_type === 'sqlserver';
+    const tablesQuery = isSqlServer
+      ? "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'"
+      : "SELECT table_name AS TABLE_NAME FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'";
     
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('test-report-query', {
         body: {
           connectionId: selectedConnection,
-          query: "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'",
+          query: tablesQuery,
           type: 'schema'
         }
       });
@@ -64,12 +69,7 @@ export function DatabaseTableExplorer({ connections, onInsertField }: DatabaseTa
     } catch (error: any) {
       console.error("Error loading tables:", error);
       toast.error("Erro ao carregar tabelas: " + error.message);
-      // Fallback com dados de exemplo
-      setTables([
-        { name: "clientes", columns: [], expanded: false },
-        { name: "produtos", columns: [], expanded: false },
-        { name: "pedidos", columns: [], expanded: false }
-      ]);
+      setTables([]);
     } finally {
       setLoading(false);
     }
@@ -86,41 +86,46 @@ export function DatabaseTableExplorer({ connections, onInsertField }: DatabaseTa
       return;
     }
 
-    // Carregar colunas se ainda não foram carregadas
-    if (table.columns.length === 0) {
-      try {
-        const { data, error } = await supabase.functions.invoke('test-report-query', {
-          body: {
-            connectionId: selectedConnection,
-            query: `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '${tableName}'`,
-            type: 'schema'
-          }
-        });
+  // Carregar colunas se ainda não foram carregadas
+  if (table.columns.length === 0) {
+    try {
+      const conn = connections.find((c) => c.id === selectedConnection);
+      const isSqlServer = conn?.database_type === 'sqlserver';
+      const colQuery = isSqlServer
+        ? `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '${tableName}'`
+        : `SELECT column_name AS COLUMN_NAME, data_type AS DATA_TYPE FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '${tableName}'`;
 
-        if (error) throw error;
-
-        if (data?.success && data?.data) {
-          const columns = data.data.map((row: any) => ({
-            name: row.COLUMN_NAME || row.column_name || Object.values(row)[0],
-            type: row.DATA_TYPE || row.data_type || Object.values(row)[1] || 'unknown'
-          }));
-          
-          setTables(tables.map(t => 
-            t.name === tableName ? { ...t, columns, expanded: true } : t
-          ));
+      const { data, error } = await supabase.functions.invoke('test-report-query', {
+        body: {
+          connectionId: selectedConnection,
+          query: colQuery,
+          type: 'schema'
         }
-      } catch (error: any) {
-        console.error("Error loading columns:", error);
-        // Fallback - expande sem colunas
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.data) {
+        const columns = data.data.map((row: any) => ({
+          name: row.COLUMN_NAME || row.column_name || Object.values(row)[0],
+          type: row.DATA_TYPE || row.data_type || Object.values(row)[1] || 'unknown'
+        }));
+        
         setTables(tables.map(t => 
-          t.name === tableName ? { ...t, expanded: true } : t
+          t.name === tableName ? { ...t, columns, expanded: true } : t
         ));
       }
-    } else {
+    } catch (error: any) {
+      console.error("Error loading columns:", error);
       setTables(tables.map(t => 
         t.name === tableName ? { ...t, expanded: true } : t
       ));
     }
+  } else {
+    setTables(tables.map(t => 
+      t.name === tableName ? { ...t, expanded: true } : t
+    ));
+  }
   };
 
   const filteredTables = tables.filter(table =>
