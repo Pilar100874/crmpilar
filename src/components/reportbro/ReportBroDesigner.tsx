@@ -243,25 +243,46 @@ const [isLoaded, setIsLoaded] = useState(false);
   return (
     <div className="h-full flex flex-col bg-muted/30">
       {/* Header minimalista */}
-      <div className="h-14 border-b flex items-center justify-between px-6 bg-card/50 backdrop-blur-sm shrink-0">
+      <div className="h-16 border-b flex items-center justify-between px-6 bg-card/50 backdrop-blur-sm shrink-0">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-foreground">Designer de Relatórios</h2>
+          <h2 className="text-lg font-semibold text-foreground">Designer de Relatórios</h2>
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" onClick={handleSave} className="h-9 px-3">
-            <Save className="h-4 w-4 mr-2" />
+        <div className="flex items-center gap-3">
+          <Button 
+            size="default" 
+            variant="outline" 
+            onClick={handleSave} 
+            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+          >
+            <Save className="h-5 w-5 mr-2" />
             Salvar
           </Button>
-          <Button size="sm" variant="ghost" onClick={handlePreview} className="h-9 px-3">
-            <Eye className="h-4 w-4 mr-2" />
+          <Button 
+            size="default" 
+            variant="outline" 
+            onClick={handlePreview} 
+            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+          >
+            <Eye className="h-5 w-5 mr-2" />
             Preview
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowDsDialog(true)} className="h-9 px-3">
-            <Database className="h-4 w-4 mr-2" />
+          <Button 
+            size="default" 
+            variant="outline" 
+            onClick={() => setShowDsDialog(true)} 
+            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+          >
+            <Database className="h-5 w-5 mr-2" />
             Dados
           </Button>
-          <Button size="sm" variant="ghost" onClick={onClose} className="h-9 w-9 p-0" title="Fechar designer">
-            <X className="h-4 w-4" />
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            onClick={onClose} 
+            className="h-10 w-10 rounded-xl transition-all hover:scale-105" 
+            title="Fechar designer"
+          >
+            <X className="h-5 w-5" />
           </Button>
         </div>
       </div>
