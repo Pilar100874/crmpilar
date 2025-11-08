@@ -34,10 +34,6 @@ import Layout from "./components/Layout";
 import Relatorios from "./pages/Relatorios";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
-import ReportStudioDemo from "./pages/ReportStudioDemo";
-import ReportsList from "./pages/ReportStudioDemo/ReportsList";
-import DesignerPage from "./pages/ReportStudioDemo/DesignerPage";
-import ViewerPage from "./pages/ReportStudioDemo/ViewerPage";
 
 const queryClient = new QueryClient();
 
@@ -90,12 +86,6 @@ const App = () => (
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
-          {/* Report Studio Demo routes (no main layout) */}
-          <Route path="/report-studio" element={<ReportStudioDemo />}>
-            <Route path="reports" element={<ReportsList />} />
-            <Route path="designer/:id" element={<DesignerPage />} />
-            <Route path="viewer/:id" element={<ViewerPage />} />
-          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
