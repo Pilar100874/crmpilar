@@ -93,8 +93,10 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Line element': 'Elemento de linha',
       
       // === Imagens ===
-      'Image element': 'Elemento de imagem', 'Source': 'Origem', 'Image file': 'Arquivo de imagem', 
-      'Image URL': 'URL da imagem',
+      'Image element': 'Elemento de imagem', 'Source': 'Origem', 'Source:': 'Origem:',
+      'Image file': 'Arquivo de imagem', 'Image file:': 'Arquivo de imagem:',
+      'Image URL': 'URL da imagem', 'Choose File': 'Escolher arquivo',
+      'No file chosen': 'Nenhum arquivo escolhido',
       
       // === Tabelas e Bandas ===
       'Table element': 'Elemento de tabela', 'Data': 'Dados', 'Print header': 'Imprimir cabeçalho', 
@@ -167,7 +169,12 @@ const [isLoaded, setIsLoaded] = useState(false);
       'dataSource': 'Fonte de dados', 'columns': 'Colunas', 'header': 'Cabeçalho',
       'contentRows': 'Linhas de conteúdo', 'footer': 'Rodapé', 'printHeader': 'Imprimir cabeçalho',
       'printFooter': 'Imprimir rodapé', 'source': 'Origem', 'imageFilename': 'Nome do arquivo',
-      'format': 'Formato', 'displayValue': 'Exibir valor'
+      'format': 'Formato', 'displayValue': 'Exibir valor',
+      
+      // === Mais Labels de Formulário ===
+      'Courier': 'Courier', 'Helvetica': 'Helvetica', 'Times-Roman': 'Times-Roman',
+      'left': 'esquerda', 'center': 'centro', 'right': 'direita',
+      'top': 'superior', 'middle': 'meio', 'bottom': 'inferior'
     }
 
     const applyAttr = (attr: 'title' | 'aria-label' | 'data-title' | 'placeholder') => {
