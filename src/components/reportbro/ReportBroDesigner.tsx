@@ -283,12 +283,25 @@ const [isLoaded, setIsLoaded] = useState(false);
       'height': 'altura'
     };
     
+    // Helper para resolver traduções considerando dois-pontos e variações
+    const resolve = (original?: string | null): string | null => {
+      if (!original) return null;
+      const t = original.trim();
+      if (!t) return null;
+      if (translationMap[t]) return translationMap[t];
+      // Remove dois-pontos no fim
+      if (t.endsWith(':')) {
+        const base = t.slice(0, -1).trim();
+        if (translationMap[base]) return translationMap[base] + ':';
+      }
+      return null;
+    };
+
     // Traduz atributos title
     root.querySelectorAll('[title]').forEach((el) => {
       const title = (el as HTMLElement).getAttribute('title');
-      if (title && translationMap[title.trim()]) {
-        (el as HTMLElement).setAttribute('title', translationMap[title.trim()]);
-      }
+      const r = resolve(title);
+      if (r) (el as HTMLElement).setAttribute('title', r);
     });
     
     // Traduz textos visíveis em todos os elementos relevantes
@@ -317,43 +330,36 @@ const [isLoaded, setIsLoaded] = useState(false);
     root.querySelectorAll(selectors.join(', ')).forEach((el) => {
       // Traduz texto direto do elemento
       if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
-        const text = el.textContent?.trim();
-        if (text && translationMap[text]) {
-          el.textContent = translationMap[text];
-        }
+        const r = resolve(el.textContent);
+        if (r) el.textContent = r;
       } else {
         // Traduz apenas text nodes diretos (não recursivo)
         Array.from(el.childNodes).forEach(node => {
           if (node.nodeType === Node.TEXT_NODE && node.textContent) {
             const trimmed = node.textContent.trim();
-            if (trimmed && translationMap[trimmed]) {
-              node.textContent = node.textContent.replace(trimmed, translationMap[trimmed]);
-            }
+            const r = resolve(trimmed);
+            if (r) node.textContent = node.textContent.replace(trimmed, r);
           }
         });
       }
       
       // Traduz também atributos data-label se existirem
       const dataLabel = (el as HTMLElement).getAttribute('data-label');
-      if (dataLabel && translationMap[dataLabel.trim()]) {
-        (el as HTMLElement).setAttribute('data-label', translationMap[dataLabel.trim()]);
-      }
+      const rData = resolve(dataLabel);
+      if (rData) (el as HTMLElement).setAttribute('data-label', rData);
     });
     
     // Traduz options de select
     root.querySelectorAll('select option').forEach((option) => {
-      const text = option.textContent?.trim();
-      if (text && translationMap[text]) {
-        option.textContent = translationMap[text];
-      }
+      const r = resolve(option.textContent);
+      if (r) option.textContent = r;
     });
     
     // Traduz placeholders
     root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach((el) => {
       const placeholder = (el as HTMLInputElement).getAttribute('placeholder');
-      if (placeholder && translationMap[placeholder.trim()]) {
-        (el as HTMLInputElement).setAttribute('placeholder', translationMap[placeholder.trim()]);
-      }
+      const r = resolve(placeholder);
+      if (r) (el as HTMLInputElement).setAttribute('placeholder', r);
     });
   };
 
