@@ -409,13 +409,58 @@ textarea.rbroInput:hover:not(:focus) {
 }
 
 /* Remove espaçamentos excessivos */
-.rbroPanelSection {
-  margin: 0 !important;
+.rbroPanelSection { margin: 0 !important; }
+.rbroFormGroup { margin-bottom: 12px !important; }
+
+/* ===== WRAPPER-SCOPED (garante aplicação no container do app) ===== */
+.rb-host .rbroToolbar, 
+.rb-host #rbro_header { gap: 8px !important; padding: 8px 12px !important; }
+
+/* Botões e itens de toolbar com espaçamento e área de clique maiores */
+.rb-host #rbro_header .rbroButton,
+.rb-host #rbro_header button,
+.rb-host .rbroToolbar .rbroButton,
+.rb-host .rbroToolbar button,
+.rb-host .rbroToolbarItem {
+  margin: 0 4px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
 }
 
-.rbroFormGroup {
-  margin-bottom: 12px !important;
+/* Evita ícones grudados */
+.rb-host #rbro_header button + button,
+.rb-host .rbroToolbar button + button,
+.rb-host .rbroToolbarItem + .rbroToolbarItem {
+  margin-left: 8px !important;
 }
+
+/* Ícones maiores e legíveis */
+.rb-host .rbroButton svg, 
+.rb-host .rbroToolbarItem svg, 
+.rb-host #rbro_header svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Menu lateral de elementos com layout limpo e espaçamento */
+.rb-host .rbroMenuItem {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  margin: 6px 8px !important;
+  border-radius: 10px !important;
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.rb-host .rbroMenuItem:hover {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+  border-color: hsl(var(--primary) / 0.4) !important;
+}
+
 
 /* Separação garantida para botões da toolbar (evita ícones grudados) */
 #rbro_container button + button { margin-left: 8px !important; }
