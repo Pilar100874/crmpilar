@@ -72,7 +72,10 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Close dialog': 'Fechar janela',
       
       // === Painel de Propriedades - Geral ===
-      'Position': 'Posição', 'Size': 'Tamanho', 'Style': 'Estilo', 'Print if': 'Imprimir se', 
+      'Position': 'Posição', 'Position (x, y):': 'Posição (x, y):', 'Size': 'Tamanho', 
+      'Size (width, height):': 'Tamanho (largura, altura):', 'Style': 'Estilo', 
+      'STYLE': 'ESTILO', 'Print if': 'Imprimir se', 'PRINT SETTINGS': 'CONFIGURAÇÕES DE IMPRESSÃO',
+      'SPREADSHEET': 'PLANILHA', 'Spreadsheet': 'Planilha',
       'Remove empty element': 'Remover elemento vazio', 'Spreadsheet hide': 'Ocultar na planilha', 
       'Spreadsheet column': 'Coluna da planilha', 'Spreadsheet colspan': 'Mesclar colunas',
       'Spreadsheet add empty row': 'Adicionar linha vazia', 'Link': 'Link', 'Pattern': 'Padrão', 
