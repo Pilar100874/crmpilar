@@ -215,9 +215,31 @@ export function DataSourceConfigurator({
               <p className="text-sm text-muted-foreground mb-4">
                 Nenhuma conexão de banco configurada.
               </p>
-              <p className="text-xs text-muted-foreground">
-                Acesse <strong>Configurações → Conexões</strong> para adicionar bancos de dados.
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowConnManager(true)}>
+                  Gerenciar Conexões
+                </Button>
+                <Button size="sm" onClick={async () => {
+                  try {
+                    const estabId = await getEstabelecimentoId();
+                    const { error } = await supabase.from('database_connections').insert([{
+                      name: 'Supabase (automático)',
+                      description: 'Conexão ao banco interno da aplicação',
+                      database_type: 'supabase',
+                      sql_server: '', sql_database: '', sql_username: '', sql_password: '', sql_port: '5432',
+                      estabelecimento_id: estabId,
+                      active: true,
+                    }]);
+                    if (error) throw error;
+                    toast.success('Conexão Supabase criada!');
+                    loadConnections();
+                  } catch (e: any) {
+                    toast.error('Erro ao criar conexão: ' + e.message);
+                  }
+                }}>
+                  Criar conexão Supabase
+                </Button>
+              </div>
             </div>
           ) : (
             <ScrollArea className="h-[500px]">
