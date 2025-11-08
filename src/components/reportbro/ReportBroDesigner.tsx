@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { X, Save, Eye, FileDown, Database } from "lucide-react";
 import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-custom.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -278,61 +277,9 @@ const [isLoaded, setIsLoaded] = useState(false);
   });
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-background via-muted/20 to-background">
-      {/* Header - estilo Canvas */}
-      <div className="h-16 border-b flex items-center justify-between px-6 bg-card/80 backdrop-blur-md shadow-sm shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-lg">R</span>
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-foreground">Designer de Relatórios</h2>
-            <p className="text-xs text-muted-foreground">Crie relatórios profissionais</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button 
-            size="default" 
-            variant="outline" 
-            onClick={handleSave} 
-            className="h-10 px-5 rounded-xl transition-all hover:scale-105 hover:shadow-md border-2"
-          >
-            <Save className="h-5 w-5 mr-2" />
-            Salvar
-          </Button>
-          <Button 
-            size="default" 
-            variant="outline" 
-            onClick={handlePreview} 
-            className="h-10 px-5 rounded-xl transition-all hover:scale-105 hover:shadow-md border-2"
-          >
-            <Eye className="h-5 w-5 mr-2" />
-            Preview
-          </Button>
-          <Button 
-            size="default" 
-            variant="outline" 
-            onClick={() => setShowDsDialog(true)} 
-            className="h-10 px-5 rounded-xl transition-all hover:scale-105 hover:shadow-md border-2"
-          >
-            <Database className="h-5 w-5 mr-2" />
-            Dados
-          </Button>
-          <div className="w-px h-8 bg-border mx-1"></div>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            onClick={onClose} 
-            className="h-10 w-10 rounded-xl transition-all hover:scale-105 hover:bg-destructive/10 hover:text-destructive" 
-            title="Fechar designer"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Designer Container */}
-      <div className="flex-1 relative overflow-hidden bg-muted/10">
+    <div className="h-full flex flex-col bg-background">
+      {/* Designer Container - ReportBro com toolbar padrão */}
+      <div className="flex-1 relative overflow-hidden">
         {!isLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-md z-10">
             <div className="text-center p-8 rounded-2xl bg-card shadow-2xl border">
