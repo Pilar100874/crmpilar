@@ -24,8 +24,7 @@ const [isLoaded, setIsLoaded] = useState(false);
 
   // Traduz tooltips do ReportBro para pt-BR dinamicamente
   const translateTooltipsPtBR = () => {
-    const root = containerRef.current;
-    if (!root) return;
+    const root: ParentNode = containerRef.current || document;
     const map: Record<string, string> = {
       'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir',
       'Preview report': 'Visualizar relatório', 'Run': 'Executar',
@@ -38,12 +37,28 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Add rectangle': 'Adicionar retângulo', 'Add circle': 'Adicionar elipse', 'Add barcode': 'Adicionar código de barras',
       'Grid': 'Grade', 'Show grid': 'Mostrar grade', 'Hide grid': 'Ocultar grade', 'Snap to grid': 'Ajustar à grade',
       'Bring to front': 'Trazer para frente', 'Send to back': 'Enviar para trás',
+      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado'
     };
-    root.querySelectorAll('[title]').forEach((el) => {
-      const t = (el as HTMLElement).getAttribute('title');
-      if (!t) return;
-      const translated = map[t.trim()];
-      if (translated) (el as HTMLElement).setAttribute('title', translated);
+
+    const applyAttr = (attr: 'title' | 'aria-label' | 'data-title') => {
+      root.querySelectorAll(`[${attr}]`).forEach((el) => {
+        const t = (el as HTMLElement).getAttribute(attr);
+        if (!t) return;
+        const translated = map[t.trim()];
+        if (translated) (el as HTMLElement).setAttribute(attr, translated);
+      });
+    };
+
+    applyAttr('title');
+    applyAttr('aria-label');
+    applyAttr('data-title');
+
+    // Alguns textos visíveis em labels/headers
+    root.querySelectorAll('.rbroControlLabel, .rbroSectionHeader').forEach((el) => {
+      const text = el.textContent?.trim();
+      if (!text) return;
+      const translated = map[text];
+      if (translated) el.textContent = translated;
     });
   };
 
@@ -53,7 +68,28 @@ const [isLoaded, setIsLoaded] = useState(false);
     observer.observe(containerRef.current, { childList: true, subtree: true });
   };
 
+  // Aplica traduções repetidamente nos primeiros segundos (evita perder tooltips criados tardiamente)
+  const startTranslationTick = () => {
+    let count = 0;
+    const intId = window.setInterval(() => {
+      translateTooltipsPtBR();
+      count++;
+      if (count >= 12) window.clearInterval(intId); // ~2.4s
+    }, 200);
+  };
+
+  // Garante remoção de branding/ícone do ReportBro sem flicker
+  const ensureBrandingHiddenStyle = () => {
+    const id = "rb-branding-hide";
+    if (document.getElementById(id)) return;
+    const style = document.createElement("style");
+    style.id = id;
+    style.textContent = `.rbroLogo, .rbroPro, .rbro-logo, .rbro-branding, [class*="logo" i][class*="reportbro" i], [class*="branding" i][class*="reportbro" i] { display: none !important; visibility: hidden !important; }`;
+    document.head.appendChild(style);
+  };
+
   useEffect(() => {
+    ensureBrandingHiddenStyle();
     loadReportBro();
   }, []);
 
@@ -103,12 +139,11 @@ const [isLoaded, setIsLoaded] = useState(false);
 
       // Pós-carregamento: ocultar branding e traduzir
       setTimeout(() => {
-        const style = document.createElement('style');
-        style.textContent = `.rbroLogo, .rbroPro, .rbro-logo, .rbro-branding, [class*="logo" i][class*="reportbro" i], [class*="branding" i][class*="reportbro" i] { display: none !important; visibility: hidden !important; }`;
-        document.head.appendChild(style);
+        ensureBrandingHiddenStyle();
         translateTooltipsPtBR();
         setupTranslationsObserver();
-      }, 500);
+        startTranslationTick();
+      }, 0);
 
       setIsLoaded(true);
       toast.success("Designer carregado!");
