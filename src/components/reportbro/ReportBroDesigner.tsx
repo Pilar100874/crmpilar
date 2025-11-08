@@ -26,71 +26,103 @@ const [isLoaded, setIsLoaded] = useState(false);
   const translateTooltipsPtBR = () => {
     const root: ParentNode = containerRef.current || document;
     const map: Record<string, string> = {
-      // Toolbar
+      // === Menu Principal ===
       'File': 'Arquivo', 'Edit': 'Editar', 'View': 'Exibir', 'Help': 'Ajuda',
-      'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir', 'Run': 'Executar',
-      'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 'Properties': 'Propriedades',
-      'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 'Close': 'Fechar', 'Settings': 'Configurações',
-      // Zoom / Align
-      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%', 'Zoom': 'Zoom',
-      'Align left': 'Alinhar à esquerda', 'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita',
+      'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir', 
+      'Run': 'Executar', 'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 
+      'Properties': 'Propriedades', 'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 
+      'Close': 'Fechar', 'Settings': 'Configurações',
+      
+      // === Zoom / Alinhamento ===
+      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 
+      'Zoom 100%': 'Zoom 100%', 'Zoom': 'Zoom', 'Align left': 'Alinhar à esquerda', 
+      'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita',
       'Align top': 'Alinhar ao topo', 'Align middle': 'Alinhar ao meio', 'Align bottom': 'Alinhar à base',
-      // Insert
-      'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha',
-      'Add rectangle': 'Adicionar retângulo', 'Add circle': 'Adicionar elipse', 'Add barcode': 'Adicionar código de barras',
-      // Arrange / Grid
-      'Grid': 'Grade', 'Show grid': 'Mostrar grade', 'Hide grid': 'Ocultar grade', 'Snap to grid': 'Ajustar à grade',
-      'Bring to front': 'Trazer para frente', 'Send to back': 'Enviar para trás', 'Group': 'Agrupar', 'Ungroup': 'Desagrupar',
+      
+      // === Inserir Elementos ===
+      'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 
+      'Add line': 'Adicionar linha', 'Add rectangle': 'Adicionar retângulo', 'Add circle': 'Adicionar elipse', 
+      'Add barcode': 'Adicionar código de barras',
+      
+      // === Grade / Organizar ===
+      'Grid': 'Grade', 'Show grid': 'Mostrar grade', 'Hide grid': 'Ocultar grade', 
+      'Snap to grid': 'Ajustar à grade', 'Bring to front': 'Trazer para frente', 
+      'Send to back': 'Enviar para trás', 'Group': 'Agrupar', 'Ungroup': 'Desagrupar',
       'Lock': 'Bloquear', 'Unlock': 'Desbloquear',
-      // Text styles
-      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Font': 'Fonte', 'Font size': 'Tamanho da fonte',
-      'Text color': 'Cor do texto', 'Background color': 'Cor de fundo', 'Opacity': 'Opacidade',
-      // Common property labels (sem duplicatas)
-      'Name': 'Nome', 'Type': 'Tipo', 'X': 'X', 'Y': 'Y', 'Width': 'Largura', 'Height': 'Altura', 'Color': 'Cor',
-      'Border': 'Borda', 'Borders': 'Bordas', 'None': 'Nenhum', 'All': 'Todos', 'Left': 'Esquerda', 'Right': 'Direita', 
-      'Top': 'Superior', 'Bottom': 'Inferior', 'Padding': 'Preenchimento', 'Margin': 'Margem', 
-      'Alignment': 'Alinhamento', 'Horizontal alignment': 'Alinhamento horizontal', 'Vertical alignment': 'Alinhamento vertical',
+      
+      // === Estilos de Texto ===
+      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Strikethrough': 'Tachado',
+      'Font': 'Fonte', 'Font size': 'Tamanho da fonte', 'Text color': 'Cor do texto', 
+      'Background color': 'Cor de fundo', 'Opacity': 'Opacidade',
+      
+      // === Propriedades Comuns ===
+      'Name': 'Nome', 'Type': 'Tipo', 'X': 'X', 'Y': 'Y', 'Width': 'Largura', 'Height': 'Altura', 
+      'Color': 'Cor', 'Border': 'Borda', 'Borders': 'Bordas', 'None': 'Nenhum', 'All': 'Todos', 
+      'Left': 'Esquerda', 'Right': 'Direita', 'Top': 'Superior', 'Bottom': 'Inferior', 
+      'Padding': 'Preenchimento', 'Margin': 'Margem', 'Alignment': 'Alinhamento', 
+      'Horizontal alignment': 'Alinhamento horizontal', 'Vertical alignment': 'Alinhamento vertical',
       'Content': 'Conteúdo', 'Image': 'Imagem', 'Table': 'Tabela', 'Row': 'Linha', 'Column': 'Coluna', 
       'Columns': 'Colunas', 'Rows': 'Linhas', 'Data source': 'Fonte de dados', 'Parameter': 'Parâmetro', 
-      'Parameters': 'Parâmetros', 'Value': 'Valor', 'Values': 'Valores', 'Header': 'Cabeçalho', 'Footer': 'Rodapé', 
-      'Page': 'Página', 'Report': 'Relatório', 'Detail': 'Detalhe', 'Preview report': 'Visualizar relatório', 
-      'Export': 'Exportar', 'PDF': 'PDF', 'PNG': 'PNG', 'JPG': 'JPG',
-      // Dialog buttons
-      'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Yes': 'Sim', 'No': 'Não', 'Close dialog': 'Fechar janela',
-      // Element Properties Panel
+      'Parameters': 'Parâmetros', 'Value': 'Valor', 'Values': 'Valores', 'Header': 'Cabeçalho', 
+      'Footer': 'Rodapé', 'Page': 'Página', 'Report': 'Relatório', 'Detail': 'Detalhe', 
+      'Preview report': 'Visualizar relatório', 'Export': 'Exportar', 'PDF': 'PDF', 'PNG': 'PNG', 'JPG': 'JPG',
+      
+      // === Diálogos ===
+      'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Yes': 'Sim', 'No': 'Não', 
+      'Close dialog': 'Fechar janela',
+      
+      // === Painel de Propriedades - Geral ===
       'Position': 'Posição', 'Size': 'Tamanho', 'Style': 'Estilo', 'Print if': 'Imprimir se', 
       'Remove empty element': 'Remover elemento vazio', 'Spreadsheet hide': 'Ocultar na planilha', 
       'Spreadsheet column': 'Coluna da planilha', 'Spreadsheet colspan': 'Mesclar colunas',
       'Spreadsheet add empty row': 'Adicionar linha vazia', 'Link': 'Link', 'Pattern': 'Padrão', 
-      'Expression': 'Expressão', 'Grow weight': 'Peso de crescimento', 'Text': 'Texto', 'Format': 'Formato', 
-      'Line': 'Linha', 'Line width': 'Largura da linha', 'Line color': 'Cor da linha', 'Line style': 'Estilo da linha', 
+      'Expression': 'Expressão', 'Grow weight': 'Peso de crescimento', 'Text': 'Texto', 
+      'Format': 'Formato', 'Line': 'Linha', 'Line width': 'Largura da linha', 
+      'Line color': 'Cor da linha', 'Line style': 'Estilo da linha', 
       'Fill': 'Preenchimento', 'Fill color': 'Cor de preenchimento',
-      // Text & Line Elements
-      'Text element': 'Elemento de texto', 'Rich text': 'Texto rico', 'Eval': 'Avaliar', 'Strikethrough': 'Tachado',
-      'Horizontal line': 'Linha horizontal', 'Vertical line': 'Linha vertical', 'Text style': 'Estilo de texto',
-      'Line spacing': 'Espaçamento de linha', 'Border width': 'Largura da borda', 'Border color': 'Cor da borda',
-      'Border style': 'Estilo da borda', 'Radius': 'Raio', 'Background': 'Fundo', 'Line element': 'Elemento de linha',
-      // Image Properties
-      'Image element': 'Elemento de imagem', 'Source': 'Origem', 'Image file': 'Arquivo de imagem', 'Image URL': 'URL da imagem',
-      // Table & Band Properties
+      
+      // === Elementos de Texto ===
+      'Text element': 'Elemento de texto', 'Rich text': 'Texto rico', 'Eval': 'Avaliar',
+      'Horizontal line': 'Linha horizontal', 'Vertical line': 'Linha vertical', 
+      'Text style': 'Estilo de texto', 'Line spacing': 'Espaçamento de linha', 
+      'Border width': 'Largura da borda', 'Border color': 'Cor da borda',
+      'Border style': 'Estilo da borda', 'Radius': 'Raio', 'Background': 'Fundo', 
+      'Line element': 'Elemento de linha',
+      
+      // === Imagens ===
+      'Image element': 'Elemento de imagem', 'Source': 'Origem', 'Image file': 'Arquivo de imagem', 
+      'Image URL': 'URL da imagem',
+      
+      // === Tabelas e Bandas ===
       'Table element': 'Elemento de tabela', 'Data': 'Dados', 'Print header': 'Imprimir cabeçalho', 
-      'Print footer': 'Imprimir rodapé', 'Content rows': 'Linhas de conteúdo', 'Band element': 'Elemento de banda',
-      'Always print on same page': 'Sempre imprimir na mesma página', 'Shrink': 'Encolher',
-      // Barcode & Frame Properties
+      'Print footer': 'Imprimir rodapé', 'Content rows': 'Linhas de conteúdo', 
+      'Band element': 'Elemento de banda', 'Always print on same page': 'Sempre imprimir na mesma página', 
+      'Shrink': 'Encolher',
+      
+      // === Código de Barras ===
       'Barcode element': 'Elemento de código de barras', 'Barcode type': 'Tipo de código de barras', 
-      'Display value': 'Exibir valor', 'Frame element': 'Elemento de moldura', 'Label': 'Rótulo',
-      // Section Properties
+      'Display value': 'Exibir valor',
+      
+      // === Moldura ===
+      'Frame element': 'Elemento de moldura', 'Label': 'Rótulo',
+      
+      // === Seção ===
       'Section element': 'Elemento de seção', 'Section': 'Seção', 'Band': 'Banda',
-      // Page Properties
-      'Page format': 'Formato da página', 'Page width': 'Largura da página', 'Page height': 'Altura da página',
-      'Content height': 'Altura do conteúdo', 'Orientation': 'Orientação', 'Portrait': 'Retrato', 'Landscape': 'Paisagem',
-      'Page header': 'Cabeçalho da página', 'Page footer': 'Rodapé da página', 'Page header size': 'Tamanho do cabeçalho',
-      'Page footer size': 'Tamanho do rodapé', 'Margin left': 'Margem esquerda', 'Margin top': 'Margem superior',
+      
+      // === Página ===
+      'Page format': 'Formato da página', 'Page width': 'Largura da página', 
+      'Page height': 'Altura da página', 'Content height': 'Altura do conteúdo', 
+      'Orientation': 'Orientação', 'Portrait': 'Retrato', 'Landscape': 'Paisagem',
+      'Page header': 'Cabeçalho da página', 'Page footer': 'Rodapé da página', 
+      'Page header size': 'Tamanho do cabeçalho', 'Page footer size': 'Tamanho do rodapé', 
+      'Margin left': 'Margem esquerda', 'Margin top': 'Margem superior',
       'Margin right': 'Margem direita', 'Margin bottom': 'Margem inferior',
-      // Document Properties
-      'Document properties': 'Propriedades do documento', 'Page size': 'Tamanho da página', 'Unit': 'Unidade',
-      'Pixels': 'Pixels', 'Millimeters': 'Milímetros', 'Inches': 'Polegadas',
-      // General UI
+      
+      // === Documento ===
+      'Document properties': 'Propriedades do documento', 'Page size': 'Tamanho da página', 
+      'Unit': 'Unidade', 'Pixels': 'Pixels', 'Millimeters': 'Milímetros', 'Inches': 'Polegadas',
+      
+      // === UI Geral ===
       'General': 'Geral', 'Options': 'Opções', 'Visible': 'Visível', 'Enabled': 'Habilitado',
       'Center': 'Centro', 'Middle': 'Meio', 'Justify': 'Justificar',
       'Solid': 'Sólido', 'Dashed': 'Tracejado', 'Dotted': 'Pontilhado', 'Double': 'Duplo',
@@ -98,7 +130,22 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Select': 'Selecionar', 'Upload': 'Enviar', 'Browse': 'Procurar', 'Clear': 'Limpar',
       'Insert': 'Inserir', 'Update': 'Atualizar', 'Duplicate': 'Duplicar',
       'Elements': 'Elementos', 'Layout': 'Layout', 'Design': 'Design', 
-      'Advanced': 'Avançado', 'Show': 'Mostrar', 'Hide': 'Ocultar'
+      'Advanced': 'Avançado', 'Show': 'Mostrar', 'Hide': 'Ocultar',
+      
+      // === Propriedades Específicas ===
+      'Fixed width': 'Largura fixa', 'Minimum width': 'Largura mínima', 'Maximum width': 'Largura máxima',
+      'Auto width': 'Largura automática', 'Fixed height': 'Altura fixa', 'Auto height': 'Altura automática',
+      'Conditional formatting': 'Formatação condicional', 'Condition': 'Condição',
+      'True': 'Verdadeiro', 'False': 'Falso', 'Sort': 'Ordenar', 'Filter': 'Filtrar',
+      'Sum': 'Soma', 'Average': 'Média', 'Count': 'Contar', 'Min': 'Mínimo', 'Max': 'Máximo',
+      'Group by': 'Agrupar por', 'Order by': 'Ordenar por', 'Ascending': 'Crescente', 
+      'Descending': 'Decrescente', 'First': 'Primeiro', 'Last': 'Último',
+      'Auto fit': 'Ajuste automático', 'Stretch': 'Esticar', 'Shrink to fit': 'Encolher para caber',
+      'Keep together': 'Manter junto', 'Repeat header': 'Repetir cabeçalho',
+      'Page break': 'Quebra de página', 'Before': 'Antes', 'After': 'Depois',
+      'Spacing': 'Espaçamento', 'Border radius': 'Raio da borda', 'Shadow': 'Sombra',
+      'Transparency': 'Transparência', 'Rotation': 'Rotação', 'Scale': 'Escala',
+      'Horizontal': 'Horizontal', 'Vertical': 'Vertical', 'Diagonal': 'Diagonal'
     };
 
     const applyAttr = (attr: 'title' | 'aria-label' | 'data-title' | 'placeholder') => {
