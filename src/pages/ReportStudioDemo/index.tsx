@@ -1,8 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { FileText, Plus, ArrowLeft } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { API_BASE_URL } from '@/api/reportClient';
 
 export default function ReportStudioDemo() {
   const navigate = useNavigate();
@@ -54,24 +52,17 @@ export default function ReportStudioDemo() {
 
           {/* Informações de configuração */}
           <div className="mt-8 pt-8 border-t">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Configuração</h3>
-            {!API_BASE_URL || API_BASE_URL === 'http://localhost:5000' ? (
-              <Alert>
-                <AlertTitle className="text-xs">Atenção</AlertTitle>
-                <AlertDescription className="text-xs">
-                  Configure <code className="bg-muted px-1 py-0.5 rounded text-[10px]">
-                    VITE_API_BASE_URL
-                  </code> no arquivo <code className="bg-muted px-1 py-0.5 rounded text-[10px]">
-                    .env
-                  </code>
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p className="font-medium">API conectada:</p>
-                <p className="break-all">{API_BASE_URL}</p>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Status</h3>
+            <div className="text-xs text-muted-foreground space-y-2">
+              <div className="bg-muted/50 p-3 rounded">
+                <p className="font-medium text-foreground mb-1">Editor Integrado</p>
+                <p>FastReport carrega diretamente no React</p>
               </div>
-            )}
+              <div className="bg-muted/50 p-3 rounded">
+                <p className="font-medium text-foreground mb-1">Arquivos</p>
+                <p>Copie para <code className="text-[10px] bg-background px-1 py-0.5 rounded">public/fastreport/</code></p>
+              </div>
+            </div>
           </div>
         </aside>
 

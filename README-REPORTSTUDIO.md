@@ -2,17 +2,37 @@
 
 ## 📋 Visão Geral
 
-O **Report Studio Demo** é uma aplicação React integrada ao FastReport Web .NET que permite criar, editar e visualizar relatórios profissionais usando o Online Designer hospedado em um backend .NET.
+O **Report Studio Demo** é uma aplicação React com o FastReport Designer **totalmente integrado** (sem iframe externo). O editor carrega diretamente no navegador usando os arquivos JavaScript do FastReport.
 
 ## 🎯 Funcionalidades
 
 - **Lista de Relatórios** (`/report-studio/reports`): Visualize todos os relatórios disponíveis
-- **Editor Online** (`/report-studio/designer/:id`): Edite relatórios usando o FastReport Online Designer em iframe
+- **Editor Integrado** (`/report-studio/designer/:id`): Edite relatórios com FastReport Designer nativo no React
 - **Visualizador** (`/report-studio/viewer/:id`): Configure parâmetros e gere PDFs dos relatórios
+- **Sem Dependências Externas**: O editor funciona 100% no frontend após copiar os arquivos
 
 ## ⚙️ Configuração do Frontend (React)
 
-### 1. Variável de Ambiente
+### 1. Arquivos do FastReport Designer
+
+**IMPORTANTE**: Copie os arquivos do FastReport Online Designer para a pasta `public/fastreport/`
+
+```
+public/fastreport/
+├── FastReport.js
+├── Designer.js
+├── designer.css
+└── [outros arquivos necessários]
+```
+
+**Onde encontrar**:
+- Se você instalou FastReport.Web via NuGet: `packages/FastReport.Web.{version}/contentFiles/any/any/wwwroot/`
+- Download direto: https://www.fast-report.com/download (procure por "FastReport Online Designer for Web Demo")
+- Do seu projeto .NET: `YourProject/wwwroot/designer/`
+
+Veja `public/fastreport/README.md` para instruções detalhadas.
+
+### 2. Variável de Ambiente
 
 Crie ou edite o arquivo `.env` na raiz do projeto e adicione:
 
@@ -22,7 +42,7 @@ VITE_API_BASE_URL=http://localhost:5000
 
 Substitua pela URL do seu backend .NET.
 
-### 2. Instalação de Dependências
+### 3. Instalação de Dependências
 
 As dependências necessárias já estão instaladas:
 - `axios` - Cliente HTTP para comunicação com a API
@@ -37,11 +57,11 @@ As dependências necessárias já estão instaladas:
 dotnet add package FastReport.Web --version 2025.1.13-demo
 ```
 
-### 2. Baixar o Online Designer
+### 2. Preparar arquivos do Online Designer
 
-1. Acesse: https://www.fast-report.com/download
-2. Baixe o pacote **"FastReport Online Designer for Web Demo"**
-3. Extraia e copie a pasta `designer/` para `wwwroot/` do seu projeto ASP.NET Core
+Como o designer agora roda integrado no React, você não precisa hospedar a pasta `designer/` no backend .NET.
+
+Os arquivos devem ser copiados para `public/fastreport/` no frontend React (veja seção de Configuração do Frontend).
 
 ### 3. Configurar Startup/Program.cs
 
@@ -220,7 +240,26 @@ CREATE TABLE Reports (
 
 ## 🚀 Como Usar
 
-### 1. Iniciar o Backend .NET
+### 1. Copiar Arquivos do FastReport
+
+**Passo mais importante!** Copie os arquivos do FastReport Designer para `public/fastreport/`:
+
+```bash
+# Estrutura necessária:
+public/fastreport/
+├── FastReport.js
+├── Designer.js
+├── designer.css
+└── [outros arquivos]
+```
+
+Veja `public/fastreport/README.md` para instruções detalhadas sobre onde encontrar esses arquivos.
+
+### 2. Configurar Backend .NET
+
+### 2. Configurar Backend .NET
+
+Configure as rotas da API no seu backend .NET (veja seção "Configuração do Backend")
 
 ```bash
 cd YourBackendProject
@@ -229,11 +268,16 @@ dotnet run
 
 O backend deve estar rodando em `http://localhost:5000` (ou a porta configurada).
 
-### 2. Iniciar o Frontend React (Lovable)
+Configure `VITE_API_BASE_URL` no arquivo `.env` do frontend:
+```env
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+### 3. Iniciar o Frontend React (Lovable)
 
 O frontend já está configurado e rodando automaticamente no Lovable.
 
-### 3. Acessar o Report Studio Demo
+### 4. Acessar o Report Studio Demo
 
 1. Acesse a página **Relatórios** no sistema
 2. Clique no botão **"Report Studio Demo"**
@@ -246,14 +290,14 @@ O frontend já está configurado e rodando automaticamente no Lovable.
 3. Desenhe seu relatório usando as ferramentas visuais
 4. Clique em **"Salvar"** para persistir o relatório
 
-### 5. Editar um Relatório Existente
+### 6. Editar um Relatório Existente
 
 1. Na lista de relatórios, clique em **"Editar"**
-2. O designer abrirá com o relatório carregado
+2. O designer abrirá integrado na página com o relatório carregado
 3. Faça suas alterações
 4. Clique em **"Salvar"**
 
-### 6. Gerar PDF
+### 7. Gerar PDF
 
 1. Na lista de relatórios, clique em **"Visualizar"**
 2. Preencha os parâmetros necessários (ex: datas, categorias)
@@ -264,10 +308,12 @@ O frontend já está configurado e rodando automaticamente no Lovable.
 
 ### Frontend (React)
 - `src/api/reportClient.ts` - Cliente HTTP para API
+- `src/components/fastreport/FastReportDesigner.tsx` - **Componente integrado do designer**
 - `src/pages/ReportStudioDemo/index.tsx` - Layout principal
 - `src/pages/ReportStudioDemo/ReportsList.tsx` - Lista de relatórios
-- `src/pages/ReportStudioDemo/DesignerPage.tsx` - Página do editor
+- `src/pages/ReportStudioDemo/DesignerPage.tsx` - Página do editor integrado
 - `src/pages/ReportStudioDemo/ViewerPage.tsx` - Página de visualização
+- `public/fastreport/` - **Pasta para arquivos JavaScript do FastReport**
 - `.env.example` - Exemplo de configuração
 
 ### Rotas Adicionadas
@@ -277,21 +323,42 @@ O frontend já está configurado e rodando automaticamente no Lovable.
 
 ## 🔧 Solução de Problemas
 
-### CORS Error
-Se você receber erros de CORS, certifique-se de que:
-1. O backend está configurado para aceitar requisições do frontend
-2. A URL em `VITE_API_BASE_URL` está correta
-3. O backend está rodando
+### "FastReport Designer não encontrado"
 
-### Designer não carrega
-1. Verifique se a pasta `designer/` está em `wwwroot/`
-2. Confirme que `app.UseStaticFiles()` está configurado
-3. Verifique o console do navegador para erros
+**Causa**: Os arquivos JavaScript não estão na pasta correta.
+
+**Solução**:
+1. Verifique se os arquivos estão em `public/fastreport/`
+2. Certifique-se de ter copiado: `FastReport.js`, `Designer.js` e `designer.css`
+3. Reinicie o servidor de desenvolvimento (F5 no navegador)
+
+### Editor aparece em branco
+
+**Causa**: Scripts não carregaram ou erro de inicialização.
+
+**Solução**:
+1. Abra o Console do navegador (F12) e verifique erros
+2. Verifique se há erros 404 para os arquivos .js
+3. Limpe o cache do navegador (Ctrl+Shift+R)
 
 ### Erro ao Salvar
+
+**Causa**: Backend não está recebendo corretamente o conteúdo .frx.
+
+**Solução**:
 1. Verifique se a rota PUT `/api/reports/:id` está implementada
-2. Confirme que o backend está recebendo o conteúdo .frx
+2. Confirme que o backend está rodando
 3. Verifique logs do backend para erros
+4. Teste a API com Postman/Insomnia
+
+### Designer não carrega (mensagem de arquivos não encontrados)
+
+**Causa**: Arquivos do FastReport não foram copiados para `public/fastreport/`
+
+**Solução**:
+1. Siga as instruções em `public/fastreport/README.md`
+2. Baixe os arquivos do site oficial: https://www.fast-report.com/download
+3. Ou copie do seu projeto .NET existente
 
 ## 📚 Recursos Adicionais
 
@@ -301,4 +368,11 @@ Se você receber erros de CORS, certifique-se de que:
 
 ## 🎉 Pronto!
 
-Seu Report Studio Demo está configurado e pronto para uso. Agora você pode criar relatórios profissionais com interface visual e gerar PDFs dinamicamente!
+Seu Report Studio Demo está configurado com **FastReport Designer totalmente integrado no React**! 
+
+✅ Sem iframes  
+✅ Sem chamadas externas  
+✅ Editor nativo no navegador  
+✅ Performance superior  
+
+Agora você pode criar relatórios profissionais com interface visual e gerar PDFs dinamicamente!

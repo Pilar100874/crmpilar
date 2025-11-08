@@ -1,73 +1,63 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_BASE_URL, updateReport, getReport } from '@/api/reportClient';
+import { updateReport, getReport } from '@/api/reportClient';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { FastReportDesigner } from '@/components/fastreport/FastReportDesigner';
 
 export default function DesignerPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [saving, setSaving] = useState(false);
   const [reportName, setReportName] = useState('');
+  const [reportContent, setReportContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id && id !== 'new') {
-      loadReportInfo();
-    } else {
-      setLoading(false);
-    }
+    loadReport();
   }, [id]);
 
-  const loadReportInfo = async () => {
+  const loadReport = async () => {
     try {
-      const report = await getReport(id!);
-      setReportName(report.name);
+      setLoading(true);
+      
+      if (id && id !== 'new') {
+        const report = await getReport(id);
+        setReportName(report.name);
+        // Assumindo que o backend retorna o conteúdo .frx em um campo
+        setReportContent(report.description || ''); // Ajuste conforme sua API
+      } else {
+        setReportName('Novo Relatório');
+        setReportContent('');
+      }
     } catch (error) {
-      console.error('Erro ao carregar informações do relatório:', error);
+      console.error('Erro ao carregar relatório:', error);
+      toast.error('Erro ao carregar relatório');
+      navigate('/report-studio/reports');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (frxContent: string) => {
     if (!id || id === 'new') {
-      toast.error('Não é possível salvar um novo relatório ainda');
+      toast.error('Para criar um novo relatório, use a lista de relatórios');
       return;
     }
 
     try {
-      setSaving(true);
-      
-      // Em uma implementação real, você precisaria obter o conteúdo .frx do iframe
-      // Por enquanto, vamos apenas simular o salvamento
-      const iframe = document.getElementById('designer-iframe') as HTMLIFrameElement;
-      
-      if (!iframe || !iframe.contentWindow) {
-        throw new Error('Designer não carregado');
-      }
-
-      // Aqui você precisaria implementar a comunicação com o iframe
-      // para obter o conteúdo .frx atualizado
-      // Exemplo: const frxContent = await getDesignerContent(iframe.contentWindow);
-      
-      // Por enquanto, apenas simula
-      await updateReport(id, '<!-- FRX Content -->');
-      
+      await updateReport(id, frxContent);
       toast.success('Relatório salvo com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar relatório:', error);
       toast.error('Erro ao salvar relatório');
-    } finally {
-      setSaving(false);
+      throw error;
     }
   };
 
-  const designerUrl = id === 'new' 
-    ? `${API_BASE_URL}/designer`
-    : `${API_BASE_URL}/designer?reportId=${id}`;
+  const handleClose = () => {
+    navigate('/report-studio/reports');
+  };
 
   if (loading) {
     return (
@@ -78,61 +68,28 @@ export default function DesignerPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <div className="bg-background border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            onClick={() => navigate('/report-studio/reports')}
-            variant="ghost"
-            size="sm"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">
-              {id === 'new' ? 'Novo Relatório' : reportName || `Relatório ${id}`}
-            </h1>
-            <p className="text-sm text-muted-foreground">Editor FastReport Online</p>
-          </div>
+    <div className="h-[calc(100vh-4rem)]">
+      <div className="bg-background border-b px-6 py-3 flex items-center gap-4">
+        <Button
+          onClick={handleClose}
+          variant="ghost"
+          size="sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">{reportName}</h1>
+          <p className="text-xs text-muted-foreground">Editor FastReport integrado</p>
         </div>
-        
-        {id !== 'new' && (
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                Salvar
-              </>
-            )}
-          </Button>
-        )}
       </div>
 
-      {!API_BASE_URL && (
-        <div className="p-6">
-          <Alert variant="destructive">
-            <AlertDescription>
-              <strong>Configuração necessária:</strong> Defina a variável de ambiente{' '}
-              <code className="bg-destructive/20 px-1 py-0.5 rounded">VITE_API_BASE_URL</code>{' '}
-              apontando para seu backend .NET com FastReport Web Demo.
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      <div className="flex-1 bg-muted/30">
-        <iframe
-          id="designer-iframe"
-          src={designerUrl}
-          className="w-full h-full border-0"
-          title="FastReport Online Designer"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+      <div className="h-[calc(100%-60px)]">
+        <FastReportDesigner
+          reportId={id || null}
+          initialReport={reportContent}
+          onSave={handleSave}
+          onClose={handleClose}
         />
       </div>
     </div>
