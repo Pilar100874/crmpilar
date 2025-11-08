@@ -2670,7 +2670,6 @@ export type Database = {
         Returns: string
       }
       admins_present: { Args: never; Returns: boolean }
-      execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
       get_user_estabelecimento_id: {
         Args: { _user_id: string }

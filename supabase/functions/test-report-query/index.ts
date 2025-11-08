@@ -98,33 +98,6 @@ serve(async (req) => {
 
     // Executar query baseado no tipo de banco
     if (connection.database_type === 'sqlserver') {
-      // If a proxy_url is configured, delegate query execution to the proxy
-      if (connection.proxy_url && connection.proxy_url.length > 0) {
-        try {
-          const resp = await fetch(connection.proxy_url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: body.query })
-          });
-          if (!resp.ok) {
-            const msg = await resp.text();
-            throw new Error(`Proxy retornou erro ${resp.status}: ${msg}`);
-          }
-          const proxyData = await resp.json();
-          const rows = Array.isArray(proxyData) ? proxyData : (proxyData.data ?? []);
-          return new Response(
-            JSON.stringify({ success: true, data: rows, rowCount: rows.length }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        } catch (e) {
-          console.error('Erro via proxy SQL Server:', e);
-          return new Response(
-            JSON.stringify({ success: false, error: (e as Error).message }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      }
-
       const result = await executeSqlServerQuery(
         connection.sql_server,
         connection.sql_database,
