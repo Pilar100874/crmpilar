@@ -70,6 +70,51 @@ const [isLoaded, setIsLoaded] = useState(false);
         showTemplateSelection: false,
       });
 
+      // Injeta estilos customizados diretamente no DOM do ReportBro
+      setTimeout(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+          /* Espaçamento entre botões/ícones da toolbar */
+          #rbro_header, .rbroToolbar { gap: 12px !important; display: flex !important; align-items: center !important; padding: 12px 16px !important; }
+          #rbro_header .rbroButton, .rbroToolbar .rbroButton, .rbroToolbarItem { 
+            margin: 0 6px !important; 
+            min-width: 40px !important; 
+            height: 40px !important; 
+            border-radius: 12px !important; 
+            padding: 10px 14px !important;
+            border: 2px solid hsl(var(--border)) !important;
+            background: hsl(var(--background)) !important;
+            transition: all 0.2s ease !important;
+          }
+          #rbro_header .rbroButton:hover, .rbroToolbar .rbroButton:hover, .rbroToolbarItem:hover { 
+            transform: scale(1.05) !important; 
+            box-shadow: 0 2px 8px hsl(var(--foreground) / 0.15) !important;
+            border-color: hsl(var(--primary) / 0.5) !important;
+          }
+          #rbro_header .rbroButton svg, .rbroToolbar .rbroButton svg, .rbroToolbarItem svg { 
+            width: 20px !important; 
+            height: 20px !important; 
+          }
+          /* Menu lateral com cards separados */
+          .rbroMenuItem { 
+            margin: 8px 12px !important; 
+            padding: 12px 16px !important; 
+            border-radius: 12px !important;
+            gap: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            border: 2px solid hsl(var(--border)) !important;
+            background: hsl(var(--card)) !important;
+          }
+          .rbroMenuItem:hover {
+            transform: translateX(4px) !important;
+            box-shadow: 0 2px 8px hsl(var(--foreground) / 0.1) !important;
+            border-color: hsl(var(--primary) / 0.5) !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }, 500);
+
       setIsLoaded(true);
       toast.success("Designer carregado!");
     } catch (error) {
