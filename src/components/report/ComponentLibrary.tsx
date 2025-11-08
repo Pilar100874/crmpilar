@@ -2,16 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   FileText, 
-  ImageIcon, 
-  BarChart3, 
+  Image, 
+  BarChart2, 
   PieChart, 
-  Activity,
+  LineChart,
   Table as TableIcon,
   Calculator,
   TrendingUp,
   Hash,
   Gauge,
-  DatabaseZap
+  Database
 } from "lucide-react";
 
 interface ComponentItem {
@@ -25,15 +25,15 @@ interface ComponentItem {
 const components: ComponentItem[] = [
   // Basic
   { id: "text", name: "Texto", icon: FileText, type: "text", category: "basic" },
-  { id: "image", name: "Imagem", icon: ImageIcon, type: "image", category: "basic" },
+  { id: "image", name: "Imagem", icon: Image, type: "image", category: "basic" },
   
   // Data
-  { id: "field", name: "Campo de Dados", icon: DatabaseZap, type: "field", category: "data" },
+  { id: "field", name: "Campo de Dados", icon: Database, type: "field", category: "data" },
   { id: "table", name: "Tabela", icon: TableIcon, type: "table", category: "data" },
   
   // Charts
-  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart3, type: "chart-bar", category: "charts" },
-  { id: "line-chart", name: "Gráfico de Linha", icon: Activity, type: "chart-line", category: "charts" },
+  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart2, type: "chart-bar", category: "charts" },
+  { id: "line-chart", name: "Gráfico de Linha", icon: LineChart, type: "chart-line", category: "charts" },
   { id: "pie-chart", name: "Gráfico Pizza", icon: PieChart, type: "chart-pie", category: "charts" },
   { id: "gauge", name: "Indicador", icon: Gauge, type: "gauge", category: "charts" },
   
