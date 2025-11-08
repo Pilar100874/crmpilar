@@ -283,6 +283,18 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Preview Report': 'Visualizar relatório',
       'Save Report': 'Salvar relatório',
       
+      // Configurações de página
+      'Content height': 'Altura do conteúdo',
+      'Page margins': 'Margens da página',
+      'Header size': 'Tamanho do cabeçalho',
+      'Display': 'Exibir',
+      'Footer size': 'Tamanho do rodapé',
+      'Watermarks': 'Marcas d\'água',
+      'Pattern locale': 'Localidade do padrão',
+      'Pattern currency symbol': 'Símbolo de moeda do padrão',
+      'leave empty for default': 'deixe vazio para o padrão',
+      'affects only GUI size to place elements and not the real page size': 'afeta apenas o tamanho da interface para posicionar elementos, não o tamanho real da página',
+      
       // Seções em maiúsculas
       'STYLE': 'ESTILO',
       'ESTILO': 'ESTILO',
