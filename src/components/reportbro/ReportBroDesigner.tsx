@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { X, Save, Eye, FileDown, Database } from "lucide-react";
 import "reportbro-designer/dist/reportbro.css";
-import "./reportbro-custom.css"; // habilitado para estilizar o menu esquerdo
+// import "./reportbro-custom.css"; // desabilitado - mantém design original do ReportBro
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 
@@ -193,7 +193,7 @@ const [isLoaded, setIsLoaded] = useState(false);
     const intId = window.setInterval(() => {
       translateTooltipsPtBR();
       count++;
-      if (count >= 50) window.clearInterval(intId); // ~10s cobrindo elementos tardios
+      if (count >= 10) window.clearInterval(intId); // reduzido para ~2s
     }, 200);
   };
 
