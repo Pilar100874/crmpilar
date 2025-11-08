@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Type, Image, Minus, Database, Trash2, BarChart3 } from "lucide-react";
+import { Type, Database, Trash2, BarChart3 } from "lucide-react";
 
 interface ReportElement {
   id: string;
@@ -115,32 +115,38 @@ export function BandCanvas({ bands, selectedElement, onSelectElement, onAddEleme
           {/* Band Header */}
           <div className="flex items-center justify-between px-3 py-2 bg-muted border-b">
             <span className="text-sm font-medium">{bandLabels[band.type]}</span>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-2">
               {activeBand === band.id && (
                 <>
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="ghost"
+                    className="h-8 w-8 rounded-md"
                     onClick={() => handleAddText(band.id)}
                     title="Adicionar Texto"
+                    aria-label="Adicionar Texto"
                   >
-                    <Type className="h-3 w-3" />
+                    <Type className="h-4 w-4" />
                   </Button>
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="ghost"
+                    className="h-8 w-8 rounded-md"
                     onClick={() => handleAddField(band.id)}
                     title="Adicionar Campo"
+                    aria-label="Adicionar Campo"
                   >
-                    <Database className="h-3 w-3" />
+                    <Database className="h-4 w-4" />
                   </Button>
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="ghost"
+                    className="h-8 w-8 rounded-md"
                     onClick={() => handleRemoveBand(band.id)}
                     title="Remover Band"
+                    aria-label="Remover Band"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </>
               )}
