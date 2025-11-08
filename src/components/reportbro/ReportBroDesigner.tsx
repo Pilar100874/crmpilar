@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { X, Save, Eye, FileDown, Database } from "lucide-react";
 import "reportbro-designer/dist/reportbro.css";
-// import "./reportbro-custom.css"; // desabilitado para manter a barra original do ReportBro
+import "./reportbro-custom.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 
@@ -24,405 +24,26 @@ const [isLoaded, setIsLoaded] = useState(false);
 
   // Traduz tooltips do ReportBro para pt-BR dinamicamente
   const translateTooltipsPtBR = () => {
-    const root: ParentNode = containerRef.current || document;
+    const root = containerRef.current;
+    if (!root) return;
     const map: Record<string, string> = {
-      // === Menu Principal ===
-      'File': 'Arquivo', 'Edit': 'Editar', 'View': 'Exibir', 'Help': 'Ajuda',
-      'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir', 
-      'Run': 'Executar', 'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 
-      'Properties': 'Propriedades', 'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 
-      'Close': 'Fechar', 'Settings': 'Configurações',
-      
-      // === Zoom / Alinhamento ===
-      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 
-      'Zoom 100%': 'Zoom 100%', 'Zoom': 'Zoom', 'Align left': 'Alinhar à esquerda', 
-      'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita',
-      'Align top': 'Alinhar ao topo', 'Align middle': 'Alinhar ao meio', 'Align bottom': 'Alinhar à base',
-      
-      // === Inserir Elementos ===
-      'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 
-      'Add line': 'Adicionar linha', 'Add rectangle': 'Adicionar retângulo', 'Add circle': 'Adicionar elipse', 
-      'Add barcode': 'Adicionar código de barras', 'Add frame': 'Adicionar moldura',
-      'Add section': 'Adicionar seção', 'Add page break': 'Adicionar quebra de página',
-      
-      // === Grade / Organizar ===
-      'Grid': 'Grade', 'Show grid': 'Mostrar grade', 'Hide grid': 'Ocultar grade', 
-      'Snap to grid': 'Ajustar à grade', 'Bring to front': 'Trazer para frente', 
-      'Send to back': 'Enviar para trás', 'Group': 'Agrupar', 'Ungroup': 'Desagrupar',
-      'Lock': 'Bloquear', 'Unlock': 'Desbloquear',
-      
-      // === Estilos de Texto ===
-      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Strikethrough': 'Tachado',
-      'Font': 'Fonte', 'Font size': 'Tamanho da fonte', 'Text color': 'Cor do texto', 
-      'Background color': 'Cor de fundo', 'Opacity': 'Opacidade',
-      
-      // === Propriedades Comuns ===
-      'Name': 'Nome', 'Type': 'Tipo', 'X': 'X', 'Y': 'Y', 'Width': 'Largura', 'Height': 'Altura', 
-      'Color': 'Cor', 'Border': 'Borda', 'Borders': 'Bordas', 'None': 'Nenhum', 'All': 'Todos', 
-      'Left': 'Esquerda', 'Right': 'Direita', 'Top': 'Superior', 'Bottom': 'Inferior', 
-      'Padding': 'Preenchimento', 'Margin': 'Margem', 'Alignment': 'Alinhamento', 
-      'Horizontal alignment': 'Alinhamento horizontal', 'Vertical alignment': 'Alinhamento vertical',
-      'Content': 'Conteúdo', 'Image': 'Imagem', 'Table': 'Tabela', 'Row': 'Linha', 'Column': 'Coluna', 
-      'Columns': 'Colunas', 'Rows': 'Linhas', 'Data source': 'Fonte de dados', 'Parameter': 'Parâmetro', 
-      'Parameters': 'Parâmetros', 'Value': 'Valor', 'Values': 'Valores', 'Header': 'Cabeçalho', 
-      'Footer': 'Rodapé', 'Page': 'Página', 'Report': 'Relatório', 'Detail': 'Detalhe', 
-      'Preview report': 'Visualizar relatório', 'Export': 'Exportar', 'PDF': 'PDF', 'PNG': 'PNG', 'JPG': 'JPG',
-      
-      // === Diálogos ===
-      'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Yes': 'Sim', 'No': 'Não', 
-      'Close dialog': 'Fechar janela',
-      
-      // === Painel de Propriedades - Geral ===
-      'Position': 'Posição', 'Position (x, y):': 'Posição (x, y):', 'Size': 'Tamanho', 
-      'Size (width, height):': 'Tamanho (largura, altura):', 'Style': 'Estilo', 
-      'STYLE': 'ESTILO', 'Print if': 'Imprimir se', 'PRINT SETTINGS': 'CONFIGURAÇÕES DE IMPRESSÃO',
-      'SPREADSHEET': 'PLANILHA', 'Spreadsheet': 'Planilha',
-      'Remove empty element': 'Remover elemento vazio', 'Spreadsheet hide': 'Ocultar na planilha', 
-      'Spreadsheet column': 'Coluna da planilha', 'Spreadsheet colspan': 'Mesclar colunas',
-      'Spreadsheet add empty row': 'Adicionar linha vazia', 'Link': 'Link', 'Pattern': 'Padrão', 
-      'Expression': 'Expressão', 'Grow weight': 'Peso de crescimento', 'Text': 'Texto', 
-      'Format': 'Formato', 'Line': 'Linha', 'Line width': 'Largura da linha', 
-      'Line color': 'Cor da linha', 'Line style': 'Estilo da linha', 
-      'Fill': 'Preenchimento', 'Fill color': 'Cor de preenchimento',
-      
-      // === Elementos de Texto ===
-      'Text element': 'Elemento de texto', 'Rich text': 'Texto rico', 'Eval': 'Avaliar',
-      'Horizontal line': 'Linha horizontal', 'Vertical line': 'Linha vertical', 
-      'Text style': 'Estilo de texto', 'Line spacing': 'Espaçamento de linha', 
-      'Border width': 'Largura da borda', 'Border color': 'Cor da borda',
-      'Border style': 'Estilo da borda', 'Radius': 'Raio', 'Background': 'Fundo', 
-      'Line element': 'Elemento de linha',
-      
-      // === Imagens ===
-      'Image element': 'Elemento de imagem', 'Source': 'Origem', 'Image file': 'Arquivo de imagem', 
-      'Image URL': 'URL da imagem', 'Image data': 'Dados da imagem', 'Horizontal': 'Horizontal',
-      'Vertical': 'Vertical', 'Fit image': 'Ajustar imagem', 'Image position': 'Posição da imagem',
-      
-      // === Tabelas e Bandas ===
-      'Table element': 'Elemento de tabela', 'Data': 'Dados', 'Print header': 'Imprimir cabeçalho', 
-      'Print footer': 'Imprimir rodapé', 'Content rows': 'Linhas de conteúdo', 
-      'Band element': 'Elemento de banda', 'Always print on same page': 'Sempre imprimir na mesma página', 
-      'Shrink': 'Encolher', 'Header band': 'Banda de cabeçalho', 'Content band': 'Banda de conteúdo',
-      'Footer band': 'Banda de rodapé', 'Table header': 'Cabeçalho da tabela', 'Table footer': 'Rodapé da tabela',
-      'Table content': 'Conteúdo da tabela', 'Table data': 'Dados da tabela',
-      
-      // === Código de Barras ===
-      'Barcode element': 'Elemento de código de barras', 'Barcode type': 'Tipo de código de barras', 
-      'Display value': 'Exibir valor', 'Code 39': 'Code 39', 'Code 128': 'Code 128', 
-      'EAN-8': 'EAN-8', 'EAN-13': 'EAN-13', 'UPC-A': 'UPC-A', 'QR Code': 'QR Code',
-      'Data Matrix': 'Data Matrix', 'Barcode data': 'Dados do código de barras',
-      
-      // === Moldura ===
-      'Frame element': 'Elemento de moldura', 'Label': 'Rótulo', 'Frame label': 'Rótulo da moldura',
-      'Frame border': 'Borda da moldura', 'Frame background': 'Fundo da moldura',
-      
-      // === Seção ===
-      'Section element': 'Elemento de seção', 'Section': 'Seção', 'Band': 'Banda',
-      'Section header': 'Cabeçalho da seção', 'Section band': 'Banda da seção',
-      
-      // === Página ===
-      'Page format': 'Formato da página', 'Page width': 'Largura da página', 
-      'Page height': 'Altura da página', 'Content height': 'Altura do conteúdo', 
-      'Orientation': 'Orientação', 'Portrait': 'Retrato', 'Landscape': 'Paisagem',
-      'Page header': 'Cabeçalho da página', 'Page footer': 'Rodapé da página', 
-      'Page header size': 'Tamanho do cabeçalho', 'Page footer size': 'Tamanho do rodapé', 
-      'Margin left': 'Margem esquerda', 'Margin top': 'Margem superior',
-      'Margin right': 'Margem direita', 'Margin bottom': 'Margem inferior',
-      
-      // === Documento ===
-      'Document properties': 'Propriedades do documento', 'Page size': 'Tamanho da página', 
-      'Unit': 'Unidade', 'Pixels': 'Pixels', 'Millimeters': 'Milímetros', 'Inches': 'Polegadas',
-      'Document title': 'Título do documento', 'Document author': 'Autor do documento',
-      'Document subject': 'Assunto do documento', 'Document keywords': 'Palavras-chave do documento',
-      
-      // === UI Geral ===
-      'General': 'Geral', 'Options': 'Opções', 'Visible': 'Visível', 'Enabled': 'Habilitado',
-      'Center': 'Centro', 'Middle': 'Meio', 'Justify': 'Justificar',
-      'Solid': 'Sólido', 'Dashed': 'Tracejado', 'Dotted': 'Pontilhado', 'Double': 'Duplo',
-      'Add': 'Adicionar', 'Remove': 'Remover', 'Up': 'Subir', 'Down': 'Descer',
-      'Select': 'Selecionar', 'Upload': 'Enviar', 'Browse': 'Procurar', 'Clear': 'Limpar',
-      'Insert': 'Inserir', 'Update': 'Atualizar', 'Duplicate': 'Duplicar',
-      'Elements': 'Elementos', 'Layout': 'Layout', 'Design': 'Design', 
-      'Advanced': 'Avançado', 'Show': 'Mostrar', 'Hide': 'Ocultar',
-      
-      // === Propriedades Específicas ===
-      'Fixed width': 'Largura fixa', 'Minimum width': 'Largura mínima', 'Maximum width': 'Largura máxima',
-      'Auto width': 'Largura automática', 'Fixed height': 'Altura fixa', 'Auto height': 'Altura automática',
-      'Conditional formatting': 'Formatação condicional', 'Condition': 'Condição',
-      'True': 'Verdadeiro', 'False': 'Falso', 'Sort': 'Ordenar', 'Filter': 'Filtrar',
-      'Sum': 'Soma', 'Average': 'Média', 'Count': 'Contar', 'Min': 'Mínimo', 'Max': 'Máximo',
-      'Group by': 'Agrupar por', 'Order by': 'Ordenar por', 'Ascending': 'Crescente', 
-      'Descending': 'Decrescente', 'First': 'Primeiro', 'Last': 'Último',
-      'Auto fit': 'Ajuste automático', 'Stretch': 'Esticar', 'Shrink to fit': 'Encolher para caber',
-      'Keep together': 'Manter junto', 'Repeat header': 'Repetir cabeçalho',
-      'Page break': 'Quebra de página', 'Before': 'Antes', 'After': 'Depois',
-      'Spacing': 'Espaçamento', 'Border radius': 'Raio da borda', 'Shadow': 'Sombra',
-      'Transparency': 'Transparência', 'Rotation': 'Rotação', 'Scale': 'Escala',
-      'Diagonal': 'Diagonal',
-      
-      // === Propriedades Avançadas dos Objetos ===
-      'cs_condition': 'Condição', 'x': 'X', 'y': 'Y', 'width': 'Largura', 'height': 'Altura',
-      'backgroundColor': 'Cor de fundo', 'borderColor': 'Cor da borda', 'borderWidth': 'Largura da borda',
-      'borderAll': 'Borda completa', 'borderLeft': 'Borda esquerda', 'borderTop': 'Borda superior',
-      'borderRight': 'Borda direita', 'borderBottom': 'Borda inferior', 'paddingLeft': 'Preenchimento esquerdo',
-      'paddingTop': 'Preenchimento superior', 'paddingRight': 'Preenchimento direito', 
-      'paddingBottom': 'Preenchimento inferior', 'textColor': 'Cor do texto', 'fontSize': 'Tamanho da fonte',
-      'fontFamily': 'Família da fonte', 'bold': 'Negrito', 'italic': 'Itálico', 'underline': 'Sublinhado',
-      'strikethrough': 'Tachado', 'horizontalAlignment': 'Alinhamento horizontal',
-      'verticalAlignment': 'Alinhamento vertical', 'lineSpacing': 'Espaçamento de linha',
-      'printIf': 'Imprimir se', 'removeEmptyElement': 'Remover elemento vazio',
-      'spreadsheet_hide': 'Ocultar na planilha', 'spreadsheet_column': 'Coluna da planilha',
-      'spreadsheet_colspan': 'Mesclar colunas', 'spreadsheet_addEmptyRow': 'Adicionar linha vazia',
-      'growWeight': 'Peso de crescimento', 'eval': 'Avaliar', 'pattern': 'Padrão',
-      'dataSource': 'Fonte de dados', 'columns': 'Colunas', 'header': 'Cabeçalho',
-      'contentRows': 'Linhas de conteúdo', 'footer': 'Rodapé', 'printHeader': 'Imprimir cabeçalho',
-      'printFooter': 'Imprimir rodapé', 'source': 'Origem', 'imageFilename': 'Nome do arquivo',
-      'format': 'Formato', 'displayValue': 'Exibir valor',
-      
-      // === Mais Propriedades de Elementos ===
-      'Allow page break': 'Permitir quebra de página', 'Always on top': 'Sempre no topo',
-      'Always print header': 'Sempre imprimir cabeçalho', 'Always print footer': 'Sempre imprimir rodapé',
-      'Column count': 'Número de colunas', 'Column spacing': 'Espaçamento entre colunas',
-      'Column width': 'Largura da coluna', 'Row height': 'Altura da linha',
-      'Cell padding': 'Preenchimento da célula', 'Cell spacing': 'Espaçamento da célula',
-      'Alternate background': 'Fundo alternado', 'Alternate color': 'Cor alternada',
-      
-      // === Formatação de Dados ===
-      'Date format': 'Formato de data', 'Time format': 'Formato de hora', 
-      'Number format': 'Formato de número', 'Currency format': 'Formato de moeda',
-      'Decimal places': 'Casas decimais', 'Thousands separator': 'Separador de milhares',
-      'Currency symbol': 'Símbolo de moeda', 'Prefix': 'Prefixo', 'Suffix': 'Sufixo',
-      
-      // === Estilos de Fonte ===
-      'Font family': 'Família da fonte', 'Font weight': 'Peso da fonte', 'Font style': 'Estilo da fonte',
-      'Normal': 'Normal', 'Light': 'Leve', 'Regular': 'Regular', 'Medium': 'Médio',
-      'Semi-bold': 'Semi-negrito', 'Extra-bold': 'Extra-negrito', 'Black': 'Preto',
-      
-      // === Tipos de Parâmetros ===
-      'String': 'Texto', 'Number': 'Número', 'Boolean': 'Booleano', 'Date': 'Data',
-      'List': 'Lista', 'Array': 'Array', 'Object': 'Objeto', 'Simple array': 'Array simples',
-      'Array of objects': 'Array de objetos', 'Map': 'Mapa',
-      
-      // === Formatação Condicional ===
-      'Condition type': 'Tipo de condição', 'Equals': 'Igual a', 'Not equals': 'Diferente de',
-      'Greater than': 'Maior que', 'Less than': 'Menor que', 'Greater or equal': 'Maior ou igual',
-      'Less or equal': 'Menor ou igual', 'Contains': 'Contém', 'Not contains': 'Não contém',
-      'Starts with': 'Começa com', 'Ends with': 'Termina com', 'Is empty': 'Está vazio',
-      'Is not empty': 'Não está vazio', 'Between': 'Entre', 'In list': 'Na lista',
-      
-      // === Operadores e Funções ===
-      'And': 'E', 'Or': 'Ou', 'Not': 'Não', 'If': 'Se', 'Then': 'Então', 'Else': 'Senão',
-      'Function': 'Função', 'Variable': 'Variável', 'Constant': 'Constante',
-      'Operator': 'Operador', 'Expression editor': 'Editor de expressões',
-      
-      // === Configurações de Impressão Avançadas ===
-      'Print on first page only': 'Imprimir apenas na primeira página',
-      'Print on last page only': 'Imprimir apenas na última página',
-      'Print on every page': 'Imprimir em todas as páginas',
-      'Suppress when repeated': 'Suprimir quando repetido',
-      'Print after group': 'Imprimir após grupo', 'Print before group': 'Imprimir antes do grupo',
-      
-      // === Tabelas - Propriedades Detalhadas ===
-      'Table border': 'Borda da tabela', 'Cell border': 'Borda da célula',
-      'Row border': 'Borda da linha', 'Column border': 'Borda da coluna',
-      'Inner border': 'Borda interna', 'Outer border': 'Borda externa',
-      'Border top': 'Borda superior', 'Border bottom': 'Borda inferior',
-      'Border left': 'Borda esquerda', 'Border right': 'Borda direita',
-      
-      // === Seções e Bandas ===
-      'Report header': 'Cabeçalho do relatório', 'Report footer': 'Rodapé do relatório',
-      'Group header': 'Cabeçalho do grupo', 'Group footer': 'Rodapé do grupo',
-      'Detail band': 'Banda de detalhe', 'Summary': 'Resumo', 'Summary band': 'Banda de resumo',
-      
-      // === Agrupamento ===
-      'Grouping': 'Agrupamento', 'Group expression': 'Expressão de agrupamento',
-      'Group order': 'Ordem do grupo', 'New page after group': 'Nova página após grupo',
-      'New page before group': 'Nova página antes do grupo', 'Reset page number': 'Resetar numeração',
-      
-      // === Numeração de Páginas ===
-      'Page number': 'Número da página', 'Total pages': 'Total de páginas',
-      'Page of pages': 'Página de páginas', 'Current page': 'Página atual',
-      'Start page number': 'Número inicial da página',
-      
-      // === Elementos de Forma ===
-      'Rectangle': 'Retângulo', 'Circle': 'Círculo', 'Ellipse': 'Elipse',
-      'Shape': 'Forma', 'Shape type': 'Tipo de forma', 'Corner radius': 'Raio dos cantos',
-      
-      // === Validação ===
-      'Required': 'Obrigatório', 'Optional': 'Opcional', 'Validation': 'Validação',
-      'Error message': 'Mensagem de erro', 'Warning': 'Aviso', 'Information': 'Informação',
-      
-      // === Mais Labels Gerais ===
-      'Description': 'Descrição', 'Comment': 'Comentário', 'Note': 'Nota',
-      'Title': 'Título', 'Subtitle': 'Subtítulo', 'Caption': 'Legenda',
-      'ID': 'ID', 'Key': 'Chave', 'Default value': 'Valor padrão',
-      'Placeholder': 'Espaço reservado', 'Help text': 'Texto de ajuda',
-      'Example': 'Exemplo', 'Sample': 'Amostra', 'Test': 'Teste',
-      'Reset': 'Resetar', 'Refresh': 'Atualizar', 'Reload': 'Recarregar',
-      'Import': 'Importar', 'Download': 'Baixar', 'Search': 'Pesquisar',
-      'Find': 'Encontrar', 'Replace': 'Substituir', 'Find and replace': 'Localizar e substituir',
-      
-      // === Estados ===
-      'Active': 'Ativo', 'Inactive': 'Inativo', 'Disabled': 'Desabilitado',
-      'Locked': 'Bloqueado', 'Unlocked': 'Desbloqueado', 'Hidden': 'Oculto',
-      'Selected': 'Selecionado', 'Unselected': 'Não selecionado',
-      
-      // === Ações ===
-      'Create': 'Criar', 'Move': 'Mover', 'Rotate': 'Girar',
-      'Flip': 'Espelhar', 'Flip horizontal': 'Espelhar horizontal', 'Flip vertical': 'Espelhar vertical',
-      
-      // === Medidas e Unidades ===
-      'Points': 'Pontos', 'Centimeters': 'Centímetros', 'mm': 'mm', 'cm': 'cm', 
-      'in': 'pol', 'pt': 'pt', 'px': 'px',
-      
-      // === Cores Predefinidas ===
-      'White': 'Branco', 'Gray': 'Cinza', 'Silver': 'Prata', 'Red': 'Vermelho',
-      'Blue': 'Azul', 'Green': 'Verde', 'Yellow': 'Amarelo', 'Orange': 'Laranja',
-      'Purple': 'Roxo', 'Pink': 'Rosa', 'Brown': 'Marrom', 'Transparent': 'Transparente',
-      
-      // === Mensagens do Sistema ===
-      'Loading': 'Carregando', 'Saving': 'Salvando', 'Saved': 'Salvo',
-      'Error': 'Erro', 'Success': 'Sucesso', 'Failed': 'Falhou',
-      'Please wait': 'Por favor, aguarde', 'Processing': 'Processando',
-      'Complete': 'Completo', 'Incomplete': 'Incompleto',
-      
-      // === Navegação ===
-      'Next': 'Próximo', 'Previous': 'Anterior', 'Back': 'Voltar', 'Forward': 'Avançar',
-      'Home': 'Início', 'End': 'Fim', 'Go to': 'Ir para',
-      
-      // === Mais Propriedades Específicas ===
-      'Text alignment': 'Alinhamento do texto', 'Text decoration': 'Decoração do texto',
-      'Letter spacing': 'Espaçamento entre letras', 'Word spacing': 'Espaçamento entre palavras',
-      'Text transform': 'Transformação do texto', 'Uppercase': 'Maiúsculas',
-      'Lowercase': 'Minúsculas', 'Capitalize': 'Capitalizar',
-      'Text indent': 'Recuo do texto', 'Text overflow': 'Estouro de texto',
-      'Word wrap': 'Quebra de linha', 'White space': 'Espaço em branco',
-      
-      // === Layout e Posicionamento ===
-      'Absolute': 'Absoluto', 'Relative': 'Relativo', 'Fixed': 'Fixo',
-      'Position type': 'Tipo de posição', 'Z-index': 'Índice Z',
-      'Float': 'Flutuante', 'Overflow': 'Estouro',
-      
-      // === Mais Estilos de Borda ===
-      'Ridge': 'Relevo', 'Groove': 'Sulco', 'Inset': 'Baixo-relevo',
-      'Outset': 'Alto-relevo',
-      
-      // === Configurações de Tabela Avançadas ===
-      'Column span': 'Extensão de colunas', 'Row span': 'Extensão de linhas',
-      'Cell alignment': 'Alinhamento da célula', 'Cell valign': 'Alinhamento vertical da célula',
-      'Table layout': 'Layout da tabela', 'Fixed layout': 'Layout fixo',
-      'Auto layout': 'Layout automático', 'Border collapse': 'Colapso de bordas',
-      
-      // === Mais Opções de Imagem ===
-      'Image scaling': 'Escala da imagem', 'Maintain aspect ratio': 'Manter proporção',
-      'Crop': 'Cortar', 'Original size': 'Tamanho original',
-      
-      // === Propriedades de Código de Barras Adicionais ===
-      'Bar width': 'Largura da barra', 'Bar height': 'Altura da barra',
-      'Show text': 'Mostrar texto', 'Text position': 'Posição do texto',
-      'Text above': 'Texto acima', 'Text below': 'Texto abaixo',
-      
-      // === Propriedades de Linha ===
-      'Arrow start': 'Seta no início', 'Arrow end': 'Seta no fim',
-      'Line cap': 'Extremidade da linha', 'Line join': 'Junção da linha',
-      
-      // === Efeitos Visuais ===
-      'Blur': 'Desfoque', 'Brightness': 'Brilho', 'Contrast': 'Contraste',
-      'Grayscale': 'Escala de cinza', 'Sepia': 'Sépia', 'Invert': 'Inverter',
-      'Saturate': 'Saturar', 'Hue': 'Matiz',
-      
-      // === Mais Configurações de Documento ===
-      'Paper size': 'Tamanho do papel', 'A4': 'A4', 'A3': 'A3', 'A5': 'A5',
-      'Letter': 'Carta', 'Legal': 'Ofício', 'Tabloid': 'Tabloide',
-      'Custom size': 'Tamanho personalizado',
-      
-      // === Segurança e Permissões ===
-      'Read only': 'Somente leitura', 'Editable': 'Editável',
-      'Protected': 'Protegido', 'Public': 'Público', 'Private': 'Privado'
-    }
-
-    const applyAttr = (attr: 'title' | 'aria-label' | 'data-title' | 'placeholder') => {
-      root.querySelectorAll(`[${attr}]`).forEach((el) => {
-        const t = (el as HTMLElement).getAttribute(attr);
-        if (!t) return;
-        const translated = map[t.trim()];
-        if (translated) (el as HTMLElement).setAttribute(attr, translated);
-      });
+      'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir',
+      'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 'Properties': 'Propriedades',
+      'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir',
+      'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%', 'Align left': 'Alinhar à esquerda',
+      'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita', 'Bold': 'Negrito',
+      'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Add text': 'Adicionar texto',
+      'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha'
     };
-
-    applyAttr('title');
-    applyAttr('aria-label');
-    applyAttr('data-title');
-    applyAttr('placeholder');
-
-    // Text content in visible labels/buttons/tabs including property panel
-    const textSelectors = [
-      '.rbroControlLabel', '.rbroSectionHeader', '.rbroToolbar button', '.rbroToolbar .rbroToolLabel',
-      '.rbroButton', '.rbroMenuItem', '.rbroPropertyLabel', '.rbroTabs .rbroTab', 'label', 'th', 'td',
-      '.rbroFormRow label', '.rbroPropertyPanel label', '.rbroPropertyPanel .rbroPropertyLabel',
-      '.rbroDocElementsTab label', '.rbroDocElementPanel label'
-    ];
-    root.querySelectorAll(textSelectors.join(',')).forEach((el) => {
-      const node = el as HTMLElement;
-      const txt = node.textContent?.trim();
-      if (!txt) return;
-      const translated = map[txt];
-      if (translated) node.textContent = translated;
+    root.querySelectorAll('[title]').forEach((el) => {
+      const t = (el as HTMLElement).getAttribute('title');
+      if (!t) return;
+      const translated = map[t.trim()];
+      if (translated) (el as HTMLElement).setAttribute('title', translated);
     });
-
-    // Option elements in selects
-    root.querySelectorAll('select option').forEach((opt) => {
-      const o = opt as HTMLOptionElement;
-      const txt = o.textContent?.trim();
-      if (!txt) return;
-      const translated = map[txt];
-      if (translated) o.textContent = translated;
-    });
-    
-    // Translate input labels in property panel by their 'for' attribute or nearby labels
-    root.querySelectorAll('.rbroFormRow, .rbroPropertyPanel .rbroFormRow').forEach((row) => {
-      const labels = row.querySelectorAll('label');
-      labels.forEach((label) => {
-        const txt = label.textContent?.trim();
-        if (!txt) return;
-        const translated = map[txt];
-        if (translated) label.textContent = translated;
-      });
-    });
-  };
-
-  const setupTranslationsObserver = () => {
-    if (!containerRef.current) return;
-    const observer = new MutationObserver(() => translateTooltipsPtBR());
-    observer.observe(containerRef.current, { childList: true, subtree: true, attributes: true, attributeFilter: ['title','aria-label','data-title','placeholder'] });
-  };
-
-  // Aplica traduções repetidamente nos primeiros segundos (evita perder tooltips criados tardiamente)
-  const startTranslationTick = () => {
-    let count = 0;
-    const intId = window.setInterval(() => {
-      translateTooltipsPtBR();
-      count++;
-      if (count >= 50) window.clearInterval(intId); // ~10s cobrindo elementos tardios
-    }, 200);
-  };
-
-  // Garante remoção de branding/ícone do ReportBro sem flicker
-  const ensureBrandingHiddenStyle = () => {
-    const id = "rb-branding-hide";
-    if (document.getElementById(id)) return;
-    const style = document.createElement("style");
-    style.id = id;
-    style.textContent = `.rbroLogo, .rbroPro, .rbro-logo, .rbro-branding,
-      [class*="logo" i][class*="reportbro" i], [class*="branding" i][class*="reportbro" i],
-      img[alt*="reportbro" i], img[src*="reportbro" i] {
-        display: none !important; visibility: hidden !important;
-      }`;
-    document.head.appendChild(style);
   };
 
   useEffect(() => {
-    ensureBrandingHiddenStyle();
     loadReportBro();
   }, []);
 
@@ -470,13 +91,10 @@ const [isLoaded, setIsLoaded] = useState(false);
         showTemplateSelection: false,
       });
 
-      // Pós-carregamento: ocultar branding e traduzir
+      // Traduz tooltips após carregamento
       setTimeout(() => {
-        ensureBrandingHiddenStyle();
         translateTooltipsPtBR();
-        setupTranslationsObserver();
-        startTranslationTick();
-      }, 0);
+      }, 500);
 
       setIsLoaded(true);
       toast.success("Designer carregado!");
