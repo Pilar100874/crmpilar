@@ -1,18 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  FileText, 
-  ImageIcon, 
-  BarChart4, 
-  PieChart, 
-  TrendingUp,
-  TableProperties,
-  Plus,
-  Database,
-  Calendar,
-  DollarSign,
-  Percent,
-  Activity
+  AlignLeft, 
+  Frame, 
+  BarChart2, 
+  Donut, 
+  LineChart,
+  Grid3x3,
+  Sigma,
+  Braces,
+  ListOrdered,
+  CircleGauge,
+  BarChartBig
 } from "lucide-react";
 
 interface ComponentItem {
@@ -25,23 +24,23 @@ interface ComponentItem {
 
 const components: ComponentItem[] = [
   // Basic
-  { id: "text", name: "Texto", icon: FileText, type: "text", category: "basic" },
-  { id: "image", name: "Imagem", icon: ImageIcon, type: "image", category: "basic" },
+  { id: "text", name: "Texto", icon: AlignLeft, type: "text", category: "basic" },
+  { id: "image", name: "Imagem", icon: Frame, type: "image", category: "basic" },
   
   // Data
-  { id: "field", name: "Campo de Dados", icon: Database, type: "field", category: "data" },
-  { id: "table", name: "Tabela", icon: TableProperties, type: "table", category: "data" },
+  { id: "field", name: "Campo de Dados", icon: Braces, type: "field", category: "data" },
+  { id: "table", name: "Tabela", icon: Grid3x3, type: "table", category: "data" },
   
   // Charts
-  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart4, type: "chart-bar", category: "charts" },
-  { id: "line-chart", name: "Gráfico de Linha", icon: TrendingUp, type: "chart-line", category: "charts" },
-  { id: "pie-chart", name: "Gráfico Pizza", icon: PieChart, type: "chart-pie", category: "charts" },
-  { id: "gauge", name: "Indicador", icon: Activity, type: "gauge", category: "charts" },
+  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart2, type: "chart-bar", category: "charts" },
+  { id: "line-chart", name: "Gráfico de Linha", icon: LineChart, type: "chart-line", category: "charts" },
+  { id: "pie-chart", name: "Gráfico Pizza", icon: Donut, type: "chart-pie", category: "charts" },
+  { id: "gauge", name: "Indicador", icon: CircleGauge, type: "gauge", category: "charts" },
   
   // Aggregates
-  { id: "sum", name: "Soma", icon: Plus, type: "aggregate-sum", category: "aggregates" },
-  { id: "avg", name: "Média", icon: Percent, type: "aggregate-avg", category: "aggregates" },
-  { id: "count", name: "Contagem", icon: Database, type: "aggregate-count", category: "aggregates" },
+  { id: "sum", name: "Soma", icon: Sigma, type: "aggregate-sum", category: "aggregates" },
+  { id: "avg", name: "Média", icon: BarChartBig, type: "aggregate-avg", category: "aggregates" },
+  { id: "count", name: "Contagem", icon: ListOrdered, type: "aggregate-count", category: "aggregates" },
 ];
 
 interface ComponentLibraryProps {
