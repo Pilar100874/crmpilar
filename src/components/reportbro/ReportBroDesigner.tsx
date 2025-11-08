@@ -26,112 +26,232 @@ const [isLoaded, setIsLoaded] = useState(false);
     const root = containerRef.current;
     if (!root) return;
     
-    // Mapa completo de traduções
+    // Mapa COMPLETO de traduções - todos os menus e opções
     const translationMap: Record<string, string> = {
-      // Toolbar e ações
+      // Toolbar e ações principais
       'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir',
       'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 'Properties': 'Propriedades',
       'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 'Duplicate': 'Duplicar',
-      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%',
-      'Align left': 'Alinhar à esquerda', 'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita',
-      'Align top': 'Alinhar acima', 'Align middle': 'Alinhar no meio', 'Align bottom': 'Alinhar abaixo',
-      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Strikethrough': 'Tachado',
+      'Select all': 'Selecionar tudo', 'Select': 'Selecionar', 'Deselect': 'Desmarcar',
       
-      // Elementos
-      'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela',
-      'Add line': 'Adicionar linha', 'Add page break': 'Adicionar quebra de página',
-      'Add bar code': 'Adicionar código de barras', 'Add frame': 'Adicionar moldura',
-      'Add section': 'Adicionar seção', 'Text': 'Texto', 'Image': 'Imagem', 'Table': 'Tabela',
-      'Line': 'Linha', 'Page break': 'Quebra de página', 'Bar code': 'Código de barras',
-      'Frame': 'Moldura', 'Section': 'Seção',
+      // Zoom e visualização
+      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 
+      'Zoom 100%': 'Zoom 100%', 'Zoom': 'Zoom', 'Fit to width': 'Ajustar à largura',
+      'Actual size': 'Tamanho real',
       
-      // Propriedades
-      'General': 'Geral', 'Position': 'Posição', 'Size': 'Tamanho', 'Style': 'Estilo',
-      'Font': 'Fonte', 'Color': 'Cor', 'Background': 'Fundo', 'Border': 'Borda',
-      'Padding': 'Espaçamento interno', 'Margin': 'Margem', 'Width': 'Largura', 'Height': 'Altura',
-      'X': 'X', 'Y': 'Y', 'Name': 'Nome', 'Content': 'Conteúdo', 'Source': 'Origem',
+      // Alinhamento
+      'Align left': 'Alinhar à esquerda', 'Align center': 'Alinhar ao centro', 
+      'Align right': 'Alinhar à direita', 'Align top': 'Alinhar acima', 
+      'Align middle': 'Alinhar no meio', 'Align bottom': 'Alinhar abaixo',
+      'Distribute horizontally': 'Distribuir horizontalmente',
+      'Distribute vertically': 'Distribuir verticalmente',
+      
+      // Formatação de texto
+      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 
+      'Strikethrough': 'Tachado', 'Subscript': 'Subscrito', 'Superscript': 'Sobrescrito',
+      'Text color': 'Cor do texto', 'Background color': 'Cor de fundo',
+      'Font family': 'Família da fonte', 'Font size': 'Tamanho da fonte',
+      'Line spacing': 'Espaçamento entre linhas', 'Letter spacing': 'Espaçamento entre letras',
+      
+      // Elementos do documento
+      'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 
+      'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha', 
+      'Add page break': 'Adicionar quebra de página', 'Add bar code': 'Adicionar código de barras', 
+      'Add frame': 'Adicionar moldura', 'Add section': 'Adicionar seção',
+      'Text element': 'Elemento de texto', 'Text': 'Texto', 'Image': 'Imagem', 
+      'Table': 'Tabela', 'Line': 'Linha', 'Page break': 'Quebra de página', 
+      'Bar code': 'Código de barras', 'Frame': 'Moldura', 'Section': 'Seção',
+      'Shape': 'Forma', 'Rectangle': 'Retângulo', 'Circle': 'Círculo',
+      
+      // Propriedades gerais
+      'General': 'Geral', 'Position': 'Posição', 'Position and size': 'Posição e tamanho',
+      'Size': 'Tamanho', 'Style': 'Estilo', 'Font': 'Fonte', 'Color': 'Cor', 
+      'Background': 'Fundo', 'Border': 'Borda', 'Borders': 'Bordas',
+      'Padding': 'Espaçamento interno', 'Margin': 'Margem', 'Margins': 'Margens',
+      'Width': 'Largura', 'Height': 'Altura', 'X': 'X', 'Y': 'Y', 
+      'Name': 'Nome', 'Content': 'Conteúdo', 'Source': 'Origem',
       'Expression': 'Expressão', 'Pattern': 'Padrão', 'Format': 'Formato',
+      'Link': 'Link', 'URL': 'URL', 'Target': 'Destino',
       
-      // Alinhamento e formatação
-      'Left': 'Esquerda', 'Center': 'Centro', 'Right': 'Direita', 'Top': 'Topo',
-      'Middle': 'Meio', 'Bottom': 'Inferior', 'Justify': 'Justificar',
-      'Text align': 'Alinhamento do texto', 'Vertical align': 'Alinhamento vertical',
+      // Alinhamento e posicionamento
+      'Left': 'Esquerda', 'Center': 'Centro', 'Right': 'Direita', 
+      'Top': 'Topo', 'Middle': 'Meio', 'Bottom': 'Inferior', 
+      'Justify': 'Justificar', 'Text align': 'Alinhamento do texto', 
+      'Vertical align': 'Alinhamento vertical', 'Alignment': 'Alinhamento',
       
       // Tipos e valores
-      'Type': 'Tipo', 'Value': 'Valor', 'Default': 'Padrão', 'None': 'Nenhum',
-      'Visible': 'Visível', 'Printable': 'Imprimível', 'Remove row if empty': 'Remover linha se vazia',
+      'Type': 'Tipo', 'Value': 'Valor', 'Values': 'Valores',
+      'Default': 'Padrão', 'Default value': 'Valor padrão',
+      'None': 'Nenhum', 'Auto': 'Automático',
+      'Visible': 'Visível', 'Hidden': 'Oculto',
+      'Printable': 'Imprimível', 'Remove row if empty': 'Remover linha se vazia',
+      'Enabled': 'Ativado', 'Disabled': 'Desativado',
       
       // Parâmetros e dados
-      'Parameters': 'Parâmetros', 'Parameter': 'Parâmetro', 'Data': 'Dados', 'Data source': 'Fonte de dados',
-      'Field': 'Campo', 'Fields': 'Campos', 'Add parameter': 'Adicionar parâmetro',
-      'Edit parameter': 'Editar parâmetro', 'Delete parameter': 'Excluir parâmetro',
+      'Parameters': 'Parâmetros', 'Parameter': 'Parâmetro', 
+      'Data': 'Dados', 'Data source': 'Fonte de dados',
+      'Field': 'Campo', 'Fields': 'Campos', 
+      'Add parameter': 'Adicionar parâmetro', 'Edit parameter': 'Editar parâmetro', 
+      'Delete parameter': 'Excluir parâmetro', 'Array': 'Array',
+      'Simple array': 'Array simples', 'String': 'Texto', 'Number': 'Número',
+      'Boolean': 'Booleano', 'Date': 'Data',
+      'Collection': 'Coleção', 'Map': 'Mapa',
       
       // Estilos
-      'Styles': 'Estilos', 'Add style': 'Adicionar estilo', 'Edit style': 'Editar estilo',
-      'Delete style': 'Excluir estilo', 'Apply style': 'Aplicar estilo',
+      'Styles': 'Estilos', 'Add style': 'Adicionar estilo', 
+      'Edit style': 'Editar estilo', 'Delete style': 'Excluir estilo', 
+      'Apply style': 'Aplicar estilo', 'Clear style': 'Limpar estilo',
+      'Text style': 'Estilo de texto', 'Border style': 'Estilo de borda',
+      'Solid': 'Sólido', 'Dashed': 'Tracejado', 'Dotted': 'Pontilhado',
       
       // Página e layout
-      'Page': 'Página', 'Page format': 'Formato da página', 'Page size': 'Tamanho da página',
-      'Orientation': 'Orientação', 'Portrait': 'Retrato', 'Landscape': 'Paisagem',
-      'Header': 'Cabeçalho', 'Footer': 'Rodapé', 'Content band': 'Banda de conteúdo',
-      'Margins': 'Margens', 'Page header': 'Cabeçalho da página', 'Page footer': 'Rodapé da página',
+      'Page': 'Página', 'Pages': 'Páginas', 'Page format': 'Formato da página', 
+      'Page size': 'Tamanho da página', 'Orientation': 'Orientação', 
+      'Portrait': 'Retrato', 'Landscape': 'Paisagem',
+      'Header': 'Cabeçalho', 'Footer': 'Rodapé', 
+      'Content band': 'Banda de conteúdo',
+      'Page header': 'Cabeçalho da página', 'Page footer': 'Rodapé da página',
+      'First page': 'Primeira página', 'Last page': 'Última página',
+      'Odd pages': 'Páginas ímpares', 'Even pages': 'Páginas pares',
       
-      // Mensagens e ações
-      'Are you sure?': 'Tem certeza?', 'Yes': 'Sim', 'No': 'Não', 'Cancel': 'Cancelar',
-      'OK': 'OK', 'Apply': 'Aplicar', 'Close': 'Fechar', 'Add': 'Adicionar',
-      'Edit': 'Editar', 'Remove': 'Remover', 'Search': 'Buscar', 'Filter': 'Filtrar',
+      // Mensagens e diálogos
+      'Are you sure?': 'Tem certeza?', 'Confirm': 'Confirmar',
+      'Yes': 'Sim', 'No': 'Não', 'Cancel': 'Cancelar',
+      'OK': 'OK', 'Apply': 'Aplicar', 'Close': 'Fechar', 
+      'Add': 'Adicionar', 'Create': 'Criar',
+      'Edit': 'Editar', 'Remove': 'Remover', 
+      'Search': 'Buscar', 'Find': 'Localizar',
+      'Filter': 'Filtrar', 'Clear': 'Limpar',
+      'Insert': 'Inserir', 'Update': 'Atualizar',
       
       // Erros e validações
-      'Error': 'Erro', 'Warning': 'Aviso', 'Info': 'Informação', 'Required': 'Obrigatório',
-      'Invalid value': 'Valor inválido', 'Field is required': 'Campo obrigatório',
+      'Error': 'Erro', 'Errors': 'Erros',
+      'Warning': 'Aviso', 'Warnings': 'Avisos',
+      'Info': 'Informação', 'Required': 'Obrigatório',
+      'Invalid value': 'Valor inválido', 
+      'Field is required': 'Campo obrigatório',
+      'Must be a number': 'Deve ser um número',
+      'Must be positive': 'Deve ser positivo',
       
-      // Unidades
-      'px': 'px', 'mm': 'mm', 'cm': 'cm', 'inch': 'polegada',
+      // Unidades de medida
+      'px': 'px', 'mm': 'mm', 'cm': 'cm', 
+      'inch': 'polegada', 'inches': 'polegadas',
+      'pt': 'pt', 'points': 'pontos',
       
       // Tabela
-      'Columns': 'Colunas', 'Rows': 'Linhas', 'Add column': 'Adicionar coluna',
-      'Add row': 'Adicionar linha', 'Delete column': 'Excluir coluna', 'Delete row': 'Excluir linha',
-      'Cell': 'Célula', 'Merge cells': 'Mesclar células', 'Split cell': 'Dividir célula',
+      'Columns': 'Colunas', 'Column': 'Coluna',
+      'Rows': 'Linhas', 'Row': 'Linha',
+      'Add column': 'Adicionar coluna', 'Add row': 'Adicionar linha', 
+      'Delete column': 'Excluir coluna', 'Delete row': 'Excluir linha',
+      'Insert column': 'Inserir coluna', 'Insert row': 'Inserir linha',
+      'Cell': 'Célula', 'Cells': 'Células',
+      'Merge cells': 'Mesclar células', 'Split cell': 'Dividir célula',
+      'Table border': 'Borda da tabela', 'Cell border': 'Borda da célula',
+      'Border width': 'Largura da borda', 'Border color': 'Cor da borda',
       
       // Código de barras
-      'Barcode type': 'Tipo de código de barras', 'Display value': 'Exibir valor',
-      'Code': 'Código', 'EAN-13': 'EAN-13', 'QR Code': 'QR Code',
+      'Barcode': 'Código de barras',
+      'Barcode type': 'Tipo de código de barras', 
+      'Display value': 'Exibir valor', 'Show text': 'Mostrar texto',
+      'Code': 'Código', 'Code 128': 'Código 128',
+      'EAN-13': 'EAN-13', 'EAN-8': 'EAN-8',
+      'UPC-A': 'UPC-A', 'QR Code': 'QR Code',
       
       // Seções e agrupamento
-      'Group': 'Grupo', 'Grouping': 'Agrupamento', 'Group expression': 'Expressão de grupo',
-      'Sort': 'Ordenar', 'Sort order': 'Ordem de classificação', 'Ascending': 'Crescente',
-      'Descending': 'Decrescente', 'Group header': 'Cabeçalho do grupo', 'Group footer': 'Rodapé do grupo',
+      'Group': 'Grupo', 'Groups': 'Grupos',
+      'Grouping': 'Agrupamento', 'Group expression': 'Expressão de grupo',
+      'Sort': 'Ordenar', 'Sorting': 'Ordenação',
+      'Sort order': 'Ordem de classificação', 
+      'Ascending': 'Crescente', 'Descending': 'Decrescente',
+      'Group header': 'Cabeçalho do grupo', 
+      'Group footer': 'Rodapé do grupo',
       
-      // Condicionais
-      'Condition': 'Condição', 'If': 'Se', 'Then': 'Então', 'Else': 'Senão',
+      // Condicionais e lógica
+      'Condition': 'Condição', 'Conditions': 'Condições',
+      'If': 'Se', 'Then': 'Então', 'Else': 'Senão',
       'Show if': 'Mostrar se', 'Print if': 'Imprimir se',
+      'Hide if': 'Ocultar se',
       
       // Layout e organização
-      'Bring to front': 'Trazer para frente', 'Send to back': 'Enviar para trás',
-      'Bring forward': 'Avançar', 'Send backward': 'Recuar', 'Group elements': 'Agrupar elementos',
-      'Ungroup elements': 'Desagrupar elementos', 'Lock': 'Bloquear', 'Unlock': 'Desbloquear',
+      'Bring to front': 'Trazer para frente', 
+      'Send to back': 'Enviar para trás',
+      'Bring forward': 'Avançar', 
+      'Send backward': 'Recuar', 
+      'Group elements': 'Agrupar elementos',
+      'Ungroup elements': 'Desagrupar elementos', 
+      'Lock': 'Bloquear', 'Unlock': 'Desbloquear',
+      'Lock position': 'Bloquear posição',
+      'Arrange': 'Organizar', 'Order': 'Ordem',
       
-      // Formatação numérica
-      'Number format': 'Formato numérico', 'Decimal places': 'Casas decimais',
-      'Thousand separator': 'Separador de milhares', 'Currency': 'Moeda',
-      'Percentage': 'Porcentagem', 'Date format': 'Formato de data', 'Time format': 'Formato de hora',
+      // Formatação numérica e de data
+      'Number format': 'Formato numérico', 
+      'Decimal places': 'Casas decimais',
+      'Thousand separator': 'Separador de milhares', 
+      'Currency': 'Moeda', 'Currency symbol': 'Símbolo da moeda',
+      'Percentage': 'Porcentagem', 
+      'Date format': 'Formato de data', 
+      'Time format': 'Formato de hora',
+      'DateTime format': 'Formato de data/hora',
       
       // Imagem
-      'Image file': 'Arquivo de imagem', 'Image URL': 'URL da imagem', 'Fit': 'Ajustar',
-      'Stretch': 'Esticar', 'Original size': 'Tamanho original', 'Horizontal alignment': 'Alinhamento horizontal',
+      'Image file': 'Arquivo de imagem', 
+      'Image URL': 'URL da imagem', 
+      'Fit': 'Ajustar', 'Fill': 'Preencher',
+      'Stretch': 'Esticar', 
+      'Original size': 'Tamanho original', 
+      'Horizontal alignment': 'Alinhamento horizontal',
       'Vertical alignment': 'Alinhamento vertical',
+      'Image source': 'Origem da imagem',
       
-      // Diversos
-      'Units': 'Unidades', 'Show grid': 'Mostrar grade', 'Snap to grid': 'Alinhar à grade',
-      'Grid size': 'Tamanho da grade', 'Show ruler': 'Mostrar régua', 'Show guides': 'Mostrar guias',
-      'Report': 'Relatório', 'Document': 'Documento', 'Settings': 'Configurações',
+      // Configurações e preferências
+      'Units': 'Unidades', 'Show grid': 'Mostrar grade', 
+      'Snap to grid': 'Alinhar à grade', 'Grid size': 'Tamanho da grade', 
+      'Show ruler': 'Mostrar régua', 'Show guides': 'Mostrar guias',
+      'Guidelines': 'Linhas-guia', 'Rulers': 'Réguas',
+      'Report': 'Relatório', 'Document': 'Documento', 
+      'Settings': 'Configurações', 'Preferences': 'Preferências',
       'Help': 'Ajuda', 'About': 'Sobre', 'Version': 'Versão',
+      'Language': 'Idioma',
       
       // Específicos do ReportBro
-      'Element': 'Elemento', 'Elements': 'Elementos', 'Document properties': 'Propriedades do documento',
-      'Report properties': 'Propriedades do relatório', 'Show borders': 'Mostrar bordas',
+      'Element': 'Elemento', 'Elements': 'Elementos', 
+      'Document properties': 'Propriedades do documento',
+      'Report properties': 'Propriedades do relatório', 
+      'Show borders': 'Mostrar bordas',
       'Always print on same page': 'Sempre imprimir na mesma página',
-      'Shrink to content height': 'Reduzir à altura do conteúdo'
+      'Shrink to content height': 'Reduzir à altura do conteúdo',
+      'Grow to content height': 'Expandir à altura do conteúdo',
+      
+      // Mais opções de propriedades
+      'Spacing': 'Espaçamento', 'Opacity': 'Opacidade',
+      'Rotation': 'Rotação', 'Scale': 'Escala',
+      'Shadow': 'Sombra', 'Outline': 'Contorno',
+      'Transparency': 'Transparência',
+      
+      // Ações adicionais
+      'Refresh': 'Atualizar', 'Reload': 'Recarregar',
+      'Export': 'Exportar', 'Import': 'Importar',
+      'Download': 'Baixar', 'Upload': 'Enviar',
+      
+      // Bandas do documento
+      'Band': 'Banda', 'Bands': 'Bandas',
+      'Report header': 'Cabeçalho do relatório',
+      'Report footer': 'Rodapé do relatório',
+      'Detail': 'Detalhe', 'Details': 'Detalhes',
+      
+      // Opções de repetição
+      'Repeat': 'Repetir', 'Repeat header': 'Repetir cabeçalho',
+      'Repeat footer': 'Repetir rodapé',
+      'Page count': 'Contagem de páginas',
+      'Current page': 'Página atual',
+      
+      // Misc
+      'Options': 'Opções', 'Advanced': 'Avançado',
+      'Basic': 'Básico', 'Custom': 'Personalizado',
+      'Template': 'Modelo', 'Templates': 'Modelos',
+      'Layout': 'Layout', 'Design': 'Design',
+      'Preview mode': 'Modo de visualização',
+      'Edit mode': 'Modo de edição'
     };
     
     // Traduz atributos title
