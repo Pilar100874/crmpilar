@@ -262,14 +262,59 @@ const [isLoaded, setIsLoaded] = useState(false);
       }
     });
     
-    // Traduz textos visíveis
-    root.querySelectorAll('label, span, button, .rbroMenuItem, .rbroMenuItemText').forEach((el) => {
-      const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
-      if (textNode && textNode.textContent) {
-        const trimmed = textNode.textContent.trim();
-        if (translationMap[trimmed]) {
-          textNode.textContent = translationMap[trimmed];
+    // Traduz textos visíveis em todos os elementos relevantes
+    const selectors = [
+      'label',
+      'span',
+      'button',
+      'div',
+      '.rbroMenuItem',
+      '.rbroMenuItemText',
+      '.rbroControlLabel',
+      '.rbroPanelSectionHeader',
+      '.rbroFormLabel',
+      '.rbroPropertyLabel',
+      '.rbroTabButton',
+      '.rbroSelect option',
+      '.rbroButton',
+      '.rbroFormRowLabel',
+      'th',
+      'td'
+    ];
+    
+    root.querySelectorAll(selectors.join(', ')).forEach((el) => {
+      // Traduz texto direto do elemento
+      if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
+        const text = el.textContent?.trim();
+        if (text && translationMap[text]) {
+          el.textContent = translationMap[text];
         }
+      } else {
+        // Traduz apenas text nodes diretos (não recursivo)
+        Array.from(el.childNodes).forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+            const trimmed = node.textContent.trim();
+            if (trimmed && translationMap[trimmed]) {
+              node.textContent = node.textContent.replace(trimmed, translationMap[trimmed]);
+            }
+          }
+        });
+      }
+    });
+    
+    // Traduz options de select
+    root.querySelectorAll('select option').forEach((option) => {
+      const text = option.textContent?.trim();
+      if (text && translationMap[text]) {
+        option.textContent = translationMap[text];
+      }
+    });
+    
+    // Traduz placeholders
+    root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach((el) => {
+      const placeholder = (el as HTMLInputElement).getAttribute('placeholder');
+      if (placeholder && translationMap[placeholder.trim()]) {
+        (el as HTMLInputElement).setAttribute('placeholder', translationMap[placeholder.trim()]);
       }
     });
   };
@@ -327,8 +372,17 @@ const [isLoaded, setIsLoaded] = useState(false);
         translateInterfacePtBR();
         
         // Observer para traduzir elementos carregados dinamicamente
-        const observer = new MutationObserver(() => {
-          translateInterfacePtBR();
+        const observer = new MutationObserver((mutations) => {
+          // Verifica se houve mudanças relevantes
+          const shouldTranslate = mutations.some(mutation => 
+            mutation.type === 'childList' || 
+            (mutation.type === 'attributes' && mutation.attributeName === 'title')
+          );
+          
+          if (shouldTranslate) {
+            // Pequeno delay para garantir que o DOM está estável
+            setTimeout(() => translateInterfacePtBR(), 50);
+          }
         });
         
         if (containerRef.current) {
@@ -336,9 +390,14 @@ const [isLoaded, setIsLoaded] = useState(false);
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: ['title']
+            attributeFilter: ['title', 'placeholder']
           });
         }
+        
+        // Traduz novamente após eventos de click (quando painéis abrem)
+        containerRef.current?.addEventListener('click', () => {
+          setTimeout(() => translateInterfacePtBR(), 100);
+        });
       }, 500);
 
       setIsLoaded(true);
