@@ -107,7 +107,6 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
-  { id: "Rel2", title: "Rel2", url: "/rel2", icon: FileBarChart },
   { 
     id: "Configurações",
     title: "Configurações", 
