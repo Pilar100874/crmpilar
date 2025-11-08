@@ -189,9 +189,9 @@ export default function Relatorios() {
   }
 
   return (
-    <div className={`flex gap-4 p-4 ${showDesigner ? 'h-screen overflow-hidden' : 'container mx-auto max-w-7xl'}`}>
-      {/* Coluna da Lista - fica menor quando designer está aberto */}
-      <div className={`transition-all ${showDesigner ? 'w-80 flex-shrink-0 overflow-y-auto' : 'flex-1'}`}>
+    <div className={showDesigner ? 'h-screen' : 'container mx-auto max-w-7xl p-4'}>
+      {!showDesigner && (
+      <div className="flex-1">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className={`font-bold flex items-center gap-2 ${showDesigner ? 'text-xl' : 'text-3xl'}`}>
@@ -344,15 +344,14 @@ export default function Relatorios() {
           </DialogContent>
         </Dialog>
       </div>
+      )}
 
-      {/* Coluna do Designer - ocupa o resto do espaço */}
+      {/* Designer em tela cheia */}
       {showDesigner && (
-        <div className="flex-1 border-l overflow-hidden">
-          <ReportBroDesigner
-            reportId={currentReportId}
-            onClose={handleCloseDesigner}
-          />
-        </div>
+        <ReportBroDesigner
+          reportId={currentReportId}
+          onClose={handleCloseDesigner}
+        />
       )}
     </div>
   );
