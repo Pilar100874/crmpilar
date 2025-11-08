@@ -1,117 +1,73 @@
-# 📥 Onde Baixar os Arquivos do FastReport Designer
+# ⚠️ Problemas com FastReport - Use ReportBro
 
-## ❌ Problema Comum
+## 🚫 Por que FastReport está difícil?
 
-O link "Online Designer" na página de downloads **NÃO baixa arquivos** - ele apenas abre uma demonstração online do editor.
+O FastReport Online Designer **NÃO está disponível publicamente** para download direto:
 
-## ✅ Soluções Práticas
+1. ❌ Link "Online Designer" apenas abre demo online
+2. ❌ Trial WinForms vem como instalador `.exe` (não arquivos JS)
+3. ❌ Arquivos JavaScript não estão no GitHub público
+4. ❌ Requer licença comercial ou projeto .NET backend
 
-### **Opção 1: Baixar Trial WinForms** (Mais Fácil)
+## ✅ Solução Recomendada: Use ReportBro
 
-1. Acesse: https://www.fast-report.com/downloads/fast-report-net
+Você **JÁ TEM** o ReportBro Designer instalado e funcionando no projeto!
 
-2. Baixe o primeiro arquivo da lista:
-   ```
-   Trial version WinForms, WPF, Avalonia, Mono for Windows
-   Data: 2025-07-04
-   Tamanho: ~15 MB
-   ```
+### Vantagens do ReportBro:
 
-3. Extraia o arquivo .zip
+- ✅ **100% Open Source** - Gratuito e sem limitações
+- ✅ **Totalmente integrado** - Já instalado via npm
+- ✅ **Funcionando agora** - Sem necessidade de arquivos externos
+- ✅ **Interface visual profissional** - Drag & drop
+- ✅ **Exportação PDF** - Diretamente no navegador
+- ✅ **Dados do Supabase** - Conecta facilmente
 
-4. Navegue até a pasta de demos:
-   ```
-   FastReport.Net.Demo/
-   └── Demos/
-       └── Reports/
-           └── Web/
-               └── wwwroot/
-                   ├── FastReport.js
-                   ├── Designer.js
-                   ├── designer.css
-                   └── [outros arquivos]
-   ```
+### Como Usar:
 
-5. **Copie** todo o conteúdo de `wwwroot/` para `public/fastreport/` do seu projeto React
+1. Acesse `/relatorios` no sistema
+2. Clique em "Novo Modelo"
+3. O designer abrirá automaticamente
+4. Crie seu relatório visualmente
+5. Salve e visualize
 
-### **Opção 2: Instalar via NuGet no Backend .NET**
+📖 **Veja o guia completo**: `REPORTBRO-GUIDE.md`
 
-Se você já tem um projeto .NET:
+## 🔄 Alternativas ao FastReport
+
+Se ainda precisar do FastReport futuramente:
+
+### Opção 1: Iframe com Backend .NET
+
+- Backend .NET hospeda o FastReport Designer
+- React mostra via iframe
+- Mais simples que integração direta
+
+### Opção 2: Licença Comercial FastReport
+
+- Compre licença no site oficial
+- Receberá arquivos JavaScript diretamente
+- Suporte oficial incluso
+
+### Opção 3: NuGet Package (Requer .NET)
 
 ```bash
-cd YourBackendProject
 dotnet add package FastReport.Web --version 2025.1.13-demo
 ```
 
-Os arquivos estarão em:
+Arquivos estarão em:
 ```
-YourBackendProject/
-└── obj/
-    └── project.assets.json (veja onde o NuGet instalou)
-    
-Ou procure em:
-packages/FastReport.Web.2025.1.13-demo/
-└── contentFiles/
-    └── any/
-        └── any/
-            └── wwwroot/
+packages/FastReport.Web.{version}/contentFiles/any/any/wwwroot/
 ```
 
-Copie o conteúdo de `wwwroot/` para `public/fastreport/`
+## 🎯 Recomendação Final
 
-### **Opção 3: Usar apenas o Backend .NET** (Alternativa Simples)
+**Use o ReportBro** que já está funcionando. É uma solução profissional, open source e totalmente integrada ao seu sistema.
 
-Se a integração direta no React está difícil, você pode usar o FastReport apenas no backend:
+Se realmente precisar do FastReport no futuro, considere a abordagem com iframe (backend .NET) que é muito mais simples.
 
-1. **Backend .NET** hospeda o designer e serve via iframe
-2. **Frontend React** apenas mostra o iframe
-3. Comunicação via API para salvar relatórios
+---
 
-Veja `README-REPORTSTUDIO.md` seção "Backend Implementation" para detalhes.
-
-### **Opção 4: Contatar Suporte FastReport**
-
-Se você tem licença comercial ou precisa de ajuda:
-
-📧 Email: info@fast-report.com
-🌐 Site: https://www.fast-report.com/contact-us
-
-Eles podem fornecer um link direto para download dos arquivos do Online Designer.
-
-## 📁 Estrutura Final Esperada
-
-Depois de copiar os arquivos, verifique:
-
-```
-public/fastreport/
-├── FastReport.js          ✓
-├── Designer.js            ✓
-├── designer.css           ✓
-├── fonts/                 ✓ (opcional)
-├── icons/                 ✓ (opcional)
-└── locales/               ✓ (opcional)
-    └── pt-BR.js
-```
-
-## 🧪 Como Testar
-
-1. Abra o Report Studio Demo
-2. Clique em "Novo Relatório"
-3. Se os arquivos estiverem corretos, o editor carregará
-4. Se não, você verá a mensagem: "Arquivos do FastReport não encontrados"
-
-## ⚠️ Importante
-
-- **Versão Demo**: Terá marca d'água nos relatórios
-- **Versão Comercial**: Requer licença válida
-- **Alternativa**: Use o backend .NET para hospedar o designer (mais simples)
-
-## 🆘 Ainda com dúvidas?
-
-Se você está tendo dificuldades, considere usar a **abordagem com iframe** (mais simples):
-
-1. Backend .NET hospeda o FastReport Designer
-2. Frontend React mostra via iframe
-3. Sem necessidade de copiar arquivos JavaScript
-
-Isso já estava implementado na primeira versão. Posso reverter se preferir?
+**Links Úteis:**
+- 📘 Guia ReportBro: `REPORTBRO-GUIDE.md`
+- 🌐 ReportBro Demo: https://www.reportbro.com/demo
+- 📦 ReportBro GitHub: https://github.com/jobsta/reportbro-designer

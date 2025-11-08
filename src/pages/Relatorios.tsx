@@ -102,7 +102,7 @@ export default function Relatorios() {
       setShowNewDialog(false);
       setFormData({ nome: "", descricao: "" });
       
-      // Abrir designer Stimulsoft inline
+      // Abrir designer ReportBro
       setCurrentReportId(data.id);
       setShowDesigner(true);
     } catch (error: any) {
@@ -111,19 +111,23 @@ export default function Relatorios() {
   };
 
   const handleEdit = (report: Report) => {
-    // Abrir designer Stimulsoft inline
+    // Abrir designer ReportBro
     setCurrentReportId(report.id);
     setShowDesigner(true);
   };
 
   const handlePreview = (report: Report) => {
-    // Salvar relatório no localStorage e navegar para o viewer
-    if (report.layout_json && typeof report.layout_json === 'string') {
-      localStorage.setItem('stimulsoft_preview_report', report.layout_json);
-    } else if (report.layout_json) {
-      localStorage.setItem('stimulsoft_preview_report', JSON.stringify(report.layout_json));
+    // Salvar relatório no localStorage e abrir visualização ReportBro
+    if (report.layout_json) {
+      const layoutData = typeof report.layout_json === 'string' 
+        ? report.layout_json 
+        : JSON.stringify(report.layout_json);
+      localStorage.setItem('reportbro_preview', layoutData);
+      window.open('/relatorios/viewer', '_blank');
+      toast.success('Abrindo visualização...');
+    } else {
+      toast.error('Relatório sem layout definido');
     }
-    navigate('/stimulsoft-viewer');
   };
 
 
@@ -196,7 +200,7 @@ export default function Relatorios() {
             </h1>
             {!showDesigner && (
               <p className="text-muted-foreground mt-1">
-                Gerencie templates de relatórios profissionais com Stimulsoft
+                Gerencie templates de relatórios profissionais com ReportBro Designer
               </p>
             )}
           </div>
