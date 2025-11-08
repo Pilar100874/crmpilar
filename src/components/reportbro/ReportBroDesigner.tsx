@@ -685,53 +685,42 @@ const [isLoaded, setIsLoaded] = useState(false);
     version: 3,
   });
 
-  const handleDeleteSelected = () => {
-    if (!reportBroRef.current) return;
-    
-    try {
-      // Obtém os elementos selecionados
-      const selectedObjects = reportBroRef.current.getSelectedObjects();
-      
-      if (!selectedObjects || selectedObjects.length === 0) {
-        toast.info("Nenhum elemento selecionado para excluir");
-        return;
-      }
-      
-      // Exclui cada elemento selecionado
-      selectedObjects.forEach((obj: any) => {
-        if (obj && obj.id) {
-          reportBroRef.current.deleteObject(obj.id);
-        }
-      });
-      
-      toast.success(`${selectedObjects.length} elemento(s) excluído(s)`);
-    } catch (error) {
-      console.error("Erro ao excluir:", error);
-      toast.error("Erro ao excluir elemento");
-    }
-  };
+  // Hotfix: manter experiência original (tecla Delete) sem botão extra
+  useEffect(() => {
+    const host = containerRef.current;
+    if (!host) return;
+    // Garantir foco para receber teclas
+    host.tabIndex = 0;
 
+    const onKeyDownCapture = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Sempre captura para evitar erro interno do ReportBro quando não há seleção
+        e.stopPropagation();
+        const rb = reportBroRef.current;
+        if (!rb) { e.preventDefault(); return; }
+        const getSel = rb.getSelectedObjects?.bind(rb);
+        const delObj = rb.deleteObject?.bind(rb);
+        if (!getSel || !delObj) { e.preventDefault(); return; }
+        const sel = getSel() || [];
+        if (sel.length > 0) {
+          sel.forEach((o: any) => o?.id && delObj(o.id));
+        }
+        e.preventDefault();
+      }
+    };
+
+    const onClick = () => host.focus();
+
+    host.addEventListener('keydown', onKeyDownCapture, true);
+    host.addEventListener('click', onClick);
+    return () => {
+      host.removeEventListener('keydown', onKeyDownCapture, true);
+      host.removeEventListener('click', onClick);
+    };
+  }, [isLoaded]);
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Toolbar Customizada */}
-      <div className="flex items-center gap-2 px-4 py-2 bg-card border-b border-border">
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleDeleteSelected}
-          disabled={!isLoaded}
-          title="Excluir elemento selecionado (Delete)"
-          className="gap-2"
-        >
-          <span className="text-lg">🗑️</span>
-          Excluir Selecionado
-        </Button>
-        <span className="text-xs text-muted-foreground ml-2">
-          Selecione um elemento no relatório e clique para excluir
-        </span>
-      </div>
-      
-      {/* Designer Container - ReportBro */}
+      {/* Designer Container - ReportBro com toolbar padrão */}
       <div className="flex-1 relative overflow-hidden">
         {!isLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-md z-10">
