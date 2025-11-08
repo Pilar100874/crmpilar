@@ -1,18 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  Type, 
-  Image, 
-  BarChart3, 
+  FileText, 
+  ImageIcon, 
+  BarChart4, 
   PieChart, 
-  LineChart,
-  Table2,
-  Calculator,
-  Hash,
+  TrendingUp,
+  TableProperties,
+  Plus,
+  Database,
   Calendar,
   DollarSign,
-  TrendingUp,
-  Gauge
+  Percent,
+  Activity
 } from "lucide-react";
 
 interface ComponentItem {
@@ -25,23 +25,23 @@ interface ComponentItem {
 
 const components: ComponentItem[] = [
   // Basic
-  { id: "text", name: "Texto", icon: Type, type: "text", category: "basic" },
-  { id: "image", name: "Imagem", icon: Image, type: "image", category: "basic" },
+  { id: "text", name: "Texto", icon: FileText, type: "text", category: "basic" },
+  { id: "image", name: "Imagem", icon: ImageIcon, type: "image", category: "basic" },
   
   // Data
-  { id: "field", name: "Campo de Dados", icon: Hash, type: "field", category: "data" },
-  { id: "table", name: "Tabela", icon: Table2, type: "table", category: "data" },
+  { id: "field", name: "Campo de Dados", icon: Database, type: "field", category: "data" },
+  { id: "table", name: "Tabela", icon: TableProperties, type: "table", category: "data" },
   
   // Charts
-  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart3, type: "chart-bar", category: "charts" },
-  { id: "line-chart", name: "Gráfico de Linha", icon: LineChart, type: "chart-line", category: "charts" },
+  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart4, type: "chart-bar", category: "charts" },
+  { id: "line-chart", name: "Gráfico de Linha", icon: TrendingUp, type: "chart-line", category: "charts" },
   { id: "pie-chart", name: "Gráfico Pizza", icon: PieChart, type: "chart-pie", category: "charts" },
-  { id: "gauge", name: "Indicador", icon: Gauge, type: "gauge", category: "charts" },
+  { id: "gauge", name: "Indicador", icon: Activity, type: "gauge", category: "charts" },
   
   // Aggregates
-  { id: "sum", name: "Soma", icon: Calculator, type: "aggregate-sum", category: "aggregates" },
-  { id: "avg", name: "Média", icon: TrendingUp, type: "aggregate-avg", category: "aggregates" },
-  { id: "count", name: "Contagem", icon: Hash, type: "aggregate-count", category: "aggregates" },
+  { id: "sum", name: "Soma", icon: Plus, type: "aggregate-sum", category: "aggregates" },
+  { id: "avg", name: "Média", icon: Percent, type: "aggregate-avg", category: "aggregates" },
+  { id: "count", name: "Contagem", icon: Database, type: "aggregate-count", category: "aggregates" },
 ];
 
 interface ComponentLibraryProps {
