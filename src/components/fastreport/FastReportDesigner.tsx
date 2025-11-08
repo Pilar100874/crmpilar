@@ -40,35 +40,67 @@ export function FastReportDesigner({
           return;
         }
 
-        // Carrega CSS
-        const cssLink = document.createElement('link');
-        cssLink.rel = 'stylesheet';
-        cssLink.href = '/fastreport/designer.css';
-        document.head.appendChild(cssLink);
-
-        // Carrega JS principal
-        const script1 = document.createElement('script');
-        script1.src = '/fastreport/FastReport.js';
-        script1.async = false;
-        document.head.appendChild(script1);
-
-        // Carrega Designer JS
-        const script2 = document.createElement('script');
-        script2.src = '/fastreport/Designer.js';
-        script2.async = false;
+        // Tenta carregar localmente primeiro
+        const useLocal = true; // Mude para false para usar CDN
         
-        script2.onload = () => {
-          setScriptsLoaded(true);
-          setLoading(false);
-        };
-        
-        script2.onerror = () => {
-          console.error('Erro ao carregar FastReport Designer');
-          toast.error('Erro ao carregar o editor. Certifique-se de que os arquivos estão em /public/fastreport/');
-          setLoading(false);
-        };
+        if (useLocal) {
+          // Carrega CSS local
+          const cssLink = document.createElement('link');
+          cssLink.rel = 'stylesheet';
+          cssLink.href = '/fastreport/designer.css';
+          document.head.appendChild(cssLink);
 
-        document.head.appendChild(script2);
+          // Carrega JS principal local
+          const script1 = document.createElement('script');
+          script1.src = '/fastreport/FastReport.js';
+          script1.async = false;
+          document.head.appendChild(script1);
+
+          // Carrega Designer JS local
+          const script2 = document.createElement('script');
+          script2.src = '/fastreport/Designer.js';
+          script2.async = false;
+          
+          script2.onload = () => {
+            setScriptsLoaded(true);
+            setLoading(false);
+          };
+          
+          script2.onerror = () => {
+            console.error('Erro ao carregar FastReport Designer localmente');
+            toast.error('Arquivos não encontrados localmente. Copie os arquivos do FastReport para /public/fastreport/');
+            setLoading(false);
+          };
+
+          document.head.appendChild(script2);
+        } else {
+          // Alternativa: Carregar de CDN ou URL externa
+          toast.info('Carregando FastReport de fonte externa...');
+          
+          // Nota: Você precisaria de uma URL válida de CDN do FastReport
+          // Este é apenas um exemplo, ajuste conforme necessário
+          const script1 = document.createElement('script');
+          script1.src = 'https://cdn.fast-report.com/fr-web/latest/FastReport.js'; // URL exemplo
+          script1.async = false;
+          script1.onerror = () => {
+            toast.error('Não foi possível carregar o FastReport. Configure os arquivos localmente.');
+            setLoading(false);
+          };
+          document.head.appendChild(script1);
+
+          const script2 = document.createElement('script');
+          script2.src = 'https://cdn.fast-report.com/fr-web/latest/Designer.js'; // URL exemplo
+          script2.async = false;
+          script2.onload = () => {
+            setScriptsLoaded(true);
+            setLoading(false);
+          };
+          script2.onerror = () => {
+            toast.error('Não foi possível carregar o FastReport Designer.');
+            setLoading(false);
+          };
+          document.head.appendChild(script2);
+        }
       } catch (error) {
         console.error('Erro ao carregar scripts:', error);
         toast.error('Erro ao inicializar o editor');
