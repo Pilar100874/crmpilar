@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import "reportbro-designer/dist/reportbro.css";
-import "./reportbro-custom.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 
@@ -21,132 +20,24 @@ const [isLoaded, setIsLoaded] = useState(false);
   const [currentSources, setCurrentSources] = useState<any[]>([]);
   const [applying, setApplying] = useState(false);
 
-  // Traduz tooltips e textos do ReportBro para pt-BR dinamicamente
+  // Traduz tooltips do ReportBro para pt-BR dinamicamente
   const translateTooltipsPtBR = () => {
     const root = containerRef.current;
     if (!root) return;
-    
     const map: Record<string, string> = {
-      // Toolbar
       'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir',
       'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 'Properties': 'Propriedades',
       'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir',
       'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%', 'Align left': 'Alinhar à esquerda',
-      'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita', 'Align top': 'Alinhar ao topo',
-      'Align bottom': 'Alinhar à base', 'Align middle': 'Alinhar ao meio',
-      'Bold': 'Negrito', 'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Strikethrough': 'Tachado',
-      'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 
-      'Add line': 'Adicionar linha', 'Add page break': 'Adicionar quebra de página',
-      'Add barcode': 'Adicionar código de barras', 'Add QR code': 'Adicionar QR code',
-      
-      // Menu lateral
-      'Document': 'Documento', 'Parameters': 'Parâmetros', 'Styles': 'Estilos', 'Page': 'Página',
-      'Header': 'Cabeçalho', 'Content': 'Conteúdo', 'Footer': 'Rodapé', 'Elements': 'Elementos',
-      
-      // Propriedades gerais
-      'General': 'Geral', 'Position': 'Posição', 'Size': 'Tamanho', 'Layout': 'Layout',
-      'Style': 'Estilo', 'Print if': 'Imprimir se', 'Visibility': 'Visibilidade',
-      'Name': 'Nome', 'Label': 'Rótulo', 'Value': 'Valor', 'Type': 'Tipo',
-      'Width': 'Largura', 'Height': 'Altura', 'X': 'X', 'Y': 'Y',
-      'Left': 'Esquerda', 'Right': 'Direita', 'Top': 'Topo', 'Bottom': 'Base',
-      'Padding': 'Espaçamento interno', 'Margin': 'Margem',
-      
-      // Texto
-      'Text': 'Texto', 'Font': 'Fonte', 'Font size': 'Tamanho da fonte', 'Font style': 'Estilo da fonte',
-      'Text color': 'Cor do texto', 'Background color': 'Cor de fundo', 'Alignment': 'Alinhamento',
-      'Line height': 'Altura da linha', 'Letter spacing': 'Espaçamento entre letras',
-      'Word spacing': 'Espaçamento entre palavras', 'Text decoration': 'Decoração do texto',
-      'Text transform': 'Transformação do texto', 'White space': 'Espaço em branco',
-      
-      // Bordas
-      'Border': 'Borda', 'Border color': 'Cor da borda', 'Border width': 'Largura da borda',
-      'Border style': 'Estilo da borda', 'Border all': 'Borda completa', 'Border left': 'Borda esquerda',
-      'Border right': 'Borda direita', 'Border top': 'Borda superior', 'Border bottom': 'Borda inferior',
-      
-      // Imagem
-      'Image': 'Imagem', 'Source': 'Origem', 'Image file': 'Arquivo de imagem', 
-      'Horizontal alignment': 'Alinhamento horizontal', 'Vertical alignment': 'Alinhamento vertical',
-      
-      // Tabela
-      'Table': 'Tabela', 'Columns': 'Colunas', 'Rows': 'Linhas', 'Column': 'Coluna', 'Row': 'Linha',
-      'Add column': 'Adicionar coluna', 'Add row': 'Adicionar linha', 'Delete column': 'Excluir coluna',
-      'Delete row': 'Excluir linha', 'Cell': 'Célula', 'Merge cells': 'Mesclar células',
-      
-      // Linha
-      'Line': 'Linha', 'Line color': 'Cor da linha', 'Line width': 'Largura da linha',
-      
-      // Barcode
-      'Barcode': 'Código de barras', 'Display value': 'Exibir valor', 'Format': 'Formato',
-      
-      // Condições
-      'Condition': 'Condição', 'Conditions': 'Condições',
-      'Remove empty element': 'Remover elemento vazio', 'Shrink': 'Encolher',
-      
-      // Dados
-      'Data': 'Dados', 'Data source': 'Fonte de dados', 'Expression': 'Expressão',
-      'Pattern': 'Padrão', 'Link': 'Link', 'Spreadsheet hide': 'Ocultar na planilha',
-      
-      // Página
-      'Page format': 'Formato da página', 'Page width': 'Largura da página', 
-      'Page height': 'Altura da página', 'Orientation': 'Orientação',
-      'Portrait': 'Retrato', 'Landscape': 'Paisagem', 'Paper size': 'Tamanho do papel',
-      'Unit': 'Unidade', 'Margins': 'Margens', 'Margin top': 'Margem superior',
-      'Margin bottom': 'Margem inferior', 'Margin left': 'Margem esquerda',
-      'Margin right': 'Margem direita',
-      
-      // Cabeçalho/Rodapé
-      'Header size': 'Tamanho do cabeçalho', 'Footer size': 'Tamanho do rodapé',
-      'Header display': 'Exibir cabeçalho', 'Footer display': 'Exibir rodapé',
-      
-      // Cores comuns
-      'Color': 'Cor', 'Transparent': 'Transparente', 'None': 'Nenhum',
-      
-      // Botões de ação
-      'OK': 'OK', 'Cancel': 'Cancelar', 'Apply': 'Aplicar', 'Close': 'Fechar',
-      'Add': 'Adicionar', 'Remove': 'Remover', 'Edit': 'Editar', 'Select': 'Selecionar',
-      'Browse': 'Procurar', 'Upload': 'Enviar', 'Download': 'Baixar', 'Clear': 'Limpar',
-      
-      // Mensagens
-      'Are you sure?': 'Tem certeza?', 'Confirm': 'Confirmar', 'Error': 'Erro',
-      'Warning': 'Aviso', 'Info': 'Informação', 'Success': 'Sucesso',
-      
-      // Outros
-      'Grid': 'Grade', 'Snap to grid': 'Ajustar à grade', 'Show grid': 'Mostrar grade',
-      'Grid size': 'Tamanho da grade', 'Visible': 'Visível', 'Hidden': 'Oculto',
-      'Enabled': 'Habilitado', 'Disabled': 'Desabilitado', 'Yes': 'Sim', 'No': 'Não',
-      'Always': 'Sempre', 'Never': 'Nunca', 'Auto': 'Automático'
+      'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita', 'Bold': 'Negrito',
+      'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Add text': 'Adicionar texto',
+      'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha'
     };
-    
-    // Traduz atributos title e alt
-    root.querySelectorAll('[title], [alt]').forEach((el) => {
-      const title = (el as HTMLElement).getAttribute('title');
-      const alt = (el as HTMLElement).getAttribute('alt');
-      
-      if (title) {
-        const translated = map[title.trim()];
-        if (translated) (el as HTMLElement).setAttribute('title', translated);
-      }
-      
-      if (alt) {
-        const translated = map[alt.trim()];
-        if (translated) (el as HTMLElement).setAttribute('alt', translated);
-      }
-    });
-    
-    // Traduz textos visíveis (labels, botões, etc)
-    root.querySelectorAll('label, button, span, div').forEach((el) => {
-      const text = (el as HTMLElement).textContent?.trim();
-      if (text && map[text]) {
-        (el as HTMLElement).textContent = map[text];
-      }
-    });
-    
-    // Traduz opções de select
-    root.querySelectorAll('select option').forEach((el) => {
-      const text = (el as HTMLElement).textContent?.trim();
-      if (text && map[text]) {
-        (el as HTMLElement).textContent = map[text];
-      }
+    root.querySelectorAll('[title]').forEach((el) => {
+      const t = (el as HTMLElement).getAttribute('title');
+      if (!t) return;
+      const translated = map[t.trim()];
+      if (translated) (el as HTMLElement).setAttribute('title', translated);
     });
   };
 
@@ -198,23 +89,10 @@ const [isLoaded, setIsLoaded] = useState(false);
         showTemplateSelection: false,
       });
 
-      // Traduz tooltips após carregamento inicial
+      // Traduz tooltips após carregamento
       setTimeout(() => {
         translateTooltipsPtBR();
       }, 500);
-      
-      // Observa mudanças no DOM para traduzir elementos carregados dinamicamente
-      const observer = new MutationObserver(() => {
-        translateTooltipsPtBR();
-      });
-      
-      if (containerRef.current) {
-        observer.observe(containerRef.current, {
-          childList: true,
-          subtree: true,
-          attributes: false
-        });
-      }
 
       setIsLoaded(true);
       toast.success("Designer carregado!");

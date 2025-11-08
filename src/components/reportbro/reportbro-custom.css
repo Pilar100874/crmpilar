@@ -24,30 +24,15 @@
   background-color: hsl(var(--muted) / 0.2) !important;
 }
 
-/* Esconde TODOS os logos do ReportBro com máxima prioridade */
+/* Esconde o logo do ReportBro */
 .rbroLogo,
 .rbroPro,
 .rbro-logo,
 .rbro-branding,
 [class*="logo" i][class*="reportbro" i],
-[class*="branding" i][class*="reportbro" i],
-[class*="Logo"],
-[class*="logo"],
-.rbroToolbar img,
-#rbro_header img,
-#rbro_container img[src*="logo"],
-#rbro_container img[src*="brand"],
-#rbro_menu_panel img,
-div[class*="brand" i],
-div[class*="logo" i],
-a[href*="reportbro" i] {
+[class*="branding" i][class*="reportbro" i] {
   display: none !important;
   visibility: hidden !important;
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  position: absolute !important;
-  left: -9999px !important;
 }
 
 /* ===== MENU LATERAL ESQUERDO ===== */
