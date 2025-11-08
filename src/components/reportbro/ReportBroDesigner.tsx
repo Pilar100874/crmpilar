@@ -28,12 +28,16 @@ const [isLoaded, setIsLoaded] = useState(false);
     if (!root) return;
     const map: Record<string, string> = {
       'Save': 'Salvar', 'Open': 'Abrir', 'New': 'Novo', 'Preview': 'Visualizar', 'Print': 'Imprimir',
+      'Preview report': 'Visualizar relatório', 'Run': 'Executar',
       'Undo': 'Desfazer', 'Redo': 'Refazer', 'Delete': 'Excluir', 'Properties': 'Propriedades',
-      'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar', 'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir',
-      'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%', 'Align left': 'Alinhar à esquerda',
-      'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita', 'Bold': 'Negrito',
-      'Italic': 'Itálico', 'Underline': 'Sublinhado', 'Add text': 'Adicionar texto',
-      'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha'
+      'Cut': 'Cortar', 'Copy': 'Copiar', 'Paste': 'Colar',
+      'Zoom in': 'Ampliar', 'Zoom out': 'Reduzir', 'Zoom to fit': 'Ajustar à tela', 'Zoom 100%': 'Zoom 100%',
+      'Align left': 'Alinhar à esquerda', 'Align center': 'Alinhar ao centro', 'Align right': 'Alinhar à direita',
+      'Align top': 'Alinhar ao topo', 'Align middle': 'Alinhar ao meio', 'Align bottom': 'Alinhar à base',
+      'Add text': 'Adicionar texto', 'Add image': 'Adicionar imagem', 'Add table': 'Adicionar tabela', 'Add line': 'Adicionar linha',
+      'Add rectangle': 'Adicionar retângulo', 'Add circle': 'Adicionar elipse', 'Add barcode': 'Adicionar código de barras',
+      'Grid': 'Grade', 'Show grid': 'Mostrar grade', 'Hide grid': 'Ocultar grade', 'Snap to grid': 'Ajustar à grade',
+      'Bring to front': 'Trazer para frente', 'Send to back': 'Enviar para trás',
     };
     root.querySelectorAll('[title]').forEach((el) => {
       const t = (el as HTMLElement).getAttribute('title');
@@ -41,6 +45,12 @@ const [isLoaded, setIsLoaded] = useState(false);
       const translated = map[t.trim()];
       if (translated) (el as HTMLElement).setAttribute('title', translated);
     });
+  };
+
+  const setupTranslationsObserver = () => {
+    if (!containerRef.current) return;
+    const observer = new MutationObserver(() => translateTooltipsPtBR());
+    observer.observe(containerRef.current, { childList: true, subtree: true });
   };
 
   useEffect(() => {
@@ -91,9 +101,13 @@ const [isLoaded, setIsLoaded] = useState(false);
         showTemplateSelection: false,
       });
 
-      // Traduz tooltips após carregamento
+      // Pós-carregamento: ocultar branding e traduzir
       setTimeout(() => {
+        const style = document.createElement('style');
+        style.textContent = `.rbroLogo, .rbroPro, .rbro-logo, .rbro-branding, [class*="logo" i][class*="reportbro" i], [class*="branding" i][class*="reportbro" i] { display: none !important; visibility: hidden !important; }`;
+        document.head.appendChild(style);
         translateTooltipsPtBR();
+        setupTranslationsObserver();
       }, 500);
 
       setIsLoaded(true);
