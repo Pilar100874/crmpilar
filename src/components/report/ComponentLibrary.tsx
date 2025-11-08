@@ -72,7 +72,7 @@ export function ComponentLibrary({ onDragStart }: ComponentLibraryProps) {
                 <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase">
                   {category.name}
                 </h4>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
                   {components
                     .filter((c) => c.category === category.id)
                     .map((component) => {
@@ -82,10 +82,10 @@ export function ComponentLibrary({ onDragStart }: ComponentLibraryProps) {
                           key={component.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, component)}
-                          className="flex flex-col items-center justify-center gap-2 p-4 border rounded-lg cursor-move hover:bg-muted/50 hover:border-primary transition-colors min-h-[80px]"
+                          className="w-full flex items-center gap-3 p-3 border rounded-md cursor-move bg-card hover:bg-accent hover:text-accent-foreground transition-colors"
                         >
-                          <Icon className="h-6 w-6 text-primary flex-shrink-0" />
-                          <span className="text-xs text-center leading-tight break-words w-full">{component.name}</span>
+                          <Icon className="h-5 w-5 text-primary" />
+                          <span className="text-sm leading-none flex-1 text-left">{component.name}</span>
                         </div>
                       );
                     })}
