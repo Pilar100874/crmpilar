@@ -258,6 +258,8 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Requires commercial PLUS version': 'Requer versão comercial PLUS',
       'Evaluate': 'Avaliar',
       'Position (x, y)': 'Posição (x, y)',
+      'Position (x)': 'Posição (x)',
+      'Position (y)': 'Posição (y)',
       'Size (width, height)': 'Tamanho (largura, altura)',
       'Bar width': 'Largura da barra',
       'Rotate': 'Rotacionar',
@@ -271,6 +273,15 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Choose file': 'Escolher arquivo',
       'Browse': 'Procurar',
       'No file chosen': 'Nenhum arquivo escolhido',
+      'Text wrap': 'Quebra de texto',
+      'Align to bottom of page': 'Alinhar ao rodapé da página',
+      'Label': 'Rótulo',
+      'Conditional style': 'Estilo condicional',
+      'CONDITIONAL STYLE': 'ESTILO CONDICIONAL',
+      'Preview report': 'Visualizar relatório',
+      'Save report': 'Salvar relatório',
+      'Preview Report': 'Visualizar relatório',
+      'Save Report': 'Salvar relatório',
       
       // Seções em maiúsculas
       'STYLE': 'ESTILO',
@@ -295,6 +306,43 @@ const [isLoaded, setIsLoaded] = useState(false);
         if (translationMap[base]) return translationMap[base] + ':';
       }
       return null;
+    };
+
+    // Oculta recursos da versão PLUS (ex: Rich text)
+    const hidePlusFeatures = () => {
+      const plusPatterns = [
+        'Requires commercial PLUS version',
+        'PLUS',
+        'Rich text',
+        'Rich Text',
+        'Spreadsheet (PLUS)',
+        'SPREADSHEET (PLUS)'
+      ];
+
+      // Remove opções de selects que são PLUS
+      root.querySelectorAll('select option').forEach((opt) => {
+        const t = opt.textContent?.trim() || '';
+        if (plusPatterns.some(p => t.includes(p))) {
+          opt.remove();
+        }
+      });
+
+      // Oculta linhas/labels/seções relacionadas ao PLUS
+      const candidates = root.querySelectorAll('.rbroFormRow, .rbroFormRowLabel, .rbroPropertyLabel, .rbroControlLabel, label, .rbroPanelSectionHeader, .rbroMenuItem, .rbroFormRow > div:first-child, .rbroInfo, .rbroWarning');
+      candidates.forEach((el) => {
+        const t = el.textContent?.trim() || '';
+        if (!t) return;
+        if (plusPatterns.some(p => t.includes(p))) {
+          let row: HTMLElement | null = el as HTMLElement;
+          while (row && !row.classList?.contains('rbroFormRow') && row.parentElement) {
+            row = row.parentElement as HTMLElement;
+            if (row.classList?.contains('rbroFormRow')) break;
+          }
+          const target = (row || (el as HTMLElement));
+          target.style.display = 'none';
+          target.setAttribute('data-hidden-plus', '1');
+        }
+      });
     };
 
     // Traduz atributos title
