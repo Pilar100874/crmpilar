@@ -305,7 +305,7 @@ const [isLoaded, setIsLoaded] = useState(false);
             </div>
           </div>
         )}
-        <div ref={containerRef} className="w-full h-full" />
+        <div ref={containerRef} className="rb-host w-full h-full" />
       </div>
       <Dialog open={showDsDialog} onOpenChange={setShowDsDialog}>
         <DialogContent className="max-w-5xl">

@@ -416,3 +416,13 @@ textarea.rbroInput:hover:not(:focus) {
 .rbroFormGroup {
   margin-bottom: 12px !important;
 }
+
+/* Separação garantida para botões da toolbar (evita ícones grudados) */
+#rbro_container button + button { margin-left: 8px !important; }
+#rbro_header button + button, .rbroToolbar button + button { margin-left: 8px !important; }
+#rbro_header .rbroButton, .rbroToolbar .rbroButton { margin: 0 4px !important; }
+#rbro_header, .rbroToolbar { gap: 8px !important; }
+/* Tamanho mínimo para clique confortável */
+#rbro_header .rbroButton, .rbroToolbar .rbroButton, #rbro_container .rbroButton { min-width: 36px !important; height: 36px !important; border-radius: 10px !important; }
+/* Ícones maiores e legíveis */
+#rbro_container .rbroButton svg, #rbro_container .rbroToolbarItem svg { width: 18px !important; height: 18px !important; }
