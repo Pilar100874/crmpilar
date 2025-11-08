@@ -685,9 +685,53 @@ const [isLoaded, setIsLoaded] = useState(false);
     version: 3,
   });
 
+  const handleDeleteSelected = () => {
+    if (!reportBroRef.current) return;
+    
+    try {
+      // Obtém os elementos selecionados
+      const selectedObjects = reportBroRef.current.getSelectedObjects();
+      
+      if (!selectedObjects || selectedObjects.length === 0) {
+        toast.info("Nenhum elemento selecionado para excluir");
+        return;
+      }
+      
+      // Exclui cada elemento selecionado
+      selectedObjects.forEach((obj: any) => {
+        if (obj && obj.id) {
+          reportBroRef.current.deleteObject(obj.id);
+        }
+      });
+      
+      toast.success(`${selectedObjects.length} elemento(s) excluído(s)`);
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      toast.error("Erro ao excluir elemento");
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Designer Container - ReportBro com toolbar padrão */}
+      {/* Toolbar Customizada */}
+      <div className="flex items-center gap-2 px-4 py-2 bg-card border-b border-border">
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={handleDeleteSelected}
+          disabled={!isLoaded}
+          title="Excluir elemento selecionado (Delete)"
+          className="gap-2"
+        >
+          <span className="text-lg">🗑️</span>
+          Excluir Selecionado
+        </Button>
+        <span className="text-xs text-muted-foreground ml-2">
+          Selecione um elemento no relatório e clique para excluir
+        </span>
+      </div>
+      
+      {/* Designer Container - ReportBro */}
       <div className="flex-1 relative overflow-hidden">
         {!isLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-md z-10">
