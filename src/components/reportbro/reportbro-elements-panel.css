@@ -1,0 +1,109 @@
+/* Estilização customizada do Painel de Elementos do ReportBro */
+
+/* Painel de elementos lateral esquerdo */
+.rbroDocumentPanel {
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%) !important;
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Cabeçalhos das seções (CABEÇALHO, CONTEÚDO, RODAPÉ, etc) */
+.rbroDocElementsContainer .rbroDocElementType {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  margin: 4px 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Itens dentro das seções (Imagem, Texto, etc) */
+.rbroDocElement {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 4px !important;
+  margin: 2px 8px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Hover nos itens */
+.rbroDocElement:hover {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+  transform: translateX(2px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Item selecionado */
+.rbroDocElement.rbroDocElementSelected {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Seções especiais (PARÂMETROS, STYLES, PROPRIEDADES DO DOCUMENTO) */
+.rbroDocElementsContainer > div:not(.rbroDocElementType):not(.rbroDocElement) {
+  background: hsl(var(--secondary)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+  border-radius: 6px !important;
+  margin: 4px 8px !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Botão de adicionar (+) */
+.rbroDocElementsContainer .rbroButton,
+.rbroDocElementsContainer button {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.rbroDocElementsContainer .rbroButton:hover,
+.rbroDocElementsContainer button:hover {
+  background: hsl(var(--primary) / 0.8) !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Ícones dos elementos */
+.rbroDocElement .rbroIcon {
+  filter: brightness(1.2) !important;
+  margin-right: 6px !important;
+}
+
+/* Scroll do painel */
+.rbroDocumentPanel::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+.rbroDocumentPanel::-webkit-scrollbar-track {
+  background: hsl(var(--muted)) !important;
+  border-radius: 4px !important;
+}
+
+.rbroDocumentPanel::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary)) !important;
+  border-radius: 4px !important;
+}
+
+.rbroDocumentPanel::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8) !important;
+}
