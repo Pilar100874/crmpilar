@@ -1,0 +1,23 @@
+/* Remove apenas os logos do ReportBro - SEM alterar estilos dos menus */
+.rbroLogo,
+.rbroPro,
+.rbro-logo,
+.rbro-branding,
+[class*="logo" i][class*="reportbro" i],
+[class*="branding" i][class*="reportbro" i],
+img[src*="logo" i],
+img[alt*="reportbro" i],
+img[alt*="logo" i],
+.rbroHeader img,
+#rbro_header img,
+#rbro_menu_panel img[src*="logo"],
+#rbro_detail_panel img[src*="logo"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
