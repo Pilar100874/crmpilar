@@ -1,17 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  AlignLeft, 
-  Frame, 
-  BarChart2, 
-  Donut, 
-  LineChart,
-  Grid3x3,
-  Sigma,
-  Braces,
-  ListOrdered,
-  CircleGauge,
-  BarChartBig
+  FileText, 
+  ImageIcon, 
+  BarChart3, 
+  PieChart, 
+  Activity,
+  Table as TableIcon,
+  Calculator,
+  TrendingUp,
+  Hash,
+  Gauge,
+  DatabaseZap
 } from "lucide-react";
 
 interface ComponentItem {
@@ -24,23 +24,23 @@ interface ComponentItem {
 
 const components: ComponentItem[] = [
   // Basic
-  { id: "text", name: "Texto", icon: AlignLeft, type: "text", category: "basic" },
-  { id: "image", name: "Imagem", icon: Frame, type: "image", category: "basic" },
+  { id: "text", name: "Texto", icon: FileText, type: "text", category: "basic" },
+  { id: "image", name: "Imagem", icon: ImageIcon, type: "image", category: "basic" },
   
   // Data
-  { id: "field", name: "Campo de Dados", icon: Braces, type: "field", category: "data" },
-  { id: "table", name: "Tabela", icon: Grid3x3, type: "table", category: "data" },
+  { id: "field", name: "Campo de Dados", icon: DatabaseZap, type: "field", category: "data" },
+  { id: "table", name: "Tabela", icon: TableIcon, type: "table", category: "data" },
   
   // Charts
-  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart2, type: "chart-bar", category: "charts" },
-  { id: "line-chart", name: "Gráfico de Linha", icon: LineChart, type: "chart-line", category: "charts" },
-  { id: "pie-chart", name: "Gráfico Pizza", icon: Donut, type: "chart-pie", category: "charts" },
-  { id: "gauge", name: "Indicador", icon: CircleGauge, type: "gauge", category: "charts" },
+  { id: "bar-chart", name: "Gráfico de Barras", icon: BarChart3, type: "chart-bar", category: "charts" },
+  { id: "line-chart", name: "Gráfico de Linha", icon: Activity, type: "chart-line", category: "charts" },
+  { id: "pie-chart", name: "Gráfico Pizza", icon: PieChart, type: "chart-pie", category: "charts" },
+  { id: "gauge", name: "Indicador", icon: Gauge, type: "gauge", category: "charts" },
   
   // Aggregates
-  { id: "sum", name: "Soma", icon: Sigma, type: "aggregate-sum", category: "aggregates" },
-  { id: "avg", name: "Média", icon: BarChartBig, type: "aggregate-avg", category: "aggregates" },
-  { id: "count", name: "Contagem", icon: ListOrdered, type: "aggregate-count", category: "aggregates" },
+  { id: "sum", name: "Soma", icon: Calculator, type: "aggregate-sum", category: "aggregates" },
+  { id: "avg", name: "Média", icon: TrendingUp, type: "aggregate-avg", category: "aggregates" },
+  { id: "count", name: "Contagem", icon: Hash, type: "aggregate-count", category: "aggregates" },
 ];
 
 interface ComponentLibraryProps {
@@ -82,10 +82,10 @@ export function ComponentLibrary({ onDragStart }: ComponentLibraryProps) {
                           key={component.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, component)}
-                          className="w-full flex items-center gap-3 p-3 border rounded-md cursor-move bg-card hover:bg-accent hover:text-accent-foreground transition-colors"
+                          className="w-full flex items-center gap-4 p-4 border rounded-md cursor-move bg-card hover:bg-accent hover:text-accent-foreground transition-colors"
                         >
-                          <Icon className="h-5 w-5 text-primary" />
-                          <span className="text-sm leading-none flex-1 text-left">{component.name}</span>
+                          <Icon className="h-6 w-6 text-primary flex-shrink-0" />
+                          <span className="text-sm font-medium leading-none flex-1 text-left">{component.name}</span>
                         </div>
                       );
                     })}
