@@ -145,8 +145,27 @@ const [isLoaded, setIsLoaded] = useState(false);
       'Page break': 'Quebra de página', 'Before': 'Antes', 'After': 'Depois',
       'Spacing': 'Espaçamento', 'Border radius': 'Raio da borda', 'Shadow': 'Sombra',
       'Transparency': 'Transparência', 'Rotation': 'Rotação', 'Scale': 'Escala',
-      'Horizontal': 'Horizontal', 'Vertical': 'Vertical', 'Diagonal': 'Diagonal'
-    };
+      'Horizontal': 'Horizontal', 'Vertical': 'Vertical', 'Diagonal': 'Diagonal',
+      
+      // === Propriedades Avançadas dos Objetos ===
+      'cs_condition': 'Condição', 'x': 'X', 'y': 'Y', 'width': 'Largura', 'height': 'Altura',
+      'backgroundColor': 'Cor de fundo', 'borderColor': 'Cor da borda', 'borderWidth': 'Largura da borda',
+      'borderAll': 'Borda completa', 'borderLeft': 'Borda esquerda', 'borderTop': 'Borda superior',
+      'borderRight': 'Borda direita', 'borderBottom': 'Borda inferior', 'paddingLeft': 'Preenchimento esquerdo',
+      'paddingTop': 'Preenchimento superior', 'paddingRight': 'Preenchimento direito', 
+      'paddingBottom': 'Preenchimento inferior', 'textColor': 'Cor do texto', 'fontSize': 'Tamanho da fonte',
+      'fontFamily': 'Família da fonte', 'bold': 'Negrito', 'italic': 'Itálico', 'underline': 'Sublinhado',
+      'strikethrough': 'Tachado', 'horizontalAlignment': 'Alinhamento horizontal',
+      'verticalAlignment': 'Alinhamento vertical', 'lineSpacing': 'Espaçamento de linha',
+      'printIf': 'Imprimir se', 'removeEmptyElement': 'Remover elemento vazio',
+      'spreadsheet_hide': 'Ocultar na planilha', 'spreadsheet_column': 'Coluna da planilha',
+      'spreadsheet_colspan': 'Mesclar colunas', 'spreadsheet_addEmptyRow': 'Adicionar linha vazia',
+      'growWeight': 'Peso de crescimento', 'eval': 'Avaliar', 'pattern': 'Padrão',
+      'dataSource': 'Fonte de dados', 'columns': 'Colunas', 'header': 'Cabeçalho',
+      'contentRows': 'Linhas de conteúdo', 'footer': 'Rodapé', 'printHeader': 'Imprimir cabeçalho',
+      'printFooter': 'Imprimir rodapé', 'source': 'Origem', 'imageFilename': 'Nome do arquivo',
+      'format': 'Formato', 'displayValue': 'Exibir valor'
+    }
 
     const applyAttr = (attr: 'title' | 'aria-label' | 'data-title' | 'placeholder') => {
       root.querySelectorAll(`[${attr}]`).forEach((el) => {
@@ -162,10 +181,12 @@ const [isLoaded, setIsLoaded] = useState(false);
     applyAttr('data-title');
     applyAttr('placeholder');
 
-    // Text content in visible labels/buttons/tabs
+    // Text content in visible labels/buttons/tabs including property panel
     const textSelectors = [
       '.rbroControlLabel', '.rbroSectionHeader', '.rbroToolbar button', '.rbroToolbar .rbroToolLabel',
-      '.rbroButton', '.rbroMenuItem', '.rbroPropertyLabel', '.rbroTabs .rbroTab', 'label', 'th', 'td'
+      '.rbroButton', '.rbroMenuItem', '.rbroPropertyLabel', '.rbroTabs .rbroTab', 'label', 'th', 'td',
+      '.rbroFormRow label', '.rbroPropertyPanel label', '.rbroPropertyPanel .rbroPropertyLabel',
+      '.rbroDocElementsTab label', '.rbroDocElementPanel label'
     ];
     root.querySelectorAll(textSelectors.join(',')).forEach((el) => {
       const node = el as HTMLElement;
@@ -182,6 +203,17 @@ const [isLoaded, setIsLoaded] = useState(false);
       if (!txt) return;
       const translated = map[txt];
       if (translated) o.textContent = translated;
+    });
+    
+    // Translate input labels in property panel by their 'for' attribute or nearby labels
+    root.querySelectorAll('.rbroFormRow, .rbroPropertyPanel .rbroFormRow').forEach((row) => {
+      const labels = row.querySelectorAll('label');
+      labels.forEach((label) => {
+        const txt = label.textContent?.trim();
+        if (!txt) return;
+        const translated = map[txt];
+        if (translated) label.textContent = translated;
+      });
     });
   };
 
