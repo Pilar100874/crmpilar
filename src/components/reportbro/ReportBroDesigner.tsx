@@ -241,18 +241,24 @@ const [isLoaded, setIsLoaded] = useState(false);
   });
 
   return (
-    <div className="h-full flex flex-col bg-muted/30">
-      {/* Header minimalista */}
-      <div className="h-16 border-b flex items-center justify-between px-6 bg-card/50 backdrop-blur-sm shrink-0">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-foreground">Designer de Relatórios</h2>
+    <div className="h-full flex flex-col bg-gradient-to-br from-background via-muted/20 to-background">
+      {/* Header - estilo Canvas */}
+      <div className="h-16 border-b flex items-center justify-between px-6 bg-card/80 backdrop-blur-md shadow-sm shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-lg">R</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Designer de Relatórios</h2>
+            <p className="text-xs text-muted-foreground">Crie relatórios profissionais</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Button 
             size="default" 
             variant="outline" 
             onClick={handleSave} 
-            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+            className="h-10 px-5 rounded-xl transition-all hover:scale-105 hover:shadow-md border-2"
           >
             <Save className="h-5 w-5 mr-2" />
             Salvar
@@ -261,7 +267,7 @@ const [isLoaded, setIsLoaded] = useState(false);
             size="default" 
             variant="outline" 
             onClick={handlePreview} 
-            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+            className="h-10 px-5 rounded-xl transition-all hover:scale-105 hover:shadow-md border-2"
           >
             <Eye className="h-5 w-5 mr-2" />
             Preview
@@ -270,16 +276,17 @@ const [isLoaded, setIsLoaded] = useState(false);
             size="default" 
             variant="outline" 
             onClick={() => setShowDsDialog(true)} 
-            className="h-10 px-4 rounded-xl transition-all hover:scale-105"
+            className="h-10 px-5 rounded-xl transition-all hover:scale-105 hover:shadow-md border-2"
           >
             <Database className="h-5 w-5 mr-2" />
             Dados
           </Button>
+          <div className="w-px h-8 bg-border mx-1"></div>
           <Button 
             size="icon" 
             variant="ghost" 
             onClick={onClose} 
-            className="h-10 w-10 rounded-xl transition-all hover:scale-105" 
+            className="h-10 w-10 rounded-xl transition-all hover:scale-105 hover:bg-destructive/10 hover:text-destructive" 
             title="Fechar designer"
           >
             <X className="h-5 w-5" />
@@ -288,12 +295,13 @@ const [isLoaded, setIsLoaded] = useState(false);
       </div>
 
       {/* Designer Container */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden bg-muted/10">
         {!isLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-sm text-muted-foreground">Carregando designer...</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-md z-10">
+            <div className="text-center p-8 rounded-2xl bg-card shadow-2xl border">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto mb-6"></div>
+              <p className="text-lg font-semibold text-foreground mb-2">Carregando designer...</p>
+              <p className="text-sm text-muted-foreground">Preparando ambiente de relatórios</p>
             </div>
           </div>
         )}
