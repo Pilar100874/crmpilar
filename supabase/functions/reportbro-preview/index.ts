@@ -185,19 +185,68 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
         eval: false,
         nullable: false,
         children: fields.map((f, i) => ({ id: Date.now() + i + 1, name: f, type: typeof first[f] === 'number' ? 'number' : typeof first[f] === 'boolean' ? 'boolean' : 'string', nullable: true })),
-        testData: '[]'
       };
       report.parameters.push(apiParam);
     }
 
-    apiParam.testData = JSON.stringify(rows);
+    // Remove possíveis dados de teste para evitar marcas d'água de teste
+    if (typeof apiParam === 'object' && 'testData' in apiParam) {
+      try { delete (apiParam as any).testData; } catch {}
+    }
 
-    // Call ReportBro runner
+    // Sanitiza o layout removendo elementos de branding/logos
+    const stripBranding = (node: any): any => {
+      const isString = (v: any) => typeof v === 'string';
+      const hasBrandWord = (s: string) => /reportbro|logo|branding|powered/i.test(s);
+
+      // Remove propriedades de watermark/branding
+      if (node && typeof node === 'object' && !Array.isArray(node)) {
+        for (const key of Object.keys(node)) {
+          if (/watermark|branding|logo|powered/i.test(key)) {
+            delete node[key as keyof typeof node];
+            continue;
+          }
+          const val: any = (node as any)[key];
+          if (isString(val) && hasBrandWord(val)) {
+            // Zera textos/imagens com palavras de marca
+            (node as any)[key] = '';
+          } else {
+            (node as any)[key] = stripBranding(val);
+          }
+        }
+        // Se possuir lista de elementos, filtra itens de imagem/texto que tenham indícios de marca
+        const listKeys = ['elements', 'children', 'items', 'content'];
+        for (const lk of listKeys) {
+          const arr = (node as any)[lk];
+          if (Array.isArray(arr)) {
+            (node as any)[lk] = arr
+              .filter((el: any) => {
+                if (!el || typeof el !== 'object') return true;
+                const t = (el.type || el.kind || '').toString().toLowerCase();
+                const txt = (el.text || el.label || '') as string;
+                const img = (el.image || el.src || el.imageUrl || '') as string;
+                if (t.includes('image') && hasBrandWord(img)) return false;
+                if (isString(txt) && hasBrandWord(txt)) return false;
+                if (isString(el.name) && hasBrandWord(el.name)) return false;
+                return true;
+              })
+              .map(stripBranding);
+          }
+        }
+        return node;
+      }
+      if (Array.isArray(node)) return node.map(stripBranding);
+      return node;
+    };
+
+    stripBranding(report);
+
+    // Chamada ao runner sem "isTestData" para evitar marca d'água
     console.log('Calling ReportBro runner...');
     const runnerResp = await fetch('https://www.reportbro.com/report/run', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ report, outputFormat: 'pdf', isTestData: true })
+      body: JSON.stringify({ report, outputFormat: 'pdf', isTestData: false, parameterValues: { api_data: rows } })
     });
 
     if (!runnerResp.ok) {
