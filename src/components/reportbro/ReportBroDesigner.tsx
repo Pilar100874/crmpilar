@@ -685,27 +685,25 @@ const [isLoaded, setIsLoaded] = useState(false);
             const apiParam = {
               id: Date.now(),
               name: 'api_data',
-              type: 'simple_array',
+              type: 'array',
+              arrayItemType: 'map',
               eval: false,
               nullable: false,
               pattern: '',
               expression: '',
               showOnlyNameType: false,
-              testData: `[${data.map((item: any, idx: number) => 
-                `{"id":${idx+1},${fields.map(f => `"${f}":"${item[f] || ''}"`).join(',')}}`
-              ).join(',')}]`,
               children: fields.map((fieldName, idx) => ({
                 id: Date.now() + idx + 1,
                 name: fieldName,
-                type: 'string',
+                type: (typeof firstItem[fieldName] === 'number') ? 'number' : (typeof firstItem[fieldName] === 'boolean') ? 'boolean' : 'string',
                 eval: false,
                 nullable: true,
                 pattern: '',
-                expression: `\${api_data.${fieldName}}`,
+                expression: '',
                 showOnlyNameType: false
-              }))
+              })),
+              testData: JSON.stringify(data)
             };
-            
             filteredParams.push(apiParam);
             report.parameters = filteredParams;
             
