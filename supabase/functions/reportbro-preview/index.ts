@@ -52,10 +52,29 @@ serve(async (req) => {
       );
     }
 
-    // Start background processing without blocking
-    processPreview(job.id, body.reportId, maxRecords, supabase).catch(err => {
-      console.error('Background processing error:', err);
-    });
+    // Start background processing without blocking (ensure it survives after response)
+    try {
+      // Prefer background task runner when available
+      // @ts-ignore - EdgeRuntime is available in this environment at runtime
+      const ER: any = (globalThis as any).EdgeRuntime;
+      if (ER?.waitUntil) {
+        ER.waitUntil(
+          processPreview(job.id, body.reportId, maxRecords, supabase).catch((err: any) => {
+            console.error('Background processing error:', err);
+          })
+        );
+      } else {
+        // Fallback to fire-and-forget
+        processPreview(job.id, body.reportId, maxRecords, supabase).catch((err: any) => {
+          console.error('Background processing error:', err);
+        });
+      }
+    } catch (e) {
+      // Last-resort fallback
+      processPreview(job.id, body.reportId, maxRecords, supabase).catch((err: any) => {
+        console.error('Background processing error:', err);
+      });
+    }
 
     return new Response(
       JSON.stringify({ success: true, jobId: job.id }),
