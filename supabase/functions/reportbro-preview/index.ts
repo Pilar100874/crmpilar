@@ -308,12 +308,26 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
         opacity: 0.9,
       });
       
-      // Add white rectangle at footer (bottom of page, full width)
+      // Add white rectangle at footer with image area (450x70)
+      const footerHeight = 80;
+      const imageWidth = 450;
+      const imageHeight = 70;
+      
+      // Full width white footer background
       page.drawRectangle({
         x: 0,
         y: 0,
         width: width,
-        height: 80,
+        height: footerHeight,
+        color: rgb(1, 1, 1),
+      });
+      
+      // White rectangle for image area (centered)
+      page.drawRectangle({
+        x: (width - imageWidth) / 2,
+        y: (footerHeight - imageHeight) / 2,
+        width: imageWidth,
+        height: imageHeight,
         color: rgb(1, 1, 1),
       });
     }
