@@ -272,25 +272,11 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
     }
     const pdfBytes = await pdfResponse.arrayBuffer();
 
-    // Load PDF and add white rectangles over watermark areas + logo
+    // Load PDF and add white rectangles over watermark areas
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const pages = pdfDoc.getPages();
     
-    // Download and embed logo image
-    let logoImage = null;
-    try {
-      // Try to fetch logo from public URL (you can change this URL to your logo)
-      const logoUrl = 'https://ioxugupvxlcdweldocmq.supabase.co/storage/v1/object/public/bot-media/logo_branco.png';
-      const logoResponse = await fetch(logoUrl);
-      if (logoResponse.ok) {
-        const logoBytes = await logoResponse.arrayBuffer();
-        logoImage = await pdfDoc.embedPng(logoBytes);
-      }
-    } catch (error) {
-      console.log('Could not load logo, skipping:', error);
-    }
-    
-    // Add white rectangles over typical watermark positions + logo
+    // Add white rectangles over typical watermark positions
     for (const page of pages) {
       const { width, height } = page.getSize();
       
@@ -322,29 +308,28 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
         opacity: 0.9,
       });
       
-      // Add white rectangle at footer (bottom of page, full width)
+      // Add white rectangle at footer with image area (450x70)
+      const footerHeight = 80;
+      const imageWidth = 450;
+      const imageHeight = 70;
+      
+      // Full width white footer background
       page.drawRectangle({
         x: 0,
         y: 0,
         width: width,
-        height: 80,
+        height: footerHeight,
         color: rgb(1, 1, 1),
       });
       
-      // Add logo image in footer if available
-      if (logoImage) {
-        const logoWidth = 450;
-        const logoHeight = 70;
-        const logoX = (width - logoWidth) / 2; // Center horizontally
-        const logoY = 5; // 5px from bottom
-        
-        page.drawImage(logoImage, {
-          x: logoX,
-          y: logoY,
-          width: logoWidth,
-          height: logoHeight,
-        });
-      }
+      // White rectangle for image area (centered)
+      page.drawRectangle({
+        x: (width - imageWidth) / 2,
+        y: (footerHeight - imageHeight) / 2,
+        width: imageWidth,
+        height: imageHeight,
+        color: rgb(1, 1, 1),
+      });
     }
 
     const cleanedPdfBytes = await pdfDoc.save();
