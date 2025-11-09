@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { PDFDocument } from 'https://esm.sh/pdf-lib@1.17.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -261,55 +260,15 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
       throw new Error('Resposta inválida do gerador');
     }
 
-    const originalPdfUrl = `https://www.reportbro.com/report/${result.key}`;
-    console.log('Original PDF ready:', originalPdfUrl);
-
-    // Download PDF and remove watermark
-    console.log('Downloading PDF to remove watermark...');
-    const pdfResponse = await fetch(originalPdfUrl);
-    if (!pdfResponse.ok) {
-      throw new Error('Falha ao baixar PDF');
-    }
-    
-    const pdfBytes = await pdfResponse.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-    
-    // Remove metadata que possa conter branding
-    pdfDoc.setTitle('Relatório');
-    pdfDoc.setAuthor('');
-    pdfDoc.setSubject('');
-    pdfDoc.setKeywords([]);
-    pdfDoc.setProducer('');
-    pdfDoc.setCreator('');
-    
-    const cleanedPdfBytes = await pdfDoc.save();
-    
-    // Upload PDF limpo para o storage do Supabase
-    const fileName = `report-${jobId}-${Date.now()}.pdf`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('bot-media')
-      .upload(fileName, cleanedPdfBytes, {
-        contentType: 'application/pdf',
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      throw new Error('Falha ao fazer upload do PDF');
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('bot-media')
-      .getPublicUrl(fileName);
-
-    console.log('Clean PDF ready:', publicUrl);
+    const pdfUrl = `https://www.reportbro.com/report/${result.key}`;
+    console.log('PDF ready:', pdfUrl);
 
     // Update job as ready
     await supabase
       .from('report_preview_jobs')
       .update({
         status: 'ready',
-        pdf_url: publicUrl,
+        pdf_url: pdfUrl,
         truncated: hasMore,
         included: rows.length,
         total: totalCount
