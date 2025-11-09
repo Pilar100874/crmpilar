@@ -468,8 +468,13 @@ const [isLoaded, setIsLoaded] = useState(false);
       setTimeout(() => {
         translateInterfacePtBR();
         
+        let translationTimeout: NodeJS.Timeout;
+        
         // Observer para traduzir elementos carregados dinamicamente
         const observer = new MutationObserver((mutations) => {
+          // Limpa timeout anterior para debounce
+          clearTimeout(translationTimeout);
+          
           // Verifica se houve mudanças relevantes
           const shouldTranslate = mutations.some(mutation => 
             mutation.type === 'childList' || 
@@ -477,8 +482,22 @@ const [isLoaded, setIsLoaded] = useState(false);
           );
           
           if (shouldTranslate) {
-            // Pequeno delay para garantir que o DOM está estável
-            setTimeout(() => translateInterfacePtBR(), 50);
+            // Desconecta observer para evitar loop
+            observer.disconnect();
+            
+            // Agenda tradução com debounce
+            translationTimeout = setTimeout(() => {
+              translateInterfacePtBR();
+              // Reconecta observer após tradução
+              if (containerRef.current) {
+                observer.observe(containerRef.current, {
+                  childList: true,
+                  subtree: true,
+                  attributes: true,
+                  attributeFilter: ['title', 'placeholder']
+                });
+              }
+            }, 200);
           }
         });
         
@@ -559,12 +578,15 @@ const [isLoaded, setIsLoaded] = useState(false);
         translateInterfacePtBR();
       }
 
-      // Carrega dados da API se configurada
+      // Carrega dados da API se configurada (sem bloquear a interface)
       if (data?.configuracoes && typeof data.configuracoes === 'object') {
         const config = data.configuracoes as any;
         if (config.api_url) {
           setCurrentApiUrl(config.api_url);
-          await loadApiData(config.api_url);
+          // Carrega API em segundo plano sem await
+          loadApiData(config.api_url).catch(err => {
+            console.error("Erro ao carregar API em background:", err);
+          });
         }
       }
     } catch (error) {
@@ -630,11 +652,16 @@ const [isLoaded, setIsLoaded] = useState(false);
   };
 
   const loadApiData = async (url: string) => {
-    if (!url) return;
+    if (!url || loadingApiData) return; // Previne múltiplas chamadas simultâneas
     
     setLoadingApiData(true);
     try {
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -669,7 +696,6 @@ const [isLoaded, setIsLoaded] = useState(false);
             
             // Recarrega o relatório com os novos parâmetros
             reportBroRef.current.load(report);
-            translateInterfacePtBR();
             
             toast.success(`${data.length} registros carregados da API e disponíveis como 'api_data'`);
           } catch (error) {
@@ -681,8 +707,12 @@ const [isLoaded, setIsLoaded] = useState(false);
         toast.error("API não retornou dados válidos");
       }
     } catch (error: any) {
-      console.error("Erro ao carregar dados da API:", error);
-      toast.error("Erro ao carregar dados da API");
+      if (error.name === 'AbortError') {
+        toast.error("Timeout ao carregar dados da API");
+      } else {
+        console.error("Erro ao carregar dados da API:", error);
+        toast.error("Erro ao carregar dados da API");
+      }
     } finally {
       setLoadingApiData(false);
     }
