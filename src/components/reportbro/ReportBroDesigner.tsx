@@ -6,7 +6,7 @@ import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
-import { Globe, Eye } from "lucide-react";
+import { Globe } from "lucide-react";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -21,6 +21,8 @@ const [isLoaded, setIsLoaded] = useState(false);
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
   const [apiData, setApiData] = useState<any>(null);
   const [loadingApiData, setLoadingApiData] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [previewJson, setPreviewJson] = useState<string>("");
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -458,10 +460,10 @@ const [isLoaded, setIsLoaded] = useState(false);
 
       // Sempre inicia sem report explícito para que o ReportBro crie um padrão válido
       reportBroRef.current = new ReportBro(containerRef.current, {
-        reportServerUrl: "",
+        // Não definir reportServerUrl para evitar chamadas HTTP (PUT "")
         locale: "pt_BR",
         saveCallback: handleSave,
-        previewCallback: handlePreview, // Conecta o preview nativo ao nosso viewer
+        previewCallback: handlePreview, // Conecta o preview nativo ao nosso handler interno
         showTemplateSelection: false,
       });
 
@@ -621,33 +623,21 @@ const [isLoaded, setIsLoaded] = useState(false);
 
   const handlePreview = () => {
     if (!reportBroRef.current) return;
-    
     try {
       const reportData = reportBroRef.current.getReport();
-      
-      // Valida se há dados
       if (!reportData || typeof reportData !== 'object') {
         toast.error("Relatório vazio ou inválido");
         return;
       }
-      
-      const layoutStr = JSON.stringify(reportData);
-      
-      // Salva no localStorage
+      const layoutStr = JSON.stringify(reportData, null, 2);
+      // Mantém compatibilidade com o viewer existente, mas não abre nova aba
       localStorage.setItem("reportbro_preview", layoutStr);
-      
-      // Abre nova aba
-      const newWindow = window.open("/relatorios/viewer", "_blank");
-      
-      if (!newWindow) {
-        toast.error("Permita pop-ups para visualizar o relatório");
-        return;
-      }
-      
-      toast.success("Abrindo visualização...");
+      setPreviewJson(layoutStr);
+      setShowPreviewDialog(true);
+      toast.success("Pré-visualização pronta");
     } catch (error) {
       console.error("Erro ao visualizar:", error);
-      toast.error(`Erro ao abrir visualização: ${error}`);
+      toast.error("Erro ao abrir visualização");
     }
   };
 
@@ -901,6 +891,23 @@ const [isLoaded, setIsLoaded] = useState(false);
               </details>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Visualização interna */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Visualização do relatório</DialogTitle>
+            <DialogDescription>Prévia interna sem servidor de geração</DialogDescription>
+          </DialogHeader>
+          <div className="h-[60vh] overflow-auto rounded bg-muted/40 p-4">
+            <pre className="text-xs whitespace-pre-wrap break-words">{previewJson}</pre>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowPreviewDialog(false)}>Fechar</Button>
+            <Button onClick={() => window.print()}>Imprimir</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
