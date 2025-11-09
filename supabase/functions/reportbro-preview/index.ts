@@ -9,8 +9,7 @@ const corsHeaders = {
 
 type PreviewRequest = {
   reportId: string;
-  userId?: string;
-  limit?: number;
+  maxRecords?: number;
 };
 
 serve(async (req) => {
@@ -23,36 +22,39 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body: PreviewRequest = await req.json();
-    const { reportId, userId, limit = 5000 } = body;
-
-    if (!reportId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'reportId required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const authHeader = req.headers.get('Authorization');
+    let userId: string | null = null;
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id ?? null;
     }
 
-    console.log('Creating async preview job for report:', reportId);
+    const body: PreviewRequest = await req.json();
+    const maxRecords = Math.max(1, Math.min(10000, body.maxRecords ?? 5000));
 
     // Create job record
-    const { data: job, error: jobErr } = await supabase
+    const { data: job, error: jobError } = await supabase
       .from('report_preview_jobs')
-      .insert({ report_id: reportId, requested_by: userId || null, status: 'pending' })
+      .insert({
+        report_id: body.reportId,
+        requested_by: userId,
+        status: 'pending'
+      })
       .select()
       .single();
 
-    if (jobErr || !job) {
-      console.error('Failed to create job:', jobErr);
+    if (jobError || !job) {
+      console.error('Failed to create job:', jobError);
       return new Response(
         JSON.stringify({ success: false, error: 'Falha ao criar job' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Background processing - return immediately
-    processReportJob(supabase, job.id, reportId, limit).catch((err) => {
-      console.error('Background job error:', err);
+    // Start background processing without blocking
+    processPreview(job.id, body.reportId, maxRecords, supabase).catch(err => {
+      console.error('Background processing error:', err);
     });
 
     return new Response(
@@ -68,48 +70,54 @@ serve(async (req) => {
   }
 });
 
-async function processReportJob(supabase: any, jobId: string, reportId: string, limit: number) {
+async function processPreview(jobId: string, reportId: string, maxRecords: number, supabase: any) {
   try {
-    // Load report
-    const { data: report, error: repErr } = await supabase
+    console.log('Processing preview for job:', jobId);
+
+    const { data, error } = await supabase
       .from('relatorios')
       .select('layout_json, configuracoes')
       .eq('id', reportId)
-      .single();
+      .maybeSingle();
 
-    if (repErr || !report) {
+    if (error || !data) {
       throw new Error('Relatório não encontrado');
     }
 
-    const reportLayout = report.layout_json;
-    const apiUrl = report.configuracoes?.api_url;
+    const reportLayout = data.layout_json;
+    const apiUrl = data.configuracoes?.api_url;
+
     if (!apiUrl) {
       throw new Error('API não configurada');
     }
 
     // Fetch API data
+    console.log('Fetching data from API:', apiUrl);
     const apiResp = await fetch(apiUrl);
-    if (!apiResp.ok) throw new Error('Falha ao buscar API');
+    if (!apiResp.ok) {
+      throw new Error('Falha ao buscar dados da API');
+    }
     const raw = await apiResp.json();
 
     let rows: any[] = [];
     if (Array.isArray(raw)) rows = raw;
-    else if (raw?.data && Array.isArray(raw.data)) rows = raw.data;
-    else if (raw?.data) rows = [raw.data];
-    else if (raw) rows = [raw];
+    else if (raw && typeof raw === 'object' && 'data' in raw) rows = Array.isArray(raw.data) ? raw.data : [raw.data];
+    else if (raw != null) rows = [raw];
 
-    const total = rows.length;
-    const maxRecords = Math.max(1, Math.min(10000, limit));
-    const truncated = rows.length > maxRecords;
-    if (truncated) rows = rows.slice(0, maxRecords);
+    const totalCount = rows.length;
+    let truncated = false;
+    if (rows.length > maxRecords) {
+      truncated = true;
+      rows = rows.slice(0, maxRecords);
+    }
 
-    // Build report
-    const rpt = JSON.parse(JSON.stringify(reportLayout || {}));
-    rpt.parameters = Array.isArray(rpt.parameters) ? rpt.parameters : [];
+    // Build report with data
+    const report = JSON.parse(JSON.stringify(reportLayout || {}));
+    report.parameters = Array.isArray(report.parameters) ? report.parameters : [];
 
     const first = rows[0] || {};
     const fields = Object.keys(first);
-    let apiParam = rpt.parameters.find((p: any) => p?.name === 'api_data');
+    let apiParam = report.parameters.find((p: any) => p?.name === 'api_data');
     if (!apiParam) {
       apiParam = {
         id: Date.now(),
@@ -118,36 +126,37 @@ async function processReportJob(supabase: any, jobId: string, reportId: string, 
         arrayItemType: 'map',
         eval: false,
         nullable: false,
-        children: fields.map((f, i) => ({
-          id: Date.now() + i + 1,
-          name: f,
-          type: typeof first[f] === 'number' ? 'number' : typeof first[f] === 'boolean' ? 'boolean' : 'string',
-          nullable: true
-        })),
+        children: fields.map((f, i) => ({ id: Date.now() + i + 1, name: f, type: typeof first[f] === 'number' ? 'number' : typeof first[f] === 'boolean' ? 'boolean' : 'string', nullable: true })),
         testData: '[]'
       };
-      rpt.parameters.push(apiParam);
+      report.parameters.push(apiParam);
     }
+
     apiParam.testData = JSON.stringify(rows);
 
     // Call ReportBro runner
+    console.log('Calling ReportBro runner...');
     const runnerResp = await fetch('https://www.reportbro.com/report/run', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ report: rpt, outputFormat: 'pdf', isTestData: true })
+      body: JSON.stringify({ report, outputFormat: 'pdf', isTestData: true })
     });
 
     if (!runnerResp.ok) {
-      const txt = await runnerResp.text();
-      throw new Error(`Runner failed: ${runnerResp.status} ${txt}`);
+      const t = await runnerResp.text();
+      console.error('Runner error:', runnerResp.status, t);
+      throw new Error('Falha ao gerar PDF');
     }
 
     const result = await runnerResp.json();
-    if (!result?.key) throw new Error('No key returned');
+    if (!result?.key) {
+      throw new Error('Resposta inválida do gerador');
+    }
 
     const pdfUrl = `https://www.reportbro.com/report/${result.key}`;
+    console.log('PDF ready:', pdfUrl);
 
-    // Update job
+    // Update job as ready
     await supabase
       .from('report_preview_jobs')
       .update({
@@ -155,16 +164,19 @@ async function processReportJob(supabase: any, jobId: string, reportId: string, 
         pdf_url: pdfUrl,
         truncated,
         included: rows.length,
-        total
+        total: totalCount
       })
       .eq('id', jobId);
 
-    console.log('Job completed:', jobId, pdfUrl);
+    console.log('Job completed:', jobId);
   } catch (error: any) {
-    console.error('Job processing error:', error);
+    console.error('Error processing preview:', error);
     await supabase
       .from('report_preview_jobs')
-      .update({ status: 'error', error: error?.message || 'Unknown error' })
+      .update({
+        status: 'error',
+        error: error?.message || 'Erro desconhecido'
+      })
       .eq('id', jobId);
   }
 }
