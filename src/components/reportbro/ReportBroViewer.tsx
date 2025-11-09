@@ -14,18 +14,32 @@ export function ReportBroViewer() {
 
   const loadReportFromStorage = () => {
     try {
-      const stored = localStorage.getItem("reportbro_preview");
-      if (!stored) {
+      let jsonStr = localStorage.getItem("reportbro_preview");
+
+      // Fallback: tenta via query param ?r=base64
+      if (!jsonStr) {
+        const params = new URLSearchParams(window.location.search);
+        const r = params.get('r');
+        if (r) {
+          try {
+            jsonStr = atob(r);
+          } catch (e) {
+            console.warn('Falha ao decodificar parâmetro r:', e);
+          }
+        }
+      }
+
+      if (!jsonStr) {
         toast.error("Nenhum relatório para visualizar");
         return;
       }
-      
-      const data = JSON.parse(stored);
+
+      const data = JSON.parse(jsonStr);
       if (!data || typeof data !== 'object') {
         toast.error("Dados do relatório inválidos");
         return;
       }
-      
+
       setReportData(data);
     } catch (error) {
       console.error("Erro ao carregar:", error);

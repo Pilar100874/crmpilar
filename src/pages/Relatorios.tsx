@@ -117,13 +117,19 @@ export default function Relatorios() {
   };
 
   const handlePreview = (report: Report) => {
-    // Salvar relatório no localStorage e abrir visualização ReportBro
+    // Salvar relatório no localStorage e abrir visualização ReportBro (com fallback via query)
     if (report.layout_json) {
-      const layoutData = typeof report.layout_json === 'string' 
-        ? report.layout_json 
-        : JSON.stringify(report.layout_json);
-      localStorage.setItem('reportbro_preview', layoutData);
-      window.open('/relatorios/viewer', '_blank');
+      const layoutJsonObj = typeof report.layout_json === 'string' 
+        ? JSON.parse(report.layout_json)
+        : report.layout_json;
+      const layoutStr = JSON.stringify(layoutJsonObj);
+
+      // Salva no localStorage
+      localStorage.setItem('reportbro_preview', layoutStr);
+
+      // Também envia como fallback por query param base64 (para casos onde o localStorage não está acessível)
+      const r = encodeURIComponent(btoa(layoutStr));
+      window.open(`/relatorios/viewer?r=${r}`, '_blank');
       toast.success('Abrindo visualização...');
     } else {
       toast.error('Relatório sem layout definido');

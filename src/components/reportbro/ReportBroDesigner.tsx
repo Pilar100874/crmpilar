@@ -623,8 +623,10 @@ const [isLoaded, setIsLoaded] = useState(false);
     
     try {
       const reportData = reportBroRef.current.getReport();
-      localStorage.setItem("reportbro_preview", JSON.stringify(reportData));
-      window.open("/relatorios/viewer", "_blank");
+      const layoutStr = JSON.stringify(reportData);
+      localStorage.setItem("reportbro_preview", layoutStr);
+      const r = encodeURIComponent(btoa(layoutStr));
+      window.open(`/relatorios/viewer?r=${r}`, "_blank");
       toast.success("Abrindo visualização...");
     } catch (error) {
       console.error("Erro ao visualizar:", error);
