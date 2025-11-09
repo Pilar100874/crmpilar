@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
 import { Database, Globe } from "lucide-react";
@@ -24,6 +24,8 @@ const [isLoaded, setIsLoaded] = useState(false);
   const [applying, setApplying] = useState(false);
   const [showApiDialog, setShowApiDialog] = useState(false);
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
+  const [apiData, setApiData] = useState<any>(null);
+  const [loadingApiData, setLoadingApiData] = useState(false);
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -574,6 +576,15 @@ const [isLoaded, setIsLoaded] = useState(false);
         });
       }
       setInitialSources(initSources);
+
+      // Carrega dados da API se configurada
+      if (data?.configuracoes && typeof data.configuracoes === 'object') {
+        const config = data.configuracoes as any;
+        if (config.api_url) {
+          setCurrentApiUrl(config.api_url);
+          await loadApiData(config.api_url);
+        }
+      }
     } catch (error) {
       console.error("Erro ao carregar relatório:", error);
       toast.error("Erro ao carregar relatório");
@@ -661,6 +672,65 @@ const [isLoaded, setIsLoaded] = useState(false);
     }
   };
 
+  const loadApiData = async (url: string) => {
+    if (!url) return;
+    
+    setLoadingApiData(true);
+    try {
+      const response = await fetch(url);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const data = Array.isArray(result.data) ? result.data : [result.data];
+        setApiData(data);
+        
+        // Adiciona os dados da API como parâmetros no ReportBro
+        if (reportBroRef.current && data.length > 0) {
+          try {
+            const report = reportBroRef.current.getReport();
+            
+            // Remove parâmetro api_data se já existir
+            const existingParams = report.parameters || [];
+            const filteredParams = existingParams.filter((p: any) => p.name !== 'api_data');
+            
+            // Adiciona novo parâmetro com os dados da API
+            const apiParam = {
+              id: 'api_data',
+              name: 'api_data',
+              type: 'array',
+              arrayItemType: 'map',
+              eval: false,
+              nullable: false,
+              pattern: '',
+              expression: '',
+              showOnlyNameType: false,
+              testData: JSON.stringify(data)
+            };
+            
+            filteredParams.push(apiParam);
+            report.parameters = filteredParams;
+            
+            // Recarrega o relatório com os novos parâmetros
+            reportBroRef.current.load(report);
+            translateInterfacePtBR();
+            
+            toast.success(`${data.length} registros carregados da API e disponíveis como 'api_data'`);
+          } catch (error) {
+            console.error("Erro ao adicionar dados ao ReportBro:", error);
+            toast.warning(`${data.length} registros carregados mas não foi possível adicionar ao designer`);
+          }
+        }
+      } else {
+        toast.error("API não retornou dados válidos");
+      }
+    } catch (error: any) {
+      console.error("Erro ao carregar dados da API:", error);
+      toast.error("Erro ao carregar dados da API");
+    } finally {
+      setLoadingApiData(false);
+    }
+  };
+
   const handleApiSelect = async (apiUrl: string, apiName: string) => {
     if (!reportId) {
       toast.error("Salve o relatório antes de configurar API");
@@ -682,7 +752,11 @@ const [isLoaded, setIsLoaded] = useState(false);
 
       setCurrentApiUrl(apiUrl);
       setShowApiDialog(false);
-      toast.success(`API "${apiName}" configurada no relatório`);
+      
+      // Carrega os dados da API
+      await loadApiData(apiUrl);
+      
+      toast.success(`API "${apiName}" configurada e dados carregados`);
     } catch (error: any) {
       console.error("Erro ao configurar API:", error);
       toast.error("Erro ao configurar API");
@@ -731,9 +805,29 @@ const [isLoaded, setIsLoaded] = useState(false);
           API de Dados
         </Button>
         {currentApiUrl && (
-          <span className="text-xs text-muted-foreground ml-2">
-            API configurada
-          </span>
+          <div className="flex items-center gap-2 ml-2">
+            <span className="text-xs text-muted-foreground">
+              API configurada
+            </span>
+            {apiData && (
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                {apiData.length} registros
+              </span>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => loadApiData(currentApiUrl)}
+              disabled={loadingApiData}
+              className="h-6 px-2"
+            >
+              {loadingApiData ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+              ) : (
+                "Recarregar"
+              )}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -754,6 +848,9 @@ const [isLoaded, setIsLoaded] = useState(false);
         <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle>Fontes de Dados do Relatório</DialogTitle>
+            <DialogDescription>
+              Configure as conexões de banco de dados e queries SQL para o relatório
+            </DialogDescription>
           </DialogHeader>
           {reportId ? (
             <div className="h-[70vh]">
@@ -779,11 +876,40 @@ const [isLoaded, setIsLoaded] = useState(false);
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Configurar API de Dados</DialogTitle>
+            <DialogDescription>
+              Selecione uma API cadastrada ou configure uma URL customizada
+            </DialogDescription>
           </DialogHeader>
           <APIDataSourceSelector 
             onSelect={handleApiSelect}
             currentUrl={currentApiUrl}
           />
+          {apiData && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold mb-2 text-sm">Dados Carregados ({apiData.length} registros):</h4>
+              <div className="text-xs space-y-2">
+                <div className="p-2 bg-background rounded">
+                  <p className="font-semibold mb-1">Como usar no ReportBro:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                    <li>Use o parâmetro <code className="bg-muted px-1 rounded">api_data</code> como fonte de dados</li>
+                    <li>Para acessar campos: <code className="bg-muted px-1 rounded">{"{"}api_data.campo{"}"}</code></li>
+                    <li>Para listas/tabelas: use <code className="bg-muted px-1 rounded">api_data</code> como data source</li>
+                  </ol>
+                </div>
+                <p className="font-mono text-muted-foreground">
+                  Campos disponíveis: {apiData.length > 0 && Object.keys(apiData[0]).join(", ")}
+                </p>
+              </div>
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                  Ver dados completos (JSON)
+                </summary>
+                <pre className="mt-2 p-2 bg-background rounded text-xs overflow-x-auto max-h-40 overflow-y-auto">
+                  {JSON.stringify(apiData, null, 2)}
+                </pre>
+              </details>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
