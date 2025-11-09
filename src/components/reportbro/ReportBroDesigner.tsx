@@ -628,7 +628,35 @@ const [isLoaded, setIsLoaded] = useState(false);
         return;
       }
       const layoutStr = JSON.stringify(reportData);
-      localStorage.setItem("reportbro_preview", layoutStr);
+
+      // Tenta salvar no localStorage; se falhar por tamanho, usa fallbacks
+      let saved = false;
+      try {
+        localStorage.setItem("reportbro_preview", layoutStr);
+        saved = true;
+      } catch (e) {
+        // Tenta sessionStorage direto
+        try {
+          sessionStorage.setItem("reportbro_preview", layoutStr);
+          saved = true;
+        } catch (e2) {
+          // Como último recurso, salva em chunks na sessionStorage
+          const chunkSize = 500000; // ~500KB por chunk
+          const totalChunks = Math.ceil(layoutStr.length / chunkSize);
+          sessionStorage.setItem("reportbro_preview_chunk_count", String(totalChunks));
+          for (let i = 0; i < totalChunks; i++) {
+            const chunk = layoutStr.slice(i * chunkSize, (i + 1) * chunkSize);
+            sessionStorage.setItem(`reportbro_preview_chunk_${i}`, chunk);
+          }
+          saved = true;
+        }
+      }
+
+      if (!saved) {
+        toast.error("Falha ao preparar visualização do relatório");
+        return;
+      }
+
       // Abre no MESMO separador para evitar popup/tela em branco
       window.location.href = "/relatorios/viewer";
     } catch (error) {
