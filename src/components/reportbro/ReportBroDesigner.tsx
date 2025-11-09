@@ -6,6 +6,8 @@ import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
+import { APIDataSourceSelector } from "./APIDataSourceSelector";
+import { Database, Globe } from "lucide-react";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -20,6 +22,8 @@ const [isLoaded, setIsLoaded] = useState(false);
   const [initialSources, setInitialSources] = useState<any[]>([]);
   const [currentSources, setCurrentSources] = useState<any[]>([]);
   const [applying, setApplying] = useState(false);
+  const [showApiDialog, setShowApiDialog] = useState(false);
+  const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -657,6 +661,34 @@ const [isLoaded, setIsLoaded] = useState(false);
     }
   };
 
+  const handleApiSelect = async (apiUrl: string, apiName: string) => {
+    if (!reportId) {
+      toast.error("Salve o relatório antes de configurar API");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("relatorios")
+        .update({ 
+          configuracoes: { 
+            api_url: apiUrl,
+            api_name: apiName 
+          } 
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      setCurrentApiUrl(apiUrl);
+      setShowApiDialog(false);
+      toast.success(`API "${apiName}" configurada no relatório`);
+    } catch (error: any) {
+      console.error("Erro ao configurar API:", error);
+      toast.error("Erro ao configurar API");
+    }
+  };
+
   const getEmptyReport = () => ({
     docElements: [
       {
@@ -678,6 +710,33 @@ const [isLoaded, setIsLoaded] = useState(false);
   // Nenhuma captura adicional de teclado para não interferir nos handlers internos do designer.
   return (
     <div className="h-full flex flex-col bg-background">
+      {/* Barra de ferramentas customizada */}
+      <div className="bg-card border-b px-4 py-2 flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setShowDsDialog(true)}
+          className="gap-2"
+        >
+          <Database className="h-4 w-4" />
+          Fontes de Dados SQL
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setShowApiDialog(true)}
+          className="gap-2"
+        >
+          <Globe className="h-4 w-4" />
+          API de Dados
+        </Button>
+        {currentApiUrl && (
+          <span className="text-xs text-muted-foreground ml-2">
+            API configurada
+          </span>
+        )}
+      </div>
+
       {/* Designer Container - ReportBro com toolbar padrão */}
       <div className="flex-1 relative overflow-hidden">
         {!isLoaded && (
@@ -713,6 +772,18 @@ const [isLoaded, setIsLoaded] = useState(false);
             <Button variant="outline" onClick={() => setShowDsDialog(false)}>Fechar</Button>
             <Button onClick={applyDataSources} disabled={applying || !reportId}>Aplicar</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Configurar API de Dados</DialogTitle>
+          </DialogHeader>
+          <APIDataSourceSelector 
+            onSelect={handleApiSelect}
+            currentUrl={currentApiUrl}
+          />
         </DialogContent>
       </Dialog>
     </div>
