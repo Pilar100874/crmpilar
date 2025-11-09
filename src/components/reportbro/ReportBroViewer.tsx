@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import "reportbro-designer/dist/reportbro.css";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ReportBroViewer() {
   const [reportData, setReportData] = useState<any>(null);
@@ -36,8 +37,8 @@ export function ReportBroViewer() {
 
       setReportInfo(data);
       
-      // Se tiver reportId e apiUrl, gera via backend
-      if (data.reportId && data.apiUrl) {
+      // Se tiver reportId, gera via backend (buscará a API configurada no BD)
+      if (data.reportId) {
         await generatePdfViaBackend(data.reportId, data.apiUrl, data.report);
       } else {
         // Fallback: mostra estrutura do relatório
@@ -51,65 +52,28 @@ export function ReportBroViewer() {
     }
   };
 
-  const generatePdfViaBackend = async (reportId: string, apiUrl: string, reportLayout: any) => {
+  const generatePdfViaBackend = async (reportId: string, apiUrl: string, _reportLayout: any) => {
     try {
       setLoading(true);
-      
-      // Busca dados da API
-      const apiResponse = await fetch(apiUrl);
-      const apiData = await apiResponse.json();
-      
-      // Prepara dados para ReportBro
-      let data: any[] = [];
-      if (Array.isArray(apiData)) {
-        data = apiData;
-      } else if (apiData && typeof apiData === 'object' && 'data' in apiData) {
-        data = Array.isArray(apiData.data) ? apiData.data : [apiData.data];
-      } else if (apiData != null) {
-        data = [apiData];
-      }
 
-      // Atualiza parâmetros com dados reais
-      const reportWithData = JSON.parse(JSON.stringify(reportLayout));
-      if (reportWithData.parameters) {
-        reportWithData.parameters = reportWithData.parameters.map((param: any) => {
-          if (param.name === 'api_data' && data.length > 0) {
-            return {
-              ...param,
-              testData: JSON.stringify(data)
-            };
-          }
-          return param;
-        });
-      }
-
-      // Gera PDF via ReportBro API
-      const response = await fetch('https://www.reportbro.com/report/run', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          report: reportWithData,
-          outputFormat: 'pdf',
-          isTestData: true
-        })
+      const { data, error } = await supabase.functions.invoke('reportbro-preview', {
+        body: { reportId }
       });
 
-      if (!response.ok) {
-        throw new Error('Falha ao gerar PDF');
+      if (error) throw error;
+      if (!data?.success) {
+        throw new Error(data?.error || 'Falha ao gerar preview');
       }
 
-      const result = await response.json();
-      if (result.key) {
-        const url = `https://www.reportbro.com/report/${result.key}`;
-        setPdfUrl(url);
-        setReportData(reportWithData);
-      } else {
-        throw new Error('API não retornou chave do PDF');
+      setPdfUrl(data.pdfUrl);
+      if (data.truncated) {
+        toast.message('Prévia reduzida', {
+          description: `Mostrando ${data.included} de ${data.total} registros para evitar estouro. Use filtros para refinar.`
+        });
       }
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
-      toast.error("Erro ao gerar PDF. Mostrando estrutura do relatório.");
-      setReportData(reportLayout);
+      toast.error("Erro ao gerar preview do relatório");
     } finally {
       setLoading(false);
     }
