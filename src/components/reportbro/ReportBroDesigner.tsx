@@ -4,10 +4,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { DataSourceConfigurator } from "@/components/report/DataSourceConfigurator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
-import { Database, Globe } from "lucide-react";
+import { Globe } from "lucide-react";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -18,10 +17,6 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   const containerRef = useRef<HTMLDivElement>(null);
   const reportBroRef = useRef<any>(null);
 const [isLoaded, setIsLoaded] = useState(false);
-  const [showDsDialog, setShowDsDialog] = useState(false);
-  const [initialSources, setInitialSources] = useState<any[]>([]);
-  const [currentSources, setCurrentSources] = useState<any[]>([]);
-  const [applying, setApplying] = useState(false);
   const [showApiDialog, setShowApiDialog] = useState(false);
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
   const [apiData, setApiData] = useState<any>(null);
@@ -564,19 +559,6 @@ const [isLoaded, setIsLoaded] = useState(false);
         translateInterfacePtBR();
       }
 
-      // Prepara fontes iniciais a partir das colunas do relatório
-      const initSources: any[] = [];
-      if (data?.conexao_id || data?.query_sql) {
-        initSources.push({
-          id: "ds-main",
-          name: "Principal",
-          connectionId: data?.conexao_id || "",
-          query: data?.query_sql || "",
-          fields: []
-        });
-      }
-      setInitialSources(initSources);
-
       // Carrega dados da API se configurada
       if (data?.configuracoes && typeof data.configuracoes === 'object') {
         const config = data.configuracoes as any;
@@ -644,31 +626,6 @@ const [isLoaded, setIsLoaded] = useState(false);
     } catch (error) {
       console.error("Erro ao exportar:", error);
       toast.error("Erro ao exportar PDF");
-    }
-  };
-
-  const applyDataSources = async () => {
-    if (!reportId) return;
-    try {
-      setApplying(true);
-      const main = currentSources[0];
-      const updates: any = {};
-      if (main) {
-        updates.conexao_id = main.connectionId || null;
-        updates.query_sql = main.query || "";
-      }
-      const { error } = await supabase
-        .from("relatorios")
-        .update(updates)
-        .eq("id", reportId);
-      if (error) throw error;
-      toast.success("Fontes aplicadas ao relatório");
-      setShowDsDialog(false);
-    } catch (error: any) {
-      console.error("Erro ao aplicar fontes:", error);
-      toast.error("Erro ao aplicar fontes: " + error.message);
-    } finally {
-      setApplying(false);
     }
   };
 
@@ -783,51 +740,37 @@ const [isLoaded, setIsLoaded] = useState(false);
   // Mantém comportamento original de exclusão via ReportBro (tecla Delete/Backspace e botão padrão)
   // Nenhuma captura adicional de teclado para não interferir nos handlers internos do designer.
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Barra de ferramentas customizada */}
-      <div className="bg-card border-b px-4 py-2 flex items-center gap-2">
+    <div className="h-full flex flex-col bg-background relative">
+      {/* Botão de API integrado na interface */}
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
         <Button
           size="sm"
-          variant="outline"
-          onClick={() => setShowDsDialog(true)}
-          className="gap-2"
-        >
-          <Database className="h-4 w-4" />
-          Fontes de Dados SQL
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
           onClick={() => setShowApiDialog(true)}
-          className="gap-2"
+          className="gap-2 shadow-lg"
+          variant={currentApiUrl ? "default" : "outline"}
         >
           <Globe className="h-4 w-4" />
           API de Dados
-        </Button>
-        {currentApiUrl && (
-          <div className="flex items-center gap-2 ml-2">
-            <span className="text-xs text-muted-foreground">
-              API configurada
+          {apiData && (
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-background/20 rounded">
+              {apiData.length}
             </span>
-            {apiData && (
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                {apiData.length} registros
-              </span>
+          )}
+        </Button>
+        {currentApiUrl && apiData && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => loadApiData(currentApiUrl)}
+            disabled={loadingApiData}
+            className="shadow-lg"
+          >
+            {loadingApiData ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            ) : (
+              "↻"
             )}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => loadApiData(currentApiUrl)}
-              disabled={loadingApiData}
-              className="h-6 px-2"
-            >
-              {loadingApiData ? (
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
-              ) : (
-                "Recarregar"
-              )}
-            </Button>
-          </div>
+          </Button>
         )}
       </div>
 
@@ -844,33 +787,6 @@ const [isLoaded, setIsLoaded] = useState(false);
         )}
         <div ref={containerRef} className="rb-host w-full h-full" />
       </div>
-      <Dialog open={showDsDialog} onOpenChange={setShowDsDialog}>
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>Fontes de Dados do Relatório</DialogTitle>
-            <DialogDescription>
-              Configure as conexões de banco de dados e queries SQL para o relatório
-            </DialogDescription>
-          </DialogHeader>
-          {reportId ? (
-            <div className="h-[70vh]">
-              <DataSourceConfigurator
-                reportId={reportId}
-                initialDataSources={initialSources}
-                onDataSourcesChange={setCurrentSources}
-              />
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              Salve o relatório para configurar as fontes de dados.
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDsDialog(false)}>Fechar</Button>
-            <Button onClick={applyDataSources} disabled={applying || !reportId}>Aplicar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
         <DialogContent className="max-w-3xl">
