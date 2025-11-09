@@ -461,6 +461,7 @@ const [isLoaded, setIsLoaded] = useState(false);
         reportServerUrl: "",
         locale: "pt_BR",
         saveCallback: handleSave,
+        previewCallback: handlePreview, // Conecta o preview nativo ao nosso viewer
         showTemplateSelection: false,
       });
 
@@ -845,14 +846,6 @@ const [isLoaded, setIsLoaded] = useState(false);
             )}
           </Button>
         )}
-      </div>
-
-      {/* Botão de Visualização - canto direito */}
-      <div className="absolute top-2 right-2 z-10">
-        <Button size="sm" onClick={handlePreview} className="gap-2 shadow-lg">
-          <Eye className="h-4 w-4" />
-          Visualizar
-        </Button>
       </div>
 
       {/* Designer Container - ReportBro com toolbar padrão */}
