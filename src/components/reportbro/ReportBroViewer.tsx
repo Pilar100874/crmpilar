@@ -5,86 +5,144 @@ import { toast } from "sonner";
 import "reportbro-designer/dist/reportbro.css";
 
 export function ReportBroViewer() {
-  
   const [reportData, setReportData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [pdfUrl, setPdfUrl] = useState<string>("");
+  const [reportInfo, setReportInfo] = useState<any>(null);
 
   useEffect(() => {
     loadReportFromStorage();
   }, []);
 
-  // Abre a caixa de impressão automaticamente quando os dados estiverem prontos
-  useEffect(() => {
-    if (reportData) {
-      // pequeno atraso para garantir que o conteúdo foi renderizado
-      const t = setTimeout(() => {
-        try {
-          window.print();
-        } catch (e) {
-          console.warn("Falha ao abrir impressão automática", e);
-        }
-      }, 200);
-      return () => clearTimeout(t);
-    }
-  }, [reportData]);
-
-  const loadReportFromStorage = () => {
+  const loadReportFromStorage = async () => {
     try {
       let jsonStr: string | null = localStorage.getItem("reportbro_preview");
-
-      // Fallbacks caso a gravação tenha sido grande ou em outra storage
       if (!jsonStr) {
         jsonStr = sessionStorage.getItem("reportbro_preview");
       }
-      if (!jsonStr) {
-        const countStr = sessionStorage.getItem("reportbro_preview_chunk_count") || localStorage.getItem("reportbro_preview_chunk_count");
-        const count = countStr ? parseInt(countStr, 10) : 0;
-        if (count > 0) {
-          let combined = "";
-          for (let i = 0; i < count; i++) {
-            combined += sessionStorage.getItem(`reportbro_preview_chunk_${i}`) || localStorage.getItem(`reportbro_preview_chunk_${i}`) || "";
-          }
-          jsonStr = combined || null;
-        }
-      }
 
       if (!jsonStr) {
-        toast.error("Nenhum relatório para visualizar. Volte e clique em Visualizar novamente.");
+        toast.error("Nenhum relatório para visualizar");
+        setLoading(false);
         return;
       }
 
       const data = JSON.parse(jsonStr);
       if (!data || typeof data !== 'object') {
         toast.error("Dados do relatório inválidos");
+        setLoading(false);
         return;
       }
 
-      setReportData(data);
-      console.log("Relatório carregado:", data);
+      setReportInfo(data);
+      
+      // Se tiver reportId e apiUrl, gera via backend
+      if (data.reportId && data.apiUrl) {
+        await generatePdfViaBackend(data.reportId, data.apiUrl, data.report);
+      } else {
+        // Fallback: mostra estrutura do relatório
+        setReportData(data.report || data);
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Erro ao carregar relatório:", error);
-      toast.error(`Erro ao carregar relatório: ${error}`);
+      toast.error("Erro ao carregar relatório");
+      setLoading(false);
+    }
+  };
+
+  const generatePdfViaBackend = async (reportId: string, apiUrl: string, reportLayout: any) => {
+    try {
+      setLoading(true);
+      
+      // Busca dados da API
+      const apiResponse = await fetch(apiUrl);
+      const apiData = await apiResponse.json();
+      
+      // Prepara dados para ReportBro
+      let data: any[] = [];
+      if (Array.isArray(apiData)) {
+        data = apiData;
+      } else if (apiData && typeof apiData === 'object' && 'data' in apiData) {
+        data = Array.isArray(apiData.data) ? apiData.data : [apiData.data];
+      } else if (apiData != null) {
+        data = [apiData];
+      }
+
+      // Atualiza parâmetros com dados reais
+      const reportWithData = JSON.parse(JSON.stringify(reportLayout));
+      if (reportWithData.parameters) {
+        reportWithData.parameters = reportWithData.parameters.map((param: any) => {
+          if (param.name === 'api_data' && data.length > 0) {
+            return {
+              ...param,
+              testData: JSON.stringify(data)
+            };
+          }
+          return param;
+        });
+      }
+
+      // Gera PDF via ReportBro API
+      const response = await fetch('https://www.reportbro.com/report/run', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report: reportWithData,
+          outputFormat: 'pdf',
+          isTestData: true
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao gerar PDF');
+      }
+
+      const result = await response.json();
+      if (result.key) {
+        const url = `https://www.reportbro.com/report/${result.key}`;
+        setPdfUrl(url);
+        setReportData(reportWithData);
+      } else {
+        throw new Error('API não retornou chave do PDF');
+      }
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar PDF. Mostrando estrutura do relatório.");
+      setReportData(reportLayout);
+    } finally {
+      setLoading(false);
     }
   };
 
 
   const handleExportPDF = () => {
-    toast.info("Exportação PDF em desenvolvimento");
-    window.print();
-  };
-
-  const handleGoBack = () => {
-    // Fecha a aba ou volta se estiver no mesmo contexto
-    if (window.opener) {
-      window.close();
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank');
     } else {
-      window.location.href = "/relatorios";
+      window.print();
     }
   };
 
+  const handleGoBack = () => {
+    window.location.href = "/relatorios";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Gerando relatório...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="h-14 border-b flex items-center justify-between px-4 bg-card">
+      <div className="h-14 border-b flex items-center justify-between px-4 bg-card flex-shrink-0">
         <Button variant="ghost" size="sm" onClick={handleGoBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
@@ -92,41 +150,50 @@ export function ReportBroViewer() {
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={handleExportPDF}>
             <FileDown className="h-4 w-4 mr-2" />
-            Exportar PDF
+            {pdfUrl ? 'Baixar PDF' : 'Imprimir'}
           </Button>
         </div>
       </div>
 
-      <div className="p-4">
-        {reportData ? (
-          <div className="max-w-4xl mx-auto bg-card shadow-lg rounded-lg p-6 border">
-            <h1 className="text-xl font-semibold mb-2">Visualização de Relatório</h1>
-            <p className="text-muted-foreground mb-4">
-              Prévia simplificada (sem renderização completa). Abaixo um resumo e o JSON bruto.
-            </p>
-            {/* Resumo simples */}
-            {Array.isArray(reportData?.docElements) && reportData.docElements.length > 0 && (
-              <div className="mb-4 border rounded p-3 bg-background">
-                <h2 className="font-medium mb-2">Conteúdos de texto encontrados</h2>
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  {reportData.docElements
-                    .filter((el: any) => el && (el.type === 'text' || el.elementType === 'text'))
-                    .slice(0, 20)
-                    .map((el: any, idx: number) => (
-                      <li key={idx} className="text-foreground/80">
-                        {el.text?.value || el.text || el.name || 'Texto sem conteúdo visível'}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-            <pre className="mt-2 p-4 bg-muted rounded text-xs overflow-auto">
-              {JSON.stringify(reportData, null, 2)}
-            </pre>
+      <div className="flex-1 overflow-hidden">
+        {pdfUrl ? (
+          <iframe
+            src={pdfUrl}
+            className="w-full h-full border-0"
+            title="Visualização do Relatório"
+          />
+        ) : reportData ? (
+          <div className="p-4 overflow-auto h-full">
+            <div className="max-w-4xl mx-auto bg-card shadow-lg rounded-lg p-6 border">
+              <h1 className="text-xl font-semibold mb-2">Visualização de Relatório</h1>
+              <p className="text-muted-foreground mb-4">
+                Configure uma API de dados para gerar o PDF completo
+              </p>
+              {Array.isArray(reportData?.docElements) && reportData.docElements.length > 0 && (
+                <div className="mb-4 border rounded p-3 bg-background">
+                  <h2 className="font-medium mb-2">Elementos do relatório</h2>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    {reportData.docElements
+                      .filter((el: any) => el && (el.type === 'text' || el.elementType === 'text'))
+                      .slice(0, 20)
+                      .map((el: any, idx: number) => (
+                        <li key={idx} className="text-foreground/80">
+                          {el.content || el.text?.value || el.text || el.name || 'Elemento sem conteúdo'}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto text-center text-muted-foreground py-16">
-            Nenhum relatório para visualizar.
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-muted-foreground">
+              <p>Nenhum relatório para visualizar</p>
+              <Button className="mt-4" onClick={handleGoBack}>
+                Voltar para relatórios
+              </Button>
+            </div>
           </div>
         )}
       </div>

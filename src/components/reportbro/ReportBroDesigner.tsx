@@ -619,45 +619,46 @@ const [isLoaded, setIsLoaded] = useState(false);
     }
   };
 
-  const handlePreview = () => {
-    if (!reportBroRef.current) return;
+  const handlePreview = async () => {
+    if (!reportBroRef.current || !reportId) {
+      toast.error("Salve o relatório antes de visualizar");
+      return;
+    }
+    
     try {
       const reportData = reportBroRef.current.getReport();
       if (!reportData || typeof reportData !== 'object') {
         toast.error("Relatório vazio ou inválido");
         return;
       }
-      const layoutStr = JSON.stringify(reportData);
 
-      // Tenta salvar no localStorage; se falhar por tamanho, usa fallbacks
-      let saved = false;
+      // Remove testData grandes dos parâmetros para evitar exceder limite do storage
+      const cleanedData = JSON.parse(JSON.stringify(reportData));
+      if (cleanedData.parameters) {
+        cleanedData.parameters = cleanedData.parameters.map((param: any) => {
+          const p = { ...param };
+          // Remove testData se for muito grande (>100KB)
+          if (p.testData && typeof p.testData === 'string' && p.testData.length > 100000) {
+            p.testData = '[]'; // Substitui por array vazio
+          }
+          return p;
+        });
+      }
+
+      // Salva versão limpa no storage
+      const layoutStr = JSON.stringify({
+        report: cleanedData,
+        reportId: reportId,
+        apiUrl: currentApiUrl
+      });
+
       try {
         localStorage.setItem("reportbro_preview", layoutStr);
-        saved = true;
       } catch (e) {
-        // Tenta sessionStorage direto
-        try {
-          sessionStorage.setItem("reportbro_preview", layoutStr);
-          saved = true;
-        } catch (e2) {
-          // Como último recurso, salva em chunks na sessionStorage
-          const chunkSize = 500000; // ~500KB por chunk
-          const totalChunks = Math.ceil(layoutStr.length / chunkSize);
-          sessionStorage.setItem("reportbro_preview_chunk_count", String(totalChunks));
-          for (let i = 0; i < totalChunks; i++) {
-            const chunk = layoutStr.slice(i * chunkSize, (i + 1) * chunkSize);
-            sessionStorage.setItem(`reportbro_preview_chunk_${i}`, chunk);
-          }
-          saved = true;
-        }
+        sessionStorage.setItem("reportbro_preview", layoutStr);
       }
 
-      if (!saved) {
-        toast.error("Falha ao preparar visualização do relatório");
-        return;
-      }
-
-      // Abre no MESMO separador para evitar popup/tela em branco
+      // Abre visualização
       window.location.href = "/relatorios/viewer";
     } catch (error) {
       console.error("Erro ao visualizar:", error);
