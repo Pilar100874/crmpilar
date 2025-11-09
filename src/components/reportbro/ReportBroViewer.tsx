@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import "reportbro-designer/dist/reportbro.css";
 
 export function ReportBroViewer() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  
   const [reportData, setReportData] = useState<any>(null);
 
   useEffect(() => {
@@ -27,37 +27,12 @@ export function ReportBroViewer() {
       }
       
       setReportData(data);
-      renderReport(data);
     } catch (error) {
       console.error("Erro ao carregar:", error);
       toast.error("Erro ao carregar relatório");
     }
   };
 
-  const renderReport = async (data: any) => {
-    if (!containerRef.current) return;
-
-    try {
-      // ReportBro viewer implementation
-      // Note: ReportBro focuses on designer, viewer would need additional implementation
-      containerRef.current.innerHTML = `
-        <div class="p-8">
-          <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8">
-            <h1 class="text-2xl font-bold mb-4">Visualização de Relatório</h1>
-            <p class="text-muted-foreground">
-              Relatório carregado. A renderização completa requer configuração adicional.
-            </p>
-            <pre class="mt-4 p-4 bg-muted rounded text-xs overflow-auto">
-              ${JSON.stringify(data, null, 2)}
-            </pre>
-          </div>
-        </div>
-      `;
-    } catch (error) {
-      console.error("Erro ao renderizar:", error);
-      toast.error("Erro ao renderizar relatório");
-    }
-  };
 
   const handleExportPDF = () => {
     toast.info("Exportação PDF em desenvolvimento");
@@ -89,8 +64,23 @@ export function ReportBroViewer() {
         </div>
       </div>
 
-      {/* Viewer Container */}
-      <div ref={containerRef} className="p-4" />
+      <div className="p-4">
+        {reportData ? (
+          <div className="max-w-4xl mx-auto bg-card shadow-lg rounded-lg p-6 border">
+            <h1 className="text-xl font-semibold mb-2">Visualização de Relatório</h1>
+            <p className="text-muted-foreground">
+              Renderização completa ainda não implementada. Abaixo, os dados do relatório:
+            </p>
+            <pre className="mt-4 p-4 bg-muted rounded text-xs overflow-auto">
+              {JSON.stringify(reportData, null, 2)}
+            </pre>
+          </div>
+        ) : (
+          <div className="max-w-2xl mx-auto text-center text-muted-foreground py-16">
+            Nenhum relatório para visualizar.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
