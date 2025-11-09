@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import "reportbro-designer/dist/reportbro.css";
+import "./reportbro-logos.css";
 import { supabase } from "@/integrations/supabase/client";
 
 export function ReportBroViewer() {

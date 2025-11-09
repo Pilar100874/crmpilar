@@ -1,13 +1,12 @@
-/* Remove apenas os logos do ReportBro - SEM alterar estilos dos menus */
+/* Remove TODOS os logos do ReportBro - interface e PDFs gerados */
+
+/* Seletores gerais de logo */
 .rbroLogo,
 .rbroPro,
 .rbro-logo,
 .rbro-branding,
 [class*="logo" i][class*="reportbro" i],
 [class*="branding" i][class*="reportbro" i],
-img[src*="logo" i],
-img[alt*="reportbro" i],
-img[alt*="logo" i],
 .rbroHeader img,
 #rbro_header img,
 #rbro_menu_panel img[src*="logo"],
@@ -20,4 +19,66 @@ img[alt*="logo" i],
   max-width: 0 !important;
   max-height: 0 !important;
   overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Remove logos de imagens - PDFs e preview */
+img[src*="logo" i],
+img[src*="reportbro" i],
+img[alt*="reportbro" i],
+img[alt*="logo" i],
+img[title*="reportbro" i],
+img[title*="logo" i] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Remove textos de marca/branding */
+*[class*="watermark" i],
+*[class*="powered" i],
+*[data-reportbro-branding],
+*[data-logo] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Remove logos em SVG e backgrounds */
+svg[class*="logo" i],
+svg[class*="branding" i],
+*[style*="logo"],
+*[style*="reportbro"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Adicional: remove qualquer link ou div com texto "ReportBro" */
+a[href*="reportbro" i],
+div:has(> img[src*="logo"]),
+div:has(> img[alt*="reportbro"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
 }
