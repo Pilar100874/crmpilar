@@ -106,32 +106,68 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
     }
 
     const reportLayout = data.layout_json;
-    const apiUrl = data.configuracoes?.api_url;
+    const cfg = data.configuracoes || {};
+    const apiUrl = cfg.api_url;
 
     if (!apiUrl) {
       throw new Error('API não configurada');
     }
 
-    // Fetch API data with pagination
-    console.log('Fetching data from API:', apiUrl, 'Page:', page, 'PageSize:', pageSize);
-    const apiResp = await fetch(apiUrl);
+    // Build paginated URL if possible (supports page/size or offset/limit)
+    const pagination = cfg.pagination || {};
+    const type = (pagination.type || 'page') as 'page' | 'offset';
+    const pageParam = pagination.pageParam || 'page';
+    const sizeParam = pagination.sizeParam || 'pageSize';
+    const offsetParam = pagination.offsetParam || 'offset';
+    const limitParam = pagination.limitParam || 'limit';
+    const zeroBased = Boolean(pagination.zeroBased);
+
+    let finalUrl = apiUrl as string;
+    try {
+      const u = new URL(apiUrl);
+      if (type === 'offset') {
+        u.searchParams.set(offsetParam, String((page - 1) * pageSize));
+        u.searchParams.set(limitParam, String(pageSize));
+      } else {
+        u.searchParams.set(pageParam, String(zeroBased ? page - 1 : page));
+        u.searchParams.set(sizeParam, String(pageSize));
+      }
+      finalUrl = u.toString();
+    } catch {
+      const sep = apiUrl.includes('?') ? '&' : '?';
+      if (type === 'offset') {
+        finalUrl = `${apiUrl}${sep}${offsetParam}=${(page - 1) * pageSize}&${limitParam}=${pageSize}`;
+      } else {
+        finalUrl = `${apiUrl}${sep}${pageParam}=${zeroBased ? page - 1 : page}&${sizeParam}=${pageSize}`;
+      }
+    }
+
+    // Fetch API data with pagination (server-side when supported)
+    console.log('Fetching data from API:', finalUrl);
+    const apiResp = await fetch(finalUrl);
     if (!apiResp.ok) {
-      throw new Error('Falha ao buscar dados da API');
+      throw new Error(`Falha ao buscar dados da API (${apiResp.status})`);
     }
     const raw = await apiResp.json();
 
-    let allRows: any[] = [];
-    if (Array.isArray(raw)) allRows = raw;
-    else if (raw && typeof raw === 'object' && 'data' in raw) allRows = Array.isArray(raw.data) ? raw.data : [raw.data];
-    else if (raw != null) allRows = [raw];
+    // Normalize rows and total
+    let rows: any[] = [];
+    if (Array.isArray(raw)) rows = raw;
+    else if (raw && typeof raw === 'object') {
+      if (Array.isArray((raw as any).data)) rows = (raw as any).data;
+      else if (Array.isArray((raw as any).items)) rows = (raw as any).items;
+      else if (Array.isArray((raw as any).results)) rows = (raw as any).results;
+      else if ((raw as any).data && typeof (raw as any).data === 'object' && Array.isArray((raw as any).data.items)) rows = (raw as any).data.items;
+      else rows = [raw];
+    }
 
-    const totalCount = allRows.length;
-    
-    // Apply pagination
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const rows = allRows.slice(startIndex, endIndex);
-    const hasMore = endIndex < totalCount;
+    let totalCount = Number((raw as any)?.total ?? (raw as any)?.count ?? (raw as any)?.meta?.total ?? (raw as any)?.pagination?.total ?? (raw as any)?.data?.total ?? 0);
+    if (!Number.isFinite(totalCount) || totalCount <= 0) {
+      // Fallback: infer total when API does not provide it
+      totalCount = rows.length === pageSize ? page * pageSize + 1 : (page - 1) * pageSize + rows.length;
+    }
+
+    const hasMore = totalCount > page * pageSize || rows.length === pageSize;
 
     // Build report with data
     const report = JSON.parse(JSON.stringify(reportLayout || {}));

@@ -71,6 +71,11 @@ export function ReportBroViewer() {
       }
 
       // Start async job with pagination
+      setLoading(true);
+      setPdfUrl("");
+      setProgress(undefined);
+      setJobId("");
+
       const { data: result, error: fnError } = await supabase.functions.invoke('reportbro-preview', {
         body: { reportId: data.reportId, page: currentPage, pageSize }
       });
