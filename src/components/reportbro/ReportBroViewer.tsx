@@ -14,23 +14,10 @@ export function ReportBroViewer() {
 
   const loadReportFromStorage = () => {
     try {
-      let jsonStr = localStorage.getItem("reportbro_preview");
-
-      // Fallback: tenta via query param ?r=base64
-      if (!jsonStr) {
-        const params = new URLSearchParams(window.location.search);
-        const r = params.get('r');
-        if (r) {
-          try {
-            jsonStr = atob(r);
-          } catch (e) {
-            console.warn('Falha ao decodificar parâmetro r:', e);
-          }
-        }
-      }
+      const jsonStr = localStorage.getItem("reportbro_preview");
 
       if (!jsonStr) {
-        toast.error("Nenhum relatório para visualizar");
+        toast.error("Nenhum relatório para visualizar. Volte e clique em Visualizar novamente.");
         return;
       }
 
@@ -41,9 +28,10 @@ export function ReportBroViewer() {
       }
 
       setReportData(data);
+      console.log("Relatório carregado:", data);
     } catch (error) {
-      console.error("Erro ao carregar:", error);
-      toast.error("Erro ao carregar relatório");
+      console.error("Erro ao carregar relatório:", error);
+      toast.error(`Erro ao carregar relatório: ${error}`);
     }
   };
 

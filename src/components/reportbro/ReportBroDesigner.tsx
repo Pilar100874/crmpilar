@@ -623,14 +623,30 @@ const [isLoaded, setIsLoaded] = useState(false);
     
     try {
       const reportData = reportBroRef.current.getReport();
+      
+      // Valida se há dados
+      if (!reportData || typeof reportData !== 'object') {
+        toast.error("Relatório vazio ou inválido");
+        return;
+      }
+      
       const layoutStr = JSON.stringify(reportData);
+      
+      // Salva no localStorage
       localStorage.setItem("reportbro_preview", layoutStr);
-      const r = encodeURIComponent(btoa(layoutStr));
-      window.open(`/relatorios/viewer?r=${r}`, "_blank");
+      
+      // Abre nova aba
+      const newWindow = window.open("/relatorios/viewer", "_blank");
+      
+      if (!newWindow) {
+        toast.error("Permita pop-ups para visualizar o relatório");
+        return;
+      }
+      
       toast.success("Abrindo visualização...");
     } catch (error) {
       console.error("Erro ao visualizar:", error);
-      toast.error("Erro ao abrir visualização");
+      toast.error(`Erro ao abrir visualização: ${error}`);
     }
   };
 
