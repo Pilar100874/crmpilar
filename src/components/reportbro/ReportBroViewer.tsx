@@ -12,6 +12,21 @@ export function ReportBroViewer() {
     loadReportFromStorage();
   }, []);
 
+  // Abre a caixa de impressão automaticamente quando os dados estiverem prontos
+  useEffect(() => {
+    if (reportData) {
+      // pequeno atraso para garantir que o conteúdo foi renderizado
+      const t = setTimeout(() => {
+        try {
+          window.print();
+        } catch (e) {
+          console.warn("Falha ao abrir impressão automática", e);
+        }
+      }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [reportData]);
+
   const loadReportFromStorage = () => {
     try {
       let jsonStr: string | null = localStorage.getItem("reportbro_preview");
