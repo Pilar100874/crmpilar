@@ -307,6 +307,15 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
         color: rgb(1, 1, 1),
         opacity: 0.9,
       });
+      
+      // Add white rectangle at footer (bottom of page, full width)
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width: width,
+        height: 80,
+        color: rgb(1, 1, 1),
+      });
     }
 
     const cleanedPdfBytes = await pdfDoc.save();
