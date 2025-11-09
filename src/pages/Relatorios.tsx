@@ -5,7 +5,6 @@ import { ReportBroDesigner } from "@/components/reportbro/ReportBroDesigner";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Copy, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { uploadFooterLogo } from "@/utils/uploadFooterLogo";
 import {
   Table,
   TableBody,
@@ -56,8 +55,6 @@ export default function Relatorios() {
 
   useEffect(() => {
     loadReports();
-    // Upload footer logo to storage (only once)
-    uploadFooterLogo().catch(console.error);
   }, []);
 
   const loadReports = async () => {
