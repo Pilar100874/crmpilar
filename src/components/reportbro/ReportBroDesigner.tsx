@@ -467,6 +467,21 @@ const [isLoaded, setIsLoaded] = useState(false);
       // Traduz interface e configura observer para traduções dinâmicas
       setTimeout(() => {
         translateInterfacePtBR();
+
+        // Esconde botões de preview nativos do ReportBro (evita "preview failed")
+        const hideBuiltInPreview = () => {
+          const root = containerRef.current;
+          if (!root) return;
+          root.querySelectorAll('button, .rbroButton, .rbroMenuItem').forEach((el) => {
+            const text = (el.textContent || '').toLowerCase();
+            const title = ((el as HTMLElement).getAttribute('title') || '').toLowerCase();
+            if ((/preview|visualizar/.test(text) || /preview|visualizar/.test(title)) && !(el as HTMLElement).getAttribute('data-hidden-preview')) {
+              (el as HTMLElement).setAttribute('data-hidden-preview', '1');
+              (el as HTMLElement).style.display = 'none';
+            }
+          });
+        };
+        hideBuiltInPreview();
         
         let translationTimeout: NodeJS.Timeout;
         
@@ -488,6 +503,7 @@ const [isLoaded, setIsLoaded] = useState(false);
             // Agenda tradução com debounce
             translationTimeout = setTimeout(() => {
               translateInterfacePtBR();
+              hideBuiltInPreview();
               // Reconecta observer após tradução
               if (containerRef.current) {
                 observer.observe(containerRef.current, {
@@ -512,7 +528,10 @@ const [isLoaded, setIsLoaded] = useState(false);
         
         // Traduz novamente após eventos de click (quando painéis abrem)
         containerRef.current?.addEventListener('click', () => {
-          setTimeout(() => translateInterfacePtBR(), 100);
+          setTimeout(() => { 
+            translateInterfacePtBR();
+            hideBuiltInPreview();
+          }, 100);
         });
       }, 500);
 
@@ -848,6 +867,15 @@ const [isLoaded, setIsLoaded] = useState(false);
             )}
           </Button>
         )}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handlePreview}
+          className="shadow-lg"
+          title="Visualizar relatório"
+        >
+          Visualizar
+        </Button>
       </div>
 
       {/* Designer Container - ReportBro com toolbar padrão */}
