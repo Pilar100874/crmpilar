@@ -1,29 +1,23 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileDown } from "lucide-react";
+import { ArrowLeft, FileDown, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import "reportbro-designer/dist/reportbro.css";
 
 export function ReportBroViewer() {
-  
   const [reportData, setReportData] = useState<any>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
     loadReportFromStorage();
   }, []);
 
-  // Abre a caixa de impressão automaticamente quando os dados estiverem prontos
+  // Gera o PDF automaticamente quando os dados estiverem prontos
   useEffect(() => {
-    if (reportData) {
-      // pequeno atraso para garantir que o conteúdo foi renderizado
-      const t = setTimeout(() => {
-        try {
-          window.print();
-        } catch (e) {
-          console.warn("Falha ao abrir impressão automática", e);
-        }
-      }, 200);
-      return () => clearTimeout(t);
+    if (reportData && !pdfUrl && !isGeneratingPdf) {
+      handleGeneratePDF();
     }
   }, [reportData]);
 
@@ -67,9 +61,75 @@ export function ReportBroViewer() {
   };
 
 
-  const handleExportPDF = () => {
-    toast.info("Exportação PDF em desenvolvimento");
-    window.print();
+  const handleGeneratePDF = async () => {
+    if (!reportData || isGeneratingPdf) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      toast.info("Gerando PDF...");
+      
+      const { data, error } = await supabase.functions.invoke('generate-reportbro-pdf', {
+        body: {
+          report: reportData,
+          isTestData: true, // Usa dados de teste do próprio relatório
+          outputFormat: 'pdf'
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao gerar PDF:', error);
+        throw error;
+      }
+
+      // A resposta do invoke é o ArrayBuffer direto quando é binary
+      if (data instanceof ArrayBuffer) {
+        const blob = new Blob([data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        toast.success("PDF gerado com sucesso!");
+      } else if (data && data.error) {
+        throw new Error(data.error);
+      } else {
+        // Se não é ArrayBuffer, tenta converter
+        const blob = new Blob([data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        toast.success("PDF gerado com sucesso!");
+      }
+    } catch (error: any) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error(error.message || "Erro ao gerar PDF");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!pdfUrl) return;
+    
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = `relatorio-${Date.now()}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Download iniciado!");
+  };
+
+  const handlePrintPDF = () => {
+    if (!pdfUrl) return;
+    
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = pdfUrl;
+    document.body.appendChild(iframe);
+    
+    iframe.onload = () => {
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    };
   };
 
   const handleGoBack = () => {
@@ -90,19 +150,45 @@ export function ReportBroViewer() {
           Voltar
         </Button>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={handleExportPDF}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Exportar PDF
-          </Button>
+          {!pdfUrl && !isGeneratingPdf && (
+            <Button size="sm" onClick={handleGeneratePDF}>
+              <Eye className="h-4 w-4 mr-2" />
+              Gerar PDF
+            </Button>
+          )}
+          {isGeneratingPdf && (
+            <Button size="sm" disabled>
+              Gerando...
+            </Button>
+          )}
+          {pdfUrl && (
+            <>
+              <Button size="sm" variant="outline" onClick={handlePrintPDF}>
+                Imprimir
+              </Button>
+              <Button size="sm" onClick={handleDownloadPDF}>
+                <FileDown className="h-4 w-4 mr-2" />
+                Baixar PDF
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
       <div className="p-4">
-        {reportData ? (
+        {pdfUrl ? (
+          <div className="w-full h-[calc(100vh-5rem)]">
+            <iframe
+              src={pdfUrl}
+              className="w-full h-full border-0 rounded-lg shadow-lg"
+              title="Visualização do PDF"
+            />
+          </div>
+        ) : reportData ? (
           <div className="max-w-4xl mx-auto bg-card shadow-lg rounded-lg p-6 border">
-            <h1 className="text-xl font-semibold mb-2">Visualização de Relatório</h1>
+            <h1 className="text-xl font-semibold mb-2">Preparando visualização</h1>
             <p className="text-muted-foreground mb-4">
-              Prévia simplificada (sem renderização completa). Abaixo um resumo e o JSON bruto.
+              {isGeneratingPdf ? "Gerando PDF do relatório..." : "Clique em 'Gerar PDF' acima para visualizar"}
             </p>
             {/* Resumo simples */}
             {Array.isArray(reportData?.docElements) && reportData.docElements.length > 0 && (
@@ -120,9 +206,12 @@ export function ReportBroViewer() {
                 </ul>
               </div>
             )}
-            <pre className="mt-2 p-4 bg-muted rounded text-xs overflow-auto">
-              {JSON.stringify(reportData, null, 2)}
-            </pre>
+            <details className="mt-4">
+              <summary className="cursor-pointer font-medium text-sm">Ver JSON bruto</summary>
+              <pre className="mt-2 p-4 bg-muted rounded text-xs overflow-auto">
+                {JSON.stringify(reportData, null, 2)}
+              </pre>
+            </details>
           </div>
         ) : (
           <div className="max-w-2xl mx-auto text-center text-muted-foreground py-16">
