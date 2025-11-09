@@ -624,13 +624,16 @@ const [isLoaded, setIsLoaded] = useState(false);
     try {
       const reportData = reportBroRef.current.getReport();
       
-      // Valida se há dados
-      if (!reportData || typeof reportData !== 'object') {
-        toast.error("Relatório vazio ou inválido");
-        return;
-      }
+      // Valida e normaliza estrutura mínima
+      const safeLayout = {
+        docElements: Array.isArray(reportData?.docElements) ? reportData.docElements : [],
+        parameters: Array.isArray(reportData?.parameters) ? reportData.parameters : [],
+        styles: Array.isArray(reportData?.styles) ? reportData.styles : [],
+        version: reportData?.version ?? 3,
+        ...reportData,
+      };
       
-      const layoutStr = JSON.stringify(reportData);
+      const layoutStr = JSON.stringify(safeLayout);
       
       // Salva no localStorage
       localStorage.setItem("reportbro_preview", layoutStr);
