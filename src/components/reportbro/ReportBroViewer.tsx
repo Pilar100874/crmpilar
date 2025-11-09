@@ -10,10 +10,50 @@ export function ReportBroViewer() {
   const [loading, setLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [reportInfo, setReportInfo] = useState<any>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>('Preparando...');
 
   useEffect(() => {
     loadReportFromStorage();
   }, []);
+
+  // Poll job status when jobId is set
+  useEffect(() => {
+    if (!jobId) return;
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('report_preview_jobs')
+          .select('*')
+          .eq('id', jobId)
+          .single();
+
+        if (error) throw error;
+
+        if (data.status === 'ready') {
+          setPdfUrl(data.pdf_url);
+          setLoading(false);
+          clearInterval(pollInterval);
+          if (data.truncated) {
+            toast.message('Prévia reduzida', {
+              description: `Mostrando ${data.included} de ${data.total} registros para evitar timeout. Use filtros para refinar.`
+            });
+          }
+        } else if (data.status === 'error') {
+          setLoading(false);
+          clearInterval(pollInterval);
+          toast.error(data.error || 'Erro ao gerar preview');
+        } else {
+          setStatus('Processando relatório...');
+        }
+      } catch (err) {
+        console.error('Poll error:', err);
+      }
+    }, 2000);
+
+    return () => clearInterval(pollInterval);
+  }, [jobId]);
 
   const loadReportFromStorage = async () => {
     try {
@@ -52,29 +92,28 @@ export function ReportBroViewer() {
     }
   };
 
-  const generatePdfViaBackend = async (reportId: string, apiUrl: string, _reportLayout: any) => {
+  const generatePdfViaBackend = async (reportId: string, _apiUrl: string, _reportLayout: any) => {
     try {
       setLoading(true);
+      setStatus('Criando job de geração...');
+
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData?.user?.id;
 
       const { data, error } = await supabase.functions.invoke('reportbro-preview', {
-        body: { reportId }
+        body: { reportId, userId }
       });
 
       if (error) throw error;
       if (!data?.success) {
-        throw new Error(data?.error || 'Falha ao gerar preview');
+        throw new Error(data?.error || 'Falha ao criar job');
       }
 
-      setPdfUrl(data.pdfUrl);
-      if (data.truncated) {
-        toast.message('Prévia reduzida', {
-          description: `Mostrando ${data.included} de ${data.total} registros para evitar estouro. Use filtros para refinar.`
-        });
-      }
+      setJobId(data.jobId);
+      setStatus('Aguardando processamento...');
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
-      toast.error("Erro ao gerar preview do relatório");
-    } finally {
+      toast.error("Erro ao iniciar geração do preview");
       setLoading(false);
     }
   };
@@ -97,7 +136,10 @@ export function ReportBroViewer() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Gerando relatório...</p>
+          <p className="text-lg font-medium text-foreground">{status}</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Relatórios grandes podem levar alguns segundos...
+          </p>
         </div>
       </div>
     );

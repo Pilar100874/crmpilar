@@ -1821,6 +1821,48 @@ export type Database = {
           },
         ]
       }
+      report_preview_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          included: number | null
+          pdf_url: string | null
+          report_id: string | null
+          requested_by: string | null
+          status: string
+          total: number | null
+          truncated: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          included?: number | null
+          pdf_url?: string | null
+          report_id?: string | null
+          requested_by?: string | null
+          status?: string
+          total?: number | null
+          truncated?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          included?: number | null
+          pdf_url?: string | null
+          report_id?: string | null
+          requested_by?: string | null
+          status?: string
+          total?: number | null
+          truncated?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       report_templates_jsreport: {
         Row: {
           created_at: string
@@ -2670,6 +2712,7 @@ export type Database = {
         Returns: string
       }
       admins_present: { Args: never; Returns: boolean }
+      execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
       get_user_estabelecimento_id: {
         Args: { _user_id: string }

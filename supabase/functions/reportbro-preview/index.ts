@@ -8,10 +8,9 @@ const corsHeaders = {
 };
 
 type PreviewRequest = {
-  reportId?: string;
-  apiUrl?: string;
-  report?: any;
-  limit?: number; // max records to include in preview
+  reportId: string;
+  userId?: string;
+  limit?: number;
 };
 
 serve(async (req) => {
@@ -25,124 +24,39 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: PreviewRequest = await req.json();
-    const maxRecords = Math.max(1, Math.min(10000, body.limit ?? 5000));
+    const { reportId, userId, limit = 5000 } = body;
 
-    let reportLayout: any | null = null;
-    let apiUrl: string | null = null;
-
-    if (body.reportId) {
-      console.log('Loading report from DB:', body.reportId);
-      const { data, error } = await supabase
-        .from('relatorios')
-        .select('layout_json, configuracoes')
-        .eq('id', body.reportId)
-        .single();
-
-      if (error || !data) {
-        console.error('Report not found:', error);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Relatório não encontrado' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      reportLayout = (data as any).layout_json;
-      apiUrl = (data as any).configuracoes?.api_url ?? null;
-
-      if (!apiUrl) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'API do relatório não configurada' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } else if (body.report && body.apiUrl) {
-      reportLayout = body.report;
-      apiUrl = body.apiUrl;
-    } else {
+    if (!reportId) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Parâmetros inválidos' }),
+        JSON.stringify({ success: false, error: 'reportId required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Fetch API data
-    console.log('Fetching data from API:', apiUrl);
-    const apiResp = await fetch(apiUrl!);
-    if (!apiResp.ok) {
+    console.log('Creating async preview job for report:', reportId);
+
+    // Create job record
+    const { data: job, error: jobErr } = await supabase
+      .from('report_preview_jobs')
+      .insert({ report_id: reportId, requested_by: userId || null, status: 'pending' })
+      .select()
+      .single();
+
+    if (jobErr || !job) {
+      console.error('Failed to create job:', jobErr);
       return new Response(
-        JSON.stringify({ success: false, error: 'Falha ao buscar dados da API' }),
+        JSON.stringify({ success: false, error: 'Falha ao criar job' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    const raw = await apiResp.json();
 
-    let rows: any[] = [];
-    if (Array.isArray(raw)) rows = raw;
-    else if (raw && typeof raw === 'object' && 'data' in raw) rows = Array.isArray(raw.data) ? raw.data : [raw.data];
-    else if (raw != null) rows = [raw];
-
-    const totalCount = rows.length;
-    let truncated = false;
-    if (rows.length > maxRecords) {
-      truncated = true;
-      rows = rows.slice(0, maxRecords);
-    }
-
-    // Build report with data
-    const report = JSON.parse(JSON.stringify(reportLayout || {}));
-    report.parameters = Array.isArray(report.parameters) ? report.parameters : [];
-
-    // Ensure api_data parameter exists and matches fields
-    const first = rows[0] || {};
-    const fields = Object.keys(first);
-    let apiParam = report.parameters.find((p: any) => p?.name === 'api_data');
-    if (!apiParam) {
-      apiParam = {
-        id: Date.now(),
-        name: 'api_data',
-        type: 'array',
-        arrayItemType: 'map',
-        eval: false,
-        nullable: false,
-        children: fields.map((f, i) => ({ id: Date.now() + i + 1, name: f, type: typeof first[f] === 'number' ? 'number' : typeof first[f] === 'boolean' ? 'boolean' : 'string', nullable: true })),
-        testData: '[]'
-      };
-      report.parameters.push(apiParam);
-    }
-
-    // Attach data as testData
-    apiParam.testData = JSON.stringify(rows);
-
-    // Call ReportBro cloud runner to generate PDF
-    console.log('Calling ReportBro runner...');
-    const runnerResp = await fetch('https://www.reportbro.com/report/run', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ report, outputFormat: 'pdf', isTestData: true })
+    // Background processing - return immediately
+    processReportJob(supabase, job.id, reportId, limit).catch((err) => {
+      console.error('Background job error:', err);
     });
 
-    if (!runnerResp.ok) {
-      const t = await runnerResp.text();
-      console.error('Runner error:', runnerResp.status, t);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Falha ao gerar PDF' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const result = await runnerResp.json();
-    if (!result?.key) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Resposta inválida do gerador' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const pdfUrl = `https://www.reportbro.com/report/${result.key}`;
-    console.log('PDF ready:', pdfUrl, 'truncated:', truncated, 'rows:', rows.length, '/', totalCount);
-
     return new Response(
-      JSON.stringify({ success: true, pdfUrl, truncated, included: rows.length, total: totalCount }),
+      JSON.stringify({ success: true, jobId: job.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
@@ -153,3 +67,104 @@ serve(async (req) => {
     );
   }
 });
+
+async function processReportJob(supabase: any, jobId: string, reportId: string, limit: number) {
+  try {
+    // Load report
+    const { data: report, error: repErr } = await supabase
+      .from('relatorios')
+      .select('layout_json, configuracoes')
+      .eq('id', reportId)
+      .single();
+
+    if (repErr || !report) {
+      throw new Error('Relatório não encontrado');
+    }
+
+    const reportLayout = report.layout_json;
+    const apiUrl = report.configuracoes?.api_url;
+    if (!apiUrl) {
+      throw new Error('API não configurada');
+    }
+
+    // Fetch API data
+    const apiResp = await fetch(apiUrl);
+    if (!apiResp.ok) throw new Error('Falha ao buscar API');
+    const raw = await apiResp.json();
+
+    let rows: any[] = [];
+    if (Array.isArray(raw)) rows = raw;
+    else if (raw?.data && Array.isArray(raw.data)) rows = raw.data;
+    else if (raw?.data) rows = [raw.data];
+    else if (raw) rows = [raw];
+
+    const total = rows.length;
+    const maxRecords = Math.max(1, Math.min(10000, limit));
+    const truncated = rows.length > maxRecords;
+    if (truncated) rows = rows.slice(0, maxRecords);
+
+    // Build report
+    const rpt = JSON.parse(JSON.stringify(reportLayout || {}));
+    rpt.parameters = Array.isArray(rpt.parameters) ? rpt.parameters : [];
+
+    const first = rows[0] || {};
+    const fields = Object.keys(first);
+    let apiParam = rpt.parameters.find((p: any) => p?.name === 'api_data');
+    if (!apiParam) {
+      apiParam = {
+        id: Date.now(),
+        name: 'api_data',
+        type: 'array',
+        arrayItemType: 'map',
+        eval: false,
+        nullable: false,
+        children: fields.map((f, i) => ({
+          id: Date.now() + i + 1,
+          name: f,
+          type: typeof first[f] === 'number' ? 'number' : typeof first[f] === 'boolean' ? 'boolean' : 'string',
+          nullable: true
+        })),
+        testData: '[]'
+      };
+      rpt.parameters.push(apiParam);
+    }
+    apiParam.testData = JSON.stringify(rows);
+
+    // Call ReportBro runner
+    const runnerResp = await fetch('https://www.reportbro.com/report/run', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ report: rpt, outputFormat: 'pdf', isTestData: true })
+    });
+
+    if (!runnerResp.ok) {
+      const txt = await runnerResp.text();
+      throw new Error(`Runner failed: ${runnerResp.status} ${txt}`);
+    }
+
+    const result = await runnerResp.json();
+    if (!result?.key) throw new Error('No key returned');
+
+    const pdfUrl = `https://www.reportbro.com/report/${result.key}`;
+
+    // Update job
+    await supabase
+      .from('report_preview_jobs')
+      .update({
+        status: 'ready',
+        pdf_url: pdfUrl,
+        truncated,
+        included: rows.length,
+        total
+      })
+      .eq('id', jobId);
+
+    console.log('Job completed:', jobId, pdfUrl);
+  } catch (error: any) {
+    console.error('Job processing error:', error);
+    await supabase
+      .from('report_preview_jobs')
+      .update({ status: 'error', error: error?.message || 'Unknown error' })
+      .eq('id', jobId);
+  }
+}
