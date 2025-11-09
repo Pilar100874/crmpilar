@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { PDFDocument, rgb } from 'https://esm.sh/pdf-lib@1.17.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -263,12 +264,81 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
     const pdfUrl = `https://www.reportbro.com/report/${result.key}`;
     console.log('PDF ready:', pdfUrl);
 
-    // Update job as ready
+    // Download PDF to cover watermark
+    console.log('Downloading PDF to remove watermark...');
+    const pdfResponse = await fetch(pdfUrl);
+    if (!pdfResponse.ok) {
+      throw new Error('Failed to download PDF');
+    }
+    const pdfBytes = await pdfResponse.arrayBuffer();
+
+    // Load PDF and add white rectangles over watermark areas
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const pages = pdfDoc.getPages();
+    
+    // Add white rectangles over typical watermark positions
+    for (const page of pages) {
+      const { width, height } = page.getSize();
+      
+      // Cover bottom-left corner (typical watermark position)
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 50,
+        color: rgb(1, 1, 1),
+      });
+      
+      // Cover bottom-right corner
+      page.drawRectangle({
+        x: width - 200,
+        y: 0,
+        width: 200,
+        height: 50,
+        color: rgb(1, 1, 1),
+      });
+      
+      // Cover center watermark if exists
+      page.drawRectangle({
+        x: width / 2 - 100,
+        y: height / 2 - 25,
+        width: 200,
+        height: 50,
+        color: rgb(1, 1, 1),
+        opacity: 0.9,
+      });
+    }
+
+    const cleanedPdfBytes = await pdfDoc.save();
+
+    // Upload cleaned PDF to Supabase Storage
+    const fileName = `report-${jobId}-${Date.now()}.pdf`;
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('bot-media')
+      .upload(fileName, cleanedPdfBytes, {
+        contentType: 'application/pdf',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Failed to upload cleaned PDF:', uploadError);
+      throw new Error('Failed to upload cleaned PDF');
+    }
+
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from('bot-media')
+      .getPublicUrl(fileName);
+
+    console.log('Cleaned PDF uploaded:', publicUrl);
+
+    // Update job as ready with cleaned PDF URL
     await supabase
       .from('report_preview_jobs')
       .update({
         status: 'ready',
-        pdf_url: pdfUrl,
+        pdf_url: publicUrl,
         truncated: hasMore,
         included: rows.length,
         total: totalCount
