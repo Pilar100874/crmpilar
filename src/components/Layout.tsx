@@ -107,6 +107,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
+  { id: "Stimulsoft", title: "Stimulsoft", url: "/stimulsoft", icon: FileBarChart },
   { 
     id: "Configurações",
     title: "Configurações", 
