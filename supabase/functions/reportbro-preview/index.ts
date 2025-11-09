@@ -276,7 +276,22 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const pages = pdfDoc.getPages();
     
-    // Add white rectangles over typical watermark positions
+    // Download footer logo from Supabase Storage
+    console.log('Downloading footer logo...');
+    const logoUrl = 'https://ioxugupvxlcdweldocmq.supabase.co/storage/v1/object/public/bot-media/footer-logo.jpg';
+    const logoResponse = await fetch(logoUrl);
+    let footerImage = null;
+    
+    if (logoResponse.ok) {
+      const logoBytes = await logoResponse.arrayBuffer();
+      try {
+        footerImage = await pdfDoc.embedJpg(logoBytes);
+      } catch (e) {
+        console.warn('Failed to embed footer logo:', e);
+      }
+    }
+    
+    // Add white rectangles over typical watermark positions and footer logo
     for (const page of pages) {
       const { width, height } = page.getSize();
       
@@ -307,6 +322,19 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
         color: rgb(1, 1, 1),
         opacity: 0.9,
       });
+      
+      // Add footer logo if available
+      if (footerImage) {
+        const imgWidth = 150;
+        const imgHeight = (footerImage.height / footerImage.width) * imgWidth;
+        
+        page.drawImage(footerImage, {
+          x: width / 2 - imgWidth / 2,
+          y: 10,
+          width: imgWidth,
+          height: imgHeight,
+        });
+      }
     }
 
     const cleanedPdfBytes = await pdfDoc.save();
