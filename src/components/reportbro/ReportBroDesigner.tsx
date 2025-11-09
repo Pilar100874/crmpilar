@@ -673,22 +673,37 @@ const [isLoaded, setIsLoaded] = useState(false);
           try {
             const report = reportBroRef.current.getReport();
             
+            // Extrai campos do primeiro registro
+            const firstItem = data[0];
+            const fields = Object.keys(firstItem);
+            
             // Remove parâmetro api_data se já existir
             const existingParams = report.parameters || [];
             const filteredParams = existingParams.filter((p: any) => p.name !== 'api_data');
             
-            // Adiciona novo parâmetro com os dados da API
+            // Cria parâmetro do tipo simple array (lista)
             const apiParam = {
-              id: 'api_data',
+              id: Date.now(),
               name: 'api_data',
-              type: 'array',
-              arrayItemType: 'map',
+              type: 'simple_array',
               eval: false,
               nullable: false,
               pattern: '',
               expression: '',
               showOnlyNameType: false,
-              testData: JSON.stringify(data)
+              testData: `[${data.map((item: any, idx: number) => 
+                `{"id":${idx+1},${fields.map(f => `"${f}":"${item[f] || ''}"`).join(',')}}`
+              ).join(',')}]`,
+              children: fields.map((fieldName, idx) => ({
+                id: Date.now() + idx + 1,
+                name: fieldName,
+                type: 'string',
+                eval: false,
+                nullable: true,
+                pattern: '',
+                expression: `\${api_data.${fieldName}}`,
+                showOnlyNameType: false
+              }))
             };
             
             filteredParams.push(apiParam);
@@ -697,10 +712,11 @@ const [isLoaded, setIsLoaded] = useState(false);
             // Recarrega o relatório com os novos parâmetros
             reportBroRef.current.load(report);
             
-            toast.success(`${data.length} registros carregados da API e disponíveis como 'api_data'`);
+            console.log("Parâmetros adicionados:", apiParam);
+            toast.success(`${data.length} registros da API disponíveis. Use 'api_data' no relatório.`);
           } catch (error) {
             console.error("Erro ao adicionar dados ao ReportBro:", error);
-            toast.warning(`${data.length} registros carregados mas não foi possível adicionar ao designer`);
+            toast.warning(`${data.length} registros carregados mas erro ao adicionar: ${error}`);
           }
         }
       } else {
@@ -837,9 +853,10 @@ const [isLoaded, setIsLoaded] = useState(false);
                 <div className="p-2 bg-background rounded">
                   <p className="font-semibold mb-1">Como usar no ReportBro:</p>
                   <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                    <li>Use o parâmetro <code className="bg-muted px-1 rounded">api_data</code> como fonte de dados</li>
-                    <li>Para acessar campos: <code className="bg-muted px-1 rounded">{"{"}api_data.campo{"}"}</code></li>
-                    <li>Para listas/tabelas: use <code className="bg-muted px-1 rounded">api_data</code> como data source</li>
+                    <li>Vá em "Parâmetros" no painel lateral</li>
+                    <li>Você verá o parâmetro <code className="bg-muted px-1 rounded">api_data</code> criado</li>
+                    <li>Para usar em tabela: arraste <code className="bg-muted px-1 rounded">api_data</code> para a tabela</li>
+                    <li>Para campos: use <code className="bg-muted px-1 rounded">{"{"}api_data.campo{"}"}</code> em elementos de texto</li>
                   </ol>
                 </div>
                 <p className="font-mono text-muted-foreground">
