@@ -21,8 +21,6 @@ const [isLoaded, setIsLoaded] = useState(false);
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
   const [apiData, setApiData] = useState<any>(null);
   const [loadingApiData, setLoadingApiData] = useState(false);
-  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
-  const [previewJson, setPreviewJson] = useState<string>("");
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -460,10 +458,9 @@ const [isLoaded, setIsLoaded] = useState(false);
 
       // Sempre inicia sem report explícito para que o ReportBro crie um padrão válido
       reportBroRef.current = new ReportBro(containerRef.current, {
-        // Não definir reportServerUrl para evitar chamadas HTTP (PUT "")
+        reportServerUrl: "https://www.reportbro.com/report",
         locale: "pt_BR",
         saveCallback: handleSave,
-        previewCallback: handlePreview, // Conecta o preview nativo ao nosso handler interno
         showTemplateSelection: false,
       });
 
@@ -622,23 +619,8 @@ const [isLoaded, setIsLoaded] = useState(false);
   };
 
   const handlePreview = () => {
-    if (!reportBroRef.current) return;
-    try {
-      const reportData = reportBroRef.current.getReport();
-      if (!reportData || typeof reportData !== 'object') {
-        toast.error("Relatório vazio ou inválido");
-        return;
-      }
-      const layoutStr = JSON.stringify(reportData, null, 2);
-      // Mantém compatibilidade com o viewer existente, mas não abre nova aba
-      localStorage.setItem("reportbro_preview", layoutStr);
-      setPreviewJson(layoutStr);
-      setShowPreviewDialog(true);
-      toast.success("Pré-visualização pronta");
-    } catch (error) {
-      console.error("Erro ao visualizar:", error);
-      toast.error("Erro ao abrir visualização");
-    }
+    // Preview nativo via servidor oficial; este handler não é mais utilizado.
+    toast.info("Use o botão Visualizar do ReportBro (preview nativo).");
   };
 
   const handleExportPDF = async () => {
@@ -894,22 +876,6 @@ const [isLoaded, setIsLoaded] = useState(false);
         </DialogContent>
       </Dialog>
 
-      {/* Visualização interna */}
-      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Visualização do relatório</DialogTitle>
-            <DialogDescription>Prévia interna sem servidor de geração</DialogDescription>
-          </DialogHeader>
-          <div className="h-[60vh] overflow-auto rounded bg-muted/40 p-4">
-            <pre className="text-xs whitespace-pre-wrap break-words">{previewJson}</pre>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowPreviewDialog(false)}>Fechar</Button>
-            <Button onClick={() => window.print()}>Imprimir</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
