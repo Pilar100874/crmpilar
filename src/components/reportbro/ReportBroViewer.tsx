@@ -14,7 +14,23 @@ export function ReportBroViewer() {
 
   const loadReportFromStorage = () => {
     try {
-      const jsonStr = localStorage.getItem("reportbro_preview");
+      let jsonStr: string | null = localStorage.getItem("reportbro_preview");
+
+      // Fallbacks caso a gravação tenha sido grande ou em outra storage
+      if (!jsonStr) {
+        jsonStr = sessionStorage.getItem("reportbro_preview");
+      }
+      if (!jsonStr) {
+        const countStr = sessionStorage.getItem("reportbro_preview_chunk_count") || localStorage.getItem("reportbro_preview_chunk_count");
+        const count = countStr ? parseInt(countStr, 10) : 0;
+        if (count > 0) {
+          let combined = "";
+          for (let i = 0; i < count; i++) {
+            combined += sessionStorage.getItem(`reportbro_preview_chunk_${i}`) || localStorage.getItem(`reportbro_preview_chunk_${i}`) || "";
+          }
+          jsonStr = combined || null;
+        }
+      }
 
       if (!jsonStr) {
         toast.error("Nenhum relatório para visualizar. Volte e clique em Visualizar novamente.");
@@ -70,10 +86,26 @@ export function ReportBroViewer() {
         {reportData ? (
           <div className="max-w-4xl mx-auto bg-card shadow-lg rounded-lg p-6 border">
             <h1 className="text-xl font-semibold mb-2">Visualização de Relatório</h1>
-            <p className="text-muted-foreground">
-              Renderização completa ainda não implementada. Abaixo, os dados do relatório:
+            <p className="text-muted-foreground mb-4">
+              Prévia simplificada (sem renderização completa). Abaixo um resumo e o JSON bruto.
             </p>
-            <pre className="mt-4 p-4 bg-muted rounded text-xs overflow-auto">
+            {/* Resumo simples */}
+            {Array.isArray(reportData?.docElements) && reportData.docElements.length > 0 && (
+              <div className="mb-4 border rounded p-3 bg-background">
+                <h2 className="font-medium mb-2">Conteúdos de texto encontrados</h2>
+                <ul className="list-disc pl-5 space-y-1 text-sm">
+                  {reportData.docElements
+                    .filter((el: any) => el && (el.type === 'text' || el.elementType === 'text'))
+                    .slice(0, 20)
+                    .map((el: any, idx: number) => (
+                      <li key={idx} className="text-foreground/80">
+                        {el.text?.value || el.text || el.name || 'Texto sem conteúdo visível'}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
+            <pre className="mt-2 p-4 bg-muted rounded text-xs overflow-auto">
               {JSON.stringify(reportData, null, 2)}
             </pre>
           </div>
