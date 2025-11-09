@@ -458,9 +458,10 @@ const [isLoaded, setIsLoaded] = useState(false);
 
       // Sempre inicia sem report explícito para que o ReportBro crie um padrão válido
       reportBroRef.current = new ReportBro(containerRef.current, {
-        reportServerUrl: "https://www.reportbro.com/report",
+        // Usaremos o previewCallback customizado (como antes)
         locale: "pt_BR",
         saveCallback: handleSave,
+        previewCallback: handlePreview,
         showTemplateSelection: false,
       });
 
@@ -619,8 +620,21 @@ const [isLoaded, setIsLoaded] = useState(false);
   };
 
   const handlePreview = () => {
-    // Preview nativo via servidor oficial; este handler não é mais utilizado.
-    toast.info("Use o botão Visualizar do ReportBro (preview nativo).");
+    if (!reportBroRef.current) return;
+    try {
+      const reportData = reportBroRef.current.getReport();
+      if (!reportData || typeof reportData !== 'object') {
+        toast.error("Relatório vazio ou inválido");
+        return;
+      }
+      const layoutStr = JSON.stringify(reportData);
+      localStorage.setItem("reportbro_preview", layoutStr);
+      // Abre no MESMO separador para evitar popup/tela em branco
+      window.location.href = "/relatorios/viewer";
+    } catch (error) {
+      console.error("Erro ao visualizar:", error);
+      toast.error("Erro ao abrir visualização");
+    }
   };
 
   const handleExportPDF = async () => {
