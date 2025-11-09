@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import "reportbro-designer/dist/reportbro.css";
 
 export function ReportBroViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [reportData, setReportData] = useState<any>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     loadReportFromStorage();
@@ -17,13 +15,19 @@ export function ReportBroViewer() {
   const loadReportFromStorage = () => {
     try {
       const stored = localStorage.getItem("reportbro_preview");
-      if (stored) {
-        const data = JSON.parse(stored);
-        setReportData(data);
-        renderReport(data);
-      } else {
+      if (!stored) {
         toast.error("Nenhum relatório para visualizar");
+        return;
       }
+      
+      const data = JSON.parse(stored);
+      if (!data || typeof data !== 'object') {
+        toast.error("Dados do relatório inválidos");
+        return;
+      }
+      
+      setReportData(data);
+      renderReport(data);
     } catch (error) {
       console.error("Erro ao carregar:", error);
       toast.error("Erro ao carregar relatório");
@@ -60,11 +64,20 @@ export function ReportBroViewer() {
     window.print();
   };
 
+  const handleGoBack = () => {
+    // Fecha a aba ou volta se estiver no mesmo contexto
+    if (window.opener) {
+      window.close();
+    } else {
+      window.location.href = "/relatorios";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="h-14 border-b flex items-center justify-between px-4 bg-card">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/relatorios")}>
+        <Button variant="ghost" size="sm" onClick={handleGoBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
