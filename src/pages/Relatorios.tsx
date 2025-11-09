@@ -117,7 +117,7 @@ export default function Relatorios() {
   };
 
   const handlePreview = (report: Report) => {
-    // Salvar relatório no localStorage e navegar para o viewer na mesma aba
+    // Salvar relatório no localStorage e abrir visualização ReportBro
     if (!report.layout_json) {
       toast.error('Relatório sem layout definido');
       return;
@@ -128,21 +128,23 @@ export default function Relatorios() {
         ? JSON.parse(report.layout_json)
         : report.layout_json;
       
-      // Garante estrutura mínima
-      const safeLayout = {
-        docElements: Array.isArray(layoutJsonObj?.docElements) ? layoutJsonObj.docElements : [],
-        parameters: Array.isArray(layoutJsonObj?.parameters) ? layoutJsonObj.parameters : [],
-        styles: Array.isArray(layoutJsonObj?.styles) ? layoutJsonObj.styles : [],
-        version: layoutJsonObj?.version ?? 3,
-        ...layoutJsonObj,
-      };
+      const layoutStr = JSON.stringify(layoutJsonObj);
       
-      const layoutStr = JSON.stringify(safeLayout);
+      // Salva no localStorage
       localStorage.setItem('reportbro_preview', layoutStr);
-      navigate('/relatorios/viewer');
+      
+      // Abre nova aba
+      const newWindow = window.open('/relatorios/viewer', '_blank');
+      
+      if (!newWindow) {
+        toast.error('Permita pop-ups para visualizar o relatório');
+        return;
+      }
+      
+      toast.success('Abrindo visualização...');
     } catch (error) {
-      console.error('Erro ao preparar visualização:', error);
-      toast.error(`Erro ao preparar visualização: ${error}`);
+      console.error('Erro ao visualizar:', error);
+      toast.error(`Erro ao abrir visualização: ${error}`);
     }
   };
 
