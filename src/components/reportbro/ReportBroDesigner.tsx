@@ -6,7 +6,7 @@ import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
-import { Globe } from "lucide-react";
+import { Globe, Eye } from "lucide-react";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -845,6 +845,14 @@ const [isLoaded, setIsLoaded] = useState(false);
             )}
           </Button>
         )}
+      </div>
+
+      {/* Botão de Visualização - canto direito */}
+      <div className="absolute top-2 right-2 z-10">
+        <Button size="sm" onClick={handlePreview} className="gap-2 shadow-lg">
+          <Eye className="h-4 w-4" />
+          Visualizar
+        </Button>
       </div>
 
       {/* Designer Container - ReportBro com toolbar padrão */}
