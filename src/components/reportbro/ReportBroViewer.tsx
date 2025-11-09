@@ -11,10 +11,12 @@ export function ReportBroViewer() {
   const [jobId, setJobId] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [progress, setProgress] = useState<{ truncated?: boolean; included?: number; total?: number }>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(500);
 
   useEffect(() => {
     loadReportFromStorage();
-  }, []);
+  }, [currentPage]);
 
   // Poll job status
   useEffect(() => {
@@ -68,9 +70,9 @@ export function ReportBroViewer() {
         return;
       }
 
-      // Start async job
+      // Start async job with pagination
       const { data: result, error: fnError } = await supabase.functions.invoke('reportbro-preview', {
-        body: { reportId: data.reportId, maxRecords: 5000 }
+        body: { reportId: data.reportId, page: currentPage, pageSize }
       });
 
       if (fnError || !result?.success) {
@@ -132,11 +134,31 @@ export function ReportBroViewer() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
-        <div className="flex items-center gap-2">
-          {progress?.truncated && (
-            <span className="text-xs text-muted-foreground">
-              {progress.included} de {progress.total} registros
-            </span>
+        <div className="flex items-center gap-4">
+          {progress?.total && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                Página {currentPage} • {progress.included} de {progress.total} registros
+              </span>
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={!progress.truncated}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
           )}
           <Button size="sm" variant="outline" onClick={handleExportPDF}>
             <FileDown className="h-4 w-4 mr-2" />

@@ -10,6 +10,8 @@ const corsHeaders = {
 type PreviewRequest = {
   reportId: string;
   maxRecords?: number;
+  page?: number;
+  pageSize?: number;
 };
 
 serve(async (req) => {
@@ -31,7 +33,8 @@ serve(async (req) => {
     }
 
     const body: PreviewRequest = await req.json();
-    const maxRecords = Math.max(1, Math.min(10000, body.maxRecords ?? 5000));
+    const pageSize = Math.max(100, Math.min(1000, body.pageSize ?? 500));
+    const page = Math.max(1, body.page ?? 1);
 
     // Create job record
     const { data: job, error: jobError } = await supabase
@@ -39,7 +42,9 @@ serve(async (req) => {
       .insert({
         report_id: body.reportId,
         requested_by: userId,
-        status: 'pending'
+        status: 'pending',
+        total: 0,
+        included: 0
       })
       .select()
       .single();
@@ -54,24 +59,21 @@ serve(async (req) => {
 
     // Start background processing without blocking (ensure it survives after response)
     try {
-      // Prefer background task runner when available
       // @ts-ignore - EdgeRuntime is available in this environment at runtime
       const ER: any = (globalThis as any).EdgeRuntime;
       if (ER?.waitUntil) {
         ER.waitUntil(
-          processPreview(job.id, body.reportId, maxRecords, supabase).catch((err: any) => {
+          processPreview(job.id, body.reportId, pageSize, page, supabase).catch((err: any) => {
             console.error('Background processing error:', err);
           })
         );
       } else {
-        // Fallback to fire-and-forget
-        processPreview(job.id, body.reportId, maxRecords, supabase).catch((err: any) => {
+        processPreview(job.id, body.reportId, pageSize, page, supabase).catch((err: any) => {
           console.error('Background processing error:', err);
         });
       }
     } catch (e) {
-      // Last-resort fallback
-      processPreview(job.id, body.reportId, maxRecords, supabase).catch((err: any) => {
+      processPreview(job.id, body.reportId, pageSize, page, supabase).catch((err: any) => {
         console.error('Background processing error:', err);
       });
     }
@@ -89,7 +91,7 @@ serve(async (req) => {
   }
 });
 
-async function processPreview(jobId: string, reportId: string, maxRecords: number, supabase: any) {
+async function processPreview(jobId: string, reportId: string, pageSize: number, page: number, supabase: any) {
   try {
     console.log('Processing preview for job:', jobId);
 
@@ -110,25 +112,26 @@ async function processPreview(jobId: string, reportId: string, maxRecords: numbe
       throw new Error('API não configurada');
     }
 
-    // Fetch API data
-    console.log('Fetching data from API:', apiUrl);
+    // Fetch API data with pagination
+    console.log('Fetching data from API:', apiUrl, 'Page:', page, 'PageSize:', pageSize);
     const apiResp = await fetch(apiUrl);
     if (!apiResp.ok) {
       throw new Error('Falha ao buscar dados da API');
     }
     const raw = await apiResp.json();
 
-    let rows: any[] = [];
-    if (Array.isArray(raw)) rows = raw;
-    else if (raw && typeof raw === 'object' && 'data' in raw) rows = Array.isArray(raw.data) ? raw.data : [raw.data];
-    else if (raw != null) rows = [raw];
+    let allRows: any[] = [];
+    if (Array.isArray(raw)) allRows = raw;
+    else if (raw && typeof raw === 'object' && 'data' in raw) allRows = Array.isArray(raw.data) ? raw.data : [raw.data];
+    else if (raw != null) allRows = [raw];
 
-    const totalCount = rows.length;
-    let truncated = false;
-    if (rows.length > maxRecords) {
-      truncated = true;
-      rows = rows.slice(0, maxRecords);
-    }
+    const totalCount = allRows.length;
+    
+    // Apply pagination
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const rows = allRows.slice(startIndex, endIndex);
+    const hasMore = endIndex < totalCount;
 
     // Build report with data
     const report = JSON.parse(JSON.stringify(reportLayout || {}));
@@ -181,7 +184,7 @@ async function processPreview(jobId: string, reportId: string, maxRecords: numbe
       .update({
         status: 'ready',
         pdf_url: pdfUrl,
-        truncated,
+        truncated: hasMore,
         included: rows.length,
         total: totalCount
       })
