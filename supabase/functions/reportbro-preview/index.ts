@@ -272,11 +272,25 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
     }
     const pdfBytes = await pdfResponse.arrayBuffer();
 
-    // Load PDF and add white rectangles over watermark areas
+    // Load PDF and add white rectangles over watermark areas + logo
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const pages = pdfDoc.getPages();
     
-    // Add white rectangles over typical watermark positions
+    // Download and embed logo image
+    let logoImage = null;
+    try {
+      // Try to fetch logo from public URL (you can change this URL to your logo)
+      const logoUrl = 'https://ioxugupvxlcdweldocmq.supabase.co/storage/v1/object/public/bot-media/logo_branco.png';
+      const logoResponse = await fetch(logoUrl);
+      if (logoResponse.ok) {
+        const logoBytes = await logoResponse.arrayBuffer();
+        logoImage = await pdfDoc.embedPng(logoBytes);
+      }
+    } catch (error) {
+      console.log('Could not load logo, skipping:', error);
+    }
+    
+    // Add white rectangles over typical watermark positions + logo
     for (const page of pages) {
       const { width, height } = page.getSize();
       
@@ -316,6 +330,21 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
         height: 80,
         color: rgb(1, 1, 1),
       });
+      
+      // Add logo image in footer if available
+      if (logoImage) {
+        const logoWidth = 450;
+        const logoHeight = 70;
+        const logoX = (width - logoWidth) / 2; // Center horizontally
+        const logoY = 5; // 5px from bottom
+        
+        page.drawImage(logoImage, {
+          x: logoX,
+          y: logoY,
+          width: logoWidth,
+          height: logoHeight,
+        });
+      }
     }
 
     const cleanedPdfBytes = await pdfDoc.save();
