@@ -771,8 +771,8 @@ const [isLoaded, setIsLoaded] = useState(false);
   // Nenhuma captura adicional de teclado para não interferir nos handlers internos do designer.
   return (
     <div className="h-full flex flex-col bg-background relative">
-      {/* Botão de API integrado na interface */}
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+      {/* Botão de API integrado na interface - lado esquerdo */}
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
         <Button
           size="sm"
           onClick={() => setShowApiDialog(true)}
