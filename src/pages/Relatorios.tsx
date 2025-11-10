@@ -2,20 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ReportBroDesigner } from "@/components/reportbro/ReportBroDesigner";
+import { SubMenuHeader } from "@/components/SubMenuHeader";
+import { useLayout } from "@/contexts/LayoutContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Copy, FileText, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, FileText, Eye, Copy, Trash2, MoreVertical, Edit } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -23,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Report {
   id: string;
@@ -43,11 +44,13 @@ interface DatabaseConnection {
 
 export default function Relatorios() {
   const navigate = useNavigate();
+  const { openSubmenu } = useLayout();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
   const [currentReportId, setCurrentReportId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     descricao: "",
@@ -207,151 +210,189 @@ export default function Relatorios() {
   }
 
   return (
-    <div className={showDesigner ? 'h-screen' : 'container mx-auto max-w-7xl p-4'}>
+    <div className={showDesigner ? 'h-screen' : 'p-8 space-y-8 animate-fade-in bg-white min-h-full'}>
       {!showDesigner && (
-      <div className="flex-1">
-        <div className="flex justify-between items-center mb-6">
+        <>
           <div>
-            <h1 className={`font-bold flex items-center gap-2 ${showDesigner ? 'text-xl' : 'text-3xl'}`}>
-              <FileText className={showDesigner ? 'h-5 w-5' : 'h-8 w-8'} />
-              {showDesigner ? 'Modelos' : 'Modelos de Relatório'}
-            </h1>
-            {!showDesigner && (
-              <p className="text-muted-foreground mt-1">
-                Gerencie templates de relatórios profissionais com ReportBro Designer
-              </p>
+            <div className="flex items-center gap-3 mb-3">
+              <SubMenuHeader 
+                title="Relatórios"
+                onOpenSubmenu={() => openSubmenu("Relatórios")}
+              />
+              <h1 className="text-lg font-bold text-foreground">Modelos de Relatório</h1>
+            </div>
+            <p className="text-muted-foreground">
+              Gerencie templates de relatórios profissionais com ReportBro Designer
+            </p>
+          </div>
+
+          <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+            <Card 
+              className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
+              onClick={() => setShowNewDialog(true)}
+            >
+              <CardHeader className="flex-1 p-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
+                <CardTitle>Criar Novo Modelo</CardTitle>
+                <CardDescription>
+                  Configure um novo modelo de relatório profissional com o designer ReportBro
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="mt-auto p-4 pt-0">
+                <Button className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar Modelo
+                </Button>
+              </CardContent>
+            </Card>
+
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="animate-pulse h-full">
+                  <CardHeader>
+                    <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
+                    <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-full"></div>
+                  </CardHeader>
+                </Card>
+              ))
+            ) : (
+              reports.map((report) => (
+                <Card
+                  key={report.id}
+                  className="hover:shadow-lg transition-all relative group h-full flex flex-col"
+                >
+                  <div className="absolute top-4 right-4 z-10">
+                    <DropdownMenu open={openMenuId === report.id} onOpenChange={(open) => setOpenMenuId(open ? report.id : null)}>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleEdit(report);
+                        }}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handlePreview(report);
+                        }}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Visualizar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleDuplicate(report);
+                        }}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Duplicar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(null);
+                            handleDelete(report.id);
+                          }}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <CardHeader className="flex-1 p-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                      <FileText className="w-6 h-6 text-primary" />
+                    </div>
+                    <CardTitle className="pr-8">{report.nome}</CardTitle>
+                    {report.descricao && (
+                      <p className="text-sm text-muted-foreground mb-2">{report.descricao}</p>
+                    )}
+                    <CardDescription>
+                      Criado {formatDistanceToNow(new Date(report.created_at), { 
+                        addSuffix: true, 
+                        locale: ptBR 
+                      })}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="mt-auto p-4 pt-0">
+                    <Button 
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(report);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar Modelo
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowNewDialog(true)} size={showDesigner ? 'sm' : 'lg'}>
-              <Plus className={`mr-2 ${showDesigner ? 'h-4 w-4' : 'h-5 w-5'}`} />
-              {showDesigner ? 'Novo' : 'Novo Modelo'}
-            </Button>
-          </div>
-        </div>
 
-        {/* Grid de Cards */}
-        <div className={`grid gap-4 ${showDesigner ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
-          {reports.length === 0 ? (
-            <div className="col-span-full text-center py-12 border-2 border-dashed rounded-lg">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">
-                Nenhum modelo de relatório cadastrado
+          {!loading && reports.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 rounded-2xl bg-muted mx-auto mb-4 flex items-center justify-center">
+                <FileText className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground">
+                Você ainda não tem modelos de relatório criados. Clique no card acima para criar seu primeiro modelo!
               </p>
-              <Button onClick={() => setShowNewDialog(true)} variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
-                Criar Primeiro Modelo
-              </Button>
             </div>
-          ) : (
-            reports.map((report) => (
-              <div
-                key={report.id}
-                className={`group border rounded-lg hover:shadow-lg transition-all bg-card hover:border-primary/50 ${
-                  showDesigner ? 'p-3' : 'p-6'
-                } ${currentReportId === report.id ? 'border-primary shadow-md' : ''}`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className={`font-semibold group-hover:text-primary transition-colors ${showDesigner ? 'text-sm mb-0' : 'text-lg mb-1'}`}>
-                      {report.nome}
-                    </h3>
-                    {!showDesigner && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {report.descricao || "Sem descrição"}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {!showDesigner && (
-                  <div className="space-y-2 mb-4">
-                    <div className="text-xs text-muted-foreground">
-                      Criado em {new Date(report.created_at).toLocaleDateString("pt-BR")}
-                    </div>
-                  </div>
-                )}
-
-                <div className={`flex gap-2 ${showDesigner ? 'flex-col' : ''}`}>
-                  <Button
-                    size="sm"
-                    className={showDesigner ? 'w-full justify-start' : 'flex-1'}
-                    onClick={() => handleEdit(report)}
-                    variant={currentReportId === report.id ? 'default' : 'outline'}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Editar
-                  </Button>
-                  {!showDesigner && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handlePreview(report)}
-                        title="Visualizar relatório"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDuplicate(report)}
-                        title="Duplicar modelo"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(report.id)}
-                        title="Excluir modelo"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))
           )}
-        </div>
 
-        {/* Dialog de Novo Modelo */}
-        <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Novo Modelo de Relatório</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="nome">Nome *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  placeholder="Ex: Relatório de Vendas Mensal"
-                />
+          {/* Dialog de Novo Modelo */}
+          <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Novo Modelo de Relatório</DialogTitle>
+                <DialogDescription>
+                  Informe os dados do novo modelo
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome *</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Ex: Relatório de Vendas Mensal"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descricao">Descrição</Label>
+                  <Textarea
+                    id="descricao"
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    placeholder="Descrição detalhada do modelo..."
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="descricao">Descrição</Label>
-                <Textarea
-                  id="descricao"
-                  value={formData.descricao}
-                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  placeholder="Descrição detalhada do modelo..."
-                  rows={3}
-                />
-              </div>
-              <div className="flex justify-end gap-2">
+              <DialogFooter>
                 <Button variant="outline" onClick={() => setShowNewDialog(false)}>
                   Cancelar
                 </Button>
                 <Button onClick={handleCreate}>Criar</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
       )}
 
       {/* Designer em tela cheia */}
