@@ -863,7 +863,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       case "crm_gerar_relatorio": {
-        addSystemMessage("📄 Iniciando geração de relatório...");
+        addSystemMessage("📄 Gerando relatório em background...");
         try {
           const relatorioId = interpolateVariables(config.relatorioId || "", context);
           if (!relatorioId) {
@@ -882,56 +882,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           });
 
           if (error) {
-            addSystemMessage(`❌ Erro ao iniciar geração: ${error.message || error}`);
+            addSystemMessage(`❌ Erro ao gerar relatório: ${error.message || error}`);
             break;
           }
 
-          const jobId = data?.jobId;
-          if (!jobId) {
-            addSystemMessage("❌ Erro: Job ID não retornado");
-            break;
-          }
-
-          addSystemMessage(`⏳ Relatório sendo gerado (Job ${jobId.substring(0, 8)}...)...`);
-
-          // Polling no job (até 3 minutos)
-          let attempts = 0;
-          const maxAttempts = 90;
-          let jobCompleted = false;
-          let pdfUrl: string | null = null;
-
-          while (attempts < maxAttempts && !jobCompleted) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            attempts++;
-
-            const { data: jobData, error: jobError } = await supabase
-              .from('relatorio_jobs')
-              .select('*')
-              .eq('id', jobId)
-              .single();
-
-            if (jobError) {
-              addSystemMessage(`❌ Erro ao verificar job: ${jobError.message}`);
-              break;
-            }
-
-            if (jobData.status === 'completed') {
-              pdfUrl = jobData.pdf_url;
-              jobCompleted = true;
-              addSystemMessage("✅ Relatório gerado com sucesso!");
-            } else if (jobData.status === 'error') {
-              addSystemMessage(`❌ Erro na geração: ${jobData.error_message}`);
-              break;
-            }
-
-            // Mostrar progresso a cada 10 tentativas
-            if (attempts % 10 === 0 && !jobCompleted) {
-              addSystemMessage(`⏳ Ainda processando... (${attempts * 2}s)`);
-            }
-          }
-
-          if (pdfUrl) {
-            addBotMediaMessage(pdfUrl, "file", "Relatório gerado", node.id);
+          if (data?.pdfUrl) {
+            addBotMediaMessage(data.pdfUrl, "file", data.fileName || "Relatório gerado", node.id);
             const outputVar = normalizeVarName(config.outputVariable || "relatorio_gerado");
             if (outputVar) {
               setContext((prev) => ({ ...prev, [outputVar]: "Sucesso" }));
@@ -943,8 +899,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 executeNode(nextNode);
               }
             }, 500);
-          } else if (!jobCompleted) {
-            addSystemMessage("❌ Timeout: Relatório não foi gerado a tempo");
+          } else {
+            addSystemMessage("❌ Erro: Relatório não foi gerado corretamente.");
           }
         } catch (e: any) {
           addSystemMessage(`❌ Erro ao gerar relatório: ${e?.message || e}`);

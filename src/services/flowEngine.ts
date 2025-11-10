@@ -949,7 +949,7 @@ export class FlowEngine {
 
       console.log("📊 Gerando relatório com variáveis:", apiVariables);
 
-      // Chamar edge function para iniciar geração em background
+      // Chamar edge function para gerar PDF em background
       const { supabase } = await import("@/integrations/supabase/client");
       
       const { data: resultData, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
@@ -960,7 +960,7 @@ export class FlowEngine {
       });
 
       if (error) {
-        console.error("❌ Erro ao iniciar geração:", error);
+        console.error("❌ Erro ao gerar relatório:", error);
         await this.onResponse({
           type: "text",
           content: `Erro ao gerar relatório: ${error.message}`,
@@ -968,79 +968,26 @@ export class FlowEngine {
         return;
       }
 
-      const jobId = resultData?.jobId;
-      if (!jobId) {
-        console.error("❌ Job ID não retornado");
-        await this.onResponse({
-          type: "text",
-          content: "Erro: Não foi possível iniciar a geração do relatório",
-        });
-        return;
-      }
-
-      console.log("⏳ Job criado:", jobId, "- Aguardando conclusão...");
-
-      // Fazer polling no job até completar (timeout de 3 minutos)
-      const maxAttempts = 90; // 90 tentativas x 2 segundos = 3 minutos
-      let attempts = 0;
-      let job: any = null;
-
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Aguarda 2 segundos
-        attempts++;
-
-        const { data: jobData, error: jobError } = await supabase
-          .from('relatorio_jobs')
-          .select('*')
-          .eq('id', jobId)
-          .single();
-
-        if (jobError) {
-          console.error("❌ Erro ao verificar job:", jobError);
-          break;
-        }
-
-        job = jobData;
-
-        if (job.status === 'completed') {
-          console.log("✅ Relatório gerado com sucesso!");
-          break;
-        } else if (job.status === 'error') {
-          console.error("❌ Erro na geração:", job.error_message);
-          break;
-        }
-
-        // Log a cada 10 tentativas (20 segundos)
-        if (attempts % 10 === 0) {
-          console.log(`⏳ Aguardando... (${attempts}/${maxAttempts})`);
-        }
-      }
-
-      // Verificar resultado
-      if (!job || job.status === 'error') {
-        await this.onResponse({
-          type: "text",
-          content: `Erro ao gerar relatório: ${job?.error_message || "Timeout ou erro desconhecido"}`,
-        });
-        return;
-      }
-
-      if (job.status === 'completed' && job.pdf_url) {
+      // Verificar se foi gerado com sucesso
+      if (resultData?.pdfUrl) {
+        console.log("✅ Relatório gerado com sucesso:", resultData.pdfUrl);
+        
         // Enviar PDF como anexo
         await this.onResponse({
           type: "media",
           mediaType: "document",
-          url: job.pdf_url,
-          caption: "Relatório gerado",
+          url: resultData.pdfUrl,
+          caption: resultData.fileName || "Relatório gerado",
         });
 
         // Definir variável de saída
         const outputVariable = config.outputVariable || "relatorio_gerado";
         this.context.vars[outputVariable] = "Sucesso";
       } else {
+        console.error("❌ PDF não foi gerado");
         await this.onResponse({
           type: "text",
-          content: "Erro: Relatório ainda está sendo processado ou falhou",
+          content: "Erro: Relatório não foi gerado corretamente",
         });
         return;
       }

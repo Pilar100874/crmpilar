@@ -233,51 +233,36 @@ export default function Layout({ children }: LayoutProps) {
       if (!user) return;
 
       try {
-        console.log("🔍 Buscando dados do usuário:", { 
-          userId: user.id, 
-          email: user.email, 
-          isAdmin 
-        });
-
         // Buscar nome do usuário
         if (isAdmin) {
-          const { data: adminData, error: adminError } = await supabase
+          const { data: adminData } = await supabase
             .from("administradores")
             .select("nome")
             .eq("id", user.id)
             .maybeSingle();
           
-          console.log("👤 Resultado busca administrador:", { adminData, adminError });
-          
-          // Define um nome padrão baseado no email caso não encontre na tabela
-          setUserName(adminData?.nome || user.email?.split("@")[0] || "Administrador");
+          setUserName(adminData?.nome || "Administrador");
         } else {
-          const { data: userData, error: userError } = await supabase
+          const { data: userData } = await supabase
             .from("usuarios")
             .select("nome")
             .ilike("email", user.email || "")
             .maybeSingle();
-          
-          console.log("👤 Resultado busca usuário:", { userData, userError });
           
           setUserName(userData?.nome || user.email?.split("@")[0] || "Usuário");
         }
 
         // Buscar nome do estabelecimento
         const estabId = await getEstabelecimentoId();
-        console.log("🏢 Estabelecimento ID:", estabId);
-        
         if (estabId) {
           setEstabelecimentoId(estabId);
-          const { data: estabData, error: estabError } = await supabase
+          const { data: estabData } = await supabase
             .from("estabelecimentos")
             .select("nome")
             .eq("id", estabId)
             .maybeSingle();
           
-          console.log("🏢 Resultado busca estabelecimento:", { estabData, estabError });
-          
-          setEstabelecimentoName(estabData?.nome || "Estabelecimento");
+          setEstabelecimentoName(estabData?.nome || "");
         }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário/estabelecimento:", error);
@@ -338,27 +323,36 @@ export default function Layout({ children }: LayoutProps) {
             />
             {/* Informações do usuário e estabelecimento */}
             <div className="w-full px-1 space-y-2">
-              <button
-                onClick={() => isAdmin && setShowEstabelecimentoSelector(true)}
-                disabled={!isAdmin}
-                className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                title={isAdmin ? "Selecionar Estabelecimento" : "Somente visualização"}
-              >
-                <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                  {estabelecimentoName || "Estabelecimento"}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setShowUsuarioSelector(true)}
-                className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
-              >
-                <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
-                  {userName || "Usuário"}
-                </span>
-              </button>
+              {estabelecimentoName && isAdmin && (
+                <button
+                  onClick={() => setShowEstabelecimentoSelector(true)}
+                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
+                    {estabelecimentoName}
+                  </span>
+                </button>
+              )}
+              {estabelecimentoName && !isAdmin && (
+                <div className="flex flex-col items-center">
+                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
+                    {estabelecimentoName}
+                  </span>
+                </div>
+              )}
+              {userName && (
+                <button
+                  onClick={() => setShowUsuarioSelector(true)}
+                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
+                >
+                  <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
+                    {userName}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
 

@@ -1764,53 +1764,6 @@ export type Database = {
           },
         ]
       }
-      relatorio_jobs: {
-        Row: {
-          api_variables: Json | null
-          completed_at: string | null
-          created_at: string | null
-          error_message: string | null
-          id: string
-          pdf_url: string | null
-          relatorio_id: string
-          reportbro_key: string | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          api_variables?: Json | null
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          pdf_url?: string | null
-          relatorio_id: string
-          reportbro_key?: string | null
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          api_variables?: Json | null
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          pdf_url?: string | null
-          relatorio_id?: string
-          reportbro_key?: string | null
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "relatorio_jobs_relatorio_id_fkey"
-            columns: ["relatorio_id"]
-            isOneToOne: false
-            referencedRelation: "relatorios"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       relatorios: {
         Row: {
           conexao_id: string | null
