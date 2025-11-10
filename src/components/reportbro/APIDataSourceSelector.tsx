@@ -47,6 +47,15 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
   const [customApiName, setCustomApiName] = useState("");
   const [savingCustom, setSavingCustom] = useState(false);
 
+  // Limpar variáveis ao trocar de aba
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "custom") {
+      setSelectedEndpoint(null);
+      setVariables([]);
+    }
+  };
+
   useEffect(() => {
     loadEndpoints();
   }, []);
@@ -223,7 +232,7 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
 
   return (
     <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="endpoints">
             <Database className="h-4 w-4 mr-2" />
@@ -383,8 +392,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
         </TabsContent>
       </Tabs>
 
-      {/* Configuração de Variáveis - Aparece após selecionar API ou na aba customizada */}
-      {(selectedEndpoint || activeTab === "custom") && (
+      {/* Configuração de Variáveis - Aparece após selecionar API OU na aba customizada */}
+      {((selectedEndpoint && activeTab === "endpoints") || activeTab === "custom") && (
         <Card className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <div className="flex items-center justify-between mb-3">
             <div>
