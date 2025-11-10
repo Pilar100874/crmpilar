@@ -324,13 +324,19 @@ const handleSelectCustomUrl = () => {
     
     try {
       const response = await fetch(url);
-      const data = await response.json();
+      let data: any = null;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
       setTestResult(data);
       
-      if (response.ok && data.success) {
+      if (response.ok) {
         toast.success("API respondeu com sucesso!");
       } else {
-        toast.warning("API retornou erro");
+        toast.error(`API retornou erro (status ${response.status})`);
       }
     } catch (error: any) {
       toast.error("Erro ao testar API: " + error.message);
