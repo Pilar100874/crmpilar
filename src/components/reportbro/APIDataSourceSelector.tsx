@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, Database, Globe, Play } from "lucide-react";
+import { Link, Database, Globe, Play, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface APIEndpoint {
@@ -20,17 +21,25 @@ interface APIEndpoint {
   parameters: any[];
 }
 
-interface APIDataSourceSelectorProps {
-  onSelect: (apiUrl: string, apiName: string) => void;
-  currentUrl?: string;
+interface APIVariable {
+  name: string;
+  type: string;
+  value: string;
 }
 
-export function APIDataSourceSelector({ onSelect, currentUrl }: APIDataSourceSelectorProps) {
+interface APIDataSourceSelectorProps {
+  onSelect: (apiUrl: string, apiName: string, variables: APIVariable[]) => void;
+  currentUrl?: string;
+  currentVariables?: APIVariable[];
+}
+
+export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }: APIDataSourceSelectorProps) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [customUrl, setCustomUrl] = useState(currentUrl || "");
   const [testingUrl, setTestingUrl] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<any>(null);
+  const [variables, setVariables] = useState<APIVariable[]>(currentVariables || []);
 
   useEffect(() => {
     loadEndpoints();
@@ -74,7 +83,7 @@ export function APIDataSourceSelector({ onSelect, currentUrl }: APIDataSourceSel
 
   const handleSelectEndpoint = (endpoint: APIEndpoint) => {
     const url = getFullUrl(endpoint);
-    onSelect(url, endpoint.name);
+    onSelect(url, endpoint.name, variables);
     toast.success(`API "${endpoint.name}" selecionada`);
   };
 
@@ -83,8 +92,22 @@ export function APIDataSourceSelector({ onSelect, currentUrl }: APIDataSourceSel
       toast.error("Digite uma URL válida");
       return;
     }
-    onSelect(customUrl, "API Customizada");
+    onSelect(customUrl, "API Customizada", variables);
     toast.success("URL customizada configurada");
+  };
+
+  const addVariable = () => {
+    setVariables([...variables, { name: "", type: "string", value: "" }]);
+  };
+
+  const updateVariable = (index: number, field: keyof APIVariable, value: string) => {
+    const newVariables = [...variables];
+    newVariables[index][field] = value;
+    setVariables(newVariables);
+  };
+
+  const removeVariable = (index: number) => {
+    setVariables(variables.filter((_, i) => i !== index));
   };
 
   const testApi = async (url: string) => {
@@ -119,6 +142,70 @@ export function APIDataSourceSelector({ onSelect, currentUrl }: APIDataSourceSel
 
   return (
     <div className="space-y-4">
+      {/* Configuração de Variáveis */}
+      <Card className="p-4 bg-muted/30">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold">Variáveis da API</h3>
+          <Button size="sm" variant="outline" onClick={addVariable}>
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar
+          </Button>
+        </div>
+        
+        {variables.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-3">
+            Nenhuma variável configurada. Variáveis sem valor fixo serão solicitadas no preview.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {variables.map((variable, index) => (
+              <div key={index} className="flex gap-2 items-start p-2 bg-background rounded border">
+                <div className="flex-1 space-y-2">
+                  <Input
+                    placeholder="Nome da variável"
+                    value={variable.name}
+                    onChange={(e) => updateVariable(index, "name", e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                  <div className="flex gap-2">
+                    <Select
+                      value={variable.type}
+                      onValueChange={(value) => updateVariable(index, "type", value)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="string">String</SelectItem>
+                        <SelectItem value="number">Number</SelectItem>
+                        <SelectItem value="boolean">Boolean</SelectItem>
+                        <SelectItem value="date">Date</SelectItem>
+                        <SelectItem value="array">Array</SelectItem>
+                        <SelectItem value="object">Object</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      placeholder="Valor (deixe em branco para solicitar no preview)"
+                      value={variable.value}
+                      onChange={(e) => updateVariable(index, "value", e.target.value)}
+                      className="h-8 text-xs flex-1"
+                    />
+                  </div>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => removeVariable(index)}
+                  className="h-8 w-8"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       <Tabs defaultValue="endpoints" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="endpoints">

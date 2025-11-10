@@ -27,6 +27,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   const [loadingApiData, setLoadingApiData] = useState(false);
   const [showTestVariablesDialog, setShowTestVariablesDialog] = useState(false);
   const [apiVariables, setApiVariables] = useState<Array<{ name: string; type: string }>>([]);
+  const [savedApiVariables, setSavedApiVariables] = useState<Array<{ name: string; type: string; value: string }>>([]);
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -595,18 +596,62 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
           setCurrentApiUrl(config.api_url);
           
           // Extrai variáveis da configuração se existirem
+          const allVariables: Array<{ name: string; type: string; value: string }> = [];
+          const varsWithoutValue: Array<{ name: string; type: string }> = [];
+          
           if (config.api_variables && typeof config.api_variables === 'object') {
-            const vars = Object.entries(config.api_variables).map(([name, varData]: [string, any]) => ({
-              name,
-              type: varData?.type || 'string'
-            }));
-            setApiVariables(vars);
+            Object.entries(config.api_variables).forEach(([name, varData]: [string, any]) => {
+              const type = varData?.type || 'string';
+              const value = varData?.value || '';
+              
+              allVariables.push({ name, type, value });
+              
+              // Se não tem valor fixo, precisa solicitar no preview
+              if (!value) {
+                varsWithoutValue.push({ name, type });
+              }
+            });
+            
+            setSavedApiVariables(allVariables);
           }
           
-          // Carrega API em segundo plano sem await
-          loadApiData(config.api_url).catch(err => {
-            console.error("Erro ao carregar API em background:", err);
-          });
+          setApiVariables(varsWithoutValue);
+          
+          // Se todas as variáveis têm valor fixo, carrega API automaticamente
+          if (varsWithoutValue.length === 0 && allVariables.length > 0) {
+            const fixedVars: Record<string, any> = {};
+            allVariables.forEach(v => {
+              if (v.value) {
+                try {
+                  switch (v.type) {
+                    case 'number':
+                      fixedVars[v.name] = parseFloat(v.value);
+                      break;
+                    case 'boolean':
+                      fixedVars[v.name] = v.value === 'true';
+                      break;
+                    case 'date':
+                      fixedVars[v.name] = new Date(v.value).toISOString();
+                      break;
+                    case 'array':
+                      fixedVars[v.name] = JSON.parse(v.value);
+                      break;
+                    case 'object':
+                      fixedVars[v.name] = JSON.parse(v.value);
+                      break;
+                    default:
+                      fixedVars[v.name] = v.value;
+                  }
+                } catch (e) {
+                  fixedVars[v.name] = v.value;
+                }
+              }
+            });
+            
+            loadApiData(config.api_url, fixedVars).catch(err => {
+              console.error("Erro ao carregar API em background:", err);
+            });
+          }
         }
       }
     } catch (error) {
@@ -740,7 +785,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
     }
   };
 
-  const loadApiData = async (url: string) => {
+  const loadApiData = async (url: string, variables?: Record<string, any>) => {
     if (!url || loadingApiData) return; // Previne múltiplas chamadas simultâneas
     
     setLoadingApiData(true);
@@ -748,7 +793,23 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
       
-      const response = await fetch(url, { signal: controller.signal });
+      let response: Response;
+      
+      if (variables && Object.keys(variables).length > 0) {
+        // POST com variáveis
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(variables),
+          signal: controller.signal
+        });
+      } else {
+        // GET simples
+        response = await fetch(url, { signal: controller.signal });
+      }
+      
       clearTimeout(timeoutId);
       
       const result = await response.json();
@@ -832,19 +893,28 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
     }
   };
 
-  const handleApiSelect = async (apiUrl: string, apiName: string) => {
+  const handleApiSelect = async (apiUrl: string, apiName: string, variables: Array<{ name: string; type: string; value: string }>) => {
     if (!reportId) {
       toast.error("Salve o relatório antes de configurar API");
       return;
     }
 
     try {
+      // Converte variáveis para o formato que será salvo
+      const apiVariablesConfig: Record<string, { type: string; value: string }> = {};
+      variables.forEach(v => {
+        if (v.name) {
+          apiVariablesConfig[v.name] = { type: v.type, value: v.value };
+        }
+      });
+
       const { error } = await supabase
         .from("relatorios")
         .update({ 
           configuracoes: { 
             api_url: apiUrl,
-            api_name: apiName 
+            api_name: apiName,
+            api_variables: apiVariablesConfig
           } 
         })
         .eq("id", reportId);
@@ -852,12 +922,51 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       if (error) throw error;
 
       setCurrentApiUrl(apiUrl);
+      
+      // Atualiza apiVariables com variáveis que não têm valor fixo
+      const varsWithoutValue = variables
+        .filter(v => v.name && !v.value)
+        .map(v => ({ name: v.name, type: v.type }));
+      setApiVariables(varsWithoutValue);
+      
       setShowApiDialog(false);
       
-      // Carrega os dados da API
-      await loadApiData(apiUrl);
+      // Se não há variáveis sem valor, carrega dados da API automaticamente
+      if (varsWithoutValue.length === 0) {
+        // Prepara variáveis com valor fixo para enviar
+        const fixedVars: Record<string, any> = {};
+        variables.forEach(v => {
+          if (v.name && v.value) {
+            try {
+              switch (v.type) {
+                case 'number':
+                  fixedVars[v.name] = parseFloat(v.value);
+                  break;
+                case 'boolean':
+                  fixedVars[v.name] = v.value === 'true';
+                  break;
+                case 'date':
+                  fixedVars[v.name] = new Date(v.value).toISOString();
+                  break;
+                case 'array':
+                  fixedVars[v.name] = JSON.parse(v.value);
+                  break;
+                case 'object':
+                  fixedVars[v.name] = JSON.parse(v.value);
+                  break;
+                default:
+                  fixedVars[v.name] = v.value;
+              }
+            } catch (e) {
+              fixedVars[v.name] = v.value;
+            }
+          }
+        });
+        
+        await loadApiData(apiUrl, fixedVars);
+      }
       
-      toast.success(`API "${apiName}" configurada e dados carregados`);
+      toast.success(`API "${apiName}" configurada${varsWithoutValue.length > 0 ? ' (variáveis serão solicitadas no preview)' : ' e dados carregados'}`);
     } catch (error: any) {
       console.error("Erro ao configurar API:", error);
       toast.error("Erro ao configurar API");
@@ -916,7 +1025,38 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
             <Button
               size="sm"
               variant="outline"
-              onClick={() => loadApiData(currentApiUrl)}
+              onClick={() => {
+                // Prepara variáveis com valor fixo
+                const fixedVars: Record<string, any> = {};
+                savedApiVariables.forEach(v => {
+                  if (v.value) {
+                    try {
+                      switch (v.type) {
+                        case 'number':
+                          fixedVars[v.name] = parseFloat(v.value);
+                          break;
+                        case 'boolean':
+                          fixedVars[v.name] = v.value === 'true';
+                          break;
+                        case 'date':
+                          fixedVars[v.name] = new Date(v.value).toISOString();
+                          break;
+                        case 'array':
+                          fixedVars[v.name] = JSON.parse(v.value);
+                          break;
+                        case 'object':
+                          fixedVars[v.name] = JSON.parse(v.value);
+                          break;
+                        default:
+                          fixedVars[v.name] = v.value;
+                      }
+                    } catch (e) {
+                      fixedVars[v.name] = v.value;
+                    }
+                  }
+                });
+                loadApiData(currentApiUrl, fixedVars);
+              }}
               disabled={loadingApiData}
             >
               {loadingApiData ? (
@@ -967,6 +1107,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
             <APIDataSourceSelector 
               onSelect={handleApiSelect}
               currentUrl={currentApiUrl}
+              currentVariables={savedApiVariables}
             />
             {apiData && (
               <div className="mt-4 p-4 bg-muted/50 rounded-lg">

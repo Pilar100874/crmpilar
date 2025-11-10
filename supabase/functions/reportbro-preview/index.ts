@@ -115,18 +115,61 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
       throw new Error('API não configurada');
     }
 
-    // Fetch API data - use POST com variáveis se houver, senão GET com paginação
+    // Prepara variáveis combinando fixas + teste
+    const allVariables: Record<string, any> = {};
+    
+    // 1. Adiciona variáveis com valor fixo da configuração
+    if (cfg.api_variables && typeof cfg.api_variables === 'object') {
+      Object.entries(cfg.api_variables).forEach(([name, varData]: [string, any]) => {
+        const value = varData?.value;
+        const type = varData?.type || 'string';
+        
+        if (value) {
+          // Converte valor fixo
+          try {
+            switch (type) {
+              case 'number':
+                allVariables[name] = parseFloat(value);
+                break;
+              case 'boolean':
+                allVariables[name] = value === 'true';
+                break;
+              case 'date':
+                allVariables[name] = new Date(value).toISOString();
+                break;
+              case 'array':
+                allVariables[name] = JSON.parse(value);
+                break;
+              case 'object':
+                allVariables[name] = JSON.parse(value);
+                break;
+              default:
+                allVariables[name] = value;
+            }
+          } catch (e) {
+            allVariables[name] = value;
+          }
+        }
+      });
+    }
+    
+    // 2. Sobrescreve/adiciona variáveis de teste (variáveis sem valor fixo)
+    if (testVariables && Object.keys(testVariables).length > 0) {
+      Object.assign(allVariables, testVariables);
+    }
+    
+    // Fetch API data - use POST se houver variáveis, senão GET com paginação
     let apiResp: Response;
     
-    if (testVariables && Object.keys(testVariables).length > 0) {
-      // POST com variáveis de teste
-      console.log('Fetching data from API with test variables:', apiUrl);
+    if (Object.keys(allVariables).length > 0) {
+      // POST com variáveis
+      console.log('Fetching data from API with variables:', apiUrl, allVariables);
       apiResp = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(testVariables),
+        body: JSON.stringify(allVariables),
       });
     } else {
       // GET com paginação (lógica original)
