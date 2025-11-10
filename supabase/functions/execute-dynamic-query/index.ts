@@ -15,32 +15,65 @@ interface SqlConfig {
   query: string;
 }
 
-async function executeSqlServerQueryViaProxy(proxyUrl: string, config: SqlConfig, params: Record<string, any> = {}) {
-  console.log('Routing SQL Server query via proxy...');
-  const payload = {
+async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
+  console.log('Executing SQL Server query...');
+  console.log('Query parameters:', params);
+  
+  console.log('Connecting to SQL Server:', config.server);
+  
+  const sqlConfig = {
     server: config.server,
-    database: config.database,
-    username: config.username,
+    port: 1433,
+    user: config.username,
     password: config.password,
-    query: config.query,
-    params,
+    database: config.database,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true,
+      enableArithAbort: true,
+    },
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
+    },
+    connectionTimeout: 60000,
+    requestTimeout: 60000,
   };
 
-  const resp = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error(`Proxy HTTP ${resp.status}: ${text}`);
+  try {
+    // Dynamic import to avoid build-time type checking issues
+    const sqlModule = await eval('import("npm:mssql@^10")');
+    const sql = sqlModule.default || sqlModule;
+    
+    const pool = await sql.connect(sqlConfig);
+    console.log('Connected successfully. Executing query...');
+    
+    const request = pool.request();
+    
+    // Add parameters to the request
+    for (const [key, value] of Object.entries(params)) {
+      console.log(`Adding parameter @${key} = ${value}`);
+      request.input(key, value);
+    }
+    
+    const result = await request.query(config.query);
+    console.log('Query executed successfully. Rows:', result.recordset?.length || 0);
+    
+    await pool.close();
+    
+    return result.recordset || [];
+  } catch (error) {
+    console.error('SQL Server query error:', error);
+    try {
+      const sqlModule = await eval('import("npm:mssql@^10")');
+      const sql = sqlModule.default || sqlModule;
+      await sql.close();
+    } catch (closeError) {
+      console.error('Error closing connection:', closeError);
+    }
+    throw error;
   }
-
-  const data = await resp.json();
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  return data;
 }
 
 serve(async (req) => {
@@ -121,46 +154,17 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
-    } else if (apiConfig.database_type === 'sqlserver') {
-      // Get database connection details if connection_id is specified
-      let connectionConfig: any = apiConfig;
-      if (apiConfig.connection_id) {
-        const { data: connData, error: connError } = await supabase
-          .from('database_connections')
-          .select('*')
-          .eq('id', apiConfig.connection_id)
-          .eq('active', true)
-          .maybeSingle();
-        
-        if (!connError && connData) {
-          connectionConfig = {
-            ...apiConfig,
-            sql_server: connData.sql_server,
-            sql_database: connData.sql_database,
-            sql_username: connData.sql_username,
-            sql_password: connData.sql_password,
-            proxy_url: connData.proxy_url,
-          };
-        }
-      }
-
-      const proxyUrl = connectionConfig.proxy_url;
-      if (!proxyUrl) {
-        return new Response(
-          JSON.stringify({ error: 'Nenhuma proxy_url configurada para SQL Server. Cadastre em Configurações > Conexões (campo "Proxy URL").' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
+    } else {
+      // Execute SQL Server query
       const sqlConfig: SqlConfig = {
-        server: connectionConfig.sql_server,
-        database: connectionConfig.sql_database,
-        username: connectionConfig.sql_username,
-        password: connectionConfig.sql_password,
+        server: apiConfig.sql_server,
+        database: apiConfig.sql_database,
+        username: apiConfig.sql_username,
+        password: apiConfig.sql_password,
         query: apiConfig.query,
       };
 
-      const result = await executeSqlServerQueryViaProxy(proxyUrl, sqlConfig, params);
+      const result = await executeSqlServerQuery(sqlConfig, params);
 
       return new Response(
         JSON.stringify({
@@ -172,11 +176,6 @@ serve(async (req) => {
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ error: `Database type ${apiConfig.database_type} not supported` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
   } catch (error: any) {
