@@ -85,6 +85,12 @@ serve(async (req) => {
     };
 
     console.log("🚀 Chamando API ReportBro...");
+    console.log("📦 Payload sendo enviado (resumo):", {
+      hasReport: !!reportPayload.report,
+      reportKeys: Object.keys(reportPayload.report || {}),
+      dataKeys: Object.keys(reportPayload.data || {}),
+      apiDataLength: parameters.api_data?.length || 0,
+    });
 
     const pdfResponse = await fetch(reportBroApiUrl, {
       method: 'POST',
@@ -97,11 +103,28 @@ serve(async (req) => {
     if (!pdfResponse.ok) {
       const errorText = await pdfResponse.text();
       console.error("❌ Erro ReportBro API:", errorText);
-      throw new Error(`ReportBro API error: ${pdfResponse.status}`);
+      throw new Error(`ReportBro API error: ${pdfResponse.status} - ${errorText}`);
     }
+
+    const contentType = pdfResponse.headers.get('content-type');
+    console.log("📄 Content-Type da resposta:", contentType);
 
     let pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
     console.log("✅ PDF gerado, tamanho:", pdfBytes.length);
+
+    // Verificar se é realmente um PDF válido (deve começar com %PDF)
+    if (pdfBytes.length < 100) {
+      const responseText = new TextDecoder().decode(pdfBytes);
+      console.error("❌ Resposta muito pequena:", responseText);
+      throw new Error(`Resposta inválida da API ReportBro: ${responseText}`);
+    }
+
+    const pdfHeader = new TextDecoder().decode(pdfBytes.slice(0, 4));
+    if (pdfHeader !== '%PDF') {
+      const responseText = new TextDecoder().decode(pdfBytes.slice(0, 200));
+      console.error("❌ Resposta não é um PDF:", responseText);
+      throw new Error(`API ReportBro retornou conteúdo inválido: ${responseText}`);
+    }
 
     // 5. Adicionar retângulo branco no rodapé (cobrir marca d'água)
     try {
