@@ -6,7 +6,7 @@ import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
-import { Globe, X, Save } from "lucide-react";
+import { Globe, X, Save, FileText } from "lucide-react";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -20,6 +20,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   const [showApiDialog, setShowApiDialog] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [reportName, setReportName] = useState<string>("");
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
   const [apiData, setApiData] = useState<any>(null);
   const [loadingApiData, setLoadingApiData] = useState(false);
@@ -543,6 +544,9 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
         return;
       }
 
+      // Carrega o nome do relatório
+      setReportName(data.nome || "Relatório sem nome");
+
       if (reportBroRef.current) {
         let layoutData: any = null;
         if (data?.layout_json) {
@@ -853,51 +857,60 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   // Mantém comportamento original de exclusão via ReportBro (tecla Delete/Backspace e botão padrão)
   // Nenhuma captura adicional de teclado para não interferir nos handlers internos do designer.
   return (
-    <div className="h-full flex flex-col bg-background relative">
-      {/* Botões de controle - API (esquerda) e Sair (direita) */}
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
-        <Button
-          size="sm"
-          onClick={() => setShowApiDialog(true)}
-          className="gap-2 shadow-lg"
-          variant={currentApiUrl ? "default" : "outline"}
-        >
-          <Globe className="h-4 w-4" />
-          API de Dados
-          {apiData && (
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-background/20 rounded">
-              {apiData.length}
-            </span>
-          )}
-        </Button>
-        {currentApiUrl && apiData && (
+    <div className="h-full flex flex-col bg-background">
+      {/* Barra de Título */}
+      <div className="bg-card border-b px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <FileText className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Designer de Relatórios</h1>
+            <p className="text-sm text-muted-foreground">{reportName}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Botão API */}
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => loadApiData(currentApiUrl)}
-            disabled={loadingApiData}
-            className="shadow-lg"
+            onClick={() => setShowApiDialog(true)}
+            className="gap-2"
+            variant={currentApiUrl ? "default" : "outline"}
           >
-            {loadingApiData ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-            ) : (
-              "↻"
+            <Globe className="h-4 w-4" />
+            API de Dados
+            {apiData && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-background/20 rounded">
+                {apiData.length}
+              </span>
             )}
           </Button>
-        )}
-      </div>
-
-      {/* Botão de Sair - 5cm da direita */}
-      <div className="absolute top-2 right-[5cm] z-10">
-        <Button
-          size="sm"
-          onClick={handleExitClick}
-          variant="outline"
-          className="gap-2 shadow-lg"
-        >
-          <X className="h-4 w-4" />
-          Sair
-        </Button>
+          
+          {currentApiUrl && apiData && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => loadApiData(currentApiUrl)}
+              disabled={loadingApiData}
+            >
+              {loadingApiData ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              ) : (
+                "↻"
+              )}
+            </Button>
+          )}
+          
+          {/* Botão Sair */}
+          <Button
+            size="sm"
+            onClick={handleExitClick}
+            variant="outline"
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Sair
+          </Button>
+        </div>
       </div>
 
       {/* Designer Container - ReportBro com toolbar padrão */}
