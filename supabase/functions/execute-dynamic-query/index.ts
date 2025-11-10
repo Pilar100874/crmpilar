@@ -15,66 +15,32 @@ interface SqlConfig {
   query: string;
 }
 
-async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
-  console.log('Executing SQL Server query...');
-  console.log('Query parameters:', params);
-  console.log('Connecting to SQL Server:', config.server);
-  
-  const sqlConfig = {
+async function executeSqlServerQueryViaProxy(proxyUrl: string, config: SqlConfig, params: Record<string, any> = {}) {
+  console.log('Routing SQL Server query via proxy...');
+  const payload = {
     server: config.server,
-    port: 1433,
-    user: config.username,
-    password: config.password,
     database: config.database,
-    options: {
-      encrypt: false,
-      trustServerCertificate: true,
-      enableArithAbort: true,
-    },
-    pool: {
-      max: 10,
-      min: 0,
-      idleTimeoutMillis: 30000
-    },
-    connectionTimeout: 60000,
-    requestTimeout: 60000,
+    username: config.username,
+    password: config.password,
+    query: config.query,
+    params,
   };
 
-  try {
-    // Dynamic import using Function to bypass TypeScript checking
-    const importFn = new Function('spec', 'return import(spec)');
-    const sql = await importFn('npm:mssql@^10');
-    const mssql = sql.default || sql;
-    
-    const pool = await mssql.connect(sqlConfig);
-    console.log('Connected successfully. Executing query...');
-    
-    const request = pool.request();
-    
-    // Add parameters to the request
-    for (const [key, value] of Object.entries(params)) {
-      console.log(`Adding parameter @${key} = ${value}`);
-      request.input(key, value);
-    }
-    
-    const result = await request.query(config.query);
-    console.log('Query executed successfully. Rows:', result.recordset?.length || 0);
-    
-    await pool.close();
-    
-    return result.recordset || [];
-  } catch (error) {
-    console.error('SQL Server query error:', error);
-    try {
-      const importFn = new Function('spec', 'return import(spec)');
-      const sql = await importFn('npm:mssql@^10');
-      const mssql = sql.default || sql;
-      await mssql.close();
-    } catch (closeError) {
-      console.error('Error closing connection:', closeError);
-    }
-    throw error;
+  const resp = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`Proxy HTTP ${resp.status}: ${text}`);
   }
+
+  const data = await resp.json();
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.data)) return data.data;
+  return data;
 }
 
 serve(async (req) => {
@@ -164,7 +130,7 @@ serve(async (req) => {
           .select('*')
           .eq('id', apiConfig.connection_id)
           .eq('active', true)
-          .single();
+          .maybeSingle();
         
         if (!connError && connData) {
           connectionConfig = {
@@ -173,11 +139,19 @@ serve(async (req) => {
             sql_database: connData.sql_database,
             sql_username: connData.sql_username,
             sql_password: connData.sql_password,
+            proxy_url: connData.proxy_url,
           };
         }
       }
 
-      // Execute SQL Server query
+      const proxyUrl = connectionConfig.proxy_url;
+      if (!proxyUrl) {
+        return new Response(
+          JSON.stringify({ error: 'Nenhuma proxy_url configurada para SQL Server. Cadastre em Configurações > Conexões (campo "Proxy URL").' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const sqlConfig: SqlConfig = {
         server: connectionConfig.sql_server,
         database: connectionConfig.sql_database,
@@ -186,7 +160,7 @@ serve(async (req) => {
         query: apiConfig.query,
       };
 
-      const result = await executeSqlServerQuery(sqlConfig, params);
+      const result = await executeSqlServerQueryViaProxy(proxyUrl, sqlConfig, params);
 
       return new Response(
         JSON.stringify({
