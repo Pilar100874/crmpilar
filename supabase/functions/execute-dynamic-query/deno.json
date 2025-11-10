@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "mssql": "npm:mssql@^10",
+    "@types/mssql": "npm:@types/mssql@^9"
+  },
+  "nodeModulesDir": "auto"
+}
