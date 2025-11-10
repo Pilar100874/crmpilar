@@ -35,13 +35,79 @@ serve(async (req) => {
 
     console.log("✅ Relatório encontrado:", relatorio.nome);
 
-    // 2. Buscar dados da API se configurada
+    // 2. Preparar parâmetros e converter tipos
+    const convertedParams: Record<string, any> = {};
+    if (apiVariables && typeof apiVariables === 'object') {
+      for (const [key, varData] of Object.entries(apiVariables)) {
+        const isVarObject = typeof varData === 'object' && varData !== null && 'value' in varData && 'type' in varData;
+        const value = isVarObject ? (varData as any).value : String(varData);
+        const type = isVarObject ? (varData as any).type : 'string';
+        
+        // Converter tipo
+        try {
+          switch (type) {
+            case 'number':
+              convertedParams[key] = value ? parseFloat(value) : 0;
+              break;
+            case 'boolean':
+              convertedParams[key] = value === 'true' || value === '1' || value === true;
+              break;
+            case 'date':
+              convertedParams[key] = value ? new Date(value).toISOString() : null;
+              break;
+            case 'array':
+              convertedParams[key] = value ? JSON.parse(value) : [];
+              break;
+            case 'object':
+              convertedParams[key] = value ? JSON.parse(value) : {};
+              break;
+            default: // string
+              convertedParams[key] = String(value);
+          }
+        } catch (convError) {
+          console.warn(`⚠️ Erro ao converter ${key}:`, convError);
+          convertedParams[key] = value; // Mantém valor original
+        }
+      }
+    }
+    
+    console.log("🔧 Parâmetros convertidos:", convertedParams);
+
+    // 3. Buscar dados da API se configurada
     let apiData: any[] = [];
     if (relatorio.configuracoes?.api_url) {
-      console.log("🔗 Buscando dados da API:", relatorio.configuracoes.api_url);
+      const apiUrl = relatorio.configuracoes.api_url;
+      console.log("🔗 Buscando dados da API:", apiUrl);
       
       try {
-        const apiResponse = await fetch(relatorio.configuracoes.api_url);
+        // Montar URL com query parameters
+        const url = new URL(apiUrl);
+        Object.entries(convertedParams).forEach(([key, value]) => {
+          url.searchParams.append(key, String(value));
+        });
+        
+        console.log("📡 URL completa:", url.toString());
+        
+        const apiResponse = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!apiResponse.ok) {
+          const errorText = await apiResponse.text();
+          console.error(`❌ API retornou status ${apiResponse.status}:`, errorText);
+          throw new Error(`API error: ${apiResponse.status}`);
+        }
+        
+        const contentType = apiResponse.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          const responseText = await apiResponse.text();
+          console.error("❌ API não retornou JSON:", responseText.substring(0, 200));
+          throw new Error('API não retornou JSON válido');
+        }
+        
         const apiResult = await apiResponse.json();
         
         // Suporta APIs que retornam array direto ou objeto { data }
@@ -60,13 +126,13 @@ serve(async (req) => {
       }
     }
 
-    // 3. Preparar dados do relatório
+    // 4. Preparar dados do relatório
     const layoutData = typeof relatorio.layout_json === 'string' 
       ? JSON.parse(relatorio.layout_json)
       : relatorio.layout_json;
 
-    // Adicionar variáveis customizadas aos parâmetros
-    const parameters: Record<string, any> = { ...apiVariables };
+    // Usar parâmetros convertidos
+    const parameters: Record<string, any> = { ...convertedParams };
     
     // Se tem dados da API, adicionar ao parâmetro api_data
     if (apiData.length > 0) {
@@ -75,7 +141,7 @@ serve(async (req) => {
 
     console.log("📝 Parâmetros finais para o relatório:", Object.keys(parameters));
 
-    // 4. Gerar PDF usando ReportBro API (PUT para obter key)
+    // 5. Gerar PDF usando ReportBro API (PUT para obter key)
     const reportBroApiUrl = 'https://www.reportbro.com/report/run';
     
     const reportPayload = {
@@ -111,7 +177,7 @@ serve(async (req) => {
     const reportKey = keyMatch[1];
     console.log("✅ Key obtida:", reportKey);
 
-    // 5. Polling para buscar o PDF gerado
+    // 6. Polling para buscar o PDF gerado
     console.log("⏳ Aguardando geração do PDF...");
     let pdfBytes: Uint8Array | null = null;
     const maxAttempts = 60; // 2 minutos (60 x 2s)
@@ -141,7 +207,7 @@ serve(async (req) => {
       throw new Error('Timeout: PDF não foi gerado a tempo');
     }
 
-    // 6. Adicionar retângulo branco no rodapé (cobrir marca d'água)
+    // 7. Adicionar retângulo branco no rodapé (cobrir marca d'água)
     try {
       const pdfDoc = await PDFDocument.load(pdfBytes);
       const pages = pdfDoc.getPages();
@@ -167,7 +233,7 @@ serve(async (req) => {
       // Continua com o PDF original
     }
 
-    // 7. Salvar PDF no storage
+    // 8. Salvar PDF no storage
     const fileName = `relatorio_${relatorioId}_${Date.now()}.pdf`;
     const filePath = `relatorios/${fileName}`;
 
@@ -183,7 +249,7 @@ serve(async (req) => {
       throw new Error(`Erro ao salvar PDF: ${uploadError.message}`);
     }
 
-    // 8. Obter URL pública
+    // 9. Obter URL pública
     const { data: urlData } = supabase.storage
       .from('bot-media')
       .getPublicUrl(filePath);
