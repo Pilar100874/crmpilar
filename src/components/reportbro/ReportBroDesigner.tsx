@@ -23,6 +23,8 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   const [isSaving, setIsSaving] = useState(false);
   const [reportName, setReportName] = useState<string>("");
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
+  const [apiHttpMethod, setApiHttpMethod] = useState<string>("GET");
+  const [apiParamType, setApiParamType] = useState<string>("query");
   const [apiData, setApiData] = useState<any>(null);
   const [loadingApiData, setLoadingApiData] = useState(false);
   const [showTestVariablesDialog, setShowTestVariablesDialog] = useState(false);
@@ -594,6 +596,10 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
         const config = data.configuracoes as any;
         if (config.api_url) {
           setCurrentApiUrl(config.api_url);
+          const method = (config.http_method || 'GET').toUpperCase();
+          const ptype = config.param_type || 'query';
+          setApiHttpMethod(method);
+          setApiParamType(ptype);
           
           // Extrai variáveis da configuração se existirem
           const allVariables: Array<{ name: string; type: string; value: string }> = [];
@@ -648,7 +654,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
               }
             });
             
-            loadApiData(config.api_url, fixedVars).catch(err => {
+            loadApiData(config.api_url, fixedVars, { httpMethod: method, paramType: ptype }).catch(err => {
               console.error("Erro ao carregar API em background:", err);
             });
           }
@@ -785,125 +791,168 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
     }
   };
 
-  const loadApiData = async (url: string, variables?: Record<string, any>) => {
-    if (!url || loadingApiData) return; // Previne múltiplas chamadas simultâneas
+const loadApiData = async (
+  url: string,
+  variables?: Record<string, any>,
+  opts?: { httpMethod?: string; paramType?: string }
+) => {
+  if (!url || loadingApiData) return; // Previne múltiplas chamadas simultâneas
+  
+  setLoadingApiData(true);
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
     
-    setLoadingApiData(true);
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-      
-      let response: Response;
-      
-      if (variables && Object.keys(variables).length > 0) {
-        // GET com variáveis na query string
-        const queryParams = new URLSearchParams();
-        Object.entries(variables).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== '') {
-            queryParams.append(key, String(value));
-          }
-        });
-        
-        const urlWithParams = queryParams.toString() 
-          ? `${url}?${queryParams.toString()}`
-          : url;
-        
-        response = await fetch(urlWithParams, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal
-        });
-      } else {
-        // GET simples
-        response = await fetch(url, { signal: controller.signal });
+    const method = (opts?.httpMethod || apiHttpMethod || 'GET').toUpperCase();
+    const paramType = (opts?.paramType || apiParamType || 'query');
+    let response: Response;
+
+    let requestUrl = url;
+    const headers: Record<string, string> = { 'Accept': 'application/json' };
+    let body: any = undefined;
+
+    const vars = variables || {};
+
+    if (paramType === 'query') {
+      const queryParams = new URLSearchParams();
+      Object.entries(vars).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          queryParams.append(key, String(value));
+        }
+      });
+      const qs = queryParams.toString();
+      if (qs) requestUrl = `${url}?${qs}`;
+    } else if (paramType === 'json' && method !== 'GET') {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(vars);
+    } else if (paramType === 'formdata' && method !== 'GET') {
+      const fd = new FormData();
+      Object.entries(vars).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) fd.append(key, String(value));
+      });
+      body = fd;
+    } else if (paramType === 'header') {
+      const headerValue = Object.entries(vars).map(([name, value]) => {
+        const saved = savedApiVariables.find(v => v.name === name);
+        const t = saved?.type || (typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'boolean' : 'string');
+        return `${name},${value ?? ''},${t}`;
+      }).join(';');
+      if (headerValue) headers['keys'] = headerValue;
+    }
+    
+    const fetchOptions: RequestInit = {
+      method,
+      headers,
+      signal: controller.signal
+    };
+    if (body && method !== 'GET') fetchOptions.body = body;
+
+    response = await fetch(requestUrl, fetchOptions);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(text || `Erro HTTP ${response.status}`);
+    }
+
+    let result: any;
+    const ct = response.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      result = await response.json();
+    } else {
+      const text = await response.text();
+      try {
+        result = JSON.parse(text);
+      } catch {
+        throw new Error('Resposta da API não é JSON válido');
       }
+    }
+    
+    // Suporta APIs que retornam array direto, objeto { data }, ou item único
+    let data: any[] = [];
+    if (Array.isArray(result)) {
+      data = result as any[];
+    } else if (result && typeof result === 'object' && 'data' in (result as any)) {
+      const r: any = result as any;
+      data = Array.isArray(r.data) ? r.data : [r.data];
+    } else if (result != null) {
+      data = [result];
+    }
+    
+    if (data.length > 0) {
+      setApiData(data);
       
-      clearTimeout(timeoutId);
-      
-      const result = await response.json();
-      
-      // Suporta APIs que retornam array direto, objeto { data }, ou item único
-      let data: any[] = [];
-      if (Array.isArray(result)) {
-        data = result as any[];
-      } else if (result && typeof result === 'object' && 'data' in (result as any)) {
-        const r: any = result as any;
-        data = Array.isArray(r.data) ? r.data : [r.data];
-      } else if (result != null) {
-        data = [result];
-      }
-      
-      if (data.length > 0) {
-        setApiData(data);
-        
-        // Adiciona os dados da API como parâmetros no ReportBro
-        if (reportBroRef.current) {
-          try {
-            const report = reportBroRef.current.getReport();
-            
-            // Extrai campos do primeiro registro
-            const firstItem = data[0];
-            const fields = Object.keys(firstItem || {});
-            
-            // Remove parâmetro api_data se já existir
-            const existingParams = report.parameters || [];
-            const filteredParams = existingParams.filter((p: any) => p.name !== 'api_data');
-            
-            // Cria parâmetro do tipo array->map com testData
-            const apiParam = {
-              id: Date.now(),
-              name: 'api_data',
-              type: 'array',
-              arrayItemType: 'map',
+      // Adiciona os dados da API como parâmetros no ReportBro
+      if (reportBroRef.current) {
+        try {
+          const report = reportBroRef.current.getReport();
+          
+          // Extrai campos do primeiro registro
+          const firstItem = data[0];
+          const fields = Object.keys(firstItem || {});
+          
+          // Remove parâmetro api_data se já existir
+          const existingParams = report.parameters || [];
+          const filteredParams = existingParams.filter((p: any) => p.name !== 'api_data');
+          
+          // Cria parâmetro do tipo array->map com testData
+          const apiParam = {
+            id: Date.now(),
+            name: 'api_data',
+            type: 'array',
+            arrayItemType: 'map',
+            eval: false,
+            nullable: false,
+            pattern: '',
+            expression: '',
+            showOnlyNameType: false,
+            children: fields.map((fieldName, idx) => ({
+              id: Date.now() + idx + 1,
+              name: fieldName,
+              type: (typeof firstItem[fieldName] === 'number') ? 'number' : (typeof firstItem[fieldName] === 'boolean') ? 'boolean' : 'string',
               eval: false,
-              nullable: false,
+              nullable: true,
               pattern: '',
               expression: '',
-              showOnlyNameType: false,
-              children: fields.map((fieldName, idx) => ({
-                id: Date.now() + idx + 1,
-                name: fieldName,
-                type: (typeof firstItem[fieldName] === 'number') ? 'number' : (typeof firstItem[fieldName] === 'boolean') ? 'boolean' : 'string',
-                eval: false,
-                nullable: true,
-                pattern: '',
-                expression: '',
-                showOnlyNameType: false
-              })),
-              testData: JSON.stringify(data)
-            };
-            
-            filteredParams.push(apiParam);
-            report.parameters = filteredParams;
-            
-            // Recarrega o relatório com os novos parâmetros
-            reportBroRef.current.load(report);
-            
-            console.log('Parâmetros adicionados:', apiParam);
-            toast.success(`${data.length} registros da API disponíveis. Use 'api_data' no relatório.`);
-          } catch (error) {
-            console.error('Erro ao adicionar dados ao ReportBro:', error);
-            toast.warning(`${data.length} registros carregados mas erro ao adicionar: ${error}`);
-          }
+              showOnlyNameType: false
+            })),
+            testData: JSON.stringify(data)
+          };
+          
+          filteredParams.push(apiParam);
+          report.parameters = filteredParams;
+          
+          // Recarrega o relatório com os novos parâmetros
+          reportBroRef.current.load(report);
+          
+          console.log('Parâmetros adicionados:', apiParam);
+          toast.success(`${data.length} registros da API disponíveis. Use 'api_data' no relatório.`);
+        } catch (error) {
+          console.error('Erro ao adicionar dados ao ReportBro:', error);
+          toast.warning(`${data.length} registros carregados mas erro ao adicionar: ${error}`);
         }
-      } else {
-        toast.error('API não retornou dados válidos');
       }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        toast.error("Timeout ao carregar dados da API");
-      } else {
-        console.error("Erro ao carregar dados da API:", error);
-        toast.error("Erro ao carregar dados da API");
-      }
-    } finally {
-      setLoadingApiData(false);
+    } else {
+      toast.error('API não retornou dados válidos');
     }
-  };
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      toast.error("Timeout ao carregar dados da API");
+    } else {
+      console.error("Erro ao carregar dados da API:", error);
+      toast.error("Erro ao carregar dados da API");
+    }
+  } finally {
+    setLoadingApiData(false);
+  }
+};
 
-  const handleApiSelect = async (apiUrl: string, apiName: string, variables: Array<{ name: string; type: string; value: string }>) => {
+  const handleApiSelect = async (
+    apiUrl: string,
+    apiName: string,
+    variables: Array<{ name: string; type: string; value: string }>,
+    options?: { httpMethod?: string; paramType?: string }
+  ) => {
     if (!reportId) {
       toast.error("Salve o relatório antes de configurar API");
       return;
@@ -918,13 +967,18 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
         }
       });
 
+      const http_method = options?.httpMethod || 'GET';
+      const param_type = options?.paramType || 'query';
+
       const { error } = await supabase
         .from("relatorios")
         .update({ 
           configuracoes: { 
             api_url: apiUrl,
             api_name: apiName,
-            api_variables: apiVariablesConfig
+            api_variables: apiVariablesConfig,
+            http_method,
+            param_type
           } 
         })
         .eq("id", reportId);
@@ -932,6 +986,8 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       if (error) throw error;
 
       setCurrentApiUrl(apiUrl);
+      setApiHttpMethod(http_method);
+      setApiParamType(param_type);
       
       // Atualiza apiVariables com variáveis que não têm valor fixo
       const varsWithoutValue = variables
@@ -973,7 +1029,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
           }
         });
         
-        await loadApiData(apiUrl, fixedVars);
+        await loadApiData(apiUrl, fixedVars, { httpMethod: http_method, paramType: param_type });
       }
       
       toast.success(`API "${apiName}" configurada${varsWithoutValue.length > 0 ? ' (variáveis serão solicitadas no preview)' : ' e dados carregados'}`);

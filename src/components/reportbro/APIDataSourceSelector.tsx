@@ -30,7 +30,12 @@ interface APIVariable {
 }
 
 interface APIDataSourceSelectorProps {
-  onSelect: (apiUrl: string, apiName: string, variables: APIVariable[]) => void;
+  onSelect: (
+    apiUrl: string,
+    apiName: string,
+    variables: APIVariable[],
+    options?: { httpMethod?: string; paramType?: string; isCustom?: boolean }
+  ) => void;
   currentUrl?: string;
   currentVariables?: APIVariable[];
 }
@@ -148,18 +153,21 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
       return;
     }
     const url = getFullUrl(selectedEndpoint);
-    onSelect(url, selectedEndpoint.name, variables);
+    const derivedMethod = selectedEndpoint.http_method || "GET";
+    // tenta inferir paramType dos parâmetros salvos
+    const derivedParamType = (selectedEndpoint.parameters && selectedEndpoint.parameters[0]?.param_type) || "query";
+    onSelect(url, selectedEndpoint.name, variables, { httpMethod: derivedMethod, paramType: derivedParamType, isCustom: !!selectedEndpoint.is_custom });
     toast.success(`API "${selectedEndpoint.name}" configurada com sucesso`);
   };
 
-  const handleSelectCustomUrl = () => {
-    if (!customUrl.trim()) {
-      toast.error("Digite uma URL válida");
-      return;
-    }
-    onSelect(customUrl, customApiName || "API Customizada", variables);
-    toast.success("URL customizada configurada");
-  };
+const handleSelectCustomUrl = () => {
+  if (!customUrl.trim()) {
+    toast.error("Digite uma URL válida");
+    return;
+  }
+  onSelect(customUrl, customApiName || "API Customizada", variables, { httpMethod, paramType, isCustom: true });
+  toast.success("URL customizada configurada");
+};
 
   const loadCustomEndpoint = (endpoint: APIEndpoint) => {
     setSelectedCustomEndpoint(endpoint);
