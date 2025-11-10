@@ -18,8 +18,6 @@ import {
   Megaphone,
   LogOut,
   Globe,
-  Building2,
-  User as UserIcon,
   ChevronDown,
   ChevronRight,
   Plus,
@@ -33,8 +31,6 @@ import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import logo from "@/assets/logo_branco_sidebar.png";
-import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
-import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { LayoutContext } from "@/contexts/LayoutContext";
 
@@ -71,8 +67,8 @@ const menuItems: MenuItem[] = [
     title: "Listas", 
     icon: FileText,
     subItems: [
-      { id: "Contatos", title: "Contatos", url: "/contatos", icon: UserIcon },
-      { id: "Empresas", title: "Empresas", url: "/empresas", icon: Building2 },
+      { id: "Contatos", title: "Contatos", url: "/contatos", icon: Users },
+      { id: "Empresas", title: "Empresas", url: "/empresas", icon: FileText },
       { id: "Todos", title: "Todos", url: "/todos", icon: Users },
     ]
   },
@@ -131,8 +127,6 @@ export default function Layout({ children }: LayoutProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
-  const [showUsuarioSelector, setShowUsuarioSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
@@ -319,41 +313,8 @@ export default function Layout({ children }: LayoutProps) {
             <img 
               src={logo} 
               alt="Pilar Logo" 
-              className="h-10 w-18 object-contain mb-3"
+              className="h-10 w-18 object-contain"
             />
-            {/* Informações do usuário e estabelecimento */}
-            <div className="w-full px-1 space-y-2">
-              {estabelecimentoName && isAdmin && (
-                <button
-                  onClick={() => setShowEstabelecimentoSelector(true)}
-                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer"
-                >
-                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                    {estabelecimentoName}
-                  </span>
-                </button>
-              )}
-              {estabelecimentoName && !isAdmin && (
-                <div className="flex flex-col items-center">
-                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                    {estabelecimentoName}
-                  </span>
-                </div>
-              )}
-              {userName && (
-                <button
-                  onClick={() => setShowUsuarioSelector(true)}
-                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
-                >
-                  <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
-                    {userName}
-                  </span>
-                </button>
-              )}
-            </div>
           </div>
 
           <ScrollArea className="flex-1 bg-sidebar">
@@ -493,21 +454,6 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </main>
       </div>
-
-      <EstabelecimentoSelector
-        open={showEstabelecimentoSelector}
-        onSelectEstabelecimento={(estabelecimentoId) => {
-          setShowEstabelecimentoSelector(false);
-          window.location.reload(); // Recarrega a página para aplicar o novo estabelecimento
-        }}
-        onClose={() => setShowEstabelecimentoSelector(false)}
-      />
-
-      <UsuarioSelector
-        open={showUsuarioSelector}
-        onClose={() => setShowUsuarioSelector(false)}
-        estabelecimentoId={estabelecimentoId}
-      />
     </SidebarProvider>
     </LayoutContext.Provider>
   );
