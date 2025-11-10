@@ -233,36 +233,51 @@ export default function Layout({ children }: LayoutProps) {
       if (!user) return;
 
       try {
+        console.log("🔍 Buscando dados do usuário:", { 
+          userId: user.id, 
+          email: user.email, 
+          isAdmin 
+        });
+
         // Buscar nome do usuário
         if (isAdmin) {
-          const { data: adminData } = await supabase
+          const { data: adminData, error: adminError } = await supabase
             .from("administradores")
             .select("nome")
             .eq("id", user.id)
             .maybeSingle();
           
-          setUserName(adminData?.nome || "Administrador");
+          console.log("👤 Resultado busca administrador:", { adminData, adminError });
+          
+          // Define um nome padrão baseado no email caso não encontre na tabela
+          setUserName(adminData?.nome || user.email?.split("@")[0] || "Administrador");
         } else {
-          const { data: userData } = await supabase
+          const { data: userData, error: userError } = await supabase
             .from("usuarios")
             .select("nome")
             .ilike("email", user.email || "")
             .maybeSingle();
+          
+          console.log("👤 Resultado busca usuário:", { userData, userError });
           
           setUserName(userData?.nome || user.email?.split("@")[0] || "Usuário");
         }
 
         // Buscar nome do estabelecimento
         const estabId = await getEstabelecimentoId();
+        console.log("🏢 Estabelecimento ID:", estabId);
+        
         if (estabId) {
           setEstabelecimentoId(estabId);
-          const { data: estabData } = await supabase
+          const { data: estabData, error: estabError } = await supabase
             .from("estabelecimentos")
             .select("nome")
             .eq("id", estabId)
             .maybeSingle();
           
-          setEstabelecimentoName(estabData?.nome || "");
+          console.log("🏢 Resultado busca estabelecimento:", { estabData, estabError });
+          
+          setEstabelecimentoName(estabData?.nome || "Estabelecimento");
         }
       } catch (error) {
         console.error("Erro ao buscar dados do usuário/estabelecimento:", error);
