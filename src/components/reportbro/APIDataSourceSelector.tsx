@@ -37,15 +37,18 @@ interface APIDataSourceSelectorProps {
 
 export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }: APIDataSourceSelectorProps) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
+  const [customEndpoints, setCustomEndpoints] = useState<APIEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [customUrl, setCustomUrl] = useState(currentUrl || "");
   const [testingUrl, setTestingUrl] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<any>(null);
   const [variables, setVariables] = useState<APIVariable[]>(currentVariables || []);
   const [selectedEndpoint, setSelectedEndpoint] = useState<APIEndpoint | null>(null);
+  const [selectedCustomEndpoint, setSelectedCustomEndpoint] = useState<APIEndpoint | null>(null);
   const [activeTab, setActiveTab] = useState<string>("endpoints");
   const [customApiName, setCustomApiName] = useState("");
   const [savingCustom, setSavingCustom] = useState(false);
+  const [editingCustom, setEditingCustom] = useState(false);
 
   // Limpar variáveis ao trocar de aba
   const handleTabChange = (tab: string) => {
@@ -53,6 +56,16 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
     if (tab === "custom") {
       setSelectedEndpoint(null);
       setVariables([]);
+      setCustomUrl("");
+      setCustomApiName("");
+      setSelectedCustomEndpoint(null);
+      setEditingCustom(false);
+    } else {
+      setSelectedCustomEndpoint(null);
+      setCustomUrl("");
+      setCustomApiName("");
+      setVariables([]);
+      setEditingCustom(false);
     }
   };
 
@@ -82,7 +95,12 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
         parameters: Array.isArray(ep.parameters) ? ep.parameters : []
       }));
       
-      setEndpoints(formattedEndpoints);
+      // Separar APIs normais das customizadas
+      const normalApis = formattedEndpoints.filter(ep => !ep.is_custom);
+      const customApis = formattedEndpoints.filter(ep => ep.is_custom);
+      
+      setEndpoints(normalApis);
+      setCustomEndpoints(customApis);
     } catch (error: any) {
       console.error("Erro ao carregar endpoints:", error);
       toast.error("Erro ao carregar APIs");
@@ -137,6 +155,24 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
     toast.success("URL customizada configurada");
   };
 
+  const loadCustomEndpoint = (endpoint: APIEndpoint) => {
+    setSelectedCustomEndpoint(endpoint);
+    setCustomApiName(endpoint.name);
+    setCustomUrl(endpoint.custom_url || endpoint.endpoint_path);
+    setEditingCustom(true);
+    
+    if (endpoint.parameters && endpoint.parameters.length > 0) {
+      const apiVars: APIVariable[] = endpoint.parameters.map((param: any) => ({
+        name: param.name || "",
+        type: param.type || "string",
+        value: param.default_value || ""
+      }));
+      setVariables(apiVars);
+    } else {
+      setVariables([]);
+    }
+  };
+
   const saveCustomUrl = async () => {
     if (!customUrl.trim()) {
       toast.error("Digite uma URL válida");
@@ -161,7 +197,7 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
 
       console.log("Parâmetros formatados:", parametersToSave);
 
-      const dataToInsert = {
+      const dataToSave = {
         name: customApiName,
         description: "URL customizada configurada via ReportBro",
         endpoint_path: customUrl,
@@ -175,28 +211,71 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
         custom_url: customUrl
       };
 
-      console.log("Dados a inserir:", dataToInsert);
+      console.log("Dados a salvar:", dataToSave);
 
-      const { data, error } = await supabase
-        .from("api_endpoints")
-        .insert(dataToInsert)
-        .select();
+      if (editingCustom && selectedCustomEndpoint) {
+        // Atualizar existente
+        const { data, error } = await supabase
+          .from("api_endpoints")
+          .update(dataToSave)
+          .eq("id", selectedCustomEndpoint.id)
+          .select();
 
-      if (error) throw error;
+        if (error) throw error;
+        console.log("API atualizada com sucesso:", data);
+        toast.success(`URL customizada atualizada com ${variables.length} variável(is)!`);
+      } else {
+        // Inserir nova
+        const { data, error } = await supabase
+          .from("api_endpoints")
+          .insert(dataToSave)
+          .select();
 
-      console.log("API salva com sucesso:", data);
+        if (error) throw error;
+        console.log("API salva com sucesso:", data);
+        toast.success(`URL customizada salva com ${variables.length} variável(is)!`);
+      }
       
-      toast.success(`URL customizada salva com ${variables.length} variável(is)!`);
       setCustomApiName("");
       setCustomUrl("");
       setVariables([]);
+      setSelectedCustomEndpoint(null);
+      setEditingCustom(false);
       await loadEndpoints();
-      setActiveTab("endpoints");
     } catch (error: any) {
       console.error("Erro ao salvar URL customizada:", error);
       toast.error("Erro ao salvar: " + error.message);
     } finally {
       setSavingCustom(false);
+    }
+  };
+
+  const deleteCustomEndpoint = async (endpoint: APIEndpoint) => {
+    if (!confirm(`Deseja realmente excluir a URL customizada "${endpoint.name}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("api_endpoints")
+        .delete()
+        .eq("id", endpoint.id);
+
+      if (error) throw error;
+
+      toast.success("URL customizada excluída");
+      await loadEndpoints();
+      
+      if (selectedCustomEndpoint?.id === endpoint.id) {
+        setSelectedCustomEndpoint(null);
+        setCustomUrl("");
+        setCustomApiName("");
+        setVariables([]);
+        setEditingCustom(false);
+      }
+    } catch (error: any) {
+      console.error("Erro ao excluir:", error);
+      toast.error("Erro ao excluir: " + error.message);
     }
   };
 
@@ -355,61 +434,159 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
         </TabsContent>
 
         <TabsContent value="custom" className="space-y-4">
-          <Card className="p-4 bg-muted/30">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="customApiName">Nome da Configuração *</Label>
-                <Input
-                  id="customApiName"
-                  placeholder="Ex: API de Produtos Externa"
-                  value={customApiName}
-                  onChange={(e) => setCustomApiName(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Nome para identificar esta URL customizada
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="customUrl">URL da API *</Label>
-                <Input
-                  id="customUrl"
-                  type="url"
-                  placeholder="https://api.exemplo.com/dados"
-                  value={customUrl}
-                  onChange={(e) => {
-                    setCustomUrl(e.target.value);
-                    setSelectedEndpoint(null);
-                  }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Digite a URL completa da API que retorna dados em JSON
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => testApi(customUrl)}
-                  disabled={!customUrl.trim() || testingUrl === customUrl}
+          {/* Lista de URLs customizadas salvas */}
+          {customEndpoints.length > 0 && !editingCustom && !customUrl && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold">URLs Customizadas Salvas</h3>
+              {customEndpoints.map((endpoint) => (
+                <Card 
+                  key={endpoint.id} 
+                  className="p-3 cursor-pointer hover:bg-accent/50 transition-all"
                 >
-                  {testingUrl === customUrl ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-                  ) : (
-                    <>
-                      <Play className="h-4 w-4 mr-2" />
-                      Testar API
-                    </>
-                  )}
-                </Button>
-              </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0" onClick={() => loadCustomEndpoint(endpoint)}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-sm truncate">{endpoint.name}</h4>
+                        <Badge variant="secondary" className="text-xs">
+                          <Globe className="h-3 w-3 mr-1" />
+                          Customizada
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Link className="h-3 w-3" />
+                        <code className="bg-muted px-1 rounded text-[10px] truncate max-w-[250px]">
+                          {endpoint.custom_url || endpoint.endpoint_path}
+                        </code>
+                      </div>
+                      {endpoint.parameters && endpoint.parameters.length > 0 && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-muted-foreground">
+                            {endpoint.parameters.length} variável(is)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          testApi(endpoint.custom_url || endpoint.endpoint_path);
+                        }}
+                        className="h-8 w-8"
+                      >
+                        <Play className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteCustomEndpoint(endpoint);
+                        }}
+                        className="h-8 w-8"
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCustomUrl("");
+                  setCustomApiName("");
+                  setVariables([]);
+                  setEditingCustom(false);
+                  setSelectedCustomEndpoint(null);
+                }}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nova URL Customizada
+              </Button>
             </div>
-          </Card>
+          )}
+
+          {/* Formulário de criar/editar URL customizada */}
+          {(editingCustom || customUrl || customEndpoints.length === 0) && (
+            <Card className="p-4 bg-muted/30">
+              <div className="space-y-4">
+                {editingCustom && (
+                  <div className="flex items-center justify-between pb-3 border-b">
+                    <Badge variant="secondary">Editando URL Customizada</Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingCustom(false);
+                        setSelectedCustomEndpoint(null);
+                        setCustomUrl("");
+                        setCustomApiName("");
+                        setVariables([]);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="customApiName">Nome da Configuração *</Label>
+                  <Input
+                    id="customApiName"
+                    placeholder="Ex: API de Produtos Externa"
+                    value={customApiName}
+                    onChange={(e) => setCustomApiName(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Nome para identificar esta URL customizada
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="customUrl">URL da API *</Label>
+                  <Input
+                    id="customUrl"
+                    type="url"
+                    placeholder="https://api.exemplo.com/dados"
+                    value={customUrl}
+                    onChange={(e) => {
+                      setCustomUrl(e.target.value);
+                      setSelectedEndpoint(null);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Digite a URL completa da API que retorna dados em JSON
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => testApi(customUrl)}
+                    disabled={!customUrl.trim() || testingUrl === customUrl}
+                  >
+                    {testingUrl === customUrl ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-2" />
+                        Testar API
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
-      {/* Configuração de Variáveis - Aparece após selecionar API OU na aba customizada */}
-      {((selectedEndpoint && activeTab === "endpoints") || activeTab === "custom") && (
+      {/* Configuração de Variáveis - Aparece após selecionar API OU na aba customizada com formulário ativo */}
+      {((selectedEndpoint && activeTab === "endpoints") || (activeTab === "custom" && (editingCustom || customUrl))) && (
         <Card className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -553,6 +730,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
                         Salvando...
                       </>
+                    ) : editingCustom ? (
+                      "Salvar Alterações"
                     ) : (
                       "Salvar Configuração"
                     )}
