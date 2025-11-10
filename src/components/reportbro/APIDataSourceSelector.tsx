@@ -107,9 +107,10 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
       const apiVars: APIVariable[] = endpoint.parameters.map((param: any) => ({
         name: param.name || "",
         type: param.type || "string",
-        value: "" // Deixa vazio para solicitar no preview
+        value: param.default_value || "" // Carrega o valor padrão se existir
       }));
       setVariables(apiVars);
+      console.log("Variáveis carregadas da API:", apiVars);
       toast.info(`${apiVars.length} variável(is) carregada(s) da API`);
     } else {
       setVariables([]);
@@ -146,37 +147,50 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
       return;
     }
 
+    console.log("Salvando URL customizada com variáveis:", variables);
+
     setSavingCustom(true);
     try {
       const estabId = await getEstabelecimentoId();
       
-      const { error } = await supabase
+      const parametersToSave = variables.map(v => ({
+        name: v.name,
+        type: v.type,
+        default_value: v.value || null
+      }));
+
+      console.log("Parâmetros formatados:", parametersToSave);
+
+      const dataToInsert = {
+        name: customApiName,
+        description: "URL customizada configurada via ReportBro",
+        endpoint_path: customUrl,
+        http_method: "GET",
+        active: true,
+        database_type: "custom",
+        query: "",
+        parameters: parametersToSave,
+        estabelecimento_id: estabId,
+        is_custom: true,
+        custom_url: customUrl
+      };
+
+      console.log("Dados a inserir:", dataToInsert);
+
+      const { data, error } = await supabase
         .from("api_endpoints")
-        .insert({
-          name: customApiName,
-          description: "URL customizada configurada via ReportBro",
-          endpoint_path: customUrl,
-          http_method: "GET",
-          active: true,
-          database_type: "custom",
-          query: "",
-          parameters: variables.map(v => ({
-            name: v.name,
-            type: v.type,
-            default_value: v.value
-          })),
-          estabelecimento_id: estabId,
-          is_custom: true,
-          custom_url: customUrl
-        });
+        .insert(dataToInsert)
+        .select();
 
       if (error) throw error;
 
-      toast.success("URL customizada salva com sucesso!");
+      console.log("API salva com sucesso:", data);
+      
+      toast.success(`URL customizada salva com ${variables.length} variável(is)!`);
       setCustomApiName("");
       setCustomUrl("");
       setVariables([]);
-      loadEndpoints();
+      await loadEndpoints();
       setActiveTab("endpoints");
     } catch (error: any) {
       console.error("Erro ao salvar URL customizada:", error);
@@ -187,7 +201,9 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
   };
 
   const addVariable = () => {
-    setVariables([...variables, { name: "", type: "string", value: "" }]);
+    const newVariables = [...variables, { name: "", type: "string", value: "" }];
+    setVariables(newVariables);
+    console.log("Variável adicionada. Total:", newVariables.length);
   };
 
   const updateVariable = (index: number, field: keyof APIVariable, value: string) => {
