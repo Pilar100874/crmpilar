@@ -526,36 +526,58 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
           )}
 
           {/* Botão de ação final */}
-          <div className="mt-4 pt-4 border-t flex gap-2">
+          <div className="mt-4 pt-4 border-t space-y-3">
             {activeTab === "custom" && (
+              <div className="space-y-2">
+                {(!customUrl.trim() || !customApiName.trim()) && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <p className="text-xs text-amber-700 font-medium">
+                      ⚠️ Para salvar a configuração, preencha:
+                    </p>
+                    <ul className="text-xs text-amber-600 mt-1 ml-4 list-disc">
+                      {!customApiName.trim() && <li>Nome da Configuração</li>}
+                      {!customUrl.trim() && <li>URL da API</li>}
+                    </ul>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={saveCustomUrl}
+                    disabled={!customUrl.trim() || !customApiName.trim() || savingCustom}
+                    variant="outline"
+                    className="flex-1"
+                    size="lg"
+                  >
+                    {savingCustom ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar Configuração"
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={handleSelectCustomUrl}
+                    disabled={!customUrl.trim()}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    Usar Agora
+                  </Button>
+                </div>
+              </div>
+            )}
+            {activeTab === "endpoints" && (
               <Button 
-                onClick={saveCustomUrl}
-                disabled={!customUrl.trim() || !customApiName.trim() || savingCustom}
-                variant="outline"
-                className="flex-1"
+                onClick={handleSelectEndpoint}
+                disabled={!selectedEndpoint}
+                className="w-full"
                 size="lg"
               >
-                {savingCustom ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
-                    Salvando...
-                  </>
-                ) : (
-                  "Salvar Configuração"
-                )}
+                {`Usar API${selectedEndpoint ? `: ${selectedEndpoint.name}` : ''}`}
               </Button>
             )}
-            <Button 
-              onClick={activeTab === "endpoints" ? handleSelectEndpoint : handleSelectCustomUrl}
-              disabled={activeTab === "endpoints" ? !selectedEndpoint : !customUrl.trim()}
-              className="flex-1"
-              size="lg"
-            >
-              {activeTab === "endpoints" 
-                ? `Usar API${selectedEndpoint ? `: ${selectedEndpoint.name}` : ''}`
-                : "Usar Agora"
-              }
-            </Button>
           </div>
         </Card>
       )}
