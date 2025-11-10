@@ -20,6 +20,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { Connection, Request as TediousRequest, TYPES } from 'https://esm.sh/tedious@18.6.1';
 
 
 const corsHeaders = {
@@ -50,58 +51,94 @@ interface SqlConfig {
  * - timeout: 60000ms (60 segundos)
  * - pool: max 10 conexões simultâneas
  */
-async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
+async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}): Promise<any[]> {
   console.log('Executing SQL Server query...');
   console.log('Query parameters:', params);
-  
   console.log('Connecting to SQL Server:', config.server);
   
-  // ⚠️ NÃO MODIFICAR ESTA CONFIGURAÇÃO
-  const sqlConfig = {
-    server: config.server,
-    port: 1433,
-    user: config.username,
-    password: config.password,
-    database: config.database,
-    options: {
-      encrypt: false,
-      trustServerCertificate: true,
-      enableArithAbort: true,
-    },
-    pool: {
-      max: 10,
-      min: 0,
-      idleTimeoutMillis: 30000
-    },
-    connectionTimeout: 60000,
-    requestTimeout: 60000,
-  };
+  return new Promise((resolve, reject) => {
+    const connectionConfig = {
+      server: config.server,
+      authentication: {
+        type: 'default' as const,
+        options: {
+          userName: config.username,
+          password: config.password,
+        }
+      },
+      options: {
+        database: config.database,
+        encrypt: false,
+        trustServerCertificate: true,
+        port: 1433,
+        connectTimeout: 60000,
+        requestTimeout: 60000,
+      }
+    };
 
-  try {
-    const pkg = 'npm:' + 'mssql@^10';
-    const mod = await import(pkg as string);
-    const mssql = (mod as any).default ?? mod;
-    const pool = await mssql.connect(sqlConfig);
-    console.log('Connected successfully. Executing query...');
-    
-    const request = pool.request();
-    
-    // Add parameters to the request
-    for (const [key, value] of Object.entries(params)) {
-      console.log(`Adding parameter @${key} = ${value}`);
-      request.input(key, value);
-    }
-    
-    const result = await request.query(config.query);
-    console.log('Query executed successfully. Rows:', result.recordset?.length || 0);
-    
-    await pool.close();
-    
-    return result.recordset || [];
-  } catch (error) {
-    console.error('SQL Server query error:', error);
-    throw error;
-  }
+    const connection = new Connection(connectionConfig);
+    const results: any[] = [];
+
+    connection.on('connect', (err) => {
+      if (err) {
+        console.error('Connection error:', err);
+        reject(err);
+        return;
+      }
+
+      console.log('Connected successfully. Executing query...');
+      
+      const request = new TediousRequest(config.query, (error, rowCount) => {
+        connection.close();
+        
+        if (error) {
+          console.error('Query error:', error);
+          reject(error);
+          return;
+        }
+        
+        console.log('Query executed successfully. Rows:', results.length);
+        resolve(results);
+      });
+
+      // Add parameters to the request
+      for (const [key, value] of Object.entries(params)) {
+        console.log(`Adding parameter @${key} = ${value}`);
+        let sqlType = TYPES.NVarChar;
+        
+        if (typeof value === 'number') {
+          if (Number.isInteger(value)) {
+            sqlType = TYPES.Int;
+          } else {
+            sqlType = TYPES.Float;
+          }
+        } else if (typeof value === 'boolean') {
+          sqlType = TYPES.Bit;
+        } else if (value instanceof Date) {
+          sqlType = TYPES.DateTime;
+        }
+        
+        request.addParameter(key, sqlType, value);
+      }
+
+      request.on('row', (columns) => {
+        const row: any = {};
+        columns.forEach((column) => {
+          row[column.metadata.colName] = column.value;
+        });
+        results.push(row);
+      });
+
+      connection.execSql(request);
+    });
+
+    connection.on('error', (err) => {
+      console.error('Connection error:', err);
+      reject(err);
+    });
+
+    connection.connect();
+  });
 }
 
 serve(async (req) => {
