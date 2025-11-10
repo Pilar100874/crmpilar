@@ -78,21 +78,15 @@ serve(async (req) => {
     if (relatorio.configuracoes?.api_url) {
       const apiUrl = relatorio.configuracoes.api_url;
       console.log("🔗 Buscando dados da API:", apiUrl);
+      console.log("📦 Parâmetros JSON:", JSON.stringify(convertedParams, null, 2));
       
       try {
-        // Montar URL com query parameters
-        const url = new URL(apiUrl);
-        Object.entries(convertedParams).forEach(([key, value]) => {
-          url.searchParams.append(key, String(value));
-        });
-        
-        console.log("📡 URL completa:", url.toString());
-        
-        const apiResponse = await fetch(url.toString(), {
-          method: 'GET',
+        const apiResponse = await fetch(apiUrl, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify(convertedParams),
         });
         
         if (!apiResponse.ok) {
