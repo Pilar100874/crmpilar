@@ -989,6 +989,9 @@ const loadApiData = async (
       setApiHttpMethod(http_method);
       setApiParamType(param_type);
       
+      // Atualiza savedApiVariables com TODAS as variáveis (com e sem valor fixo)
+      setSavedApiVariables(variables);
+      
       // Atualiza apiVariables com variáveis que não têm valor fixo
       const varsWithoutValue = variables
         .filter(v => v.name && !v.value)
