@@ -1,27 +1,6 @@
-/**
- * EDGE FUNCTION: execute-dynamic-query
- * 
- * ⚠️ NÃO MODIFICAR ESTA FUNÇÃO SEM NECESSIDADE EXTREMA ⚠️
- * 
- * Esta função é responsável por executar queries SQL dinâmicas
- * em bancos de dados SQL Server e Supabase.
- * 
- * Funcionalidades:
- * - Conexão com SQL Server usando mssql@^10
- * - Suporte a parâmetros dinâmicos
- * - Gerenciamento de pool de conexões
- * - Timeout configurado (60s)
- * - CORS habilitado para requisições web
- * 
- * Última modificação: Funcionando corretamente (10,592 registros testados)
- * Status: ✅ PRODUÇÃO - NÃO ALTERAR
- */
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import sql from 'https://esm.sh/mssql@10.0.4';
-
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,21 +15,6 @@ interface SqlConfig {
   query: string;
 }
 
-/**
- * Executa query no SQL Server com suporte a parâmetros
- * 
- * ⚠️ CONFIGURAÇÃO CRÍTICA - NÃO ALTERAR SEM TESTES ⚠️
- * 
- * Esta configuração foi testada e validada para conexões SQL Server.
- * Qualquer alteração pode causar falhas na conexão ou timeout.
- * 
- * Configurações importantes:
- * - port: 1433 (padrão SQL Server)
- * - encrypt: false (compatibilidade)
- * - trustServerCertificate: true (certificados auto-assinados)
- * - timeout: 60000ms (60 segundos)
- * - pool: max 10 conexões simultâneas
- */
 async function executeSqlServerQuery(config: SqlConfig, params: Record<string, any> = {}) {
   console.log('Executing SQL Server query...');
   console.log('Query parameters:', params);
@@ -78,7 +42,11 @@ async function executeSqlServerQuery(config: SqlConfig, params: Record<string, a
   };
 
   try {
-    const pool = await sql.connect(sqlConfig);
+    // @ts-ignore - Dynamic npm import at runtime
+    const sql = await import('npm:mssql@^10');
+    const mssql = sql.default || sql;
+    
+    const pool = await mssql.connect(sqlConfig);
     console.log('Connected successfully. Executing query...');
     
     const request = pool.request();
@@ -97,11 +65,6 @@ async function executeSqlServerQuery(config: SqlConfig, params: Record<string, a
     return result.recordset || [];
   } catch (error) {
     console.error('SQL Server query error:', error);
-    try {
-      await sql.close();
-    } catch (closeError) {
-      console.error('Error closing connection:', closeError);
-    }
     throw error;
   }
 }
@@ -162,27 +125,6 @@ serve(async (req) => {
       params = await req.json();
     }
 
-    // Get database connection details if connection_id is specified
-    let connectionConfig: any = apiConfig;
-    if (apiConfig.connection_id) {
-      const { data: connData, error: connError } = await supabase
-        .from('database_connections')
-        .select('*')
-        .eq('id', apiConfig.connection_id)
-        .eq('active', true)
-        .single();
-      
-      if (!connError && connData) {
-        connectionConfig = {
-          ...apiConfig,
-          sql_server: connData.sql_server,
-          sql_database: connData.sql_database,
-          sql_username: connData.sql_username,
-          sql_password: connData.sql_password,
-        };
-      }
-    }
-
     // Execute query based on database type
     if (apiConfig.database_type === 'supabase') {
       // Execute Supabase query
@@ -205,13 +147,13 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
-    } else if (apiConfig.database_type === 'sqlserver') {
+    } else {
       // Execute SQL Server query
       const sqlConfig: SqlConfig = {
-        server: connectionConfig.sql_server,
-        database: connectionConfig.sql_database,
-        username: connectionConfig.sql_username,
-        password: connectionConfig.sql_password,
+        server: apiConfig.sql_server,
+        database: apiConfig.sql_database,
+        username: apiConfig.sql_username,
+        password: apiConfig.sql_password,
         query: apiConfig.query,
       };
 
@@ -226,14 +168,6 @@ serve(async (req) => {
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ error: `Database type ${apiConfig.database_type} not supported` }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
