@@ -352,6 +352,15 @@ export const PropertiesPanel = ({
         />;
       case "crm_agenda_rapida":
         return <BlockConfigs.AgendaRapidaConfig {...configProps} />;
+      case "crm_gerar_relatorio":
+        return <BlockConfigs.CRMGerarRelatorioConfig 
+          {...configProps} 
+          handleConfigChange={(updates: any) => {
+            Object.entries(updates).forEach(([key, value]) => {
+              handleConfigChange(key, value);
+            });
+          }}
+        />;
 
       case "start":
         return (

@@ -119,6 +119,9 @@ export class FlowEngine {
       case "crm_cadastro_empresa":
         await this.handleCRMCadastroEmpresa(node);
         break;
+      case "crm_gerar_relatorio":
+        await this.handleCRMGerarRelatorio(node);
+        break;
       default:
         console.log(`Node type ${data.type} not implemented yet`);
         const nextNodes = this.getNextNodes(node.id);
@@ -909,6 +912,91 @@ export class FlowEngine {
 
     } catch (error) {
       console.error("Erro ao processar cadastro de empresa:", error);
+      return;
+    }
+
+    // Continuar para próximo bloco
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
+  }
+
+  private async handleCRMGerarRelatorio(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+
+    console.log("📊 Iniciando geração de relatório - config:", config);
+
+    try {
+      const relatorioId = this.interpolate(config.relatorioId || "");
+      
+      if (!relatorioId) {
+        await this.onResponse({
+          type: "text",
+          content: "Erro: Nenhum relatório selecionado",
+        });
+        return;
+      }
+
+      // Interpolar variáveis da API
+      const apiVariables: Record<string, any> = {};
+      if (config.apiVariables) {
+        for (const [key, value] of Object.entries(config.apiVariables)) {
+          apiVariables[key] = this.interpolate(value as string);
+        }
+      }
+
+      console.log("📊 Gerando relatório com variáveis:", apiVariables);
+
+      // Chamar edge function para gerar PDF em background
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      const { data: resultData, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+        body: {
+          relatorioId,
+          apiVariables,
+        }
+      });
+
+      if (error) {
+        console.error("❌ Erro ao gerar relatório:", error);
+        await this.onResponse({
+          type: "text",
+          content: `Erro ao gerar relatório: ${error.message}`,
+        });
+        return;
+      }
+
+      // Verificar se foi gerado com sucesso
+      if (resultData?.pdfUrl) {
+        console.log("✅ Relatório gerado com sucesso:", resultData.pdfUrl);
+        
+        // Enviar PDF como anexo
+        await this.onResponse({
+          type: "media",
+          mediaType: "document",
+          url: resultData.pdfUrl,
+          caption: resultData.fileName || "Relatório gerado",
+        });
+
+        // Definir variável de saída
+        const outputVariable = config.outputVariable || "relatorio_gerado";
+        this.context.vars[outputVariable] = "Sucesso";
+      } else {
+        console.error("❌ PDF não foi gerado");
+        await this.onResponse({
+          type: "text",
+          content: "Erro: Relatório não foi gerado corretamente",
+        });
+      }
+
+    } catch (error: any) {
+      console.error("❌ Erro ao processar geração de relatório:", error);
+      await this.onResponse({
+        type: "text",
+        content: `Erro ao gerar relatório: ${error.message}`,
+      });
       return;
     }
 

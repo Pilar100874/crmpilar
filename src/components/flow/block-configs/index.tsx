@@ -57,6 +57,10 @@ export {
 } from './CRMBlocks';
 
 export {
+  CRMGerarRelatorioConfig,
+} from './CRMGerarRelatorioConfig';
+
+export {
   AgendaRapidaConfig,
 } from './AgendaRapidaConfig';
 

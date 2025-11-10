@@ -34,7 +34,8 @@ export type NodeType =
   | "trigger_automation"
   | "dynamic_data"
   | "crm_cadastro_empresa"
-  | "crm_agenda_rapida";
+  | "crm_agenda_rapida"
+  | "crm_gerar_relatorio";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -357,6 +358,18 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       cnpjVariable: "cnpj",
       observacaoVariable: "observacao",
       outputVariable: "tarefa_criada"
+    },
+  },
+  {
+    type: "crm_gerar_relatorio",
+    label: "Gerar relatório",
+    description: "Gerar PDF de relatório e anexar no chat",
+    icon: "FileText",
+    color: "text-success",
+    defaultData: { 
+      relatorioId: "",
+      apiVariables: {},
+      outputVariable: "relatorio_gerado"
     },
   },
 ];
