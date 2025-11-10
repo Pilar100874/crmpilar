@@ -50,6 +50,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
     sql_username: "",
     sql_password: "",
     sql_port: "1433",
+    proxy_url: "",
   });
 
   useEffect(() => {
@@ -115,6 +116,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
         sql_username: "",
         sql_password: "",
         sql_port: "1433",
+        proxy_url: "",
       });
       loadConnections();
       onConnectionsChange?.();
@@ -133,6 +135,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
       sql_username: conn.sql_username,
       sql_password: conn.sql_password,
       sql_port: conn.sql_port,
+      proxy_url: conn.proxy_url || "",
     });
     setEditingId(conn.id);
     setShowForm(true);
@@ -357,6 +360,21 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
                   </div>
                 </div>
               </div>
+
+              {formData.database_type === 'sqlserver' && (
+                <div className="space-y-2">
+                  <Label htmlFor="proxy_url">URL do Servidor Proxy (Opcional)</Label>
+                  <Input
+                    id="proxy_url"
+                    value={formData.proxy_url}
+                    onChange={(e) => setFormData({ ...formData, proxy_url: e.target.value })}
+                    placeholder="https://seu-proxy.railway.app"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Necessário apenas para conexões SQL Server via proxy externo
+                  </p>
+                </div>
+              )}
 
               <Button type="submit" className="w-full">
                 {editingId ? "Atualizar Conexão" : "Criar Conexão"}
