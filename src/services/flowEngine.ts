@@ -989,6 +989,7 @@ export class FlowEngine {
           type: "text",
           content: "Erro: Relatório não foi gerado corretamente",
         });
+        return;
       }
 
     } catch (error: any) {
