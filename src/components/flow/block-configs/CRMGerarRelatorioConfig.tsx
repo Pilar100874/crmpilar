@@ -70,7 +70,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
 
   const loadReportVariables = async (relatorioId: string) => {
     setLoadingVariables(true);
-    console.log("📊 Carregando variáveis para relatório:", relatorioId);
+    console.log("📊 Carregando parâmetros para relatório:", relatorioId);
     
     try {
       const relatorio = relatorios.find(r => r.id === relatorioId);
@@ -93,7 +93,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
             type: param.type || "string"
           };
         });
-        console.log("✅ Variáveis configuradas:", newVars);
+        console.log("✅ Parâmetros configurados:", newVars);
         handleConfigChange({ apiVariables: newVars });
         setLoadingVariables(false);
         return;
@@ -101,7 +101,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
 
       // Se não tiver parametros, tenta buscar da API configurada
       if (relatorio.configuracoes?.api_url) {
-        console.log("🔗 Tentando buscar variáveis da API:", relatorio.configuracoes.api_url);
+        console.log("🔗 Tentando buscar parâmetros da API:", relatorio.configuracoes.api_url);
         const apiUrl = relatorio.configuracoes.api_url;
         const urlParts = apiUrl.split('/api/');
         
@@ -124,7 +124,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
                 type: param.type || "string"
               };
             });
-            console.log("✅ Variáveis da API configuradas:", newVars);
+            console.log("✅ Parâmetros da API configurados:", newVars);
             handleConfigChange({ apiVariables: newVars });
             setLoadingVariables(false);
             return;
@@ -134,10 +134,10 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
         }
       }
 
-      console.log("ℹ️ Nenhuma variável encontrada para este relatório");
+      console.log("ℹ️ Nenhum parâmetro encontrado para este relatório");
       handleConfigChange({ apiVariables: {} });
     } catch (error) {
-      console.error("❌ Erro ao carregar variáveis do relatório:", error);
+      console.error("❌ Erro ao carregar parâmetros do relatório:", error);
       handleConfigChange({ apiVariables: {} });
     } finally {
       setLoadingVariables(false);
@@ -190,21 +190,21 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       {config.relatorioId && (
         <div className="space-y-3 border-t pt-4">
           <div>
-            <Label className="font-semibold">Variáveis do Relatório</Label>
+            <Label className="font-semibold">Parâmetros do Relatório</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              Insira os valores para as variáveis do relatório selecionado
+              Insira os valores para os parâmetros do relatório selecionado
             </p>
           </div>
 
           {loadingVariables ? (
             <div className="text-sm text-muted-foreground text-center py-4">
-              Carregando variáveis...
+              Carregando parâmetros...
             </div>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
               {Object.entries(apiVariables).length === 0 ? (
                 <div className="text-sm text-muted-foreground text-center py-4 border-2 border-dashed rounded">
-                  Este relatório não possui variáveis configuradas
+                  Este relatório não possui parâmetros configurados
                 </div>
               ) : (
                 Object.entries(apiVariables).map(([key, varData]) => {
@@ -237,7 +237,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
                         <RichTextEditor
                           value={value}
                           onChange={(newValue) => updateVariableValue(key, newValue)}
-                          placeholder="Insira o valor da variável"
+                          placeholder="Insira o valor do parâmetro"
                           multiline={false}
                           nodes={nodes}
                           edges={edges}
