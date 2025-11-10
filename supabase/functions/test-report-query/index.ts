@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import sql from 'https://esm.sh/mssql@10.0.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,31 +14,52 @@ interface TestQueryRequest {
   type: 'test';
 }
 
-async function executeSqlServerQuery(server: string, database: string, username: string, password: string, query: string, proxy_url?: string) {
-  console.log('Executing SQL Server test query...');
-
-  if (!proxy_url) {
-    throw new Error('SQL Server direto não suportado neste ambiente. Configure um Proxy URL na conexão.');
-  }
-
-  try {
-    const response = await fetch(`${proxy_url}/query`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ server, database, username, password, query, params: {} })
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `Proxy request failed with ${response.status}`);
+async function executeSqlServerQuery(server: string, database: string, username: string, password: string, query: string, port?: string) {
+  console.log('Connecting to SQL Server directly for test...');
+  
+  const sqlConfig = {
+    server: server,
+    database: database,
+    user: username,
+    password: password,
+    port: port ? parseInt(port) : 1433,
+    options: {
+      encrypt: true,
+      trustServerCertificate: true,
+      enableArithAbort: true,
+      connectionTimeout: 30000,
+      requestTimeout: 30000
+    },
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
     }
+  };
 
-    const result = await response.json();
-    console.log('Query executed via proxy successfully. Rows:', result.rowCount || 0);
-    return result.data || [];
+  let pool;
+  try {
+    console.log(`Test connecting to: ${server}/${database}`);
+    pool = await sql.connect(sqlConfig);
+    console.log('Test connection successful');
+
+    const request = pool.request();
+    const result = await request.query(query);
+    console.log('Test query executed successfully. Rows:', result.recordset?.length || 0);
+    
+    return result.recordset || [];
   } catch (error) {
-    console.error('Proxy SQL Server error:', error);
+    console.error('Test SQL Server error:', error);
     throw error;
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+        console.log('Test connection closed');
+      } catch (closeError) {
+        console.error('Error closing test connection:', closeError);
+      }
+    }
   }
 }
 
@@ -87,7 +109,7 @@ serve(async (req) => {
         connection.sql_username,
         connection.sql_password,
         body.query,
-        connection.proxy_url
+        connection.sql_port
       );
 
       return new Response(
