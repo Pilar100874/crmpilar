@@ -158,18 +158,29 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
       Object.assign(allVariables, testVariables);
     }
     
-    // Fetch API data - use POST se houver variáveis, senão GET com paginação
+    // Fetch API data - sempre GET com variáveis na query string
     let apiResp: Response;
     
+    // Build query string from variables
+    const queryParams = new URLSearchParams();
+    Object.entries(allVariables).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        queryParams.append(key, String(value));
+      }
+    });
+    
     if (Object.keys(allVariables).length > 0) {
-      // POST com variáveis
-      console.log('Fetching data from API with variables:', apiUrl, allVariables);
-      apiResp = await fetch(apiUrl, {
-        method: 'POST',
+      // GET com variáveis na query string
+      const urlWithParams = queryParams.toString() 
+        ? `${apiUrl}?${queryParams.toString()}`
+        : apiUrl;
+      
+      console.log('Fetching data from API with query string:', urlWithParams);
+      apiResp = await fetch(urlWithParams, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(allVariables),
       });
     } else {
       // GET com paginação (lógica original)

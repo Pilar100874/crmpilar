@@ -796,13 +796,23 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       let response: Response;
       
       if (variables && Object.keys(variables).length > 0) {
-        // POST com variáveis
-        response = await fetch(url, {
-          method: 'POST',
+        // GET com variáveis na query string
+        const queryParams = new URLSearchParams();
+        Object.entries(variables).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== '') {
+            queryParams.append(key, String(value));
+          }
+        });
+        
+        const urlWithParams = queryParams.toString() 
+          ? `${url}?${queryParams.toString()}`
+          : url;
+        
+        response = await fetch(urlWithParams, {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(variables),
           signal: controller.signal
         });
       } else {
