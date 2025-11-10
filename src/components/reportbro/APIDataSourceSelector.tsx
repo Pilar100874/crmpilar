@@ -48,6 +48,7 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
   const [variables, setVariables] = useState<APIVariable[]>(currentVariables || []);
   const [selectedEndpoint, setSelectedEndpoint] = useState<APIEndpoint | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [savingDefaults, setSavingDefaults] = useState(false);
 
   useEffect(() => {
     loadEndpoints();
@@ -119,6 +120,41 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
     const derivedParamType = (selectedEndpoint.parameters && selectedEndpoint.parameters[0]?.param_type) || "query";
     onSelect(url, selectedEndpoint.name, variables, { httpMethod: derivedMethod, paramType: derivedParamType, isCustom: !!selectedEndpoint.is_custom });
     toast.success(`API "${selectedEndpoint.name}" configurada com sucesso`);
+  };
+
+  const saveDefaultValues = async () => {
+    if (!selectedEndpoint) {
+      toast.error("Nenhuma API selecionada");
+      return;
+    }
+
+    setSavingDefaults(true);
+    try {
+      // Atualizar os parâmetros com os novos valores padrão
+      const updatedParameters = variables.map(v => ({
+        name: v.name,
+        type: v.type,
+        default_value: v.value || null,
+        param_type: selectedEndpoint.parameters?.[0]?.param_type || "query"
+      }));
+
+      const { error } = await supabase
+        .from("api_endpoints")
+        .update({ parameters: updatedParameters })
+        .eq("id", selectedEndpoint.id);
+
+      if (error) throw error;
+
+      toast.success("Valores padrão salvos com sucesso!");
+      
+      // Recarregar endpoints para atualizar a lista
+      await loadEndpoints();
+    } catch (error: any) {
+      console.error("Erro ao salvar valores padrão:", error);
+      toast.error("Erro ao salvar: " + error.message);
+    } finally {
+      setSavingDefaults(false);
+    }
   };
 
   const filteredEndpoints = endpoints.filter(ep => 
@@ -309,9 +345,27 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                 Defina os valores das variáveis da API
               </p>
             </div>
-            <Button size="sm" variant="outline" onClick={addVariable}>
-              Adicionar Variável
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={addVariable}>
+                Adicionar Variável
+              </Button>
+              {variables.length > 0 && (
+                <Button 
+                  size="sm" 
+                  onClick={saveDefaultValues}
+                  disabled={savingDefaults}
+                >
+                  {savingDefaults ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-background mr-2" />
+                      Salvando...
+                    </>
+                  ) : (
+                    "Salvar Valores Padrão"
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
           
           {variables.length === 0 ? (
