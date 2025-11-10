@@ -887,8 +887,8 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
         )}
       </div>
 
-      {/* Botão de Sair - lado direito */}
-      <div className="absolute top-2 right-2 z-10">
+      {/* Botão de Sair - 5cm da direita */}
+      <div className="absolute top-2 right-[5cm] z-10">
         <Button
           size="sm"
           onClick={handleExitClick}
