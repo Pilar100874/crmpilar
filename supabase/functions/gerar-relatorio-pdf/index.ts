@@ -109,8 +109,62 @@ serve(async (req) => {
     const contentType = pdfResponse.headers.get('content-type');
     console.log("📄 Content-Type da resposta:", contentType);
 
-    let pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
-    console.log("✅ PDF gerado, tamanho:", pdfBytes.length);
+    let pdfBytes: Uint8Array | null = null;
+
+    // Verificar se a resposta é uma key (processo assíncrono) ou PDF direto
+    if (contentType?.includes('text/plain')) {
+      const responseText = await pdfResponse.text();
+      console.log("🔑 Resposta é uma key:", responseText);
+      
+      // Se for uma key, significa que o PDF está sendo gerado de forma assíncrona
+      // Vamos tentar buscar o PDF usando a key
+      if (responseText.startsWith('key:')) {
+        const key = responseText.substring(4);
+        console.log("⏳ Aguardando geração do PDF com key:", key);
+        
+        // Tentar buscar o PDF com a key por até 30 segundos
+        let attempts = 0;
+        const maxAttempts = 15;
+        
+        while (attempts < maxAttempts && !pdfBytes) {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Aguarda 2 segundos
+          attempts++;
+          
+          console.log(`🔄 Tentativa ${attempts}/${maxAttempts} de buscar o PDF...`);
+          
+          const pdfGetResponse = await fetch(`https://www.reportbro.com/report/get?key=${key}`, {
+            method: 'GET',
+          });
+          
+          if (pdfGetResponse.ok) {
+            const getPdfContentType = pdfGetResponse.headers.get('content-type');
+            console.log("📄 Content-Type do GET:", getPdfContentType);
+            
+            if (getPdfContentType?.includes('application/pdf')) {
+              pdfBytes = new Uint8Array(await pdfGetResponse.arrayBuffer());
+              console.log("✅ PDF obtido, tamanho:", pdfBytes.length);
+            } else {
+              const statusText = await pdfGetResponse.text();
+              console.log("⏳ PDF ainda não está pronto:", statusText);
+            }
+          }
+        }
+        
+        if (!pdfBytes) {
+          throw new Error('Timeout: PDF não foi gerado a tempo pela API ReportBro');
+        }
+      } else {
+        throw new Error(`Resposta inesperada da API ReportBro: ${responseText}`);
+      }
+    } else {
+      // Resposta direta é o PDF
+      pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
+      console.log("✅ PDF gerado diretamente, tamanho:", pdfBytes.length);
+    }
+
+    if (!pdfBytes) {
+      throw new Error('Falha ao obter PDF da API ReportBro');
+    }
 
     // Verificar se é realmente um PDF válido (deve começar com %PDF)
     if (pdfBytes.length < 100) {
