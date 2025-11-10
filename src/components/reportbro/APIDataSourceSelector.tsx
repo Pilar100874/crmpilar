@@ -49,6 +49,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
   const [customApiName, setCustomApiName] = useState("");
   const [savingCustom, setSavingCustom] = useState(false);
   const [editingCustom, setEditingCustom] = useState(false);
+  const [httpMethod, setHttpMethod] = useState<string>("GET");
+  const [paramType, setParamType] = useState<string>("query");
 
   // Limpar variáveis ao trocar de aba
   const handleTabChange = (tab: string) => {
@@ -60,12 +62,16 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
       setCustomApiName("");
       setSelectedCustomEndpoint(null);
       setEditingCustom(false);
+      setHttpMethod("GET");
+      setParamType("query");
     } else {
       setSelectedCustomEndpoint(null);
       setCustomUrl("");
       setCustomApiName("");
       setVariables([]);
       setEditingCustom(false);
+      setHttpMethod("GET");
+      setParamType("query");
     }
   };
 
@@ -159,6 +165,10 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
     setSelectedCustomEndpoint(endpoint);
     setCustomApiName(endpoint.name);
     setCustomUrl(endpoint.custom_url || endpoint.endpoint_path);
+    setHttpMethod(endpoint.http_method || "GET");
+    // Extrair paramType dos parâmetros salvos se existir
+    const savedParamType = endpoint.parameters?.[0]?.param_type || "query";
+    setParamType(savedParamType);
     setEditingCustom(true);
     
     if (endpoint.parameters && endpoint.parameters.length > 0) {
@@ -192,16 +202,17 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
       const parametersToSave = variables.map(v => ({
         name: v.name,
         type: v.type,
-        default_value: v.value || null
+        default_value: v.value || null,
+        param_type: paramType
       }));
 
       console.log("Parâmetros formatados:", parametersToSave);
 
       const dataToSave = {
         name: customApiName,
-        description: "URL customizada configurada via ReportBro",
+        description: `URL customizada configurada via ReportBro (${httpMethod} - ${paramType})`,
         endpoint_path: customUrl,
-        http_method: "GET",
+        http_method: httpMethod,
         active: true,
         database_type: "custom",
         query: "",
@@ -241,6 +252,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
       setVariables([]);
       setSelectedCustomEndpoint(null);
       setEditingCustom(false);
+      setHttpMethod("GET");
+      setParamType("query");
       await loadEndpoints();
     } catch (error: any) {
       console.error("Erro ao salvar URL customizada:", error);
@@ -272,6 +285,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
         setCustomApiName("");
         setVariables([]);
         setEditingCustom(false);
+        setHttpMethod("GET");
+        setParamType("query");
       }
     } catch (error: any) {
       console.error("Erro ao excluir:", error);
@@ -445,11 +460,14 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0" onClick={() => loadCustomEndpoint(endpoint)}>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h4 className="font-semibold text-sm truncate">{endpoint.name}</h4>
                         <Badge variant="secondary" className="text-xs">
                           <Globe className="h-3 w-3 mr-1" />
                           Customizada
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {endpoint.http_method}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -501,6 +519,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                   setVariables([]);
                   setEditingCustom(false);
                   setSelectedCustomEndpoint(null);
+                  setHttpMethod("GET");
+                  setParamType("query");
                 }}
                 className="w-full"
               >
@@ -526,6 +546,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                         setCustomUrl("");
                         setCustomApiName("");
                         setVariables([]);
+                        setHttpMethod("GET");
+                        setParamType("query");
                       }}
                     >
                       Cancelar
@@ -546,6 +568,38 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                   </p>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="httpMethod">Método HTTP *</Label>
+                    <Select value={httpMethod} onValueChange={setHttpMethod}>
+                      <SelectTrigger id="httpMethod">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GET">GET</SelectItem>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="PUT">PUT</SelectItem>
+                        <SelectItem value="DELETE">DELETE</SelectItem>
+                        <SelectItem value="PATCH">PATCH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="paramType">Tipo de Envio *</Label>
+                    <Select value={paramType} onValueChange={setParamType}>
+                      <SelectTrigger id="paramType">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="query">Query String</SelectItem>
+                        <SelectItem value="json">JSON Body</SelectItem>
+                        <SelectItem value="formdata">Form Data</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="customUrl">URL da API *</Label>
                   <Input
@@ -559,7 +613,12 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                     }}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Digite a URL completa da API que retorna dados em JSON
+                    {paramType === "query" 
+                      ? "Parâmetros serão enviados na URL (?param=value)"
+                      : paramType === "json"
+                      ? "Parâmetros serão enviados no corpo da requisição como JSON"
+                      : "Parâmetros serão enviados como form-data"
+                    }
                   </p>
                 </div>
 
