@@ -595,6 +595,7 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                         <SelectItem value="query">Query String</SelectItem>
                         <SelectItem value="json">JSON Body</SelectItem>
                         <SelectItem value="formdata">Form Data</SelectItem>
+                        <SelectItem value="header">Custom Header</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -617,7 +618,9 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                       ? "Parâmetros serão enviados na URL (?param=value)"
                       : paramType === "json"
                       ? "Parâmetros serão enviados no corpo da requisição como JSON"
-                      : "Parâmetros serão enviados como form-data"
+                      : paramType === "formdata"
+                      ? "Parâmetros serão enviados como form-data"
+                      : "Parâmetros serão enviados como headers customizados (X-Custom-Name: value)"
                     }
                   </p>
                 </div>
