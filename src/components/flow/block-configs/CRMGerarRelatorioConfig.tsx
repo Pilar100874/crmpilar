@@ -82,6 +82,8 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       }
 
       console.log("✅ Relatório encontrado:", relatorio);
+      console.log("📋 Configurações do relatório:", relatorio.configuracoes);
+      console.log("📋 Parâmetros do relatório:", relatorio.parametros);
 
       // Primeiro tenta usar os parametros do relatório
       if (relatorio.parametros && Array.isArray(relatorio.parametros) && relatorio.parametros.length > 0) {
@@ -103,17 +105,29 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       if (relatorio.configuracoes?.api_url) {
         console.log("🔗 Tentando buscar parâmetros da API:", relatorio.configuracoes.api_url);
         const apiUrl = relatorio.configuracoes.api_url;
-        const urlParts = apiUrl.split('/api/');
         
-        if (urlParts.length > 1) {
-          const endpointPath = '/api/' + urlParts[1].split('?')[0];
-          console.log("🔍 Buscando endpoint:", endpointPath);
+        // Extrai o endpoint_path da URL completa
+        // Formato esperado: https://PROJECT.supabase.co/functions/v1/execute-dynamic-query/ENDPOINT_PATH
+        let endpointPath = '';
+        
+        if (apiUrl.includes('/execute-dynamic-query/')) {
+          const parts = apiUrl.split('/execute-dynamic-query/');
+          if (parts.length > 1) {
+            endpointPath = parts[1].split('?')[0]; // Remove query params se houver
+            console.log("🔍 Endpoint path extraído:", endpointPath);
+          }
+        }
+        
+        if (endpointPath) {
+          console.log("🔍 Buscando API com endpoint_path:", endpointPath);
           
           const { data: apiData, error } = await supabase
             .from('api_endpoints')
-            .select('parameters')
+            .select('id, name, parameters, endpoint_path')
             .eq('endpoint_path', endpointPath)
             .maybeSingle();
+
+          console.log("📦 Resultado da busca:", { apiData, error });
 
           if (!error && apiData?.parameters && Array.isArray(apiData.parameters) && apiData.parameters.length > 0) {
             console.log("📝 Parâmetros encontrados na API:", apiData.parameters);
@@ -130,7 +144,14 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
             return;
           } else {
             console.log("⚠️ Nenhum parâmetro encontrado na API ou erro:", error);
+            if (error) console.error("Erro detalhado:", error);
+            if (!apiData) console.log("❌ API não encontrada com endpoint_path:", endpointPath);
+            if (apiData && (!apiData.parameters || !Array.isArray(apiData.parameters) || apiData.parameters.length === 0)) {
+              console.log("⚠️ API encontrada mas sem parâmetros:", apiData);
+            }
           }
+        } else {
+          console.log("⚠️ Não foi possível extrair endpoint_path da URL:", apiUrl);
         }
       }
 
