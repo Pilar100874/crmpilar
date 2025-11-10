@@ -2233,14 +2233,29 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                         {msg.mediaType === "file" && (
                           <div className="p-4 flex items-center gap-2">
                             <span>📄</span>
-                            <a 
-                              href={msg.mediaUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch(msg.mediaUrl, { credentials: 'omit' });
+                                  const blob = await res.blob();
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  const fallbackName = msg.text ? `${msg.text}.pdf` : (msg.mediaUrl.split('/').pop()?.split('?')[0] || 'arquivo.pdf');
+                                  a.href = url;
+                                  a.download = fallbackName;
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  a.remove();
+                                  URL.revokeObjectURL(url);
+                                } catch (err) {
+                                  console.error('Falha ao baixar arquivo:', err);
+                                  window.open(msg.mediaUrl, '_blank', 'noopener'); // fallback
+                                }
+                              }}
                               className="text-sm underline"
                             >
-                              Download arquivo
-                            </a>
+                              Baixar arquivo
+                            </button>
                           </div>
                         )}
                       </div>
