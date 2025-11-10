@@ -158,32 +158,67 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
       Object.assign(allVariables, testVariables);
     }
     
-    // Fetch API data - sempre GET com variáveis na query string
+    // Respeita http_method e param_type salvos no relatório
+    const method = ((cfg.http_method || 'GET') as string).toUpperCase();
+    const paramType = (cfg.param_type || 'query') as 'query' | 'json' | 'formdata' | 'header';
+
     let apiResp: Response;
-    
-    // Build query string from variables
-    const queryParams = new URLSearchParams();
-    Object.entries(allVariables).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        queryParams.append(key, String(value));
-      }
-    });
-    
-    if (Object.keys(allVariables).length > 0) {
-      // GET com variáveis na query string
-      const urlWithParams = queryParams.toString() 
-        ? `${apiUrl}?${queryParams.toString()}`
-        : apiUrl;
-      
-      console.log('Fetching data from API with query string:', urlWithParams);
-      apiResp = await fetch(urlWithParams, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+
+    // Monta opções da requisição
+    const fetchHeaders: Record<string, string> = { 'Accept': 'application/json' };
+    const fetchInit: RequestInit = { method, headers: fetchHeaders };
+    let requestUrl = apiUrl as string;
+
+    // Cria mapa de tipos a partir da config
+    const typeMap: Record<string, string> = {};
+    try {
+      const vcfg = cfg.api_variables || {};
+      Object.entries(vcfg).forEach(([name, varData]: [string, any]) => {
+        if (name) typeMap[name] = (varData?.type || 'string') as string;
       });
+    } catch {}
+
+    if (paramType === 'header') {
+      // Envia TUDO em um único header "keys" no formato: variavel,valor,tipo;variavel2,valor2,tipo2
+      const headerValue = Object.entries(allVariables)
+        .map(([name, value]) => {
+          let t = typeMap[name];
+          if (!t) {
+            // Inferir tipo quando não informado
+            if (typeof value === 'number') t = 'number';
+            else if (typeof value === 'boolean') t = 'boolean';
+            else if (value && typeof value === 'string' && /\d{4}-\d{2}-\d{2}T/.test(value)) t = 'date';
+            else t = 'string';
+          }
+          return `${name},${value ?? ''},${t}`;
+        })
+        .join(';');
+
+      if (headerValue) fetchHeaders['keys'] = headerValue;
+      console.log('Fetching data from API with custom header keys:', headerValue);
+    } else if (paramType === 'json' && method !== 'GET') {
+      fetchHeaders['Content-Type'] = 'application/json';
+      (fetchInit as any).body = JSON.stringify(allVariables);
+      console.log('Fetching data from API with JSON body');
+    } else if (paramType === 'formdata' && method !== 'GET') {
+      const fd = new FormData();
+      Object.entries(allVariables).forEach(([k, v]) => v != null && fd.append(k, String(v)));
+      (fetchInit as any).body = fd as any;
+      console.log('Fetching data from API with FormData body');
     } else {
-      // GET com paginação (lógica original)
+      // query string (padrão)
+      const queryParams = new URLSearchParams();
+      Object.entries(allVariables).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          queryParams.append(key, String(value));
+        }
+      });
+      if (queryParams.toString()) requestUrl = `${apiUrl}?${queryParams.toString()}`;
+      console.log('Fetching data from API with query string:', requestUrl);
+    }
+
+    // Se não há variáveis e existir paginação, mantém a lógica original de paginação
+    if (Object.keys(allVariables).length === 0 && paramType !== 'header' && paramType !== 'json' && paramType !== 'formdata') {
       const pagination = cfg.pagination || {};
       const type = (pagination.type || 'page') as 'page' | 'offset';
       const pageParam = pagination.pageParam || 'page';
@@ -192,9 +227,8 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
       const limitParam = pagination.limitParam || 'limit';
       const zeroBased = Boolean(pagination.zeroBased);
 
-      let finalUrl = apiUrl as string;
       try {
-        const u = new URL(apiUrl);
+        const u = new URL(requestUrl);
         if (type === 'offset') {
           u.searchParams.set(offsetParam, String((page - 1) * pageSize));
           u.searchParams.set(limitParam, String(pageSize));
@@ -202,19 +236,19 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
           u.searchParams.set(pageParam, String(zeroBased ? page - 1 : page));
           u.searchParams.set(sizeParam, String(pageSize));
         }
-        finalUrl = u.toString();
+        requestUrl = u.toString();
       } catch {
-        const sep = apiUrl.includes('?') ? '&' : '?';
+        const sep = requestUrl.includes('?') ? '&' : '?';
         if (type === 'offset') {
-          finalUrl = `${apiUrl}${sep}${offsetParam}=${(page - 1) * pageSize}&${limitParam}=${pageSize}`;
+          requestUrl = `${requestUrl}${sep}${offsetParam}=${(page - 1) * pageSize}&${limitParam}=${pageSize}`;
         } else {
-          finalUrl = `${apiUrl}${sep}${pageParam}=${zeroBased ? page - 1 : page}&${sizeParam}=${pageSize}`;
+          requestUrl = `${requestUrl}${sep}${pageParam}=${zeroBased ? page - 1 : page}&${sizeParam}=${pageSize}`;
         }
       }
-
-      console.log('Fetching data from API with pagination:', finalUrl);
-      apiResp = await fetch(finalUrl);
+      console.log('Fetching data from API with pagination:', requestUrl);
     }
+
+    apiResp = await fetch(requestUrl, fetchInit);
     if (!apiResp.ok) {
       throw new Error(`Falha ao buscar dados da API (${apiResp.status})`);
     }
