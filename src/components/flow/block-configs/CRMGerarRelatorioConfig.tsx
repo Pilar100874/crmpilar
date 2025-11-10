@@ -22,6 +22,11 @@ interface Relatorio {
   descricao: string | null;
 }
 
+interface VariableData {
+  value: string;
+  type: string;
+}
+
 export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edges, selectedNode }: ConfigProps) => {
   const [relatorios, setRelatorios] = useState<Relatorio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +66,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
   const addVariable = () => {
     const newVars = { ...apiVariables };
     const newKey = `variavel_${Object.keys(newVars).length + 1}`;
-    newVars[newKey] = "";
+    newVars[newKey] = { value: "", type: "string" };
     handleConfigChange({ apiVariables: newVars });
   };
 
@@ -75,7 +80,15 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
 
   const updateVariableValue = (key: string, value: string) => {
     const newVars = { ...apiVariables };
-    newVars[key] = value;
+    const currentVar = newVars[key];
+    newVars[key] = typeof currentVar === 'object' ? { ...currentVar, value } : { value, type: "string" };
+    handleConfigChange({ apiVariables: newVars });
+  };
+
+  const updateVariableType = (key: string, type: string) => {
+    const newVars = { ...apiVariables };
+    const currentVar = newVars[key];
+    newVars[key] = typeof currentVar === 'object' ? { ...currentVar, type } : { value: currentVar || "", type };
     handleConfigChange({ apiVariables: newVars });
   };
 
@@ -142,36 +155,58 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
               Nenhuma variável configurada
             </div>
           ) : (
-            Object.entries(apiVariables).map(([key, value]) => (
-              <div key={key} className="flex gap-2 items-start p-2 bg-muted/50 rounded">
-                <div className="flex-1 space-y-2">
-                  <Input
-                    placeholder="Nome da variável"
-                    value={key}
-                    onChange={(e) => updateVariableKey(key, e.target.value)}
-                    className="h-8 text-xs"
-                  />
-                  <RichTextEditor
-                    value={value as string}
-                    onChange={(newValue) => updateVariableValue(key, newValue)}
-                    placeholder="Valor da variável"
-                    multiline={false}
-                    nodes={nodes}
-                    edges={edges}
-                    selectedNode={selectedNode}
-                    showFormatting={false}
-                  />
+            Object.entries(apiVariables).map(([key, varData]) => {
+              const isVarObject = typeof varData === 'object' && varData !== null && 'value' in varData;
+              const value = isVarObject ? (varData as VariableData).value : String(varData);
+              const type = isVarObject ? (varData as VariableData).type : 'string';
+              
+              return (
+                <div key={key} className="flex gap-2 items-start p-2 bg-muted/50 rounded">
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      placeholder="Nome da variável"
+                      value={key}
+                      onChange={(e) => updateVariableKey(key, e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    <Select
+                      value={type}
+                      onValueChange={(newType) => updateVariableType(key, newType)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="string">String</SelectItem>
+                        <SelectItem value="number">Número</SelectItem>
+                        <SelectItem value="boolean">Booleano</SelectItem>
+                        <SelectItem value="date">Data</SelectItem>
+                        <SelectItem value="array">Array</SelectItem>
+                        <SelectItem value="object">Objeto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <RichTextEditor
+                      value={value}
+                      onChange={(newValue) => updateVariableValue(key, newValue)}
+                      placeholder="Valor da variável"
+                      multiline={false}
+                      nodes={nodes}
+                      edges={edges}
+                      selectedNode={selectedNode}
+                      showFormatting={false}
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeVariable(key)}
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => removeVariable(key)}
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
