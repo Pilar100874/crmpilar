@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
-import { Globe } from "lucide-react";
+import { Globe, X, Save } from "lucide-react";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -16,8 +16,10 @@ interface ReportBroDesignerProps {
 export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const reportBroRef = useRef<any>(null);
-const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [showApiDialog, setShowApiDialog] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
   const [apiData, setApiData] = useState<any>(null);
   const [loadingApiData, setLoadingApiData] = useState(false);
@@ -599,6 +601,7 @@ const [isLoaded, setIsLoaded] = useState(false);
   const handleSave = async () => {
     if (!reportBroRef.current || !reportId) return;
 
+    setIsSaving(true);
     try {
       const reportData = reportBroRef.current.getReport();
       
@@ -613,9 +616,30 @@ const [isLoaded, setIsLoaded] = useState(false);
       if (error) throw error;
 
       toast.success("Relatório salvo com sucesso!");
+      return true;
     } catch (error) {
       console.error("Erro ao salvar:", error);
       toast.error("Erro ao salvar relatório");
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleExitClick = () => {
+    setShowExitDialog(true);
+  };
+
+  const handleExitWithoutSaving = () => {
+    setShowExitDialog(false);
+    onClose();
+  };
+
+  const handleSaveAndExit = async () => {
+    const saved = await handleSave();
+    if (saved) {
+      setShowExitDialog(false);
+      onClose();
     }
   };
 
@@ -830,7 +854,7 @@ const [isLoaded, setIsLoaded] = useState(false);
   // Nenhuma captura adicional de teclado para não interferir nos handlers internos do designer.
   return (
     <div className="h-full flex flex-col bg-background relative">
-      {/* Botão de API integrado na interface - lado esquerdo */}
+      {/* Botões de controle - API (esquerda) e Sair (direita) */}
       <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
         <Button
           size="sm"
@@ -861,6 +885,19 @@ const [isLoaded, setIsLoaded] = useState(false);
             )}
           </Button>
         )}
+      </div>
+
+      {/* Botão de Sair - lado direito */}
+      <div className="absolute top-2 right-2 z-10">
+        <Button
+          size="sm"
+          onClick={handleExitClick}
+          variant="outline"
+          className="gap-2 shadow-lg"
+        >
+          <X className="h-4 w-4" />
+          Sair
+        </Button>
       </div>
 
       {/* Designer Container - ReportBro com toolbar padrão */}
@@ -916,6 +953,43 @@ const [isLoaded, setIsLoaded] = useState(false);
               </details>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Confirmação de Saída */}
+      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deseja salvar antes de sair?</DialogTitle>
+            <DialogDescription>
+              Você tem alterações não salvas. Deseja salvar o relatório antes de sair?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExitWithoutSaving}
+            >
+              Não Salvar
+            </Button>
+            <Button
+              onClick={handleSaveAndExit}
+              disabled={isSaving}
+              className="gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-background"></div>
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Salvar e Sair
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
