@@ -40,6 +40,8 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
   const [testingUrl, setTestingUrl] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<any>(null);
   const [variables, setVariables] = useState<APIVariable[]>(currentVariables || []);
+  const [selectedEndpoint, setSelectedEndpoint] = useState<APIEndpoint | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("endpoints");
 
   useEffect(() => {
     loadEndpoints();
@@ -81,10 +83,32 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
     return `https://${projectId}.supabase.co/functions/v1/execute-dynamic-query/${endpoint.endpoint_path}`;
   };
 
-  const handleSelectEndpoint = (endpoint: APIEndpoint) => {
-    const url = getFullUrl(endpoint);
-    onSelect(url, endpoint.name, variables);
-    toast.success(`API "${endpoint.name}" selecionada`);
+  const loadEndpointVariables = (endpoint: APIEndpoint) => {
+    setSelectedEndpoint(endpoint);
+    
+    // Carregar variáveis dos parâmetros da API
+    if (endpoint.parameters && endpoint.parameters.length > 0) {
+      const apiVars: APIVariable[] = endpoint.parameters.map((param: any) => ({
+        name: param.name || "",
+        type: param.type || "string",
+        value: "" // Deixa vazio para solicitar no preview
+      }));
+      setVariables(apiVars);
+      toast.info(`${apiVars.length} variável(is) carregada(s) da API`);
+    } else {
+      setVariables([]);
+      toast.info("API sem parâmetros configurados");
+    }
+  };
+
+  const handleSelectEndpoint = () => {
+    if (!selectedEndpoint) {
+      toast.error("Selecione uma API primeiro");
+      return;
+    }
+    const url = getFullUrl(selectedEndpoint);
+    onSelect(url, selectedEndpoint.name, variables);
+    toast.success(`API "${selectedEndpoint.name}" configurada com sucesso`);
   };
 
   const handleSelectCustomUrl = () => {
@@ -142,104 +166,7 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
 
   return (
     <div className="space-y-4">
-      {/* Configuração de Variáveis */}
-      <Card className="p-4 bg-muted/30">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">Variáveis da API</h3>
-          <Button size="sm" variant="outline" onClick={addVariable}>
-            <Plus className="h-4 w-4 mr-1" />
-            Adicionar
-          </Button>
-        </div>
-        
-        {variables.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-3">
-            Nenhuma variável configurada. Variáveis sem valor fixo serão solicitadas no preview.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {variables.map((variable, index) => (
-              <div key={index} className="p-3 bg-background rounded border space-y-2">
-                <div className="flex gap-2 items-start">
-                  <div className="flex-1 space-y-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Nome da Variável *</Label>
-                      <Input
-                        placeholder="Ex: cliente_id, data_inicio, etc"
-                        value={variable.name}
-                        onChange={(e) => updateVariable(index, "name", e.target.value)}
-                        className="h-9"
-                      />
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Tipo</Label>
-                      <Select
-                        value={variable.type}
-                        onValueChange={(value) => updateVariable(index, "type", value)}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="string">String (Texto)</SelectItem>
-                          <SelectItem value="number">Number (Número)</SelectItem>
-                          <SelectItem value="boolean">Boolean (Verdadeiro/Falso)</SelectItem>
-                          <SelectItem value="date">Date (Data)</SelectItem>
-                          <SelectItem value="array">Array (Lista)</SelectItem>
-                          <SelectItem value="object">Object (Objeto JSON)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        Valor Fixo (opcional)
-                        {!variable.value && (
-                          <span className="ml-2 text-amber-600 font-medium">
-                            ⚠️ Será solicitado no preview
-                          </span>
-                        )}
-                      </Label>
-                      <Input
-                        placeholder={
-                          variable.type === 'array' ? '["item1", "item2"]' :
-                          variable.type === 'object' ? '{"chave": "valor"}' :
-                          variable.type === 'boolean' ? 'true ou false' :
-                          variable.type === 'date' ? 'YYYY-MM-DD' :
-                          variable.type === 'number' ? '123' :
-                          'Deixe vazio para solicitar no preview'
-                        }
-                        value={variable.value}
-                        onChange={(e) => updateVariable(index, "value", e.target.value)}
-                        className="h-9"
-                      />
-                      <p className="text-[10px] text-muted-foreground">
-                        {variable.value 
-                          ? '✓ Valor fixo será enviado automaticamente' 
-                          : '⚠️ Sistema pedirá este valor ao gerar o preview do relatório'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => removeVariable(index)}
-                    className="h-9 w-9 mt-5"
-                    title="Remover variável"
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <Tabs defaultValue="endpoints" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="endpoints">
             <Database className="h-4 w-4 mr-2" />
@@ -251,67 +178,78 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="endpoints" className="space-y-3 max-h-[400px] overflow-y-auto">
-          {endpoints.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Database className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Nenhuma API cadastrada</p>
-              <p className="text-sm">Crie APIs na tela de Gerador de API</p>
-            </div>
-          ) : (
-            endpoints.map((endpoint) => {
-              const url = getFullUrl(endpoint);
-              const isTesting = testingUrl === url;
-              
-              return (
-                <Card key={endpoint.id} className="p-4 hover:bg-accent/50 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold truncate">{endpoint.name}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          {endpoint.http_method}
-                        </Badge>
-                      </div>
-                      
-                      {endpoint.description && (
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {endpoint.description}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                        <Link className="h-3 w-3" />
-                        <code className="bg-muted px-1 rounded truncate max-w-[300px]">
-                          {url}
-                        </code>
-                      </div>
-
-                      {endpoint.parameters && endpoint.parameters.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {endpoint.parameters.map((param: any, idx: number) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {param.name}
-                            </Badge>
-                          ))}
+        <TabsContent value="endpoints" className="space-y-3">
+          <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
+            {endpoints.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Database className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>Nenhuma API cadastrada</p>
+                <p className="text-sm">Crie APIs na tela de Gerador de API</p>
+              </div>
+            ) : (
+              endpoints.map((endpoint) => {
+                const url = getFullUrl(endpoint);
+                const isTesting = testingUrl === url;
+                const isSelected = selectedEndpoint?.id === endpoint.id;
+                
+                return (
+                  <Card 
+                    key={endpoint.id} 
+                    className={`p-4 cursor-pointer transition-all ${
+                      isSelected 
+                        ? 'border-primary bg-primary/5 shadow-sm' 
+                        : 'hover:bg-accent/50 hover:border-accent'
+                    }`}
+                    onClick={() => loadEndpointVariables(endpoint)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold truncate">{endpoint.name}</h4>
+                          <Badge variant="outline" className="text-xs">
+                            {endpoint.http_method}
+                          </Badge>
+                          {isSelected && (
+                            <Badge className="text-xs">Selecionada</Badge>
+                          )}
                         </div>
-                      )}
-                    </div>
+                        
+                        {endpoint.description && (
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {endpoint.description}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                          <Link className="h-3 w-3" />
+                          <code className="bg-muted px-1 rounded text-[10px] truncate max-w-[300px]">
+                            /{endpoint.endpoint_path}
+                          </code>
+                        </div>
 
-                    <div className="flex flex-col gap-2">
+                        {endpoint.parameters && endpoint.parameters.length > 0 && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-muted-foreground">Parâmetros:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {endpoint.parameters.map((param: any, idx: number) => (
+                                <Badge key={idx} variant="secondary" className="text-[10px] py-0">
+                                  {param.name} ({param.type || 'string'})
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <Button
                         size="sm"
-                        onClick={() => handleSelectEndpoint(endpoint)}
-                        className="whitespace-nowrap"
-                      >
-                        Selecionar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => testApi(url)}
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          testApi(url);
+                        }}
                         disabled={isTesting}
-                        className="whitespace-nowrap"
+                        className="shrink-0"
                       >
                         {isTesting ? (
                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
@@ -320,50 +258,185 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                         )}
                       </Button>
                     </div>
-                  </div>
-                </Card>
-              );
-            })
-          )}
+                  </Card>
+                );
+              })
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="custom" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="customUrl">URL da API</Label>
-            <Input
-              id="customUrl"
-              type="url"
-              placeholder="https://api.exemplo.com/dados"
-              value={customUrl}
-              onChange={(e) => setCustomUrl(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Digite a URL completa da API que retorna dados em JSON
-            </p>
-          </div>
+          <Card className="p-4 bg-muted/30">
+            <div className="space-y-2">
+              <Label htmlFor="customUrl">URL da API</Label>
+              <Input
+                id="customUrl"
+                type="url"
+                placeholder="https://api.exemplo.com/dados"
+                value={customUrl}
+                onChange={(e) => {
+                  setCustomUrl(e.target.value);
+                  setSelectedEndpoint(null);
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Digite a URL completa da API que retorna dados em JSON
+              </p>
+            </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={handleSelectCustomUrl}
-              disabled={!customUrl.trim()}
-              className="flex-1"
-            >
-              Usar esta URL
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => testApi(customUrl)}
-              disabled={!customUrl.trim() || testingUrl === customUrl}
-            >
-              {testingUrl === customUrl ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+            <div className="flex gap-2 mt-3">
+              <Button
+                variant="outline"
+                onClick={() => testApi(customUrl)}
+                disabled={!customUrl.trim() || testingUrl === customUrl}
+              >
+                {testingUrl === customUrl ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Testar API
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Configuração de Variáveis - Aparece após selecionar API ou na aba customizada */}
+      {(selectedEndpoint || activeTab === "custom") && (
+        <Card className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                Configurar Variáveis
+                {selectedEndpoint && (
+                  <Badge variant="outline" className="text-xs">
+                    {selectedEndpoint.name}
+                  </Badge>
+                )}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                {selectedEndpoint 
+                  ? "Preencha os valores para as variáveis da API selecionada"
+                  : "Adicione variáveis que serão enviadas via query string"
+                }
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={addVariable}>
+              <Plus className="h-4 w-4 mr-1" />
+              Adicionar
+            </Button>
+          </div>
+          
+          {variables.length === 0 ? (
+            <div className="text-center py-6 border-2 border-dashed rounded-lg bg-background/50">
+              <p className="text-xs text-muted-foreground">
+                {selectedEndpoint 
+                  ? "Esta API não possui parâmetros configurados"
+                  : "Nenhuma variável adicionada"
+                }
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Clique em "Adicionar" para criar variáveis personalizadas
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {variables.map((variable, index) => (
+                <div key={index} className="p-3 bg-background rounded-lg border shadow-sm space-y-2">
+                  <div className="flex gap-2 items-start">
+                    <div className="flex-1 grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Nome *</Label>
+                        <Input
+                          placeholder="nome_parametro"
+                          value={variable.name}
+                          onChange={(e) => updateVariable(index, "name", e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Tipo</Label>
+                        <Select
+                          value={variable.type}
+                          onValueChange={(value) => updateVariable(index, "type", value)}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="string">String</SelectItem>
+                            <SelectItem value="number">Number</SelectItem>
+                            <SelectItem value="boolean">Boolean</SelectItem>
+                            <SelectItem value="date">Date</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                          Valor
+                          {!variable.value && (
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 bg-amber-500/10 text-amber-700 border-amber-200">
+                              Será solicitado
+                            </Badge>
+                          )}
+                        </Label>
+                        <Input
+                          placeholder={
+                            variable.type === 'boolean' ? 'true/false' :
+                            variable.type === 'date' ? 'YYYY-MM-DD' :
+                            variable.type === 'number' ? '123' :
+                            'Opcional'
+                          }
+                          value={variable.value}
+                          onChange={(e) => updateVariable(index, "value", e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => removeVariable(index)}
+                      className="h-9 w-9 mt-5"
+                      title="Remover variável"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground pl-1">
+                    {variable.value 
+                      ? '✓ Este valor será enviado automaticamente na URL' 
+                      : '⚠️ Sistema solicitará este valor ao gerar o preview'
+                    }
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Botão de ação final */}
+          <div className="mt-4 pt-4 border-t">
+            <Button 
+              onClick={activeTab === "endpoints" ? handleSelectEndpoint : handleSelectCustomUrl}
+              disabled={activeTab === "endpoints" ? !selectedEndpoint : !customUrl.trim()}
+              className="w-full"
+              size="lg"
+            >
+              {activeTab === "endpoints" 
+                ? `Usar API${selectedEndpoint ? `: ${selectedEndpoint.name}` : ''}`
+                : "Usar URL Customizada"
+              }
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {testResult && (
         <Card className="p-4 bg-muted/50">
