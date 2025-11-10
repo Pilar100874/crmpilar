@@ -75,7 +75,7 @@ serve(async (req) => {
 
     console.log("📝 Parâmetros finais para o relatório:", Object.keys(parameters));
 
-    // 4. Gerar PDF usando ReportBro API
+    // 4. Gerar PDF usando ReportBro API (PUT para obter key)
     const reportBroApiUrl = 'https://www.reportbro.com/report/run';
     
     const reportPayload = {
@@ -84,26 +84,64 @@ serve(async (req) => {
       isTestData: false,
     };
 
-    console.log("🚀 Chamando API ReportBro...");
+    console.log("🚀 Chamando API ReportBro (PUT)...");
 
-    const pdfResponse = await fetch(reportBroApiUrl, {
-      method: 'POST',
+    const initResponse = await fetch(reportBroApiUrl, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(reportPayload),
     });
 
-    if (!pdfResponse.ok) {
-      const errorText = await pdfResponse.text();
-      console.error("❌ Erro ReportBro API:", errorText);
-      throw new Error(`ReportBro API error: ${pdfResponse.status}`);
+    if (!initResponse.ok) {
+      const errorText = await initResponse.text();
+      console.error("❌ Erro ReportBro API (init):", errorText);
+      throw new Error(`ReportBro API error: ${initResponse.status}`);
     }
 
-    let pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
-    console.log("✅ PDF gerado, tamanho:", pdfBytes.length);
+    const initText = await initResponse.text();
+    console.log("🔑 Resposta ReportBro:", initText);
+    
+    // Extrair key da resposta (formato: "key:XXXXX")
+    const keyMatch = initText.match(/key:([a-f0-9-]+)/);
+    if (!keyMatch) {
+      throw new Error('Key não encontrada na resposta da API');
+    }
+    const reportKey = keyMatch[1];
+    console.log("✅ Key obtida:", reportKey);
 
-    // 5. Adicionar retângulo branco no rodapé (cobrir marca d'água)
+    // 5. Polling para buscar o PDF gerado
+    console.log("⏳ Aguardando geração do PDF...");
+    let pdfBytes: Uint8Array | null = null;
+    const maxAttempts = 60; // 2 minutos (60 x 2s)
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (attempt % 5 === 0) {
+        console.log(`🔄 Tentativa ${attempt}/${maxAttempts}...`);
+      }
+      
+      const pollResponse = await fetch(`${reportBroApiUrl}?key=${reportKey}`);
+      
+      if (pollResponse.ok) {
+        const contentType = pollResponse.headers.get('content-type');
+        
+        if (contentType?.includes('application/pdf')) {
+          pdfBytes = new Uint8Array(await pollResponse.arrayBuffer());
+          console.log("✅ PDF gerado, tamanho:", pdfBytes.length);
+          break;
+        }
+      }
+      
+      // Aguardar 2 segundos antes da próxima tentativa
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    if (!pdfBytes) {
+      throw new Error('Timeout: PDF não foi gerado a tempo');
+    }
+
+    // 6. Adicionar retângulo branco no rodapé (cobrir marca d'água)
     try {
       const pdfDoc = await PDFDocument.load(pdfBytes);
       const pages = pdfDoc.getPages();
@@ -129,7 +167,7 @@ serve(async (req) => {
       // Continua com o PDF original
     }
 
-    // 6. Salvar PDF no storage
+    // 7. Salvar PDF no storage
     const fileName = `relatorio_${relatorioId}_${Date.now()}.pdf`;
     const filePath = `relatorios/${fileName}`;
 
@@ -145,7 +183,7 @@ serve(async (req) => {
       throw new Error(`Erro ao salvar PDF: ${uploadError.message}`);
     }
 
-    // 7. Obter URL pública
+    // 8. Obter URL pública
     const { data: urlData } = supabase.storage
       .from('bot-media')
       .getPublicUrl(filePath);
