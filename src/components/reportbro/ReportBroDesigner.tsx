@@ -928,44 +928,49 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       </div>
 
       <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Configurar API de Dados</DialogTitle>
             <DialogDescription>
               Selecione uma API cadastrada ou configure uma URL customizada
             </DialogDescription>
           </DialogHeader>
-          <APIDataSourceSelector 
-            onSelect={handleApiSelect}
-            currentUrl={currentApiUrl}
-          />
-          {apiData && (
-            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-              <h4 className="font-semibold mb-2 text-sm">Dados Carregados ({apiData.length} registros):</h4>
-              <div className="text-xs space-y-2">
-                <div className="p-2 bg-background rounded">
-                  <p className="font-semibold mb-1">Como usar no ReportBro:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                    <li>Vá em "Parâmetros" no painel lateral</li>
-                    <li>Você verá o parâmetro <code className="bg-muted px-1 rounded">api_data</code> criado</li>
-                    <li>Para usar em tabela: arraste <code className="bg-muted px-1 rounded">api_data</code> para a tabela</li>
-                    <li>Para campos: use <code className="bg-muted px-1 rounded">{"{"}api_data.campo{"}"}</code> em elementos de texto</li>
-                  </ol>
+          
+          <div className="flex-1 overflow-y-auto pr-2">
+            <APIDataSourceSelector 
+              onSelect={handleApiSelect}
+              currentUrl={currentApiUrl}
+            />
+            {apiData && (
+              <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-semibold mb-2 text-sm">Dados Carregados ({apiData.length} registros):</h4>
+                <div className="text-xs space-y-2">
+                  <div className="p-2 bg-background rounded">
+                    <p className="font-semibold mb-1">Como usar no ReportBro:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                      <li>Vá em "Parâmetros" no painel lateral</li>
+                      <li>Você verá o parâmetro <code className="bg-muted px-1 rounded">api_data</code> criado</li>
+                      <li>Para usar em tabela: arraste <code className="bg-muted px-1 rounded">api_data</code> para a tabela</li>
+                      <li>Para campos: use <code className="bg-muted px-1 rounded">{"{"}api_data.campo{"}"}</code> em elementos de texto</li>
+                    </ol>
+                  </div>
+                  <p className="font-mono text-muted-foreground truncate">
+                    Campos disponíveis: {apiData.length > 0 && Object.keys(apiData[0]).join(", ")}
+                  </p>
                 </div>
-                <p className="font-mono text-muted-foreground">
-                  Campos disponíveis: {apiData.length > 0 && Object.keys(apiData[0]).join(", ")}
-                </p>
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1">
+                    Ver dados completos (JSON)
+                  </summary>
+                  <div className="mt-2 p-2 bg-background rounded max-h-[200px] overflow-auto">
+                    <pre className="text-xs whitespace-pre-wrap break-words">
+                      {JSON.stringify(apiData, null, 2)}
+                    </pre>
+                  </div>
+                </details>
               </div>
-              <details className="mt-2">
-                <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
-                  Ver dados completos (JSON)
-                </summary>
-                <pre className="mt-2 p-2 bg-background rounded text-xs overflow-x-auto max-h-40 overflow-y-auto">
-                  {JSON.stringify(apiData, null, 2)}
-                </pre>
-              </details>
-            </div>
-          )}
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
