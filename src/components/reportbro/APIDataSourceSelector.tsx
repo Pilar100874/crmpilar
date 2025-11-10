@@ -147,16 +147,18 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
           name: customApiName,
           description: "URL customizada configurada via ReportBro",
           endpoint_path: customUrl,
-          custom_url: customUrl,
-          is_custom: true,
           http_method: "GET",
           active: true,
+          database_type: "custom",
+          query: "",
           parameters: variables.map(v => ({
             name: v.name,
             type: v.type,
             default_value: v.value
           })),
-          estabelecimento_id: estabId
+          estabelecimento_id: estabId,
+          is_custom: true,
+          custom_url: customUrl
         });
 
       if (error) throw error;

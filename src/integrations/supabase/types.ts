@@ -46,12 +46,14 @@ export type Database = {
           active: boolean | null
           connection_id: string | null
           created_at: string | null
+          custom_url: string | null
           database_type: string
           description: string | null
           endpoint_path: string
           estabelecimento_id: string | null
           http_method: string
           id: string
+          is_custom: boolean | null
           name: string
           parameters: Json | null
           query: string
@@ -64,12 +66,14 @@ export type Database = {
           active?: boolean | null
           connection_id?: string | null
           created_at?: string | null
+          custom_url?: string | null
           database_type: string
           description?: string | null
           endpoint_path: string
           estabelecimento_id?: string | null
           http_method: string
           id?: string
+          is_custom?: boolean | null
           name: string
           parameters?: Json | null
           query: string
@@ -82,12 +86,14 @@ export type Database = {
           active?: boolean | null
           connection_id?: string | null
           created_at?: string | null
+          custom_url?: string | null
           database_type?: string
           description?: string | null
           endpoint_path?: string
           estabelecimento_id?: string | null
           http_method?: string
           id?: string
+          is_custom?: boolean | null
           name?: string
           parameters?: Json | null
           query?: string
@@ -1760,6 +1766,53 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: true
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relatorio_jobs: {
+        Row: {
+          api_variables: Json | null
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          pdf_url: string | null
+          relatorio_id: string
+          reportbro_key: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_variables?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          pdf_url?: string | null
+          relatorio_id: string
+          reportbro_key?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_variables?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          pdf_url?: string | null
+          relatorio_id?: string
+          reportbro_key?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorio_jobs_relatorio_id_fkey"
+            columns: ["relatorio_id"]
+            isOneToOne: false
+            referencedRelation: "relatorios"
             referencedColumns: ["id"]
           },
         ]
