@@ -37,10 +37,10 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
   }, []);
 
   useEffect(() => {
-    if (config.relatorioId) {
+    if (config.relatorioId && relatorios.length > 0) {
       loadReportVariables(config.relatorioId);
     }
-  }, [config.relatorioId]);
+  }, [config.relatorioId, relatorios]);
 
   const loadRelatorios = async () => {
     try {
@@ -70,16 +70,22 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
 
   const loadReportVariables = async (relatorioId: string) => {
     setLoadingVariables(true);
+    console.log("📊 Carregando variáveis para relatório:", relatorioId);
+    
     try {
       const relatorio = relatorios.find(r => r.id === relatorioId);
       if (!relatorio) {
+        console.log("❌ Relatório não encontrado");
         handleConfigChange({ apiVariables: {} });
         setLoadingVariables(false);
         return;
       }
 
+      console.log("✅ Relatório encontrado:", relatorio);
+
       // Primeiro tenta usar os parametros do relatório
-      if (relatorio.parametros && Array.isArray(relatorio.parametros)) {
+      if (relatorio.parametros && Array.isArray(relatorio.parametros) && relatorio.parametros.length > 0) {
+        console.log("📝 Usando parâmetros do relatório:", relatorio.parametros);
         const newVars: Record<string, VariableData> = {};
         relatorio.parametros.forEach((param: any) => {
           newVars[param.name] = {
@@ -87,6 +93,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
             type: param.type || "string"
           };
         });
+        console.log("✅ Variáveis configuradas:", newVars);
         handleConfigChange({ apiVariables: newVars });
         setLoadingVariables(false);
         return;
@@ -94,11 +101,13 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
 
       // Se não tiver parametros, tenta buscar da API configurada
       if (relatorio.configuracoes?.api_url) {
-        // Extrai o endpoint path da URL configurada
+        console.log("🔗 Tentando buscar variáveis da API:", relatorio.configuracoes.api_url);
         const apiUrl = relatorio.configuracoes.api_url;
         const urlParts = apiUrl.split('/api/');
+        
         if (urlParts.length > 1) {
           const endpointPath = '/api/' + urlParts[1].split('?')[0];
+          console.log("🔍 Buscando endpoint:", endpointPath);
           
           const { data: apiData, error } = await supabase
             .from('api_endpoints')
@@ -106,7 +115,8 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
             .eq('endpoint_path', endpointPath)
             .maybeSingle();
 
-          if (!error && apiData?.parameters && Array.isArray(apiData.parameters)) {
+          if (!error && apiData?.parameters && Array.isArray(apiData.parameters) && apiData.parameters.length > 0) {
+            console.log("📝 Parâmetros encontrados na API:", apiData.parameters);
             const newVars: Record<string, VariableData> = {};
             apiData.parameters.forEach((param: any) => {
               newVars[param.name] = {
@@ -114,16 +124,20 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
                 type: param.type || "string"
               };
             });
+            console.log("✅ Variáveis da API configuradas:", newVars);
             handleConfigChange({ apiVariables: newVars });
             setLoadingVariables(false);
             return;
+          } else {
+            console.log("⚠️ Nenhum parâmetro encontrado na API ou erro:", error);
           }
         }
       }
 
+      console.log("ℹ️ Nenhuma variável encontrada para este relatório");
       handleConfigChange({ apiVariables: {} });
     } catch (error) {
-      console.error("Erro ao carregar variáveis do relatório:", error);
+      console.error("❌ Erro ao carregar variáveis do relatório:", error);
       handleConfigChange({ apiVariables: {} });
     } finally {
       setLoadingVariables(false);
