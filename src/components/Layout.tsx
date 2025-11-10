@@ -358,6 +358,41 @@ export default function Layout({ children }: LayoutProps) {
 
           <ScrollArea className="flex-1 bg-sidebar">
             <div className="py-2">
+              {/* Atalhos fixos: Empresa e Usuário acima do menu */}
+              <div className="flex flex-col items-center gap-1 mb-2">
+                {/* Empresa */}
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowEstabelecimentoSelector(true)}
+                    className="w-full flex flex-col items-center justify-center gap-1 py-2 px-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md transition-colors"
+                  >
+                    <Building2 className="w-5 h-5" />
+                    <span className="text-[10px] font-medium leading-tight text-center">
+                      {estabelecimentoName || "Selecionar"}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="w-full flex flex-col items-center justify-center gap-1 py-2 px-2 text-sidebar-foreground/70 rounded-md">
+                    <Building2 className="w-5 h-5" />
+                    <span className="text-[10px] font-medium leading-tight text-center">
+                      {estabelecimentoName || "Empresa"}
+                    </span>
+                  </div>
+                )}
+
+                {/* Usuário */}
+                <button
+                  type="button"
+                  onClick={() => setShowUsuarioSelector(true)}
+                  className="w-full flex flex-col items-center justify-center gap-1 py-2 px-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md transition-colors"
+                >
+                  <UserIcon className="w-5 h-5" />
+                  <span className="text-[10px] font-medium leading-tight text-center">
+                    {userName || user?.email?.split("@")[0] || "Usuário"}
+                  </span>
+                </button>
+              </div>
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
