@@ -78,7 +78,12 @@ export function ReportBroViewer() {
       setJobId("");
 
       const { data: result, error: fnError } = await supabase.functions.invoke('reportbro-preview', {
-        body: { reportId: data.reportId, page: currentPage, pageSize }
+        body: { 
+          reportId: data.reportId, 
+          page: currentPage, 
+          pageSize,
+          testVariables: data.testVariables || {}
+        }
       });
 
       if (fnError || !result?.success) {

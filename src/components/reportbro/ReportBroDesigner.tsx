@@ -6,6 +6,7 @@ import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
+import { TestVariablesDialog } from "./TestVariablesDialog";
 import { Globe, X, Save, FileText } from "lucide-react";
 
 interface ReportBroDesignerProps {
@@ -24,6 +25,8 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   const [currentApiUrl, setCurrentApiUrl] = useState<string>("");
   const [apiData, setApiData] = useState<any>(null);
   const [loadingApiData, setLoadingApiData] = useState(false);
+  const [showTestVariablesDialog, setShowTestVariablesDialog] = useState(false);
+  const [apiVariables, setApiVariables] = useState<Array<{ name: string; type: string }>>([]);
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -590,6 +593,16 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
         const config = data.configuracoes as any;
         if (config.api_url) {
           setCurrentApiUrl(config.api_url);
+          
+          // Extrai variáveis da configuração se existirem
+          if (config.api_variables && typeof config.api_variables === 'object') {
+            const vars = Object.entries(config.api_variables).map(([name, varData]: [string, any]) => ({
+              name,
+              type: varData?.type || 'string'
+            }));
+            setApiVariables(vars);
+          }
+          
           // Carrega API em segundo plano sem await
           loadApiData(config.api_url).catch(err => {
             console.error("Erro ao carregar API em background:", err);
@@ -653,6 +666,19 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       return;
     }
     
+    // Se houver variáveis configuradas, mostrar dialog de teste
+    if (apiVariables.length > 0) {
+      setShowTestVariablesDialog(true);
+      return;
+    }
+    
+    // Se não houver variáveis, continuar normalmente
+    openPreview();
+  };
+
+  const openPreview = async (testVariables?: Record<string, any>) => {
+    if (!reportBroRef.current || !reportId) return;
+    
     try {
       const reportData = reportBroRef.current.getReport();
       if (!reportData || typeof reportData !== 'object') {
@@ -677,7 +703,8 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       const layoutStr = JSON.stringify({
         report: cleanedData,
         reportId: reportId,
-        apiUrl: currentApiUrl
+        apiUrl: currentApiUrl,
+        testVariables: testVariables || {}
       });
 
       try {
@@ -1010,6 +1037,14 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de teste de variáveis */}
+      <TestVariablesDialog
+        open={showTestVariablesDialog}
+        onOpenChange={setShowTestVariablesDialog}
+        variables={apiVariables}
+        onSubmit={(values) => openPreview(values)}
+      />
 
     </div>
   );

@@ -13,6 +13,7 @@ type PreviewRequest = {
   maxRecords?: number;
   page?: number;
   pageSize?: number;
+  testVariables?: Record<string, any>;
 };
 
 serve(async (req) => {
@@ -64,17 +65,17 @@ serve(async (req) => {
       const ER: any = (globalThis as any).EdgeRuntime;
       if (ER?.waitUntil) {
         ER.waitUntil(
-          processPreview(job.id, body.reportId, pageSize, page, supabase).catch((err: any) => {
+          processPreview(job.id, body.reportId, pageSize, page, body.testVariables || {}, supabase).catch((err: any) => {
             console.error('Background processing error:', err);
           })
         );
       } else {
-        processPreview(job.id, body.reportId, pageSize, page, supabase).catch((err: any) => {
+        processPreview(job.id, body.reportId, pageSize, page, body.testVariables || {}, supabase).catch((err: any) => {
           console.error('Background processing error:', err);
         });
       }
     } catch (e) {
-      processPreview(job.id, body.reportId, pageSize, page, supabase).catch((err: any) => {
+      processPreview(job.id, body.reportId, pageSize, page, body.testVariables || {}, supabase).catch((err: any) => {
         console.error('Background processing error:', err);
       });
     }
@@ -92,7 +93,7 @@ serve(async (req) => {
   }
 });
 
-async function processPreview(jobId: string, reportId: string, pageSize: number, page: number, supabase: any) {
+async function processPreview(jobId: string, reportId: string, pageSize: number, page: number, testVariables: Record<string, any>, supabase: any) {
   try {
     console.log('Processing preview for job:', jobId);
 
@@ -114,38 +115,52 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
       throw new Error('API não configurada');
     }
 
-    // Build paginated URL if possible (supports page/size or offset/limit)
-    const pagination = cfg.pagination || {};
-    const type = (pagination.type || 'page') as 'page' | 'offset';
-    const pageParam = pagination.pageParam || 'page';
-    const sizeParam = pagination.sizeParam || 'pageSize';
-    const offsetParam = pagination.offsetParam || 'offset';
-    const limitParam = pagination.limitParam || 'limit';
-    const zeroBased = Boolean(pagination.zeroBased);
+    // Fetch API data - use POST com variáveis se houver, senão GET com paginação
+    let apiResp: Response;
+    
+    if (testVariables && Object.keys(testVariables).length > 0) {
+      // POST com variáveis de teste
+      console.log('Fetching data from API with test variables:', apiUrl);
+      apiResp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testVariables),
+      });
+    } else {
+      // GET com paginação (lógica original)
+      const pagination = cfg.pagination || {};
+      const type = (pagination.type || 'page') as 'page' | 'offset';
+      const pageParam = pagination.pageParam || 'page';
+      const sizeParam = pagination.sizeParam || 'pageSize';
+      const offsetParam = pagination.offsetParam || 'offset';
+      const limitParam = pagination.limitParam || 'limit';
+      const zeroBased = Boolean(pagination.zeroBased);
 
-    let finalUrl = apiUrl as string;
-    try {
-      const u = new URL(apiUrl);
-      if (type === 'offset') {
-        u.searchParams.set(offsetParam, String((page - 1) * pageSize));
-        u.searchParams.set(limitParam, String(pageSize));
-      } else {
-        u.searchParams.set(pageParam, String(zeroBased ? page - 1 : page));
-        u.searchParams.set(sizeParam, String(pageSize));
+      let finalUrl = apiUrl as string;
+      try {
+        const u = new URL(apiUrl);
+        if (type === 'offset') {
+          u.searchParams.set(offsetParam, String((page - 1) * pageSize));
+          u.searchParams.set(limitParam, String(pageSize));
+        } else {
+          u.searchParams.set(pageParam, String(zeroBased ? page - 1 : page));
+          u.searchParams.set(sizeParam, String(pageSize));
+        }
+        finalUrl = u.toString();
+      } catch {
+        const sep = apiUrl.includes('?') ? '&' : '?';
+        if (type === 'offset') {
+          finalUrl = `${apiUrl}${sep}${offsetParam}=${(page - 1) * pageSize}&${limitParam}=${pageSize}`;
+        } else {
+          finalUrl = `${apiUrl}${sep}${pageParam}=${zeroBased ? page - 1 : page}&${sizeParam}=${pageSize}`;
+        }
       }
-      finalUrl = u.toString();
-    } catch {
-      const sep = apiUrl.includes('?') ? '&' : '?';
-      if (type === 'offset') {
-        finalUrl = `${apiUrl}${sep}${offsetParam}=${(page - 1) * pageSize}&${limitParam}=${pageSize}`;
-      } else {
-        finalUrl = `${apiUrl}${sep}${pageParam}=${zeroBased ? page - 1 : page}&${sizeParam}=${pageSize}`;
-      }
+
+      console.log('Fetching data from API with pagination:', finalUrl);
+      apiResp = await fetch(finalUrl);
     }
-
-    // Fetch API data with pagination (server-side when supported)
-    console.log('Fetching data from API:', finalUrl);
-    const apiResp = await fetch(finalUrl);
     if (!apiResp.ok) {
       throw new Error(`Falha ao buscar dados da API (${apiResp.status})`);
     }
