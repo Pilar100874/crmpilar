@@ -613,16 +613,32 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                       setSelectedEndpoint(null);
                     }}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {paramType === "query" 
-                      ? "Parâmetros serão enviados na URL (?param=value)"
-                      : paramType === "json"
-                      ? "Parâmetros serão enviados no corpo da requisição como JSON"
-                      : paramType === "formdata"
-                      ? "Parâmetros serão enviados como form-data"
-                      : "Parâmetros serão enviados como headers customizados (X-Custom-Name: value)"
-                    }
-                  </p>
+                  {paramType === "header" && (
+                    <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                      <p className="text-xs font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                        Formato Custom Header:
+                      </p>
+                      <p className="text-xs text-amber-800 dark:text-amber-200">
+                        Os parâmetros serão enviados em um único header com key="keys"
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                        Formato: <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">variavel,valor,tipo</code>
+                      </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        Exemplo: <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">prod,10000,string</code>
+                      </p>
+                    </div>
+                  )}
+                  {paramType !== "header" && (
+                    <p className="text-xs text-muted-foreground">
+                      {paramType === "query" 
+                        ? "Parâmetros serão enviados na URL (?param=value)"
+                        : paramType === "json"
+                        ? "Parâmetros serão enviados no corpo da requisição como JSON"
+                        : "Parâmetros serão enviados como form-data"
+                      }
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
@@ -664,7 +680,13 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
               <p className="text-xs text-muted-foreground mt-1">
                 {selectedEndpoint 
                   ? "Preencha os valores para as variáveis da API selecionada"
-                  : "Adicione variáveis que serão enviadas via query string"
+                  : paramType === "header"
+                  ? "Variáveis serão enviadas como header 'keys' no formato: variavel,valor,tipo"
+                  : paramType === "json"
+                  ? "Variáveis serão enviadas no corpo da requisição como JSON"
+                  : paramType === "formdata"
+                  ? "Variáveis serão enviadas como form-data"
+                  : "Variáveis serão enviadas como query string na URL"
                 }
               </p>
             </div>
@@ -754,13 +776,38 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
                     </Button>
                   </div>
                   <p className="text-[10px] text-muted-foreground pl-1">
-                    {variable.value 
-                      ? '✓ Este valor será enviado automaticamente na URL' 
-                      : '⚠️ Sistema solicitará este valor ao gerar o preview'
+                    {paramType === "header" 
+                      ? variable.value 
+                        ? `✓ Será enviado no header 'keys' como: ${variable.name},${variable.value},${variable.type}`
+                        : `⚠️ Sistema solicitará este valor para montar o header 'keys'`
+                      : variable.value 
+                        ? '✓ Este valor será enviado automaticamente' 
+                        : '⚠️ Sistema solicitará este valor ao gerar o preview'
                     }
                   </p>
                 </div>
               ))}
+              
+              {/* Preview do formato do header quando paramType for "header" */}
+              {paramType === "header" && variables.length > 0 && (
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                    Preview do Header:
+                  </p>
+                  <div className="font-mono text-xs bg-blue-100 dark:bg-blue-900/40 p-2 rounded">
+                    <div className="text-blue-800 dark:text-blue-200">
+                      <strong>Key:</strong> keys
+                    </div>
+                    <div className="text-blue-700 dark:text-blue-300 mt-1">
+                      <strong>Value:</strong>{' '}
+                      {variables
+                        .filter(v => v.name)
+                        .map(v => `${v.name},${v.value || '{valor}'},${v.type}`)
+                        .join(';')}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
