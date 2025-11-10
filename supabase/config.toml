@@ -25,3 +25,12 @@ verify_jwt = false
 [functions.test-report-query]
 verify_jwt = false
 
+[functions.reportbro-preview]
+verify_jwt = false
+
+[functions.gerar-relatorio-pdf]
+verify_jwt = false
+
+[functions.consultar-cnpj]
+verify_jwt = false
+
