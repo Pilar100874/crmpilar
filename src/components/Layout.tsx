@@ -323,36 +323,36 @@ export default function Layout({ children }: LayoutProps) {
             />
             {/* Informações do usuário e estabelecimento */}
             <div className="w-full px-1 space-y-2">
-              {estabelecimentoName && isAdmin && (
+              {/* Empresa - sempre visível */}
+              {isAdmin ? (
                 <button
                   onClick={() => setShowEstabelecimentoSelector(true)}
                   className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer"
                 >
                   <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
                   <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                    {estabelecimentoName}
+                    {estabelecimentoName || "Selecionar"}
                   </span>
                 </button>
-              )}
-              {estabelecimentoName && !isAdmin && (
+              ) : (
                 <div className="flex flex-col items-center">
                   <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
                   <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                    {estabelecimentoName}
+                    {estabelecimentoName || "Empresa"}
                   </span>
                 </div>
               )}
-              {userName && (
-                <button
-                  onClick={() => setShowUsuarioSelector(true)}
-                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
-                >
-                  <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
-                    {userName}
-                  </span>
-                </button>
-              )}
+
+              {/* Usuário - sempre visível */}
+              <button
+                onClick={() => setShowUsuarioSelector(true)}
+                className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
+              >
+                <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
+                  {userName || user?.email?.split("@")[0] || "Usuário"}
+                </span>
+              </button>
             </div>
           </div>
 
