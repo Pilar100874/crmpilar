@@ -862,6 +862,52 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "crm_gerar_relatorio": {
+        addSystemMessage("📄 Gerando relatório em background...");
+        try {
+          const relatorioId = interpolateVariables(config.relatorioId || "", context);
+          if (!relatorioId) {
+            addSystemMessage("❌ Nenhum relatório selecionado.");
+            break;
+          }
+
+          const rawVars = config.apiVariables || {};
+          const apiVariables: Record<string, any> = {};
+          for (const [key, val] of Object.entries(rawVars)) {
+            apiVariables[key] = typeof val === "string" ? interpolateVariables(val as string, context) : val;
+          }
+
+          const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+            body: { relatorioId, apiVariables }
+          });
+
+          if (error) {
+            addSystemMessage(`❌ Erro ao gerar relatório: ${error.message || error}`);
+            break;
+          }
+
+          if (data?.pdfUrl) {
+            addBotMediaMessage(data.pdfUrl, "file", data.fileName || "Relatório gerado", node.id);
+            const outputVar = normalizeVarName(config.outputVariable || "relatorio_gerado");
+            if (outputVar) {
+              setContext((prev) => ({ ...prev, [outputVar]: "Sucesso" }));
+            }
+            safeSetTimeout(() => {
+              const nextNode = getNextNode(node.id);
+              if (nextNode) {
+                setCurrentNodeId(nextNode.id);
+                executeNode(nextNode);
+              }
+            }, 500);
+          } else {
+            addSystemMessage("❌ Erro: Relatório não foi gerado corretamente.");
+          }
+        } catch (e: any) {
+          addSystemMessage(`❌ Erro ao gerar relatório: ${e?.message || e}`);
+        }
+        break;
+      }
+
       case "reply_buttons":
         const replyHeader = interpolateVariables(config.header || "", context);
         const replyText = interpolateVariables(config.text || "", context);
