@@ -369,6 +369,22 @@ const handleSelectCustomUrl = () => {
         </TabsList>
 
         <TabsContent value="endpoints" className="space-y-3">
+          {selectedEndpoint && (
+            <div className="bg-primary/10 border border-primary rounded-lg p-3 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">API Selecionada: {selectedEndpoint.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{selectedEndpoint.description || 'Sem descrição'}</p>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleSelectEndpoint}
+                className="shrink-0"
+              >
+                Usar esta API
+              </Button>
+            </div>
+          )}
+          
           <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
             {endpoints.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -463,6 +479,28 @@ const handleSelectCustomUrl = () => {
         </TabsContent>
 
         <TabsContent value="custom" className="space-y-4">
+          {selectedCustomEndpoint && (
+            <div className="bg-primary/10 border border-primary rounded-lg p-3 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">API Selecionada: {selectedCustomEndpoint.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{selectedCustomEndpoint.custom_url}</p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => {
+                  const url = selectedCustomEndpoint.custom_url || selectedCustomEndpoint.endpoint_path;
+                  const derivedMethod = selectedCustomEndpoint.http_method || "GET";
+                  const derivedParamType = (selectedCustomEndpoint.parameters && selectedCustomEndpoint.parameters[0]?.param_type) || "query";
+                  onSelect(url, selectedCustomEndpoint.name, variables, { httpMethod: derivedMethod, paramType: derivedParamType, isCustom: true });
+                  toast.success(`API "${selectedCustomEndpoint.name}" configurada com sucesso`);
+                }}
+                className="shrink-0"
+              >
+                Usar esta API
+              </Button>
+            </div>
+          )}
+          
           {/* Lista de URLs customizadas salvas */}
           {customEndpoints.length > 0 && !editingCustom && !customUrl && (
             <div className="space-y-2">
@@ -547,6 +585,22 @@ const handleSelectCustomUrl = () => {
           {/* Formulário de criar/editar URL customizada */}
           {(editingCustom || customUrl || customEndpoints.length === 0) && (
             <Card className="p-4 bg-muted/30">
+              {customUrl && !editingCustom && (
+                <div className="bg-primary/10 border border-primary rounded-lg p-3 mb-4 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">Nova API: {customApiName || "Sem nome"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{customUrl}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSelectCustomUrl}
+                    className="shrink-0"
+                  >
+                    Usar esta API
+                  </Button>
+                </div>
+              )}
+              
               <div className="space-y-4">
                 {editingCustom && (
                   <div className="flex items-center justify-between pb-3 border-b">
