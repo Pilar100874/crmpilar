@@ -338,38 +338,27 @@ export default function Layout({ children }: LayoutProps) {
             />
             {/* Informações do usuário e estabelecimento */}
             <div className="w-full px-1 space-y-2">
-              {isAdmin && (
-                <button
-                  onClick={() => setShowEstabelecimentoSelector(true)}
-                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer"
-                >
-                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                    {estabelecimentoName || "Selecionar Estabelecimento"}
-                  </span>
-                </button>
-              )}
+              <button
+                onClick={() => isAdmin && setShowEstabelecimentoSelector(true)}
+                disabled={!isAdmin}
+                className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title={isAdmin ? "Selecionar Estabelecimento" : "Somente visualização"}
+              >
+                <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
+                  {estabelecimentoName || "Estabelecimento"}
+                </span>
+              </button>
 
-              {!isAdmin && estabelecimentoName && (
-                <div className="flex flex-col items-center">
-                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                    {estabelecimentoName}
-                  </span>
-                </div>
-              )}
-
-              {(
-                <button
-                  onClick={() => setShowUsuarioSelector(true)}
-                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
-                >
-                  <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
-                    {userName || "Usuário"}
-                  </span>
-                </button>
-              )}
+              <button
+                onClick={() => setShowUsuarioSelector(true)}
+                className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
+              >
+                <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
+                  {userName || "Usuário"}
+                </span>
+              </button>
             </div>
           </div>
 

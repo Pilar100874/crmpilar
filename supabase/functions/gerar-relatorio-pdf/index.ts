@@ -116,7 +116,7 @@ async function processarRelatorio(
         
         // Polling com mais tempo (até 2 minutos)
         let attempts = 0;
-        const maxAttempts = 60; // 60 tentativas x 2 segundos = 2 minutos
+        const maxAttempts = 150; // 150 tentativas x 2 segundos = 5 minutos
         
         while (attempts < maxAttempts && !pdfBytes) {
           await new Promise(resolve => setTimeout(resolve, 2000));
