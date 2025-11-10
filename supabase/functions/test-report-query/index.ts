@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import sql from 'https://esm.sh/mssql@10.0.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,10 +41,7 @@ async function executeSqlServerQuery(server: string, database: string, username:
   };
 
   try {
-    const pkg = 'npm:' + 'mssql@^10';
-    const mod = await import(pkg as string);
-    const mssql = (mod as any).default ?? mod;
-    const pool = await mssql.connect(sqlConfig);
+    const pool = await sql.connect(sqlConfig);
     console.log('Connected to SQL Server. Executing query...');
     
     const result = await pool.request().query(query);

@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import sql from 'https://esm.sh/mssql@10.0.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,10 +43,6 @@ async function executeSqlServerQuery(config: SqlConfig, params: Record<string, a
   };
 
   try {
-    // Dynamic import to avoid build-time type checking issues
-    const sqlModule = await eval('import("npm:mssql@^10")');
-    const sql = sqlModule.default || sqlModule;
-    
     const pool = await sql.connect(sqlConfig);
     console.log('Connected successfully. Executing query...');
     
@@ -66,8 +63,6 @@ async function executeSqlServerQuery(config: SqlConfig, params: Record<string, a
   } catch (error) {
     console.error('SQL Server query error:', error);
     try {
-      const sqlModule = await eval('import("npm:mssql@^10")');
-      const sql = sqlModule.default || sqlModule;
       await sql.close();
     } catch (closeError) {
       console.error('Error closing connection:', closeError);
