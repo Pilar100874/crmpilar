@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, FileText, Eye, Copy, Trash2, MoreVertical, Edit } from "lucide-react";
+import { Plus, FileText, Eye, Copy, Trash2, MoreVertical, Edit, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -49,7 +49,9 @@ export default function Relatorios() {
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [currentReportId, setCurrentReportId] = useState<string | null>(null);
+  const [reportToEdit, setReportToEdit] = useState<Report | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
@@ -195,6 +197,45 @@ export default function Relatorios() {
     }
   };
 
+  const handleOpenEdit = (report: Report) => {
+    setReportToEdit(report);
+    setFormData({
+      nome: report.nome,
+      descricao: report.descricao || "",
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateReport = async () => {
+    if (!formData.nome) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+
+    if (!reportToEdit) return;
+
+    try {
+      const { error } = await supabase
+        .from("relatorios")
+        .update({
+          nome: formData.nome,
+          descricao: formData.descricao,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", reportToEdit.id);
+
+      if (error) throw error;
+
+      toast.success("Relatório atualizado com sucesso");
+      setShowEditDialog(false);
+      setReportToEdit(null);
+      setFormData({ nome: "", descricao: "" });
+      loadReports();
+    } catch (error: any) {
+      toast.error("Erro ao atualizar relatório: " + error.message);
+    }
+  };
+
   const handleCloseDesigner = () => {
     setShowDesigner(false);
     setCurrentReportId(null);
@@ -278,7 +319,15 @@ export default function Relatorios() {
                           handleEdit(report);
                         }}>
                           <Edit className="w-4 h-4 mr-2" />
-                          Editar
+                          Editar Designer
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleOpenEdit(report);
+                        }}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Renomear
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
@@ -389,6 +438,49 @@ export default function Relatorios() {
                   Cancelar
                 </Button>
                 <Button onClick={handleCreate}>Criar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog de Editar Modelo */}
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Editar Modelo de Relatório</DialogTitle>
+                <DialogDescription>
+                  Atualize os dados do modelo
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nome">Nome *</Label>
+                  <Input
+                    id="edit-nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Ex: Relatório de Vendas Mensal"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-descricao">Descrição</Label>
+                  <Textarea
+                    id="edit-descricao"
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    placeholder="Descrição detalhada do modelo..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  setShowEditDialog(false);
+                  setReportToEdit(null);
+                  setFormData({ nome: "", descricao: "" });
+                }}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleUpdateReport}>Salvar</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
