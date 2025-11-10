@@ -157,49 +157,82 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
             Nenhuma variável configurada. Variáveis sem valor fixo serão solicitadas no preview.
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {variables.map((variable, index) => (
-              <div key={index} className="flex gap-2 items-start p-2 bg-background rounded border">
-                <div className="flex-1 space-y-2">
-                  <Input
-                    placeholder="Nome da variável"
-                    value={variable.name}
-                    onChange={(e) => updateVariable(index, "name", e.target.value)}
-                    className="h-8 text-xs"
-                  />
-                  <div className="flex gap-2">
-                    <Select
-                      value={variable.type}
-                      onValueChange={(value) => updateVariable(index, "type", value)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="string">String</SelectItem>
-                        <SelectItem value="number">Number</SelectItem>
-                        <SelectItem value="boolean">Boolean</SelectItem>
-                        <SelectItem value="date">Date</SelectItem>
-                        <SelectItem value="array">Array</SelectItem>
-                        <SelectItem value="object">Object</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      placeholder="Valor (deixe em branco para solicitar no preview)"
-                      value={variable.value}
-                      onChange={(e) => updateVariable(index, "value", e.target.value)}
-                      className="h-8 text-xs flex-1"
-                    />
+              <div key={index} className="p-3 bg-background rounded border space-y-2">
+                <div className="flex gap-2 items-start">
+                  <div className="flex-1 space-y-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Nome da Variável *</Label>
+                      <Input
+                        placeholder="Ex: cliente_id, data_inicio, etc"
+                        value={variable.name}
+                        onChange={(e) => updateVariable(index, "name", e.target.value)}
+                        className="h-9"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Tipo</Label>
+                      <Select
+                        value={variable.type}
+                        onValueChange={(value) => updateVariable(index, "type", value)}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="string">String (Texto)</SelectItem>
+                          <SelectItem value="number">Number (Número)</SelectItem>
+                          <SelectItem value="boolean">Boolean (Verdadeiro/Falso)</SelectItem>
+                          <SelectItem value="date">Date (Data)</SelectItem>
+                          <SelectItem value="array">Array (Lista)</SelectItem>
+                          <SelectItem value="object">Object (Objeto JSON)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Valor Fixo (opcional)
+                        {!variable.value && (
+                          <span className="ml-2 text-amber-600 font-medium">
+                            ⚠️ Será solicitado no preview
+                          </span>
+                        )}
+                      </Label>
+                      <Input
+                        placeholder={
+                          variable.type === 'array' ? '["item1", "item2"]' :
+                          variable.type === 'object' ? '{"chave": "valor"}' :
+                          variable.type === 'boolean' ? 'true ou false' :
+                          variable.type === 'date' ? 'YYYY-MM-DD' :
+                          variable.type === 'number' ? '123' :
+                          'Deixe vazio para solicitar no preview'
+                        }
+                        value={variable.value}
+                        onChange={(e) => updateVariable(index, "value", e.target.value)}
+                        className="h-9"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        {variable.value 
+                          ? '✓ Valor fixo será enviado automaticamente' 
+                          : '⚠️ Sistema pedirá este valor ao gerar o preview do relatório'
+                        }
+                      </p>
+                    </div>
                   </div>
+                  
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeVariable(index)}
+                    className="h-9 w-9 mt-5"
+                    title="Remover variável"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeVariable(index)}
-                  className="h-8 w-8"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
             ))}
           </div>
