@@ -837,6 +837,7 @@ const loadApiData = async (
         const t = saved?.type || (typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'boolean' : 'string');
         return `${name},${value ?? ''},${t}`;
       }).join(';');
+      console.log('ParamType=header, keys header:', headerValue);
       if (headerValue) headers['keys'] = headerValue;
     }
     
