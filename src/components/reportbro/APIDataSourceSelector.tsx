@@ -310,8 +310,12 @@ const handleSelectCustomUrl = () => {
 
   const updateVariable = (index: number, field: keyof APIVariable, value: string) => {
     const newVariables = [...variables];
-    newVariables[index][field] = value;
+    newVariables[index] = {
+      ...newVariables[index],
+      [field]: value
+    };
     setVariables(newVariables);
+    console.log(`Variável ${index} atualizada:`, { field, value, allVariables: newVariables });
   };
 
   const removeVariable = (index: number) => {
