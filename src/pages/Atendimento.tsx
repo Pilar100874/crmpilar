@@ -675,9 +675,10 @@ export default function Atendimento() {
               )}
             </div>
 
-            <div className="border-t bg-card p-4 flex-shrink-0 overflow-hidden">
-              {/* AI Button and Chat */}
-              <div className="mb-3">
+            <div className="border-t bg-card flex-shrink-0">
+              <div className="max-h-[40vh] overflow-y-auto p-4 pb-0">
+                {/* AI Button and Chat */}
+                <div className="mb-3">
                 <Button
                   variant={showAIChat ? "default" : "outline"}
                   size="sm"
@@ -795,10 +796,11 @@ export default function Atendimento() {
                 </Card>
               )}
 
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                disabled={false}
-              />
+                <ChatInput
+                  onSendMessage={handleSendMessage}
+                  disabled={false}
+                />
+              </div>
             </div>
           </>
         ) : (

@@ -236,9 +236,28 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
   };
 
   const handleQuickAttachmentSelect = (attachment: any) => {
+    // Determinar o contentType baseado no tipo do anexo
+    let contentType: Message["contentType"] = "text";
+    
+    if (attachment.type === "file") {
+      // Mapear file_type para contentType apropriado
+      if (attachment.file_type === "image") {
+        contentType = "image";
+      } else if (attachment.file_type === "pdf" || attachment.file_type === "excel" || attachment.file_type === "word") {
+        contentType = "file";
+      } else {
+        contentType = "file";
+      }
+    }
+    
+    // Construir mensagem descritiva
+    const messageText = attachment.type === "link" 
+      ? attachment.title
+      : `${attachment.title}`;
+    
     onSendMessage(
-      `${attachment.type === "link" ? "Link" : "Arquivo"}: ${attachment.title}`,
-      attachment.type === "link" ? "text" : "file",
+      messageText,
+      contentType,
       attachment.url,
       attachment.title
     );
@@ -254,7 +273,7 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
             onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="min-h-[80px] resize-none overflow-hidden"
+            className="min-h-[80px] max-h-[200px] resize-none overflow-y-auto"
             disabled={disabled}
           />
         </div>
