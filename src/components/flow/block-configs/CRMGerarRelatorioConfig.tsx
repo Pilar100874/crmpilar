@@ -39,17 +39,23 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
   }, []);
 
   useEffect(() => {
-    if (config.relatorioId && relatorios.length > 0) {
-      // Limpar parâmetros anteriores antes de carregar novos
+    if (config.relatorioId) {
+      // Limpa apenas a lista local para evitar pisar nos valores já digitados
       setReportVariables([]);
-      handleConfigChange({ reportVariables: {} });
-      loadReportVariables(config.relatorioId);
-    } else if (!config.relatorioId) {
-      // Limpar quando não houver relatório selecionado
+      if (relatorios.length > 0) {
+        loadReportVariables(config.relatorioId);
+      }
+    } else {
       setReportVariables([]);
-      handleConfigChange({ reportVariables: {} });
     }
   }, [config.relatorioId]);
+
+  // Quando a lista de relatórios chegar/atualizar, recarrega os parâmetros do relatório selecionado
+  useEffect(() => {
+    if (config.relatorioId && relatorios.length > 0) {
+      loadReportVariables(config.relatorioId);
+    }
+  }, [relatorios]);
 
   const loadRelatorios = async () => {
     try {
