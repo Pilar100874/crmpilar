@@ -639,10 +639,10 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
       )}
 
       {testResult && (
-        <Card className="p-4 bg-muted/50">
-          <h4 className="font-semibold mb-2 text-sm">Resultado do Teste:</h4>
+        <Card className="p-4 bg-muted/50 space-y-4">
+          <h4 className="font-semibold text-sm">Resultado do Teste</h4>
           
-          {/* Tabela de Resultados */}
+          {/* Modo Tabela */}
           {(() => {
             let data: any[] = [];
             if (Array.isArray(testResult)) {
@@ -657,6 +657,12 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
               const columns = Object.keys(data[0]);
               return (
                 <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">Tabela</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {data.length} registro(s)
+                    </span>
+                  </div>
                   <div className="overflow-x-auto border rounded">
                     <table className="w-full text-xs">
                       <thead className="bg-muted">
@@ -694,15 +700,15 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
             return null;
           })()}
 
-          {/* JSON Completo */}
-          <details className="mt-2">
-            <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1">
-              Ver JSON completo
-            </summary>
-            <pre className="text-xs overflow-x-auto max-h-[200px] overflow-y-auto mt-2 p-2 bg-background rounded border">
-              {JSON.stringify(testResult, null, 2)}
-            </pre>
-          </details>
+          {/* Modo JSON */}
+          <div className="space-y-2">
+            <Badge variant="secondary" className="text-xs">JSON</Badge>
+            <ScrollArea className="h-[200px] w-full">
+              <pre className="text-xs p-3 bg-background rounded border">
+                {JSON.stringify(testResult, null, 2)}
+              </pre>
+            </ScrollArea>
+          </div>
         </Card>
       )}
     </div>
