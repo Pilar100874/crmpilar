@@ -270,6 +270,7 @@ serve(async (req) => {
     console.log("📋 Keys do report:", Object.keys(layoutData || {}));
     console.log("📋 Output Format:", outputFormat);
     console.log("📋 Parâmetros sendo enviados:", JSON.stringify(parameters, null, 2));
+    console.log("📋 Layout completo:", JSON.stringify(layoutData, null, 2));
 
     const initResponse = await fetch(reportBroApiUrl, {
       method: 'PUT',
@@ -282,7 +283,9 @@ serve(async (req) => {
     if (!initResponse.ok) {
       const errorText = await initResponse.text();
       console.error("❌ Erro ReportBro API (init):", errorText);
-      throw new Error(`ReportBro API error: ${initResponse.status}`);
+      console.error("❌ Status:", initResponse.status);
+      console.error("❌ Payload enviado:", JSON.stringify(reportPayload, null, 2));
+      throw new Error(`ReportBro API error: ${initResponse.status} - ${errorText}`);
     }
 
     const initText = await initResponse.text();
