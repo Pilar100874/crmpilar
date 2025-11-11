@@ -351,10 +351,11 @@ function BotBuilderContent() {
 
   const handleUpdateNode = useCallback(
     (nodeId: string, data: Partial<FlowNodeData>) => {
+      console.log("🔄 [BotBuilder.handleUpdateNode] nodeId:", nodeId, "data:", data);
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            return {
+            const updatedNode = {
               ...node,
               data: {
                 ...node.data,
@@ -365,11 +366,13 @@ function BotBuilderContent() {
                 },
               },
             };
+            console.log("💾 [BotBuilder.handleUpdateNode] Node atualizado:", updatedNode);
+            return updatedNode;
           }
           return node;
         })
       );
-      console.log("Node updated:", nodeId, data);
+      console.log("✅ [BotBuilder.handleUpdateNode] Node updated:", nodeId, data);
     },
     [setNodes]
   );

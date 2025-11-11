@@ -98,14 +98,14 @@ export const PropertiesPanel = ({
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === nodeData.type);
 
   const handleConfigChange = (key: string, value: any) => {
-    console.log("Config change:", key, value);
+    console.log("⚙️ [PropertiesPanel.handleConfigChange] key:", key, "value:", value);
     // Get fresh config from selectedNode to avoid stale state
     const currentConfig = (selectedNode.data as any).config || {};
     const newConfig = {
       ...currentConfig,
       [key]: value,
     };
-    console.log("New config:", newConfig);
+    console.log("✅ [PropertiesPanel.handleConfigChange] Novo config completo:", newConfig);
     onUpdateNode(selectedNode.id, {
       config: newConfig,
     });
@@ -356,7 +356,9 @@ export const PropertiesPanel = ({
         return <BlockConfigs.CRMGerarRelatorioConfig 
           {...configProps} 
           handleConfigChange={(updates: any) => {
+            console.log("📡 [PropertiesPanel] CRMGerarRelatorioConfig updates:", updates);
             Object.entries(updates).forEach(([key, value]) => {
+              console.log("📝 [PropertiesPanel] Chamando handleConfigChange:", key, value);
               handleConfigChange(key, value);
             });
           }}

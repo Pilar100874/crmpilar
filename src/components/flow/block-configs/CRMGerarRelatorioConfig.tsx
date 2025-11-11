@@ -194,9 +194,11 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
   const apiVariables = config.apiVariables || {};
 
   const updateVariableValue = (key: string, value: string) => {
+    console.log("🔧 [CRMGerarRelatorioConfig] Atualizando variável:", key, "com valor:", value);
     const newVars = { ...apiVariables };
     const currentVar = newVars[key];
     newVars[key] = typeof currentVar === 'object' ? { ...currentVar, value } : { value, type: "string" };
+    console.log("📦 [CRMGerarRelatorioConfig] Novo apiVariables:", newVars);
     handleConfigChange({ apiVariables: newVars });
   };
 
