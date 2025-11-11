@@ -31,6 +31,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
   const [relatorios, setRelatorios] = useState<Relatorio[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingVariables, setLoadingVariables] = useState(false);
+  const [reportVariables, setReportVariables] = useState<Array<{ name: string; type: string }>>([]);
 
   useEffect(() => {
     loadRelatorios();
@@ -77,6 +78,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       if (!relatorio) {
         console.log("❌ Relatório não encontrado");
         handleConfigChange({ apiVariables: {} });
+        setReportVariables([]);
         setLoadingVariables(false);
         return;
       }
@@ -84,6 +86,31 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       console.log("✅ Relatório encontrado:", relatorio);
       console.log("📋 Configurações do relatório:", relatorio.configuracoes);
       console.log("📋 Parâmetros do relatório:", relatorio.parametros);
+
+      // Extrair variáveis fixas do relatório (do layout do ReportBro)
+      if (relatorio.configuracoes?.layout) {
+        try {
+          const layout = typeof relatorio.configuracoes.layout === 'string' 
+            ? JSON.parse(relatorio.configuracoes.layout) 
+            : relatorio.configuracoes.layout;
+          
+          if (layout.parameters && Array.isArray(layout.parameters)) {
+            const vars = layout.parameters.map((param: any) => ({
+              name: param.name,
+              type: param.type || 'string'
+            }));
+            console.log("📝 Variáveis fixas do relatório encontradas:", vars);
+            setReportVariables(vars);
+          } else {
+            setReportVariables([]);
+          }
+        } catch (e) {
+          console.error("Erro ao parsear layout:", e);
+          setReportVariables([]);
+        }
+      } else {
+        setReportVariables([]);
+      }
 
       // PRIORIDADE 1: Usar api_variables de configuracoes (mais recente)
       if (relatorio.configuracoes?.api_variables && Object.keys(relatorio.configuracoes.api_variables).length > 0) {
@@ -235,6 +262,12 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
     handleConfigChange({ apiVariables: newVars });
   };
 
+  const updateReportVariable = (key: string, value: string) => {
+    const reportVars = config.reportVariables || {};
+    const newReportVars = { ...reportVars, [key]: value };
+    handleConfigChange({ reportVariables: newReportVars });
+  };
+
   if (loading) {
     return <div className="p-4 text-center text-muted-foreground">Carregando relatórios...</div>;
   }
@@ -270,37 +303,28 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       </div>
 
       {config.relatorioId && (
-        <div className="space-y-3 border-t pt-4">
-          <div>
-            <Label className="font-semibold">Parâmetros do Relatório</Label>
-            <p className="text-xs text-muted-foreground mt-1">
-              Insira os valores para os parâmetros do relatório selecionado
-            </p>
-          </div>
+        <>
+          {/* Variáveis Fixas do Relatório */}
+          {reportVariables.length > 0 && (
+            <div className="space-y-3 border-t pt-4">
+              <div>
+                <Label className="font-semibold">Variáveis do Relatório</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Variáveis fixas definidas no template do relatório
+                </p>
+              </div>
 
-          {loadingVariables ? (
-            <div className="text-sm text-muted-foreground text-center py-4">
-              Carregando parâmetros...
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-              {Object.entries(apiVariables).length === 0 ? (
-                <div className="text-sm text-muted-foreground text-center py-4 border-2 border-dashed rounded">
-                  Este relatório não possui parâmetros configurados
-                </div>
-              ) : (
-                Object.entries(apiVariables).map(([key, varData]) => {
-                  const isVarObject = typeof varData === 'object' && varData !== null && 'value' in varData;
-                  const value = isVarObject ? (varData as VariableData).value : String(varData);
-                  const type = isVarObject ? (varData as VariableData).type : 'string';
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                {reportVariables.map((variable) => {
+                  const currentValue = (config.reportVariables || {})[variable.name] || "";
                   
                   return (
-                    <div key={key} className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                    <div key={variable.name} className="space-y-2 p-3 bg-muted/30 rounded-lg border">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <Label className="text-xs text-muted-foreground">Nome</Label>
                           <Input
-                            value={key}
+                            value={variable.name}
                             disabled
                             className="h-8 text-xs bg-muted/50"
                           />
@@ -308,7 +332,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
                         <div className="space-y-1">
                           <Label className="text-xs text-muted-foreground">Tipo</Label>
                           <Input
-                            value={type}
+                            value={variable.type}
                             disabled
                             className="h-8 text-xs bg-muted/50 capitalize"
                           />
@@ -317,9 +341,9 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
                       <div className="space-y-1">
                         <Label className="text-xs">Valor</Label>
                         <RichTextEditor
-                          value={value}
-                          onChange={(newValue) => updateVariableValue(key, newValue)}
-                          placeholder="Insira o valor do parâmetro"
+                          value={currentValue}
+                          onChange={(newValue) => updateReportVariable(variable.name, newValue)}
+                          placeholder="Insira o valor da variável"
                           multiline={false}
                           nodes={nodes}
                           edges={edges}
@@ -329,11 +353,73 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
                       </div>
                     </div>
                   );
-                })
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Parâmetros da API */}
+          {Object.entries(apiVariables).length > 0 && (
+            <div className="space-y-3 border-t pt-4">
+              <div>
+                <Label className="font-semibold">Parâmetros da API</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Parâmetros para consulta de dados da API
+                </p>
+              </div>
+
+              {loadingVariables ? (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  Carregando parâmetros...
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                  {Object.entries(apiVariables).map(([key, varData]) => {
+                    const isVarObject = typeof varData === 'object' && varData !== null && 'value' in varData;
+                    const value = isVarObject ? (varData as VariableData).value : String(varData);
+                    const type = isVarObject ? (varData as VariableData).type : 'string';
+                    
+                    return (
+                      <div key={key} className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Nome</Label>
+                            <Input
+                              value={key}
+                              disabled
+                              className="h-8 text-xs bg-muted/50"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Tipo</Label>
+                            <Input
+                              value={type}
+                              disabled
+                              className="h-8 text-xs bg-muted/50 capitalize"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Valor</Label>
+                          <RichTextEditor
+                            value={value}
+                            onChange={(newValue) => updateVariableValue(key, newValue)}
+                            placeholder="Insira o valor do parâmetro"
+                            multiline={false}
+                            nodes={nodes}
+                            edges={edges}
+                            selectedNode={selectedNode}
+                            showFormatting={false}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
-        </div>
+        </>
       )}
 
       <div className="space-y-2 border-t pt-4">

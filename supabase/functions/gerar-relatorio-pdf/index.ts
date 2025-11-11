@@ -17,10 +17,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { relatorioId, apiVariables } = await req.json();
+    const { relatorioId, apiVariables, reportVariables } = await req.json();
 
     console.log("📊 Gerando relatório:", relatorioId);
     console.log("📊 Variáveis da API:", apiVariables);
+    console.log("📊 Variáveis do Relatório:", reportVariables);
 
     // 1. Buscar relatório do banco
     const { data: relatorio, error: relError } = await supabase
@@ -156,8 +157,16 @@ serve(async (req) => {
       ? JSON.parse(relatorio.layout_json)
       : relatorio.layout_json;
 
-    // Usar parâmetros convertidos
+    // Usar parâmetros convertidos (da API)
     const parameters: Record<string, any> = { ...convertedParams };
+    
+    // Adicionar variáveis fixas do relatório
+    if (reportVariables && typeof reportVariables === 'object') {
+      Object.entries(reportVariables).forEach(([key, value]) => {
+        parameters[key] = value;
+      });
+      console.log("📝 Variáveis fixas adicionadas:", Object.keys(reportVariables));
+    }
     
     // Se tem dados da API, adicionar ao parâmetro api_data
     if (apiData.length > 0) {

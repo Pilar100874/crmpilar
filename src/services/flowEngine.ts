@@ -941,22 +941,33 @@ export class FlowEngine {
 
       // Interpolar variáveis da API preservando tipo e valor
       const apiVariables: Record<string, any> = {};
-      if (config.apiVariables && typeof config.apiVariables === 'object') {
+      if (config.apiVariables) {
         for (const [key, varData] of Object.entries(config.apiVariables as Record<string, any>)) {
-          if (varData && typeof varData === 'object' && 'type' in varData) {
-            const t = (varData as any).type || 'string';
-            const v = (varData as any).value;
+          if (varData && typeof varData === 'object' && 'value' in varData) {
+            const interpolatedValue = this.interpolate(varData.value || "");
             apiVariables[key] = {
-              type: t,
-              value: this.interpolate(v !== undefined && v !== null ? String(v) : ''),
+              value: interpolatedValue,
+              type: varData.type || "string"
             };
           } else {
-            apiVariables[key] = this.interpolate(varData !== undefined && varData !== null ? String(varData) : '');
+            apiVariables[key] = {
+              value: this.interpolate(String(varData || "")),
+              type: "string"
+            };
           }
         }
       }
 
-      console.log("📊 Gerando relatório com variáveis:", apiVariables);
+      // Interpolar variáveis fixas do relatório
+      const reportVariables: Record<string, any> = {};
+      if (config.reportVariables) {
+        for (const [key, value] of Object.entries(config.reportVariables as Record<string, any>)) {
+          reportVariables[key] = this.interpolate(String(value || ""));
+        }
+      }
+
+      console.log("📊 Gerando relatório com variáveis da API:", apiVariables);
+      console.log("📊 Gerando relatório com variáveis fixas:", reportVariables);
 
       // Chamar edge function para gerar PDF em background
       const { supabase } = await import("@/integrations/supabase/client");
@@ -965,6 +976,7 @@ export class FlowEngine {
         body: {
           relatorioId,
           apiVariables,
+          reportVariables,
         }
       });
 
