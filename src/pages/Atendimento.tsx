@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -76,6 +76,9 @@ export default function Atendimento() {
   // Transfer to user states
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [selectedTransferUser, setSelectedTransferUser] = useState<string | null>(null);
+  
+  // Customer companies
+  const [customerCompanies, setCustomerCompanies] = useState<any[]>([]);
 
   useEffect(() => {
     loadConversations();
@@ -91,6 +94,7 @@ export default function Atendimento() {
       loadMessages(selectedConversation);
       subscribeToMessages(selectedConversation);
       loadConversationWebhookConfig(selectedConversation);
+      loadCustomerCompanies(selectedConversation);
     }
   }, [selectedConversation]);
 
@@ -244,6 +248,45 @@ export default function Atendimento() {
     } catch (error) {
       console.error("Erro ao transferir conversa:", error);
       toast.error("Erro ao transferir conversa");
+    }
+  };
+
+  const loadCustomerCompanies = async (conversationId: string) => {
+    try {
+      const { data: convData } = await supabase
+        .from('conversations')
+        .select('customer_id')
+        .eq('id', conversationId)
+        .single();
+
+      if (!convData?.customer_id) {
+        setCustomerCompanies([]);
+        return;
+      }
+
+      const { data: companiesData } = await supabase
+        .from('customer_empresas')
+        .select(`
+          empresa_id,
+          is_primary,
+          cargo,
+          empresas (
+            id,
+            nome,
+            nome_fantasia,
+            cnpj
+          )
+        `)
+        .eq('customer_id', convData.customer_id);
+
+      if (companiesData) {
+        setCustomerCompanies(companiesData);
+      } else {
+        setCustomerCompanies([]);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar empresas do cliente:", error);
+      setCustomerCompanies([]);
     }
   };
 
@@ -817,7 +860,7 @@ ${recentMessages}
                   <h3 className="font-medium text-foreground">
                     {selectedConv.customer?.nome || "Cliente"}
                   </h3>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                     {selectedConv.customer?.telefone && (
                       <div className="flex items-center gap-1">
                         <Phone className="w-3 h-3" />
@@ -828,6 +871,17 @@ ${recentMessages}
                       <div className="flex items-center gap-1">
                         <Mail className="w-3 h-3" />
                         <span>{selectedConv.customer.email}</span>
+                      </div>
+                    )}
+                    {customerCompanies.length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <FileText className="w-3 h-3" />
+                        {customerCompanies.map((rel, idx) => (
+                          <Badge key={rel.empresa_id} variant="secondary" className="text-xs">
+                            {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'Empresa'}
+                            {rel.is_primary && ' ⭐'}
+                          </Badge>
+                        ))}
                       </div>
                     )}
                   </div>
