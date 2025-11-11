@@ -980,13 +980,18 @@ ${recentMessages}
                         }`}
                       >
                         <div
-                          className={`relative p-3 rounded-2xl transition-all ${
+                          className={`relative p-3 pb-5 rounded-2xl transition-all ${
                             msg.sender === "agent"
                               ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
                               : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30"
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed pr-12">{msg.text}</p>
+                          <span className={`absolute bottom-1.5 right-2 text-[10px] ${
+                            msg.sender === "agent" ? "text-primary-foreground/70" : "text-muted-foreground"
+                          }`}>
+                            {format(new Date(msg.created_at), "HH:mm", { locale: ptBR })}
+                          </span>
                           {msg.attachments && msg.attachments.length > 0 ? (
                             msg.payload?.contentType === "image" ? (
                               <div className="mt-2">
@@ -1028,10 +1033,6 @@ ${recentMessages}
                             </Button>
                           )}
                         </div>
-
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(msg.created_at), "HH:mm", { locale: ptBR })}
-                        </span>
                       </div>
 
                       {msg.sender === "agent" && (
