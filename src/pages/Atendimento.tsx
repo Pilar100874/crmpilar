@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -11,6 +11,7 @@ import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface Conversation {
   id: string;
@@ -53,6 +54,7 @@ export default function Atendimento() {
   const [aiWebhooks, setAiWebhooks] = useState<any[]>([]);
   const [selectedAIWebhook, setSelectedAIWebhook] = useState<string | null>(null);
   const [aiInput, setAiInput] = useState("");
+  const [aiContext, setAiContext] = useState("");
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [isAILoading, setIsAILoading] = useState(false);
   const aiScrollRef = useRef<HTMLDivElement>(null);
@@ -166,6 +168,30 @@ export default function Atendimento() {
     }
   };
 
+  const addConversationContext = () => {
+    if (!selectedConv) return;
+    
+    const recentMessages = messages.slice(-10).map(m => 
+      `[${m.sender === "agent" ? "Você" : "Cliente"}]: ${m.text}`
+    ).join("\n");
+    
+    const contextData = `
+=== DADOS DO CLIENTE ===
+Nome: ${selectedConv.customer?.nome || "N/A"}
+Email: ${selectedConv.customer?.email || "N/A"}
+Telefone: ${selectedConv.customer?.telefone || "N/A"}
+Canal: ${selectedConv.canal}
+Status: ${selectedConv.status}
+Bot Ativo: ${selectedConv.bot_active !== false ? "Sim" : "Não"}
+
+=== ÚLTIMAS MENSAGENS ===
+${recentMessages}
+    `.trim();
+    
+    setAiContext(contextData);
+    toast.success("Contexto da conversa adicionado!");
+  };
+
   const sendAIMessage = async () => {
     if (!aiInput.trim() || !selectedAIWebhook || !currentAISessionId) {
       toast.error("Digite uma mensagem");
@@ -177,6 +203,11 @@ export default function Atendimento() {
       toast.error("Webhook de IA não encontrado");
       return;
     }
+
+    // Combine context and input
+    const fullMessage = aiContext 
+      ? `${aiContext}\n\n---\n\n${aiInput}`
+      : aiInput;
 
     const messageContent = aiInput;
     setAiInput("");
@@ -201,7 +232,7 @@ export default function Atendimento() {
         body: JSON.stringify({
           timestamp: new Date().toISOString(),
           contentType: "text",
-          content: messageContent,
+          content: fullMessage,
         }),
       });
 
@@ -747,6 +778,29 @@ export default function Atendimento() {
                   </div>
 
                   <div className="p-4">
+                    {/* Context Field */}
+                    <div className="mb-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-medium">Contexto adicional (opcional)</Label>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={addConversationContext}
+                          className="h-7 text-xs gap-1"
+                          disabled={!selectedConversation}
+                        >
+                          <FileText className="h-3 w-3" />
+                          Adicionar contexto da conversa
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={aiContext}
+                        onChange={(e) => setAiContext(e.target.value)}
+                        placeholder="Cole ou digite informações relevantes da conversa..."
+                        className="min-h-[80px] text-xs resize-none bg-background/50"
+                      />
+                    </div>
+
                     <div
                       ref={aiScrollRef}
                       className="max-h-48 overflow-y-auto mb-4 space-y-3"
