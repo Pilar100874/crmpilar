@@ -960,10 +960,16 @@ export class FlowEngine {
 
       // Interpolar variáveis fixas do relatório
       const reportVariables: Record<string, any> = {};
-      if (config.reportVariables) {
+      if (config.reportVariables && typeof config.reportVariables === 'object') {
+        console.log("📝 Interpolando variáveis fixas do relatório:", config.reportVariables);
         for (const [key, value] of Object.entries(config.reportVariables as Record<string, any>)) {
-          reportVariables[key] = this.interpolate(String(value || ""));
+          const interpolatedValue = this.interpolate(String(value || ""));
+          reportVariables[key] = interpolatedValue;
+          console.log(`   ✓ ${key}: "${value}" → "${interpolatedValue}"`);
         }
+        console.log("✅ Variáveis fixas interpoladas:", reportVariables);
+      } else {
+        console.log("ℹ️ Nenhuma variável fixa do relatório configurada");
       }
 
       const outputType = this.interpolate(config.outputType || "pdf");

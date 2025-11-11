@@ -162,20 +162,28 @@ serve(async (req) => {
     // Usar parâmetros convertidos (da API)
     const parameters: Record<string, any> = { ...convertedParams };
     
-    // Adicionar variáveis fixas do relatório
+    // SEMPRE adicionar variáveis fixas do relatório quando houver
     if (reportVariables && typeof reportVariables === 'object') {
+      console.log("📝 Processando variáveis fixas do relatório...");
       Object.entries(reportVariables).forEach(([key, value]) => {
-        parameters[key] = value;
+        // Interpolar e adicionar ao parameters
+        const finalValue = String(value || "");
+        parameters[key] = finalValue;
+        console.log(`   ✓ ${key} = "${finalValue}"`);
       });
-      console.log("📝 Variáveis fixas adicionadas:", Object.keys(reportVariables));
+      console.log("✅ Variáveis fixas adicionadas aos parâmetros:", Object.keys(reportVariables));
+    } else {
+      console.log("ℹ️ Nenhuma variável fixa do relatório foi fornecida");
     }
     
     // Se tem dados da API, adicionar ao parâmetro api_data
     if (apiData.length > 0) {
       parameters.api_data = apiData;
+      console.log("✅ Dados da API adicionados (api_data):", apiData.length, "registros");
     }
 
-    console.log("📝 Parâmetros finais para o relatório:", Object.keys(parameters));
+    console.log("📝 Parâmetros FINAIS para o ReportBro:", Object.keys(parameters));
+    console.log("📋 Valores dos parâmetros:", JSON.stringify(parameters, null, 2));
 
     // 5. Gerar relatório usando ReportBro API (PUT para obter key)
     const reportBroApiUrl = 'https://www.reportbro.com/report/run';
