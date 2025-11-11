@@ -297,6 +297,7 @@ serve(async (req) => {
 
     // ====== Buscar ou criar customer e conversation ======
     let conversationId: string | null = null;
+    let isBotActive = true;
     
     if (estabelecimentoId) {
       console.log("[ATENDIMENTO] Buscando/criando customer e conversation para:", { from, estabelecimentoId });
@@ -336,7 +337,7 @@ serve(async (req) => {
       if (customerId) {
         const { data: existingConv } = await supabase
           .from("conversations")
-          .select("id")
+          .select("id, bot_active")
           .eq("customer_id", customerId)
           .eq("estabelecimento_id", estabelecimentoId)
           .eq("canal", "whatsapp")
@@ -344,6 +345,7 @@ serve(async (req) => {
           .maybeSingle();
         
         conversationId = existingConv?.id || null;
+        isBotActive = existingConv?.bot_active !== false;
         
         if (!conversationId) {
           console.log("[ATENDIMENTO] Criando nova conversation");
@@ -413,6 +415,14 @@ serve(async (req) => {
         await respond(message);
       }
     };
+
+    // ====== Verificar se bot está ativo ======
+    if (!isBotActive) {
+      console.log("[ATENDIMENTO] Bot está pausado para esta conversa. Mensagem salva mas bot não responderá.");
+      return new Response(JSON.stringify({ success: true, bot_paused: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // ====== Execução do fluxo ======
     let shouldSaveContext = true;

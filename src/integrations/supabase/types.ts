@@ -373,6 +373,7 @@ export type Database = {
       conversations: {
         Row: {
           assignee_id: string | null
+          bot_active: boolean
           bot_id: string | null
           canal: string
           created_at: string | null
@@ -385,6 +386,7 @@ export type Database = {
         }
         Insert: {
           assignee_id?: string | null
+          bot_active?: boolean
           bot_id?: string | null
           canal: string
           created_at?: string | null
@@ -397,6 +399,7 @@ export type Database = {
         }
         Update: {
           assignee_id?: string | null
+          bot_active?: boolean
           bot_id?: string | null
           canal?: string
           created_at?: string | null

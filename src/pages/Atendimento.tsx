@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Search, User, Clock, MessageSquare, Phone, Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,7 @@ interface Conversation {
   status: string;
   updated_at: string;
   metadata: any;
+  bot_active?: boolean;
   customer?: {
     nome: string;
     email: string;
@@ -187,16 +189,46 @@ export default function Atendimento() {
 
       if (error) throw error;
 
-      // Update conversation timestamp
+      // Update conversation timestamp and pause bot (agent took over)
       await supabase
         .from("conversations")
-        .update({ updated_at: new Date().toISOString() })
+        .update({ 
+          updated_at: new Date().toISOString(),
+          bot_active: false  // Pause bot when agent sends message
+        })
         .eq("id", selectedConversation);
 
-      toast.success("Mensagem enviada");
+      toast.success("Mensagem enviada • Bot pausado");
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem");
+    }
+  };
+
+  const handleReactivateBot = async () => {
+    if (!selectedConversation) return;
+
+    try {
+      const { error } = await supabase
+        .from("conversations")
+        .update({ bot_active: true })
+        .eq("id", selectedConversation);
+
+      if (error) throw error;
+
+      // Update local state
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === selectedConversation
+            ? { ...conv, bot_active: true }
+            : conv
+        )
+      );
+
+      toast.success("Bot reativado");
+    } catch (error) {
+      console.error("Erro ao reativar bot:", error);
+      toast.error("Erro ao reativar bot");
     }
   };
 
@@ -333,7 +365,26 @@ export default function Atendimento() {
                     )}
                   </div>
                 </div>
-                <Badge variant="outline">{selectedConv.canal}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{selectedConv.canal}</Badge>
+                  <Badge 
+                    variant={selectedConv.bot_active !== false ? "default" : "secondary"}
+                    className="flex items-center gap-1"
+                  >
+                    <div className={`w-2 h-2 rounded-full ${selectedConv.bot_active !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    {selectedConv.bot_active !== false ? "Bot Ativo" : "Bot Pausado"}
+                  </Badge>
+                  {selectedConv.bot_active === false && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={handleReactivateBot}
+                      className="text-xs"
+                    >
+                      Reativar Bot
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
