@@ -166,35 +166,58 @@ serve(async (req) => {
 
     console.log("Processed message:", { from, body, phoneNumberId, transport });
 
-    // ====== Busca configuração do WAHA ======
+    // ====== Busca configuração do WAHA SEMPRE DO BANCO (nunca de secrets) ======
     let WAHA_URL = "";
     let WAHA_API_KEY = "";
     
     if (transport === "waha") {
+      console.log("[WAHA] Buscando configuração do banco para sessão:", wahaSession);
+      
       // Primeiro busca a sessão para pegar o estabelecimento_id
-      const { data: sessionData } = await supabase
+      const { data: sessionData, error: sessionError } = await supabase
         .from("whatsapp_sessions")
         .select("estabelecimento_id")
         .eq("session_name", wahaSession)
         .maybeSingle();
       
+      if (sessionError) {
+        console.error("[WAHA] Erro ao buscar sessão:", sessionError);
+      }
+      
       if (sessionData?.estabelecimento_id) {
-        // Agora busca a configuração WAHA do estabelecimento
-        const { data: wahaConfig } = await supabase
+        console.log("[WAHA] Sessão encontrada, estabelecimento_id:", sessionData.estabelecimento_id);
+        
+        // Agora busca a configuração WAHA do estabelecimento NA TABELA whatsapp_config
+        const { data: wahaConfig, error: configError } = await supabase
           .from("whatsapp_config")
           .select("waha_url, waha_api_key")
           .eq("estabelecimento_id", sessionData.estabelecimento_id)
           .maybeSingle();
         
+        if (configError) {
+          console.error("[WAHA] Erro ao buscar configuração:", configError);
+        }
+        
         if (wahaConfig) {
           WAHA_URL = wahaConfig.waha_url || "";
           WAHA_API_KEY = wahaConfig.waha_api_key || "";
-          console.log("[WAHA] Using config from whatsapp_config:", { sessionName: wahaSession, hasUrl: !!WAHA_URL, hasApiKey: !!WAHA_API_KEY });
+          console.log("[WAHA] ✓ Configuração carregada do banco:", { 
+            sessionName: wahaSession, 
+            hasUrl: !!WAHA_URL, 
+            hasApiKey: !!WAHA_API_KEY,
+            urlPreview: WAHA_URL ? WAHA_URL.substring(0, 30) + "..." : "vazio"
+          });
+          
+          if (!WAHA_API_KEY) {
+            console.error("[WAHA] ⚠️ WAHA_API_KEY está vazio! Configure através da interface em Config > Configuração WhatsApp WAHA");
+          }
         } else {
-          console.error("[WAHA] No whatsapp_config found for estabelecimento_id:", sessionData.estabelecimento_id);
+          console.error("[WAHA] ⚠️ Nenhuma configuração encontrada na tabela whatsapp_config para estabelecimento_id:", sessionData.estabelecimento_id);
+          console.error("[WAHA] 📝 Configure o servidor WAHA através da interface em: Config > Configuração WhatsApp WAHA");
         }
       } else {
-        console.error("[WAHA] No session found with name:", wahaSession);
+        console.error("[WAHA] ⚠️ Nenhuma sessão encontrada com nome:", wahaSession);
+        console.error("[WAHA] 📝 Crie uma sessão através da interface em: Config > Configuração WhatsApp WAHA");
       }
     }
     
