@@ -192,8 +192,22 @@ serve(async (req) => {
     
     // Se tem dados da API, adicionar ao parâmetro api_data
     if (apiData.length > 0) {
-      parameters.api_data = apiData;
-      console.log("✅ Dados da API adicionados (api_data):", apiData.length, "registros");
+      if (outputFormat === 'pdf') {
+        const cfgMax = Number(relatorio.configuracoes?.max_pdf_rows);
+        const maxPdfRows = Number.isFinite(cfgMax) && cfgMax > 0 ? cfgMax : 500;
+        if (apiData.length > maxPdfRows) {
+          console.warn(`⚠️ api_data possui ${apiData.length} registros, limitando a ${maxPdfRows} para PDF a fim de evitar loop/erro 400`);
+          (parameters as any).__meta = { truncated: true, total: apiData.length, shown: maxPdfRows };
+          parameters.api_data = apiData.slice(0, maxPdfRows);
+        } else {
+          parameters.api_data = apiData;
+        }
+      } else {
+        parameters.api_data = apiData;
+      }
+      const addedCount = Array.isArray(parameters.api_data) ? parameters.api_data.length : 0;
+      const truncInfo = (parameters as any).__meta?.truncated ? ` (truncados de ${apiData.length})` : '';
+      console.log("✅ Dados da API adicionados (api_data):", addedCount, "registros", truncInfo);
     }
 
     console.log("📝 Parâmetros FINAIS para o ReportBro:", Object.keys(parameters));
