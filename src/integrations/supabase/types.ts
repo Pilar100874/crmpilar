@@ -2668,6 +2668,7 @@ export type Database = {
           estabelecimento_id: string | null
           id: string
           phone_number_id: string | null
+          session_name: string | null
           updated_at: string | null
           waha_api_key: string | null
           waha_url: string | null
@@ -2680,6 +2681,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           phone_number_id?: string | null
+          session_name?: string | null
           updated_at?: string | null
           waha_api_key?: string | null
           waha_url?: string | null
@@ -2692,6 +2694,7 @@ export type Database = {
           estabelecimento_id?: string | null
           id?: string
           phone_number_id?: string | null
+          session_name?: string | null
           updated_at?: string | null
           waha_api_key?: string | null
           waha_url?: string | null
