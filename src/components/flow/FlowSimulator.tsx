@@ -877,8 +877,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             apiVariables[key] = typeof val === "string" ? interpolateVariables(val as string, context) : val;
           }
 
+          // Variáveis fixas do relatório
+          const rawReportVars = (config as any).reportVariables || {};
+          const reportVariables: Record<string, any> = {};
+          for (const [key, val] of Object.entries(rawReportVars)) {
+            reportVariables[key] = interpolateVariables(String(val ?? ""), context);
+          }
+
+          const outputType = interpolateVariables((config as any).outputType || "pdf", context);
+
           const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
-            body: { relatorioId, apiVariables }
+            body: { relatorioId, apiVariables, reportVariables, outputType }
           });
 
           if (error) {
