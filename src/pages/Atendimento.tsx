@@ -488,10 +488,10 @@ export default function Atendimento() {
   }
 
   return (
-    <div className="h-full flex bg-background overflow-hidden">
+    <div className="h-[100vh] flex bg-background overflow-hidden">
       {/* Conversation List */}
-      <div className="w-96 border-r border-border bg-card flex flex-col min-h-0">
-        <div className="p-4 border-b bg-card/50">
+      <div className="w-96 border-r border-border bg-card flex flex-col h-full">
+        <div className="p-4 border-b bg-card/50 flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -503,7 +503,7 @@ export default function Atendimento() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -562,7 +562,7 @@ export default function Atendimento() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col h-full min-w-0">
         {selectedConversation && selectedConv ? (
           <>
             <div className="p-4 border-b bg-card shadow-sm flex-shrink-0">
@@ -612,7 +612,7 @@ export default function Atendimento() {
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-muted/20">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-muted/20">
               {messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -697,10 +697,9 @@ export default function Atendimento() {
               )}
             </div>
 
-            <div className="border-t bg-card flex-shrink-0">
-              <div className="p-4">
-                {/* AI Button and Chat */}
-                <div className="mb-3">
+            <div className="border-t bg-card flex-shrink-0 p-4">
+              {/* AI Button and Chat */}
+              <div className="mb-3">
                 <Button
                   variant={showAIChat ? "default" : "outline"}
                   size="sm"
@@ -822,7 +821,6 @@ export default function Atendimento() {
                 onSendMessage={handleSendMessage}
                 disabled={false}
               />
-              </div>
             </div>
           </>
         ) : (
