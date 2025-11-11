@@ -82,18 +82,14 @@ serve(async (req) => {
     };
 
     if (fileUrl) {
-      if (contentType === "image") {
-        sendUrl = `${wahaUrl}/api/sendImage`;
-        // WAHA Plus espera um objeto com { url } para imagens
-        body.image = { url: fileUrl };
-        if (text) body.caption = text;
-      } else {
-        sendUrl = `${wahaUrl}/api/sendFile`;
-        // Envie arquivos como objeto com { url } para compatibilidade com WAHA Plus
-        body.file = { url: fileUrl };
-        body.filename = fileName || "arquivo";
-        if (text) body.caption = text;
-      }
+      // Use sendFile para todos os tipos de arquivo (incluindo imagens)
+      // pois WAHA Plus WEBJS tem problemas com sendImage
+      sendUrl = `${wahaUrl}/api/sendFile`;
+      body.file = {
+        url: fileUrl,
+        filename: fileName || "arquivo"
+      };
+      if (text) body.caption = text;
     } else {
       body.text = text;
     }
