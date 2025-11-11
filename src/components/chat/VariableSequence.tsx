@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,42 +81,79 @@ export default function VariableSequence({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Sequência de Variáveis</DialogTitle>
+          <DialogTitle>Variáveis Recebidas no Chat do Bot</DialogTitle>
           <DialogDescription>
-            Crie uma sequência de variáveis customizadas para enviar
+            {botVarsCount > 0 
+              ? `${botVarsCount} variável(is) recebida(s) durante a conversa com o bot`
+              : "Nenhuma variável foi recebida do bot ainda"}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[400px] pr-4">
+        <ScrollArea className="max-h-[500px] pr-4">
           <div className="space-y-4">
-            {/* Bot Variables Section */}
-            {botVarsCount > 0 && (
-              <div className="space-y-3 pb-4 border-b">
-                <Label className="text-sm font-semibold text-muted-foreground">
-                  Variáveis do Bot ({botVarsCount})
-                </Label>
-                {Object.entries(botVariables).map(([key, value]) => (
-                  <div key={key} className="flex gap-2 items-center p-2 bg-muted/50 rounded">
-                    <div className="flex-1">
-                      <span className="text-xs text-muted-foreground">Chave:</span>
-                      <p className="font-mono text-sm">{key}</p>
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs text-muted-foreground">Valor:</span>
-                      <p className="font-mono text-sm">{String(value)}</p>
-                    </div>
-                  </div>
-                ))}
+            {/* Bot Variables Section - Main Focus */}
+            {botVarsCount > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge variant="secondary" className="text-xs">
+                    Bot Variables
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Estas variáveis foram coletadas durante a interação com o bot
+                  </span>
+                </div>
+                
+                <div className="grid gap-3">
+                  {Object.entries(botVariables).map(([key, value], index) => (
+                    <Card key={key} className="p-4 border-l-4 border-l-primary">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono text-xs">
+                              #{index + 1}
+                            </Badge>
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Nome da Variável
+                            </span>
+                          </div>
+                        </div>
+                        <div className="font-mono text-sm font-semibold text-foreground bg-muted/50 px-3 py-2 rounded">
+                          {key}
+                        </div>
+                        
+                        <div className="mt-3">
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Valor
+                          </span>
+                          <div className="mt-1 font-mono text-sm text-foreground bg-background border px-3 py-2 rounded min-h-[40px] break-words">
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-sm">Nenhuma variável disponível no momento</p>
+                <p className="text-xs mt-2">As variáveis aparecerão aqui quando o bot interagir com o usuário</p>
               </div>
             )}
 
-            {/* Custom Variables Section */}
-            <Label className="text-sm font-semibold text-muted-foreground">
-              Variáveis Personalizadas
-            </Label>
-            {variables.map((variable, index) => (
+            {/* Custom Variables Section - Secondary */}
+            <div className="mt-6 pt-6 border-t space-y-3">
+              <div className="flex items-center gap-2 mb-4">
+                <Badge variant="outline" className="text-xs">
+                  Variáveis Personalizadas
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  Adicione variáveis customizadas adicionais se necessário
+                </span>
+              </div>
+              {variables.map((variable, index) => (
               <div key={variable.id} className="flex gap-2 items-end">
                 <div className="flex-1 space-y-2">
                   <Label htmlFor={`key-${variable.id}`}>
@@ -152,16 +191,17 @@ export default function VariableSequence({
                 </Button>
               </div>
             ))}
+            </div>
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-4 border-t">
           <Button variant="outline" onClick={addVariable} className="flex-1">
             <Plus className="h-4 w-4 mr-2" />
-            Adicionar Variável
+            Adicionar Variável Customizada
           </Button>
-          <Button onClick={handleSubmit} className="flex-1">
-            Enviar Variáveis
+          <Button onClick={handleSubmit} className="flex-1" disabled={botVarsCount === 0 && variables.some(v => !v.key || !v.value)}>
+            Enviar Todas as Variáveis
           </Button>
         </div>
       </DialogContent>
