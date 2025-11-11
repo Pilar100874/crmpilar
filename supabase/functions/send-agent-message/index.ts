@@ -84,11 +84,13 @@ serve(async (req) => {
     if (fileUrl) {
       if (contentType === "image") {
         sendUrl = `${wahaUrl}/api/sendImage`;
-        body.image = fileUrl;
+        // WAHA Plus espera um objeto com { url } para imagens
+        body.image = { url: fileUrl };
         if (text) body.caption = text;
       } else {
         sendUrl = `${wahaUrl}/api/sendFile`;
-        body.file = fileUrl;
+        // Envie arquivos como objeto com { url } para compatibilidade com WAHA Plus
+        body.file = { url: fileUrl };
         body.filename = fileName || "arquivo";
         if (text) body.caption = text;
       }
