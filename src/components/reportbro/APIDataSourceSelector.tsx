@@ -162,6 +162,110 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
     }
   };
 
+  const testAndSaveDefaultValues = async () => {
+    if (!selectedEndpoint) {
+      toast.error("Selecione uma API primeiro");
+      return;
+    }
+
+    setTestingUrl(getFullUrl(selectedEndpoint));
+    setSavingDefaults(true);
+    setTestResult(null);
+
+    try {
+      const url = getFullUrl(selectedEndpoint);
+      const method = selectedEndpoint.http_method || "GET";
+      const derivedParamType = (selectedEndpoint.parameters && selectedEndpoint.parameters[0]?.param_type) || "query";
+      
+      // Prepara os parâmetros com os valores preenchidos
+      const params: Record<string, any> = {};
+      variables.forEach(v => {
+        if (v.name) {
+          try {
+            if (v.value === undefined || v.value === null || v.value === "") return;
+            switch (v.type) {
+              case 'number':
+                params[v.name] = parseFloat(v.value);
+                break;
+              case 'boolean':
+                params[v.name] = v.value === 'true' || v.value === '1';
+                break;
+              case 'date':
+                params[v.name] = new Date(v.value).toISOString();
+                break;
+              case 'array':
+                params[v.name] = JSON.parse(v.value);
+                break;
+              case 'object':
+                params[v.name] = JSON.parse(v.value);
+                break;
+              default:
+                params[v.name] = v.value;
+            }
+          } catch (e) {
+            params[v.name] = v.value;
+          }
+        }
+      });
+
+      console.log("🧪 Testando API com parâmetros:", params);
+
+      let response: Response;
+      if (method === "POST") {
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params)
+        });
+      } else {
+        const queryString = new URLSearchParams(
+          Object.entries(params).map(([k, v]) => [k, String(v)])
+        ).toString();
+        response = await fetch(`${url}${queryString ? '?' + queryString : ''}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ Resposta da API:", data);
+      
+      setTestResult({ 
+        success: true, 
+        data: data,
+        message: "API testada com sucesso!" 
+      });
+
+      // Se o teste foi bem-sucedido, salvar os valores padrão
+      const updatedParameters = variables.map(v => ({
+        name: v.name,
+        type: v.type,
+        default_value: v.value || null,
+        param_type: selectedEndpoint.parameters?.[0]?.param_type || "query"
+      }));
+
+      const { error: saveError } = await supabase
+        .from("api_endpoints")
+        .update({ parameters: updatedParameters })
+        .eq("id", selectedEndpoint.id);
+
+      if (saveError) throw saveError;
+
+      toast.success("API testada e valores salvos com sucesso!");
+      
+      // Recarregar endpoints para atualizar a lista
+      await loadEndpoints();
+
+      if (onTest) {
+        onTest(url, params, { httpMethod: method, paramType: derivedParamType });
+      }
+    } catch (error: any) {
+      console.error("Erro ao testar API:", error);
+      toast.error("Erro ao testar API: " + error.message);
+      setTestResult({ error: error.message });
+    } finally {
+      setTestingUrl(null);
+      setSavingDefaults(false);
+    }
+  };
+
   const filteredEndpoints = endpoints.filter(ep => 
     ep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ep.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -449,36 +553,19 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
               {variables.length > 0 && variables.some(v => v.value) && (
                 <Button 
                   size="sm" 
-                  variant="secondary"
-                  onClick={testApiWithVariables}
-                  disabled={!!testingUrl}
+                  onClick={testAndSaveDefaultValues}
+                  disabled={!!testingUrl || savingDefaults}
                 >
-                  {testingUrl ? (
+                  {testingUrl || savingDefaults ? (
                     <>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-foreground mr-2" />
-                      Testando...
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-background mr-2" />
+                      {testingUrl ? "Testando..." : "Salvando..."}
                     </>
                   ) : (
                     <>
                       <Play className="h-3 w-3 mr-2" />
-                      Testar com Valores
+                      Testar e Salvar
                     </>
-                  )}
-                </Button>
-              )}
-              {variables.length > 0 && (
-                <Button 
-                  size="sm" 
-                  onClick={saveDefaultValues}
-                  disabled={savingDefaults}
-                >
-                  {savingDefaults ? (
-                    <>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-background mr-2" />
-                      Salvando...
-                    </>
-                  ) : (
-                    "Salvar Valores Padrão"
                   )}
                 </Button>
               )}
