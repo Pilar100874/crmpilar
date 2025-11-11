@@ -716,6 +716,18 @@ async function sendWahaMediaMessage(
     ? mediaType.toLowerCase()
     : "document";
 
+  // Inferir nome do arquivo e mimetype a partir da URL
+  const _lastPath = (() => { try { return new URL(mediaUrl).pathname.split('/').pop() || 'arquivo'; } catch { return mediaUrl.split('?')[0].split('/').pop() || 'arquivo'; } })();
+  const inferredName = decodeURIComponent(_lastPath);
+  const lowerName = inferredName.toLowerCase();
+  const isPdf = lowerName.endsWith('.pdf');
+  const isXlsx = lowerName.endsWith('.xlsx');
+  const mime = isPdf
+    ? 'application/pdf'
+    : isXlsx
+    ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    : 'application/octet-stream';
+
   const baseUrl = wahaUrl.replace(/\/$/, '');
   const endpoints = [
     `${baseUrl}/api/sendFile`,
@@ -727,27 +739,27 @@ async function sendWahaMediaMessage(
   ];
 
   const variantBase: any[] = [
-    // Formato 1: url direto
-    { session: sessionName, chatId, type: t, url: mediaUrl, caption },
-    { session: sessionName, to: toNumberOnly, type: t, url: mediaUrl, caption },
-    { session: sessionName, to: chatId, type: t, url: mediaUrl, caption },
+    // Formato 1: url direto (com nome)
+    { session: sessionName, chatId, type: t, url: mediaUrl, caption, fileName: inferredName, filename: inferredName, name: inferredName },
+    { session: sessionName, to: toNumberOnly, type: t, url: mediaUrl, caption, fileName: inferredName },
+    { session: sessionName, to: chatId, type: t, url: mediaUrl, caption, fileName: inferredName },
     
     // Formato 2: nested object (WAHA Plus padrão)
-    { session: sessionName, to: chatId, [t]: { url: mediaUrl }, caption },
-    { session: sessionName, chatId, [t]: { url: mediaUrl }, caption },
+    { session: sessionName, to: chatId, [t]: { url: mediaUrl, filename: inferredName }, caption },
+    { session: sessionName, chatId, [t]: { url: mediaUrl, filename: inferredName }, caption },
     
-    // Formato 3: mimetype específico para documents
-    { session: sessionName, chatId, file: { url: mediaUrl, mimetype: 'application/pdf' }, caption },
-    { session: sessionName, to: chatId, file: { url: mediaUrl }, caption },
+    // Formato 3: campo file com mimetype e nome
+    { session: sessionName, chatId, file: { url: mediaUrl, mimetype: mime, filename: inferredName }, caption },
+    { session: sessionName, to: chatId, file: { url: mediaUrl, mimetype: mime, filename: inferredName }, caption },
     
     // Formato 4: sem session na raiz
-    { chatId, type: t, url: mediaUrl, caption },
-    { to: chatId, type: t, url: mediaUrl, caption },
-    { chatId, [t]: { url: mediaUrl }, caption },
+    { chatId, type: t, url: mediaUrl, caption, fileName: inferredName },
+    { to: chatId, type: t, url: mediaUrl, caption, fileName: inferredName },
+    { chatId, [t]: { url: mediaUrl, filename: inferredName }, caption },
     
     // Formato 5: variações adicionais
-    { to: toNumberOnly, type: t, url: mediaUrl, caption },
-    { number: toNumberOnly, type: t, url: mediaUrl, caption },
+    { to: toNumberOnly, type: t, url: mediaUrl, caption, filename: inferredName },
+    { number: toNumberOnly, type: t, url: mediaUrl, caption, filename: inferredName },
   ];
 
   const headerSets: Array<Record<string, string>> = [
