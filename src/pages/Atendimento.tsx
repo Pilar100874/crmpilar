@@ -675,7 +675,7 @@ export default function Atendimento() {
               )}
             </div>
 
-            <div className="border-t bg-card p-4">
+            <div className="border-t bg-card p-4 flex-shrink-0">
               {/* AI Button and Chat */}
               <div className="mb-3">
                 <Button
