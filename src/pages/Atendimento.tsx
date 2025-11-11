@@ -550,10 +550,10 @@ export default function Atendimento() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {selectedConversation && selectedConv ? (
           <>
-            <div className="p-4 border-b bg-card shadow-sm">
+            <div className="p-4 border-b bg-card shadow-sm flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
                   <User className="w-5 h-5" />
@@ -600,7 +600,7 @@ export default function Atendimento() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-muted/20">
               {messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -675,7 +675,7 @@ export default function Atendimento() {
               )}
             </div>
 
-            <div className="border-t bg-card p-4 flex-shrink-0">
+            <div className="border-t bg-card p-4 flex-shrink-0 overflow-hidden">
               {/* AI Button and Chat */}
               <div className="mb-3">
                 <Button
