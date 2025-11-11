@@ -597,60 +597,93 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
   for (const base of endpoints) {
     const urlVariants = [
       base,
+      `${base}?session=${encodeURIComponent(sessionName)}`,
       `${base}?token=${encodeURIComponent(wahaApiKey)}`,
+      `${base}?session=${encodeURIComponent(sessionName)}&token=${encodeURIComponent(wahaApiKey)}`,
       `${base}?apikey=${encodeURIComponent(wahaApiKey)}`,
       `${base}?api_key=${encodeURIComponent(wahaApiKey)}`,
     ];
+
+    const headerSets: Array<Record<string, string>> = [
+      {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${wahaApiKey}`,
+        "X-API-KEY": wahaApiKey,
+        "X-Api-Key": wahaApiKey,
+        "x-api-key": wahaApiKey,
+        apikey: wahaApiKey,
+        "X-Session-Name": sessionName,
+      },
+      {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Apikey ${wahaApiKey}`,
+        "x-api-key": wahaApiKey,
+        apikey: wahaApiKey,
+        "X-Session-Name": sessionName,
+      },
+      {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": wahaApiKey,
+        "X-Session-Name": sessionName,
+      },
+    ];
+
     for (const url of urlVariants) {
       for (const body of variants) {
-        try {
-          console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
-          const resp = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-              Authorization: `Bearer ${wahaApiKey}`,
-              "X-API-KEY": wahaApiKey,
-              "X-Api-Key": wahaApiKey,
-              "x-api-key": wahaApiKey,
-            },
-            body: JSON.stringify(body),
-          });
-          const resultText = await resp.text();
-          console.log("[WAHA] TEXT result:", resp.status, resultText);
-          if (resp.ok) return;
-          if (resp.status === 404) break;
-          if (resp.status === 401) continue; // try next variant
-        } catch (err) {
-          console.error("[WAHA] error sending text via", url, err);
+        for (const headers of headerSets) {
+          try {
+            console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
+            const resp = await fetch(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+            });
+            const resultText = await resp.text();
+            console.log("[WAHA] TEXT result:", resp.status, resultText);
+            if (resp.ok) return;
+            if (resp.status === 404) break;
+            if (resp.status === 401) continue; // try next variant/headers
+          } catch (err) {
+            console.error("[WAHA] error sending text via", url, err);
+          }
         }
       }
 
       // GET fallback (alguns WAHA Plus aceitam sendText via GET)
       if (base.includes('/sendText')) {
         const getParamSets = [
-          `to=${encodeURIComponent(chatId)}&text=${encodeURIComponent(text)}`,
-          `jid=${encodeURIComponent(chatId)}&message=${encodeURIComponent(text)}`,
-          `number=${encodeURIComponent(toNumberOnly)}&message=${encodeURIComponent(text)}`,
-          `phone=${encodeURIComponent(toNumberOnly)}&text=${encodeURIComponent(text)}`,
+          `session=${encodeURIComponent(sessionName)}&to=${encodeURIComponent(toNumberOnly)}&message=${encodeURIComponent(text)}`,
+          `session=${encodeURIComponent(sessionName)}&to=${encodeURIComponent(chatId)}&text=${encodeURIComponent(text)}`,
+          `session=${encodeURIComponent(sessionName)}&jid=${encodeURIComponent(chatId)}&message=${encodeURIComponent(text)}`,
+          `session=${encodeURIComponent(sessionName)}&number=${encodeURIComponent(toNumberOnly)}&text=${encodeURIComponent(text)}`,
+        ];
+        const tokenParams = [
+          `token=${encodeURIComponent(wahaApiKey)}`,
+          `apikey=${encodeURIComponent(wahaApiKey)}`,
+          `api_key=${encodeURIComponent(wahaApiKey)}`,
         ];
         for (const params of getParamSets) {
-          const urlWithParams = `${base}?${params}&token=${encodeURIComponent(wahaApiKey)}`;
-          try {
-            console.log(`[WAHA] Trying GET TEXT -> ${chatId} via ${urlWithParams}`);
-            const resp = await fetch(urlWithParams, {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-                "x-api-key": wahaApiKey,
-              },
-            });
-            const resultText = await resp.text();
-            console.log("[WAHA] GET TEXT result:", resp.status, resultText);
-            if (resp.ok) return;
-          } catch (err) {
-            console.error("[WAHA] error sending GET text via", urlWithParams, err);
+          for (const tok of tokenParams) {
+            const urlWithParams = `${base}?${params}&${tok}`;
+            try {
+              console.log(`[WAHA] Trying GET TEXT -> ${chatId} via ${urlWithParams}`);
+              const resp = await fetch(urlWithParams, {
+                method: "GET",
+                headers: {
+                  Accept: "application/json",
+                  "x-api-key": wahaApiKey,
+                  "X-Session-Name": sessionName,
+                },
+              });
+              const resultText = await resp.text();
+              console.log("[WAHA] GET TEXT result:", resp.status, resultText);
+              if (resp.ok) return;
+            } catch (err) {
+              console.error("[WAHA] error sending GET text via", urlWithParams, err);
+            }
           }
         }
       }
