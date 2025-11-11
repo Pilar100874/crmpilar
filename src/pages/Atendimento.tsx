@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -60,11 +60,16 @@ export default function Atendimento() {
   const aiScrollRef = useRef<HTMLDivElement>(null);
   const [currentAISessionId, setCurrentAISessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Bot redirect states
+  const [availableBots, setAvailableBots] = useState<any[]>([]);
+  const [selectedBotRedirect, setSelectedBotRedirect] = useState<string | null>(null);
 
   useEffect(() => {
     loadConversations();
     subscribeToConversations();
     loadAIWebhooks();
+    loadAvailableBots();
   }, []);
 
   useEffect(() => {
@@ -77,6 +82,60 @@ export default function Atendimento() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Load available bots
+  const loadAvailableBots = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
+    const { data: botsData } = await supabase
+      .from('bot_flows')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .eq('active', true)
+      .order('name');
+
+    if (botsData) {
+      setAvailableBots(botsData);
+      if (botsData.length > 0) {
+        setSelectedBotRedirect(botsData[0].id);
+      }
+    }
+  };
+
+  const handleRedirectToBot = async () => {
+    if (!selectedConversation || !selectedBotRedirect) {
+      toast.error("Selecione um bot para direcionar");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("conversations")
+        .update({ 
+          bot_id: selectedBotRedirect,
+          bot_active: true
+        })
+        .eq("id", selectedConversation);
+
+      if (error) throw error;
+
+      // Update local state
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === selectedConversation
+            ? { ...conv, bot_id: selectedBotRedirect, bot_active: true }
+            : conv
+        )
+      );
+
+      const botName = availableBots.find(b => b.id === selectedBotRedirect)?.name || "Bot";
+      toast.success(`Cliente direcionado para ${botName}`);
+    } catch (error) {
+      console.error("Erro ao direcionar para bot:", error);
+      toast.error("Erro ao direcionar para bot");
+    }
+  };
 
   // Load AI webhooks
   const loadAIWebhooks = async () => {
@@ -907,6 +966,38 @@ ${recentMessages}
                 onSendMessage={handleSendMessage}
                 disabled={false}
               />
+              
+              {/* Bot Redirect Section */}
+              {availableBots.length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-xs font-medium">Direcionar para bot</Label>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <select
+                      value={selectedBotRedirect || ""}
+                      onChange={(e) => setSelectedBotRedirect(e.target.value)}
+                      className="flex-1 text-sm border rounded-lg px-3 py-2 bg-card hover:bg-secondary/50 transition-colors"
+                    >
+                      {availableBots.map((bot) => (
+                        <option key={bot.id} value={bot.id}>
+                          {bot.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      onClick={handleRedirectToBot}
+                      disabled={!selectedBotRedirect}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      <Bot className="h-4 w-4" />
+                      Direcionar
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (
