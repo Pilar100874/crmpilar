@@ -236,7 +236,7 @@ serve(async (req) => {
         console.log(`✅ XLSX (fast-path) salvo em:`, fileUrl);
 
         return new Response(
-          JSON.stringify({ success: true, pdfUrl: fileUrl, fileUrl, fileName: relatorio.nome, fileType: 'xlsx' }),
+          JSON.stringify({ success: true, pdfUrl: fileUrl, fileUrl, fileName: `${relatorio.nome}.xlsx`, fileType: 'xlsx' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         );
       } catch (fastErr) {
@@ -437,7 +437,7 @@ serve(async (req) => {
         success: true,
         pdfUrl: fileUrl, // Mantém nome pdfUrl por compatibilidade
         fileUrl: fileUrl,
-        fileName: relatorio.nome,
+        fileName: `${relatorio.nome}.${fileExtension}`,
         fileType: outputFormat,
       }),
       {
