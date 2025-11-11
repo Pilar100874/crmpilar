@@ -30,6 +30,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   const [showTestVariablesDialog, setShowTestVariablesDialog] = useState(false);
   const [apiVariables, setApiVariables] = useState<Array<{ name: string; type: string }>>([]);
   const [savedApiVariables, setSavedApiVariables] = useState<Array<{ name: string; type: string; value: string }>>([]);
+  const [lastApiParams, setLastApiParams] = useState<Record<string, any> | null>(null);
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -882,6 +883,7 @@ const loadApiData = async (
     
     if (data.length > 0) {
       setApiData(data);
+      setLastApiParams(vars); // Salva os parâmetros usados neste carregamento
       
       // Adiciona os dados da API como parâmetros no ReportBro
       if (reportBroRef.current) {
@@ -1181,7 +1183,19 @@ const loadApiData = async (
             />
             {apiData && (
               <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-semibold mb-2 text-sm">Dados Carregados ({apiData.length} registros):</h4>
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-semibold text-sm">Dados Carregados ({apiData.length} registro{apiData.length !== 1 ? 's' : ''}):</h4>
+                  {lastApiParams && Object.keys(lastApiParams).length > 0 && (
+                    <div className="text-xs bg-background px-2 py-1 rounded border">
+                      <span className="font-semibold">Parâmetros usados:</span>{' '}
+                      {Object.entries(lastApiParams).map(([key, value]) => (
+                        <span key={key} className="ml-1">
+                          <code className="bg-muted px-1 rounded">{key}={String(value)}</code>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="text-xs space-y-2">
                   <div className="p-2 bg-background rounded">
                     <p className="font-semibold mb-1">Como usar no ReportBro:</p>
