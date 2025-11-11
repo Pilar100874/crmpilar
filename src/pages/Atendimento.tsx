@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Conversation {
   id: string;
@@ -902,7 +903,7 @@ ${recentMessages}
             </div>
 
             <div className="border-t bg-card flex-shrink-0 p-4">
-              {/* AI Button and Chat */}
+              {/* AI Button */}
               <div className="mb-3">
                 <Button
                   variant={showAIChat ? "default" : "outline"}
@@ -1052,76 +1053,90 @@ ${recentMessages}
                 </Card>
               )}
 
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                disabled={false}
-              />
-              
-              {/* Bot Redirect Section */}
-              {availableBots.length > 0 && (
-                <div className="mt-3 pt-3 border-t">
-                  <div className="flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-muted-foreground" />
-                    <Label className="text-xs font-medium">Direcionar para bot</Label>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <select
-                      value={selectedBotRedirect || ""}
-                      onChange={(e) => setSelectedBotRedirect(e.target.value)}
-                      className="flex-1 text-sm border rounded-lg px-3 py-2 bg-card hover:bg-secondary/50 transition-colors"
-                    >
-                      {availableBots.map((bot) => (
-                        <option key={bot.id} value={bot.id}>
-                          {bot.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      onClick={handleRedirectToBot}
-                      disabled={!selectedBotRedirect}
-                      variant="outline"
-                      className="gap-2"
-                    >
-                      <Bot className="h-4 w-4" />
-                      Direcionar
-                    </Button>
-                  </div>
+              <div className="flex flex-col gap-3">
+                <ChatInput
+                  onSendMessage={handleSendMessage}
+                  disabled={false}
+                />
+                
+                {/* Bot & Webhook Controls Row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Bot Redirect */}
+                  {availableBots.length > 0 && (
+                    <>
+                      <div className="flex items-center gap-1.5">
+                        <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+                        <Label className="text-xs">Bot:</Label>
+                      </div>
+                      <Select
+                        value={selectedBotRedirect || ""}
+                        onValueChange={setSelectedBotRedirect}
+                      >
+                        <SelectTrigger className="h-8 w-[140px] text-xs">
+                          <SelectValue placeholder="Selecione bot" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableBots.map((bot) => (
+                            <SelectItem key={bot.id} value={bot.id} className="text-xs">
+                              {bot.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        onClick={handleRedirectToBot}
+                        disabled={!selectedBotRedirect}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs"
+                      >
+                        Direcionar
+                      </Button>
+                    </>
+                  )}
+                  
+                  {/* Separator */}
+                  {availableBots.length > 0 && webhooksForAutoResponse.length > 0 && (
+                    <div className="h-6 w-px bg-border" />
+                  )}
+                  
+                  {/* Webhook Auto-Response */}
+                  {webhooksForAutoResponse.length > 0 && (
+                    <>
+                      <div className="flex items-center gap-1.5">
+                        <Webhook className="h-3.5 w-3.5 text-muted-foreground" />
+                        <Label className="text-xs">Webhook:</Label>
+                      </div>
+                      <Select
+                        value={selectedWebhookAutoResponse || ""}
+                        onValueChange={setSelectedWebhookAutoResponse}
+                        disabled={webhookAutoResponseActive}
+                      >
+                        <SelectTrigger className="h-8 w-[140px] text-xs">
+                          <SelectValue placeholder="Selecione webhook" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {webhooksForAutoResponse.map((webhook) => (
+                            <SelectItem key={webhook.id} value={webhook.id} className="text-xs">
+                              {webhook.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-1.5">
+                        <Switch
+                          checked={webhookAutoResponseActive}
+                          onCheckedChange={handleToggleWebhookAutoResponse}
+                          disabled={!selectedWebhookAutoResponse}
+                        />
+                        <Label className="text-xs cursor-pointer">
+                          {webhookAutoResponseActive ? "Ativo" : "Inativo"}
+                        </Label>
+                      </div>
+                    </>
+                  )}
                 </div>
-              )}
-              
-              {/* Webhook Auto-Response Section */}
-              {webhooksForAutoResponse.length > 0 && (
-                <div className="mt-3 pt-3 border-t">
-                  <div className="flex items-center gap-2">
-                    <Webhook className="h-4 w-4 text-muted-foreground" />
-                    <Label className="text-xs font-medium">Resposta automática via webhook</Label>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <select
-                      value={selectedWebhookAutoResponse || ""}
-                      onChange={(e) => setSelectedWebhookAutoResponse(e.target.value)}
-                      className="flex-1 text-sm border rounded-lg px-3 py-2 bg-card hover:bg-secondary/50 transition-colors"
-                      disabled={webhookAutoResponseActive}
-                    >
-                      {webhooksForAutoResponse.map((webhook) => (
-                        <option key={webhook.id} value={webhook.id}>
-                          {webhook.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-card">
-                      <Switch
-                        checked={webhookAutoResponseActive}
-                        onCheckedChange={handleToggleWebhookAutoResponse}
-                        disabled={!selectedWebhookAutoResponse}
-                      />
-                      <Label className="text-xs cursor-pointer">
-                        {webhookAutoResponseActive ? "Ativo" : "Inativo"}
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </>
         ) : (
