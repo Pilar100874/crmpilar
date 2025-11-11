@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,7 @@ export default function Atendimento() {
   const [aiWebhooks, setAiWebhooks] = useState<any[]>([]);
   const [selectedAIWebhook, setSelectedAIWebhook] = useState<string | null>(null);
   const [aiInput, setAiInput] = useState("");
+  const [aiContext, setAiContext] = useState("");
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [isAILoading, setIsAILoading] = useState(false);
   const aiScrollRef = useRef<HTMLDivElement>(null);
@@ -178,6 +180,12 @@ export default function Atendimento() {
       return;
     }
 
+    // Combine context with message if context is provided
+    let fullMessage = aiInput;
+    if (aiContext.trim()) {
+      fullMessage = `Contexto:\n${aiContext}\n\nPergunta: ${aiInput}`;
+    }
+
     const messageContent = aiInput;
     setAiInput("");
     setIsAILoading(true);
@@ -201,7 +209,7 @@ export default function Atendimento() {
         body: JSON.stringify({
           timestamp: new Date().toISOString(),
           contentType: "text",
-          content: messageContent,
+          content: fullMessage,
         }),
       });
 
@@ -771,24 +779,15 @@ export default function Atendimento() {
                             )}
 
                             <div
+                              onClick={() => msg.role === "assistant" && sendAIResponseToChat(msg.content)}
                               className={`relative max-w-[75%] p-3 rounded-lg ${
                                 msg.role === "user"
                                   ? "bg-primary text-primary-foreground"
-                                  : "bg-card border border-border"
+                                  : "bg-card border border-border cursor-pointer hover:opacity-80 transition-opacity"
                               }`}
+                              title={msg.role === "assistant" ? "Clique para enviar ao cliente" : ""}
                             >
                               <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                              {msg.role === "assistant" && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => sendAIResponseToChat(msg.content)}
-                                  className="absolute -bottom-8 right-0 h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Send className="h-3 w-3 mr-1" />
-                                  Enviar ao cliente
-                                </Button>
-                              )}
                             </div>
 
                             {msg.role === "user" && (
@@ -799,6 +798,18 @@ export default function Atendimento() {
                           </div>
                         ))
                       )}
+                    </div>
+
+                    <div className="space-y-2 mb-3">
+                      <Label className="text-xs text-muted-foreground">
+                        Contexto (opcional - dados da conversa, cliente, etc.)
+                      </Label>
+                      <Textarea
+                        value={aiContext}
+                        onChange={(e) => setAiContext(e.target.value)}
+                        placeholder="Cole informações do cliente, histórico da conversa, ou qualquer contexto relevante..."
+                        className="min-h-[60px] text-xs resize-none"
+                      />
                     </div>
 
                     <div className="flex gap-2">
