@@ -747,6 +747,8 @@ async function executeNode(
   const data = node.data;
   const cfg = data.config || {};
 
+  console.log(`[FLOW] Executing node: ${node.id} (${data.type})`);
+
   const itp = (txt = "") =>
     txt.replace(/\{\{([^}]+)\}\}/g, (_, k) => {
       const key = String(k).trim();
@@ -759,25 +761,35 @@ async function executeNode(
       .map((e: any) => nodes.find((n: any) => n.id === e.target))
       .filter(Boolean);
 
-  switch (data.type) {
-    case "start": {
-      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-      break;
-    }
-    case "send_message": {
-      if (Array.isArray(cfg.messages) && cfg.messages.length) {
-        for (const m of cfg.messages) {
-          const t = itp(m.text || "");
-          if (t) await onResponse(t);
-          await new Promise((r) => setTimeout(r, 500));
-        }
-      } else if (cfg.text) {
-        const t = itp(cfg.text);
-        if (t) await onResponse(t);
+  try {
+    switch (data.type) {
+      case "start": {
+        console.log(`[FLOW] Start node - moving to next nodes`);
+        const nextNodes = nexts(node.id);
+        console.log(`[FLOW] Found ${nextNodes.length} next nodes from start`);
+        for (const nx of nextNodes) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
       }
-      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-      break;
-    }
+      case "send_message": {
+        console.log(`[FLOW] send_message node - config:`, JSON.stringify(cfg));
+        if (Array.isArray(cfg.messages) && cfg.messages.length) {
+          console.log(`[FLOW] Sending ${cfg.messages.length} messages`);
+          for (const m of cfg.messages) {
+            const t = itp(m.text || "");
+            console.log(`[FLOW] Sending message: "${t}"`);
+            if (t) await onResponse(t);
+            await new Promise((r) => setTimeout(r, 500));
+          }
+        } else if (cfg.text) {
+          const t = itp(cfg.text);
+          console.log(`[FLOW] Sending single message: "${t}"`);
+          if (t) await onResponse(t);
+        }
+        const nextNodes = nexts(node.id);
+        console.log(`[FLOW] Moving to ${nextNodes.length} next nodes`);
+        for (const nx of nextNodes) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
     case "media": {
       const url = itp(cfg.url || "");
       const cap = itp(cfg.caption || "");
@@ -855,6 +867,10 @@ async function executeNode(
     default: {
       for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
     }
+  }
+  } catch (err) {
+    console.error(`[FLOW] Error executing node ${node.id} (${data.type}):`, err);
+    throw err;
   }
 }
 
