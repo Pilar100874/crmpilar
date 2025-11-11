@@ -208,6 +208,92 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
     }
   };
 
+  const testApiWithVariables = async () => {
+    if (!selectedEndpoint) {
+      toast.error("Selecione uma API primeiro");
+      return;
+    }
+
+    setTestingUrl(getFullUrl(selectedEndpoint));
+    setTestResult(null);
+
+    try {
+      const url = getFullUrl(selectedEndpoint);
+      const method = selectedEndpoint.http_method || "GET";
+      
+      // Prepara os parâmetros com os valores preenchidos
+      const params: Record<string, any> = {};
+      variables.forEach(v => {
+        if (v.name && v.value) {
+          try {
+            switch (v.type) {
+              case 'number':
+                params[v.name] = parseFloat(v.value);
+                break;
+              case 'boolean':
+                params[v.name] = v.value === 'true';
+                break;
+              case 'date':
+                params[v.name] = new Date(v.value).toISOString();
+                break;
+              case 'array':
+                params[v.name] = JSON.parse(v.value);
+                break;
+              case 'object':
+                params[v.name] = JSON.parse(v.value);
+                break;
+              default:
+                params[v.name] = v.value;
+            }
+          } catch (e) {
+            params[v.name] = v.value;
+          }
+        }
+      });
+
+      console.log("🧪 Testando API com parâmetros:", params);
+
+      let response: Response;
+      if (method === "POST") {
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params)
+        });
+      } else {
+        // GET - adiciona parâmetros na URL
+        const urlParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+          urlParams.append(key, String(value));
+        });
+        const fullUrl = `${url}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+        response = await fetch(fullUrl);
+      }
+
+      let data: any = null;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+      
+      setTestResult(data);
+      
+      if (response.ok) {
+        toast.success(`API testada com sucesso! ${data?.data?.length || 0} registro(s) retornado(s)`);
+      } else {
+        toast.error(`API retornou erro (status ${response.status})`);
+      }
+    } catch (error: any) {
+      console.error("Erro ao testar API:", error);
+      toast.error("Erro ao testar API: " + error.message);
+      setTestResult({ error: error.message });
+    } finally {
+      setTestingUrl(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -349,6 +435,26 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
               <Button size="sm" variant="outline" onClick={addVariable}>
                 Adicionar Variável
               </Button>
+              {variables.length > 0 && variables.some(v => v.value) && (
+                <Button 
+                  size="sm" 
+                  variant="secondary"
+                  onClick={testApiWithVariables}
+                  disabled={!!testingUrl}
+                >
+                  {testingUrl ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-foreground mr-2" />
+                      Testando...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3 w-3 mr-2" />
+                      Testar com Valores
+                    </>
+                  )}
+                </Button>
+              )}
               {variables.length > 0 && (
                 <Button 
                   size="sm" 
