@@ -105,8 +105,12 @@ serve(async (req) => {
     let params: Record<string, any> = {};
     if (req.method === 'GET') {
       params = Object.fromEntries(url.searchParams.entries());
+      console.log('📥 Parâmetros recebidos (GET):', params);
     } else if (req.method === 'POST') {
       params = await req.json();
+      console.log('📥 Parâmetros recebidos (POST):', JSON.stringify(params, null, 2));
+      console.log('📝 Quantidade de parâmetros:', Object.keys(params).length);
+      console.log('📋 Tipos dos parâmetros:', Object.entries(params).map(([k, v]) => `${k}: ${typeof v}`).join(", "));
     }
 
     // Execute query based on database type
@@ -142,7 +146,12 @@ serve(async (req) => {
         proxy_url: apiConfig.connection?.proxy_url
       };
 
+      console.log('🔍 Query SQL a ser executada:', sqlConfig.query);
+      console.log('📦 Parâmetros que serão enviados ao SQL Server:', JSON.stringify(params, null, 2));
+      
       const result = await executeSqlServerQuery(sqlConfig, params);
+
+      console.log(`✅ SQL Server retornou ${result.length} registros`);
 
       return new Response(
         JSON.stringify({

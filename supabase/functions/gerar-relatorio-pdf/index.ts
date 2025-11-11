@@ -78,7 +78,9 @@ serve(async (req) => {
     if (relatorio.configuracoes?.api_url) {
       const apiUrl = relatorio.configuracoes.api_url;
       console.log("🔗 Buscando dados da API:", apiUrl);
-      console.log("📦 Parâmetros JSON:", JSON.stringify(convertedParams, null, 2));
+      console.log("📦 Parâmetros convertidos que serão enviados:", JSON.stringify(convertedParams, null, 2));
+      console.log("📝 Quantidade de parâmetros:", Object.keys(convertedParams).length);
+      console.log("📋 Tipos dos parâmetros:", Object.entries(convertedParams).map(([k, v]) => `${k}: ${typeof v}`).join(", "));
       
       try {
         const apiResponse = await fetch(apiUrl, {
@@ -88,6 +90,8 @@ serve(async (req) => {
           },
           body: JSON.stringify(convertedParams),
         });
+        
+        console.log("📡 Status da resposta da API:", apiResponse.status, apiResponse.statusText);
         
         if (!apiResponse.ok) {
           const errorText = await apiResponse.text();
