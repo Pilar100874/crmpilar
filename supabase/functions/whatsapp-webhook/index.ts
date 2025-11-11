@@ -571,11 +571,15 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
   const chatId = toJid(toNumberOnly);
 
   const endpoints = [
-    `${baseUrl}/api/sendText`, // WAHA Plus
+    `${baseUrl}/api/sendText`, // WAHA Plus (global)
+    `${baseUrl}/api/sessions/${sessionName}/sendText`,
     `${baseUrl}/api/sessions/${sessionName}/messages/send`,
     `${baseUrl}/api/sessions/${sessionName}/messages`,
     `${baseUrl}/api/sessions/${sessionName}/sendMessage`,
     `${baseUrl}/api/sessions/${sessionName}/chats/send-text`,
+    `${baseUrl}/api/sessions/${sessionName}/chats/${encodeURIComponent(chatId)}/send-text`,
+    `${baseUrl}/api/chats/${encodeURIComponent(chatId)}/send-text`,
+    `${baseUrl}/api/messages/send-text`,
   ];
 
   const variants: any[] = [
@@ -620,6 +624,34 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
           if (resp.status === 401) continue; // try next variant
         } catch (err) {
           console.error("[WAHA] error sending text via", url, err);
+        }
+      }
+
+      // GET fallback (alguns WAHA Plus aceitam sendText via GET)
+      if (base.includes('/sendText')) {
+        const getParamSets = [
+          `to=${encodeURIComponent(chatId)}&text=${encodeURIComponent(text)}`,
+          `jid=${encodeURIComponent(chatId)}&message=${encodeURIComponent(text)}`,
+          `number=${encodeURIComponent(toNumberOnly)}&message=${encodeURIComponent(text)}`,
+          `phone=${encodeURIComponent(toNumberOnly)}&text=${encodeURIComponent(text)}`,
+        ];
+        for (const params of getParamSets) {
+          const urlWithParams = `${base}?${params}&token=${encodeURIComponent(wahaApiKey)}`;
+          try {
+            console.log(`[WAHA] Trying GET TEXT -> ${chatId} via ${urlWithParams}`);
+            const resp = await fetch(urlWithParams, {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+                "x-api-key": wahaApiKey,
+              },
+            });
+            const resultText = await resp.text();
+            console.log("[WAHA] GET TEXT result:", resp.status, resultText);
+            if (resp.ok) return;
+          } catch (err) {
+            console.error("[WAHA] error sending GET text via", urlWithParams, err);
+          }
         }
       }
     }
