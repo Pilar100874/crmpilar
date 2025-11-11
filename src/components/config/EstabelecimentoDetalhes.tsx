@@ -374,15 +374,27 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
   };
 
   const syncSessionStatus = async (sessionsToSync: any[]) => {
-    if (!config?.waha_url) return;
+    // SEMPRE busca a configuração mais recente do banco para o polling
+    const { data: currentConfig } = await supabase
+      .from("whatsapp_config")
+      .select("waha_url, waha_api_key")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .maybeSingle();
 
-    const base = config.waha_url.replace(/\/+$/, '');
+    if (!currentConfig?.waha_url) {
+      console.log('[WAHA Sync] Sem configuração WAHA no banco para estabelecimento:', estabelecimentoId);
+      return;
+    }
+
+    const base = currentConfig.waha_url.replace(/\/+$/, '');
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    if (config.waha_api_key) {
-      headers['x-api-key'] = config.waha_api_key;
+    if (currentConfig.waha_api_key) {
+      headers['x-api-key'] = currentConfig.waha_api_key;
     }
+    
+    console.log('[WAHA Sync] Sincronizando status de', sessionsToSync.length, 'sessões com config do banco');
 
     for (const session of sessionsToSync) {
       try {
@@ -417,10 +429,22 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
                 if (session.status !== mappedStatus) {
                   await supabase
                     .from('whatsapp_sessions')
-                    .update({ status: mappedStatus })
+                    .update({ 
+                      status: mappedStatus,
+                      // Limpa QR code se conectado
+                      qr_code: mappedStatus === 'WORKING' ? null : session.qr_code
+                    })
                     .eq('id', session.id);
                   
-                  console.log(`Status atualizado: ${session.session_name} -> ${mappedStatus}`);
+                  console.log(`✓ Status atualizado: ${session.session_name} -> ${mappedStatus}`);
+                  
+                  // Se conectou, mostrar notificação
+                  if (mappedStatus === 'WORKING' && session.status !== 'WORKING') {
+                    toast({
+                      title: "✓ Sessão conectada!",
+                      description: `A sessão "${session.session_name}" foi conectada com sucesso!`,
+                    });
+                  }
                 }
                 
                 statusFound = true;
@@ -502,6 +526,8 @@ function WhatsAppWAHAConfigSection({ estabelecimentoId }: { estabelecimentoId: s
       });
       setShowConfigDialog(false);
       await loadConfig();
+      // Forçar sincronização imediata após salvar config
+      await refreshSessions();
     } catch (error: any) {
       console.error("Error saving config:", error);
       toast({
