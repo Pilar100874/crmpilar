@@ -979,13 +979,6 @@ ${recentMessages}
                           msg.sender === "agent" ? "items-end" : "items-start"
                         }`}
                       >
-                        <Badge
-                          variant={msg.sender === "agent" ? "default" : "secondary"}
-                          className="text-xs"
-                        >
-                          {msg.sender === "agent" ? "Você" : "Cliente"}
-                        </Badge>
-
                         <div
                           className={`relative p-3 rounded-2xl transition-all ${
                             msg.sender === "agent"
