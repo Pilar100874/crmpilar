@@ -17,13 +17,17 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { relatorioId, apiVariables, reportVariables, outputType } = await req.json();
+    const requestBody = await req.json();
+    console.log("📦 Body completo recebido:", JSON.stringify(requestBody, null, 2));
+    
+    const { relatorioId, apiVariables, reportVariables, outputType } = requestBody;
     const outputFormat = outputType === 'xlsx' ? 'xlsx' : 'pdf';
 
     console.log("📊 Gerando relatório:", relatorioId);
     console.log("📊 Variáveis da API:", apiVariables);
     console.log("📊 Variáveis do Relatório:", reportVariables);
-    console.log("📊 Tipo de saída:", outputFormat);
+    console.log("📊 Tipo de saída solicitado:", outputType);
+    console.log("📊 Formato de saída processado:", outputFormat);
 
     // 1. Buscar relatório do banco
     const { data: relatorio, error: relError } = await supabase
@@ -163,7 +167,7 @@ serve(async (req) => {
     const parameters: Record<string, any> = { ...convertedParams };
     
     // SEMPRE adicionar variáveis fixas do relatório quando houver
-    if (reportVariables && typeof reportVariables === 'object') {
+    if (reportVariables && typeof reportVariables === 'object' && Object.keys(reportVariables).length > 0) {
       console.log("📝 Processando variáveis fixas do relatório...");
       Object.entries(reportVariables).forEach(([key, value]) => {
         // Interpolar e adicionar ao parameters
@@ -172,8 +176,14 @@ serve(async (req) => {
         console.log(`   ✓ ${key} = "${finalValue}"`);
       });
       console.log("✅ Variáveis fixas adicionadas aos parâmetros:", Object.keys(reportVariables));
+      console.log("✅ Total de parâmetros após variáveis fixas:", Object.keys(parameters));
     } else {
       console.log("ℹ️ Nenhuma variável fixa do relatório foi fornecida");
+      console.log("   - reportVariables:", reportVariables);
+      console.log("   - typeof:", typeof reportVariables);
+      if (reportVariables && typeof reportVariables === 'object') {
+        console.log("   - keys:", Object.keys(reportVariables));
+      }
     }
     
     // Se tem dados da API, adicionar ao parâmetro api_data
