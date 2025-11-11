@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Conversation {
   id: string;
@@ -66,11 +67,13 @@ export default function Atendimento() {
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
   const [selectedBotRedirect, setSelectedBotRedirect] = useState<string | null>(null);
+  const [showBotPopover, setShowBotPopover] = useState(false);
   
   // Webhook auto-response states
   const [webhooksForAutoResponse, setWebhooksForAutoResponse] = useState<any[]>([]);
   const [selectedWebhookAutoResponse, setSelectedWebhookAutoResponse] = useState<string | null>(null);
   const [webhookAutoResponseActive, setWebhookAutoResponseActive] = useState(false);
+  const [showWebhookPopover, setShowWebhookPopover] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -222,6 +225,7 @@ export default function Atendimento() {
 
       const botName = availableBots.find(b => b.id === selectedBotRedirect)?.name || "Bot";
       toast.success(`Cliente direcionado para ${botName}`);
+      setShowBotPopover(false);
     } catch (error) {
       console.error("Erro ao direcionar para bot:", error);
       toast.error("Erro ao direcionar para bot");
@@ -1060,80 +1064,107 @@ ${recentMessages}
                 />
                 
                 {/* Bot & Webhook Controls Row */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* Bot Redirect */}
+                <div className="flex items-center gap-1 flex-wrap border-t pt-2">
+                  {/* Bot Redirect Popover */}
                   {availableBots.length > 0 && (
-                    <>
-                      <div className="flex items-center gap-1.5">
-                        <Bot className="h-3.5 w-3.5 text-muted-foreground" />
-                        <Label className="text-xs">Bot:</Label>
-                      </div>
-                      <Select
-                        value={selectedBotRedirect || ""}
-                        onValueChange={setSelectedBotRedirect}
-                      >
-                        <SelectTrigger className="h-8 w-[140px] text-xs">
-                          <SelectValue placeholder="Selecione bot" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableBots.map((bot) => (
-                            <SelectItem key={bot.id} value={bot.id} className="text-xs">
-                              {bot.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        onClick={handleRedirectToBot}
-                        disabled={!selectedBotRedirect}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs"
-                      >
-                        Direcionar
-                      </Button>
-                    </>
+                    <Popover open={showBotPopover} onOpenChange={setShowBotPopover}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          title="Direcionar para bot"
+                        >
+                          <Bot className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 z-50" align="start">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 border-b pb-2">
+                            <Bot className="h-4 w-4 text-muted-foreground" />
+                            <Label className="text-sm font-semibold">Direcionar para bot</Label>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Selecione o bot</Label>
+                            <Select
+                              value={selectedBotRedirect || ""}
+                              onValueChange={setSelectedBotRedirect}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione um bot" />
+                              </SelectTrigger>
+                              <SelectContent className="z-50">
+                                {availableBots.map((bot) => (
+                                  <SelectItem key={bot.id} value={bot.id}>
+                                    {bot.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button
+                            onClick={handleRedirectToBot}
+                            disabled={!selectedBotRedirect}
+                            className="w-full"
+                          >
+                            <Bot className="h-4 w-4 mr-2" />
+                            Direcionar
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                   
-                  {/* Separator */}
-                  {availableBots.length > 0 && webhooksForAutoResponse.length > 0 && (
-                    <div className="h-6 w-px bg-border" />
-                  )}
-                  
-                  {/* Webhook Auto-Response */}
+                  {/* Webhook Auto-Response Popover */}
                   {webhooksForAutoResponse.length > 0 && (
-                    <>
-                      <div className="flex items-center gap-1.5">
-                        <Webhook className="h-3.5 w-3.5 text-muted-foreground" />
-                        <Label className="text-xs">Webhook:</Label>
-                      </div>
-                      <Select
-                        value={selectedWebhookAutoResponse || ""}
-                        onValueChange={setSelectedWebhookAutoResponse}
-                        disabled={webhookAutoResponseActive}
-                      >
-                        <SelectTrigger className="h-8 w-[140px] text-xs">
-                          <SelectValue placeholder="Selecione webhook" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {webhooksForAutoResponse.map((webhook) => (
-                            <SelectItem key={webhook.id} value={webhook.id} className="text-xs">
-                              {webhook.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="flex items-center gap-1.5">
-                        <Switch
-                          checked={webhookAutoResponseActive}
-                          onCheckedChange={handleToggleWebhookAutoResponse}
-                          disabled={!selectedWebhookAutoResponse}
-                        />
-                        <Label className="text-xs cursor-pointer">
-                          {webhookAutoResponseActive ? "Ativo" : "Inativo"}
-                        </Label>
-                      </div>
-                    </>
+                    <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          title="Resposta automática via webhook"
+                          className={webhookAutoResponseActive ? "bg-primary text-primary-foreground" : ""}
+                        >
+                          <Webhook className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 z-50" align="start">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 border-b pb-2">
+                            <Webhook className="h-4 w-4 text-muted-foreground" />
+                            <Label className="text-sm font-semibold">Resposta automática via webhook</Label>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Selecione o webhook</Label>
+                            <Select
+                              value={selectedWebhookAutoResponse || ""}
+                              onValueChange={setSelectedWebhookAutoResponse}
+                              disabled={webhookAutoResponseActive}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione um webhook" />
+                              </SelectTrigger>
+                              <SelectContent className="z-50">
+                                {webhooksForAutoResponse.map((webhook) => (
+                                  <SelectItem key={webhook.id} value={webhook.id}>
+                                    {webhook.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+                            <Label className="text-sm font-medium">
+                              {webhookAutoResponseActive ? "Webhook ativo" : "Webhook inativo"}
+                            </Label>
+                            <Switch
+                              checked={webhookAutoResponseActive}
+                              onCheckedChange={handleToggleWebhookAutoResponse}
+                              disabled={!selectedWebhookAutoResponse}
+                            />
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </div>
               </div>
