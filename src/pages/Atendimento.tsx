@@ -361,6 +361,8 @@ export default function Atendimento() {
   ) => {
     if (!selectedConversation) return;
 
+    console.log("💬 Atendimento - Enviando mensagem:", { content, contentType, fileUrl, fileName });
+
     try {
       // Save message to database
       const { error: dbError } = await supabase.from("messages").insert({
@@ -374,7 +376,12 @@ export default function Atendimento() {
         },
       });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error("❌ Erro ao salvar mensagem no banco:", dbError);
+        throw dbError;
+      }
+
+      console.log("✅ Mensagem salva no banco com sucesso");
 
       // Immediately add message to local state for instant feedback
       const newMessage: Message = {
@@ -389,15 +396,20 @@ export default function Atendimento() {
       setMessages(prev => [...prev, newMessage]);
 
       // Send message via WhatsApp
-      const { error: sendError } = await supabase.functions.invoke("send-agent-message", {
+      const { data: sendData, error: sendError } = await supabase.functions.invoke("send-agent-message", {
         body: {
           conversationId: selectedConversation,
           text: content,
+          fileUrl: fileUrl,
+          fileName: fileName,
+          contentType: contentType,
         },
       });
 
+      console.log("📤 Resposta do send-agent-message:", { sendData, sendError });
+
       if (sendError) {
-        console.error("Erro ao enviar via WhatsApp:", sendError);
+        console.error("❌ Erro ao enviar via WhatsApp:", sendError);
         toast.error("Mensagem salva, mas não enviada ao cliente");
       }
 
@@ -412,7 +424,7 @@ export default function Atendimento() {
 
       toast.success("Mensagem enviada • Bot pausado");
     } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
+      console.error("❌ Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem");
     }
   };
@@ -675,10 +687,9 @@ export default function Atendimento() {
               )}
             </div>
 
-            <div className="border-t bg-card flex-shrink-0">
-              <div className="max-h-[40vh] overflow-y-auto p-4 pb-0">
-                {/* AI Button and Chat */}
-                <div className="mb-3">
+            <div className="border-t bg-card flex-shrink-0 p-4">
+              {/* AI Button and Chat */}
+              <div className="mb-3">
                 <Button
                   variant={showAIChat ? "default" : "outline"}
                   size="sm"
@@ -796,11 +807,10 @@ export default function Atendimento() {
                 </Card>
               )}
 
-                <ChatInput
-                  onSendMessage={handleSendMessage}
-                  disabled={false}
-                />
-              </div>
+              <ChatInput
+                onSendMessage={handleSendMessage}
+                disabled={false}
+              />
             </div>
           </>
         ) : (

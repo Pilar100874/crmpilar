@@ -236,6 +236,8 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
   };
 
   const handleQuickAttachmentSelect = (attachment: any) => {
+    console.log("📎 Anexo rápido selecionado:", attachment);
+    
     // Determinar o contentType baseado no tipo do anexo
     let contentType: Message["contentType"] = "text";
     
@@ -250,10 +252,15 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
       }
     }
     
+    console.log("📎 Content type determinado:", contentType);
+    console.log("📎 URL do arquivo:", attachment.url);
+    
     // Construir mensagem descritiva
     const messageText = attachment.type === "link" 
       ? attachment.title
       : `${attachment.title}`;
+    
+    console.log("📎 Enviando mensagem:", { messageText, contentType, url: attachment.url, title: attachment.title });
     
     onSendMessage(
       messageText,
