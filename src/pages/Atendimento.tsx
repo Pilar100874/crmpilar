@@ -812,6 +812,7 @@ export default function Atendimento() {
                 onSendMessage={handleSendMessage}
                 disabled={false}
               />
+              </div>
             </div>
           </>
         ) : (
