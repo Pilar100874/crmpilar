@@ -221,12 +221,17 @@ serve(async (req) => {
 
         const fileExtension = 'xlsx';
         const contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        const fileName = `relatorio_${relatorioId}_${Date.now()}.${fileExtension}`;
-        const filePath = `relatorios/${fileName}`;
+        const sanitizedName = relatorio.nome.replace(/[^a-zA-Z0-9_\-]/g, '_');
+        const storageFileName = `${sanitizedName}_${Date.now()}.${fileExtension}`;
+        const filePath = `relatorios/${storageFileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('bot-media')
-          .upload(filePath, bytes, { contentType, upsert: false });
+          .upload(filePath, bytes, { 
+            contentType, 
+            upsert: false,
+            cacheControl: '3600'
+          });
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
@@ -409,14 +414,16 @@ serve(async (req) => {
     const contentType = outputFormat === 'xlsx' 
       ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       : 'application/pdf';
-    const fileName = `relatorio_${relatorioId}_${Date.now()}.${fileExtension}`;
-    const filePath = `relatorios/${fileName}`;
+    const sanitizedName = relatorio.nome.replace(/[^a-zA-Z0-9_\-]/g, '_');
+    const storageFileName = `${sanitizedName}_${Date.now()}.${fileExtension}`;
+    const filePath = `relatorios/${storageFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('bot-media')
       .upload(filePath, fileBytes, {
         contentType: contentType,
         upsert: false,
+        cacheControl: '3600'
       });
 
     if (uploadError) {
