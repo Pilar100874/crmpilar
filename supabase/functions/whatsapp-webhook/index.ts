@@ -169,6 +169,7 @@ serve(async (req) => {
     // ====== Busca configuração do WAHA SEMPRE DO BANCO (nunca de secrets) ======
     let WAHA_URL = "";
     let WAHA_API_KEY = "";
+    let estabelecimentoId = "";
     
     if (transport === "waha") {
       console.log("[WAHA] Buscando configuração do banco para sessão:", wahaSession);
@@ -185,7 +186,8 @@ serve(async (req) => {
       }
       
       if (sessionData?.estabelecimento_id) {
-        console.log("[WAHA] Sessão encontrada, estabelecimento_id:", sessionData.estabelecimento_id);
+        estabelecimentoId = sessionData.estabelecimento_id;
+        console.log("[WAHA] Sessão encontrada, estabelecimento_id:", estabelecimentoId);
         
         // Agora busca a configuração WAHA do estabelecimento NA TABELA whatsapp_config
         const { data: wahaConfig, error: configError } = await supabase
@@ -293,7 +295,115 @@ serve(async (req) => {
     context.vars.phoneNumber = from;
     context.vars.session = wahaSession;
 
+    // ====== Buscar ou criar customer e conversation ======
+    let conversationId: string | null = null;
+    
+    if (estabelecimentoId) {
+      console.log("[ATENDIMENTO] Buscando/criando customer e conversation para:", { from, estabelecimentoId });
+      
+      // 1. Buscar ou criar customer
+      const { data: existingCustomer } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("telefone", from)
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+      
+      let customerId = existingCustomer?.id;
+      
+      if (!customerId) {
+        console.log("[ATENDIMENTO] Criando novo customer");
+        const { data: newCustomer, error: customerError } = await supabase
+          .from("customers")
+          .insert({
+            nome: `Cliente ${from}`,
+            telefone: from,
+            email: `${from}@temp.com`,
+            estabelecimento_id: estabelecimentoId
+          })
+          .select("id")
+          .single();
+        
+        if (customerError) {
+          console.error("[ATENDIMENTO] Erro ao criar customer:", customerError);
+        } else {
+          customerId = newCustomer?.id;
+          console.log("[ATENDIMENTO] Customer criado:", customerId);
+        }
+      }
+      
+      // 2. Buscar ou criar conversation
+      if (customerId) {
+        const { data: existingConv } = await supabase
+          .from("conversations")
+          .select("id")
+          .eq("customer_id", customerId)
+          .eq("estabelecimento_id", estabelecimentoId)
+          .eq("canal", "whatsapp")
+          .eq("status", "open")
+          .maybeSingle();
+        
+        conversationId = existingConv?.id || null;
+        
+        if (!conversationId) {
+          console.log("[ATENDIMENTO] Criando nova conversation");
+          const { data: newConv, error: convError } = await supabase
+            .from("conversations")
+            .insert({
+              customer_id: customerId,
+              estabelecimento_id: estabelecimentoId,
+              canal: "whatsapp",
+              status: "open"
+            })
+            .select("id")
+            .single();
+          
+          if (convError) {
+            console.error("[ATENDIMENTO] Erro ao criar conversation:", convError);
+          } else {
+            conversationId = newConv?.id;
+            console.log("[ATENDIMENTO] Conversation criada:", conversationId);
+          }
+        }
+        
+        // 3. Salvar mensagem do cliente
+        if (conversationId && body) {
+          console.log("[ATENDIMENTO] Salvando mensagem do cliente");
+          const { error: msgError } = await supabase
+            .from("messages")
+            .insert({
+              conversation_id: conversationId,
+              sender: "customer",
+              text: body
+            });
+          
+          if (msgError) {
+            console.error("[ATENDIMENTO] Erro ao salvar mensagem:", msgError);
+          } else {
+            console.log("[ATENDIMENTO] ✓ Mensagem do cliente salva");
+          }
+        }
+      }
+    }
+
     const onResponse = async (message: string, mediaUrl?: string, mediaType?: string) => {
+      // Salva mensagem do bot na conversation
+      if (conversationId && message) {
+        console.log("[ATENDIMENTO] Salvando mensagem do bot");
+        const { error: botMsgError } = await supabase
+          .from("messages")
+          .insert({
+            conversation_id: conversationId,
+            sender: "assistant",
+            text: message
+          });
+        
+        if (botMsgError) {
+          console.error("[ATENDIMENTO] Erro ao salvar mensagem do bot:", botMsgError);
+        } else {
+          console.log("[ATENDIMENTO] ✓ Mensagem do bot salva");
+        }
+      }
       // Se tem mídia, envia tudo junto em uma única chamada
       if (mediaUrl && mediaType) {
         await respond(message, mediaUrl, mediaType);
