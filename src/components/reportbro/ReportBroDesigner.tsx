@@ -752,11 +752,44 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
       }
 
       // Salva versão limpa no storage
+      // Monta valores padrão salvos (sem precisar clicar em "Testar com valores")
+      const defaultVars: Record<string, any> = {};
+      try {
+        savedApiVariables.forEach(v => {
+          if (v.name && v.value !== undefined && v.value !== null && v.value !== "") {
+            try {
+              switch (v.type) {
+                case 'number':
+                  defaultVars[v.name] = parseFloat(v.value);
+                  break;
+                case 'boolean':
+                  defaultVars[v.name] = v.value === 'true' || v.value === '1';
+                  break;
+                case 'date':
+                  defaultVars[v.name] = new Date(v.value).toISOString();
+                  break;
+                case 'array':
+                  defaultVars[v.name] = JSON.parse(v.value);
+                  break;
+                case 'object':
+                  defaultVars[v.name] = JSON.parse(v.value);
+                  break;
+                default:
+                  defaultVars[v.name] = v.value;
+              }
+            } catch {
+              defaultVars[v.name] = v.value;
+            }
+          }
+        });
+      } catch {}
+      const mergedTestVars = { ...defaultVars, ...(testVariables || {}) };
+
       const layoutStr = JSON.stringify({
         report: cleanedData,
         reportId: reportId,
         apiUrl: currentApiUrl,
-        testVariables: testVariables || {}
+        testVariables: mergedTestVars
       });
 
       try {
