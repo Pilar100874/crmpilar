@@ -124,7 +124,7 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
         const value = varData?.value;
         const type = varData?.type || 'string';
         
-        if (value) {
+        if (value !== undefined && value !== null && !(typeof value === 'string' && value.trim() === '')) {
           // Converte valor fixo
           try {
             switch (type) {

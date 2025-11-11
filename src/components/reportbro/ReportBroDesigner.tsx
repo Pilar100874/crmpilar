@@ -609,12 +609,13 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
           if (config.api_variables && typeof config.api_variables === 'object') {
             Object.entries(config.api_variables).forEach(([name, varData]: [string, any]) => {
               const type = varData?.type || 'string';
-              const value = varData?.value || '';
+              const rawVal = varData?.value;
+              const value = rawVal !== undefined && rawVal !== null ? String(rawVal) : '';
               
               allVariables.push({ name, type, value });
               
               // Se não tem valor fixo, precisa solicitar no preview
-              if (!value) {
+              if (rawVal === undefined || rawVal === null || (typeof rawVal === 'string' && rawVal.trim() === '')) {
                 varsWithoutValue.push({ name, type });
               }
             });
@@ -628,7 +629,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
           if (varsWithoutValue.length === 0 && allVariables.length > 0) {
             const fixedVars: Record<string, any> = {};
             allVariables.forEach(v => {
-              if (v.value) {
+              if (v.value !== undefined && v.value !== null && v.value !== "") {
                 try {
                   switch (v.type) {
                     case 'number':
@@ -1029,17 +1030,17 @@ const loadApiData = async (
       setSavedApiVariables(variables);
       
       // Atualiza apiVariables com variáveis que não têm valor fixo
-      const varsWithoutValue = variables
-        .filter(v => v.name && !v.value)
-        .map(v => ({ name: v.name, type: v.type }));
-      setApiVariables(varsWithoutValue);
+       const varsWithoutValue = variables
+         .filter(v => v.name && (v.value === undefined || v.value === null || v.value === ""))
+         .map(v => ({ name: v.name, type: v.type }));
+       setApiVariables(varsWithoutValue);
       
       setShowApiDialog(false);
       
       // Sempre carrega dados da API com os valores configurados
       const fixedVars: Record<string, any> = {};
       variables.forEach(v => {
-        if (v.name && v.value) {
+        if (v.name && v.value !== undefined && v.value !== null && v.value !== "") {
           try {
             switch (v.type) {
               case 'number':
