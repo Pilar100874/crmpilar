@@ -250,25 +250,34 @@ serve(async (req) => {
       
       if (pollResponse.ok) {
         const contentType = pollResponse.headers.get('content-type');
-        console.log(`📋 Content-Type recebido: ${contentType}`);
+        console.log(`📋 Content-Type recebido (tentativa ${attempt}): ${contentType}`);
         
-        // Verificar se é o formato esperado
-        const isPdf = outputFormat === 'pdf' && contentType?.includes('application/pdf');
-        const isExcel = outputFormat === 'xlsx' && (
-          contentType?.includes('spreadsheet') || 
-          contentType?.includes('vnd.openxmlformats') ||
-          contentType?.includes('application/vnd.ms-excel')
-        );
-        
-        if (isPdf || isExcel) {
+        // Para PDF
+        if (outputFormat === 'pdf' && contentType?.includes('application/pdf')) {
           fileBytes = new Uint8Array(await pollResponse.arrayBuffer());
-          console.log(`✅ ${outputFormat.toUpperCase()} gerado, tamanho:`, fileBytes.length);
+          console.log(`✅ PDF gerado, tamanho:`, fileBytes.length);
           break;
-        } else if (contentType?.includes('text/plain')) {
-          // Pode estar ainda processando
-          const statusText = await pollResponse.text();
-          console.log(`⏳ Status: ${statusText}`);
         }
+        
+        // Para XLSX - aceitar múltiplos content-types possíveis
+        if (outputFormat === 'xlsx') {
+          if (contentType?.includes('spreadsheet') || 
+              contentType?.includes('vnd.openxmlformats') ||
+              contentType?.includes('vnd.ms-excel') ||
+              contentType?.includes('application/octet-stream')) {
+            fileBytes = new Uint8Array(await pollResponse.arrayBuffer());
+            console.log(`✅ XLSX gerado, tamanho:`, fileBytes.length);
+            break;
+          }
+        }
+        
+        // Se recebeu texto, pode estar ainda processando
+        if (contentType?.includes('text/plain')) {
+          const statusText = await pollResponse.text();
+          console.log(`⏳ Status (tentativa ${attempt}): ${statusText}`);
+        }
+      } else {
+        console.log(`⚠️ Response não OK (tentativa ${attempt}): ${pollResponse.status} ${pollResponse.statusText}`);
       }
       
       // Aguardar 2 segundos antes da próxima tentativa
@@ -276,6 +285,7 @@ serve(async (req) => {
     }
 
     if (!fileBytes) {
+      console.error(`❌ Timeout após ${maxAttempts} tentativas. Formato solicitado: ${outputFormat}`);
       throw new Error(`Timeout: ${outputFormat.toUpperCase()} não foi gerado a tempo`);
     }
 
