@@ -565,7 +565,7 @@ export default function Atendimento() {
       <div className="flex-1 flex flex-col min-h-0">
         {selectedConversation && selectedConv ? (
           <>
-            <div className="p-4 border-b bg-card shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div className="p-4 border-b bg-card shadow-sm flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
                   <User className="w-5 h-5" />
@@ -653,21 +653,31 @@ export default function Atendimento() {
                           }`}
                         >
                           <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                          {msg.attachments && msg.attachments.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              {msg.attachments.map((attachment, idx) => (
-                                <a
-                                  key={idx}
-                                  href={attachment}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs underline opacity-80 hover:opacity-100"
-                                >
-                                  Ver anexo
-                                </a>
-                              ))}
-                            </div>
-                          )}
+                          {msg.attachments && msg.attachments.length > 0 ? (
+                            msg.payload?.contentType === "image" ? (
+                              <div className="mt-2">
+                                <img
+                                  src={msg.attachments[0]}
+                                  alt={msg.payload?.fileName || "imagem"}
+                                  className="rounded-md max-w-full h-auto border border-border/50"
+                                />
+                              </div>
+                            ) : (
+                              <div className="mt-2 space-y-1">
+                                {msg.attachments.map((attachment, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={attachment}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs underline opacity-80 hover:opacity-100"
+                                  >
+                                    {msg.payload?.fileName || "Baixar arquivo"}
+                                  </a>
+                                ))}
+                              </div>
+                            )
+                          ) : null}
                         </div>
 
                         <span className="text-xs text-muted-foreground">
@@ -687,7 +697,7 @@ export default function Atendimento() {
               )}
             </div>
 
-            <div className="border-t bg-card flex-shrink-0 sticky bottom-0 z-10">
+            <div className="border-t bg-card flex-shrink-0">
               <div className="p-4">
                 {/* AI Button and Chat */}
                 <div className="mb-3">

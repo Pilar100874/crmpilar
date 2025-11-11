@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { conversationId, text } = await req.json();
+    const { conversationId, text, fileUrl, fileName, contentType } = await req.json();
 
     if (!conversationId || !text) {
       return new Response(
@@ -73,24 +73,39 @@ serve(async (req) => {
     const wahaUrl = wahaConfig.waha_url.replace(/\/$/, "");
     const sessionName = wahaConfig.session_name || "default";
 
-    console.log("[AGENT] Sending message to:", chatId);
+    console.log("[AGENT] Sending to:", { chatId, contentType, hasFile: !!fileUrl });
 
-    const sendUrl = `${wahaUrl}/api/sendText`;
+    let sendUrl = `${wahaUrl}/api/sendText`;
+    let body: Record<string, unknown> = {
+      session: sessionName,
+      chatId,
+    };
+
+    if (fileUrl) {
+      if (contentType === "image") {
+        sendUrl = `${wahaUrl}/api/sendImage`;
+        body.image = fileUrl;
+        if (text) body.caption = text;
+      } else {
+        sendUrl = `${wahaUrl}/api/sendFile`;
+        body.file = fileUrl;
+        body.filename = fileName || "arquivo";
+        if (text) body.caption = text;
+      }
+    } else {
+      body.text = text;
+    }
+
     const response = await fetch(sendUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Api-Key": wahaConfig.waha_api_key,
       },
-      body: JSON.stringify({
-        session: sessionName,
-        chatId,
-        text,
-      }),
+      body: JSON.stringify(body),
     });
 
     const result = await response.json().catch(() => ({}));
-    
     if (!response.ok) {
       console.error("[AGENT] WAHA send failed:", response.status, result);
       return new Response(
