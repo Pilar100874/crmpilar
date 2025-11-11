@@ -523,7 +523,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         <main className="flex-1 flex flex-col bg-background min-w-0 ml-20">
-          <div className="flex-1 overflow-auto bg-background">
+          <div className="flex-1 overflow-hidden bg-background">
             {children}
           </div>
         </main>

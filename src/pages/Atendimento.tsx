@@ -476,9 +476,9 @@ export default function Atendimento() {
   }
 
   return (
-    <div className="h-full flex bg-background">
+    <div className="h-full flex bg-background overflow-hidden">
       {/* Conversation List */}
-      <div className="w-96 border-r border-border bg-card flex flex-col">
+      <div className="w-96 border-r border-border bg-card flex flex-col min-h-0">
         <div className="p-4 border-b bg-card/50">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

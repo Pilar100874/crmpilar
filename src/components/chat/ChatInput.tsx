@@ -36,6 +36,14 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
   const [quickReplies, setQuickReplies] = useState<Array<{content: string, shortcut: string}>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
+  // Auto-resize textarea to avoid inner scrollbars
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [message]);
+  
   // Auto-suggestion states
   const [autoSuggestionEnabled, setAutoSuggestionEnabled] = useState(false);
   const [autoResponseWebhooks, setAutoResponseWebhooks] = useState<any[]>([]);
@@ -246,7 +254,7 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
             onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="min-h-[80px] resize-none"
+            className="min-h-[80px] resize-none overflow-hidden"
             disabled={disabled}
           />
         </div>
