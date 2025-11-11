@@ -2249,9 +2249,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                   const blob = await res.blob();
                                   const url = URL.createObjectURL(blob);
                                   const a = document.createElement('a');
-                                  const fallbackName = msg.text ? `${msg.text}.pdf` : (msg.mediaUrl.split('/').pop()?.split('?')[0] || 'arquivo.pdf');
+                                  const contentType = blob.type || '';
+                                  const extMap: Record<string, string> = {
+                                    'application/pdf': 'pdf',
+                                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+                                    'application/vnd.ms-excel': 'xls',
+                                    'text/csv': 'csv',
+                                  };
+                                  const inferredExt = extMap[contentType] || '';
+                                  const urlName = msg.mediaUrl.split('/').pop()?.split('?')[0] || '';
+                                  const urlExt = urlName.includes('.') ? (urlName.split('.').pop() || '') : '';
+                                  const hasExtInText = !!(msg.text && /\.[a-z0-9]+$/i.test(msg.text));
+                                  let baseName = (msg.text || urlName || 'arquivo').replace(/\?.*$/, '');
+                                  let finalName = baseName;
+                                  if (!hasExtInText) {
+                                    const ext = (urlExt || inferredExt || 'pdf').toLowerCase();
+                                    if (!finalName.toLowerCase().endsWith(`.${ext}`)) finalName = `${finalName}.${ext}`;
+                                  }
                                   a.href = url;
-                                  a.download = fallbackName;
+                                  a.download = finalName;
                                   document.body.appendChild(a);
                                   a.click();
                                   a.remove();
