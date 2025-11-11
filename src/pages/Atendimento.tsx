@@ -61,23 +61,18 @@ export default function Atendimento() {
   const loadConversations = async () => {
     try {
       const estabId = await getEstabelecimentoId();
-      if (!estabId) {
-        toast.error("Estabelecimento não encontrado");
-        return;
-      }
-
-      const baseSelect = `
-        *,
-        customer:customers!conversations_customer_id_fkey (
-          nome,
-          email,
-          telefone
-        )
-      `;
-
+      
+      // Build optimized query with last message in single query
       let query = supabase
         .from("conversations")
-        .select(baseSelect);
+        .select(`
+          *,
+          customer:customers!conversations_customer_id_fkey (
+            nome,
+            email,
+            telefone
+          )
+        `);
 
       if (estabId) {
         query = query.eq("estabelecimento_id", estabId);
@@ -87,25 +82,35 @@ export default function Atendimento() {
 
       if (error) throw error;
 
-      // Load last message for each conversation
-      const conversationsWithMessages = await Promise.all(
-        (data || []).map(async (conv) => {
-          const { data: msgData } = await supabase
-            .from("messages")
-            .select("text, created_at")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+      // Get last messages for all conversations in one query
+      if (data && data.length > 0) {
+        const convIds = data.map(c => c.id);
+        
+        // Get last message for each conversation using a lateral join approach
+        const { data: lastMessages } = await supabase
+          .from("messages")
+          .select("conversation_id, text, created_at")
+          .in("conversation_id", convIds)
+          .order("created_at", { ascending: false });
 
-          return {
-            ...conv,
-            lastMessage: msgData,
-          };
-        })
-      );
+        // Create a map of last messages
+        const lastMessageMap = new Map();
+        lastMessages?.forEach(msg => {
+          if (!lastMessageMap.has(msg.conversation_id)) {
+            lastMessageMap.set(msg.conversation_id, msg);
+          }
+        });
 
-      setConversations(conversationsWithMessages);
+        // Attach last messages to conversations
+        const conversationsWithMessages = data.map(conv => ({
+          ...conv,
+          lastMessage: lastMessageMap.get(conv.id) || null,
+        }));
+
+        setConversations(conversationsWithMessages);
+      } else {
+        setConversations([]);
+      }
     } catch (error) {
       console.error("Erro ao carregar conversas:", error);
       toast.error("Erro ao carregar conversas");
@@ -182,7 +187,8 @@ export default function Atendimento() {
     if (!selectedConversation) return;
 
     try {
-      const { error } = await supabase.from("messages").insert({
+      // Save message to database
+      const { error: dbError } = await supabase.from("messages").insert({
         conversation_id: selectedConversation,
         sender: "agent",
         text: content,
@@ -193,14 +199,27 @@ export default function Atendimento() {
         },
       });
 
-      if (error) throw error;
+      if (dbError) throw dbError;
+
+      // Send message via WhatsApp
+      const { error: sendError } = await supabase.functions.invoke("send-agent-message", {
+        body: {
+          conversationId: selectedConversation,
+          text: content,
+        },
+      });
+
+      if (sendError) {
+        console.error("Erro ao enviar via WhatsApp:", sendError);
+        toast.error("Mensagem salva, mas não enviada ao cliente");
+      }
 
       // Update conversation timestamp and pause bot (agent took over)
       await supabase
         .from("conversations")
         .update({ 
           updated_at: new Date().toISOString(),
-          bot_active: false  // Pause bot when agent sends message
+          bot_active: false
         })
         .eq("id", selectedConversation);
 
