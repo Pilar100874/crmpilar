@@ -590,27 +590,37 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
     { jid: chatId, message: text },
   ];
 
-  for (const url of endpoints) {
-    for (const body of variants) {
-      try {
-        console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${wahaApiKey}`,
-            "X-API-KEY": wahaApiKey,
-            "X-Api-Key": wahaApiKey,
-          },
-          body: JSON.stringify(body),
-        });
-        const resultText = await resp.text();
-        console.log("[WAHA] TEXT result:", resp.status, resultText);
-        if (resp.ok) return;
-        if (resp.status === 404) break;
-      } catch (err) {
-        console.error("[WAHA] error sending text via", url, err);
+  for (const base of endpoints) {
+    const urlVariants = [
+      base,
+      `${base}?token=${encodeURIComponent(wahaApiKey)}`,
+      `${base}?apikey=${encodeURIComponent(wahaApiKey)}`,
+      `${base}?api_key=${encodeURIComponent(wahaApiKey)}`,
+    ];
+    for (const url of urlVariants) {
+      for (const body of variants) {
+        try {
+          console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${wahaApiKey}`,
+              "X-API-KEY": wahaApiKey,
+              "X-Api-Key": wahaApiKey,
+              "x-api-key": wahaApiKey,
+            },
+            body: JSON.stringify(body),
+          });
+          const resultText = await resp.text();
+          console.log("[WAHA] TEXT result:", resp.status, resultText);
+          if (resp.ok) return;
+          if (resp.status === 404) break;
+          if (resp.status === 401) continue; // try next variant
+        } catch (err) {
+          console.error("[WAHA] error sending text via", url, err);
+        }
       }
     }
   }
