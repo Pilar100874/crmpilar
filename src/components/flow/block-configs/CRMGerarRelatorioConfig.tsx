@@ -106,7 +106,18 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
         });
         
         console.log("✅ Parâmetros configurados de api_variables:", newVars);
-        handleConfigChange({ apiVariables: newVars });
+        // Mesclar com valores já presentes no config, priorizando o que o usuário digitou
+        const existing = (config.apiVariables || {}) as Record<string, any>;
+        const merged: Record<string, VariableData> = { ...newVars };
+        Object.entries(existing).forEach(([k, v]: [string, any]) => {
+          const isObj = v && typeof v === 'object' && 'value' in v;
+          const val = isObj ? v.value : String(v ?? '');
+          const typ = isObj ? (v.type || 'string') : (newVars[k]?.type || 'string');
+          if (!(val === undefined || val === null || val === '')) {
+            merged[k] = { value: String(val), type: typ };
+          }
+        });
+        handleConfigChange({ apiVariables: merged });
         setLoadingVariables(false);
         return;
       }
@@ -122,7 +133,17 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
           };
         });
         console.log("✅ Parâmetros configurados:", newVars);
-        handleConfigChange({ apiVariables: newVars });
+        const existing = (config.apiVariables || {}) as Record<string, any>;
+        const merged: Record<string, VariableData> = { ...newVars };
+        Object.entries(existing).forEach(([k, v]: [string, any]) => {
+          const isObj = v && typeof v === 'object' && 'value' in v;
+          const val = isObj ? v.value : String(v ?? '');
+          const typ = isObj ? (v.type || 'string') : (newVars[k]?.type || 'string');
+          if (!(val === undefined || val === null || val === '')) {
+            merged[k] = { value: String(val), type: typ };
+          }
+        });
+        handleConfigChange({ apiVariables: merged });
         setLoadingVariables(false);
         return;
       }
@@ -165,7 +186,17 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
               };
             });
             console.log("✅ Parâmetros da API configurados:", newVars);
-            handleConfigChange({ apiVariables: newVars });
+            const existing = (config.apiVariables || {}) as Record<string, any>;
+            const merged: Record<string, VariableData> = { ...newVars };
+            Object.entries(existing).forEach(([k, v]: [string, any]) => {
+              const isObj = v && typeof v === 'object' && 'value' in v;
+              const val = isObj ? v.value : String(v ?? '');
+              const typ = isObj ? (v.type || 'string') : (newVars[k]?.type || 'string');
+              if (!(val === undefined || val === null || val === '')) {
+                merged[k] = { value: String(val), type: typ };
+              }
+            });
+            handleConfigChange({ apiVariables: merged });
             setLoadingVariables(false);
             return;
           } else {
@@ -182,7 +213,9 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       }
 
       console.log("ℹ️ Nenhum parâmetro encontrado para este relatório");
-      handleConfigChange({ apiVariables: {} });
+      if (!config.apiVariables || Object.keys(config.apiVariables || {}).length === 0) {
+        handleConfigChange({ apiVariables: {} });
+      }
     } catch (error) {
       console.error("❌ Erro ao carregar parâmetros do relatório:", error);
       handleConfigChange({ apiVariables: {} });
