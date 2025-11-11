@@ -805,13 +805,13 @@ ${recentMessages}
   return (
     <div className="h-[100vh] flex bg-background overflow-hidden">
       {/* Conversation List */}
-      <div className="w-80 border-r border-border/50 bg-card flex flex-col h-full shadow-sm">
-        <div className="px-3 py-2.5 border-b border-border/50 bg-gradient-to-b from-card to-muted/30 flex-shrink-0">
+      <div className="w-96 border-r border-border bg-card flex flex-col h-full">
+        <div className="p-4 border-b bg-card/50 flex-shrink-0">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar conversas..."
-              className="pl-8 h-8 text-sm bg-background/50 border-border/50"
+              className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -820,56 +820,56 @@ ${recentMessages}
 
         <div className="flex-1 overflow-y-auto min-h-0">
           {filteredConversations.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground">
-              <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-20" />
-              <p className="text-xs">Nenhuma conversa encontrada</p>
+            <div className="p-8 text-center text-muted-foreground">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">Nenhuma conversa encontrada</p>
             </div>
           ) : (
             filteredConversations.map((conv) => (
               <div
                 key={conv.id}
                 onClick={() => setSelectedConversation(conv.id)}
-                className={`px-3 py-2.5 border-b border-border/30 cursor-pointer hover:bg-muted/50 transition-all ${
-                  selectedConversation === conv.id ? "bg-gradient-to-r from-primary/10 to-transparent border-l-2 border-l-primary" : ""
+                className={`p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
+                  selectedConversation === conv.id ? "bg-muted" : ""
                 }`}
               >
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center text-primary flex-shrink-0 shadow-sm">
-                    <User className="w-4 h-4" />
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+                    <User className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="font-semibold text-sm truncate text-foreground">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium truncate text-foreground">
                         {conv.customer?.nome || "Cliente"}
                       </span>
                       <Badge
                         variant={conv.status === "open" ? "default" : "secondary"}
-                        className="text-[10px] px-1.5 py-0 h-4"
+                        className="text-xs"
                       >
                         {conv.canal}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate leading-snug mb-1">
+                    <p className="text-sm text-muted-foreground truncate">
                       {conv.lastMessage?.text || "Sem mensagens"}
                     </p>
                     {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                      <div className="flex items-center gap-1 mb-1 flex-wrap">
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
                         {conv.customerCompanies.slice(0, 2).map((rel: any, idx: number) => (
-                          <Badge key={idx} variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-primary/20">
+                          <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0">
                             {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'Empresa'}
                             {rel.is_primary && ' ⭐'}
                           </Badge>
                         ))}
                         {conv.customerCompanies.length > 2 && (
-                          <span className="text-[9px] text-muted-foreground font-medium">
+                          <span className="text-[10px] text-muted-foreground">
                             +{conv.customerCompanies.length - 2}
                           </span>
                         )}
                       </div>
                     )}
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Clock className="w-2.5 h-2.5" />
+                    <div className="flex items-center gap-3 mt-1">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3" />
                         <span>
                           {conv.lastMessage?.created_at
                             ? getTimeAgo(conv.lastMessage.created_at)
@@ -877,8 +877,8 @@ ${recentMessages}
                         </span>
                       </div>
                       {conv.customer?.telefone && (
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <Phone className="w-2.5 h-2.5" />
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Phone className="w-3 h-3" />
                           <span className="truncate">{conv.customer.telefone}</span>
                         </div>
                       )}
@@ -895,33 +895,33 @@ ${recentMessages}
       <div className="flex-1 flex flex-col h-full min-w-0">
         {selectedConversation && selectedConv ? (
           <>
-            <div className="px-4 py-2.5 border-b border-border/50 bg-gradient-to-r from-card via-muted/20 to-card shadow-sm flex-shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center text-primary shadow-sm">
-                  <User className="w-4 h-4" />
+            <div className="p-4 border-b bg-card shadow-sm flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                  <User className="w-5 h-5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm text-foreground leading-tight">
+                <div className="flex-1">
+                  <h3 className="font-medium text-foreground">
                     {selectedConv.customer?.nome || "Cliente"}
                   </h3>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                     {selectedConv.customer?.telefone && (
-                      <div className="flex items-center gap-0.5">
-                        <Phone className="w-2.5 h-2.5" />
+                      <div className="flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
                         <span>{selectedConv.customer.telefone}</span>
                       </div>
                     )}
                     {selectedConv.customer?.email && (
-                      <div className="flex items-center gap-0.5">
-                        <Mail className="w-2.5 h-2.5" />
+                      <div className="flex items-center gap-1">
+                        <Mail className="w-3 h-3" />
                         <span>{selectedConv.customer.email}</span>
                       </div>
                     )}
                     {customerCompanies.length > 0 && (
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <FileText className="w-2.5 h-2.5" />
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <FileText className="w-3 h-3" />
                         {customerCompanies.map((rel, idx) => (
-                          <Badge key={rel.empresa_id} variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-primary/30">
+                          <Badge key={rel.empresa_id} variant="secondary" className="text-xs">
                             {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'Empresa'}
                             {rel.is_primary && ' ⭐'}
                           </Badge>
@@ -930,21 +930,21 @@ ${recentMessages}
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-5">{selectedConv.canal}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{selectedConv.canal}</Badge>
                   <Badge 
                     variant={selectedConv.bot_active !== false ? "default" : "secondary"}
-                    className="flex items-center gap-1 text-[10px] px-2 py-0.5 h-5"
+                    className="flex items-center gap-1"
                   >
-                    <div className={`w-1.5 h-1.5 rounded-full ${selectedConv.bot_active !== false ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                    {selectedConv.bot_active !== false ? "Bot Ativo" : "Pausado"}
+                    <div className={`w-2 h-2 rounded-full ${selectedConv.bot_active !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    {selectedConv.bot_active !== false ? "Bot Ativo" : "Bot Pausado"}
                   </Badge>
                   {selectedConv.bot_active === false && (
                     <Button 
                       size="sm" 
                       variant="outline"
                       onClick={handleReactivateBot}
-                      className="text-[10px] h-6 px-2"
+                      className="text-xs"
                     >
                       Reativar Bot
                     </Button>
@@ -953,65 +953,65 @@ ${recentMessages}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3 space-y-2.5 bg-gradient-to-b from-muted/10 to-muted/30">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-muted/20">
               {messages.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                  <p className="text-xs">Nenhuma mensagem ainda</p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">Nenhuma mensagem ainda</p>
                 </div>
               ) : (
                 <>
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`group flex gap-2 ${
+                      className={`group flex gap-3 ${
                         msg.sender === "agent" ? "justify-end" : "justify-start"
                       }`}
                     >
                       {msg.sender !== "agent" && (
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                          <User className="h-3 w-3 text-primary" />
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                          <User className="h-4 w-4" />
                         </div>
                       )}
 
                       <div
-                        className={`flex flex-col gap-0.5 max-w-[75%] ${
+                        className={`flex flex-col gap-1 max-w-[70%] ${
                           msg.sender === "agent" ? "items-end" : "items-start"
                         }`}
                       >
                         <Badge
                           variant={msg.sender === "agent" ? "default" : "secondary"}
-                          className="text-[9px] px-1.5 py-0 h-3.5"
+                          className="text-xs"
                         >
                           {msg.sender === "agent" ? "Você" : "Cliente"}
                         </Badge>
 
                         <div
-                          className={`relative px-2.5 py-2 rounded-xl transition-all ${
+                          className={`relative p-3 rounded-2xl transition-all ${
                             msg.sender === "agent"
                               ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
-                              : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30 hover:shadow-md"
+                              : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30"
                           }`}
                         >
-                          <p className="text-xs whitespace-pre-wrap break-words leading-snug">{msg.text}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
                           {msg.attachments && msg.attachments.length > 0 ? (
                             msg.payload?.contentType === "image" ? (
-                              <div className="mt-1.5">
+                              <div className="mt-2">
                                 <img
                                   src={msg.attachments[0]}
                                   alt={msg.payload?.fileName || "imagem"}
-                                  className="rounded-lg max-w-full h-auto border border-border/50 shadow-sm"
+                                  className="rounded-md max-w-full h-auto border border-border/50"
                                 />
                               </div>
                             ) : (
-                              <div className="mt-1.5 space-y-0.5">
+                              <div className="mt-2 space-y-1">
                                 {msg.attachments.map((attachment, idx) => (
                                   <a
                                     key={idx}
                                     href={attachment}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-[10px] underline opacity-80 hover:opacity-100"
+                                    className="text-xs underline opacity-80 hover:opacity-100"
                                   >
                                     {msg.payload?.fileName || "Baixar arquivo"}
                                   </a>
@@ -1024,26 +1024,26 @@ ${recentMessages}
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-gradient-to-br from-primary to-primary-glow text-primary-foreground hover:scale-110"
+                              className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 copyMessageToAI(msg.text);
                               }}
                               title="Copiar para o chat da IA"
                             >
-                              <ArrowDown className="h-2.5 w-2.5" />
+                              <ArrowDown className="h-3.5 w-3.5" />
                             </Button>
                           )}
                         </div>
 
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {format(new Date(msg.created_at), "HH:mm", { locale: ptBR })}
                         </span>
                       </div>
 
                       {msg.sender === "agent" && (
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                          <span className="text-[9px] font-bold text-secondary-foreground">V</span>
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-xs font-semibold">Você</span>
                         </div>
                       )}
                     </div>
@@ -1053,33 +1053,33 @@ ${recentMessages}
               )}
             </div>
 
-            <div className="border-t border-border/50 bg-card flex-shrink-0 px-3 py-2.5">
+            <div className="border-t bg-card flex-shrink-0 p-4">
               {/* AI Button */}
-              <div className="mb-2">
+              <div className="mb-3">
                 <Button
                   variant={showAIChat ? "default" : "outline"}
                   size="sm"
                   onClick={() => setShowAIChat(!showAIChat)}
-                  className="gap-1.5 h-7 text-xs"
+                  className="gap-2"
                   disabled={aiWebhooks.length === 0}
                 >
-                  <Sparkles className="h-3 w-3" />
+                  <Sparkles className="h-4 w-4" />
                   IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
                 </Button>
               </div>
 
               {/* AI Chat Box */}
               {showAIChat && aiWebhooks.length > 0 && (
-                <Card className="mb-2.5 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 shadow-lg">
-                  <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-3 py-1.5 border-b border-primary/20">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-                      <span className="text-xs font-semibold">Chat com IA</span>
+                <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20">
+                  <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-2.5 border-b border-primary/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                      <span className="text-sm font-semibold">Chat com IA</span>
                       {aiWebhooks.length > 1 && (
                         <select
                           value={selectedAIWebhook || ""}
                           onChange={(e) => setSelectedAIWebhook(e.target.value)}
-                          className="ml-auto text-[10px] border rounded px-1.5 py-0.5 bg-card h-5"
+                          className="ml-auto text-xs border rounded px-2 py-1 bg-card"
                         >
                           {aiWebhooks.map(webhook => (
                             <option key={webhook.id} value={webhook.id}>
@@ -1091,63 +1091,63 @@ ${recentMessages}
                     </div>
                   </div>
 
-                  <div className="p-3">
+                  <div className="p-4">
                     {/* Context Field */}
-                    <div className="mb-2.5 space-y-1.5">
+                    <div className="mb-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-medium">Contexto adicional (opcional)</Label>
+                        <Label className="text-xs font-medium">Contexto adicional (opcional)</Label>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={addConversationContext}
-                          className="h-5 text-[10px] gap-0.5 px-1.5"
+                          className="h-7 text-xs gap-1"
                           disabled={!selectedConversation}
                         >
-                          <FileText className="h-2.5 w-2.5" />
-                          Adicionar contexto
+                          <FileText className="h-3 w-3" />
+                          Adicionar contexto da conversa
                         </Button>
                       </div>
                       <Textarea
                         value={aiContext}
                         onChange={(e) => setAiContext(e.target.value)}
                         placeholder="Cole ou digite informações relevantes da conversa..."
-                        className="min-h-[60px] text-[10px] resize-none bg-background/50"
+                        className="min-h-[80px] text-xs resize-none bg-background/50"
                       />
                     </div>
 
                     <div
                       ref={aiScrollRef}
-                      className="max-h-40 overflow-y-auto mb-2.5 space-y-2"
+                      className="max-h-48 overflow-y-auto mb-4 space-y-3"
                     >
                       {aiMessages.length === 0 ? (
-                        <div className="text-center py-6 text-muted-foreground">
-                          <Sparkles className="w-6 h-6 mx-auto mb-1.5 opacity-20" />
-                          <p className="text-[10px]">Comece uma conversa com a IA</p>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                          <p className="text-xs">Comece uma conversa com a IA</p>
                         </div>
                       ) : (
                         aiMessages.map((msg, idx) => (
                           <div
                             key={idx}
-                            className={`group relative flex gap-2 ${
+                            className={`group relative flex gap-3 ${
                               msg.role === "user" ? "justify-end" : "justify-start"
                             }`}
                           >
                             {msg.role === "assistant" && (
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                                <Sparkles className="h-3 w-3 text-primary-foreground" />
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0 mt-1">
+                                <Sparkles className="h-4 w-4 text-primary-foreground" />
                               </div>
                             )}
 
                             <div
                               onClick={() => msg.role === "assistant" && sendAIResponseToChat(msg.content)}
-                              className={`relative max-w-[75%] px-2.5 py-2 rounded-xl transition-all ${
+                              className={`relative max-w-[75%] p-3 rounded-2xl transition-all ${
                                 msg.role === "user"
                                   ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
-                                  : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30 cursor-pointer hover:shadow-md"
+                                  : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30 cursor-pointer"
                               }`}
                               title={msg.role === "assistant" ? "Clique para enviar ao cliente" : ""}
                             >
-                              <p className="whitespace-pre-wrap break-words text-xs leading-snug">
+                              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                                 {msg.content}
                               </p>
                               
@@ -1155,21 +1155,21 @@ ${recentMessages}
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-gradient-to-br from-primary to-primary-glow text-primary-foreground hover:scale-110"
+                                  className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     sendAIResponseToChat(msg.content);
                                   }}
                                   title="Enviar para o chat do cliente"
                                 >
-                                  <Send className="h-2.5 w-2.5" />
+                                  <Send className="h-3.5 w-3.5" />
                                 </Button>
                               )}
                             </div>
 
                             {msg.role === "user" && (
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                                <span className="text-[9px] font-bold">V</span>
+                              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-1">
+                                <span className="text-xs font-semibold">Você</span>
                               </div>
                             )}
                           </div>
@@ -1177,7 +1177,7 @@ ${recentMessages}
                       )}
                     </div>
 
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-2">
                       <Textarea
                         value={aiInput}
                         onChange={(e) => setAiInput(e.target.value)}
@@ -1188,23 +1188,23 @@ ${recentMessages}
                           }
                         }}
                         placeholder="Pergunte algo à IA..."
-                        className="flex-1 min-h-[50px] text-xs resize-none"
+                        className="flex-1 min-h-[60px] resize-none"
                         disabled={isAILoading}
                       />
                       <Button
                         onClick={sendAIMessage}
                         disabled={!aiInput.trim() || isAILoading}
                         size="icon"
-                        className="h-[50px] w-[50px]"
+                        className="h-[60px] w-[60px]"
                       >
-                        <Send className="h-3.5 w-3.5" />
+                        <Send className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </Card>
               )}
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <ChatInput
                   onSendMessage={handleSendMessage}
                   disabled={false}
@@ -1231,11 +1231,11 @@ ${recentMessages}
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground bg-gradient-to-b from-muted/10 to-muted/30">
+          <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
             <div className="text-center">
-              <MessageSquare className="w-14 h-14 mx-auto mb-3 text-muted-foreground/20" />
-              <p className="text-base font-semibold mb-1.5">Selecione uma conversa</p>
-              <p className="text-xs text-muted-foreground/80">Escolha uma conversa da lista para começar o atendimento</p>
+              <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+              <p className="text-lg font-medium mb-2">Selecione uma conversa</p>
+              <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
             </div>
           </div>
         )}
