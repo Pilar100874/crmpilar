@@ -1045,6 +1045,29 @@ const loadApiData = async (
     }
   };
 
+  const handleApiTest = async (
+    apiUrl: string,
+    params: Record<string, any>,
+    options?: { httpMethod?: string; paramType?: string }
+  ) => {
+    try {
+      // Atualiza estados locais para manter consistência
+      setCurrentApiUrl(apiUrl);
+      if (options?.httpMethod) setApiHttpMethod(options.httpMethod);
+      if (options?.paramType) setApiParamType(options.paramType);
+      setLastApiParams(params);
+
+      // Atualiza preview do ReportBro com os novos dados da API
+      await loadApiData(apiUrl, params, { 
+        httpMethod: options?.httpMethod || apiHttpMethod,
+        paramType: options?.paramType || apiParamType
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar preview com parâmetros:', error);
+      toast.error('Erro ao atualizar preview com os parâmetros informados');
+    }
+  };
+
   const getEmptyReport = () => ({
     docElements: [
       {
@@ -1178,6 +1201,7 @@ const loadApiData = async (
           <div className="flex-1 overflow-y-auto pr-2">
             <APIDataSourceSelector 
               onSelect={handleApiSelect}
+              onTest={handleApiTest}
               currentUrl={currentApiUrl}
               currentVariables={savedApiVariables}
             />

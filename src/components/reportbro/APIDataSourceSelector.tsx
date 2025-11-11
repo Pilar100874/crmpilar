@@ -36,11 +36,16 @@ interface APIDataSourceSelectorProps {
     variables: APIVariable[],
     options?: { httpMethod?: string; paramType?: string; isCustom?: boolean }
   ) => void;
+  onTest?: (
+    apiUrl: string,
+    params: Record<string, any>,
+    options?: { httpMethod?: string; paramType?: string }
+  ) => void;
   currentUrl?: string;
   currentVariables?: APIVariable[];
 }
 
-export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }: APIDataSourceSelectorProps) {
+export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVariables }: APIDataSourceSelectorProps) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [testingUrl, setTestingUrl] = useState<string | null>(null);
@@ -220,18 +225,20 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
     try {
       const url = getFullUrl(selectedEndpoint);
       const method = selectedEndpoint.http_method || "GET";
+      const derivedParamType = (selectedEndpoint.parameters && selectedEndpoint.parameters[0]?.param_type) || "query";
       
       // Prepara os parâmetros com os valores preenchidos
       const params: Record<string, any> = {};
       variables.forEach(v => {
-        if (v.name && v.value) {
+        if (v.name) {
           try {
+            if (v.value === undefined || v.value === null || v.value === "") return;
             switch (v.type) {
               case 'number':
                 params[v.name] = parseFloat(v.value);
                 break;
               case 'boolean':
-                params[v.name] = v.value === 'true';
+                params[v.name] = v.value === 'true' || v.value === '1';
                 break;
               case 'date':
                 params[v.name] = new Date(v.value).toISOString();
@@ -279,9 +286,13 @@ export function APIDataSourceSelector({ onSelect, currentUrl, currentVariables }
       }
       
       setTestResult(data);
+
+      // Notifica o pai para atualizar o ReportBro com estes parâmetros
+      onTest?.(url, params, { httpMethod: method, paramType: derivedParamType });
       
       if (response.ok) {
-        toast.success(`API testada com sucesso! ${data?.data?.length || 0} registro(s) retornado(s)`);
+        const count = Array.isArray((data as any)?.data) ? (data as any).data.length : (Array.isArray(data) ? data.length : 0);
+        toast.success(`API testada com sucesso! ${count} registro(s) retornado(s)`);
       } else {
         toast.error(`API retornou erro (status ${response.status})`);
       }
