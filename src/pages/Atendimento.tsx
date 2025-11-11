@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, FileText } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -663,12 +663,12 @@ ${recentMessages}
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`flex gap-3 ${
+                      className={`group flex gap-3 ${
                         msg.sender === "agent" ? "justify-end" : "justify-start"
                       }`}
                     >
                       {msg.sender !== "agent" && (
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
                           <User className="h-4 w-4" />
                         </div>
                       )}
@@ -686,15 +686,13 @@ ${recentMessages}
                         </Badge>
 
                         <div
-                          onClick={() => msg.sender !== "agent" && copyMessageToAI(msg.text)}
-                          className={`p-3 rounded-lg ${
+                          className={`relative p-3 rounded-2xl transition-all ${
                             msg.sender === "agent"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                              ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
+                              : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30"
                           }`}
-                          title={msg.sender !== "agent" ? "Clique para copiar ao chat da IA" : ""}
                         >
-                          <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
                           {msg.attachments && msg.attachments.length > 0 ? (
                             msg.payload?.contentType === "image" ? (
                               <div className="mt-2">
@@ -720,6 +718,21 @@ ${recentMessages}
                               </div>
                             )
                           ) : null}
+                          
+                          {msg.sender !== "agent" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyMessageToAI(msg.text);
+                              }}
+                              title="Copiar para o chat da IA"
+                            >
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
 
                         <span className="text-xs text-muted-foreground">
@@ -728,8 +741,8 @@ ${recentMessages}
                       </div>
 
                       {msg.sender === "agent" && (
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4" />
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-xs font-semibold">Você</span>
                         </div>
                       )}
                     </div>
