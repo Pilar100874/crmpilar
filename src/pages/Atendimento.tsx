@@ -25,6 +25,7 @@ interface Conversation {
   metadata: any;
   bot_active?: boolean;
   customer?: {
+    id?: string;
     nome: string;
     email: string;
     telefone: string;
@@ -33,6 +34,7 @@ interface Conversation {
     text: string;
     created_at: string;
   };
+  customerCompanies?: any[];
 }
 
 interface Message {
@@ -529,6 +531,7 @@ ${recentMessages}
         .select(`
           *,
           customer:customers!conversations_customer_id_fkey (
+            id,
             nome,
             email,
             telefone
@@ -562,10 +565,36 @@ ${recentMessages}
           }
         });
 
-        // Attach last messages to conversations
+        // Get all customer IDs
+        const customerIds = data.map(c => c.customer_id).filter(Boolean);
+        
+        // Get all companies for these customers
+        const { data: companiesData } = await supabase
+          .from('customer_empresas')
+          .select(`
+            customer_id,
+            is_primary,
+            empresas (
+              nome_fantasia,
+              nome
+            )
+          `)
+          .in('customer_id', customerIds);
+
+        // Create a map of companies by customer_id
+        const companiesMap = new Map();
+        companiesData?.forEach(rel => {
+          if (!companiesMap.has(rel.customer_id)) {
+            companiesMap.set(rel.customer_id, []);
+          }
+          companiesMap.get(rel.customer_id).push(rel);
+        });
+
+        // Attach last messages and companies to conversations
         const conversationsWithMessages = data.map(conv => ({
           ...conv,
           lastMessage: lastMessageMap.get(conv.id) || null,
+          customerCompanies: companiesMap.get(conv.customer_id) || [],
         }));
 
         setConversations(conversationsWithMessages);
@@ -823,6 +852,21 @@ ${recentMessages}
                     <p className="text-sm text-muted-foreground truncate">
                       {conv.lastMessage?.text || "Sem mensagens"}
                     </p>
+                    {conv.customerCompanies && conv.customerCompanies.length > 0 && (
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        {conv.customerCompanies.slice(0, 2).map((rel: any, idx: number) => (
+                          <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'Empresa'}
+                            {rel.is_primary && ' ⭐'}
+                          </Badge>
+                        ))}
+                        {conv.customerCompanies.length > 2 && (
+                          <span className="text-[10px] text-muted-foreground">
+                            +{conv.customerCompanies.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <div className="flex items-center gap-3 mt-1">
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
