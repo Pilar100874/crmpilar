@@ -1181,47 +1181,6 @@ const loadApiData = async (
               currentUrl={currentApiUrl}
               currentVariables={savedApiVariables}
             />
-            {apiData && (
-              <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-sm">Dados Carregados ({apiData.length} registro{apiData.length !== 1 ? 's' : ''}):</h4>
-                  {lastApiParams && Object.keys(lastApiParams).length > 0 && (
-                    <div className="text-xs bg-background px-2 py-1 rounded border">
-                      <span className="font-semibold">Parâmetros usados:</span>{' '}
-                      {Object.entries(lastApiParams).map(([key, value]) => (
-                        <span key={key} className="ml-1">
-                          <code className="bg-muted px-1 rounded">{key}={String(value)}</code>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="text-xs space-y-2">
-                  <div className="p-2 bg-background rounded">
-                    <p className="font-semibold mb-1">Como usar no ReportBro:</p>
-                    <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                      <li>Vá em "Parâmetros" no painel lateral</li>
-                      <li>Você verá o parâmetro <code className="bg-muted px-1 rounded">api_data</code> criado</li>
-                      <li>Para usar em tabela: arraste <code className="bg-muted px-1 rounded">api_data</code> para a tabela</li>
-                      <li>Para campos: use <code className="bg-muted px-1 rounded">{"{"}api_data.campo{"}"}</code> em elementos de texto</li>
-                    </ol>
-                  </div>
-                  <p className="font-mono text-muted-foreground truncate">
-                    Campos disponíveis: {apiData.length > 0 && Object.keys(apiData[0]).join(", ")}
-                  </p>
-                </div>
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1">
-                    Ver dados completos (JSON)
-                  </summary>
-                  <div className="mt-2 p-2 bg-background rounded max-h-[200px] overflow-auto">
-                    <pre className="text-xs whitespace-pre-wrap break-words">
-                      {JSON.stringify(apiData, null, 2)}
-                    </pre>
-                  </div>
-                </details>
-              </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>
