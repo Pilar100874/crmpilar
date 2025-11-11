@@ -132,7 +132,7 @@ async function processPreview(jobId: string, reportId: string, pageSize: number,
                 allVariables[name] = parseFloat(value);
                 break;
               case 'boolean':
-                allVariables[name] = value === 'true';
+                allVariables[name] = (typeof value === 'boolean' ? value : typeof value === 'number' ? value !== 0 : typeof value === 'string' ? ['true','1','on','yes'].includes(value.trim().toLowerCase()) : false);
                 break;
               case 'date':
                 allVariables[name] = new Date(value).toISOString();

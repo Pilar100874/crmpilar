@@ -635,7 +635,7 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
                       fixedVars[v.name] = parseFloat(v.value);
                       break;
                     case 'boolean':
-                      fixedVars[v.name] = v.value === 'true';
+                      fixedVars[v.name] = v.value === 'true' || v.value === '1';
                       break;
                     case 'date':
                       fixedVars[v.name] = new Date(v.value).toISOString();
@@ -1046,7 +1046,7 @@ const loadApiData = async (
                 fixedVars[v.name] = parseFloat(v.value);
                 break;
               case 'boolean':
-                fixedVars[v.name] = v.value === 'true';
+                 fixedVars[v.name] = v.value === 'true' || v.value === '1';
                 break;
               case 'date':
                 fixedVars[v.name] = new Date(v.value).toISOString();
@@ -1165,7 +1165,7 @@ const loadApiData = async (
                           fixedVars[v.name] = parseFloat(v.value);
                           break;
                         case 'boolean':
-                          fixedVars[v.name] = v.value === 'true';
+                          fixedVars[v.name] = v.value === 'true' || v.value === '1';
                           break;
                         case 'date':
                           fixedVars[v.name] = new Date(v.value).toISOString();
