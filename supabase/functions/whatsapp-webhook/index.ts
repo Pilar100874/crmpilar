@@ -1070,9 +1070,10 @@ async function executeNode(
             // Enviar arquivo via WhatsApp
             const caption = itp(cfg.successMessage || "📄 Seu relatório está pronto!");
             const mediaType = 'document';
+            const captionWithLink = `${caption}\n${result.fileUrl}`;
             
-            await onResponse(caption, result.fileUrl, mediaType);
-            console.log(`[FLOW] ✅ Relatório enviado via WhatsApp`);
+            await onResponse(captionWithLink, result.fileUrl, mediaType);
+            console.log(`[FLOW] ✅ Relatório enviado via WhatsApp (com link)`);
           } 
           // Resposta inválida
           else {
