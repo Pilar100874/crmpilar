@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -765,35 +765,43 @@ export default function Atendimento() {
                             }`}
                           >
                             {msg.role === "assistant" && (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0 mt-1">
                                 <Sparkles className="h-4 w-4 text-primary-foreground" />
                               </div>
                             )}
 
                             <div
-                              className={`relative max-w-[75%] p-3 rounded-lg ${
+                              onClick={() => msg.role === "assistant" && sendAIResponseToChat(msg.content)}
+                              className={`relative max-w-[75%] p-3 rounded-2xl transition-all ${
                                 msg.role === "user"
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-card border border-border"
+                                  ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
+                                  : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30 cursor-pointer"
                               }`}
+                              title={msg.role === "assistant" ? "Clique para enviar ao cliente" : ""}
                             >
-                              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                                {msg.content}
+                              </p>
+                              
                               {msg.role === "assistant" && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => sendAIResponseToChat(msg.content)}
-                                  className="absolute -bottom-8 right-0 h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    sendAIResponseToChat(msg.content);
+                                  }}
+                                  title="Enviar para o chat do cliente"
                                 >
-                                  <Send className="h-3 w-3 mr-1" />
-                                  Enviar ao cliente
+                                  <Send className="h-3.5 w-3.5" />
                                 </Button>
                               )}
                             </div>
 
                             {msg.role === "user" && (
-                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                                <User className="h-4 w-4" />
+                              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-1">
+                                <span className="text-xs font-semibold">Você</span>
                               </div>
                             )}
                           </div>
