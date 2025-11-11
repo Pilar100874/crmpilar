@@ -541,15 +541,12 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
         <Card className="p-4 bg-muted/30">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold">Configurar Variáveis</h3>
+              <h3 className="text-sm font-semibold">Parâmetros da API</h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Defina os valores das variáveis da API
+                Defina os valores dos parâmetros (nome e tipo não podem ser alterados)
               </p>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={addVariable}>
-                Adicionar Variável
-              </Button>
               {variables.length > 0 && variables.some(v => v.value) && (
                 <Button 
                   size="sm" 
@@ -575,65 +572,53 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
           {variables.length === 0 ? (
             <div className="text-center py-8 border-2 border-dashed rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Nenhuma variável configurada
+                Esta API não possui parâmetros configurados
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Clique em "Adicionar Variável" para começar
+                Configure os parâmetros no Gerador de API
               </p>
             </div>
           ) : (
             <div className="space-y-2">
               {variables.map((variable, index) => (
                 <div key={index} className="p-3 bg-background rounded-lg border">
-                  <div className="flex gap-2">
-                    <div className="flex-1 grid grid-cols-3 gap-2">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Nome</Label>
-                        <Input
-                          placeholder="parametro"
-                          value={variable.name}
-                          onChange={(e) => updateVariable(index, "name", e.target.value)}
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <Label className="text-xs">Tipo</Label>
-                        <Select
-                          value={variable.type}
-                          onValueChange={(value) => updateVariable(index, "type", value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="string">String</SelectItem>
-                            <SelectItem value="number">Number</SelectItem>
-                            <SelectItem value="boolean">Boolean</SelectItem>
-                            <SelectItem value="date">Date</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <Label className="text-xs">Valor Padrão</Label>
-                        <Input
-                          placeholder="opcional"
-                          value={variable.value}
-                          onChange={(e) => updateVariable(index, "value", e.target.value)}
-                          className="h-8 text-sm"
-                        />
-                      </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nome</Label>
+                      <Input
+                        value={variable.name}
+                        disabled
+                        className="h-8 text-sm bg-muted cursor-not-allowed"
+                      />
                     </div>
                     
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => removeVariable(index)}
-                      className="h-8 w-8 self-end"
-                    >
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tipo</Label>
+                      <Select
+                        value={variable.type}
+                        disabled
+                      >
+                        <SelectTrigger className="h-8 bg-muted cursor-not-allowed">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="string">String</SelectItem>
+                          <SelectItem value="number">Number</SelectItem>
+                          <SelectItem value="boolean">Boolean</SelectItem>
+                          <SelectItem value="date">Date</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Valor Padrão</Label>
+                      <Input
+                        placeholder="opcional"
+                        value={variable.value}
+                        onChange={(e) => updateVariable(index, "value", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
                   </div>
                   {!variable.value && (
                     <p className="text-[10px] text-amber-600 mt-1">
@@ -647,7 +632,7 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
           
           {variables.some(v => !v.value) && (
             <div className="mt-3 p-2 bg-muted rounded text-xs text-muted-foreground">
-              💡 Variáveis sem valor padrão serão solicitadas ao gerar o relatório
+              💡 Parâmetros sem valor padrão serão solicitados ao gerar o relatório
             </div>
           )}
         </Card>
