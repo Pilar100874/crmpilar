@@ -772,6 +772,8 @@ async function executeNode(
       }
       case "send_message": {
         console.log(`[FLOW] send_message node - config:`, JSON.stringify(cfg));
+        console.log(`[FLOW] cfg.messages:`, cfg.messages);
+        console.log(`[FLOW] cfg.text:`, cfg.text);
         if (Array.isArray(cfg.messages) && cfg.messages.length) {
           console.log(`[FLOW] Sending ${cfg.messages.length} messages`);
           for (const m of cfg.messages) {
@@ -784,6 +786,8 @@ async function executeNode(
           const t = itp(cfg.text);
           console.log(`[FLOW] Sending single message: "${t}"`);
           if (t) await onResponse(t);
+        } else {
+          console.log(`[FLOW] No message to send - cfg is empty or misconfigured`);
         }
         const nextNodes = nexts(node.id);
         console.log(`[FLOW] Moving to ${nextNodes.length} next nodes`);
@@ -865,6 +869,7 @@ async function executeNode(
       break;
     }
     default: {
+      console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
       for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
     }
   }
