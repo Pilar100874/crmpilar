@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook } from "lucide-react";
+import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,6 +41,11 @@ interface ChatInputProps {
   onWebhookToggle?: () => void;
   // Bot variables
   botVariables?: Record<string, any>;
+  // Transfer to user props
+  availableUsers?: any[];
+  selectedTransferUser?: string | null;
+  onTransferUserChange?: (userId: string) => void;
+  onTransferUser?: () => void;
 }
 
 export default function ChatInput({ 
@@ -57,7 +62,11 @@ export default function ChatInput({
   onWebhookChange,
   webhookAutoResponseActive = false,
   onWebhookToggle,
-  botVariables = {}
+  botVariables = {},
+  availableUsers = [],
+  selectedTransferUser,
+  onTransferUserChange,
+  onTransferUser
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -66,6 +75,7 @@ export default function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showBotPopover, setShowBotPopover] = useState(false);
   const [showWebhookPopover, setShowWebhookPopover] = useState(false);
+  const [showTransferPopover, setShowTransferPopover] = useState(false);
   
   // Auto-resize textarea to avoid inner scrollbars
   useEffect(() => {
@@ -454,6 +464,59 @@ export default function ChatInput({
                         disabled={!selectedWebhookAutoResponse}
                       />
                     </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {/* Transfer to User Popover */}
+            {availableUsers.length > 0 && (
+              <Popover open={showTransferPopover} onOpenChange={setShowTransferPopover}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Direcionar para usuário"
+                    disabled={disabled}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 z-50" align="start">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-2">
+                      <UserPlus className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm font-semibold">Direcionar para usuário</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Selecione o usuário</Label>
+                      <Select
+                        value={selectedTransferUser || ""}
+                        onValueChange={onTransferUserChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione um usuário" />
+                        </SelectTrigger>
+                        <SelectContent className="z-50">
+                          {availableUsers.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.nome} ({user.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        onTransferUser?.();
+                        setShowTransferPopover(false);
+                      }}
+                      disabled={!selectedTransferUser}
+                      className="w-full"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Transferir Conversa
+                    </Button>
                   </div>
                 </PopoverContent>
               </Popover>

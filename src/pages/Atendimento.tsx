@@ -72,6 +72,10 @@ export default function Atendimento() {
   const [webhooksForAutoResponse, setWebhooksForAutoResponse] = useState<any[]>([]);
   const [selectedWebhookAutoResponse, setSelectedWebhookAutoResponse] = useState<string | null>(null);
   const [webhookAutoResponseActive, setWebhookAutoResponseActive] = useState(false);
+  
+  // Transfer to user states
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [selectedTransferUser, setSelectedTransferUser] = useState<string | null>(null);
 
   useEffect(() => {
     loadConversations();
@@ -79,6 +83,7 @@ export default function Atendimento() {
     loadAIWebhooks();
     loadAvailableBots();
     loadWebhooksForAutoResponse();
+    loadAvailableUsers();
   }, []);
 
   useEffect(() => {
@@ -192,6 +197,53 @@ export default function Atendimento() {
       if (botsData.length > 0) {
         setSelectedBotRedirect(botsData[0].id);
       }
+    }
+  };
+
+  // Load available users for transfer
+  const loadAvailableUsers = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
+    const { data: usersData } = await supabase
+      .from('usuarios')
+      .select('id, nome, email')
+      .eq('estabelecimento_id', estabId)
+      .order('nome');
+
+    if (usersData) {
+      setAvailableUsers(usersData);
+      if (usersData.length > 0) {
+        setSelectedTransferUser(usersData[0].id);
+      }
+    }
+  };
+
+  const handleTransferToUser = async () => {
+    if (!selectedConversation || !selectedTransferUser) {
+      toast.error("Selecione um usuário para transferir");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .update({ 
+          assignee_id: selectedTransferUser,
+          bot_active: false 
+        })
+        .eq('id', selectedConversation);
+
+      if (error) throw error;
+
+      const userName = availableUsers.find(u => u.id === selectedTransferUser)?.nome || "Usuário";
+      toast.success(`Conversa transferida para ${userName}`);
+      
+      // Reload conversations to update UI
+      loadConversations();
+    } catch (error) {
+      console.error("Erro ao transferir conversa:", error);
+      toast.error("Erro ao transferir conversa");
     }
   };
 
@@ -1072,6 +1124,10 @@ ${recentMessages}
                       ? conversations.find(c => c.id === selectedConversation)?.metadata?.vars || {}
                       : {}
                   }
+                  availableUsers={availableUsers}
+                  selectedTransferUser={selectedTransferUser}
+                  onTransferUserChange={setSelectedTransferUser}
+                  onTransferUser={handleTransferToUser}
                 />
               </div>
             </div>
