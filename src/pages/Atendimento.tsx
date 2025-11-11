@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -12,6 +12,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface Conversation {
   id: string;
@@ -64,24 +65,113 @@ export default function Atendimento() {
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
   const [selectedBotRedirect, setSelectedBotRedirect] = useState<string | null>(null);
+  
+  // Webhook auto-response states
+  const [webhooksForAutoResponse, setWebhooksForAutoResponse] = useState<any[]>([]);
+  const [selectedWebhookAutoResponse, setSelectedWebhookAutoResponse] = useState<string | null>(null);
+  const [webhookAutoResponseActive, setWebhookAutoResponseActive] = useState(false);
 
   useEffect(() => {
     loadConversations();
     subscribeToConversations();
     loadAIWebhooks();
     loadAvailableBots();
+    loadWebhooksForAutoResponse();
   }, []);
 
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
       subscribeToMessages(selectedConversation);
+      loadConversationWebhookConfig(selectedConversation);
     }
   }, [selectedConversation]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const loadWebhooksForAutoResponse = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
+    const { data: webhooksData } = await supabase
+      .from('webhooks')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .eq('active', true)
+      .order('created_at', { ascending: false });
+
+    if (webhooksData) {
+      // Filter webhooks that have "ia-atendimento" in usage_locations
+      const autoResponseWebhooks = webhooksData.filter(w => 
+        w.usage_locations && Array.isArray(w.usage_locations) && w.usage_locations.includes('ia-atendimento')
+      );
+      setWebhooksForAutoResponse(autoResponseWebhooks);
+    }
+  };
+
+  const loadConversationWebhookConfig = async (conversationId: string) => {
+    const { data } = await supabase
+      .from('conversations')
+      .select('metadata')
+      .eq('id', conversationId)
+      .single();
+
+    const metadata = data?.metadata as any;
+    if (metadata?.webhook_auto_response) {
+      setSelectedWebhookAutoResponse(metadata.webhook_auto_response.webhook_id);
+      setWebhookAutoResponseActive(metadata.webhook_auto_response.active || false);
+    } else {
+      setSelectedWebhookAutoResponse(webhooksForAutoResponse[0]?.id || null);
+      setWebhookAutoResponseActive(false);
+    }
+  };
+
+  const handleToggleWebhookAutoResponse = async () => {
+    if (!selectedConversation || !selectedWebhookAutoResponse) {
+      toast.error("Selecione um webhook primeiro");
+      return;
+    }
+
+    const newActiveState = !webhookAutoResponseActive;
+
+    try {
+      const { data: currentConv } = await supabase
+        .from('conversations')
+        .select('metadata')
+        .eq('id', selectedConversation)
+        .single();
+
+      const currentMetadata = (currentConv?.metadata || {}) as any;
+      const updatedMetadata = {
+        ...currentMetadata,
+        webhook_auto_response: {
+          webhook_id: selectedWebhookAutoResponse,
+          active: newActiveState
+        }
+      };
+
+      const { error } = await supabase
+        .from('conversations')
+        .update({ metadata: updatedMetadata })
+        .eq('id', selectedConversation);
+
+      if (error) throw error;
+
+      setWebhookAutoResponseActive(newActiveState);
+      
+      if (newActiveState) {
+        const webhookName = webhooksForAutoResponse.find(w => w.id === selectedWebhookAutoResponse)?.name || "Webhook";
+        toast.success(`Respostas automáticas via ${webhookName} ativadas`);
+      } else {
+        toast.success("Respostas automáticas via webhook desativadas");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar webhook auto-response:", error);
+      toast.error("Erro ao configurar webhook");
+    }
+  };
 
   // Load available bots
   const loadAvailableBots = async () => {
@@ -995,6 +1085,40 @@ ${recentMessages}
                       <Bot className="h-4 w-4" />
                       Direcionar
                     </Button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Webhook Auto-Response Section */}
+              {webhooksForAutoResponse.length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <div className="flex items-center gap-2">
+                    <Webhook className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-xs font-medium">Resposta automática via webhook</Label>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <select
+                      value={selectedWebhookAutoResponse || ""}
+                      onChange={(e) => setSelectedWebhookAutoResponse(e.target.value)}
+                      className="flex-1 text-sm border rounded-lg px-3 py-2 bg-card hover:bg-secondary/50 transition-colors"
+                      disabled={webhookAutoResponseActive}
+                    >
+                      {webhooksForAutoResponse.map((webhook) => (
+                        <option key={webhook.id} value={webhook.id}>
+                          {webhook.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-card">
+                      <Switch
+                        checked={webhookAutoResponseActive}
+                        onCheckedChange={handleToggleWebhookAutoResponse}
+                        disabled={!selectedWebhookAutoResponse}
+                      />
+                      <Label className="text-xs cursor-pointer">
+                        {webhookAutoResponseActive ? "Ativo" : "Inativo"}
+                      </Label>
+                    </div>
                   </div>
                 </div>
               )}
