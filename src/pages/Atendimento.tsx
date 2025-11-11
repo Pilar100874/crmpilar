@@ -233,7 +233,13 @@ export default function Atendimento() {
       return;
     }
     handleSendMessage(content, "text");
-    toast.success("Mensagem enviada!");
+    toast.success("Mensagem enviada ao cliente!");
+  };
+
+  const copyMessageToAI = (content: string) => {
+    setAiInput(content);
+    setShowAIChat(true);
+    toast.success("Mensagem copiada para o chat da IA!");
   };
 
   const loadConversations = async () => {
@@ -649,11 +655,13 @@ export default function Atendimento() {
                         </Badge>
 
                         <div
+                          onClick={() => msg.sender !== "agent" && copyMessageToAI(msg.text)}
                           className={`p-3 rounded-lg ${
                             msg.sender === "agent"
                               ? "bg-primary text-primary-foreground"
-                              : "bg-card border border-border"
+                              : "bg-card border border-border cursor-pointer hover:opacity-80 transition-opacity"
                           }`}
+                          title={msg.sender !== "agent" ? "Clique para copiar ao chat da IA" : ""}
                         >
                           <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                           {msg.attachments && msg.attachments.length > 0 ? (
