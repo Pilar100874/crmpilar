@@ -813,6 +813,91 @@ async function sendWahaMediaMessage(
       }
     }
   }
+
+  // ===== Fallback: upload multipart/form-data com arquivo real =====
+  try {
+    console.log("[WAHA] 🔁 Tentando fallback multipart (upload de arquivo)");
+
+    // Baixa o arquivo público para bytes
+    const fileResp = await fetch(mediaUrl);
+    if (!fileResp.ok) {
+      console.error("[WAHA] ❌ Falha ao baixar mídia para upload:", fileResp.status, fileResp.statusText);
+      throw new Error(`download_failed_${fileResp.status}`);
+    }
+    const buf = new Uint8Array(await fileResp.arrayBuffer());
+
+    // Deduz nome e content-type
+    const urlObj = new URL(mediaUrl);
+    const baseName = urlObj.pathname.split('/').pop() || 'arquivo';
+    const lower = baseName.toLowerCase();
+    const isPdf = lower.endsWith('.pdf');
+    const isXlsx = lower.endsWith('.xlsx');
+    const contentType = isPdf
+      ? 'application/pdf'
+      : isXlsx
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : 'application/octet-stream';
+
+    const fileFieldNames = ['file', 'document', 'media', 'attachment'];
+    const recipientParamSets = [
+      { chatId },
+      { to: chatId },
+      { to: toNumberOnly },
+      { jid: chatId },
+      { number: toNumberOnly },
+    ];
+
+    for (const base of endpoints) {
+      const urlVariants = [
+        base,
+        `${base}?session=${encodeURIComponent(sessionName)}`,
+        `${base}?token=${encodeURIComponent(wahaApiKey)}`,
+        `${base}?session=${encodeURIComponent(sessionName)}&token=${encodeURIComponent(wahaApiKey)}`,
+      ];
+
+      for (const url of urlVariants) {
+        for (const headers of headerSets) {
+          for (const recipient of recipientParamSets) {
+            for (const fileField of fileFieldNames) {
+              try {
+                const fd = new FormData();
+                // sessão também no corpo, alguns WAHA exigem
+                fd.append('session', sessionName);
+                fd.append('type', t);
+                if (caption) fd.append('caption', caption);
+                Object.entries(recipient).forEach(([k, v]) => fd.append(k, String(v)));
+                fd.append(fileField, new Blob([buf], { type: contentType }), baseName);
+
+                // Não definir Content-Type manualmente (boundary automático)
+                const hdrs = { ...headers } as Record<string, string>;
+                delete hdrs['Content-Type'];
+
+                console.log(`[WAHA] 📤 Multipart -> ${url} (fileField=${fileField}, recipient=${Object.keys(recipient).join(',')})`);
+                const resp = await fetch(url, {
+                  method: 'POST',
+                  headers: hdrs,
+                  body: fd as any,
+                });
+                const txt = await resp.text();
+                console.log('[WAHA] 📥 Resposta MULTIPART:', resp.status, txt);
+                if (resp.ok) {
+                  console.log('[WAHA] ✅ Upload multipart enviado com sucesso!');
+                  return;
+                }
+                if (resp.status === 404) break; // tentar próximo endpoint
+                if (resp.status === 401) continue; // tentar próxima combinação
+              } catch (e) {
+                console.error('[WAHA] ❌ Erro no upload multipart:', e);
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[WAHA] ❌ Fallback multipart falhou:', e);
+  }
+
   console.error("[WAHA] ❌ Todas as tentativas de envio de mídia falharam para sessão:", sessionName);
 }
 
