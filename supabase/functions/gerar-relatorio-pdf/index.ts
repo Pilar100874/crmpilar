@@ -190,6 +190,8 @@ serve(async (req) => {
     console.log("🚀 Chamando API ReportBro (PUT)...");
     console.log("📋 Keys do payload:", Object.keys(reportPayload));
     console.log("📋 Keys do report:", Object.keys(layoutData || {}));
+    console.log("📋 Output Format:", outputFormat);
+    console.log("📋 Parâmetros sendo enviados:", JSON.stringify(parameters, null, 2));
 
     const initResponse = await fetch(reportBroApiUrl, {
       method: 'PUT',
@@ -220,9 +222,6 @@ serve(async (req) => {
     console.log(`⏳ Aguardando geração do ${outputFormat.toUpperCase()}...`);
     let fileBytes: Uint8Array | null = null;
     const maxAttempts = 60; // 2 minutos (60 x 2s)
-    const expectedContentType = outputFormat === 'xlsx' 
-      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      : 'application/pdf';
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       if (attempt % 5 === 0) {
@@ -233,13 +232,24 @@ serve(async (req) => {
       
       if (pollResponse.ok) {
         const contentType = pollResponse.headers.get('content-type');
+        console.log(`📋 Content-Type recebido: ${contentType}`);
         
-        if (contentType?.includes(expectedContentType) || 
-            (outputFormat === 'pdf' && contentType?.includes('application/pdf')) ||
-            (outputFormat === 'xlsx' && contentType?.includes('spreadsheet'))) {
+        // Verificar se é o formato esperado
+        const isPdf = outputFormat === 'pdf' && contentType?.includes('application/pdf');
+        const isExcel = outputFormat === 'xlsx' && (
+          contentType?.includes('spreadsheet') || 
+          contentType?.includes('vnd.openxmlformats') ||
+          contentType?.includes('application/vnd.ms-excel')
+        );
+        
+        if (isPdf || isExcel) {
           fileBytes = new Uint8Array(await pollResponse.arrayBuffer());
           console.log(`✅ ${outputFormat.toUpperCase()} gerado, tamanho:`, fileBytes.length);
           break;
+        } else if (contentType?.includes('text/plain')) {
+          // Pode estar ainda processando
+          const statusText = await pollResponse.text();
+          console.log(`⏳ Status: ${statusText}`);
         }
       }
       

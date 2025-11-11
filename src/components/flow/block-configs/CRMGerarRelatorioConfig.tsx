@@ -20,6 +20,7 @@ interface Relatorio {
   descricao: string | null;
   parametros: any;
   configuracoes: any;
+  layout_json: any;
 }
 
 interface VariableData {
@@ -39,12 +40,16 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
 
   useEffect(() => {
     if (config.relatorioId && relatorios.length > 0) {
+      // Limpar parâmetros anteriores antes de carregar novos
+      setReportVariables([]);
+      handleConfigChange({ reportVariables: {} });
       loadReportVariables(config.relatorioId);
     } else if (!config.relatorioId) {
       // Limpar quando não houver relatório selecionado
       setReportVariables([]);
+      handleConfigChange({ reportVariables: {} });
     }
-  }, [config.relatorioId, relatorios]);
+  }, [config.relatorioId]);
 
   const loadRelatorios = async () => {
     try {
@@ -57,7 +62,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
 
       const { data, error } = await supabase
         .from('relatorios')
-        .select('id, nome, descricao, parametros, configuracoes')
+        .select('id, nome, descricao, parametros, configuracoes, layout_json')
         .eq('estabelecimento_id', estabId)
         .order('nome');
 
@@ -89,46 +94,52 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       console.log("✅ Relatório encontrado:", relatorio);
       console.log("📋 Configurações do relatório:", relatorio.configuracoes);
       console.log("📋 Parâmetros do relatório:", relatorio.parametros);
+      console.log("📋 Layout JSON completo:", relatorio.layout_json);
 
-      // Extrair variáveis fixas do relatório (do layout do ReportBro)
-      if (relatorio.configuracoes?.layout) {
+      // Extrair variáveis fixas do relatório (do layout_json do ReportBro)
+      let layoutData = null;
+      
+      // Tentar primeiro de layout_json (campo principal)
+      if (relatorio.layout_json) {
         try {
-          const layout = typeof relatorio.configuracoes.layout === 'string' 
+          layoutData = typeof relatorio.layout_json === 'string' 
+            ? JSON.parse(relatorio.layout_json) 
+            : relatorio.layout_json;
+        } catch (e) {
+          console.error("Erro ao parsear layout_json:", e);
+        }
+      }
+      
+      // Fallback para configuracoes.layout
+      if (!layoutData && relatorio.configuracoes?.layout) {
+        try {
+          layoutData = typeof relatorio.configuracoes.layout === 'string' 
             ? JSON.parse(relatorio.configuracoes.layout) 
             : relatorio.configuracoes.layout;
-          
-          if (layout.parameters && Array.isArray(layout.parameters)) {
-            // Filtrar e ignorar api_data
-            const vars = layout.parameters
-              .filter((param: any) => param.name !== 'api_data')
-              .map((param: any) => ({
-                name: param.name,
-                type: param.type || 'string'
-              }));
-            console.log("📝 Variáveis fixas do relatório encontradas (sem api_data):", vars);
-            setReportVariables(vars);
-            
-            // Limpar valores antigos de reportVariables que não existem mais
-            if (config.reportVariables) {
-              const validKeys = vars.map((v: any) => v.name);
-              const newReportVars: Record<string, any> = {};
-              Object.entries(config.reportVariables).forEach(([key, value]) => {
-                if (validKeys.includes(key)) {
-                  newReportVars[key] = value;
-                }
-              });
-              handleConfigChange({ reportVariables: newReportVars });
-            }
-          } else {
-            setReportVariables([]);
-            handleConfigChange({ reportVariables: {} });
-          }
         } catch (e) {
-          console.error("Erro ao parsear layout:", e);
-          setReportVariables([]);
-          handleConfigChange({ reportVariables: {} });
+          console.error("Erro ao parsear configuracoes.layout:", e);
         }
+      }
+      
+      if (layoutData?.parameters && Array.isArray(layoutData.parameters)) {
+        // Filtrar e ignorar api_data
+        const vars = layoutData.parameters
+          .filter((param: any) => param.name !== 'api_data')
+          .map((param: any) => ({
+            name: param.name,
+            type: param.type || 'string'
+          }));
+        console.log("📝 Variáveis fixas do relatório encontradas (sem api_data):", vars);
+        setReportVariables(vars);
+        
+        // Inicializar valores vazios para novos parâmetros
+        const newReportVars: Record<string, any> = {};
+        vars.forEach((v: any) => {
+          newReportVars[v.name] = (config.reportVariables || {})[v.name] || "";
+        });
+        handleConfigChange({ reportVariables: newReportVars });
       } else {
+        console.log("⚠️ Nenhum parâmetro encontrado no layout do relatório");
         setReportVariables([]);
         handleConfigChange({ reportVariables: {} });
       }

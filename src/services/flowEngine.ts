@@ -997,11 +997,14 @@ export class FlowEngine {
       if (resultData?.pdfUrl) {
         console.log("✅ Relatório gerado com sucesso:", resultData.pdfUrl);
         
-        // Enviar PDF como anexo
+        // Enviar arquivo como anexo
+        const fileType = resultData.fileType || 'pdf';
+        const mediaType = fileType === 'xlsx' ? 'document' : 'document';
+        
         await this.onResponse({
           type: "media",
-          mediaType: "document",
-          url: resultData.pdfUrl,
+          mediaType: mediaType,
+          url: resultData.pdfUrl || resultData.fileUrl,
           caption: resultData.fileName || "Relatório gerado",
         });
 
