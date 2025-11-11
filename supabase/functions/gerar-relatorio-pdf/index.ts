@@ -77,19 +77,46 @@ serve(async (req) => {
     let apiData: any[] = [];
     if (relatorio.configuracoes?.api_url) {
       const apiUrl = relatorio.configuracoes.api_url;
+      const httpMethod = ((relatorio.configuracoes.http_method || 'GET') as string).toUpperCase();
+      const paramType = (relatorio.configuracoes.param_type || 'query') as string;
+      
       console.log("🔗 Buscando dados da API:", apiUrl);
+      console.log("📋 Método HTTP:", httpMethod, "| Tipo de parâmetro:", paramType);
       console.log("📦 Parâmetros convertidos que serão enviados:", JSON.stringify(convertedParams, null, 2));
       console.log("📝 Quantidade de parâmetros:", Object.keys(convertedParams).length);
       console.log("📋 Tipos dos parâmetros:", Object.entries(convertedParams).map(([k, v]) => `${k}: ${typeof v}`).join(", "));
       
       try {
-        const apiResponse = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(convertedParams),
-        });
+        let requestUrl = apiUrl;
+        const fetchHeaders: Record<string, string> = { 'Accept': 'application/json' };
+        const fetchInit: RequestInit = { method: httpMethod, headers: fetchHeaders };
+        
+        if (httpMethod === 'GET' || paramType === 'query') {
+          // Query string
+          const queryParams = new URLSearchParams();
+          Object.entries(convertedParams).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && value !== '') {
+              queryParams.append(key, String(value));
+            }
+          });
+          if (queryParams.toString()) {
+            requestUrl = `${apiUrl}?${queryParams.toString()}`;
+          }
+          console.log("🔗 URL final com query string:", requestUrl);
+        } else if (paramType === 'json' && httpMethod !== 'GET') {
+          // JSON body
+          fetchHeaders['Content-Type'] = 'application/json';
+          (fetchInit as any).body = JSON.stringify(convertedParams);
+          console.log("📦 Enviando JSON body");
+        } else if (paramType === 'formdata' && httpMethod !== 'GET') {
+          // FormData
+          const fd = new FormData();
+          Object.entries(convertedParams).forEach(([k, v]) => v != null && fd.append(k, String(v)));
+          (fetchInit as any).body = fd as any;
+          console.log("📦 Enviando FormData");
+        }
+        
+        const apiResponse = await fetch(requestUrl, fetchInit);
         
         console.log("📡 Status da resposta da API:", apiResponse.status, apiResponse.statusText);
         
@@ -144,12 +171,14 @@ serve(async (req) => {
     
     const reportPayload = {
       report: layoutData,
-      parameterValues: parameters,
       outputFormat: 'pdf',
+      data: parameters,
       isTestData: false,
     };
 
     console.log("🚀 Chamando API ReportBro (PUT)...");
+    console.log("📋 Keys do payload:", Object.keys(reportPayload));
+    console.log("📋 Keys do report:", Object.keys(layoutData || {}));
 
     const initResponse = await fetch(reportBroApiUrl, {
       method: 'PUT',
