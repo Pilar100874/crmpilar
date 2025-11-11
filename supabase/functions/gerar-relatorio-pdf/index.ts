@@ -362,7 +362,7 @@ serve(async (req) => {
     // 6. Polling para buscar o arquivo gerado
     console.log(`⏳ Aguardando geração do ${outputFormat.toUpperCase()}...`);
     let fileBytes: Uint8Array | null = null;
-    const maxAttempts = 150; // ~7.5 minutos (150 x 3s)
+    const maxAttempts = 240; // ~12 minutos (240 x 3s) - aumentado para iPhone com relatórios grandes
     let sawPdfInsteadOfXlsx = false;
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -486,6 +486,16 @@ serve(async (req) => {
     const storageFileName = `${sanitizedName}_${Date.now()}.${fileExtension}`;
     const filePath = `relatorios/${storageFileName}`;
 
+    // Verificar tamanho do arquivo
+    const fileSizeMB = fileBytes.length / (1024 * 1024);
+    console.log(`📊 Tamanho do arquivo: ${fileSizeMB.toFixed(2)} MB`);
+    
+    if (fileSizeMB > 25) {
+      console.warn(`⚠️ AVISO: Arquivo grande (${fileSizeMB.toFixed(2)} MB). Pode ter problemas no envio via WhatsApp em dispositivos móveis como iPhone.`);
+    }
+    
+    console.log(`📤 Fazendo upload do arquivo ${fileExtension.toUpperCase()} (${fileSizeMB.toFixed(2)} MB)...`);
+
     const { error: uploadError } = await supabase.storage
       .from('bot-media')
       .upload(filePath, fileBytes, {
@@ -499,13 +509,14 @@ serve(async (req) => {
       throw new Error(`Erro ao salvar ${outputFormat.toUpperCase()}: ${uploadError.message}`);
     }
 
-    // 9. Obter URL pública
+     // 9. Obter URL pública
     const { data: urlData } = supabase.storage
       .from('bot-media')
       .getPublicUrl(filePath);
 
     const fileUrl = urlData.publicUrl;
     console.log(`✅ ${outputFormat.toUpperCase()} salvo em:`, fileUrl);
+    console.log(`📊 Tamanho final: ${fileSizeMB.toFixed(2)} MB`);
 
     return new Response(
       JSON.stringify({
@@ -514,6 +525,7 @@ serve(async (req) => {
         fileUrl: fileUrl,
         fileName: `${String(relatorio.nome || 'Relatorio').replace(/\.[a-zA-Z0-9]+$/, '')}.${fileExtension}`,
         fileType: outputFormat,
+        fileSizeMB: parseFloat(fileSizeMB.toFixed(2)),
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

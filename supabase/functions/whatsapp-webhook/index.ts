@@ -830,13 +830,26 @@ async function sendWahaMediaMessage(
   try {
     console.log("[WAHA] 🔁 Tentando fallback multipart (upload de arquivo)");
 
-    // Baixa o arquivo público para bytes
-    const fileResp = await fetch(mediaUrl);
+    // Baixa o arquivo público para bytes com timeout aumentado
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutos de timeout
+    
+    console.log("[WAHA] 📥 Baixando arquivo de:", mediaUrl);
+    const fileResp = await fetch(mediaUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
     if (!fileResp.ok) {
       console.error("[WAHA] ❌ Falha ao baixar mídia para upload:", fileResp.status, fileResp.statusText);
       throw new Error(`download_failed_${fileResp.status}`);
     }
+    
     const buf = new Uint8Array(await fileResp.arrayBuffer());
+    const sizeMB = buf.length / (1024 * 1024);
+    console.log(`[WAHA] ✅ Arquivo baixado: ${sizeMB.toFixed(2)} MB`);
+    
+    if (sizeMB > 25) {
+      console.warn(`[WAHA] ⚠️ Arquivo grande (${sizeMB.toFixed(2)} MB). Pode falhar no envio via WhatsApp em alguns dispositivos.`);
+    }
 
     // Deduz nome e content-type
     const urlObj = new URL(mediaUrl);
@@ -858,6 +871,9 @@ async function sendWahaMediaMessage(
       { jid: chatId },
       { number: toNumberOnly },
     ];
+    
+    let uploadAttempts = 0;
+    const maxUploadAttempts = 3; // Tentar até 3 vezes
 
     for (const base of endpoints) {
       const urlVariants = [
@@ -871,6 +887,12 @@ async function sendWahaMediaMessage(
         for (const headers of headerSets) {
           for (const recipient of recipientParamSets) {
             for (const fileField of fileFieldNames) {
+              uploadAttempts++;
+              if (uploadAttempts > maxUploadAttempts * endpoints.length) {
+                console.error(`[WAHA] ❌ Número máximo de tentativas de upload atingido`);
+                break;
+              }
+              
               try {
                 const fd = new FormData();
                 // sessão também no corpo, alguns WAHA exigem
@@ -884,12 +906,20 @@ async function sendWahaMediaMessage(
                 const hdrs = { ...headers } as Record<string, string>;
                 delete hdrs['Content-Type'];
 
-                console.log(`[WAHA] 📤 Multipart -> ${url} (fileField=${fileField}, recipient=${Object.keys(recipient).join(',')})`);
+                console.log(`[WAHA] 📤 Multipart tentativa ${uploadAttempts} -> ${url} (fileField=${fileField}, recipient=${Object.keys(recipient).join(',')}, size=${sizeMB.toFixed(2)}MB)`);
+                
+                // Timeout aumentado para arquivos grandes
+                const uploadController = new AbortController();
+                const uploadTimeoutId = setTimeout(() => uploadController.abort(), 180000); // 3 minutos
+                
                 const resp = await fetch(url, {
                   method: 'POST',
                   headers: hdrs,
                   body: fd as any,
+                  signal: uploadController.signal,
                 });
+                clearTimeout(uploadTimeoutId);
+                
                 const txt = await resp.text();
                 console.log('[WAHA] 📥 Resposta MULTIPART:', resp.status, txt);
                 if (resp.ok) {
@@ -898,8 +928,18 @@ async function sendWahaMediaMessage(
                 }
                 if (resp.status === 404) break; // tentar próximo endpoint
                 if (resp.status === 401) continue; // tentar próxima combinação
-              } catch (e) {
-                console.error('[WAHA] ❌ Erro no upload multipart:', e);
+                
+                // Retry delay para erros temporários
+                if (resp.status >= 500) {
+                  console.log('[WAHA] ⏳ Erro temporário, aguardando 2s antes de retry...');
+                  await new Promise(r => setTimeout(r, 2000));
+                }
+              } catch (e: any) {
+                if (e.name === 'AbortError') {
+                  console.error('[WAHA] ❌ Timeout no upload multipart (arquivo muito grande ou conexão lenta)');
+                } else {
+                  console.error('[WAHA] ❌ Erro no upload multipart:', e);
+                }
               }
             }
           }
