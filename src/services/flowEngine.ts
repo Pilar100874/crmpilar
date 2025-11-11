@@ -939,11 +939,20 @@ export class FlowEngine {
         return;
       }
 
-      // Interpolar variáveis da API
+      // Interpolar variáveis da API preservando tipo e valor
       const apiVariables: Record<string, any> = {};
-      if (config.apiVariables) {
-        for (const [key, value] of Object.entries(config.apiVariables)) {
-          apiVariables[key] = this.interpolate(value as string);
+      if (config.apiVariables && typeof config.apiVariables === 'object') {
+        for (const [key, varData] of Object.entries(config.apiVariables as Record<string, any>)) {
+          if (varData && typeof varData === 'object' && 'type' in varData) {
+            const t = (varData as any).type || 'string';
+            const v = (varData as any).value;
+            apiVariables[key] = {
+              type: t,
+              value: this.interpolate(v !== undefined && v !== null ? String(v) : ''),
+            };
+          } else {
+            apiVariables[key] = this.interpolate(varData !== undefined && varData !== null ? String(varData) : '');
+          }
         }
       }
 

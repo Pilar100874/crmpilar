@@ -144,7 +144,8 @@ serve(async (req) => {
     
     const reportPayload = {
       report: layoutData,
-      data: parameters,
+      parameterValues: parameters,
+      outputFormat: 'pdf',
       isTestData: false,
     };
 
