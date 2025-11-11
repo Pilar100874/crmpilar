@@ -290,9 +290,13 @@ serve(async (req) => {
       
       if (!pendingNode) {
         console.error("[FLOW] Pending node not found, resetting context");
-        delete context.pendingNodeId;
+        context = { vars: { userMessage: body, from, phoneNumber: from, session: wahaSession } };
         const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
-        if (startNode) await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
+        if (startNode) {
+          await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
+        }
+        shouldSaveContext = true;
+        shouldReturn = true;
       }
       // Processa resposta para reply_buttons
       else if (pendingNode?.data?.type === "reply_buttons") {
