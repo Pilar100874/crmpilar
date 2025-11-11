@@ -240,8 +240,10 @@ serve(async (req) => {
         const fileUrl = urlData.publicUrl;
         console.log(`✅ XLSX (fast-path) salvo em:`, fileUrl);
 
+        const baseName = String(relatorio.nome || 'Relatorio').replace(/\.[a-zA-Z0-9]+$/, '');
+        const displayFileName = `${baseName}.xlsx`;
         return new Response(
-          JSON.stringify({ success: true, pdfUrl: fileUrl, fileUrl, fileName: `${relatorio.nome}.xlsx`, fileType: 'xlsx' }),
+          JSON.stringify({ success: true, pdfUrl: fileUrl, fileUrl, fileName: displayFileName, fileType: 'xlsx' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         );
       } catch (fastErr) {
@@ -444,7 +446,7 @@ serve(async (req) => {
         success: true,
         pdfUrl: fileUrl, // Mantém nome pdfUrl por compatibilidade
         fileUrl: fileUrl,
-        fileName: `${relatorio.nome}.${fileExtension}`,
+        fileName: `${String(relatorio.nome || 'Relatorio').replace(/\.[a-zA-Z0-9]+$/, '')}.${fileExtension}`,
         fileType: outputFormat,
       }),
       {
