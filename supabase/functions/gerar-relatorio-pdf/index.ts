@@ -362,7 +362,7 @@ serve(async (req) => {
     // 6. Polling para buscar o arquivo gerado
     console.log(`⏳ Aguardando geração do ${outputFormat.toUpperCase()}...`);
     let fileBytes: Uint8Array | null = null;
-    const maxAttempts = 60; // 2 minutos (60 x 2s)
+    const maxAttempts = 150; // ~7.5 minutos (150 x 3s)
     let sawPdfInsteadOfXlsx = false;
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -411,8 +411,8 @@ serve(async (req) => {
         console.log(`⚠️ Response não OK (tentativa ${attempt}): ${pollResponse.status} ${pollResponse.statusText}`);
       }
       
-      // Aguardar 2 segundos antes da próxima tentativa
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Aguardar 3 segundos antes da próxima tentativa
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
 
     if (!fileBytes) {
