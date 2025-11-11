@@ -294,8 +294,14 @@ serve(async (req) => {
     context.vars.session = wahaSession;
 
     const onResponse = async (message: string, mediaUrl?: string, mediaType?: string) => {
-      if (message) await respond(message);
-      if (mediaUrl) await respond(undefined, mediaUrl, mediaType);
+      // Se tem mídia, envia tudo junto em uma única chamada
+      if (mediaUrl && mediaType) {
+        await respond(message, mediaUrl, mediaType);
+      } 
+      // Se só tem mensagem, envia apenas texto
+      else if (message) {
+        await respond(message);
+      }
     };
 
     // ====== Execução do fluxo ======
@@ -721,15 +727,27 @@ async function sendWahaMediaMessage(
   ];
 
   const variantBase: any[] = [
+    // Formato 1: url direto
     { session: sessionName, chatId, type: t, url: mediaUrl, caption },
     { session: sessionName, to: toNumberOnly, type: t, url: mediaUrl, caption },
-    { session: sessionName, to: chatId, [t]: { url: mediaUrl, caption } },
-    { type: t, to: chatId, [t]: { url: mediaUrl, caption } },
-    { chatId, type: t, [t]: { url: mediaUrl, caption } },
-    { jid: chatId, type: t, [t]: { url: mediaUrl, caption } },
-    { to: chatId, [t]: { url: mediaUrl, caption } },
+    { session: sessionName, to: chatId, type: t, url: mediaUrl, caption },
+    
+    // Formato 2: nested object (WAHA Plus padrão)
+    { session: sessionName, to: chatId, [t]: { url: mediaUrl }, caption },
+    { session: sessionName, chatId, [t]: { url: mediaUrl }, caption },
+    
+    // Formato 3: mimetype específico para documents
+    { session: sessionName, chatId, file: { url: mediaUrl, mimetype: 'application/pdf' }, caption },
+    { session: sessionName, to: chatId, file: { url: mediaUrl }, caption },
+    
+    // Formato 4: sem session na raiz
+    { chatId, type: t, url: mediaUrl, caption },
+    { to: chatId, type: t, url: mediaUrl, caption },
+    { chatId, [t]: { url: mediaUrl }, caption },
+    
+    // Formato 5: variações adicionais
+    { to: toNumberOnly, type: t, url: mediaUrl, caption },
     { number: toNumberOnly, type: t, url: mediaUrl, caption },
-    { chatId, file: { mimetype: 'application/pdf', url: mediaUrl }, caption },
   ];
 
   const headerSets: Array<Record<string, string>> = [
@@ -755,31 +773,47 @@ async function sendWahaMediaMessage(
       base,
       `${base}?session=${encodeURIComponent(sessionName)}`,
       `${base}?token=${encodeURIComponent(wahaApiKey)}`,
+      `${base}?session=${encodeURIComponent(sessionName)}&token=${encodeURIComponent(wahaApiKey)}`,
     ];
     
     for (const url of urlVariants) {
       for (const body of variantBase) {
         for (const headers of headerSets) {
           try {
-            console.log(`[WAHA] Trying MEDIA(${t}) -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
+            console.log(`[WAHA] 📤 Tentando enviar mídia (${t})`);
+            console.log(`[WAHA]    URL: ${url}`);
+            console.log(`[WAHA]    Body keys: ${Object.keys(body).join(',')}`);
+            console.log(`[WAHA]    Body completo:`, JSON.stringify(body, null, 2));
+            console.log(`[WAHA]    Headers: ${Object.keys(headers).filter(k => k !== 'Authorization' && !k.toLowerCase().includes('key')).join(',')}`);
+            
             const resp = await fetch(url, {
               method: "POST",
               headers,
               body: JSON.stringify(body),
             });
             const result = await resp.json().catch(() => ({}));
-            console.log("[WAHA] MEDIA result:", resp.status, result);
-            if (resp.ok) return;
-            if (resp.status === 404) break;
-            if (resp.status === 401) continue;
+            console.log("[WAHA] 📥 Resposta MEDIA:", resp.status, JSON.stringify(result));
+            
+            if (resp.ok) {
+              console.log("[WAHA] ✅ Mídia enviada com sucesso!");
+              return;
+            }
+            if (resp.status === 404) {
+              console.log("[WAHA] ⚠️ Endpoint 404, tentando próximo...");
+              break;
+            }
+            if (resp.status === 401) {
+              console.log("[WAHA] ⚠️ Não autorizado (401), tentando próxima variante...");
+              continue;
+            }
           } catch (err) {
-            console.error("[WAHA] error sending media via", url, err);
+            console.error("[WAHA] ❌ Erro ao enviar mídia via", url, err);
           }
         }
       }
     }
   }
-  console.error("[WAHA] all media endpoints/payloads failed for session:", sessionName);
+  console.error("[WAHA] ❌ Todas as tentativas de envio de mídia falharam para sessão:", sessionName);
 }
 
 /* ======= Validadores ======= */
@@ -1067,13 +1101,16 @@ async function executeNode(
               context.vars[cfg.outputVariable] = result.fileUrl;
             }
             
-            // Enviar arquivo via WhatsApp
+            // Enviar arquivo via WhatsApp (apenas o arquivo com caption)
             const caption = itp(cfg.successMessage || "📄 Seu relatório está pronto!");
             const mediaType = 'document';
-            const captionWithLink = `${caption}\n${result.fileUrl}`;
             
-            await onResponse(captionWithLink, result.fileUrl, mediaType);
-            console.log(`[FLOW] ✅ Relatório enviado via WhatsApp (com link)`);
+            console.log(`[FLOW] Enviando relatório: ${result.fileUrl}`);
+            console.log(`[FLOW] Caption: ${caption}`);
+            console.log(`[FLOW] Media type: ${mediaType}`);
+            
+            await onResponse(caption, result.fileUrl, mediaType);
+            console.log(`[FLOW] ✅ Relatório enviado via WhatsApp`);
           } 
           // Resposta inválida
           else {
