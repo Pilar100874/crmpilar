@@ -86,13 +86,16 @@ export default function Atendimento() {
       .select('*')
       .eq('estabelecimento_id', estabId)
       .eq('active', true)
-      .eq('type', 'ia')
       .order('created_at', { ascending: false });
 
     if (webhooksData) {
-      setAiWebhooks(webhooksData);
-      if (webhooksData.length > 0) {
-        setSelectedAIWebhook(webhooksData[0].id);
+      // Filtrar webhooks que têm "ia-atendimento" nos usage_locations
+      const aiAtendimentoWebhooks = webhooksData.filter(w => 
+        w.usage_locations && Array.isArray(w.usage_locations) && w.usage_locations.includes('ia-atendimento')
+      );
+      setAiWebhooks(aiAtendimentoWebhooks);
+      if (aiAtendimentoWebhooks.length > 0) {
+        setSelectedAIWebhook(aiAtendimentoWebhooks[0].id);
       }
     }
   };

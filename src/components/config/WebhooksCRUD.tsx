@@ -67,6 +67,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     { id: "bot", name: "BOT" },
     { id: "teste", name: "TESTE DE WEBHOOK" },
     { id: "ia-chat", name: "IA CHAT" },
+    { id: "ia-atendimento", name: "IA TELA ATENDIMENTO" },
     { id: "automacoes", name: "AUTOMAÇÕES" },
     { id: "resposta-automatica-chat", name: "RESPOSTA AUTOMATICA NO CHAT" },
   ];
