@@ -1003,42 +1003,43 @@ const loadApiData = async (
       
       setShowApiDialog(false);
       
-      // Se não há variáveis sem valor, carrega dados da API automaticamente
-      if (varsWithoutValue.length === 0) {
-        // Prepara variáveis com valor fixo para enviar
-        const fixedVars: Record<string, any> = {};
-        variables.forEach(v => {
-          if (v.name && v.value) {
-            try {
-              switch (v.type) {
-                case 'number':
-                  fixedVars[v.name] = parseFloat(v.value);
-                  break;
-                case 'boolean':
-                  fixedVars[v.name] = v.value === 'true';
-                  break;
-                case 'date':
-                  fixedVars[v.name] = new Date(v.value).toISOString();
-                  break;
-                case 'array':
-                  fixedVars[v.name] = JSON.parse(v.value);
-                  break;
-                case 'object':
-                  fixedVars[v.name] = JSON.parse(v.value);
-                  break;
-                default:
-                  fixedVars[v.name] = v.value;
-              }
-            } catch (e) {
-              fixedVars[v.name] = v.value;
+      // Sempre carrega dados da API com os valores configurados
+      const fixedVars: Record<string, any> = {};
+      variables.forEach(v => {
+        if (v.name && v.value) {
+          try {
+            switch (v.type) {
+              case 'number':
+                fixedVars[v.name] = parseFloat(v.value);
+                break;
+              case 'boolean':
+                fixedVars[v.name] = v.value === 'true';
+                break;
+              case 'date':
+                fixedVars[v.name] = new Date(v.value).toISOString();
+                break;
+              case 'array':
+                fixedVars[v.name] = JSON.parse(v.value);
+                break;
+              case 'object':
+                fixedVars[v.name] = JSON.parse(v.value);
+                break;
+              default:
+                fixedVars[v.name] = v.value;
             }
+          } catch (e) {
+            fixedVars[v.name] = v.value;
           }
-        });
-        
-        await loadApiData(apiUrl, fixedVars, { httpMethod: http_method, paramType: param_type });
-      }
+        }
+      });
       
-      toast.success(`API "${apiName}" configurada${varsWithoutValue.length > 0 ? ' (variáveis serão solicitadas no preview)' : ' e dados carregados'}`);
+      // Carrega dados com os parâmetros configurados
+      if (Object.keys(fixedVars).length > 0) {
+        await loadApiData(apiUrl, fixedVars, { httpMethod: http_method, paramType: param_type });
+        toast.success(`API "${apiName}" configurada e dados carregados com sucesso`);
+      } else {
+        toast.success(`API "${apiName}" configurada${varsWithoutValue.length > 0 ? ' (variáveis serão solicitadas no preview)' : ''}`);
+      }
     } catch (error: any) {
       console.error("Erro ao configurar API:", error);
       toast.error("Erro ao configurar API");

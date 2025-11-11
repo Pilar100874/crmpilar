@@ -569,9 +569,68 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
       {testResult && (
         <Card className="p-4 bg-muted/50">
           <h4 className="font-semibold mb-2 text-sm">Resultado do Teste:</h4>
-          <pre className="text-xs overflow-x-auto max-h-[200px] overflow-y-auto">
-            {JSON.stringify(testResult, null, 2)}
-          </pre>
+          
+          {/* Tabela de Resultados */}
+          {(() => {
+            let data: any[] = [];
+            if (Array.isArray(testResult)) {
+              data = testResult;
+            } else if (testResult?.data && Array.isArray(testResult.data)) {
+              data = testResult.data;
+            } else if (testResult && typeof testResult === 'object' && !testResult.error) {
+              data = [testResult];
+            }
+
+            if (data.length > 0) {
+              const columns = Object.keys(data[0]);
+              return (
+                <div className="space-y-2">
+                  <div className="overflow-x-auto border rounded">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted">
+                        <tr>
+                          {columns.map((col) => (
+                            <th key={col} className="px-3 py-2 text-left font-semibold border-b">
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.slice(0, 10).map((row, idx) => (
+                          <tr key={idx} className="border-b hover:bg-muted/30">
+                            {columns.map((col) => (
+                              <td key={col} className="px-3 py-2">
+                                {typeof row[col] === 'object' 
+                                  ? JSON.stringify(row[col])
+                                  : String(row[col] ?? '')}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {data.length > 10 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Mostrando 10 de {data.length} registros
+                    </p>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })()}
+
+          {/* JSON Completo */}
+          <details className="mt-2">
+            <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1">
+              Ver JSON completo
+            </summary>
+            <pre className="text-xs overflow-x-auto max-h-[200px] overflow-y-auto mt-2 p-2 bg-background rounded border">
+              {JSON.stringify(testResult, null, 2)}
+            </pre>
+          </details>
         </Card>
       )}
     </div>
