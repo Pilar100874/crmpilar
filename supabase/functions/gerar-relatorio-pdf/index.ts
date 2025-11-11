@@ -196,6 +196,55 @@ serve(async (req) => {
     console.log("📝 Parâmetros FINAIS para o ReportBro:", Object.keys(parameters));
     console.log("📋 Valores dos parâmetros:", JSON.stringify(parameters, null, 2));
 
+    // Fast-path: gerar XLSX localmente (evita timeout quando serviço retorna PDF)
+    if (outputFormat === 'xlsx') {
+      try {
+        console.log('⚡ Gerando XLSX localmente (fast-path)...');
+        const wb = XLSX.utils.book_new();
+        const dataRows = Array.isArray(apiData) && apiData.length ? apiData : [];
+        if (dataRows.length > 0) {
+          const ws = XLSX.utils.json_to_sheet(dataRows);
+          XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+        } else {
+          const ws = XLSX.utils.aoa_to_sheet([["Info"], ["Sem dados da API (api_data)"]]);
+          XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+        }
+        const varEntries = Object.entries(parameters)
+          .filter(([k]) => k !== 'api_data')
+          .map(([k, v]) => ({ Variavel: k, Valor: typeof v === 'object' ? JSON.stringify(v) : (v as any) }));
+        if (varEntries.length > 0) {
+          const wv = XLSX.utils.json_to_sheet(varEntries);
+          XLSX.utils.book_append_sheet(wb, wv, 'Variaveis');
+        }
+        const arrayBuf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const bytes = new Uint8Array(arrayBuf as ArrayBuffer);
+
+        const fileExtension = 'xlsx';
+        const contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        const fileName = `relatorio_${relatorioId}_${Date.now()}.${fileExtension}`;
+        const filePath = `relatorios/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('bot-media')
+          .upload(filePath, bytes, { contentType, upsert: false });
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('bot-media')
+          .getPublicUrl(filePath);
+        const fileUrl = urlData.publicUrl;
+        console.log(`✅ XLSX (fast-path) salvo em:`, fileUrl);
+
+        return new Response(
+          JSON.stringify({ success: true, pdfUrl: fileUrl, fileUrl, fileName: relatorio.nome, fileType: 'xlsx' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      } catch (fastErr) {
+        console.error('❌ Erro no fast-path XLSX, tentando via ReportBro:', fastErr);
+        // segue para ReportBro como fallback
+      }
+    }
+
     // 5. Gerar relatório usando ReportBro API (PUT para obter key)
     const reportBroApiUrl = 'https://www.reportbro.com/report/run';
     
