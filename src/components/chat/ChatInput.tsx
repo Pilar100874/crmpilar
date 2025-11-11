@@ -280,7 +280,7 @@ export default function ChatInput({ onSendMessage, disabled, lastUserMessage, on
             onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="min-h-[80px] max-h-[200px] resize-none overflow-y-auto"
+            className="min-h-[80px] resize-none overflow-hidden"
             disabled={disabled}
           />
         </div>
