@@ -546,34 +546,51 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
   
   const baseUrl = wahaUrl.replace(/\/$/, '');
   const chatId = toJid(toNumberOnly);
-  
-  // WAHA Plus official API format
-  const url = `${baseUrl}/api/sendText`;
-  const payload = {
-    session: sessionName,
-    chatId: chatId,
-    text: text
-  };
 
-  try {
-    console.log(`[WAHA] POST to ${url} with payload:`, JSON.stringify(payload));
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Api-Key": wahaApiKey,
-      },
-      body: JSON.stringify(payload),
-    });
-    
-    const result = await resp.text();
-    console.log(`[WAHA] Response status: ${resp.status}, body: ${result}`);
-    
-    if (resp.ok) return;
-  } catch (err) {
-    console.error(`[WAHA] Error:`, err);
+  const endpoints = [
+    `${baseUrl}/api/sendText`, // WAHA Plus
+    `${baseUrl}/api/sessions/${sessionName}/messages/send`,
+    `${baseUrl}/api/sessions/${sessionName}/messages`,
+    `${baseUrl}/api/sessions/${sessionName}/sendMessage`,
+    `${baseUrl}/api/sessions/${sessionName}/chats/send-text`,
+  ];
+
+  const variants: any[] = [
+    { session: sessionName, chatId, text }, // sendText style
+    { chatId, text },
+    { to: chatId, text },
+    { jid: chatId, text },
+    { number: toNumberOnly, text },
+    { phone: toNumberOnly, text },
+    { chatId, type: "text", text: { body: text } }, // some builds expect nested text
+    { to: chatId, type: "text", text: { body: text } },
+    { jid: chatId, message: text },
+  ];
+
+  for (const url of endpoints) {
+    for (const body of variants) {
+      try {
+        console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${wahaApiKey}`,
+            "X-API-KEY": wahaApiKey,
+            "X-Api-Key": wahaApiKey,
+          },
+          body: JSON.stringify(body),
+        });
+        const resultText = await resp.text();
+        console.log("[WAHA] TEXT result:", resp.status, resultText);
+        if (resp.ok) return;
+        if (resp.status === 404) break;
+      } catch (err) {
+        console.error("[WAHA] error sending text via", url, err);
+      }
+    }
   }
-  
   console.error("[WAHA] Failed to send message for session:", sessionName);
 }
 
