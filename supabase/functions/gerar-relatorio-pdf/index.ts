@@ -103,14 +103,17 @@ serve(async (req) => {
           // Query string
           const queryParams = new URLSearchParams();
           Object.entries(convertedParams).forEach(([key, value]) => {
-            if (value !== null && value !== undefined && value !== '') {
-              queryParams.append(key, String(value));
-            }
+            // Sempre adicionar o parâmetro, mesmo que seja 0, false, etc
+            queryParams.append(key, String(value));
           });
-          if (queryParams.toString()) {
-            requestUrl = `${apiUrl}?${queryParams.toString()}`;
+          const queryString = queryParams.toString();
+          if (queryString) {
+            const separator = apiUrl.includes('?') ? '&' : '?';
+            requestUrl = `${apiUrl}${separator}${queryString}`;
           }
           console.log("🔗 URL final com query string:", requestUrl);
+          console.log("🔗 Query string construída:", queryString);
+          console.log("🔗 Parâmetros individuais:", Array.from(queryParams.entries()));
         } else if (paramType === 'json' && httpMethod !== 'GET') {
           // JSON body
           fetchHeaders['Content-Type'] = 'application/json';
