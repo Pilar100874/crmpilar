@@ -412,8 +412,8 @@ export default function Todos() {
     });
   } else {
     todosItens = todosItens.sort((a, b) => {
-      const nomeA = a.type === 'contato' ? a.nome : a.nome_fantasia;
-      const nomeB = b.type === 'contato' ? b.nome : b.nome_fantasia;
+      const nomeA = a.type === 'contato' ? (a.nome || '') : (a.nome_fantasia || '');
+      const nomeB = b.type === 'contato' ? (b.nome || '') : (b.nome_fantasia || '');
       return nomeA.localeCompare(nomeB);
     });
   }
@@ -424,8 +424,8 @@ export default function Todos() {
     sortedContatos = sortedContatos.sort((a, b) => {
       let aValue, bValue;
       if (contatosSortConfig.key === 'nome') {
-        aValue = a.nome;
-        bValue = b.nome;
+        aValue = a.nome || '';
+        bValue = b.nome || '';
       } else if (contatosSortConfig.key === 'email') {
         aValue = a.email || '';
         bValue = b.email || '';
@@ -454,8 +454,8 @@ export default function Todos() {
     sortedEmpresas = sortedEmpresas.sort((a, b) => {
       let aValue, bValue;
       if (empresasSortConfig.key === 'nome_fantasia') {
-        aValue = a.nome_fantasia;
-        bValue = b.nome_fantasia;
+        aValue = a.nome_fantasia || '';
+        bValue = b.nome_fantasia || '';
       } else if (empresasSortConfig.key === 'nome') {
         aValue = a.nome || '';
         bValue = b.nome || '';
