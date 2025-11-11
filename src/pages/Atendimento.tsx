@@ -66,18 +66,24 @@ export default function Atendimento() {
         return;
       }
 
-      const { data, error } = await supabase
+      const baseSelect = `
+        *,
+        customer:customers!conversations_customer_id_fkey (
+          nome,
+          email,
+          telefone
+        )
+      `;
+
+      let query = supabase
         .from("conversations")
-        .select(`
-          *,
-          customer:customers!conversations_customer_id_fkey (
-            nome,
-            email,
-            telefone
-          )
-        `)
-        .eq("estabelecimento_id", estabId)
-        .order("updated_at", { ascending: false });
+        .select(baseSelect);
+
+      if (estabId) {
+        query = query.eq("estabelecimento_id", estabId);
+      }
+
+      const { data, error } = await query.order("updated_at", { ascending: false });
 
       if (error) throw error;
 
