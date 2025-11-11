@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
+import * as XLSX from "https://esm.sh/xlsx@0.18.5?target=deno";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -240,6 +241,7 @@ serve(async (req) => {
     console.log(`⏳ Aguardando geração do ${outputFormat.toUpperCase()}...`);
     let fileBytes: Uint8Array | null = null;
     const maxAttempts = 60; // 2 minutos (60 x 2s)
+    let sawPdfInsteadOfXlsx = false;
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       if (attempt % 5 === 0) {
@@ -256,6 +258,13 @@ serve(async (req) => {
         if (outputFormat === 'pdf' && contentType?.includes('application/pdf')) {
           fileBytes = new Uint8Array(await pollResponse.arrayBuffer());
           console.log(`✅ PDF gerado, tamanho:`, fileBytes.length);
+          break;
+        }
+        
+        // XLSX esperado, mas serviço respondeu PDF → ativar fallback local
+        if (outputFormat === 'xlsx' && contentType?.includes('application/pdf')) {
+          console.warn('⚠️ Serviço retornou PDF ao solicitar XLSX. Ativando fallback local para XLSX.');
+          sawPdfInsteadOfXlsx = true;
           break;
         }
         
@@ -285,8 +294,37 @@ serve(async (req) => {
     }
 
     if (!fileBytes) {
-      console.error(`❌ Timeout após ${maxAttempts} tentativas. Formato solicitado: ${outputFormat}`);
-      throw new Error(`Timeout: ${outputFormat.toUpperCase()} não foi gerado a tempo`);
+      if (outputFormat === 'xlsx' && sawPdfInsteadOfXlsx) {
+        try {
+          console.log('🛠️ Gerando XLSX via fallback local a partir dos dados carregados...');
+          // Gerar XLSX simples com api_data e variáveis do relatório
+          const wb = XLSX.utils.book_new();
+          const dataRows = Array.isArray(apiData) && apiData.length ? apiData : [];
+          if (dataRows.length > 0) {
+            const ws = XLSX.utils.json_to_sheet(dataRows);
+            XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+          } else {
+            const ws = XLSX.utils.aoa_to_sheet([["Info"], ["Sem dados da API (api_data)"]]);
+            XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+          }
+          const varEntries = Object.entries(parameters)
+            .filter(([k]) => k !== 'api_data')
+            .map(([k, v]) => ({ Variavel: k, Valor: typeof v === 'object' ? JSON.stringify(v) : v as any }));
+          if (varEntries.length > 0) {
+            const wv = XLSX.utils.json_to_sheet(varEntries);
+            XLSX.utils.book_append_sheet(wb, wv, 'Variaveis');
+          }
+          const arrayBuf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          fileBytes = new Uint8Array(arrayBuf as ArrayBuffer);
+          console.log('✅ XLSX gerado por fallback local, tamanho:', fileBytes.length);
+        } catch (fbErr) {
+          console.error('❌ Falha no fallback local para XLSX:', fbErr);
+          throw new Error('Falha ao gerar XLSX (fallback).');
+        }
+      } else {
+        console.error(`❌ Timeout após ${maxAttempts} tentativas. Formato solicitado: ${outputFormat}`);
+        throw new Error(`Timeout: ${outputFormat.toUpperCase()} não foi gerado a tempo`);
+      }
     }
 
     // 7. Adicionar retângulo branco no rodapé (cobrir marca d'água) - apenas para PDF
