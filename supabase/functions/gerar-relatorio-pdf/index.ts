@@ -17,11 +17,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { relatorioId, apiVariables, reportVariables } = await req.json();
+    const { relatorioId, apiVariables, reportVariables, outputType } = await req.json();
+    const outputFormat = outputType === 'xlsx' ? 'xlsx' : 'pdf';
 
     console.log("📊 Gerando relatório:", relatorioId);
     console.log("📊 Variáveis da API:", apiVariables);
     console.log("📊 Variáveis do Relatório:", reportVariables);
+    console.log("📊 Tipo de saída:", outputFormat);
 
     // 1. Buscar relatório do banco
     const { data: relatorio, error: relError } = await supabase
@@ -175,12 +177,12 @@ serve(async (req) => {
 
     console.log("📝 Parâmetros finais para o relatório:", Object.keys(parameters));
 
-    // 5. Gerar PDF usando ReportBro API (PUT para obter key)
+    // 5. Gerar relatório usando ReportBro API (PUT para obter key)
     const reportBroApiUrl = 'https://www.reportbro.com/report/run';
     
     const reportPayload = {
       report: layoutData,
-      outputFormat: 'pdf',
+      outputFormat: outputFormat,
       data: parameters,
       isTestData: false,
     };
@@ -214,10 +216,13 @@ serve(async (req) => {
     const reportKey = keyMatch[1];
     console.log("✅ Key obtida:", reportKey);
 
-    // 6. Polling para buscar o PDF gerado
-    console.log("⏳ Aguardando geração do PDF...");
-    let pdfBytes: Uint8Array | null = null;
+    // 6. Polling para buscar o arquivo gerado
+    console.log(`⏳ Aguardando geração do ${outputFormat.toUpperCase()}...`);
+    let fileBytes: Uint8Array | null = null;
     const maxAttempts = 60; // 2 minutos (60 x 2s)
+    const expectedContentType = outputFormat === 'xlsx' 
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : 'application/pdf';
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       if (attempt % 5 === 0) {
@@ -229,9 +234,11 @@ serve(async (req) => {
       if (pollResponse.ok) {
         const contentType = pollResponse.headers.get('content-type');
         
-        if (contentType?.includes('application/pdf')) {
-          pdfBytes = new Uint8Array(await pollResponse.arrayBuffer());
-          console.log("✅ PDF gerado, tamanho:", pdfBytes.length);
+        if (contentType?.includes(expectedContentType) || 
+            (outputFormat === 'pdf' && contentType?.includes('application/pdf')) ||
+            (outputFormat === 'xlsx' && contentType?.includes('spreadsheet'))) {
+          fileBytes = new Uint8Array(await pollResponse.arrayBuffer());
+          console.log(`✅ ${outputFormat.toUpperCase()} gerado, tamanho:`, fileBytes.length);
           break;
         }
       }
@@ -240,50 +247,56 @@ serve(async (req) => {
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    if (!pdfBytes) {
-      throw new Error('Timeout: PDF não foi gerado a tempo');
+    if (!fileBytes) {
+      throw new Error(`Timeout: ${outputFormat.toUpperCase()} não foi gerado a tempo`);
     }
 
-    // 7. Adicionar retângulo branco no rodapé (cobrir marca d'água)
-    try {
-      const pdfDoc = await PDFDocument.load(pdfBytes);
-      const pages = pdfDoc.getPages();
+    // 7. Adicionar retângulo branco no rodapé (cobrir marca d'água) - apenas para PDF
+    if (outputFormat === 'pdf') {
+      try {
+        const pdfDoc = await PDFDocument.load(fileBytes);
+        const pages = pdfDoc.getPages();
 
-      for (const page of pages) {
-        const { width, height } = page.getSize();
-        
-        // Retângulo branco no rodapé (altura 80)
-        page.drawRectangle({
-          x: 0,
-          y: 0,
-          width: width,
-          height: 80,
-          color: { red: 1, green: 1, blue: 1 } as any,
-        });
+        for (const page of pages) {
+          const { width, height } = page.getSize();
+          
+          // Retângulo branco no rodapé (altura 80)
+          page.drawRectangle({
+            x: 0,
+            y: 0,
+            width: width,
+            height: 80,
+            color: { red: 1, green: 1, blue: 1 } as any,
+          });
+        }
+
+        const savedBytes = await pdfDoc.save();
+        fileBytes = new Uint8Array(savedBytes);
+        console.log("✅ Marca d'água removida");
+      } catch (modError) {
+        console.error("⚠️ Erro ao modificar PDF:", modError);
+        // Continua com o PDF original
       }
-
-      const savedBytes = await pdfDoc.save();
-      pdfBytes = new Uint8Array(savedBytes);
-      console.log("✅ Marca d'água removida");
-    } catch (modError) {
-      console.error("⚠️ Erro ao modificar PDF:", modError);
-      // Continua com o PDF original
     }
 
-    // 8. Salvar PDF no storage
-    const fileName = `relatorio_${relatorioId}_${Date.now()}.pdf`;
+    // 8. Salvar arquivo no storage
+    const fileExtension = outputFormat === 'xlsx' ? 'xlsx' : 'pdf';
+    const contentType = outputFormat === 'xlsx' 
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : 'application/pdf';
+    const fileName = `relatorio_${relatorioId}_${Date.now()}.${fileExtension}`;
     const filePath = `relatorios/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('bot-media')
-      .upload(filePath, pdfBytes, {
-        contentType: 'application/pdf',
+      .upload(filePath, fileBytes, {
+        contentType: contentType,
         upsert: false,
       });
 
     if (uploadError) {
       console.error("❌ Erro ao fazer upload:", uploadError);
-      throw new Error(`Erro ao salvar PDF: ${uploadError.message}`);
+      throw new Error(`Erro ao salvar ${outputFormat.toUpperCase()}: ${uploadError.message}`);
     }
 
     // 9. Obter URL pública
@@ -291,14 +304,16 @@ serve(async (req) => {
       .from('bot-media')
       .getPublicUrl(filePath);
 
-    const pdfUrl = urlData.publicUrl;
-    console.log("✅ PDF salvo em:", pdfUrl);
+    const fileUrl = urlData.publicUrl;
+    console.log(`✅ ${outputFormat.toUpperCase()} salvo em:`, fileUrl);
 
     return new Response(
       JSON.stringify({
         success: true,
-        pdfUrl,
+        pdfUrl: fileUrl, // Mantém nome pdfUrl por compatibilidade
+        fileUrl: fileUrl,
         fileName: relatorio.nome,
+        fileType: outputFormat,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

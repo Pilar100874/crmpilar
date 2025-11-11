@@ -966,8 +966,11 @@ export class FlowEngine {
         }
       }
 
+      const outputType = this.interpolate(config.outputType || "pdf");
+
       console.log("📊 Gerando relatório com variáveis da API:", apiVariables);
       console.log("📊 Gerando relatório com variáveis fixas:", reportVariables);
+      console.log("📊 Tipo de saída:", outputType);
 
       // Chamar edge function para gerar PDF em background
       const { supabase } = await import("@/integrations/supabase/client");
@@ -977,6 +980,7 @@ export class FlowEngine {
           relatorioId,
           apiVariables,
           reportVariables,
+          outputType,
         }
       });
 

@@ -40,6 +40,9 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
   useEffect(() => {
     if (config.relatorioId && relatorios.length > 0) {
       loadReportVariables(config.relatorioId);
+    } else if (!config.relatorioId) {
+      // Limpar quando não houver relatório selecionado
+      setReportVariables([]);
     }
   }, [config.relatorioId, relatorios]);
 
@@ -95,21 +98,39 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
             : relatorio.configuracoes.layout;
           
           if (layout.parameters && Array.isArray(layout.parameters)) {
-            const vars = layout.parameters.map((param: any) => ({
-              name: param.name,
-              type: param.type || 'string'
-            }));
-            console.log("📝 Variáveis fixas do relatório encontradas:", vars);
+            // Filtrar e ignorar api_data
+            const vars = layout.parameters
+              .filter((param: any) => param.name !== 'api_data')
+              .map((param: any) => ({
+                name: param.name,
+                type: param.type || 'string'
+              }));
+            console.log("📝 Variáveis fixas do relatório encontradas (sem api_data):", vars);
             setReportVariables(vars);
+            
+            // Limpar valores antigos de reportVariables que não existem mais
+            if (config.reportVariables) {
+              const validKeys = vars.map((v: any) => v.name);
+              const newReportVars: Record<string, any> = {};
+              Object.entries(config.reportVariables).forEach(([key, value]) => {
+                if (validKeys.includes(key)) {
+                  newReportVars[key] = value;
+                }
+              });
+              handleConfigChange({ reportVariables: newReportVars });
+            }
           } else {
             setReportVariables([]);
+            handleConfigChange({ reportVariables: {} });
           }
         } catch (e) {
           console.error("Erro ao parsear layout:", e);
           setReportVariables([]);
+          handleConfigChange({ reportVariables: {} });
         }
       } else {
         setReportVariables([]);
+        handleConfigChange({ reportVariables: {} });
       }
 
       // PRIORIDADE 1: Usar api_variables de configuracoes (mais recente)
@@ -299,6 +320,25 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
         </Select>
         <p className="text-xs text-muted-foreground">
           Selecione o modelo de relatório que será gerado
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Tipo de Saída</Label>
+        <Select
+          value={config.outputType || "pdf"}
+          onValueChange={(value) => handleConfigChange({ outputType: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o tipo de saída" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pdf">PDF</SelectItem>
+            <SelectItem value="xlsx">Excel (XLSX)</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Formato do arquivo que será gerado
         </p>
       </div>
 
