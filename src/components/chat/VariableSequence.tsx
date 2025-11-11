@@ -17,6 +17,7 @@ interface VariableSequenceProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (variables: Record<string, string>) => void;
+  botVariables?: Record<string, any>;
 }
 
 interface Variable {
@@ -29,6 +30,7 @@ export default function VariableSequence({
   open,
   onOpenChange,
   onSubmit,
+  botVariables = {},
 }: VariableSequenceProps) {
   const [variables, setVariables] = useState<Variable[]>([
     { id: "1", key: "", value: "" },
@@ -73,6 +75,8 @@ export default function VariableSequence({
     toast.success("Variáveis enviadas");
   };
 
+  const botVarsCount = Object.keys(botVariables).length;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -85,6 +89,31 @@ export default function VariableSequence({
 
         <ScrollArea className="max-h-[400px] pr-4">
           <div className="space-y-4">
+            {/* Bot Variables Section */}
+            {botVarsCount > 0 && (
+              <div className="space-y-3 pb-4 border-b">
+                <Label className="text-sm font-semibold text-muted-foreground">
+                  Variáveis do Bot ({botVarsCount})
+                </Label>
+                {Object.entries(botVariables).map(([key, value]) => (
+                  <div key={key} className="flex gap-2 items-center p-2 bg-muted/50 rounded">
+                    <div className="flex-1">
+                      <span className="text-xs text-muted-foreground">Chave:</span>
+                      <p className="font-mono text-sm">{key}</p>
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs text-muted-foreground">Valor:</span>
+                      <p className="font-mono text-sm">{String(value)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Custom Variables Section */}
+            <Label className="text-sm font-semibold text-muted-foreground">
+              Variáveis Personalizadas
+            </Label>
             {variables.map((variable, index) => (
               <div key={variable.id} className="flex gap-2 items-end">
                 <div className="flex-1 space-y-2">

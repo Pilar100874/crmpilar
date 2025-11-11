@@ -1067,6 +1067,11 @@ ${recentMessages}
                   onWebhookChange={setSelectedWebhookAutoResponse}
                   webhookAutoResponseActive={webhookAutoResponseActive}
                   onWebhookToggle={handleToggleWebhookAutoResponse}
+                  botVariables={
+                    selectedConversation 
+                      ? conversations.find(c => c.id === selectedConversation)?.metadata?.vars || {}
+                      : {}
+                  }
                 />
               </div>
             </div>

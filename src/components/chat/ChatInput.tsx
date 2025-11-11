@@ -39,6 +39,8 @@ interface ChatInputProps {
   onWebhookChange?: (webhookId: string) => void;
   webhookAutoResponseActive?: boolean;
   onWebhookToggle?: () => void;
+  // Bot variables
+  botVariables?: Record<string, any>;
 }
 
 export default function ChatInput({ 
@@ -54,7 +56,8 @@ export default function ChatInput({
   selectedWebhookAutoResponse,
   onWebhookChange,
   webhookAutoResponseActive = false,
-  onWebhookToggle
+  onWebhookToggle,
+  botVariables = {}
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -514,6 +517,7 @@ export default function ChatInput({
         open={showVariables}
         onOpenChange={setShowVariables}
         onSubmit={handleVariablesSubmit}
+        botVariables={botVariables}
       />
     </>
   );
