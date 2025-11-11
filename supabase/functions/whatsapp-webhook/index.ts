@@ -710,42 +710,72 @@ async function sendWahaMediaMessage(
     ? mediaType.toLowerCase()
     : "document";
 
+  const baseUrl = wahaUrl.replace(/\/$/, '');
   const endpoints = [
-    `${wahaUrl}/api/sessions/${sessionName}/messages`,
-    `${wahaUrl}/api/sessions/${sessionName}/sendMessage`,
-    `${wahaUrl}/api/sessions/${sessionName}/messages/send`,
-    `${wahaUrl}/api/sessions/${sessionName}/messages/${t}`,
+    `${baseUrl}/api/sendFile`,
+    `${baseUrl}/api/sessions/${sessionName}/sendFile`,
+    `${baseUrl}/api/sessions/${sessionName}/messages`,
+    `${baseUrl}/api/sessions/${sessionName}/sendMessage`,
+    `${baseUrl}/api/sessions/${sessionName}/messages/send`,
+    `${baseUrl}/api/sessions/${sessionName}/messages/${t}`,
   ];
 
-  const variantBase: any[] = [];
-  // Common shapes
-  variantBase.push({ type: t, to: chatId, [t]: { url: mediaUrl, caption } });
-  variantBase.push({ chatId, type: t, [t]: { url: mediaUrl, caption } });
-  variantBase.push({ jid: chatId, type: t, [t]: { url: mediaUrl, caption } });
-  variantBase.push({ to: chatId, [t]: { url: mediaUrl, caption } });
-  // Some builds expect simplified fields
-  variantBase.push({ number: toNumberOnly, type: t, url: mediaUrl, caption });
+  const variantBase: any[] = [
+    { session: sessionName, chatId, type: t, url: mediaUrl, caption },
+    { session: sessionName, to: toNumberOnly, type: t, url: mediaUrl, caption },
+    { session: sessionName, to: chatId, [t]: { url: mediaUrl, caption } },
+    { type: t, to: chatId, [t]: { url: mediaUrl, caption } },
+    { chatId, type: t, [t]: { url: mediaUrl, caption } },
+    { jid: chatId, type: t, [t]: { url: mediaUrl, caption } },
+    { to: chatId, [t]: { url: mediaUrl, caption } },
+    { number: toNumberOnly, type: t, url: mediaUrl, caption },
+    { chatId, file: { mimetype: 'application/pdf', url: mediaUrl }, caption },
+  ];
 
-  for (const url of endpoints) {
-    for (const body of variantBase) {
-      try {
-        console.log(`[WAHA] Trying MEDIA(${t}) -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${wahaApiKey}`,
-            "X-API-KEY": wahaApiKey,
-          },
-          body: JSON.stringify(body),
-        });
-        const result = await resp.json().catch(() => ({}));
-        console.log("[WAHA] MEDIA result:", resp.status, result);
-        if (resp.ok) return;
-        if (resp.status === 404) break;
-      } catch (err) {
-        console.error("[WAHA] error sending media via", url, err);
+  const headerSets: Array<Record<string, string>> = [
+    {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${wahaApiKey}`,
+      "X-API-KEY": wahaApiKey,
+      "X-Api-Key": wahaApiKey,
+      "x-api-key": wahaApiKey,
+      "X-Session-Name": sessionName,
+    },
+    {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "x-api-key": wahaApiKey,
+      "X-Session-Name": sessionName,
+    },
+  ];
+
+  for (const base of endpoints) {
+    const urlVariants = [
+      base,
+      `${base}?session=${encodeURIComponent(sessionName)}`,
+      `${base}?token=${encodeURIComponent(wahaApiKey)}`,
+    ];
+    
+    for (const url of urlVariants) {
+      for (const body of variantBase) {
+        for (const headers of headerSets) {
+          try {
+            console.log(`[WAHA] Trying MEDIA(${t}) -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
+            const resp = await fetch(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+            });
+            const result = await resp.json().catch(() => ({}));
+            console.log("[WAHA] MEDIA result:", resp.status, result);
+            if (resp.ok) return;
+            if (resp.status === 404) break;
+            if (resp.status === 401) continue;
+          } catch (err) {
+            console.error("[WAHA] error sending media via", url, err);
+          }
+        }
       }
     }
   }
@@ -954,23 +984,94 @@ async function executeNode(
       );
       return;
     }
-    case "list_buttons": {
-      let txt = itp(cfg.text || cfg.headerText || "");
-      if (cfg.items?.length) {
-        txt += "\n\nEscolha uma opção:";
-        cfg.items.forEach((item: any, i: number) => {
-          txt += `\n${i + 1}. ${item.title}${item.description ? " - " + item.description : ""}`;
-        });
+      case "list_buttons": {
+        let txt = itp(cfg.text || cfg.headerText || "");
+        if (cfg.items?.length) {
+          txt += "\n\nEscolha uma opção:";
+          cfg.items.forEach((item: any, i: number) => {
+            txt += `\n${i + 1}. ${item.title}${item.description ? " - " + item.description : ""}`;
+          });
+        }
+        if (txt) await onResponse(txt);
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
       }
-      if (txt) await onResponse(txt);
-      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-      break;
+      case "crm_gerar_relatorio": {
+        console.log(`[FLOW] crm_gerar_relatorio - config:`, JSON.stringify(cfg));
+        
+        try {
+          // Preparar variáveis interpoladas
+          const apiVariables: Record<string, any> = {};
+          if (cfg.apiVariables && typeof cfg.apiVariables === 'object') {
+            for (const [key, varData] of Object.entries(cfg.apiVariables)) {
+              const isVarObject = typeof varData === 'object' && varData !== null && 'value' in varData;
+              const rawValue = isVarObject ? (varData as any).value : String(varData);
+              const interpolatedValue = itp(rawValue);
+              const type = isVarObject ? (varData as any).type : 'string';
+              apiVariables[key] = { value: interpolatedValue, type };
+            }
+          }
+          
+          const reportVariables: Record<string, string> = {};
+          if (cfg.reportVariables && typeof cfg.reportVariables === 'object') {
+            for (const [key, value] of Object.entries(cfg.reportVariables)) {
+              reportVariables[key] = itp(String(value || ""));
+            }
+          }
+          
+          const outputType = cfg.outputType || 'pdf';
+          
+          console.log(`[FLOW] Gerando relatório ${cfg.relatorioId}, formato: ${outputType}`);
+          console.log(`[FLOW] API Variables:`, apiVariables);
+          console.log(`[FLOW] Report Variables:`, reportVariables);
+          
+          // Chamar edge function gerar-relatorio-pdf
+          const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
+          const { data: result, error: reportError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+            body: {
+              relatorioId: cfg.relatorioId,
+              apiVariables,
+              reportVariables,
+              outputType,
+            }
+          });
+          
+          if (reportError) {
+            console.error(`[FLOW] Erro ao gerar relatório:`, reportError);
+            await onResponse("❌ Erro ao gerar relatório. Tente novamente mais tarde.");
+          } else if (result?.fileUrl) {
+            console.log(`[FLOW] Relatório gerado:`, result.fileUrl);
+            
+            // Armazenar URL do relatório em variável se configurado
+            if (cfg.outputVariable) {
+              context.vars[cfg.outputVariable] = result.fileUrl;
+            }
+            
+            // Enviar arquivo via WhatsApp
+            const caption = itp(cfg.successMessage || "📄 Seu relatório está pronto!");
+            const mediaType = outputType === 'xlsx' ? 'document' : 'document';
+            
+            await onResponse(caption, result.fileUrl, mediaType);
+            console.log(`[FLOW] ✅ Relatório enviado via WhatsApp`);
+          } else {
+            console.error(`[FLOW] Resposta inválida do gerador:`, result);
+            await onResponse("❌ Erro ao gerar relatório. Resposta inválida.");
+          }
+        } catch (err) {
+          console.error(`[FLOW] Exception ao gerar relatório:`, err);
+          await onResponse("❌ Erro ao processar geração de relatório.");
+        }
+        
+        // Continuar para próximos nós apenas após terminar
+        console.log(`[FLOW] Relatório concluído, seguindo para próximos nós`);
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      default: {
+        console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+      }
     }
-    default: {
-      console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
-      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-    }
-  }
   } catch (err) {
     console.error(`[FLOW] Error executing node ${node.id} (${data.type}):`, err);
     throw err;
