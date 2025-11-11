@@ -85,7 +85,33 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
       console.log("📋 Configurações do relatório:", relatorio.configuracoes);
       console.log("📋 Parâmetros do relatório:", relatorio.parametros);
 
-      // Primeiro tenta usar os parametros do relatório
+      // PRIORIDADE 1: Usar api_variables de configuracoes (mais recente)
+      if (relatorio.configuracoes?.api_variables && Object.keys(relatorio.configuracoes.api_variables).length > 0) {
+        console.log("📝 Usando api_variables de configuracoes:", relatorio.configuracoes.api_variables);
+        const apiVars = relatorio.configuracoes.api_variables;
+        const newVars: Record<string, VariableData> = {};
+        
+        Object.entries(apiVars).forEach(([key, varData]: [string, any]) => {
+          if (typeof varData === 'object' && varData !== null && 'type' in varData) {
+            newVars[key] = {
+              value: varData.value || "",
+              type: varData.type || "string"
+            };
+          } else {
+            newVars[key] = {
+              value: String(varData),
+              type: "string"
+            };
+          }
+        });
+        
+        console.log("✅ Parâmetros configurados de api_variables:", newVars);
+        handleConfigChange({ apiVariables: newVars });
+        setLoadingVariables(false);
+        return;
+      }
+
+      // PRIORIDADE 2: Tentar usar os parametros do relatório
       if (relatorio.parametros && Array.isArray(relatorio.parametros) && relatorio.parametros.length > 0) {
         console.log("📝 Usando parâmetros do relatório:", relatorio.parametros);
         const newVars: Record<string, VariableData> = {};
@@ -101,7 +127,7 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
         return;
       }
 
-      // Se não tiver parametros, tenta buscar da API configurada
+      // PRIORIDADE 3: Se não tiver parametros, tenta buscar da API configurada
       if (relatorio.configuracoes?.api_url) {
         console.log("🔗 Tentando buscar parâmetros da API:", relatorio.configuracoes.api_url);
         const apiUrl = relatorio.configuracoes.api_url;
