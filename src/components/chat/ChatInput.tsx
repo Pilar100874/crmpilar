@@ -415,58 +415,63 @@ export default function ChatInput({
               </Popover>
             )}
             
-            {/* Webhook Auto-Response Popover */}
+            {/* Webhook Auto-Response */}
             {webhooksForAutoResponse.length > 0 && (
-              <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    title="Resposta automática via webhook"
-                    className={webhookAutoResponseActive ? "bg-primary text-primary-foreground" : ""}
-                    disabled={disabled}
-                  >
-                    <Webhook className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 z-50" align="start">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b pb-2">
-                      <Webhook className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm font-semibold">Resposta automática via webhook</Label>
+              <>
+                <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      title="Selecionar webhook"
+                      disabled={disabled}
+                    >
+                      <Webhook className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 z-50" align="start">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 border-b pb-2">
+                        <Webhook className="h-4 w-4 text-muted-foreground" />
+                        <Label className="text-sm font-semibold">Resposta automática via webhook</Label>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Selecione o webhook</Label>
+                        <Select
+                          value={selectedWebhookAutoResponse || ""}
+                          onValueChange={onWebhookChange}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Selecione um webhook" />
+                          </SelectTrigger>
+                          <SelectContent className="z-50">
+                            {webhooksForAutoResponse.map((webhook) => (
+                              <SelectItem key={webhook.id} value={webhook.id}>
+                                {webhook.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Selecione o webhook</Label>
-                      <Select
-                        value={selectedWebhookAutoResponse || ""}
-                        onValueChange={onWebhookChange}
-                        disabled={webhookAutoResponseActive}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione um webhook" />
-                        </SelectTrigger>
-                        <SelectContent className="z-50">
-                          {webhooksForAutoResponse.map((webhook) => (
-                            <SelectItem key={webhook.id} value={webhook.id}>
-                              {webhook.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
-                      <Label className="text-sm font-medium">
-                        {webhookAutoResponseActive ? "Webhook ativo" : "Webhook inativo"}
-                      </Label>
-                      <Switch
-                        checked={webhookAutoResponseActive}
-                        onCheckedChange={onWebhookToggle}
-                        disabled={!selectedWebhookAutoResponse}
-                      />
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+                
+                <Button
+                  variant={webhookAutoResponseActive ? "default" : "outline"}
+                  size="icon"
+                  onClick={onWebhookToggle}
+                  disabled={!selectedWebhookAutoResponse || disabled}
+                  title={webhookAutoResponseActive ? "Desativar webhook" : "Ativar webhook"}
+                  className={webhookAutoResponseActive ? "bg-green-500 hover:bg-green-600" : ""}
+                >
+                  {webhookAutoResponseActive ? (
+                    <Zap className="h-4 w-4" />
+                  ) : (
+                    <Zap className="h-4 w-4 opacity-50" />
+                  )}
+                </Button>
+              </>
             )}
 
             {/* Transfer to User Popover */}
