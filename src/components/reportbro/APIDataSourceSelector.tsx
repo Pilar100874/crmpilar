@@ -514,12 +514,102 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          testApi(getFullUrl(endpoint));
+                          
+                          // Carrega variáveis do endpoint
+                          loadEndpointVariables(endpoint);
+                          
+                          // Aguarda um tick para garantir que as variáveis foram carregadas
+                          await new Promise(resolve => setTimeout(resolve, 50));
+                          
+                          // Testa a API com as variáveis carregadas
+                          const url = getFullUrl(endpoint);
+                          const method = endpoint.http_method || "GET";
+                          const derivedParamType = (endpoint.parameters && endpoint.parameters[0]?.param_type) || "query";
+                          
+                          setTestingUrl(url);
+                          setTestResult(null);
+                          
+                          try {
+                            // Prepara parâmetros com valores padrão
+                            const params: Record<string, any> = {};
+                            (endpoint.parameters || []).forEach((param: any) => {
+                              if (param.name && param.default_value !== undefined && param.default_value !== null && param.default_value !== "") {
+                                try {
+                                  switch (param.type) {
+                                    case 'number':
+                                      params[param.name] = parseFloat(param.default_value);
+                                      break;
+                                    case 'boolean':
+                                      params[param.name] = param.default_value === 'true' || param.default_value === '1';
+                                      break;
+                                    case 'date':
+                                      params[param.name] = new Date(param.default_value).toISOString();
+                                      break;
+                                    case 'array':
+                                      params[param.name] = JSON.parse(param.default_value);
+                                      break;
+                                    case 'object':
+                                      params[param.name] = JSON.parse(param.default_value);
+                                      break;
+                                    default:
+                                      params[param.name] = param.default_value;
+                                  }
+                                } catch (e) {
+                                  params[param.name] = param.default_value;
+                                }
+                              }
+                            });
+                            
+                            let response: Response;
+                            if (method === "POST") {
+                              response = await fetch(url, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(params)
+                              });
+                            } else {
+                              const urlParams = new URLSearchParams();
+                              Object.entries(params).forEach(([key, value]) => {
+                                urlParams.append(key, String(value));
+                              });
+                              const fullUrl = `${url}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+                              response = await fetch(fullUrl);
+                            }
+                            
+                            let data: any = null;
+                            const contentType = response.headers.get('content-type') || '';
+                            if (contentType.includes('application/json')) {
+                              data = await response.json();
+                            } else {
+                              data = await response.text();
+                            }
+                            
+                            setTestResult(data);
+                            
+                            // Chama callback para atualizar o preview do ReportBro
+                            if (onTest) {
+                              onTest(url, params, { httpMethod: method, paramType: derivedParamType });
+                            }
+                            
+                            if (response.ok) {
+                              const count = Array.isArray((data as any)?.data) ? (data as any).data.length : (Array.isArray(data) ? data.length : 0);
+                              toast.success(`API testada! ${count} registro(s) carregado(s) no relatório`);
+                            } else {
+                              toast.error(`API retornou erro (status ${response.status})`);
+                            }
+                          } catch (error: any) {
+                            console.error("Erro ao testar API:", error);
+                            toast.error("Erro ao testar API: " + error.message);
+                            setTestResult({ error: error.message });
+                          } finally {
+                            setTestingUrl(null);
+                          }
                         }}
                         disabled={isTesting}
                         className="h-8 w-8 shrink-0"
+                        title="Testar API e carregar dados no relatório"
                       >
                         {isTesting ? (
                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
