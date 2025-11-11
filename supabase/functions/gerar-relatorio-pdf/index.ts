@@ -217,15 +217,28 @@ serve(async (req) => {
     if (outputFormat === 'xlsx') {
       try {
         console.log('⚡ Gerando XLSX localmente (fast-path)...');
-        const wb = XLSX.utils.book_new();
+        
+        // Limite de segurança para evitar memory overflow
+        const MAX_ROWS = 20000;
         const dataRows = Array.isArray(apiData) && apiData.length ? apiData : [];
-        if (dataRows.length > 0) {
-          const ws = XLSX.utils.json_to_sheet(dataRows);
+        const limitedData = dataRows.length > MAX_ROWS ? dataRows.slice(0, MAX_ROWS) : dataRows;
+        
+        if (dataRows.length > MAX_ROWS) {
+          console.warn(`⚠️ Dados limitados a ${MAX_ROWS} registros (original: ${dataRows.length})`);
+        }
+        
+        console.log(`📊 Gerando XLSX com ${limitedData.length} registros...`);
+        
+        const wb = XLSX.utils.book_new();
+        
+        if (limitedData.length > 0) {
+          const ws = XLSX.utils.json_to_sheet(limitedData);
           XLSX.utils.book_append_sheet(wb, ws, 'Dados');
         } else {
           const ws = XLSX.utils.aoa_to_sheet([["Info"], ["Sem dados da API (api_data)"]]);
           XLSX.utils.book_append_sheet(wb, ws, 'Dados');
         }
+        
         const varEntries = Object.entries(parameters)
           .filter(([k]) => k !== 'api_data')
           .map(([k, v]) => ({ Variavel: k, Valor: typeof v === 'object' ? JSON.stringify(v) : (v as any) }));
@@ -233,8 +246,15 @@ serve(async (req) => {
           const wv = XLSX.utils.json_to_sheet(varEntries);
           XLSX.utils.book_append_sheet(wb, wv, 'Variaveis');
         }
-        const arrayBuf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        
+        console.log('📝 Convertendo para array buffer...');
+        const arrayBuf = XLSX.write(wb, { 
+          bookType: 'xlsx', 
+          type: 'array',
+          compression: true
+        });
         const bytes = new Uint8Array(arrayBuf as ArrayBuffer);
+        console.log(`💾 XLSX gerado: ${(bytes.length / 1024 / 1024).toFixed(2)} MB`);
 
         const fileExtension = 'xlsx';
         const contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -242,6 +262,7 @@ serve(async (req) => {
         const storageFileName = `${sanitizedName}_${Date.now()}.${fileExtension}`;
         const filePath = `relatorios/${storageFileName}`;
 
+        console.log('☁️ Fazendo upload para storage...');
         const { error: uploadError } = await supabase.storage
           .from('bot-media')
           .upload(filePath, bytes, { 
@@ -260,12 +281,37 @@ serve(async (req) => {
         const baseName = String(relatorio.nome || 'Relatorio').replace(/\.[a-zA-Z0-9]+$/, '');
         const displayFileName = `${baseName}.xlsx`;
         return new Response(
-          JSON.stringify({ success: true, pdfUrl: fileUrl, fileUrl, fileName: displayFileName, fileType: 'xlsx' }),
+          JSON.stringify({ 
+            success: true, 
+            pdfUrl: fileUrl, 
+            fileUrl, 
+            fileName: displayFileName, 
+            fileType: 'xlsx',
+            totalRows: limitedData.length,
+            wasLimited: dataRows.length > MAX_ROWS
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         );
       } catch (fastErr) {
-        console.error('❌ Erro no fast-path XLSX, tentando via ReportBro:', fastErr);
-        // segue para ReportBro como fallback
+        console.error('❌ Erro no fast-path XLSX:', fastErr);
+        console.error('Stack:', (fastErr as Error).stack);
+        
+        // Se for erro de memória, retornar erro específico
+        if ((fastErr as Error).message?.includes('memory') || (fastErr as Error).name === 'MemoryError') {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Muitos dados para gerar XLSX. Por favor, use filtros ou gere um PDF.',
+              code: 'MEMORY_LIMIT_EXCEEDED'
+            }),
+            { 
+              status: 413,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+        
+        // Para outros erros, tentar via ReportBro como fallback
+        console.log('⚠️ Tentando gerar via ReportBro como fallback...');
       }
     }
 

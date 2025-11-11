@@ -1036,10 +1036,30 @@ async function executeNode(
             }
           });
           
+          // Verificar se houve erro
           if (reportError) {
             console.error(`[FLOW] Erro ao gerar relatório:`, reportError);
-            await onResponse("❌ Erro ao gerar relatório. Tente novamente mais tarde.");
-          } else if (result?.fileUrl) {
+            
+            // Verificar se é erro de limite de memória
+            const errorMessage = reportError.message || JSON.stringify(reportError);
+            if (errorMessage.includes('MEMORY_LIMIT_EXCEEDED') || errorMessage.includes('memory') || errorMessage.includes('413')) {
+              await onResponse("❌ Muitos dados para gerar o relatório em XLSX. Por favor, use filtros ou gere um PDF.");
+            } else {
+              await onResponse("❌ Erro ao gerar relatório. Tente novamente mais tarde.");
+            }
+          } 
+          // Verificar se resultado tem erro interno
+          else if (result?.error) {
+            console.error(`[FLOW] Erro retornado pela função:`, result.error);
+            
+            if (result.code === 'MEMORY_LIMIT_EXCEEDED') {
+              await onResponse("❌ Muitos dados para gerar o relatório em XLSX. Por favor, use filtros ou gere um PDF.");
+            } else {
+              await onResponse(`❌ Erro ao gerar relatório: ${result.error}`);
+            }
+          }
+          // Sucesso - arquivo gerado
+          else if (result?.fileUrl) {
             console.log(`[FLOW] Relatório gerado:`, result.fileUrl);
             
             // Armazenar URL do relatório em variável se configurado
@@ -1049,11 +1069,13 @@ async function executeNode(
             
             // Enviar arquivo via WhatsApp
             const caption = itp(cfg.successMessage || "📄 Seu relatório está pronto!");
-            const mediaType = outputType === 'xlsx' ? 'document' : 'document';
+            const mediaType = 'document';
             
             await onResponse(caption, result.fileUrl, mediaType);
             console.log(`[FLOW] ✅ Relatório enviado via WhatsApp`);
-          } else {
+          } 
+          // Resposta inválida
+          else {
             console.error(`[FLOW] Resposta inválida do gerador:`, result);
             await onResponse("❌ Erro ao gerar relatório. Resposta inválida.");
           }
