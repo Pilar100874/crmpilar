@@ -22,6 +22,7 @@ export default function BotTest() {
   const [selectedBotId, setSelectedBotId] = useState<string>("");
   const [selectedBotName, setSelectedBotName] = useState<string>("");
   const [activeBotId, setActiveBotId] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<"whatsapp" | "facebook" | "instagram" | "telegram" | "webchat">("whatsapp");
   const [key, setKey] = useState(0); // Para forçar re-render do simulador
 
   useEffect(() => {
@@ -204,8 +205,20 @@ export default function BotTest() {
               </p>
             </div>
             <div className="flex gap-2 items-center">
+              <Select value={selectedChannel} onValueChange={(value: any) => setSelectedChannel(value)}>
+                <SelectTrigger className="w-[180px] rounded-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">💬 WhatsApp</SelectItem>
+                  <SelectItem value="facebook">💬 Facebook</SelectItem>
+                  <SelectItem value="instagram">📷 Instagram</SelectItem>
+                  <SelectItem value="telegram">✈️ Telegram</SelectItem>
+                  <SelectItem value="webchat">🌐 WebChat</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={selectedBotId} onValueChange={handleBotChange}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[200px] rounded-full">
                   <SelectValue placeholder="Selecione um bot" />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,6 +244,7 @@ export default function BotTest() {
                 size="sm" 
                 onClick={handleReload}
                 disabled={!selectedBotId}
+                className="rounded-full"
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Recarregar
@@ -274,11 +288,12 @@ export default function BotTest() {
 
             <TabsContent value="simulator" className="flex-1 m-0 p-4">
               {nodes.length > 0 ? (
-                <div className="h-full bg-muted rounded-lg overflow-hidden">
+                <div className="h-full bg-muted rounded-2xl overflow-hidden shadow-lg">
                   <FlowSimulator 
                     key={key}
                     nodes={nodes} 
-                    edges={edges} 
+                    edges={edges}
+                    channel={selectedChannel}
                   />
                 </div>
               ) : (

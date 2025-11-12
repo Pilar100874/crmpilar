@@ -35,9 +35,10 @@ interface FlowSimulatorProps {
   breakpointNodes?: Set<string>;
   skipNodes?: Set<string>;
   onContextChange?: (context: Record<string, any>) => void;
+  channel?: "whatsapp" | "facebook" | "instagram" | "telegram" | "webchat";
 }
 
-export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange }: FlowSimulatorProps) => {
+export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange, channel = "whatsapp" }: FlowSimulatorProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
@@ -54,6 +55,60 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
   const uid = () => `${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+
+  // Configurações visuais por canal
+  const getChannelStyles = () => {
+    const styles = {
+      whatsapp: {
+        bg: "bg-[#ECE5DD]",
+        userBubble: "bg-[#DCF8C6]",
+        botBubble: "bg-white",
+        headerBg: "bg-[#075E54]",
+        headerText: "text-white",
+        name: "WhatsApp",
+        icon: "💬"
+      },
+      facebook: {
+        bg: "bg-white",
+        userBubble: "bg-[#0084FF]",
+        botBubble: "bg-[#F0F0F0]",
+        headerBg: "bg-[#0084FF]",
+        headerText: "text-white",
+        name: "Facebook Messenger",
+        icon: "💬"
+      },
+      instagram: {
+        bg: "bg-white",
+        userBubble: "bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737]",
+        botBubble: "bg-[#EFEFEF]",
+        headerBg: "bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737]",
+        headerText: "text-white",
+        name: "Instagram Direct",
+        icon: "📷"
+      },
+      telegram: {
+        bg: "bg-[#17212B]",
+        userBubble: "bg-[#2B5278]",
+        botBubble: "bg-[#182533]",
+        headerBg: "bg-[#17212B]",
+        headerText: "text-white",
+        name: "Telegram",
+        icon: "✈️"
+      },
+      webchat: {
+        bg: "bg-white",
+        userBubble: "bg-gradient-primary",
+        botBubble: "bg-muted",
+        headerBg: "bg-gradient-primary",
+        headerText: "text-white",
+        name: "WebChat",
+        icon: "🌐"
+      }
+    };
+    return styles[channel];
+  };
+
+  const channelStyle = getChannelStyles();
 
   useEffect(() => {
     // Garantir que isActive está true quando o componente monta
@@ -2173,18 +2228,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
   return (
-    <div className="flex flex-col h-full border-l bg-card">
-      <CardHeader className="border-b">
+    <div className="flex flex-col h-full border-l">
+      <CardHeader className={`border-b ${channelStyle.headerBg}`}>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm">🧪 Simulador de Teste</CardTitle>
-          <Button size="sm" variant="outline" onClick={handleReset}>
+          <CardTitle className={`text-sm flex items-center gap-2 ${channelStyle.headerText}`}>
+            <span>{channelStyle.icon}</span>
+            <span>Simulador - {channelStyle.name}</span>
+          </CardTitle>
+          <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20">
             <RotateCcw className="w-4 h-4 mr-2" />
             Reiniciar
           </Button>
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className={`flex-1 flex flex-col p-0 ${channelStyle.bg}`}>
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-3">
             {messages.map((msg) => (
@@ -2195,21 +2253,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 }`}
               >
                 {msg.sender === "system" ? (
-                  <div className="w-full flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="w-full flex items-center gap-2 text-xs text-muted-foreground bg-white/60 px-3 py-2 rounded-lg">
                     <AlertCircle className="w-3 h-3" />
                     <span>{msg.text}</span>
                   </div>
                 ) : msg.sender === "success" ? (
-                  <div className="w-full flex items-center gap-2 text-xs text-success">
+                  <div className="w-full flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">
                     <CheckCircle className="w-3 h-3" />
                     <span>{msg.text}</span>
                   </div>
                 ) : (
                   <div
-                    className={`max-w-[80%] rounded-2xl overflow-hidden ${
+                    className={`max-w-[80%] rounded-2xl overflow-hidden shadow-sm ${
                       msg.sender === "user"
-                        ? "bg-gradient-primary text-primary-foreground"
-                        : "bg-muted"
+                        ? `${channelStyle.userBubble} ${channel === 'facebook' || channel === 'telegram' || channel === 'instagram' ? 'text-white' : 'text-foreground'}`
+                        : `${channelStyle.botBubble} text-foreground`
                     }`}
                   >
                     {msg.mediaUrl && (
@@ -2407,7 +2465,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           </>
         )}
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t bg-background">
           <input
             ref={fileInputRef}
             type="file"
@@ -2423,7 +2481,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               onClick={() => fileInputRef.current?.click()}
               disabled={!isWaitingInput}
               title="Anexar arquivo"
-              className="flex-shrink-0"
+              className="flex-shrink-0 rounded-full"
             >
               📎
             </Button>
@@ -2445,6 +2503,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               }}
               disabled={!isWaitingInput}
               readOnly={!!selectedFile}
+              className="rounded-full"
             />
             
             <Button
@@ -2454,6 +2513,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 !isWaitingInput || 
                 (!selectedFile && !input.trim())
               }
+              className={`rounded-full ${channelStyle.headerBg} ${channelStyle.headerText}`}
             >
               <Send className="w-4 h-4" />
             </Button>
