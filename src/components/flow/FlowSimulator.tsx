@@ -2210,7 +2210,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const emptyContext = {};
     setContext(emptyContext);
     onContextChange?.(emptyContext); // Notifica imediatamente o reset
-    setIsWaitingInput(false);
+    setIsWaitingInput(true); // Habilitar input desde o início
     setPendingVariable(null);
     setSelectedFile(null);
     setInput("");
@@ -2479,7 +2479,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               variant="outline"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              disabled={!isWaitingInput}
               title="Anexar arquivo"
               className="flex-shrink-0 rounded-full"
             >
@@ -2487,13 +2486,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             </Button>
             
             <Input
-              placeholder={
-                isWaitingInput
-                  ? selectedFile
-                    ? `📎 ${selectedFile.name}`
-                    : "Digite sua resposta..."
-                  : "Aguardando próximo passo..."
-              }
+              placeholder="Digite sua mensagem..."
               value={selectedFile ? `📎 ${selectedFile.name}` : input}
               onChange={(e) => {
                 if (!selectedFile) setInput(e.target.value);
@@ -2501,7 +2494,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               onKeyPress={(e) => {
                 if (e.key === "Enter" && !selectedFile) handleSendMessage();
               }}
-              disabled={!isWaitingInput}
               readOnly={!!selectedFile}
               className="rounded-full"
             />
@@ -2509,10 +2501,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             <Button
               size="icon"
               onClick={handleSendMessage}
-              disabled={
-                !isWaitingInput || 
-                (!selectedFile && !input.trim())
-              }
+              disabled={!selectedFile && !input.trim()}
               className={`rounded-full ${channelStyle.headerBg} ${channelStyle.headerText}`}
             >
               <Send className="w-4 h-4" />
