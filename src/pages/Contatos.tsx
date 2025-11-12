@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Link2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/toast-config";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual, validateWhatsApp } from "@/lib/validators";
@@ -28,6 +28,7 @@ import { TableColumnsConfig, type TableColumn } from "@/components/config/TableC
 import { APIImportDialog } from "@/components/config/APIImportDialog";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { ContatoFieldsCRUD } from "@/components/config/ContatoFieldsCRUD";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import {
   DndContext,
@@ -110,6 +111,14 @@ export default function Contatos() {
   const [shouldCheckDuplicate, setShouldCheckDuplicate] = useState(true);
   const [isClosingForm, setIsClosingForm] = useState(false);
   const isClosingRef = useRef(false);
+  
+  // Estados para vínculo pontual
+  const [vinculoDialogOpen, setVinculoDialogOpen] = useState(false);
+  const [contatoVinculo, setContatoVinculo] = useState<Contact | null>(null);
+  const [usuarioVinculo, setUsuarioVinculo] = useState("");
+  const [segmentoVinculo, setSegmentoVinculo] = useState("");
+  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
+  const [vinculos, setVinculos] = useState<any[]>([]);
   
   // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
@@ -440,6 +449,27 @@ export default function Contatos() {
         return;
       }
 
+      // Carregar usuários
+      const { data: usuariosData, error: usuariosError } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabId)
+        .order('nome');
+
+      if (!usuariosError) {
+        setUsuarios(usuariosData || []);
+      }
+
+      // Carregar vínculos
+      const { data: vinculosData, error: vinculosError } = await supabase
+        .from('customer_vinculos')
+        .select('*')
+        .eq('estabelecimento_id', estabId);
+
+      if (!vinculosError) {
+        setVinculos(vinculosData || []);
+      }
+
       let segmentsByCustomer: Record<string, string[]> = {};
       if (rows && rows.length > 0) {
         const { data: segRows } = await supabase
@@ -611,6 +641,52 @@ export default function Contatos() {
       setCompanyFields(companyFields.map(f => 
         f.id === fieldId ? { ...f, searchable: !f.searchable } : f
       ));
+    }
+  };
+
+  const handleOpenVinculoDialog = (contact: Contact) => {
+    setContatoVinculo(contact);
+    const vinculo = vinculos.find(v => v.customer_id === contact.id);
+    setUsuarioVinculo(vinculo?.usuario_id || "");
+    setSegmentoVinculo(vinculo?.segmento_id || "");
+    setVinculoDialogOpen(true);
+  };
+
+  const handleSaveVinculo = async () => {
+    if (!contatoVinculo || !estabelecimentoId) return;
+
+    try {
+      const vinculo = vinculos.find(v => v.customer_id === contatoVinculo.id);
+
+      if (vinculo) {
+        const { error } = await supabase
+          .from('customer_vinculos')
+          .update({
+            usuario_id: usuarioVinculo || null,
+            segmento_id: segmentoVinculo || null,
+          })
+          .eq('id', vinculo.id);
+
+        if (error) throw error;
+        toast.success("Vínculo atualizado!");
+      } else {
+        const { error } = await supabase
+          .from('customer_vinculos')
+          .insert({
+            customer_id: contatoVinculo.id,
+            usuario_id: usuarioVinculo || null,
+            segmento_id: segmentoVinculo || null,
+            estabelecimento_id: estabelecimentoId,
+          });
+
+        if (error) throw error;
+        toast.success("Vínculo criado!");
+      }
+
+      await loadContacts();
+      setVinculoDialogOpen(false);
+    } catch (error: any) {
+      toast.error("Erro ao salvar vínculo: " + error.message);
     }
   };
 
@@ -1998,6 +2074,15 @@ export default function Contatos() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="h-8 px-2 rounded-full hover:bg-blue-500 hover:text-white transition-all duration-200 border-blue-500/20"
+                                  onClick={() => handleOpenVinculoDialog(contact)}
+                                  title="Gerenciar vínculos"
+                                >
+                                  <Link2 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="h-8 px-2 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 border-destructive/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -2639,6 +2724,68 @@ export default function Contatos() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Dialog de vínculo pontual */}
+      <Dialog open={vinculoDialogOpen} onOpenChange={setVinculoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerenciar Vínculos</DialogTitle>
+            <DialogDescription>
+              Vincule este contato a um usuário e/ou segmento
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Contato</Label>
+              <Input value={contatoVinculo?.name || ""} disabled />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Usuário Responsável</Label>
+              <Select value={usuarioVinculo} onValueChange={setUsuarioVinculo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um usuário" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhum</SelectItem>
+                  {usuarios.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Segmento</Label>
+              <Select value={segmentoVinculo} onValueChange={setSegmentoVinculo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um segmento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhum</SelectItem>
+                  {segmentos.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setVinculoDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveVinculo}>
+              Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

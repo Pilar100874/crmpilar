@@ -514,6 +514,36 @@ export type Database = {
           },
         ]
       }
+      customer_vinculos: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id: string
+          segmento_id: string | null
+          updated_at: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id?: string
+          segmento_id?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          estabelecimento_id?: string
+          id?: string
+          segmento_id?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string | null

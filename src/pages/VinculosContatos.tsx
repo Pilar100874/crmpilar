@@ -1,22 +1,19 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { VinculosWizardStep1 } from "@/components/vinculos/VinculosWizardStep1";
+import { VinculosWizardStep1Contatos } from "@/components/vinculos/VinculosWizardStep1Contatos";
 import { VinculosWizardStep2 } from "@/components/vinculos/VinculosWizardStep2";
-import { VinculosWizardStep3 } from "@/components/vinculos/VinculosWizardStep3";
+import { VinculosWizardStep3Contatos } from "@/components/vinculos/VinculosWizardStep3Contatos";
 import { VinculosWizardStep4 } from "@/components/vinculos/VinculosWizardStep4";
 
-interface Empresa {
+interface Contato {
   id: string;
-  nome_fantasia: string;
   nome: string;
-  cnpj: string;
-  email: string;
   telefone: string;
-  endereco: string;
+  email: string;
 }
 
 interface Usuario {
@@ -30,21 +27,21 @@ interface Segmento {
   nome: string;
 }
 
-interface EmpresaComVinculo extends Empresa {
+interface ContatoComVinculo extends Contato {
   usuario_vinculado_id: string | null;
   segmento_vinculado_id: string | null;
   vinculo_id: string | null;
 }
 
-export default function VinculosEmpresas() {
+export default function VinculosContatos() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [empresas, setEmpresas] = useState<EmpresaComVinculo[]>([]);
+  const [contatos, setContatos] = useState<ContatoComVinculo[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
 
-  // Step 1 - Seleção de empresas
-  const [selectedEmpresas, setSelectedEmpresas] = useState<string[]>([]);
+  // Step 1 - Seleção de contatos
+  const [selectedContatos, setSelectedContatos] = useState<string[]>([]);
 
   // Step 2 - Definição de alterações
   const [alterarUsuario, setAlterarUsuario] = useState(false);
@@ -74,32 +71,32 @@ export default function VinculosEmpresas() {
 
   const loadData = async () => {
     try {
-      const { data: empresasData, error: empresasError } = await supabase
-        .from("empresas")
-        .select("id, nome_fantasia, nome, cnpj, email, telefone, endereco")
+      const { data: contatosData, error: contatosError } = await supabase
+        .from("customers")
+        .select("id, nome, telefone, email")
         .eq("estabelecimento_id", estabelecimentoId)
-        .order("nome_fantasia");
+        .order("nome");
 
-      if (empresasError) throw empresasError;
+      if (contatosError) throw contatosError;
 
       const { data: vinculosData, error: vinculosError } = await supabase
-        .from("empresa_vinculos")
-        .select("id, empresa_id, usuario_id, segmento_id")
+        .from("customer_vinculos")
+        .select("id, customer_id, usuario_id, segmento_id")
         .eq("estabelecimento_id", estabelecimentoId);
 
       if (vinculosError) throw vinculosError;
 
-      const empresasComVinculos: EmpresaComVinculo[] = (empresasData || []).map((empresa) => {
-        const vinculo = vinculosData?.find((v) => v.empresa_id === empresa.id);
+      const contatosComVinculos: ContatoComVinculo[] = (contatosData || []).map((contato) => {
+        const vinculo = vinculosData?.find((v) => v.customer_id === contato.id);
         return {
-          ...empresa,
+          ...contato,
           usuario_vinculado_id: vinculo?.usuario_id || null,
           segmento_vinculado_id: vinculo?.segmento_id || null,
           vinculo_id: vinculo?.id || null,
         };
       });
 
-      setEmpresas(empresasComVinculos);
+      setContatos(contatosComVinculos);
 
       const { data: usuariosData, error: usuariosError } = await supabase
         .from("usuarios")
@@ -126,7 +123,7 @@ export default function VinculosEmpresas() {
   };
 
   const canGoNext = () => {
-    if (currentStep === 1) return selectedEmpresas.length > 0;
+    if (currentStep === 1) return selectedContatos.length > 0;
     if (currentStep === 2) return alterarUsuario || alterarSegmento;
     if (currentStep === 3) return true;
     return false;
@@ -150,29 +147,29 @@ export default function VinculosEmpresas() {
     setErrors([]);
     setCompleted(false);
 
-    const empresasSelecionadas = empresas.filter((e) => selectedEmpresas.includes(e.id));
+    const contatosSelecionados = contatos.filter((c) => selectedContatos.includes(c.id));
     const errosTemp: string[] = [];
 
-    for (let i = 0; i < empresasSelecionadas.length; i++) {
-      const empresa = empresasSelecionadas[i];
+    for (let i = 0; i < contatosSelecionados.length; i++) {
+      const contato = contatosSelecionados[i];
       
       try {
-        if (empresa.vinculo_id) {
+        if (contato.vinculo_id) {
           // Atualizar vínculo existente
           const updates: any = {};
           if (alterarUsuario) updates.usuario_id = novoUsuarioId || null;
           if (alterarSegmento) updates.segmento_id = novoSegmentoId || null;
 
           const { error } = await supabase
-            .from("empresa_vinculos")
+            .from("customer_vinculos")
             .update(updates)
-            .eq("id", empresa.vinculo_id);
+            .eq("id", contato.vinculo_id);
 
           if (error) throw error;
         } else {
           // Criar novo vínculo
-          const { error } = await supabase.from("empresa_vinculos").insert({
-            empresa_id: empresa.id,
+          const { error } = await supabase.from("customer_vinculos").insert({
+            customer_id: contato.id,
             usuario_id: alterarUsuario ? (novoUsuarioId || null) : null,
             segmento_id: alterarSegmento ? (novoSegmentoId || null) : null,
             estabelecimento_id: estabelecimentoId,
@@ -182,12 +179,11 @@ export default function VinculosEmpresas() {
         }
       } catch (error: any) {
         errosTemp.push(
-          `Erro ao processar ${empresa.nome_fantasia || empresa.nome}: ${error.message}`
+          `Erro ao processar ${contato.nome}: ${error.message}`
         );
       }
 
       setProcessedCount(i + 1);
-      // Pequeno delay para visualização do progresso
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
@@ -199,7 +195,7 @@ export default function VinculosEmpresas() {
       toast.success("Processamento concluído com sucesso!");
     } else {
       toast.error("Processamento concluído com erros", {
-        description: `${empresasSelecionadas.length - errosTemp.length} sucesso, ${errosTemp.length} erro(s)`,
+        description: `${contatosSelecionados.length - errosTemp.length} sucesso, ${errosTemp.length} erro(s)`,
       });
     }
 
@@ -208,7 +204,7 @@ export default function VinculosEmpresas() {
 
   const handleReset = () => {
     setCurrentStep(1);
-    setSelectedEmpresas([]);
+    setSelectedContatos([]);
     setAlterarUsuario(false);
     setAlterarSegmento(false);
     setNovoUsuarioId("");
@@ -218,14 +214,14 @@ export default function VinculosEmpresas() {
     setCompleted(false);
   };
 
-  const empresasSelecionadas = empresas.filter((e) => selectedEmpresas.includes(e.id));
+  const contatosSelecionados = contatos.filter((c) => selectedContatos.includes(c.id));
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vínculo Empresas X Usuário / Segmento</h1>
+        <h1 className="text-3xl font-bold text-foreground">Vínculo Contatos X Usuário / Segmento</h1>
         <p className="text-muted-foreground mt-2">
-          Assistente para vincular empresas a usuários e segmentos
+          Assistente para vincular contatos a usuários e segmentos
         </p>
       </div>
 
@@ -258,12 +254,12 @@ export default function VinculosEmpresas() {
       {/* Step Content */}
       <div>
         {currentStep === 1 && (
-          <VinculosWizardStep1
-            empresas={empresas}
+          <VinculosWizardStep1Contatos
+            contatos={contatos}
             usuarios={usuarios}
             segmentos={segmentos}
-            selectedEmpresas={selectedEmpresas}
-            onSelectEmpresas={setSelectedEmpresas}
+            selectedContatos={selectedContatos}
+            onSelectContatos={setSelectedContatos}
           />
         )}
         {currentStep === 2 && (
@@ -278,12 +274,12 @@ export default function VinculosEmpresas() {
             onAlterarSegmentoChange={setAlterarSegmento}
             onNovoUsuarioChange={setNovoUsuarioId}
             onNovoSegmentoChange={setNovoSegmentoId}
-            selectedCount={selectedEmpresas.length}
+            selectedCount={selectedContatos.length}
           />
         )}
         {currentStep === 3 && (
-          <VinculosWizardStep3
-            empresasSelecionadas={empresasSelecionadas}
+          <VinculosWizardStep3Contatos
+            contatosSelecionados={contatosSelecionados}
             usuarios={usuarios}
             segmentos={segmentos}
             alterarUsuario={alterarUsuario}
@@ -296,7 +292,7 @@ export default function VinculosEmpresas() {
           <VinculosWizardStep4
             isProcessing={isProcessing}
             processedCount={processedCount}
-            totalCount={empresasSelecionadas.length}
+            totalCount={contatosSelecionados.length}
             errors={errors}
             completed={completed}
           />
