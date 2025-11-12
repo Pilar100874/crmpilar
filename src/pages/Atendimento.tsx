@@ -1484,32 +1484,6 @@ ${recentMessages}
               Ver Emails
             </Button>
           </div>
-
-          {/* Attendant Status Card */}
-          <div className="border-t p-4 flex-shrink-0">
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
-                <User className="w-8 h-8 text-primary" />
-              </div>
-              <h4 className="font-semibold">Felipe</h4>
-              <p className="text-xs text-muted-foreground mb-3">CEO</p>
-              
-              <div className="w-full space-y-2">
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-full hover:bg-muted/50 transition-colors">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-sm">Online</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-full hover:bg-muted/50 transition-colors">
-                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                  <span className="text-sm">Away</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-full hover:bg-muted/50 transition-colors">
-                  <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                  <span className="text-sm">Offline</span>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       )}
       
