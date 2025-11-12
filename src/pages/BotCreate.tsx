@@ -32,6 +32,7 @@ export default function BotCreate() {
   const [newBotDialogOpen, setNewBotDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
   const [newBotDescription, setNewBotDescription] = useState("");
+  const [selectedCanais, setSelectedCanais] = useState<string[]>(["whatsapp"]);
   const [isCreating, setIsCreating] = useState(false);
   
   // Dialogs para duplicar e renomear
@@ -272,10 +273,11 @@ export default function BotCreate() {
       }
 
       // Navegar para o builder com o nome do bot como parâmetro
-      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}`);
+      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify(selectedCanais))}`);
       setNewBotDialogOpen(false);
       setNewBotName("");
       setNewBotDescription("");
+      setSelectedCanais(["whatsapp"]);
     } catch (error) {
       console.error("Error creating bot:", error);
       toast.error("Erro ao criar bot");
@@ -417,28 +419,30 @@ export default function BotCreate() {
           </p>
         </div>
 
-        <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col" onClick={() => setNewBotDialogOpen(true)}>
-              <CardHeader className="flex-1 p-4">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Workflow className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle>Novo Bot de Fluxo</CardTitle>
-              <CardDescription>
-                Crie um bot usando o editor visual de fluxos. Ideal para automações complexas com múltiplas ramificações.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="mt-auto p-4 pt-0">
-              <Button className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                Criar Novo Bot
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Card de criar novo bot */}
+        <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30" onClick={() => setNewBotDialogOpen(true)}>
+          <CardHeader className="p-4">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Workflow className="w-6 h-6 text-primary" />
+            </div>
+            <CardTitle>Novo Bot de Fluxo</CardTitle>
+            <CardDescription>
+              Crie um bot usando o editor visual de fluxos. Ideal para automações complexas com múltiplas ramificações.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <Button className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              Criar Novo Bot
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </CardContent>
+        </Card>
 
-          {loading ? (
-            Array.from({ length: 3 }).map((_, i) => (
+        {/* Loading state */}
+        {loading && (
+          <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 3 }).map((_, i) => (
               <Card key={i} className="animate-pulse h-full">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
@@ -446,134 +450,171 @@ export default function BotCreate() {
                   <div className="h-4 bg-muted rounded w-full"></div>
                 </CardHeader>
               </Card>
-            ))
-          ) : (
-            bots.map((bot) => (
-              <Card 
-                key={bot.id} 
-                className="hover:shadow-lg transition-all cursor-pointer relative group h-full flex flex-col"
-                onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
-              >
-                <div className="absolute top-4 right-4 z-10">
-                  <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(null);
-                        navigate(`/bot-builder?id=${bot.id}`);
-                      }}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(null);
-                        setSelectedBot(bot);
-                        setRenameName(bot.name);
-                        setRenameDescription(bot.description || "");
-                        setRenameDialogOpen(true);
-                      }}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Renomear
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(null);
-                        setSelectedBot(bot);
-                        setDuplicateName(`${bot.name} (cópia)`);
-                        setDuplicateDescription(bot.description || "");
-                        setDuplicateDialogOpen(true);
-                      }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Duplicar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(null);
-                        handleToggleActive(bot.id, bot.active);
-                      }}>
-                        <Power className="w-4 h-4 mr-2" />
-                        {bot.active ? "Desativar" : "Ativar"}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(null);
-                          handleDeleteBot(bot.id, bot.name);
-                        }}
-                        className="text-destructive"
+            ))}
+          </div>
+        )}
+
+        {/* Agrupamento por canais */}
+        {!loading && bots.length > 0 && (
+          <>
+            {['whatsapp', 'webchat', 'telegram', 'facebook', 'instagram'].map((canal) => {
+              const canalBots = bots.filter(bot => bot.canais?.includes(canal));
+              if (canalBots.length === 0) return null;
+
+              const canalLabels: Record<string, string> = {
+                whatsapp: 'WhatsApp',
+                webchat: 'WebChat',
+                telegram: 'Telegram',
+                facebook: 'Facebook',
+                instagram: 'Instagram'
+              };
+
+              return (
+                <div key={canal} className="space-y-4">
+                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    {canalLabels[canal]}
+                    <Badge variant="outline">{canalBots.length}</Badge>
+                  </h2>
+                  <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+                    {canalBots.map((bot) => (
+                      <Card 
+                        key={bot.id} 
+                        className="hover:shadow-lg transition-all cursor-pointer relative group h-full flex flex-col"
+                        onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                
-                <CardHeader className="flex-1 p-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <Workflow className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle className="flex-1">{bot.name}</CardTitle>
-                    {bot.active && (
-                      <Badge variant="default" className="bg-green-500">
-                        Ativo
-                      </Badge>
-                    )}
-                  </div>
-                  {bot.description && (
-                    <p className="text-sm text-muted-foreground mb-2">{bot.description}</p>
-                  )}
-                  <CardDescription>
-                    {bot.flow_data?.nodes?.length || 0} blocos • 
-                    Atualizado {formatDistanceToNow(new Date(bot.updated_at), { 
-                      addSuffix: true, 
-                      locale: ptBR 
-                    })}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="mt-auto p-4 pt-0 space-y-3">
-                  <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-                    <Label className="text-xs flex items-center gap-1">
-                      <Smartphone className="h-3 w-3" />
-                      Número WhatsApp
-                    </Label>
-                    <div className="flex gap-2">
-                      <Select
-                        value={selectedSessions[bot.id] || "none"}
-                        onValueChange={(value) => handleSessionChange(bot.id, value === "none" ? "" : value)}
-                      >
-                        <SelectTrigger className="h-8 text-xs flex-1">
-                          <SelectValue placeholder="Nenhum número" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background z-50">
-                          <SelectItem value="none">Nenhum</SelectItem>
-                          {whatsappSessions
-                            .filter(s => !s.bot_flow_id || s.bot_flow_id === bot.id)
-                            .map(session => (
-                              <SelectItem key={session.id} value={session.id}>
-                                {session.phone_number || session.session_name} ({session.status})
-                              </SelectItem>
+                        <div className="absolute top-4 right-4 z-10">
+                          <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(null);
+                                navigate(`/bot-builder?id=${bot.id}`);
+                              }}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(null);
+                                setSelectedBot(bot);
+                                setRenameName(bot.name);
+                                setRenameDescription(bot.description || "");
+                                setRenameDialogOpen(true);
+                              }}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Renomear
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(null);
+                                setSelectedBot(bot);
+                                setDuplicateName(`${bot.name} (cópia)`);
+                                setDuplicateDescription(bot.description || "");
+                                setDuplicateDialogOpen(true);
+                              }}>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Duplicar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(null);
+                                handleToggleActive(bot.id, bot.active);
+                              }}>
+                                <Power className="w-4 h-4 mr-2" />
+                                {bot.active ? "Desativar" : "Ativar"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                  handleDeleteBot(bot.id, bot.name);
+                                }}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        
+                        <CardHeader className="flex-1 p-4">
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                            <Workflow className="w-6 h-6 text-primary" />
+                          </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <CardTitle className="flex-1">{bot.name}</CardTitle>
+                            {bot.active && (
+                              <Badge variant="default" className="bg-green-500">
+                                Ativo
+                              </Badge>
+                            )}
+                          </div>
+                          {bot.description && (
+                            <p className="text-sm text-muted-foreground mb-2">{bot.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {bot.canais?.map((c: string) => (
+                              <Badge key={c} variant="secondary" className="text-xs">
+                                {canalLabels[c] || c}
+                              </Badge>
                             ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                          </div>
+                          <CardDescription>
+                            {bot.flow_data?.nodes?.length || 0} blocos • 
+                            Atualizado {formatDistanceToNow(new Date(bot.updated_at), { 
+                              addSuffix: true, 
+                              locale: ptBR 
+                            })}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="mt-auto p-4 pt-0 space-y-3">
+                          {canal === 'whatsapp' && (
+                            <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                              <Label className="text-xs flex items-center gap-1">
+                                <Smartphone className="h-3 w-3" />
+                                Número WhatsApp
+                              </Label>
+                              <div className="flex gap-2">
+                                <Select
+                                  value={selectedSessions[bot.id] || "none"}
+                                  onValueChange={(value) => handleSessionChange(bot.id, value === "none" ? "" : value)}
+                                >
+                                  <SelectTrigger className="h-8 text-xs flex-1">
+                                    <SelectValue placeholder="Nenhum número" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    <SelectItem value="none">Nenhum</SelectItem>
+                                    {whatsappSessions
+                                      .filter(s => !s.bot_flow_id || s.bot_flow_id === bot.id)
+                                      .map(session => (
+                                        <SelectItem key={session.id} value={session.id}>
+                                          {session.phone_number || session.session_name} ({session.status})
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          )}
+                          <Button variant="outline" className="w-full">
+                            <Edit className="w-4 h-4 mr-2" />
+                            Abrir Editor
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                  <Button variant="outline" className="w-full">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Abrir Editor
-                  </Button>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                </div>
+              );
+            })}
+          </>
+        )}
 
         {!loading && bots.length === 0 && (
           <div className="text-center py-12">
@@ -624,6 +665,37 @@ export default function BotCreate() {
                 }}
               />
             </div>
+            <div className="grid gap-2">
+              <Label>Canais de Atendimento *</Label>
+              <div className="space-y-2">
+                {[
+                  { id: "whatsapp", label: "WhatsApp" },
+                  { id: "webchat", label: "WebChat" },
+                  { id: "telegram", label: "Telegram" },
+                  { id: "facebook", label: "Facebook" },
+                  { id: "instagram", label: "Instagram" }
+                ].map((canal) => (
+                  <label key={canal.id} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedCanais.includes(canal.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCanais([...selectedCanais, canal.id]);
+                        } else {
+                          setSelectedCanais(selectedCanais.filter(c => c !== canal.id));
+                        }
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">{canal.label}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Selecione em quais canais este bot poderá ser usado
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -640,7 +712,7 @@ export default function BotCreate() {
             <Button
               type="submit"
               onClick={handleCreateNewBot}
-              disabled={!newBotName.trim() || isCreating}
+              disabled={!newBotName.trim() || selectedCanais.length === 0 || isCreating}
             >
               {isCreating ? "Criando..." : "Criar Bot"}
             </Button>

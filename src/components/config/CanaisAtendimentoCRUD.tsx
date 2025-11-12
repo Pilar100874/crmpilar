@@ -68,10 +68,11 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
   const loadBots = async () => {
     try {
       const { data, error } = await supabase
-        .from('flows')
-        .select('id, nome')
+        .from('bot_flows')
+        .select('id, name')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('nome');
+        .contains('canais', ['whatsapp'])
+        .order('name');
 
       if (error) throw error;
       setBots(data || []);
@@ -234,7 +235,7 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
               <option value="">Selecione um bot...</option>
               {bots.map((bot) => (
                 <option key={bot.id} value={bot.id}>
-                  {bot.nome}
+                  {bot.name}
                 </option>
               ))}
             </select>
@@ -1050,10 +1051,11 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const loadBots = async () => {
     try {
       const { data, error } = await supabase
-        .from('flows')
-        .select('id, nome')
+        .from('bot_flows')
+        .select('id, name')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('nome');
+        .contains('canais', ['facebook'])
+        .order('name');
 
       if (error) throw error;
       setBots(data || []);
@@ -1092,7 +1094,7 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             <option value="">Selecione um bot...</option>
             {bots.map((bot) => (
               <option key={bot.id} value={bot.id}>
-                {bot.nome}
+                {bot.name}
               </option>
             ))}
           </select>
@@ -1159,10 +1161,11 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const loadBots = async () => {
     try {
       const { data, error } = await supabase
-        .from('flows')
-        .select('id, nome')
+        .from('bot_flows')
+        .select('id, name')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('nome');
+        .contains('canais', ['instagram'])
+        .order('name');
 
       if (error) throw error;
       setBots(data || []);
@@ -1201,7 +1204,7 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             <option value="">Selecione um bot...</option>
             {bots.map((bot) => (
               <option key={bot.id} value={bot.id}>
-                {bot.nome}
+                {bot.name}
               </option>
             ))}
           </select>
@@ -1257,10 +1260,11 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const loadBots = async () => {
     try {
       const { data, error } = await supabase
-        .from('flows')
-        .select('id, nome')
+        .from('bot_flows')
+        .select('id, name')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('nome');
+        .contains('canais', ['telegram'])
+        .order('name');
 
       if (error) throw error;
       setBots(data || []);
@@ -1299,7 +1303,7 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             <option value="">Selecione um bot...</option>
             {bots.map((bot) => (
               <option key={bot.id} value={bot.id}>
-                {bot.nome}
+                {bot.name}
               </option>
             ))}
           </select>
@@ -1353,10 +1357,11 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const loadBots = async () => {
     try {
       const { data, error } = await supabase
-        .from('flows')
-        .select('id, nome')
+        .from('bot_flows')
+        .select('id, name')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('nome');
+        .contains('canais', ['webchat'])
+        .order('name');
 
       if (error) throw error;
       setBots(data || []);
@@ -1364,7 +1369,7 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
       if (!data || data.length === 0) {
         toast({
           title: "Nenhum bot encontrado",
-          description: "Crie um bot no menu Bot Builder primeiro.",
+          description: "Crie um bot no menu Bot Builder primeiro e marque 'WebChat' nos canais.",
           variant: "destructive"
         });
       }
@@ -1513,7 +1518,7 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
               <option value="">Selecione um bot...</option>
               {bots.map((bot) => (
                 <option key={bot.id} value={bot.id}>
-                  {bot.nome}
+                  {bot.name}
                 </option>
               ))}
             </select>

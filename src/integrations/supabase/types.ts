@@ -122,6 +122,7 @@ export type Database = {
       bot_flows: {
         Row: {
           active: boolean | null
+          canais: string[] | null
           created_at: string | null
           description: string | null
           estabelecimento_id: string | null
@@ -132,6 +133,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          canais?: string[] | null
           created_at?: string | null
           description?: string | null
           estabelecimento_id?: string | null
@@ -142,6 +144,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          canais?: string[] | null
           created_at?: string | null
           description?: string | null
           estabelecimento_id?: string | null

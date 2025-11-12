@@ -62,6 +62,7 @@ function BotBuilderContent() {
   const botIdFromUrl = searchParams.get("id");
   const botNameFromUrl = searchParams.get("name");
   const botDescriptionFromUrl = searchParams.get("description");
+  const canaisFromUrl = searchParams.get("canais");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const savingRef = useRef(false);
   
@@ -88,6 +89,7 @@ function BotBuilderContent() {
   const [currentBotId, setCurrentBotId] = useState<string | null>(null);
   const [currentBotName, setCurrentBotName] = useState("Novo Bot");
   const [currentBotDescription, setCurrentBotDescription] = useState("");
+  const [currentBotCanais, setCurrentBotCanais] = useState<string[]>(["whatsapp"]);
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
@@ -154,7 +156,17 @@ function BotBuilderContent() {
     if (botDescriptionFromUrl && !currentBotId) {
       setCurrentBotDescription(decodeURIComponent(botDescriptionFromUrl));
     }
-  }, [botNameFromUrl, botDescriptionFromUrl, currentBotId]);
+    if (canaisFromUrl && !currentBotId) {
+      try {
+        const canais = JSON.parse(decodeURIComponent(canaisFromUrl));
+        if (Array.isArray(canais)) {
+          setCurrentBotCanais(canais);
+        }
+      } catch (e) {
+        console.error("Error parsing canais from URL:", e);
+      }
+    }
+  }, [botNameFromUrl, botDescriptionFromUrl, canaisFromUrl, currentBotId]);
 
   // Auto-save movido abaixo (após handleSave) para evitar closures desatualizadas.
 
@@ -533,6 +545,7 @@ function BotBuilderContent() {
       const botData = {
         name: currentBotName,
         description: currentBotDescription,
+        canais: currentBotCanais,
         flow_data: flow as any, // Cast to any for Json compatibility
         updated_at: new Date().toISOString(),
         estabelecimento_id: estabelecimentoId,
