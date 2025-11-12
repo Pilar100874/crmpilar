@@ -1884,7 +1884,7 @@ export default function Contatos() {
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
-                        <div className="flex items-center justify-between gap-2 pr-4">
+                       <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label}</span>
                           {column.id !== 'actions' && (
                             <Button
@@ -1897,9 +1897,10 @@ export default function Contatos() {
                             </Button>
                           )}
                         </div>
-                        <div
-                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 z-20 transition-all"
-                          style={{ touchAction: 'none' }}
+                        {column.id !== 'actions' && (
+                          <div
+                            className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 z-20 transition-all"
+                            style={{ touchAction: 'none' }}
                           onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -1930,6 +1931,7 @@ export default function Contatos() {
                             document.addEventListener('mouseup', handleMouseUp);
                           }}
                          />
+                        )}
                        </th>
                      ))}
                    </tr>

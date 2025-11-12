@@ -827,18 +827,21 @@ export default function Todos() {
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 hover:bg-background/50 rounded-full"
-                            onClick={() => handleContatosSort(column.id)}
-                          >
-                            {getSortIcon(column.id, contatosSortConfig)}
-                          </Button>
+                          {column.id !== 'actions' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 hover:bg-background/50 rounded-full"
+                              onClick={() => handleContatosSort(column.id)}
+                            >
+                              {getSortIcon(column.id, contatosSortConfig)}
+                            </Button>
+                          )}
                         </div>
-                        <div
-                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 transition-all"
-                          style={{ touchAction: 'none' }}
+                        {column.id !== 'actions' && (
+                          <div
+                            className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 transition-all"
+                            style={{ touchAction: 'none' }}
                           onMouseDown={(e) => {
                             e.preventDefault();
                             const startX = e.clientX;
@@ -865,6 +868,7 @@ export default function Todos() {
                             document.addEventListener('mouseup', handleMouseUp);
                           }}
                         />
+                        )}
                       </th>
                     ))}
                   </tr>
@@ -989,18 +993,21 @@ export default function Todos() {
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 hover:bg-background/50 rounded-full"
-                            onClick={() => handleEmpresasSort(column.id)}
-                          >
-                            {getSortIcon(column.id, empresasSortConfig)}
-                          </Button>
+                          {column.id !== 'actions' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 hover:bg-background/50 rounded-full"
+                              onClick={() => handleEmpresasSort(column.id)}
+                            >
+                              {getSortIcon(column.id, empresasSortConfig)}
+                            </Button>
+                          )}
                         </div>
-                        <div
-                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 transition-all"
-                          style={{ touchAction: 'none' }}
+                        {column.id !== 'actions' && (
+                          <div
+                            className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 transition-all"
+                            style={{ touchAction: 'none' }}
                           onMouseDown={(e) => {
                             e.preventDefault();
                             const startX = e.clientX;
@@ -1019,14 +1026,15 @@ export default function Todos() {
                             const handleMouseUp = () => {
                               document.removeEventListener('mousemove', handleMouseMove);
                               document.removeEventListener('mouseup', handleMouseUp);
-                              document.body.style.cursor = '';
-                            };
+                            document.body.style.cursor = '';
+                          };
 
-                            document.body.style.cursor = 'col-resize';
-                            document.addEventListener('mousemove', handleMouseMove);
-                            document.addEventListener('mouseup', handleMouseUp);
-                          }}
+                          document.body.style.cursor = 'col-resize';
+                          document.addEventListener('mousemove', handleMouseMove);
+                          document.addEventListener('mouseup', handleMouseUp);
+                        }}
                         />
+                        )}
                       </th>
                     ))}
                   </tr>

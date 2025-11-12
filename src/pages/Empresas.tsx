@@ -1271,9 +1271,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             </Button>
                           )}
                         </div>
-                        <div
-                          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 z-20 transition-all"
-                          style={{ touchAction: 'none' }}
+                        {column.id !== 'actions' && (
+                          <div
+                            className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize hover:bg-primary/60 hover:w-1 bg-border/30 z-20 transition-all"
+                            style={{ touchAction: 'none' }}
                           onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -1295,15 +1296,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                               document.removeEventListener('mousemove', handleMouseMove);
                               document.removeEventListener('mouseup', handleMouseUp);
                               document.body.style.cursor = '';
-                              document.body.style.userSelect = '';
-                            };
+                            document.body.style.userSelect = '';
+                          };
 
-                            document.body.style.cursor = 'col-resize';
-                            document.body.style.userSelect = 'none';
-                            document.addEventListener('mousemove', handleMouseMove);
-                            document.addEventListener('mouseup', handleMouseUp);
-                          }}
+                          document.body.style.cursor = 'col-resize';
+                          document.body.style.userSelect = 'none';
+                          document.addEventListener('mousemove', handleMouseMove);
+                          document.addEventListener('mouseup', handleMouseUp);
+                        }}
                         />
+                        )}
                       </th>
                     ))}
                   </tr>
