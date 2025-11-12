@@ -2242,8 +2242,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         </div>
       </CardHeader>
 
-      <CardContent className={`flex-1 flex flex-col p-0 overflow-hidden ${channelStyle.bg}`}>
-        <ScrollArea className="flex-1 p-4">
+      <CardContent className={`flex-1 flex flex-col p-0 ${channelStyle.bg}`}>
+        <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-3">
             {messages.map((msg) => (
               <div
@@ -2438,13 +2438,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
 
         <Separator />
 
         {Object.keys(context).length > 0 && (
           <>
-            <ScrollArea className={`flex-shrink-0 max-h-40 ${channel === 'telegram' ? 'bg-[#1A2633]' : 'bg-muted/50'}`}>
+            <div className={`flex-shrink-0 max-h-40 overflow-y-auto ${channel === 'telegram' ? 'bg-[#1A2633]' : 'bg-muted/50'}`}>
               <div className="p-3">
                 <h4 className={`text-xs font-medium mb-2 ${channel === 'telegram' ? 'text-gray-300' : ''}`}>📦 Contexto (Variáveis)</h4>
                 <div className="space-y-1">
@@ -2462,7 +2462,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                   ))}
                 </div>
               </div>
-            </ScrollArea>
+            </div>
             <Separator />
           </>
         )}
