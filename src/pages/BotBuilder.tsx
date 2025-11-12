@@ -696,6 +696,7 @@ function BotBuilderContent() {
       setCurrentBotId(data.id);
       setCurrentBotName(data.name);
       setCurrentBotDescription(data.description || "");
+      setCurrentBotCanais(data.canais || ["whatsapp"]);
       setSelectedNode(null);
       
       // Fixar estabelecimento do bot como o estabelecimento corrente da sessão

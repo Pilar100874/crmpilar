@@ -1348,6 +1348,7 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showScript, setShowScript] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -1674,6 +1675,7 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
 
             {/* Botão do WebChat */}
             <div 
+              onClick={() => setShowPreview(true)}
               style={{
                 position: 'absolute',
                 bottom: '20px',
@@ -1693,10 +1695,90 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
               }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              title={`${widgetTitle} - Clique para abrir`}
+              title={`${widgetTitle} - Clique para testar`}
             >
               💬
             </div>
+
+            {/* Preview interativo do WebChat */}
+            {showPreview && (
+              <div 
+                style={{
+                  position: 'absolute',
+                  bottom: '90px',
+                  [widgetPosition]: '20px',
+                  width: '350px',
+                  height: '500px',
+                  borderRadius: '12px',
+                  background: 'white',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                  zIndex: 1000,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Header */}
+                <div 
+                  style={{
+                    background: widgetColor,
+                    color: 'white',
+                    padding: '16px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  {widgetTitle}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPreview(false);
+                    }}
+                    style={{
+                      background: 'rgba(255,255,255,0.2)',
+                      border: 'none',
+                      color: 'white',
+                      cursor: 'pointer',
+                      borderRadius: '4px',
+                      padding: '4px 8px',
+                      fontSize: '16px',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                {/* Messages */}
+                <div style={{ flex: 1, padding: '16px', overflowY: 'auto', background: '#f5f5f5' }}>
+                  <div style={{
+                    background: 'white',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '8px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  }}>
+                    {welcomeMessage}
+                  </div>
+                </div>
+                
+                {/* Input */}
+                <div style={{ padding: '12px', background: 'white', borderTop: '1px solid #e5e5e5' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Digite sua mensagem..."
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #e5e5e5',
+                      borderRadius: '8px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <p className="text-sm text-muted-foreground mt-2 text-center">
             Posição: {widgetPosition === 'right' ? 'Direita' : 'Esquerda'} | Cor: {widgetColor}
