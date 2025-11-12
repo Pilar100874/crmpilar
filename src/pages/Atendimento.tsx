@@ -1066,20 +1066,6 @@ ${recentMessages}
             </div>
 
             <div className="border-t bg-card flex-shrink-0 p-4">
-              {/* AI Button */}
-              <div className="mb-3">
-                <Button
-                  variant={showAIChat ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowAIChat(!showAIChat)}
-                  className="gap-2"
-                  disabled={aiWebhooks.length === 0}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  IA {aiWebhooks.length > 0 && `(${aiWebhooks.length})`}
-                </Button>
-              </div>
-
               {/* AI Chat Box */}
               {showAIChat && aiWebhooks.length > 0 && (
                 <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl">
@@ -1266,6 +1252,9 @@ ${recentMessages}
                   selectedTransferUser={selectedTransferUser}
                   onTransferUserChange={setSelectedTransferUser}
                   onTransferUser={handleTransferToUser}
+                  showAIChat={showAIChat}
+                  onToggleAIChat={() => setShowAIChat(!showAIChat)}
+                  aiWebhooks={aiWebhooks}
                 />
               </div>
             </div>

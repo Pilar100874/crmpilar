@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus } from "lucide-react";
+import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,6 +46,10 @@ interface ChatInputProps {
   selectedTransferUser?: string | null;
   onTransferUserChange?: (userId: string) => void;
   onTransferUser?: () => void;
+  // AI Chat props
+  showAIChat?: boolean;
+  onToggleAIChat?: () => void;
+  aiWebhooks?: any[];
 }
 
 export default function ChatInput({ 
@@ -66,7 +70,10 @@ export default function ChatInput({
   availableUsers = [],
   selectedTransferUser,
   onTransferUserChange,
-  onTransferUser
+  onTransferUser,
+  showAIChat = false,
+  onToggleAIChat,
+  aiWebhooks = []
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -513,6 +520,20 @@ export default function ChatInput({
                   </div>
                 </PopoverContent>
             </Popover>
+          )}
+
+          {/* AI Chat Button */}
+          {aiWebhooks.length > 0 && (
+            <Button
+              variant={showAIChat ? "default" : "outline"}
+              size="icon"
+              onClick={onToggleAIChat}
+              disabled={aiWebhooks.length === 0}
+              title="Chat com IA"
+              className="rounded-full"
+            >
+              <Sparkles className="h-4 w-4" />
+            </Button>
           )}
 
           {/* Auto-suggestion toggle */}
