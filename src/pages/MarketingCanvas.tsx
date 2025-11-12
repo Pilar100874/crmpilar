@@ -7,8 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { exportCanvasToPNG, exportCanvasToJSON } from "@/lib/canvasExport";
 import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
-import { addToCart } from "@/lib/cart";
 import { saveProject } from "@/lib/projectStorage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import BottomTabBar from "@/components/editor/BottomTabBar";
@@ -64,14 +62,11 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedObjectType, setSelectedObjectType] = useState<string | null>(null);
   const [userSelectedPanel, setUserSelectedPanel] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
-  const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [productData, setProductData] = useState<any>(null);
   const isMobile = useIsMobile();
-  const isEditingCartItem = sessionStorage.getItem('editingCartItemId') !== null;
 
   // Check if canvas has content (excluding masks/guides)
   const hasCanvasContent = () => {
@@ -256,93 +251,6 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
     handleConfirmExit();
   };
 
-  const handleAddToCartClick = () => {
-    if (isEditingCartItem) {
-      setShowSaveConfirmDialog(true);
-    } else {
-      handleAddToCart();
-    }
-  };
-
-  const handleAddToCart = async () => {
-    const productData = sessionStorage.getItem('productForDesign');
-    if (!productData) {
-      toast.error('Dados do produto não encontrados');
-      return;
-    }
-
-    const product = JSON.parse(productData);
-    const fabricCanvas = (window as any).fabricCanvas;
-    if (!fabricCanvas) {
-      toast.error('Canvas não encontrado');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const pngBlob = await exportCanvasToPNG(fabricCanvas, 300);
-      const pngFile = new File([pngBlob], `design-${Date.now()}.png`, { type: 'image/png' });
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('ar-previews')
-        .upload(`designs/${Date.now()}-${pngFile.name}`, pngFile, {
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('ar-previews')
-        .getPublicUrl(uploadData.path);
-
-      const designJson = exportCanvasToJSON(fabricCanvas);
-
-      try {
-        const pngDataUrl = fabricCanvas.toDataURL({ format: 'png', quality: 0.8 });
-        const projectName = `${product.name} - ${new Date().toLocaleDateString()}`;
-        saveProject(projectName, designJson, pngDataUrl);
-      } catch (error) {
-        console.error('Error saving to projects:', error);
-      }
-
-      const editingId = sessionStorage.getItem('editingCartItemId');
-      
-      if (editingId) {
-        const { updateCartItem } = await import('@/lib/cart');
-        updateCartItem(editingId, {
-          designPngUrl: publicUrl,
-          designJson: designJson,
-        });
-        sessionStorage.removeItem('editingCartItemId');
-        toast.success('Design atualizado no carrinho!');
-      } else {
-        addToCart({
-          productId: product.id,
-          productName: product.name,
-          productCode: product.codigo || product.code || 'N/A',
-          quantity: product.quantity || 1,
-          price: product.price,
-          designPngUrl: publicUrl,
-          designJson: designJson,
-          grupo: product.grupo,
-          subgrupo: product.subgrupo,
-          tamanho: product.tamanho,
-          material: product.material,
-          papel: product.papel,
-          coating: product.coating,
-          cor: product.cor,
-        });
-        toast.success('Produto adicionado ao carrinho!');
-      }
-
-      navigate('/cart');
-    } catch (error: any) {
-      console.error('Error saving design:', error);
-      toast.error(`Erro ao salvar design: ${error.message || 'Erro desconhecido'}`);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const renderPanel = () => {
     if (userSelectedPanel) {
@@ -470,18 +378,6 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
             <CanvasWorkspace selectedSize={selectedSize} />
             <FloatingObjectToolbar />
             <ObjectActionsMenu />
-            
-            <div className="absolute bottom-4 right-4 z-10">
-              <Button 
-                onClick={handleAddToCartClick} 
-                disabled={saving}
-                size="sm"
-                className="gap-2 shadow-lg"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {saving ? 'Salvando...' : isEditingCartItem ? 'Salvar modificação' : 'Adicionar ao Carrinho'}
-              </Button>
-            </div>
           </div>
 
         <div className="lg:hidden">
@@ -524,27 +420,6 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={showSaveConfirmDialog} onOpenChange={setShowSaveConfirmDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar modificação</AlertDialogTitle>
-              <AlertDialogDescription>
-                Deseja salvar as modificações feitas neste design?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-              <AlertDialogCancel onClick={() => setShowSaveConfirmDialog(false)}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={() => {
-                setShowSaveConfirmDialog(false);
-                handleAddToCart();
-              }}>
-                Salvar modificação
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         <TemplateSelectionDialog
           open={showTemplateDialog}
