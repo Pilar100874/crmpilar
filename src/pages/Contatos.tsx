@@ -652,35 +652,24 @@ export default function Contatos() {
     try {
       const vinculos = [];
       
-      if (novosUsuariosVinculo.length > 0 && novosSegmentosVinculo.length > 0) {
-        for (const usuarioId of novosUsuariosVinculo) {
-          for (const segmentoId of novosSegmentosVinculo) {
-            vinculos.push({
-              customer_id: editingContact.id,
-              usuario_id: usuarioId,
-              segmento_id: segmentoId,
-              estabelecimento_id: estabelecimentoId,
-            });
-          }
-        }
-      } else if (novosUsuariosVinculo.length > 0) {
-        for (const usuarioId of novosUsuariosVinculo) {
-          vinculos.push({
-            customer_id: editingContact.id,
-            usuario_id: usuarioId,
-            segmento_id: null,
-            estabelecimento_id: estabelecimentoId,
-          });
-        }
-      } else if (novosSegmentosVinculo.length > 0) {
-        for (const segmentoId of novosSegmentosVinculo) {
-          vinculos.push({
-            customer_id: editingContact.id,
-            usuario_id: null,
-            segmento_id: segmentoId,
-            estabelecimento_id: estabelecimentoId,
-          });
-        }
+      // Criar vínculos independentes para usuários
+      for (const usuarioId of novosUsuariosVinculo) {
+        vinculos.push({
+          customer_id: editingContact.id,
+          usuario_id: usuarioId,
+          segmento_id: null,
+          estabelecimento_id: estabelecimentoId,
+        });
+      }
+      
+      // Criar vínculos independentes para segmentos
+      for (const segmentoId of novosSegmentosVinculo) {
+        vinculos.push({
+          customer_id: editingContact.id,
+          usuario_id: null,
+          segmento_id: segmentoId,
+          estabelecimento_id: estabelecimentoId,
+        });
       }
 
       const { error } = await supabase

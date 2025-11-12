@@ -163,23 +163,11 @@ export default function VinculosEmpresas() {
           .delete()
           .eq("empresa_id", empresa.id);
 
-        // Criar novos vínculos combinando usuários e segmentos selecionados
+        // Criar novos vínculos independentes (usuário e segmento são separados)
         const vinculos = [];
         
-        if (alterarUsuario && novosUsuariosIds.length > 0 && alterarSegmento && novosSegmentosIds.length > 0) {
-          // Criar vínculo para cada combinação usuário x segmento
-          for (const usuarioId of novosUsuariosIds) {
-            for (const segmentoId of novosSegmentosIds) {
-              vinculos.push({
-                empresa_id: empresa.id,
-                usuario_id: usuarioId,
-                segmento_id: segmentoId,
-                estabelecimento_id: estabelecimentoId,
-              });
-            }
-          }
-        } else if (alterarUsuario && novosUsuariosIds.length > 0) {
-          // Apenas usuários
+        // Adicionar vínculos de usuário (independentes)
+        if (alterarUsuario && novosUsuariosIds.length > 0) {
           for (const usuarioId of novosUsuariosIds) {
             vinculos.push({
               empresa_id: empresa.id,
@@ -188,8 +176,10 @@ export default function VinculosEmpresas() {
               estabelecimento_id: estabelecimentoId,
             });
           }
-        } else if (alterarSegmento && novosSegmentosIds.length > 0) {
-          // Apenas segmentos
+        }
+        
+        // Adicionar vínculos de segmento (independentes)
+        if (alterarSegmento && novosSegmentosIds.length > 0) {
           for (const segmentoId of novosSegmentosIds) {
             vinculos.push({
               empresa_id: empresa.id,
