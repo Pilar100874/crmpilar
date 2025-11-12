@@ -46,11 +46,6 @@ export default function BotCreate() {
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  
-  // Dialog para editar canais
-  const [editCanaisDialogOpen, setEditCanaisDialogOpen] = useState(false);
-  const [editingCanais, setEditingCanais] = useState<string[]>([]);
-  const [isSavingCanais, setIsSavingCanais] = useState(false);
 
   // WhatsApp Sessions
   const [whatsappSessions, setWhatsappSessions] = useState<any[]>([]);
@@ -367,6 +362,7 @@ export default function BotCreate() {
         return;
       }
 
+      // Verificar se já existe um bot com este nome
       const { data: existingBots } = await supabase
         .from("bot_flows")
         .select("name")
@@ -379,6 +375,7 @@ export default function BotCreate() {
         return;
       }
 
+      // Duplicar o bot
       const { error } = await supabase
         .from("bot_flows")
         .insert({
@@ -406,36 +403,6 @@ export default function BotCreate() {
     }
   };
 
-  const handleEditCanais = async () => {
-    if (!selectedBot || editingCanais.length === 0) {
-      toast.error("Selecione pelo menos um canal");
-      return;
-    }
-
-    setIsSavingCanais(true);
-
-    try {
-      const { error } = await supabase
-        .from("bot_flows")
-        .update({ canais: editingCanais })
-        .eq("id", selectedBot.id);
-
-      if (error) throw error;
-
-      toast.success("Canais atualizados com sucesso!");
-      setEditCanaisDialogOpen(false);
-      setEditingCanais([]);
-      setSelectedBot(null);
-      closeOverlays();
-      await loadBots();
-    } catch (error) {
-      console.error("Error updating canais:", error);
-      toast.error("Erro ao atualizar canais");
-    } finally {
-      setIsSavingCanais(false);
-    }
-  };
-
   const handleRenameBot = async () => {
     if (!renameName.trim()) {
       toast.error("Por favor, informe um novo nome para o bot");
@@ -455,6 +422,7 @@ export default function BotCreate() {
         return;
       }
 
+      // Verificar se já existe outro bot com este nome
       const { data: existingBots } = await supabase
         .from("bot_flows")
         .select("id, name")
@@ -467,6 +435,7 @@ export default function BotCreate() {
         return;
       }
 
+      // Renomear o bot
       const { error } = await supabase
         .from("bot_flows")
         .update({ 
@@ -596,18 +565,6 @@ export default function BotCreate() {
                               }}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Renomear
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuId(null);
-                                  setSelectedBot(bot);
-                                  setEditingCanais(bot.canais || ["whatsapp"]);
-                                  setEditCanaisDialogOpen(true);
-                                }}
-                              >
-                                <Smartphone className="w-4 h-4 mr-2" />
-                                Editar Canais
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
@@ -888,78 +845,6 @@ export default function BotCreate() {
               disabled={!duplicateName.trim() || isDuplicating}
             >
               {isDuplicating ? "Duplicando..." : "Duplicar Bot"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de editar canais */}
-      <Dialog 
-        open={editCanaisDialogOpen} 
-        onOpenChange={(open) => {
-          setEditCanaisDialogOpen(open);
-          if (!open) {
-            setEditingCanais([]);
-            setSelectedBot(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Editar Canais do Bot</DialogTitle>
-            <DialogDescription>
-              Selecione em quais canais este bot poderá funcionar
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Canais de Atendimento *</Label>
-              <div className="space-y-2">
-                {[
-                  { id: "whatsapp", label: "WhatsApp" },
-                  { id: "webchat", label: "WebChat" },
-                  { id: "telegram", label: "Telegram" },
-                  { id: "facebook", label: "Facebook" },
-                  { id: "instagram", label: "Instagram" }
-                ].map((canal) => (
-                  <label key={canal.id} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editingCanais.includes(canal.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setEditingCanais([...editingCanais, canal.id]);
-                        } else {
-                          setEditingCanais(editingCanais.filter(c => c !== canal.id));
-                        }
-                      }}
-                      className="rounded border-gray-300"
-                    />
-                    <span className="text-sm">{canal.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setEditingCanais([]);
-                setEditCanaisDialogOpen(false);
-                setSelectedBot(null);
-              }}
-              disabled={isSavingCanais}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              onClick={handleEditCanais}
-              disabled={editingCanais.length === 0 || isSavingCanais}
-            >
-              {isSavingCanais ? "Salvando..." : "Salvar Canais"}
             </Button>
           </DialogFooter>
         </DialogContent>
