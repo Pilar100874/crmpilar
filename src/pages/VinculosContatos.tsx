@@ -46,8 +46,8 @@ export default function VinculosContatos() {
   // Step 2 - Definição de alterações
   const [alterarUsuario, setAlterarUsuario] = useState(false);
   const [alterarSegmento, setAlterarSegmento] = useState(false);
-  const [novoUsuarioId, setNovoUsuarioId] = useState("");
-  const [novoSegmentoId, setNovoSegmentoId] = useState("");
+  const [novosUsuariosIds, setNovosUsuariosIds] = useState<string[]>([]);
+  const [novosSegmentosIds, setNovosSegmentosIds] = useState<string[]>([]);
 
   // Step 4 - Processamento
   const [isProcessing, setIsProcessing] = useState(false);
@@ -154,26 +154,54 @@ export default function VinculosContatos() {
       const contato = contatosSelecionados[i];
       
       try {
-        if (contato.vinculo_id) {
-          // Atualizar vínculo existente
-          const updates: any = {};
-          if (alterarUsuario) updates.usuario_id = novoUsuarioId || null;
-          if (alterarSegmento) updates.segmento_id = novoSegmentoId || null;
+        // Remover vínculos existentes do contato
+        await supabase
+          .from("customer_vinculos")
+          .delete()
+          .eq("customer_id", contato.id);
 
+        // Criar novos vínculos combinando usuários e segmentos selecionados
+        const vinculos = [];
+        
+        if (alterarUsuario && novosUsuariosIds.length > 0 && alterarSegmento && novosSegmentosIds.length > 0) {
+          // Criar vínculo para cada combinação usuário x segmento
+          for (const usuarioId of novosUsuariosIds) {
+            for (const segmentoId of novosSegmentosIds) {
+              vinculos.push({
+                customer_id: contato.id,
+                usuario_id: usuarioId,
+                segmento_id: segmentoId,
+                estabelecimento_id: estabelecimentoId,
+              });
+            }
+          }
+        } else if (alterarUsuario && novosUsuariosIds.length > 0) {
+          // Apenas usuários
+          for (const usuarioId of novosUsuariosIds) {
+            vinculos.push({
+              customer_id: contato.id,
+              usuario_id: usuarioId,
+              segmento_id: null,
+              estabelecimento_id: estabelecimentoId,
+            });
+          }
+        } else if (alterarSegmento && novosSegmentosIds.length > 0) {
+          // Apenas segmentos
+          for (const segmentoId of novosSegmentosIds) {
+            vinculos.push({
+              customer_id: contato.id,
+              usuario_id: null,
+              segmento_id: segmentoId,
+              estabelecimento_id: estabelecimentoId,
+            });
+          }
+        }
+
+        // Inserir novos vínculos
+        if (vinculos.length > 0) {
           const { error } = await supabase
             .from("customer_vinculos")
-            .update(updates)
-            .eq("id", contato.vinculo_id);
-
-          if (error) throw error;
-        } else {
-          // Criar novo vínculo
-          const { error } = await supabase.from("customer_vinculos").insert({
-            customer_id: contato.id,
-            usuario_id: alterarUsuario ? (novoUsuarioId || null) : null,
-            segmento_id: alterarSegmento ? (novoSegmentoId || null) : null,
-            estabelecimento_id: estabelecimentoId,
-          });
+            .insert(vinculos);
 
           if (error) throw error;
         }
@@ -207,8 +235,8 @@ export default function VinculosContatos() {
     setSelectedContatos([]);
     setAlterarUsuario(false);
     setAlterarSegmento(false);
-    setNovoUsuarioId("");
-    setNovoSegmentoId("");
+    setNovosUsuariosIds([]);
+    setNovosSegmentosIds([]);
     setProcessedCount(0);
     setErrors([]);
     setCompleted(false);
@@ -268,12 +296,12 @@ export default function VinculosContatos() {
             segmentos={segmentos}
             alterarUsuario={alterarUsuario}
             alterarSegmento={alterarSegmento}
-            novoUsuarioId={novoUsuarioId}
-            novoSegmentoId={novoSegmentoId}
+            novosUsuariosIds={novosUsuariosIds}
+            novosSegmentosIds={novosSegmentosIds}
             onAlterarUsuarioChange={setAlterarUsuario}
             onAlterarSegmentoChange={setAlterarSegmento}
-            onNovoUsuarioChange={setNovoUsuarioId}
-            onNovoSegmentoChange={setNovoSegmentoId}
+            onNovosUsuariosChange={setNovosUsuariosIds}
+            onNovosSegmentosChange={setNovosSegmentosIds}
             selectedCount={selectedContatos.length}
           />
         )}
@@ -284,8 +312,8 @@ export default function VinculosContatos() {
             segmentos={segmentos}
             alterarUsuario={alterarUsuario}
             alterarSegmento={alterarSegmento}
-            novoUsuarioId={novoUsuarioId}
-            novoSegmentoId={novoSegmentoId}
+            novosUsuariosIds={novosUsuariosIds}
+            novosSegmentosIds={novosSegmentosIds}
           />
         )}
         {currentStep === 4 && (

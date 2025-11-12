@@ -34,8 +34,8 @@ interface Props {
   segmentos: Segmento[];
   alterarUsuario: boolean;
   alterarSegmento: boolean;
-  novoUsuarioId: string;
-  novoSegmentoId: string;
+  novosUsuariosIds: string[];
+  novosSegmentosIds: string[];
 }
 
 export function VinculosWizardStep3({
@@ -44,11 +44,11 @@ export function VinculosWizardStep3({
   segmentos,
   alterarUsuario,
   alterarSegmento,
-  novoUsuarioId,
-  novoSegmentoId,
+  novosUsuariosIds,
+  novosSegmentosIds,
 }: Props) {
-  const novoUsuario = usuarios.find((u) => u.id === novoUsuarioId);
-  const novoSegmento = segmentos.find((s) => s.id === novoSegmentoId);
+  const novosUsuarios = usuarios.filter((u) => novosUsuariosIds.includes(u.id));
+  const novosSegmentos = segmentos.filter((s) => novosSegmentosIds.includes(s.id));
 
   return (
     <div className="space-y-6">
@@ -66,14 +66,14 @@ export function VinculosWizardStep3({
               <li>• <strong>{empresasSelecionadas.length}</strong> empresa(s) serão alteradas</li>
               {alterarUsuario && (
                 <li>
-                  • Usuário será {novoUsuarioId ? "alterado" : "removido"}
-                  {novoUsuario && `: ${novoUsuario.nome}`}
+                  • {novosUsuariosIds.length > 0 ? `${novosUsuariosIds.length} usuário(s) vinculado(s)` : "Usuários serão removidos"}
+                  {novosUsuarios.length > 0 && `: ${novosUsuarios.map(u => u.nome).join(", ")}`}
                 </li>
               )}
               {alterarSegmento && (
                 <li>
-                  • Segmento será {novoSegmentoId ? "alterado" : "removido"}
-                  {novoSegmento && `: ${novoSegmento.nome}`}
+                  • {novosSegmentosIds.length > 0 ? `${novosSegmentosIds.length} segmento(s) vinculado(s)` : "Segmentos serão removidos"}
+                  {novosSegmentos.length > 0 && `: ${novosSegmentos.map(s => s.nome).join(", ")}`}
                 </li>
               )}
             </ul>
@@ -111,19 +111,13 @@ export function VinculosWizardStep3({
                       </TableCell>
                       {alterarUsuario && (
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            {usuarioAtual ? (
-                              <Badge variant="outline" className="bg-secondary/50">
-                                {usuarioAtual.nome}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">Nenhum</span>
-                            )}
-                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                            {novoUsuario ? (
-                              <Badge variant="default" className="bg-primary">
-                                {novoUsuario.nome}
-                              </Badge>
+                          <div className="flex flex-col gap-2">
+                            {novosUsuarios.length > 0 ? (
+                              novosUsuarios.map(usuario => (
+                                <Badge key={usuario.id} variant="default" className="bg-primary">
+                                  {usuario.nome}
+                                </Badge>
+                              ))
                             ) : (
                               <span className="text-muted-foreground text-xs">Nenhum</span>
                             )}
@@ -132,19 +126,13 @@ export function VinculosWizardStep3({
                       )}
                       {alterarSegmento && (
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            {segmentoAtual ? (
-                              <Badge variant="outline" className="bg-secondary/50">
-                                {segmentoAtual.nome}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">Nenhum</span>
-                            )}
-                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                            {novoSegmento ? (
-                              <Badge variant="default" className="bg-primary">
-                                {novoSegmento.nome}
-                              </Badge>
+                          <div className="flex flex-col gap-2">
+                            {novosSegmentos.length > 0 ? (
+                              novosSegmentos.map(segmento => (
+                                <Badge key={segmento.id} variant="default" className="bg-primary">
+                                  {segmento.nome}
+                                </Badge>
+                              ))
                             ) : (
                               <span className="text-muted-foreground text-xs">Nenhum</span>
                             )}

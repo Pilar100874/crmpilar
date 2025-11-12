@@ -21,12 +21,12 @@ interface Props {
   segmentos: Segmento[];
   alterarUsuario: boolean;
   alterarSegmento: boolean;
-  novoUsuarioId: string;
-  novoSegmentoId: string;
+  novosUsuariosIds: string[];
+  novosSegmentosIds: string[];
   onAlterarUsuarioChange: (value: boolean) => void;
   onAlterarSegmentoChange: (value: boolean) => void;
-  onNovoUsuarioChange: (id: string) => void;
-  onNovoSegmentoChange: (id: string) => void;
+  onNovosUsuariosChange: (ids: string[]) => void;
+  onNovosSegmentosChange: (ids: string[]) => void;
   selectedCount: number;
 }
 
@@ -35,14 +35,27 @@ export function VinculosWizardStep2({
   segmentos,
   alterarUsuario,
   alterarSegmento,
-  novoUsuarioId,
-  novoSegmentoId,
+  novosUsuariosIds,
+  novosSegmentosIds,
   onAlterarUsuarioChange,
   onAlterarSegmentoChange,
-  onNovoUsuarioChange,
-  onNovoSegmentoChange,
+  onNovosUsuariosChange,
+  onNovosSegmentosChange,
   selectedCount,
 }: Props) {
+  const handleUsuarioToggle = (usuarioId: string) => {
+    const newIds = novosUsuariosIds.includes(usuarioId)
+      ? novosUsuariosIds.filter(id => id !== usuarioId)
+      : [...novosUsuariosIds, usuarioId];
+    onNovosUsuariosChange(newIds);
+  };
+
+  const handleSegmentoToggle = (segmentoId: string) => {
+    const newIds = novosSegmentosIds.includes(segmentoId)
+      ? novosSegmentosIds.filter(id => id !== segmentoId)
+      : [...novosSegmentosIds, segmentoId];
+    onNovosSegmentosChange(newIds);
+  };
   return (
     <div className="space-y-6">
       <Card>
@@ -81,21 +94,37 @@ export function VinculosWizardStep2({
             </div>
 
             {alterarUsuario && (
-              <div className="ml-8 space-y-2">
-                <Label htmlFor="novo-usuario">Selecione o Usuário</Label>
-                <Select value={novoUsuarioId || "none"} onValueChange={(value) => onNovoUsuarioChange(value === "none" ? "" : value)}>
-                  <SelectTrigger id="novo-usuario">
-                    <SelectValue placeholder="Escolha um usuário..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Remover vínculo de usuário</SelectItem>
-                    {usuarios.map((usuario) => (
-                      <SelectItem key={usuario.id} value={usuario.id}>
+              <div className="ml-8 space-y-3">
+                <Label>Selecione os Usuários</Label>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
+                  {usuarios.map((usuario) => (
+                    <div key={usuario.id} className="flex items-center space-x-3 p-2 hover:bg-accent/50 rounded">
+                      <Checkbox
+                        id={`usuario-${usuario.id}`}
+                        checked={novosUsuariosIds.includes(usuario.id)}
+                        onCheckedChange={() => handleUsuarioToggle(usuario.id)}
+                      />
+                      <label
+                        htmlFor={`usuario-${usuario.id}`}
+                        className="flex-1 text-sm font-medium cursor-pointer"
+                      >
                         {usuario.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {novosUsuariosIds.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {novosUsuariosIds.map(id => {
+                      const usuario = usuarios.find(u => u.id === id);
+                      return usuario ? (
+                        <Badge key={id} variant="secondary">
+                          {usuario.nome}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -121,21 +150,37 @@ export function VinculosWizardStep2({
             </div>
 
             {alterarSegmento && (
-              <div className="ml-8 space-y-2">
-                <Label htmlFor="novo-segmento">Selecione o Segmento</Label>
-                <Select value={novoSegmentoId || "none"} onValueChange={(value) => onNovoSegmentoChange(value === "none" ? "" : value)}>
-                  <SelectTrigger id="novo-segmento">
-                    <SelectValue placeholder="Escolha um segmento..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Remover vínculo de segmento</SelectItem>
-                    {segmentos.map((segmento) => (
-                      <SelectItem key={segmento.id} value={segmento.id}>
+              <div className="ml-8 space-y-3">
+                <Label>Selecione os Segmentos</Label>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
+                  {segmentos.map((segmento) => (
+                    <div key={segmento.id} className="flex items-center space-x-3 p-2 hover:bg-accent/50 rounded">
+                      <Checkbox
+                        id={`segmento-${segmento.id}`}
+                        checked={novosSegmentosIds.includes(segmento.id)}
+                        onCheckedChange={() => handleSegmentoToggle(segmento.id)}
+                      />
+                      <label
+                        htmlFor={`segmento-${segmento.id}`}
+                        className="flex-1 text-sm font-medium cursor-pointer"
+                      >
                         {segmento.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {novosSegmentosIds.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {novosSegmentosIds.map(id => {
+                      const segmento = segmentos.find(s => s.id === id);
+                      return segmento ? (
+                        <Badge key={id} variant="secondary">
+                          {segmento.nome}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -2554,37 +2554,50 @@ export default function Contatos() {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Vínculos do Contato</h3>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Visualize os vínculos deste contato com usuários e segmentos.
+                    Visualize todos os vínculos deste contato com usuários e segmentos.
                   </p>
                 </div>
 
                 {editingContact && (() => {
-                  const vinculo = vinculos.find(v => v.customer_id === editingContact.id);
-                  const usuario = vinculo?.usuario_id ? usuarios.find(u => u.id === vinculo.usuario_id) : null;
-                  const segmento = vinculo?.segmento_id ? segmentos.find(s => s.id === vinculo.segmento_id) : null;
+                  const vinculosDoContato = vinculos.filter(v => v.customer_id === editingContact.id);
 
                   return (
                     <div className="space-y-4">
-                      <div className="p-4 border rounded-lg bg-muted/30">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
-                              Usuário Responsável
-                            </Label>
-                            <p className="text-sm font-medium">
-                              {usuario ? usuario.nome : <span className="text-muted-foreground">Nenhum usuário vinculado</span>}
-                            </p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
-                              Segmento
-                            </Label>
-                            <p className="text-sm font-medium">
-                              {segmento ? segmento.nome : <span className="text-muted-foreground">Nenhum segmento vinculado</span>}
-                            </p>
-                          </div>
+                      {vinculosDoContato.length > 0 ? (
+                        <div className="space-y-3">
+                          {vinculosDoContato.map((vinculo) => {
+                            const usuario = vinculo.usuario_id ? usuarios.find(u => u.id === vinculo.usuario_id) : null;
+                            const segmento = vinculo.segmento_id ? segmentos.find(s => s.id === vinculo.segmento_id) : null;
+
+                            return (
+                              <div key={vinculo.id} className="p-4 border rounded-lg bg-muted/30">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+                                      Usuário
+                                    </Label>
+                                    <p className="text-sm font-medium">
+                                      {usuario ? usuario.nome : <span className="text-muted-foreground">Nenhum</span>}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+                                      Segmento
+                                    </Label>
+                                    <p className="text-sm font-medium">
+                                      {segmento ? segmento.nome : <span className="text-muted-foreground">Nenhum</span>}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
+                      ) : (
+                        <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                          <p className="text-sm text-muted-foreground">Nenhum vínculo cadastrado</p>
+                        </div>
+                      )}
                       
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
