@@ -135,6 +135,18 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">;
 
 function toast({ ...props }: Toast) {
+  // Verificar se as mensagens de confirmação estão habilitadas
+  const showConfirmationMessages = localStorage.getItem('showConfirmationMessages');
+  
+  // Se estiver desabilitado (false) e não for uma mensagem de erro, não mostrar
+  if (showConfirmationMessages === 'false' && props.variant !== 'destructive') {
+    return {
+      id: '',
+      dismiss: () => {},
+      update: () => {},
+    };
+  }
+
   const id = genId();
 
   const update = (props: ToasterToast) =>

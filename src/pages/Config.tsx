@@ -4,14 +4,32 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File } from "lucide-react";
+import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell } from "lucide-react";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 
 export default function Config() {
   const { openSubmenu } = useLayout();
+  const [showConfirmationMessages, setShowConfirmationMessages] = useState(
+    localStorage.getItem('showConfirmationMessages') !== 'false'
+  );
+
+  const handleToggleConfirmationMessages = (checked: boolean) => {
+    setShowConfirmationMessages(checked);
+    localStorage.setItem('showConfirmationMessages', String(checked));
+    
+    if (checked) {
+      toast({
+        title: "Mensagens habilitadas",
+        description: "As mensagens de confirmação voltarão a aparecer",
+      });
+    }
+  };
 
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
@@ -28,6 +46,42 @@ export default function Config() {
         </p>
 
         <Accordion type="single" collapsible className="space-y-4 max-w-4xl">
+          <AccordionItem value="notificacoes-sistema" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Notificações do Sistema</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configure a exibição de mensagens de confirmação
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="show-confirmations" className="text-base font-medium">
+                      Mostrar mensagens de confirmação
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Exibe notificações como "Bot ativado", "Mensagem enviada", etc.
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-confirmations"
+                    checked={showConfirmationMessages}
+                    onCheckedChange={handleToggleConfirmationMessages}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mensagens de erro sempre serão exibidas, independente desta configuração.
+                </p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="cadastro-estabelecimentos" className="border rounded-lg bg-white shadow-sm">
             <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
