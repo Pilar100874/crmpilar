@@ -1070,34 +1070,41 @@ ${recentMessages}
               {showAIChat && aiWebhooks.length > 0 && (
                 <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl">
                   <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-2.5 border-b border-primary/20 rounded-t-2xl">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                         <span className="text-sm font-semibold">Chat com IA</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-1 justify-end">
+                        {aiWebhooks.length > 1 && (
+                          <div className="flex items-center gap-2">
+                            <Label className="text-xs text-muted-foreground whitespace-nowrap">Webhook:</Label>
+                            <Select
+                              value={selectedAIWebhook || ""}
+                              onValueChange={setSelectedAIWebhook}
+                            >
+                              <SelectTrigger className="h-7 text-xs bg-background/80 border-border/50 rounded-full w-[180px]">
+                                <SelectValue placeholder="Selecione o webhook" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {aiWebhooks.map(webhook => (
+                                  <SelectItem key={webhook.id} value={webhook.id}>
+                                    {webhook.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => setShowContextBox(!showContextBox)}
-                          className="h-7 text-xs gap-1 hover:bg-primary/20 rounded-full"
+                          className="h-7 text-xs gap-1 hover:bg-primary/20 rounded-full flex-shrink-0"
                         >
                           <FileText className="h-3 w-3" />
                           {showContextBox ? "Ocultar contexto" : "Adicionar contexto"}
                         </Button>
-                        {aiWebhooks.length > 1 && (
-                          <select
-                            value={selectedAIWebhook || ""}
-                            onChange={(e) => setSelectedAIWebhook(e.target.value)}
-                            className="text-xs border rounded-full px-2 py-1 bg-card h-7"
-                          >
-                            {aiWebhooks.map(webhook => (
-                              <option key={webhook.id} value={webhook.id}>
-                                {webhook.name}
-                              </option>
-                            ))}
-                          </select>
-                        )}
                       </div>
                     </div>
                   </div>
