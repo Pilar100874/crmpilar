@@ -404,6 +404,14 @@ export default function BotCreate() {
     }
   };
 
+  const canalLabels: Record<string, string> = {
+    whatsapp: 'WhatsApp',
+    webchat: 'WebChat',
+    telegram: 'Telegram',
+    facebook: 'Facebook',
+    instagram: 'Instagram'
+  };
+
   return (
     <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
         <div>
@@ -460,14 +468,6 @@ export default function BotCreate() {
             {['whatsapp', 'webchat', 'telegram', 'facebook', 'instagram'].map((canal) => {
               const canalBots = bots.filter(bot => bot.canais?.includes(canal));
               if (canalBots.length === 0) return null;
-
-              const canalLabels: Record<string, string> = {
-                whatsapp: 'WhatsApp',
-                webchat: 'WebChat',
-                telegram: 'Telegram',
-                facebook: 'Facebook',
-                instagram: 'Instagram'
-              };
 
               return (
                 <div key={canal} className="space-y-4">

@@ -1761,6 +1761,15 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
                   }}>
                     {welcomeMessage}
                   </div>
+                  <div style={{
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    color: '#666',
+                    textAlign: 'center',
+                    fontStyle: 'italic'
+                  }}>
+                    Preview apenas visual - o bot selecionado responderia aqui na versão real
+                  </div>
                 </div>
                 
                 {/* Input */}
@@ -1768,12 +1777,15 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
                   <input 
                     type="text" 
                     placeholder="Digite sua mensagem..."
+                    disabled
                     style={{
                       width: '100%',
                       padding: '10px',
                       border: '1px solid #e5e5e5',
                       borderRadius: '8px',
                       outline: 'none',
+                      background: '#f9f9f9',
+                      cursor: 'not-allowed'
                     }}
                   />
                 </div>
