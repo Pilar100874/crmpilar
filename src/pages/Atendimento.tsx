@@ -1210,9 +1210,10 @@ ${recentMessages}
                           }
                         }}
                         placeholder="Pergunte algo à IA..."
-                        className="flex-1 min-h-[44px] max-h-[120px] text-sm resize-none rounded-full px-4"
+                        className="flex-1 h-[44px] text-sm resize-none rounded-full px-4 overflow-hidden"
                         style={{ paddingTop: '12px', paddingBottom: '12px' }}
                         disabled={isAILoading}
+                        rows={1}
                       />
                       <Button
                         onClick={sendAIMessage}
