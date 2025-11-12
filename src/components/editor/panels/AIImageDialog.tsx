@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { FabricImage } from "fabric";
 import { useIsMobile } from "@/hooks/use-mobile";

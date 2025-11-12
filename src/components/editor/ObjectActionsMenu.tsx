@@ -13,7 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCanvas } from "@/contexts/CanvasContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { useState, useEffect } from "react";
 
 export const ObjectActionsMenu = () => {

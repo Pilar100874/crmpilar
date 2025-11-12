@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Loader2, RefreshCw, CheckCircle, AlertCircle, Download } from "lucide-react";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone } from "@/lib/masks";

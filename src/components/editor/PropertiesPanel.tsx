@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCanvas } from "@/contexts/CanvasContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Settings, Type, Bold, Italic, Underline, Palette, Search, Star, AlignLeft, AlignCenter, AlignRight, AlignJustify, Minus } from "lucide-react";
 import { FabricText, IText, Shadow } from "fabric";
 import { useEffect, useState } from "react";

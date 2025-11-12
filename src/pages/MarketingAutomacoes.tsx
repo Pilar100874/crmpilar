@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Zap, MoreVertical, Edit, Trash2, Power } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import NovaAutomacaoDialog from "@/components/marketing/NovaAutomacaoDialog";

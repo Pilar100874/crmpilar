@@ -4,7 +4,7 @@ import { Trash2, Download, Plus, Save, FileX } from "lucide-react";
 import { getProjects, deleteProject, SavedProject } from "@/lib/projectStorage";
 import { useState, useEffect } from "react";
 import { useCanvas } from "@/contexts/CanvasContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import {
   Dialog,
   DialogContent,

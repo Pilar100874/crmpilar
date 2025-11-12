@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Trash2, Plus, Eye, EyeOff, Play, Database, Globe, Edit, Link } from "lucide-react";
 import { Switch } from "@/components/ui/switch";

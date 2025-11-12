@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Database, Plus, Trash2, Play, Table } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DatabaseTableExplorer } from "./DatabaseTableExplorer";
 

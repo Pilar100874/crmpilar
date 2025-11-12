@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import ImageItemExtractor from "./ImageItemExtractor";
 import AddItemForm from "./AddItemForm";
 import OrcamentoItemCard from "./OrcamentoItemCard";

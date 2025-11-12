@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
 import { Play, Database, FileDown } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SQLEditorProps {

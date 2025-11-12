@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import "reportbro-designer/dist/reportbro.css";
 import "./reportbro-logos.css";

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Database, Variable, Type, Hash, Calendar, List, ToggleLeft, FileText } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 
 interface VariableExplorerProps {

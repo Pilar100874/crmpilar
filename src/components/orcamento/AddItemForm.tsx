@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Produto, ProdutoGrupo } from "@/types/orcamento";
 import ProductSearchFilters, { ProductFilters } from "./ProductSearchFilters";
 

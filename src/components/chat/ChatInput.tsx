@@ -15,7 +15,7 @@ import QuickRepliesSelector from "./QuickRepliesSelector";
 import QuickAttachmentsSelector from "./QuickAttachmentsSelector";
 import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface ChatInputProps {
   onSendMessage: (

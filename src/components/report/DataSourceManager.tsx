@@ -7,7 +7,7 @@ import { Plus, Trash2, Database } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface DataSource {
   id: string;

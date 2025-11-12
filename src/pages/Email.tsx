@@ -23,7 +23,7 @@ import {
   Settings,
   ArrowLeft,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { useNavigate, useParams } from "react-router-dom";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";

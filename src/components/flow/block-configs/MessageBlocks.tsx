@@ -9,7 +9,7 @@ import { Plus, X, Upload, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 

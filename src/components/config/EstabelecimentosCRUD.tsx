@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { EstabelecimentoDetalhes } from "./EstabelecimentoDetalhes";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";

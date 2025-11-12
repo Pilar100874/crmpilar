@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Trash2, Edit, Plus, X } from "lucide-react";
 import { WebhookConfig, WebhookType } from "@/pages/ChatWebhook";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { format } from "date-fns";
 import {
   Select,

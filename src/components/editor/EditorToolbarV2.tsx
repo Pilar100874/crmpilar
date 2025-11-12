@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download, Share2, ZoomIn, ZoomOut, Save, Copy, Home } from "lucide-react";
 import { useCanvas } from "@/contexts/CanvasContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { useState } from "react";
 import { saveProject } from "@/lib/projectStorage";
 import { useNavigate } from "react-router-dom";

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast-config';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CNPJData {

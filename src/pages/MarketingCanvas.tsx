@@ -5,7 +5,7 @@ import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
 import DesktopSidebar from "@/components/editor/DesktopSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { exportCanvasToPNG, exportCanvasToJSON } from "@/lib/canvasExport";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { addToCart } from "@/lib/cart";

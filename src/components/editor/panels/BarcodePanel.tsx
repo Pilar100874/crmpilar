@@ -6,7 +6,7 @@ import { useCanvas } from "@/contexts/CanvasContext";
 import { FabricImage } from "fabric";
 import JsBarcode from "jsbarcode";
 import QRCode from "qrcode";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Barcode, QrCode } from "lucide-react";
 
 type BarcodeType = "ean13" | "qrcode";

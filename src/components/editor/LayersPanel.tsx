@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { useCanvas } from "@/contexts/CanvasContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Layers, Eye, EyeOff, Trash2, GripVertical, Lock, Unlock, ChevronUp, ChevronDown } from "lucide-react";
 import { FabricObject } from "fabric";
 

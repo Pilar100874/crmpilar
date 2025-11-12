@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface NovaAutomacaoDialogProps {
   open: boolean;

@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { Textbox } from "fabric";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Heading1, Heading2, Type, Search, Star } from "lucide-react";
 
 const TextPanel = () => {

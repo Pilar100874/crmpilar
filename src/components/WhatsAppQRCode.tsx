@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Smartphone, RefreshCw, Copy, CheckCircle, AlertCircle, Info } from "lucide-react";
 
 export const WhatsAppQRCode = () => {

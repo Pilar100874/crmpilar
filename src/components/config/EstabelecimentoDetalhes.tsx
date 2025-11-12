@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Save, AlertCircle, ExternalLink, Eye, EyeOff } from "lucide-react";
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast } from "@/lib/toast-config";
 import {
   Dialog,
   DialogContent,

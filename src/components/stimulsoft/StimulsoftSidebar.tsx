@@ -9,7 +9,7 @@ import {
   Download,
   Link as LinkIcon
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface StimulsoftSidebarProps {
   onNew: () => void;

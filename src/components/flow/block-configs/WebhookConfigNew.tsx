@@ -8,7 +8,7 @@ import { VariableInput } from "@/components/flow/VariableInput";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface WebhookVariable {
   id: string;

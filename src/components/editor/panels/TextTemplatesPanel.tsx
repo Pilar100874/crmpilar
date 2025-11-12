@@ -1,7 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { Textbox } from "fabric";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface TextTemplate {
   id: string;

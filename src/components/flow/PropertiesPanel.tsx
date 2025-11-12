@@ -12,7 +12,7 @@ import { Trash2, Plus, X, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { VariableExplorer } from "./VariableExplorer";
 import { FlowVariable } from "./VariableManager";
 import { VariableInput, VariableTextarea } from "./VariableInput";

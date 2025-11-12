@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, FileText, Eye, Copy, Trash2, MoreVertical, Edit, Pencil } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import {
   Dialog,
   DialogContent,

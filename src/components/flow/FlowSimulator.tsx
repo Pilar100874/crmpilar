@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { maskCNPJ } from "@/lib/masks";
 import { BLOCK_DEFINITIONS } from "@/types/flow";

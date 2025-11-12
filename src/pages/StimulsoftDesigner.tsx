@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { StimulsoftSidebar } from "@/components/stimulsoft/StimulsoftSidebar";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 // Importar Stimulsoft
 declare const Stimulsoft: any;

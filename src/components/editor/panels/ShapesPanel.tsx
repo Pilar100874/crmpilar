@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { Rect, Circle, Triangle, Line, Polygon, Path } from "fabric";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 const ShapesPanel = () => {
   const { fabricCanvas } = useCanvas();

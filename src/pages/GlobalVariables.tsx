@@ -17,7 +17,7 @@ import { Globe, Type, Hash, Calendar, List as ListIcon, ToggleLeft, Lock, Unlock
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 type VariableType = "text" | "number" | "date" | "array" | "boolean";
 

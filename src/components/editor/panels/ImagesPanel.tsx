@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { FabricImage } from "fabric";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { applyOffsetWrap } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 

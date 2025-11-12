@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ZoomIn, ZoomOut, Box, Save, Download, Share2, Copy } from "lucide-react";
 import { useCanvas } from "@/contexts/CanvasContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { useState } from "react";
 import { saveProject } from "@/lib/projectStorage";
 import Preview3DDialog from "./Preview3DDialog";

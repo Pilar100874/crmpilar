@@ -9,7 +9,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";

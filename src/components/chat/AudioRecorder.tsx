@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface AudioRecorderProps {
   onAudioRecorded: (audioBlob: Blob, audioUrl: string) => void;

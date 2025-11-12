@@ -20,7 +20,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Trash2, Variable, Type, Hash, Calendar, List, ToggleLeft, Lock, Unlock, Globe, User } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 export type VariableType = "text" | "number" | "date" | "array" | "boolean";

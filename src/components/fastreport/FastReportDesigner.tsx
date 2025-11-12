@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast-config';
 import { Save, X, Loader2 } from 'lucide-react';
 
 interface FastReportDesignerProps {

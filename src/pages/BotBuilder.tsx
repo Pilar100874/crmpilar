@@ -40,7 +40,7 @@ import { BlockMonitor } from "@/components/flow/BlockMonitor";
 import { EmpresaFieldValidator } from "@/components/flow/EmpresaFieldValidator";
 import { ErrorDialog } from "@/components/flow/ErrorDialog";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 const nodeTypes = {

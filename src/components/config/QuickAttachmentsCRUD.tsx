@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Pencil, Trash2, X, Link as LinkIcon, FileUp, Upload, Image as ImageIcon, Search, File, FileText, FileSpreadsheet } from "lucide-react";
 import { createThumbnail, getFileTypeAccept, getFileTypeIcon } from "@/lib/imageUtils";
 import { ScrollArea } from "@/components/ui/scroll-area";

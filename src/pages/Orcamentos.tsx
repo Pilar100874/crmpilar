@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Orcamento, OrcamentoEtapa } from "@/types/orcamento";
 import { Plus, Search, Filter, LayoutGrid, List, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";

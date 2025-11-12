@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { Pencil, Trash2, Plus, X, Copy } from "lucide-react";
 
 interface QuickReply {

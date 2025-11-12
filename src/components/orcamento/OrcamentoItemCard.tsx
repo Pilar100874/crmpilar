@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Pencil, Trash2, Check, X } from "lucide-react";
 import { OrcamentoItem } from "@/types/orcamento";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 
 interface OrcamentoItemCardProps {
   item: OrcamentoItem;
