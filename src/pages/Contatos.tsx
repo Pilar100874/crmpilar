@@ -115,6 +115,10 @@ export default function Contatos() {
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [vinculos, setVinculos] = useState<any[]>([]);
   
+  // Estados para gerenciar vínculos na aba
+  const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
+  const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
+  
   // Gerenciamento de colunas da tabela - APENAS CAMPOS DE CONTATO
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
     { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
@@ -636,6 +640,81 @@ export default function Contatos() {
       setCompanyFields(companyFields.map(f => 
         f.id === fieldId ? { ...f, searchable: !f.searchable } : f
       ));
+    }
+  };
+
+  const handleAdicionarVinculo = async () => {
+    if (!estabelecimentoId || !editingContact || (novosUsuariosVinculo.length === 0 && novosSegmentosVinculo.length === 0)) {
+      toast.error("Selecione pelo menos um usuário ou segmento");
+      return;
+    }
+
+    try {
+      const vinculos = [];
+      
+      if (novosUsuariosVinculo.length > 0 && novosSegmentosVinculo.length > 0) {
+        for (const usuarioId of novosUsuariosVinculo) {
+          for (const segmentoId of novosSegmentosVinculo) {
+            vinculos.push({
+              customer_id: editingContact.id,
+              usuario_id: usuarioId,
+              segmento_id: segmentoId,
+              estabelecimento_id: estabelecimentoId,
+            });
+          }
+        }
+      } else if (novosUsuariosVinculo.length > 0) {
+        for (const usuarioId of novosUsuariosVinculo) {
+          vinculos.push({
+            customer_id: editingContact.id,
+            usuario_id: usuarioId,
+            segmento_id: null,
+            estabelecimento_id: estabelecimentoId,
+          });
+        }
+      } else if (novosSegmentosVinculo.length > 0) {
+        for (const segmentoId of novosSegmentosVinculo) {
+          vinculos.push({
+            customer_id: editingContact.id,
+            usuario_id: null,
+            segmento_id: segmentoId,
+            estabelecimento_id: estabelecimentoId,
+          });
+        }
+      }
+
+      const { error } = await supabase
+        .from("customer_vinculos")
+        .insert(vinculos);
+
+      if (error) throw error;
+
+      toast.success("Vínculos adicionados!");
+      setNovosUsuariosVinculo([]);
+      setNovosSegmentosVinculo([]);
+      await loadContacts();
+    } catch (error: any) {
+      if (error.message.includes("duplicate")) {
+        toast.error("Um ou mais vínculos já existem");
+      } else {
+        toast.error("Erro ao adicionar vínculos: " + error.message);
+      }
+    }
+  };
+
+  const handleRemoverVinculo = async (vinculoId: string) => {
+    try {
+      const { error } = await supabase
+        .from("customer_vinculos")
+        .delete()
+        .eq("id", vinculoId);
+
+      if (error) throw error;
+
+      toast.success("Vínculo removido!");
+      await loadContacts();
+    } catch (error: any) {
+      toast.error("Erro ao remover vínculo: " + error.message);
     }
   };
 
@@ -2500,83 +2579,6 @@ export default function Contatos() {
 
                 {editingContact ? (() => {
                   const vinculosDoContato = vinculos.filter(v => v.customer_id === editingContact.id);
-                  const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
-                  const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
-
-                  const handleAdicionarVinculo = async () => {
-                    if (!estabelecimentoId || (novosUsuariosVinculo.length === 0 && novosSegmentosVinculo.length === 0)) {
-                      toast.error("Selecione pelo menos um usuário ou segmento");
-                      return;
-                    }
-
-                    try {
-                      const vinculos = [];
-                      
-                      if (novosUsuariosVinculo.length > 0 && novosSegmentosVinculo.length > 0) {
-                        for (const usuarioId of novosUsuariosVinculo) {
-                          for (const segmentoId of novosSegmentosVinculo) {
-                            vinculos.push({
-                              customer_id: editingContact.id,
-                              usuario_id: usuarioId,
-                              segmento_id: segmentoId,
-                              estabelecimento_id: estabelecimentoId,
-                            });
-                          }
-                        }
-                      } else if (novosUsuariosVinculo.length > 0) {
-                        for (const usuarioId of novosUsuariosVinculo) {
-                          vinculos.push({
-                            customer_id: editingContact.id,
-                            usuario_id: usuarioId,
-                            segmento_id: null,
-                            estabelecimento_id: estabelecimentoId,
-                          });
-                        }
-                      } else if (novosSegmentosVinculo.length > 0) {
-                        for (const segmentoId of novosSegmentosVinculo) {
-                          vinculos.push({
-                            customer_id: editingContact.id,
-                            usuario_id: null,
-                            segmento_id: segmentoId,
-                            estabelecimento_id: estabelecimentoId,
-                          });
-                        }
-                      }
-
-                      const { error } = await supabase
-                        .from("customer_vinculos")
-                        .insert(vinculos);
-
-                      if (error) throw error;
-
-                      toast.success("Vínculos adicionados!");
-                      setNovosUsuariosVinculo([]);
-                      setNovosSegmentosVinculo([]);
-                      await loadContacts();
-                    } catch (error: any) {
-                      if (error.message.includes("duplicate")) {
-                        toast.error("Um ou mais vínculos já existem");
-                      } else {
-                        toast.error("Erro ao adicionar vínculos: " + error.message);
-                      }
-                    }
-                  };
-
-                  const handleRemoverVinculo = async (vinculoId: string) => {
-                    try {
-                      const { error } = await supabase
-                        .from("customer_vinculos")
-                        .delete()
-                        .eq("id", vinculoId);
-
-                      if (error) throw error;
-
-                      toast.success("Vínculo removido!");
-                      await loadContacts();
-                    } catch (error: any) {
-                      toast.error("Erro ao remover vínculo: " + error.message);
-                    }
-                  };
 
                   return (
                     <div className="space-y-4">

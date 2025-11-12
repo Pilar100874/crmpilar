@@ -78,6 +78,10 @@ export default function Empresas() {
 
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [vinculos, setVinculos] = useState<any[]>([]);
+  
+  // Estados para gerenciar vínculos na aba
+  const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
+  const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
 
   // Gerenciamento de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -902,6 +906,81 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     return sortConfig.direction === 'asc' 
       ? <ArrowUp className="w-3 h-3 text-primary" />
       : <ArrowDown className="w-3 h-3 text-primary" />;
+  };
+
+  const handleAdicionarVinculo = async () => {
+    if (!estabelecimentoId || !editingEmpresa || (novosUsuariosVinculo.length === 0 && novosSegmentosVinculo.length === 0)) {
+      toast.error("Selecione pelo menos um usuário ou segmento");
+      return;
+    }
+
+    try {
+      const vinculos = [];
+      
+      if (novosUsuariosVinculo.length > 0 && novosSegmentosVinculo.length > 0) {
+        for (const usuarioId of novosUsuariosVinculo) {
+          for (const segmentoId of novosSegmentosVinculo) {
+            vinculos.push({
+              empresa_id: editingEmpresa.id,
+              usuario_id: usuarioId,
+              segmento_id: segmentoId,
+              estabelecimento_id: estabelecimentoId,
+            });
+          }
+        }
+      } else if (novosUsuariosVinculo.length > 0) {
+        for (const usuarioId of novosUsuariosVinculo) {
+          vinculos.push({
+            empresa_id: editingEmpresa.id,
+            usuario_id: usuarioId,
+            segmento_id: null,
+            estabelecimento_id: estabelecimentoId,
+          });
+        }
+      } else if (novosSegmentosVinculo.length > 0) {
+        for (const segmentoId of novosSegmentosVinculo) {
+          vinculos.push({
+            empresa_id: editingEmpresa.id,
+            usuario_id: null,
+            segmento_id: segmentoId,
+            estabelecimento_id: estabelecimentoId,
+          });
+        }
+      }
+
+      const { error } = await supabase
+        .from("empresa_vinculos")
+        .insert(vinculos);
+
+      if (error) throw error;
+
+      toast.success("Vínculos adicionados!");
+      setNovosUsuariosVinculo([]);
+      setNovosSegmentosVinculo([]);
+      await fetchEmpresas(estabelecimentoId);
+    } catch (error: any) {
+      if (error.message.includes("duplicate")) {
+        toast.error("Um ou mais vínculos já existem");
+      } else {
+        toast.error("Erro ao adicionar vínculos: " + error.message);
+      }
+    }
+  };
+
+  const handleRemoverVinculo = async (vinculoId: string) => {
+    try {
+      const { error } = await supabase
+        .from("empresa_vinculos")
+        .delete()
+        .eq("id", vinculoId);
+
+      if (error) throw error;
+
+      toast.success("Vínculo removido!");
+      await fetchEmpresas(estabelecimentoId);
+    } catch (error: any) {
+      toast.error("Erro ao remover vínculo: " + error.message);
+    }
   };
 
   const renderContactField = (field: CustomField) => {
@@ -1788,83 +1867,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
                 {editingEmpresa ? (() => {
                   const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
-                  const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
-                  const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
-
-                  const handleAdicionarVinculo = async () => {
-                    if (!estabelecimentoId || (novosUsuariosVinculo.length === 0 && novosSegmentosVinculo.length === 0)) {
-                      toast.error("Selecione pelo menos um usuário ou segmento");
-                      return;
-                    }
-
-                    try {
-                      const vinculos = [];
-                      
-                      if (novosUsuariosVinculo.length > 0 && novosSegmentosVinculo.length > 0) {
-                        for (const usuarioId of novosUsuariosVinculo) {
-                          for (const segmentoId of novosSegmentosVinculo) {
-                            vinculos.push({
-                              empresa_id: editingEmpresa.id,
-                              usuario_id: usuarioId,
-                              segmento_id: segmentoId,
-                              estabelecimento_id: estabelecimentoId,
-                            });
-                          }
-                        }
-                      } else if (novosUsuariosVinculo.length > 0) {
-                        for (const usuarioId of novosUsuariosVinculo) {
-                          vinculos.push({
-                            empresa_id: editingEmpresa.id,
-                            usuario_id: usuarioId,
-                            segmento_id: null,
-                            estabelecimento_id: estabelecimentoId,
-                          });
-                        }
-                      } else if (novosSegmentosVinculo.length > 0) {
-                        for (const segmentoId of novosSegmentosVinculo) {
-                          vinculos.push({
-                            empresa_id: editingEmpresa.id,
-                            usuario_id: null,
-                            segmento_id: segmentoId,
-                            estabelecimento_id: estabelecimentoId,
-                          });
-                        }
-                      }
-
-                      const { error } = await supabase
-                        .from("empresa_vinculos")
-                        .insert(vinculos);
-
-                      if (error) throw error;
-
-                      toast.success("Vínculos adicionados!");
-                      setNovosUsuariosVinculo([]);
-                      setNovosSegmentosVinculo([]);
-                      await fetchEmpresas(estabelecimentoId);
-                    } catch (error: any) {
-                      if (error.message.includes("duplicate")) {
-                        toast.error("Um ou mais vínculos já existem");
-                      } else {
-                        toast.error("Erro ao adicionar vínculos: " + error.message);
-                      }
-                    }
-                  };
-
-                  const handleRemoverVinculo = async (vinculoId: string) => {
-                    try {
-                      const { error } = await supabase
-                        .from("empresa_vinculos")
-                        .delete()
-                        .eq("id", vinculoId);
-
-                      if (error) throw error;
-
-                      toast.success("Vínculo removido!");
-                      await fetchEmpresas(estabelecimentoId);
-                    } catch (error: any) {
-                      toast.error("Erro ao remover vínculo: " + error.message);
-                    }
-                  };
 
                   return (
                     <div className="space-y-4">
