@@ -139,7 +139,6 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -344,28 +343,14 @@ export default function Layout({ children }: LayoutProps) {
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
         <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
-        <div ref={sidebarRef} className={`fixed left-0 top-0 bottom-0 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30 transition-all duration-300 ${sidebarExpanded ? 'w-64' : 'w-20'}`}>
-          {/* Logo e Toggle no topo */}
-          <div className="flex flex-col items-center py-4 border-b border-sidebar-border relative">
-            <div className="w-full flex items-center justify-center px-2 mb-3 relative">
+        <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-64 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
+          <div className="flex flex-col items-center py-4 border-b border-sidebar-border">
+            <div className="w-full flex items-center justify-center px-2 mb-3">
               <img 
                 src={logo} 
                 alt="Pilar Logo" 
-                className={`object-contain transition-all duration-300 ${sidebarExpanded ? 'h-10' : 'h-8'}`}
+                className="h-10 object-contain"
               />
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setSidebarExpanded(!sidebarExpanded)}
-                className="absolute right-2 h-7 w-7 p-0 hover:bg-sidebar-accent/50 rounded-full"
-                title={sidebarExpanded ? "Encolher menu" : "Expandir menu"}
-              >
-                {sidebarExpanded ? (
-                  <ChevronLeft className="w-4 h-4 text-sidebar-foreground/60" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-sidebar-foreground/60" />
-                )}
-              </Button>
             </div>
             {/* Informações do usuário e estabelecimento */}
             <div className="w-full px-2 space-y-2">
@@ -373,17 +358,17 @@ export default function Layout({ children }: LayoutProps) {
               {isAdmin ? (
                 <button
                   onClick={() => setShowEstabelecimentoSelector(true)}
-                  className={`flex items-center w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer ${sidebarExpanded ? 'justify-start gap-3' : 'flex-col justify-center gap-1'}`}
+                  className="flex items-center justify-start gap-3 w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer"
                 >
-                  <Building2 className={`text-sidebar-foreground/60 flex-shrink-0 ${sidebarExpanded ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                  <span className={`text-sidebar-foreground/80 font-medium transition-all ${sidebarExpanded ? 'text-sm text-left' : 'text-[9px] text-center leading-tight line-clamp-2'}`}>
+                  <Building2 className="w-5 h-5 text-sidebar-foreground/60 flex-shrink-0" />
+                  <span className="text-sm text-sidebar-foreground/80 font-medium text-left">
                     {estabelecimentoName || "Selecionar"}
                   </span>
                 </button>
               ) : (
-                <div className={`flex items-center ${sidebarExpanded ? 'justify-start gap-3 p-2' : 'flex-col justify-center gap-1 p-2'}`}>
-                  <Building2 className={`text-sidebar-foreground/60 flex-shrink-0 ${sidebarExpanded ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                  <span className={`text-sidebar-foreground/80 font-medium transition-all ${sidebarExpanded ? 'text-sm text-left' : 'text-[9px] text-center leading-tight line-clamp-2'}`}>
+                <div className="flex items-center justify-start gap-3 p-2">
+                  <Building2 className="w-5 h-5 text-sidebar-foreground/60 flex-shrink-0" />
+                  <span className="text-sm text-sidebar-foreground/80 font-medium text-left">
                     {estabelecimentoName || "Empresa"}
                   </span>
                 </div>
@@ -392,10 +377,10 @@ export default function Layout({ children }: LayoutProps) {
               {/* Usuário */}
               <button
                 onClick={() => setShowUsuarioSelector(true)}
-                className={`flex items-center w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer ${sidebarExpanded ? 'justify-start gap-3' : 'flex-col justify-center gap-1'}`}
+                className="flex items-center justify-start gap-3 w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer"
               >
-                <UserIcon className={`text-sidebar-foreground/60 flex-shrink-0 ${sidebarExpanded ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                <span className={`text-sidebar-foreground/70 transition-all ${sidebarExpanded ? 'text-sm text-left' : 'text-[9px] text-center leading-tight line-clamp-1'}`}>
+                <UserIcon className="w-5 h-5 text-sidebar-foreground/60 flex-shrink-0" />
+                <span className="text-sm text-sidebar-foreground/70 text-left">
                   {userName || user?.email?.split("@")[0] || "Usuário"}
                 </span>
               </button>
@@ -416,8 +401,6 @@ export default function Layout({ children }: LayoutProps) {
                         type="button"
                         onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
                         className={`w-full flex items-center gap-3 py-3 px-3 group relative rounded-md transition-all ${
-                          sidebarExpanded ? 'justify-start' : 'flex-col justify-center gap-1'
-                        } ${
                           shouldHighlight
                             ? "bg-sidebar-accent text-primary"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -426,28 +409,20 @@ export default function Layout({ children }: LayoutProps) {
                         {shouldHighlight && (
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
                         )}
-                        <item.icon className={`flex-shrink-0 ${sidebarExpanded ? 'w-5 h-5' : 'w-6 h-6'} ${
+                        <item.icon className={`w-5 h-5 flex-shrink-0 ${
                           shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`} />
-                        {sidebarExpanded ? (
-                          <span className={`text-sm font-medium flex-1 text-left ${
-                            shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                          }`}>
-                            {item.title}
-                          </span>
-                        ) : (
-                          <span className={`text-[10px] font-medium text-center leading-tight ${
-                            shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                          }`}>
-                            {item.title}
-                          </span>
-                        )}
+                        <span className={`text-sm font-medium flex-1 text-left ${
+                          shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        }`}>
+                          {item.title}
+                        </span>
                       </button>
                       
                       {isMenuOpen && (
                         <>
                           {/* Submenu panel */}
-                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className={`fixed top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto transition-all duration-300 ${sidebarExpanded ? 'left-64' : 'left-20'}`}>
+                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-64 top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto">
                             <div className="px-6 py-8">
                               <h3 className="text-lg font-bold text-foreground mb-4">
                                 {item.title}
@@ -495,8 +470,6 @@ export default function Layout({ children }: LayoutProps) {
                     className={({ isActive }) => {
                       const shouldHighlight = isActive;
                       return `flex items-center gap-3 py-3 px-3 group relative rounded-md transition-all ${
-                        sidebarExpanded ? 'justify-start' : 'flex-col justify-center gap-1'
-                      } ${
                         shouldHighlight
                           ? "bg-sidebar-accent text-primary"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -510,22 +483,14 @@ export default function Layout({ children }: LayoutProps) {
                           {shouldHighlight && (
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
                           )}
-                          <item.icon className={`flex-shrink-0 ${sidebarExpanded ? 'w-5 h-5' : 'w-6 h-6'} ${
+                          <item.icon className={`w-5 h-5 flex-shrink-0 ${
                             shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                           }`} />
-                          {sidebarExpanded ? (
-                            <span className={`text-sm font-medium flex-1 text-left ${
-                              shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                            }`}>
-                              {item.title}
-                            </span>
-                          ) : (
-                            <span className={`text-[10px] font-medium text-center leading-tight ${
-                              shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                            }`}>
-                              {item.title}
-                            </span>
-                          )}
+                          <span className={`text-sm font-medium flex-1 text-left ${
+                            shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                          }`}>
+                            {item.title}
+                          </span>
                         </>
                       );
                     }}
@@ -539,16 +504,16 @@ export default function Layout({ children }: LayoutProps) {
           <div className="border-t border-sidebar-border bg-sidebar px-2 py-2">
             <button 
               onClick={handleLogout}
-              className={`relative flex items-center w-full py-3 px-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all rounded-md ${sidebarExpanded ? 'justify-start gap-3' : 'flex-col justify-center gap-1'}`}
+              className="relative flex items-center gap-3 w-full py-3 px-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all rounded-md"
             >
-              <LogOut className={`flex-shrink-0 ${sidebarExpanded ? 'w-5 h-5' : 'w-6 h-6'}`} />
-              <span className={`font-medium ${sidebarExpanded ? 'text-sm' : 'text-[10px]'}`}>Sair</span>
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm font-medium">Sair</span>
             </button>
           </div>
         </div>
         )}
 
-        <main className={`flex-1 flex flex-col bg-background min-w-0 transition-all duration-300 ${sidebarVisible ? (sidebarExpanded ? 'ml-64' : 'ml-20') : 'ml-0'}`}>
+        <main className={`flex-1 flex flex-col bg-background min-w-0 ${sidebarVisible ? 'ml-64' : 'ml-0'}`}>
           {!sidebarVisible && (
             <div className="fixed left-0 top-0 z-30 p-2">
               <Button
