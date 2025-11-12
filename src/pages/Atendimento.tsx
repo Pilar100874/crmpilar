@@ -732,12 +732,55 @@ ${recentMessages}
     console.log("💬 Atendimento - Enviando mensagem:", { content, contentType, fileUrl, fileName });
 
     try {
+      let finalFileUrl = fileUrl;
+
+      // If we have a blob URL (from audio recording), upload it to Storage first
+      if (fileUrl && fileUrl.startsWith('blob:')) {
+        console.log("📦 Blob URL detectada, fazendo upload para Storage...");
+        
+        try {
+          // Fetch the blob data
+          const response = await fetch(fileUrl);
+          const blob = await response.blob();
+          
+          // Generate a unique filename
+          const timestamp = Date.now();
+          const extension = fileName?.split('.').pop() || 'webm';
+          const storagePath = `agent-messages/${timestamp}_${fileName || `audio.${extension}`}`;
+          
+          // Upload to Supabase Storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('bot-media')
+            .upload(storagePath, blob, {
+              contentType: blob.type,
+              cacheControl: '3600',
+            });
+
+          if (uploadError) {
+            console.error("❌ Erro ao fazer upload:", uploadError);
+            throw uploadError;
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('bot-media')
+            .getPublicUrl(storagePath);
+
+          finalFileUrl = publicUrl;
+          console.log("✅ Arquivo enviado para Storage:", finalFileUrl);
+        } catch (uploadErr) {
+          console.error("❌ Erro no processo de upload:", uploadErr);
+          toast.error("Erro ao processar arquivo");
+          return;
+        }
+      }
+
       // Save message to database
       const { error: dbError } = await supabase.from("messages").insert({
         conversation_id: selectedConversation,
         sender: "agent",
         text: content,
-        attachments: fileUrl ? [fileUrl] : [],
+        attachments: finalFileUrl ? [finalFileUrl] : [],
         payload: {
           contentType,
           fileName,
@@ -757,7 +800,7 @@ ${recentMessages}
         conversation_id: selectedConversation,
         sender: "agent",
         text: content,
-        attachments: fileUrl ? [fileUrl] : [],
+        attachments: finalFileUrl ? [finalFileUrl] : [],
         payload: { contentType, fileName },
         created_at: new Date().toISOString(),
       };
@@ -768,7 +811,7 @@ ${recentMessages}
         body: {
           conversationId: selectedConversation,
           text: content,
-          fileUrl: fileUrl,
+          fileUrl: finalFileUrl,
           fileName: fileName,
           contentType: contentType,
         },
