@@ -294,13 +294,24 @@ export default function Atendimento() {
           // Buscar TODOS os contatos e comparar telefones normalizados
           const { data: allContactsData } = await supabase
             .from('customers')
-            .select('id, telefone')
+            .select('id, telefone, tipo_operador, nome')
             .eq('estabelecimento_id', estabId);
           
           const normalizedPhone = normalizePhone(phone);
-          const matchedContact = allContactsData?.find(contact => 
+          
+          // Filtrar contatos com telefone correspondente
+          const matchedContacts = allContactsData?.filter(contact => 
             normalizePhone(contact.telefone) === normalizedPhone
-          );
+          ) || [];
+          
+          // Priorizar contatos com tipo_operador=true ou que não tenham nome padrão "Cliente XXXXX"
+          const matchedContact = matchedContacts.sort((a, b) => {
+            if (a.tipo_operador && !b.tipo_operador) return -1;
+            if (!a.tipo_operador && b.tipo_operador) return 1;
+            if (!a.nome.startsWith('Cliente ') && b.nome.startsWith('Cliente ')) return -1;
+            if (a.nome.startsWith('Cliente ') && !b.nome.startsWith('Cliente ')) return 1;
+            return 0;
+          })[0];
           
           if (matchedContact) {
             customerId = matchedContact.id;
@@ -679,15 +690,21 @@ ${recentMessages}
           // Buscar TODOS os contatos do estabelecimento
           const { data: allContactsData } = await supabase
             .from('customers')
-            .select('id, nome, email, telefone')
+            .select('id, nome, email, telefone, tipo_operador')
             .eq('estabelecimento_id', estabId);
 
-          // Criar um mapa com telefones normalizados
+          // Criar um mapa com telefones normalizados, priorizando tipo_operador=true
           const normalizedContactsMap = new Map();
           allContactsData?.forEach(contact => {
             const normalized = normalizePhone(contact.telefone);
             if (normalized) {
-              normalizedContactsMap.set(normalized, contact);
+              const existing = normalizedContactsMap.get(normalized);
+              // Priorizar contatos com tipo_operador=true ou que não tenham nome padrão "Cliente XXXXX"
+              if (!existing || 
+                  (contact.tipo_operador && !existing.tipo_operador) ||
+                  (!contact.nome.startsWith('Cliente ') && existing.nome.startsWith('Cliente '))) {
+                normalizedContactsMap.set(normalized, contact);
+              }
             }
           });
 
