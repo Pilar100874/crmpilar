@@ -33,6 +33,7 @@ export default function BotCreate() {
   const [newBotName, setNewBotName] = useState("");
   const [newBotDescription, setNewBotDescription] = useState("");
   const [selectedCanal, setSelectedCanal] = useState<string>("whatsapp");
+  const [selectedWhatsAppType, setSelectedWhatsAppType] = useState<string>("waha");
   const [isCreating, setIsCreating] = useState(false);
   
   // Dialogs para duplicar e renomear
@@ -42,6 +43,7 @@ export default function BotCreate() {
   const [duplicateName, setDuplicateName] = useState("");
   const [duplicateDescription, setDuplicateDescription] = useState("");
   const [duplicateCanal, setDuplicateCanal] = useState<string>("whatsapp");
+  const [duplicateWhatsAppType, setDuplicateWhatsAppType] = useState<string>("waha");
   const [renameName, setRenameName] = useState("");
   const [renameDescription, setRenameDescription] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
@@ -330,11 +332,13 @@ export default function BotCreate() {
       }
 
       // Navegar para o builder com o nome do bot como parâmetro
-      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}`);
+      const whatsappTypeParam = selectedCanal === 'whatsapp' ? `&whatsapp_type=${selectedWhatsAppType}` : '';
+      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}`);
       setNewBotDialogOpen(false);
       setNewBotName("");
       setNewBotDescription("");
       setSelectedCanal("whatsapp");
+      setSelectedWhatsAppType("waha");
     } catch (error) {
       console.error("Error creating bot:", error);
       toast.error("Erro ao criar bot");
@@ -376,16 +380,23 @@ export default function BotCreate() {
       }
 
       // Duplicar o bot
+      const botInsertData: any = {
+        name: duplicateName.trim(),
+        description: duplicateDescription.trim(),
+        flow_data: selectedBot.flow_data,
+        active: false,
+        estabelecimento_id: estabelecimentoId,
+        canais: [duplicateCanal],
+      };
+      
+      // Adicionar whatsapp_type apenas se o canal for WhatsApp
+      if (duplicateCanal === 'whatsapp') {
+        botInsertData.whatsapp_type = duplicateWhatsAppType;
+      }
+      
       const { error } = await supabase
         .from("bot_flows")
-        .insert({
-          name: duplicateName.trim(),
-          description: duplicateDescription.trim(),
-          flow_data: selectedBot.flow_data,
-          active: false,
-          estabelecimento_id: estabelecimentoId,
-          canais: [duplicateCanal],
-        });
+        .insert(botInsertData);
 
       if (error) throw error;
 
@@ -394,6 +405,7 @@ export default function BotCreate() {
       setDuplicateName("");
       setDuplicateDescription("");
       setDuplicateCanal("whatsapp");
+      setDuplicateWhatsAppType("waha");
       setSelectedBot(null);
       closeOverlays();
       await loadBots();
@@ -571,10 +583,11 @@ export default function BotCreate() {
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
                                 setOpenMenuId(null);
-                                setSelectedBot(bot);
-                                setDuplicateName(`${bot.name} (cópia)`);
-                                setDuplicateDescription(bot.description || "");
-                                setDuplicateDialogOpen(true);
+                setSelectedBot(bot);
+                setDuplicateName(`${bot.name} (cópia)`);
+                setDuplicateDescription(bot.description || "");
+                setDuplicateWhatsAppType(bot.whatsapp_type || "waha");
+                setDuplicateDialogOpen(true);
                               }}>
                                 <Plus className="w-4 h-4 mr-2" />
                                 Duplicar
@@ -742,6 +755,24 @@ export default function BotCreate() {
                 Selecione o canal onde este bot será usado
               </p>
             </div>
+            
+            {selectedCanal === 'whatsapp' && (
+              <div className="grid gap-2">
+                <Label htmlFor="bot-whatsapp-type">Tipo de WhatsApp *</Label>
+                <Select value={selectedWhatsAppType} onValueChange={setSelectedWhatsAppType}>
+                  <SelectTrigger id="bot-whatsapp-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="waha">WhatsApp WAHA</SelectItem>
+                    <SelectItem value="business">WhatsApp Business (Meta)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  WAHA: servidor próprio | Business: API oficial Meta
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -775,6 +806,7 @@ export default function BotCreate() {
             setDuplicateName("");
             setDuplicateDescription("");
             setDuplicateCanal("whatsapp");
+            setDuplicateWhatsAppType("waha");
             setSelectedBot(null);
           }
         }}
@@ -833,6 +865,24 @@ export default function BotCreate() {
                 Selecione o canal onde este bot será usado
               </p>
             </div>
+            
+            {duplicateCanal === 'whatsapp' && (
+              <div className="grid gap-2">
+                <Label htmlFor="duplicate-whatsapp-type">Tipo de WhatsApp *</Label>
+                <Select value={duplicateWhatsAppType} onValueChange={setDuplicateWhatsAppType}>
+                  <SelectTrigger id="duplicate-whatsapp-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="waha">WhatsApp WAHA</SelectItem>
+                    <SelectItem value="business">WhatsApp Business (Meta)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  WAHA: servidor próprio | Business: API oficial Meta
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -842,6 +892,7 @@ export default function BotCreate() {
                 setDuplicateName("");
                 setDuplicateDescription("");
                 setDuplicateCanal("whatsapp");
+                setDuplicateWhatsAppType("waha");
                 setDuplicateDialogOpen(false);
                 setSelectedBot(null);
               }}

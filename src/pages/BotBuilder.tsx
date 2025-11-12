@@ -63,6 +63,7 @@ function BotBuilderContent() {
   const botNameFromUrl = searchParams.get("name");
   const botDescriptionFromUrl = searchParams.get("description");
   const canaisFromUrl = searchParams.get("canais");
+  const whatsappTypeFromUrl = searchParams.get("whatsapp_type");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const savingRef = useRef(false);
   
@@ -90,6 +91,7 @@ function BotBuilderContent() {
   const [currentBotName, setCurrentBotName] = useState("Novo Bot");
   const [currentBotDescription, setCurrentBotDescription] = useState("");
   const [currentBotCanais, setCurrentBotCanais] = useState<string[]>(["whatsapp"]);
+  const [currentBotWhatsAppType, setCurrentBotWhatsAppType] = useState<string>("waha");
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
@@ -166,7 +168,10 @@ function BotBuilderContent() {
         console.error("Error parsing canais from URL:", e);
       }
     }
-  }, [botNameFromUrl, botDescriptionFromUrl, canaisFromUrl, currentBotId]);
+    if (whatsappTypeFromUrl && !currentBotId) {
+      setCurrentBotWhatsAppType(whatsappTypeFromUrl);
+    }
+  }, [botNameFromUrl, botDescriptionFromUrl, canaisFromUrl, whatsappTypeFromUrl, currentBotId]);
 
   // Auto-save movido abaixo (após handleSave) para evitar closures desatualizadas.
 
@@ -542,14 +547,21 @@ function BotBuilderContent() {
         variables: flowVariables,
       };
 
-      const botData = {
+      const botInsertData: any = {
         name: currentBotName,
         description: currentBotDescription,
         canais: currentBotCanais,
-        flow_data: flow as any, // Cast to any for Json compatibility
+        flow_data: flow as any,
         updated_at: new Date().toISOString(),
         estabelecimento_id: estabelecimentoId,
       };
+      
+      // Adicionar whatsapp_type apenas se o bot for para WhatsApp
+      if (currentBotCanais.includes('whatsapp')) {
+        botInsertData.whatsapp_type = currentBotWhatsAppType;
+      }
+      
+      const botData = botInsertData;
 
       let error: any, data: any;
       const targetId = currentBotId || botIdFromUrl;
@@ -697,6 +709,7 @@ function BotBuilderContent() {
       setCurrentBotName(data.name);
       setCurrentBotDescription(data.description || "");
       setCurrentBotCanais(data.canais || ["whatsapp"]);
+      setCurrentBotWhatsAppType(data.whatsapp_type || "waha");
       setSelectedNode(null);
       
       // Fixar estabelecimento do bot como o estabelecimento corrente da sessão

@@ -235,26 +235,30 @@ serve(async (req) => {
         .maybeSingle();
       
       if (sessionData?.estabelecimento_id) {
-        // Busca o bot ativo desse estabelecimento configurado para WhatsApp
+        // Busca o bot ativo desse estabelecimento configurado para WhatsApp WAHA
         const { data } = await supabase
           .from("bot_flows")
           .select("*")
           .eq("active", true)
           .eq("estabelecimento_id", sessionData.estabelecimento_id)
           .contains("canais", ["whatsapp"])
+          .eq("whatsapp_type", "waha")
           .maybeSingle();
         
-        console.log("[WAHA] Bot search result:", { found: !!data, botName: data?.name });
+        console.log("[WAHA] Bot search result:", { found: !!data, botName: data?.name, whatsappType: data?.whatsapp_type });
         flowData = data;
       }
     } else {
-      // Para Meta, busca qualquer bot ativo configurado para WhatsApp
+      // Para Meta, busca qualquer bot ativo configurado para WhatsApp Business
       const { data } = await supabase
         .from("bot_flows")
         .select("*")
         .eq("active", true)
         .contains("canais", ["whatsapp"])
+        .eq("whatsapp_type", "business")
         .maybeSingle();
+      
+      console.log("[META] Bot search result:", { found: !!data, botName: data?.name, whatsappType: data?.whatsapp_type });
       flowData = data;
     }
 
