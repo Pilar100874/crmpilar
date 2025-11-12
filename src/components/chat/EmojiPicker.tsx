@@ -39,6 +39,7 @@ export default function EmojiPicker({ onEmojiSelect, disabled }: EmojiPickerProp
           size="icon"
           disabled={disabled}
           title="Adicionar emoji"
+          className="rounded-full"
         >
           <Smile className="h-5 w-5" />
         </Button>

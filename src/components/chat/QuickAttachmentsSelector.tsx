@@ -103,6 +103,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
             size="icon"
             disabled={disabled}
             title="Anexos rápidos"
+            className="rounded-full"
           >
             <LinkIcon className="h-5 w-5" />
           </Button>

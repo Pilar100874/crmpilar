@@ -52,6 +52,7 @@ export default function FileUploader({
         onClick={handleClick}
         disabled={disabled}
         title={tooltip}
+        className="rounded-full"
       >
         {icon}
       </Button>

@@ -69,6 +69,7 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
           size="icon"
           disabled={disabled}
           title="Textos prontos"
+          className="rounded-full"
         >
           <MessageSquare className="h-5 w-5" />
         </Button>

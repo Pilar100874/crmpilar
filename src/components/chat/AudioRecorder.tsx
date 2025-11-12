@@ -59,6 +59,7 @@ export default function AudioRecorder({ onAudioRecorded, disabled }: AudioRecord
       onClick={isRecording ? stopRecording : startRecording}
       disabled={disabled}
       title={isRecording ? "Parar gravação" : "Gravar áudio"}
+      className="rounded-full"
     >
       {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
     </Button>

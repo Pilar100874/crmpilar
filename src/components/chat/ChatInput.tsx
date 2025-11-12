@@ -313,68 +313,54 @@ export default function ChatInput({
 
   return (
     <>
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleMessageChange}
-            onKeyDown={handleKeyPress}
-            placeholder="Digite sua mensagem..."
-            className="min-h-[80px] resize-none overflow-hidden"
+      <div className="flex flex-col gap-3">
+        {/* Action Buttons Row */}
+        <div className="flex gap-1.5 items-center flex-wrap">
+          <QuickRepliesSelector onSelect={handleQuickReplySelect} disabled={disabled} />
+          
+          <QuickAttachmentsSelector onSelect={handleQuickAttachmentSelect} disabled={disabled} />
+          
+          <FileUploader
+            accept="image/*"
+            onFileSelected={handleImageSelected}
             disabled={disabled}
+            icon={<Image className="h-4 w-4" />}
+            tooltip="Enviar imagem"
           />
-        </div>
+          
+          <FileUploader
+            accept="*/*"
+            onFileSelected={handleFileSelected}
+            disabled={disabled}
+            icon={<Paperclip className="h-4 w-4" />}
+            tooltip="Enviar arquivo"
+          />
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowVariables(true)}
+            disabled={disabled}
+            title="Enviar variáveis"
+            className="rounded-full"
+          >
+            <Variable className="h-4 w-4" />
+          </Button>
 
-        <div className="flex items-center justify-between">
-          <div className="flex gap-1 items-center flex-wrap">
-            <QuickRepliesSelector onSelect={handleQuickReplySelect} disabled={disabled} />
-            
-            <QuickAttachmentsSelector onSelect={handleQuickAttachmentSelect} disabled={disabled} />
-            
-            <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
-            
-            <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
-            
-            <FileUploader
-              accept="image/*"
-              onFileSelected={handleImageSelected}
-              disabled={disabled}
-              icon={<Image className="h-4 w-4" />}
-              tooltip="Enviar imagem"
-            />
-            
-            <FileUploader
-              accept="*/*"
-              onFileSelected={handleFileSelected}
-              disabled={disabled}
-              icon={<Paperclip className="h-4 w-4" />}
-              tooltip="Enviar arquivo"
-            />
-            
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowVariables(true)}
-              disabled={disabled}
-              title="Enviar variáveis"
-            >
-              <Variable className="h-4 w-4" />
-            </Button>
-
-            {/* Bot Redirect Popover */}
-            {availableBots.length > 0 && (
-              <Popover open={showBotPopover} onOpenChange={setShowBotPopover}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    title="Direcionar para bot"
-                    disabled={disabled}
-                  >
-                    <Bot className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
+          {/* Bot Redirect Popover */}
+          {availableBots.length > 0 && (
+            <Popover open={showBotPopover} onOpenChange={setShowBotPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Direcionar para bot"
+                  disabled={disabled}
+                  className="rounded-full"
+                >
+                  <Bot className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
                 <PopoverContent className="w-80 z-50" align="start">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b pb-2">
@@ -415,20 +401,21 @@ export default function ChatInput({
               </Popover>
             )}
             
-            {/* Webhook Auto-Response */}
-            {webhooksForAutoResponse.length > 0 && (
-              <>
-                <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      title="Selecionar webhook"
-                      disabled={disabled}
-                    >
-                      <Webhook className="h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
+          {/* Webhook Auto-Response */}
+          {webhooksForAutoResponse.length > 0 && (
+            <>
+              <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Selecionar webhook"
+                    disabled={disabled}
+                    className="rounded-full"
+                  >
+                    <Webhook className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
                   <PopoverContent className="w-80 z-50" align="start">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 border-b pb-2">
@@ -456,35 +443,36 @@ export default function ChatInput({
                     </div>
                   </PopoverContent>
                 </Popover>
-                
-                <Button
-                  variant={webhookAutoResponseActive ? "default" : "outline"}
-                  size="icon"
-                  onClick={onWebhookToggle}
-                  disabled={!selectedWebhookAutoResponse || disabled}
-                  title={webhookAutoResponseActive ? "Desativar webhook" : "Ativar webhook"}
-                  className={webhookAutoResponseActive ? "bg-green-500 hover:bg-green-600" : ""}
-                >
-                  {webhookAutoResponseActive ? (
-                    <Zap className="h-4 w-4" />
-                  ) : (
-                    <Zap className="h-4 w-4 opacity-50" />
-                  )}
-                </Button>
-              </>
-            )}
+              
+              <Button
+                variant={webhookAutoResponseActive ? "default" : "outline"}
+                size="icon"
+                onClick={onWebhookToggle}
+                disabled={!selectedWebhookAutoResponse || disabled}
+                title={webhookAutoResponseActive ? "Desativar webhook" : "Ativar webhook"}
+                className={webhookAutoResponseActive ? "bg-green-500 hover:bg-green-600 rounded-full" : "rounded-full"}
+              >
+                {webhookAutoResponseActive ? (
+                  <Zap className="h-4 w-4" />
+                ) : (
+                  <Zap className="h-4 w-4 opacity-50" />
+                )}
+              </Button>
+            </>
+          )}
 
-            {/* Transfer to User Popover */}
-            {availableUsers.length > 0 && (
-              <Popover open={showTransferPopover} onOpenChange={setShowTransferPopover}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    title="Direcionar para usuário"
-                    disabled={disabled}
-                  >
-                    <UserPlus className="h-4 w-4" />
+          {/* Transfer to User Popover */}
+          {availableUsers.length > 0 && (
+            <Popover open={showTransferPopover} onOpenChange={setShowTransferPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Direcionar para usuário"
+                  disabled={disabled}
+                  className="rounded-full"
+                >
+                  <UserPlus className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 z-50" align="start">
@@ -524,58 +512,79 @@ export default function ChatInput({
                     </Button>
                   </div>
                 </PopoverContent>
-              </Popover>
-            )}
+            </Popover>
+          )}
 
-            {/* Auto-suggestion toggle */}
-            {autoResponseWebhooks.length > 0 && (
-              <div className="flex items-center gap-2 ml-2 border-l pl-2">
-                <div className="flex items-center gap-1.5">
-                  <Switch
-                    id="auto-suggestion"
-                    checked={autoSuggestionEnabled}
-                    onCheckedChange={setAutoSuggestionEnabled}
-                    disabled={disabled}
-                  />
-                  <Label 
-                    htmlFor="auto-suggestion" 
-                    className="text-xs cursor-pointer flex items-center gap-1"
-                  >
-                    <Zap className="h-3 w-3" />
-                    Auto
-                  </Label>
-                </div>
-                
-                {autoSuggestionEnabled && (
-                  <Select
-                    value={selectedAutoWebhook || ""}
-                    onValueChange={setSelectedAutoWebhook}
-                    disabled={disabled}
-                  >
-                    <SelectTrigger className="h-8 w-[150px] text-xs">
-                      <SelectValue placeholder="Selecione webhook" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {autoResponseWebhooks.map((webhook) => (
-                        <SelectItem key={webhook.id} value={webhook.id} className="text-xs">
-                          {webhook.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-
-                {isGeneratingSuggestion && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    Gerando...
-                  </div>
-                )}
+          {/* Auto-suggestion toggle */}
+          {autoResponseWebhooks.length > 0 && (
+            <div className="flex items-center gap-2 ml-2 border-l pl-2">
+              <div className="flex items-center gap-1.5">
+                <Switch
+                  id="auto-suggestion"
+                  checked={autoSuggestionEnabled}
+                  onCheckedChange={setAutoSuggestionEnabled}
+                  disabled={disabled}
+                />
+                <Label 
+                  htmlFor="auto-suggestion" 
+                  className="text-xs cursor-pointer flex items-center gap-1"
+                >
+                  <Zap className="h-3 w-3" />
+                  Auto
+                </Label>
               </div>
-            )}
-          </div>
+              
+              {autoSuggestionEnabled && (
+                <Select
+                  value={selectedAutoWebhook || ""}
+                  onValueChange={setSelectedAutoWebhook}
+                  disabled={disabled}
+                >
+                  <SelectTrigger className="h-8 w-[150px] text-xs">
+                    <SelectValue placeholder="Selecione webhook" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {autoResponseWebhooks.map((webhook) => (
+                      <SelectItem key={webhook.id} value={webhook.id} className="text-xs">
+                        {webhook.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
-          <Button onClick={handleSend} disabled={!message.trim() || disabled} size="icon">
+              {isGeneratingSuggestion && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Gerando...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Text Input Row with Emoji (left), Text Area (center), Audio & Send (right) */}
+        <div className="flex items-end gap-2">
+          <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
+          
+          <Textarea
+            ref={textareaRef}
+            value={message}
+            onChange={handleMessageChange}
+            onKeyDown={handleKeyPress}
+            placeholder="Digite sua mensagem..."
+            className="min-h-[44px] max-h-[120px] resize-none rounded-full px-4 py-3"
+            disabled={disabled}
+          />
+          
+          <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
+          
+          <Button 
+            onClick={handleSend} 
+            disabled={!message.trim() || disabled} 
+            size="icon"
+            className="rounded-full h-11 w-11"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
