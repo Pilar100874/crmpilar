@@ -1856,18 +1856,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
                 {editingEmpresa ? (() => {
                   const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
+                  const vinculosUsuarios = vinculosDaEmpresa.filter(v => v.usuario_id !== null);
+                  const vinculosSegmentos = vinculosDaEmpresa.filter(v => v.segmento_id !== null);
 
                   return (
-                    <div className="space-y-4">
-                      {/* Adicionar novo vínculo */}
-                      <Card className="border-primary/20 bg-primary/5">
-                        <CardContent className="p-4 space-y-4">
-                          <h4 className="text-sm font-semibold">Adicionar Novo Vínculo</h4>
-                          
-                          <div className="grid grid-cols-2 gap-4">
+                    <Tabs defaultValue="usuarios" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+                        <TabsTrigger value="segmentos">Segmentos</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="usuarios" className="space-y-4 mt-4">
+                        {/* Adicionar novos usuários */}
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardContent className="p-4 space-y-4">
+                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
+                            
                             <div className="space-y-2">
-                              <Label className="text-xs">Usuários</Label>
-                              <div className="space-y-2 max-h-[150px] overflow-y-auto border rounded-lg p-2 bg-background">
+                              <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
                                 {usuarios.map((usuario) => (
                                   <div key={usuario.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
                                     <Checkbox
@@ -1889,9 +1895,66 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                               </div>
                             </div>
 
+                            <Button 
+                              onClick={async () => {
+                                if (novosUsuariosVinculo.length === 0) {
+                                  toast.error("Selecione pelo menos um usuário");
+                                  return;
+                                }
+                                await handleAdicionarVinculo();
+                              }} 
+                              className="w-full" 
+                              size="sm"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Usuários Selecionados
+                            </Button>
+                          </CardContent>
+                        </Card>
+
+                        {/* Lista de usuários vinculados */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
+                          {vinculosUsuarios.length > 0 ? (
                             <div className="space-y-2">
-                              <Label className="text-xs">Segmentos</Label>
-                              <div className="space-y-2 max-h-[150px] overflow-y-auto border rounded-lg p-2 bg-background">
+                              {vinculosUsuarios.map((vinculo) => {
+                                const usuario = usuarios.find(u => u.id === vinculo.usuario_id);
+
+                                return (
+                                  <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium">
+                                        {usuario?.nome || <span className="text-muted-foreground">Usuário não encontrado</span>}
+                                      </p>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={() => handleRemoverVinculo(vinculo.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                              <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="segmentos" className="space-y-4 mt-4">
+                        {/* Adicionar novos segmentos */}
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardContent className="p-4 space-y-4">
+                            <h4 className="text-sm font-semibold">Adicionar Segmentos</h4>
+                            
+                            <div className="space-y-2">
+                              <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
                                 {segmentos.map((segmento) => (
                                   <div key={segmento.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
                                     <Checkbox
@@ -1912,59 +1975,59 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                 ))}
                               </div>
                             </div>
-                          </div>
 
-                          <Button onClick={handleAdicionarVinculo} className="w-full" size="sm">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Adicionar Vínculos
-                          </Button>
-                        </CardContent>
-                      </Card>
+                            <Button 
+                              onClick={async () => {
+                                if (novosSegmentosVinculo.length === 0) {
+                                  toast.error("Selecione pelo menos um segmento");
+                                  return;
+                                }
+                                await handleAdicionarVinculo();
+                              }} 
+                              className="w-full" 
+                              size="sm"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Segmentos Selecionados
+                            </Button>
+                          </CardContent>
+                        </Card>
 
-                      {/* Lista de vínculos existentes */}
-                      <div>
-                        <h4 className="text-sm font-semibold mb-3">Vínculos Existentes</h4>
-                        {vinculosDaEmpresa.length > 0 ? (
-                          <div className="space-y-2">
-                            {vinculosDaEmpresa.map((vinculo) => {
-                              const usuario = vinculo.usuario_id ? usuarios.find(u => u.id === vinculo.usuario_id) : null;
-                              const segmento = vinculo.segmento_id ? segmentos.find(s => s.id === vinculo.segmento_id) : null;
+                        {/* Lista de segmentos vinculados */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Segmentos Vinculados</h4>
+                          {vinculosSegmentos.length > 0 ? (
+                            <div className="space-y-2">
+                              {vinculosSegmentos.map((vinculo) => {
+                                const segmento = segmentos.find(s => s.id === vinculo.segmento_id);
 
-                              return (
-                                <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                  <div className="grid grid-cols-2 gap-4 flex-1">
-                                    <div>
-                                      <Label className="text-xs text-muted-foreground">Usuário</Label>
+                                return (
+                                  <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <div className="flex-1">
                                       <p className="text-sm font-medium">
-                                        {usuario ? usuario.nome : <span className="text-muted-foreground">Nenhum</span>}
+                                        {segmento?.nome || <span className="text-muted-foreground">Segmento não encontrado</span>}
                                       </p>
                                     </div>
-                                    <div>
-                                      <Label className="text-xs text-muted-foreground">Segmento</Label>
-                                      <p className="text-sm font-medium">
-                                        {segmento ? segmento.nome : <span className="text-muted-foreground">Nenhum</span>}
-                                      </p>
-                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={() => handleRemoverVinculo(vinculo.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => handleRemoverVinculo(vinculo.id)}
-                                  >
-                                    <Trash2 className="w-4 h-4 text-destructive" />
-                                  </Button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                            <p className="text-sm text-muted-foreground">Nenhum vínculo cadastrado</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                              <p className="text-sm text-muted-foreground">Nenhum segmento vinculado</p>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   );
                 })() : (
                   <p className="text-sm text-muted-foreground text-center py-8">
