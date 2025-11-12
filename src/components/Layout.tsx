@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -138,7 +138,7 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
-
+  const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -289,18 +289,18 @@ export default function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener('keydown', handleEscape);
   }, []);
 
-  // Safety: close submenu after 100ms if clicking anywhere on page
+  // Close submenu when clicking outside the panel
   useEffect(() => {
-    const handleClick = () => {
-      setTimeout(() => {
-        if (openSubmenuId) {
-          setOpenSubmenuId(null);
-        }
-      }, 100);
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (!openSubmenuId) return;
+      const target = e.target as Node;
+      if (submenuPanelRef.current && !submenuPanelRef.current.contains(target)) {
+        setOpenSubmenuId(null);
+      }
     };
-    
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
   }, [openSubmenuId]);
 
   const handleLogout = async () => {
@@ -451,14 +451,8 @@ export default function Layout({ children }: LayoutProps) {
                       
                       {isMenuOpen && (
                         <>
-                          {/* Overlay to close menu when clicking outside (doesn't cover the main sidebar) */}
-                          <div 
-                            className="fixed left-20 top-0 bottom-0 right-0 z-40" 
-                            onClick={() => setOpenSubmenuId(null)}
-                          />
-                          
                           {/* Submenu panel */}
-                          <div className="fixed left-20 top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto">
+                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-20 top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto">
                             <div className="px-6 py-8">
                               <h3 className="text-lg font-bold text-foreground mb-4">
                                 {item.title}
