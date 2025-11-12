@@ -2228,14 +2228,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
   return (
-    <div className="flex flex-col h-full border-l">
+    <div className="flex flex-col h-full">
       <CardHeader className={`flex-shrink-0 border-b ${channelStyle.headerBg}`}>
         <div className="flex items-center justify-between">
           <CardTitle className={`text-sm flex items-center gap-2 ${channelStyle.headerText}`}>
             <span>{channelStyle.icon}</span>
             <span>Simulador - {channelStyle.name}</span>
           </CardTitle>
-          <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20">
+          <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full">
             <RotateCcw className="w-4 h-4 mr-2" />
             Reiniciar
           </Button>
@@ -2444,23 +2444,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         {Object.keys(context).length > 0 && (
           <>
-            <div className={`flex-shrink-0 p-3 max-h-40 overflow-auto ${channel === 'telegram' ? 'bg-[#1A2633]' : 'bg-muted/50'}`}>
-              <h4 className={`text-xs font-medium mb-2 ${channel === 'telegram' ? 'text-gray-300' : ''}`}>📦 Contexto (Variáveis)</h4>
-              <div className="space-y-1">
-                {Object.entries(context).map(([key, value]) => (
-                  <div key={key} className="flex gap-2 text-xs">
-                    <Badge variant="outline" className={`font-mono text-xs ${channel === 'telegram' ? 'text-white border-gray-600' : ''}`}>
-                      {key}
-                    </Badge>
-                    <span className={`truncate ${channel === 'telegram' ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                      {typeof value === "object" 
-                        ? JSON.stringify(value).substring(0, 50) + "..."
-                        : String(value).substring(0, 50)}
-                    </span>
-                  </div>
-                ))}
+            <ScrollArea className={`flex-shrink-0 max-h-40 ${channel === 'telegram' ? 'bg-[#1A2633]' : 'bg-muted/50'}`}>
+              <div className="p-3">
+                <h4 className={`text-xs font-medium mb-2 ${channel === 'telegram' ? 'text-gray-300' : ''}`}>📦 Contexto (Variáveis)</h4>
+                <div className="space-y-1">
+                  {Object.entries(context).map(([key, value]) => (
+                    <div key={key} className="flex gap-2 text-xs">
+                      <Badge variant="outline" className={`font-mono text-xs ${channel === 'telegram' ? 'text-white border-gray-600' : ''}`}>
+                        {key}
+                      </Badge>
+                      <span className={`truncate ${channel === 'telegram' ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                        {typeof value === "object" 
+                          ? JSON.stringify(value).substring(0, 50) + "..."
+                          : String(value).substring(0, 50)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </ScrollArea>
             <Separator />
           </>
         )}
