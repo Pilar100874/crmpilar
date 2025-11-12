@@ -1095,7 +1095,7 @@ ${recentMessages}
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden min-w-0 border-r border-border">
+      <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden min-w-0 border-r border-border">
         {selectedConversation && selectedConv ? (
           <>
             <div className="px-4 py-3 border-b bg-card shadow-sm flex-shrink-0">
@@ -1230,7 +1230,7 @@ ${recentMessages}
               )}
             </div>
 
-            <div className="border-t bg-card flex-shrink-0 p-4">
+            <div className="border-t bg-card flex-shrink-0 p-4 sticky bottom-0 z-10">
               {/* AI Chat Box */}
               {showAIChat && aiWebhooks.length > 0 && (
                 <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl">
