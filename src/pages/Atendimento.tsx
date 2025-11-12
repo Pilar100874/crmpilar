@@ -1137,7 +1137,7 @@ ${recentMessages}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-2 bg-gray-100">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-100">
               {messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
