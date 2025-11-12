@@ -49,6 +49,12 @@ interface Message {
   payload: any;
 }
 
+// Função para normalizar telefone (remove tudo exceto números)
+const normalizePhone = (phone: string | undefined | null): string => {
+  if (!phone) return '';
+  return phone.replace(/\D/g, '');
+};
+
 export default function Atendimento() {
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -277,25 +283,27 @@ export default function Atendimento() {
         return;
       }
 
-      // Tentar obter customer_id diretamente ou buscar pelo telefone
+      // Buscar pelo telefone normalizado
+      const metadata = convData.metadata as any;
+      const phone = metadata?.phone || convData.customer?.telefone;
       let customerId = convData.customer_id;
       
-      if (!customerId) {
-        // Buscar pelo telefone no metadata ou no customer
-        const metadata = convData.metadata as any;
-        const phone = metadata?.phone || convData.customer?.telefone;
-        
-        if (phone) {
-          const estabId = await getEstabelecimentoId();
-          if (estabId) {
-            const { data: contactData } = await supabase
-              .from('customers')
-              .select('id')
-              .eq('estabelecimento_id', estabId)
-              .eq('telefone', phone)
-              .maybeSingle();
-            
-            customerId = contactData?.id;
+      if (phone) {
+        const estabId = await getEstabelecimentoId();
+        if (estabId) {
+          // Buscar TODOS os contatos e comparar telefones normalizados
+          const { data: allContactsData } = await supabase
+            .from('customers')
+            .select('id, telefone')
+            .eq('estabelecimento_id', estabId);
+          
+          const normalizedPhone = normalizePhone(phone);
+          const matchedContact = allContactsData?.find(contact => 
+            normalizePhone(contact.telefone) === normalizedPhone
+          );
+          
+          if (matchedContact) {
+            customerId = matchedContact.id;
           }
         }
       }
@@ -663,19 +671,33 @@ ${recentMessages}
           }
         }
 
-        // Buscar todos os contatos pelo telefone no formato completo
+        // Buscar todos os contatos comparando telefones normalizados
         const phones = Array.from(phonesMap.values()).filter(Boolean);
-        let contactsMap = new Map();
+        const contactsMap = new Map();
         
         if (phones.length > 0 && estabId) {
-          const { data: contactsData } = await supabase
+          // Buscar TODOS os contatos do estabelecimento
+          const { data: allContactsData } = await supabase
             .from('customers')
             .select('id, nome, email, telefone')
-            .eq('estabelecimento_id', estabId)
-            .in('telefone', phones);
+            .eq('estabelecimento_id', estabId);
 
-          contactsData?.forEach(contact => {
-            contactsMap.set(contact.telefone, contact);
+          // Criar um mapa com telefones normalizados
+          const normalizedContactsMap = new Map();
+          allContactsData?.forEach(contact => {
+            const normalized = normalizePhone(contact.telefone);
+            if (normalized) {
+              normalizedContactsMap.set(normalized, contact);
+            }
+          });
+
+          // Para cada telefone da conversa, buscar o contato correspondente
+          phones.forEach(phone => {
+            const normalized = normalizePhone(phone);
+            if (normalized && normalizedContactsMap.has(normalized)) {
+              const contact = normalizedContactsMap.get(normalized);
+              contactsMap.set(phone, contact);
+            }
           });
         }
 
