@@ -32,7 +32,7 @@ export default function BotCreate() {
   const [newBotDialogOpen, setNewBotDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
   const [newBotDescription, setNewBotDescription] = useState("");
-  const [selectedCanais, setSelectedCanais] = useState<string[]>(["whatsapp"]);
+  const [selectedCanal, setSelectedCanal] = useState<string>("whatsapp");
   const [isCreating, setIsCreating] = useState(false);
   
   // Dialogs para duplicar e renomear
@@ -241,9 +241,9 @@ export default function BotCreate() {
           return;
         }
 
-        const botCanais = botToActivate.canais || ["whatsapp"];
+        const botCanal = botToActivate.canais?.[0] || "whatsapp";
 
-        // Buscar todos os bots ativos do mesmo estabelecimento (exceto o atual)
+        // Buscar todos os bots ativos do mesmo estabelecimento e mesmo canal (exceto o atual)
         const { data: activeBots } = await supabase
           .from("bot_flows")
           .select("*")
@@ -254,11 +254,10 @@ export default function BotCreate() {
         // Determinar conflitos por canal/sessão
         const botsToDeactivate: string[] = [];
         for (const activeBot of activeBots || []) {
-          const activeBotCanais = activeBot.canais || ["whatsapp"];
-          const hasOverlap = botCanais.some((canal: string) => activeBotCanais.includes(canal));
-
-          if (hasOverlap) {
-            if (botCanais.includes("whatsapp") && activeBotCanais.includes("whatsapp")) {
+          const activeBotCanal = activeBot.canais?.[0] || "whatsapp";
+          
+          if (botCanal === activeBotCanal) {
+            if (botCanal === "whatsapp") {
               // Para WhatsApp, permitir múltiplos se tiverem sessões diferentes
               const { data: sessions } = await supabase
                 .from("whatsapp_sessions")
@@ -330,11 +329,11 @@ export default function BotCreate() {
       }
 
       // Navegar para o builder com o nome do bot como parâmetro
-      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify(selectedCanais))}`);
+      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}`);
       setNewBotDialogOpen(false);
       setNewBotName("");
       setNewBotDescription("");
-      setSelectedCanais(["whatsapp"]);
+      setSelectedCanal("whatsapp");
     } catch (error) {
       console.error("Error creating bot:", error);
       toast.error("Erro ao criar bot");
@@ -615,12 +614,12 @@ export default function BotCreate() {
                           {bot.description && (
                             <p className="text-sm text-muted-foreground mb-2">{bot.description}</p>
                           )}
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {bot.canais?.map((c: string) => (
-                              <Badge key={c} variant="secondary" className="text-xs">
-                                {canalLabels[c] || c}
+                          <div className="mb-2">
+                            {bot.canais && bot.canais.length > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {canalLabels[bot.canais[0]] || bot.canais[0]}
                               </Badge>
-                            ))}
+                            )}
                           </div>
                           <CardDescription>
                             {bot.flow_data?.nodes?.length || 0} blocos • 
@@ -723,34 +722,21 @@ export default function BotCreate() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Canais de Atendimento *</Label>
-              <div className="space-y-2">
-                {[
-                  { id: "whatsapp", label: "WhatsApp" },
-                  { id: "webchat", label: "WebChat" },
-                  { id: "telegram", label: "Telegram" },
-                  { id: "facebook", label: "Facebook" },
-                  { id: "instagram", label: "Instagram" }
-                ].map((canal) => (
-                  <label key={canal.id} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedCanais.includes(canal.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedCanais([...selectedCanais, canal.id]);
-                        } else {
-                          setSelectedCanais(selectedCanais.filter(c => c !== canal.id));
-                        }
-                      }}
-                      className="rounded border-gray-300"
-                    />
-                    <span className="text-sm">{canal.label}</span>
-                  </label>
-                ))}
-              </div>
+              <Label htmlFor="bot-canal">Canal de Atendimento *</Label>
+              <Select value={selectedCanal} onValueChange={setSelectedCanal}>
+                <SelectTrigger id="bot-canal">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="webchat">WebChat</SelectItem>
+                  <SelectItem value="telegram">Telegram</SelectItem>
+                  <SelectItem value="facebook">Facebook</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                </SelectContent>
+              </Select>
               <p className="text-sm text-muted-foreground">
-                Selecione em quais canais este bot poderá ser usado
+                Selecione o canal onde este bot será usado
               </p>
             </div>
           </div>
@@ -769,7 +755,7 @@ export default function BotCreate() {
             <Button
               type="submit"
               onClick={handleCreateNewBot}
-              disabled={!newBotName.trim() || selectedCanais.length === 0 || isCreating}
+              disabled={!newBotName.trim() || !selectedCanal || isCreating}
             >
               {isCreating ? "Criando..." : "Criar Bot"}
             </Button>
