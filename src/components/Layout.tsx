@@ -433,7 +433,7 @@ export default function Layout({ children }: LayoutProps) {
                           
                           {/* Submenu panel */}
                           <div className="fixed left-20 top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto">
-                            <div className="p-8 pt-10">
+                            <div className="px-6 py-8">
                               <h3 className="text-lg font-bold text-foreground mb-4">
                                 {item.title}
                               </h3>
@@ -449,16 +449,16 @@ export default function Layout({ children }: LayoutProps) {
                                       to={subItem.url}
                                       onClick={() => setOpenSubmenuId(null)}
                                       className={({ isActive }) =>
-                                        `flex items-center justify-between py-4 group ${
+                                        `flex items-center gap-2 py-4 group ${
                                           isActive
                                             ? "text-foreground"
                                             : "text-foreground/70 hover:text-foreground"
                                         }`
                                       }
                                     >
-                                      <span className="text-sm font-medium">{subItem.title}</span>
+                                      <span className="text-sm font-medium flex-1">{subItem.title}</span>
                                       {location.pathname === subItem.url && (
-                                        <ChevronRight className="w-3 h-3 text-muted-foreground opacity-40" />
+                                        <ChevronRight className="w-3 h-3 text-muted-foreground opacity-40 flex-shrink-0" />
                                       )}
                                     </NavLink>
                                   </div>
