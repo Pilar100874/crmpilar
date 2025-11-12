@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Building2, User as UserIcon, Users, Link2, Trash2, Filter } from "lucide-react";
+import { Building2, User as UserIcon, Users, Link2, Trash2, Filter, Search } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Empresa {
   id: string;
@@ -42,6 +44,8 @@ interface Vinculo {
 
 export default function VinculosEmpresas() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [filteredEmpresas, setFilteredEmpresas] = useState<Empresa[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [vinculos, setVinculos] = useState<Vinculo[]>([]);
@@ -70,6 +74,23 @@ export default function VinculosEmpresas() {
   useEffect(() => {
     loadVinculos();
   }, [filterUsuario, filterSegmento]);
+
+  useEffect(() => {
+    // Filtrar empresas baseado no termo de busca
+    if (searchTerm.trim() === "") {
+      setFilteredEmpresas([]);
+    } else {
+      const filtered = empresas.filter((empresa) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          empresa.nome_fantasia?.toLowerCase().includes(searchLower) ||
+          empresa.nome?.toLowerCase().includes(searchLower) ||
+          empresa.cnpj?.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredEmpresas(filtered);
+    }
+  }, [searchTerm, empresas]);
 
   const loadData = async () => {
     try {
@@ -245,10 +266,19 @@ export default function VinculosEmpresas() {
   };
 
   const selectAllEmpresas = () => {
-    if (selectedEmpresas.length === empresas.length) {
+    if (selectedEmpresas.length === filteredEmpresas.length && filteredEmpresas.length > 0) {
       setSelectedEmpresas([]);
     } else {
-      setSelectedEmpresas(empresas.map((e) => e.id));
+      setSelectedEmpresas(filteredEmpresas.map((e) => e.id));
+    }
+  };
+
+  const handleSearch = () => {
+    // A busca é feita automaticamente pelo useEffect
+    if (filteredEmpresas.length === 0 && searchTerm.trim() !== "") {
+      toast.error("Nenhuma empresa encontrada", {
+        description: "Tente outro termo de busca",
+      });
     }
   };
 
@@ -272,50 +302,76 @@ export default function VinculosEmpresas() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Selecionar Empresas</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={selectAllEmpresas}
-                  className="text-xs"
-                >
-                  {selectedEmpresas.length === empresas.length ? "Desmarcar" : "Selecionar"} Todas
+              <Label htmlFor="search-empresa">Buscar Empresas</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="search-empresa"
+                  placeholder="Digite nome, razão social ou CNPJ..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSearch();
+                  }}
+                />
+                <Button onClick={handleSearch} variant="secondary">
+                  <Search className="h-4 w-4" />
                 </Button>
               </div>
-              <ScrollArea className="h-48 border rounded-md p-4">
-                <div className="space-y-2">
-                  {empresas.map((empresa) => (
-                    <div key={empresa.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`empresa-${empresa.id}`}
-                        checked={selectedEmpresas.includes(empresa.id)}
-                        onCheckedChange={() => toggleEmpresaSelection(empresa.id)}
-                      />
-                      <label
-                        htmlFor={`empresa-${empresa.id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span>{empresa.nome_fantasia || empresa.nome}</span>
-                          {empresa.cnpj && (
-                            <span className="text-xs text-muted-foreground">
-                              ({empresa.cnpj})
-                            </span>
-                          )}
-                        </div>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-              {selectedEmpresas.length > 0 && (
-                <Badge variant="secondary">
-                  {selectedEmpresas.length} empresa(s) selecionada(s)
-                </Badge>
-              )}
             </div>
+
+            {filteredEmpresas.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Resultados da Busca</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={selectAllEmpresas}
+                    className="text-xs"
+                  >
+                    {selectedEmpresas.length === filteredEmpresas.length ? "Desmarcar" : "Selecionar"} Todas
+                  </Button>
+                </div>
+                <ScrollArea className="h-64 border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12"></TableHead>
+                        <TableHead>Nome Fantasia</TableHead>
+                        <TableHead>Razão Social</TableHead>
+                        <TableHead>CNPJ</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredEmpresas.map((empresa) => (
+                        <TableRow key={empresa.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedEmpresas.includes(empresa.id)}
+                              onCheckedChange={() => toggleEmpresaSelection(empresa.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">{empresa.nome_fantasia || "-"}</TableCell>
+                          <TableCell>{empresa.nome || "-"}</TableCell>
+                          <TableCell className="text-muted-foreground">{empresa.cnpj || "-"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+                {selectedEmpresas.length > 0 && (
+                  <Badge variant="secondary">
+                    {selectedEmpresas.length} empresa(s) selecionada(s)
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {searchTerm && filteredEmpresas.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                Nenhuma empresa encontrada
+              </div>
+            )}
 
             <Separator />
 
