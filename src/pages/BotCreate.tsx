@@ -367,7 +367,6 @@ export default function BotCreate() {
         return;
       }
 
-      // Verificar se já existe um bot com este nome
       const { data: existingBots } = await supabase
         .from("bot_flows")
         .select("name")
@@ -380,7 +379,6 @@ export default function BotCreate() {
         return;
       }
 
-      // Duplicar o bot
       const { error } = await supabase
         .from("bot_flows")
         .insert({
@@ -438,7 +436,7 @@ export default function BotCreate() {
     }
   };
 
-  const handleRenameBot = async () {
+  const handleRenameBot = async () => {
     if (!renameName.trim()) {
       toast.error("Por favor, informe um novo nome para o bot");
       return;
@@ -457,7 +455,6 @@ export default function BotCreate() {
         return;
       }
 
-      // Verificar se já existe outro bot com este nome
       const { data: existingBots } = await supabase
         .from("bot_flows")
         .select("id, name")
@@ -470,7 +467,6 @@ export default function BotCreate() {
         return;
       }
 
-      // Renomear o bot
       const { error } = await supabase
         .from("bot_flows")
         .update({ 
@@ -601,13 +597,15 @@ export default function BotCreate() {
                                 <Edit className="w-4 h-4 mr-2" />
                                 Renomear
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(null);
-                                setSelectedBot(bot);
-                                setEditingCanais(bot.canais || ["whatsapp"]);
-                                setEditCanaisDialogOpen(true);
-                              }}>
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                  setSelectedBot(bot);
+                                  setEditingCanais(bot.canais || ["whatsapp"]);
+                                  setEditCanaisDialogOpen(true);
+                                }}
+                              >
                                 <Smartphone className="w-4 h-4 mr-2" />
                                 Editar Canais
                               </DropdownMenuItem>
