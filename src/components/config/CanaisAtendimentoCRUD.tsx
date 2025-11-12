@@ -1159,17 +1159,41 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [welcomeMessage, setWelcomeMessage] = useState("Olá! Como posso ajudar?");
   const [widgetTitle, setWidgetTitle] = useState("Atendimento");
   const [widgetPosition, setWidgetPosition] = useState<"right" | "left">("right");
+  const [selectedBotId, setSelectedBotId] = useState<string>("");
+  const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showScript, setShowScript] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    loadBots();
+  }, [estabelecimentoId]);
+
+  const loadBots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flows')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('published', true)
+        .order('nome');
+
+      if (error) throw error;
+      setBots(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar bots:', error);
+    }
+  };
+
   const generateScript = () => {
     const baseUrl = window.location.origin;
+    const botParam = selectedBotId ? `&bot=${selectedBotId}` : '';
     return `<!-- WebChat Widget -->
 <script>
   (function() {
     var config = {
       estabelecimentoId: '${estabelecimentoId}',
+      botId: '${selectedBotId}',
       color: '${widgetColor}',
       title: '${widgetTitle}',
       welcomeMessage: '${welcomeMessage}',
@@ -1254,6 +1278,7 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
     var iframe = document.createElement('iframe');
     iframe.id = 'webchat-iframe';
     iframe.src = config.baseUrl + '/webchat?estabelecimento=' + config.estabelecimentoId + 
+                 '&bot=' + config.botId +
                  '&color=' + encodeURIComponent(config.color) + 
                  '&title=' + encodeURIComponent(config.title) + 
                  '&welcome=' + encodeURIComponent(config.welcomeMessage);
@@ -1284,6 +1309,26 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           <CardDescription>Configure o widget de chat para seu site</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="bot-select">Bot de Atendimento *</Label>
+            <select
+              id="bot-select"
+              value={selectedBotId}
+              onChange={(e) => setSelectedBotId(e.target.value)}
+              className="w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Selecione um bot...</option>
+              {bots.map((bot) => (
+                <option key={bot.id} value={bot.id}>
+                  {bot.nome}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-muted-foreground">
+              Escolha qual bot responderá as mensagens do WebChat
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="widget-title">Título do Widget</Label>
             <Input
@@ -1342,10 +1387,15 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             </div>
           </div>
 
-          <Button onClick={handleSave} disabled={loading} className="w-full">
+          <Button onClick={handleSave} disabled={loading || !selectedBotId} className="w-full">
             <Save className="w-4 h-4 mr-2" />
-            Salvar Configuração
+            {loading ? "Salvando..." : "Salvar Configuração"}
           </Button>
+          {!selectedBotId && (
+            <p className="text-sm text-destructive text-center mt-2">
+              Selecione um bot para ativar o WebChat
+            </p>
+          )}
         </CardContent>
       </Card>
 
