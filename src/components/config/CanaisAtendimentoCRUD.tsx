@@ -53,8 +53,6 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
   const [whatsappToken, setWhatsappToken] = useState("");
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [businessAccountId, setBusinessAccountId] = useState("");
-  const [selectedBotId, setSelectedBotId] = useState<string>("");
-  const [bots, setBots] = useState<any[]>([]);
   const [configId, setConfigId] = useState<string | null>(null);
   const [webhookUrl] = useState(
     "https://kiuztueouxtyqiecgdxk.supabase.co/functions/v1/whatsapp-webhook"
@@ -62,24 +60,7 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
 
   useEffect(() => {
     loadWhatsAppConfig();
-    loadBots();
   }, [estabelecimentoId]);
-
-  const loadBots = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bot_flows')
-        .select('id, name')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .contains('canais', ['whatsapp'])
-        .order('name');
-
-      if (error) throw error;
-      setBots(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar bots:', error);
-    }
-  };
 
   const loadWhatsAppConfig = async () => {
     try {
@@ -224,35 +205,17 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="wa-bot-select">Bot de Atendimento *</Label>
-            <select
-              id="wa-bot-select"
-              value={selectedBotId}
-              onChange={(e) => setSelectedBotId(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">Selecione um bot...</option>
-              {bots.map((bot) => (
-                <option key={bot.id} value={bot.id}>
-                  {bot.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-muted-foreground">
-              Escolha qual bot responderá as mensagens do WhatsApp Business API
-            </p>
-          </div>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+            </AlertDescription>
+          </Alert>
 
-          <Button onClick={handleSave} className="w-full" disabled={loading || !selectedBotId}>
+          <Button onClick={handleSave} className="w-full" disabled={loading}>
             <Save className="w-4 h-4 mr-2" />
             {loading ? "Salvando..." : "Salvar Configurações"}
           </Button>
-          {!selectedBotId && (
-            <p className="text-sm text-destructive text-center mt-2">
-              Selecione um bot para ativar o WhatsApp Business API
-            </p>
-          )}
         </CardContent>
       </Card>
 
@@ -1039,30 +1002,8 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [pageId, setPageId] = useState("");
   const [pageAccessToken, setPageAccessToken] = useState("");
   const [appSecret, setAppSecret] = useState("");
-  const [selectedBotId, setSelectedBotId] = useState<string>("");
-  const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadBots();
-  }, [estabelecimentoId]);
-
-  const loadBots = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bot_flows')
-        .select('id, name')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .contains('canais', ['facebook'])
-        .order('name');
-
-      if (error) throw error;
-      setBots(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar bots:', error);
-    }
-  };
 
   const handleSave = () => {
     if (!pageId || !pageAccessToken) {
@@ -1083,25 +1024,12 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
         <CardDescription>Configure a integração com o Facebook Messenger</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="fb-bot-select">Bot de Atendimento *</Label>
-          <select
-            id="fb-bot-select"
-            value={selectedBotId}
-            onChange={(e) => setSelectedBotId(e.target.value)}
-            className="w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="">Selecione um bot...</option>
-            {bots.map((bot) => (
-              <option key={bot.id} value={bot.id}>
-                {bot.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-sm text-muted-foreground">
-            Escolha qual bot responderá as mensagens do Facebook
-          </p>
-        </div>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+          </AlertDescription>
+        </Alert>
 
         <div className="space-y-2">
           <Label htmlFor="fb-page-id">Page ID *</Label>
@@ -1132,14 +1060,9 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             onChange={(e) => setAppSecret(e.target.value)}
           />
         </div>
-        <Button onClick={handleSave} disabled={loading || !selectedBotId} className="w-full">
+        <Button onClick={handleSave} disabled={loading} className="w-full">
           Salvar Configuração
         </Button>
-        {!selectedBotId && (
-          <p className="text-sm text-destructive text-center mt-2">
-            Selecione um bot para ativar o Facebook
-          </p>
-        )}
       </CardContent>
     </Card>
   );
@@ -1149,30 +1072,8 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
 function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [instagramAccountId, setInstagramAccountId] = useState("");
   const [accessToken, setAccessToken] = useState("");
-  const [selectedBotId, setSelectedBotId] = useState<string>("");
-  const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadBots();
-  }, [estabelecimentoId]);
-
-  const loadBots = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bot_flows')
-        .select('id, name')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .contains('canais', ['instagram'])
-        .order('name');
-
-      if (error) throw error;
-      setBots(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar bots:', error);
-    }
-  };
 
   const handleSave = () => {
     if (!instagramAccountId || !accessToken) {
@@ -1193,25 +1094,12 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
         <CardDescription>Configure a integração com o Instagram</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="ig-bot-select">Bot de Atendimento *</Label>
-          <select
-            id="ig-bot-select"
-            value={selectedBotId}
-            onChange={(e) => setSelectedBotId(e.target.value)}
-            className="w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="">Selecione um bot...</option>
-            {bots.map((bot) => (
-              <option key={bot.id} value={bot.id}>
-                {bot.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-sm text-muted-foreground">
-            Escolha qual bot responderá as mensagens do Instagram
-          </p>
-        </div>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+          </AlertDescription>
+        </Alert>
 
         <div className="space-y-2">
           <Label htmlFor="ig-account">Instagram Business Account ID *</Label>
@@ -1232,14 +1120,9 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             onChange={(e) => setAccessToken(e.target.value)}
           />
         </div>
-        <Button onClick={handleSave} disabled={loading || !selectedBotId} className="w-full">
+        <Button onClick={handleSave} disabled={loading} className="w-full">
           Salvar Configuração
         </Button>
-        {!selectedBotId && (
-          <p className="text-sm text-destructive text-center mt-2">
-            Selecione um bot para ativar o Instagram
-          </p>
-        )}
       </CardContent>
     </Card>
   );
@@ -1248,30 +1131,8 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
 // Telegram Config
 function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [botToken, setBotToken] = useState("");
-  const [selectedBotId, setSelectedBotId] = useState<string>("");
-  const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadBots();
-  }, [estabelecimentoId]);
-
-  const loadBots = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bot_flows')
-        .select('id, name')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .contains('canais', ['telegram'])
-        .order('name');
-
-      if (error) throw error;
-      setBots(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar bots:', error);
-    }
-  };
 
   const handleSave = () => {
     if (!botToken) {
@@ -1292,25 +1153,12 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
         <CardDescription>Configure a integração com o Telegram</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="tg-bot-select">Bot de Atendimento *</Label>
-          <select
-            id="tg-bot-select"
-            value={selectedBotId}
-            onChange={(e) => setSelectedBotId(e.target.value)}
-            className="w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <option value="">Selecione um bot...</option>
-            {bots.map((bot) => (
-              <option key={bot.id} value={bot.id}>
-                {bot.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-sm text-muted-foreground">
-            Escolha qual bot responderá as mensagens do Telegram
-          </p>
-        </div>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+          </AlertDescription>
+        </Alert>
 
         <div className="space-y-2">
           <Label htmlFor="tg-token">Bot Token *</Label>
@@ -1325,14 +1173,9 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             Obtenha seu token com o @BotFather no Telegram
           </p>
         </div>
-        <Button onClick={handleSave} disabled={loading || !selectedBotId} className="w-full">
+        <Button onClick={handleSave} disabled={loading} className="w-full">
           Salvar Configuração
         </Button>
-        {!selectedBotId && (
-          <p className="text-sm text-destructive text-center mt-2">
-            Selecione um bot para ativar o Telegram
-          </p>
-        )}
       </CardContent>
     </Card>
   );
@@ -1344,55 +1187,18 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [welcomeMessage, setWelcomeMessage] = useState("Olá! Como posso ajudar?");
   const [widgetTitle, setWidgetTitle] = useState("Atendimento");
   const [widgetPosition, setWidgetPosition] = useState<"right" | "left">("right");
-  const [selectedBotId, setSelectedBotId] = useState<string>("");
-  const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showScript, setShowScript] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadBots();
-  }, [estabelecimentoId]);
-
-  const loadBots = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bot_flows')
-        .select('id, name')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .contains('canais', ['webchat'])
-        .order('name');
-
-      if (error) throw error;
-      setBots(data || []);
-      
-      if (!data || data.length === 0) {
-        toast({
-          title: "Nenhum bot encontrado",
-          description: "Crie um bot no menu Bot Builder primeiro e marque 'WebChat' nos canais.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao carregar bots:', error);
-      toast({
-        title: "Erro ao carregar bots",
-        description: "Não foi possível carregar a lista de bots.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const generateScript = () => {
     const baseUrl = window.location.origin;
-    const botParam = selectedBotId ? `&bot=${selectedBotId}` : '';
     return `<!-- WebChat Widget -->
 <script>
   (function() {
     var config = {
       estabelecimentoId: '${estabelecimentoId}',
-      botId: '${selectedBotId}',
       color: '${widgetColor}',
       title: '${widgetTitle}',
       welcomeMessage: '${welcomeMessage}',
@@ -1477,7 +1283,6 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
     var iframe = document.createElement('iframe');
     iframe.id = 'webchat-iframe';
     iframe.src = config.baseUrl + '/webchat?estabelecimento=' + config.estabelecimentoId + 
-                 '&bot=' + config.botId +
                  '&color=' + encodeURIComponent(config.color) + 
                  '&title=' + encodeURIComponent(config.title) + 
                  '&welcome=' + encodeURIComponent(config.welcomeMessage);
@@ -1508,25 +1313,12 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           <CardDescription>Configure o widget de chat para seu site</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="bot-select">Bot de Atendimento *</Label>
-            <select
-              id="bot-select"
-              value={selectedBotId}
-              onChange={(e) => setSelectedBotId(e.target.value)}
-              className="w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">Selecione um bot...</option>
-              {bots.map((bot) => (
-                <option key={bot.id} value={bot.id}>
-                  {bot.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-muted-foreground">
-              Escolha qual bot responderá as mensagens do WebChat
-            </p>
-          </div>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+            </AlertDescription>
+          </Alert>
 
           <div className="space-y-2">
             <Label htmlFor="widget-title">Título do Widget</Label>
@@ -1586,15 +1378,10 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             </div>
           </div>
 
-          <Button onClick={handleSave} disabled={loading || !selectedBotId} className="w-full">
+          <Button onClick={handleSave} disabled={loading} className="w-full">
             <Save className="w-4 h-4 mr-2" />
             {loading ? "Salvando..." : "Salvar Configuração"}
           </Button>
-          {!selectedBotId && (
-            <p className="text-sm text-destructive text-center mt-2">
-              Selecione um bot para ativar o WebChat
-            </p>
-          )}
         </CardContent>
       </Card>
 
