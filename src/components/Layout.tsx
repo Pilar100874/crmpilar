@@ -272,10 +272,36 @@ export default function Layout({ children }: LayoutProps) {
     fetchUserAndEstabelecimento();
   }, [user, isAdmin]);
 
-  // Close any open submenu whenever the route changes
+  // Close any open submenu whenever the route changes or on any click outside
   useEffect(() => {
     setOpenSubmenuId(null);
   }, [location.pathname]);
+
+  // Force close submenus on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpenSubmenuId(null);
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
+
+  // Safety: close submenu after 100ms if clicking anywhere on page
+  useEffect(() => {
+    const handleClick = () => {
+      setTimeout(() => {
+        if (openSubmenuId) {
+          setOpenSubmenuId(null);
+        }
+      }, 100);
+    };
+    
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [openSubmenuId]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
