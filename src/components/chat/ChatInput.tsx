@@ -368,7 +368,7 @@ export default function ChatInput({
                   <Bot className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
-                <PopoverContent className="w-80 z-50" align="start">
+                <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b pb-2">
                       <Bot className="h-4 w-4 text-muted-foreground" />
@@ -383,7 +383,7 @@ export default function ChatInput({
                         <SelectTrigger className="w-full rounded-full">
                           <SelectValue placeholder="Selecione um bot" />
                         </SelectTrigger>
-                        <SelectContent className="z-50">
+                        <SelectContent className="z-50 rounded-2xl">
                           {availableBots.map((bot) => (
                             <SelectItem key={bot.id} value={bot.id}>
                               {bot.name}
@@ -398,7 +398,7 @@ export default function ChatInput({
                         setShowBotPopover(false);
                       }}
                       disabled={!selectedBotRedirect}
-                      className="w-full"
+                      className="w-full rounded-full"
                     >
                       <Bot className="h-4 w-4 mr-2" />
                       Direcionar
@@ -423,7 +423,7 @@ export default function ChatInput({
                     <Webhook className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
-                  <PopoverContent className="w-80 z-50" align="start">
+                  <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 border-b pb-2">
                         <Webhook className="h-4 w-4 text-muted-foreground" />
@@ -438,7 +438,7 @@ export default function ChatInput({
                           <SelectTrigger className="w-full rounded-full">
                             <SelectValue placeholder="Selecione um webhook" />
                           </SelectTrigger>
-                          <SelectContent className="z-50">
+                          <SelectContent className="z-50 rounded-2xl">
                             {webhooksForAutoResponse.map((webhook) => (
                               <SelectItem key={webhook.id} value={webhook.id}>
                                 {webhook.name}
@@ -482,7 +482,7 @@ export default function ChatInput({
                   <UserPlus className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 z-50" align="start">
+                <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b pb-2">
                       <UserPlus className="h-4 w-4 text-muted-foreground" />
@@ -497,7 +497,7 @@ export default function ChatInput({
                         <SelectTrigger className="w-full rounded-full">
                           <SelectValue placeholder="Selecione um usuário" />
                         </SelectTrigger>
-                        <SelectContent className="z-50">
+                        <SelectContent className="z-50 rounded-2xl">
                           {availableUsers.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.nome} ({user.email})
@@ -512,7 +512,7 @@ export default function ChatInput({
                         setShowTransferPopover(false);
                       }}
                       disabled={!selectedTransferUser}
-                      className="w-full"
+                      className="w-full rounded-full"
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
                       Transferir Conversa
@@ -564,7 +564,7 @@ export default function ChatInput({
                   <SelectTrigger className="h-8 w-[150px] text-xs rounded-full">
                     <SelectValue placeholder="Selecione webhook" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-2xl">
                     {autoResponseWebhooks.map((webhook) => (
                       <SelectItem key={webhook.id} value={webhook.id} className="text-xs">
                         {webhook.name}

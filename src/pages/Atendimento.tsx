@@ -950,11 +950,11 @@ ${recentMessages}
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedConv.bot_active === false && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={handleReactivateBot}
-                      className="text-xs h-7"
+                      className="text-xs h-7 rounded-full"
                     >
                       Reativar Bot
                     </Button>
@@ -1086,7 +1086,7 @@ ${recentMessages}
                               <SelectTrigger className="h-7 text-xs bg-background/80 border-border/50 rounded-full w-[180px]">
                                 <SelectValue placeholder="Selecione o webhook" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="rounded-2xl">
                                 {aiWebhooks.map(webhook => (
                                   <SelectItem key={webhook.id} value={webhook.id}>
                                     {webhook.name}
