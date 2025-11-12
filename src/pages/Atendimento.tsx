@@ -2,8 +2,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox } from "lucide-react";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -49,6 +50,7 @@ interface Message {
 }
 
 export default function Atendimento() {
+  const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1453,6 +1455,34 @@ ${recentMessages}
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Ações Rápidas */}
+          <div className="border-t p-4 flex-shrink-0 space-y-2">
+            <Button
+              className="w-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+              onClick={() => {
+                if (selectedConv.customer?.id) {
+                  navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
+                }
+              }}
+            >
+              <Receipt className="w-4 h-4 mr-2" />
+              Abrir Orçamento
+            </Button>
+            
+            <Button
+              className="w-full rounded-full"
+              variant="outline"
+              onClick={() => {
+                if (selectedConv.customer?.email) {
+                  navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
+                }
+              }}
+            >
+              <Inbox className="w-4 h-4 mr-2" />
+              Ver Emails
+            </Button>
           </div>
 
           {/* Attendant Status Card */}
