@@ -900,10 +900,10 @@ export default function Todos() {
                               return (
                                 <td key={col.id} className="p-3">
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => navigate('/contatos', { state: { editContactId: contato.id } })}
-                                    className="h-8 px-2 hover:bg-primary/10 rounded-full"
+                                    className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
                                   >
                                     <Edit className="w-4 h-4" />
                                   </Button>
@@ -1062,10 +1062,10 @@ export default function Todos() {
                               return (
                                 <td key={col.id} className="p-3">
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => navigate('/empresas', { state: { editEmpresaId: empresa.id } })}
-                                    className="h-8 px-2 hover:bg-primary/10 rounded-full"
+                                    className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
                                   >
                                     <Edit className="w-4 h-4" />
                                   </Button>

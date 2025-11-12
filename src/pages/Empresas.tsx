@@ -1253,8 +1253,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     {tableColumns.filter(col => col.visible).map((column, index) => (
                       <th
                         key={column.id}
-                        className={`text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
-                          index === 0 ? 'sticky left-0 bg-gradient-to-r from-muted/40 to-muted/20 border-r border-border/40 z-20' : ''
+                         className={`text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
+                          index === 0 && column.id === 'actions' ? 'sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20 text-center text-foreground' : index === 0 ? 'sticky left-0 bg-gradient-to-r from-muted/40 to-muted/20 border-r border-border/40 z-20' : ''
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
@@ -1314,21 +1314,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       {tableColumns.filter(col => col.visible).map((column, index) => {
                         if (column.id === 'actions') {
                           return (
-                            <td key="actions" className="p-3 sticky left-0 bg-card group-hover:bg-gradient-to-r group-hover:from-muted/50 group-hover:to-muted/30 border-r border-border/40 transition-all duration-200">
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <td key="actions" className="p-3 sticky left-0 bg-gradient-to-l from-background via-background to-background/95 border-r border-border/30 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.15)] transition-all duration-200">
+                              <div className="flex items-center justify-center gap-2">
                                 <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8 hover:bg-primary/10 hover:text-primary rounded-full"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
                                   onClick={() => handleEditEmpresa(empresa)}
                                   title="Editar empresa"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive rounded-full"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 px-2 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 border-destructive/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteEmpresa(empresa.id);
