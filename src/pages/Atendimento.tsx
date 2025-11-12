@@ -1022,7 +1022,7 @@ ${recentMessages}
   }
 
   return (
-    <div className="h-full min-h-0 flex bg-gray-100 overflow-hidden">
+    <div className="h-screen min-h-0 flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
       <div className="w-80 border-r border-border bg-gray-100 flex flex-col h-full min-h-0">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
