@@ -147,11 +147,21 @@ All colors MUST be HSL.
 
   html, body, #root {
     height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
+    max-width: none;
+    text-align: initial;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Prevent layout shift when vertical scrollbar appears */
   html {
-    scrollbar-gutter: stable both-edges;
+    scrollbar-gutter: stable; /* reserve space only on the scrollbar side (right in LTR) */
   }
 
   body {
