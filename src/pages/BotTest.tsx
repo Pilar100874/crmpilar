@@ -294,9 +294,9 @@ export default function BotTest() {
           )}
         </div>
 
-        <div className="flex-1 overflow-auto pb-8">
+        <div className="flex-1 overflow-hidden flex">
           {nodes.length > 0 ? (
-            <div className="h-full bg-muted rounded-2xl overflow-hidden shadow-lg m-4 mb-6">
+            <div className="flex-1 flex">
               <FlowSimulator 
                 key={key}
                 nodes={nodes} 
