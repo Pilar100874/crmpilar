@@ -1037,7 +1037,7 @@ ${recentMessages}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1137,7 +1137,7 @@ ${recentMessages}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-2 bg-gray-100">
+            <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-2 bg-gray-100">
               {messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1303,7 +1303,7 @@ ${recentMessages}
                     {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
-                      className="max-h-64 overflow-y-auto mb-4 space-y-2 px-1"
+                      className="max-h-64 overflow-y-auto overscroll-contain mb-4 space-y-2 px-1"
                     >
                       {aiMessages.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
@@ -1463,7 +1463,7 @@ ${recentMessages}
           </div>
 
           {/* Resumo da Empresa */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-4">
             {/* Seção de Empresas */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
