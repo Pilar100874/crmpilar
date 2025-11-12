@@ -457,6 +457,11 @@ ${recentMessages}
       return;
     }
 
+    if (!webhook.url || !webhook.url.startsWith('http')) {
+      toast.error("URL do webhook inválida");
+      return;
+    }
+
     // Combine context and input
     const fullMessage = aiContext 
       ? `${aiContext}\n\n---\n\n${aiInput}`
@@ -479,18 +484,44 @@ ${recentMessages}
     setAiMessages(prev => [...prev, { role: "user", content: messageContent }]);
 
     try {
+      console.log('Chamando webhook:', webhook.url);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
       const response = await fetch(webhook.url, {
         method: webhook.method || "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({
           timestamp: new Date().toISOString(),
           contentType: "text",
           content: fullMessage,
         }),
+        signal: controller.signal
       });
 
-      const responseData = await response.json().catch(() => response.text());
-      const assistantContent = typeof responseData === "string" ? responseData : JSON.stringify(responseData, null, 2);
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      let assistantContent: string;
+
+      if (contentType?.includes('application/json')) {
+        const responseData = await response.json();
+        assistantContent = typeof responseData === "string" 
+          ? responseData 
+          : JSON.stringify(responseData, null, 2);
+      } else {
+        assistantContent = await response.text();
+      }
+
+      console.log('Resposta do webhook:', assistantContent);
 
       // Save assistant response
       await supabase
@@ -505,7 +536,22 @@ ${recentMessages}
       setAiMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
       toast.success("Resposta recebida!");
     } catch (error: any) {
-      toast.error(`Erro: ${error.message}`);
+      console.error('Erro ao chamar webhook:', error);
+      
+      let errorMessage = "Erro ao conectar com o webhook";
+      
+      if (error.name === 'AbortError') {
+        errorMessage = "Timeout: webhook demorou muito para responder";
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = "Erro de conexão. Verifique se o webhook está acessível e permite CORS";
+      } else {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+      
+      // Remove user message from UI if webhook fails
+      setAiMessages(prev => prev.slice(0, -1));
     } finally {
       setIsAILoading(false);
     }
