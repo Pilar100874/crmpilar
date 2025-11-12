@@ -865,7 +865,7 @@ ${recentMessages}
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar conversas..."
-              className="pl-10 h-9"
+              className="pl-10 h-9 rounded-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

@@ -380,7 +380,7 @@ export default function ChatInput({
                         value={selectedBotRedirect || ""}
                         onValueChange={onBotRedirectChange}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full rounded-full">
                           <SelectValue placeholder="Selecione um bot" />
                         </SelectTrigger>
                         <SelectContent className="z-50">
@@ -435,7 +435,7 @@ export default function ChatInput({
                           value={selectedWebhookAutoResponse || ""}
                           onValueChange={onWebhookChange}
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full rounded-full">
                             <SelectValue placeholder="Selecione um webhook" />
                           </SelectTrigger>
                           <SelectContent className="z-50">
@@ -494,7 +494,7 @@ export default function ChatInput({
                         value={selectedTransferUser || ""}
                         onValueChange={onTransferUserChange}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full rounded-full">
                           <SelectValue placeholder="Selecione um usuário" />
                         </SelectTrigger>
                         <SelectContent className="z-50">
@@ -561,7 +561,7 @@ export default function ChatInput({
                   onValueChange={setSelectedAutoWebhook}
                   disabled={disabled}
                 >
-                  <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectTrigger className="h-8 w-[150px] text-xs rounded-full">
                     <SelectValue placeholder="Selecione webhook" />
                   </SelectTrigger>
                   <SelectContent>
