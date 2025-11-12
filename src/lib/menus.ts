@@ -11,6 +11,7 @@ export const MENU_CONFIG = [
   { id: "Contatos", label: "Contatos" },
   { id: "Empresas", label: "Empresas" },
   { id: "Todos", label: "Todos" },
+  { id: "Vínculos Empresas", label: "Vínculos Empresas" },
   { id: "Email", label: "E-mail" },
   { id: "Caixa de Entrada", label: "Caixa de Entrada" },
   { id: "Enviados", label: "Enviados" },

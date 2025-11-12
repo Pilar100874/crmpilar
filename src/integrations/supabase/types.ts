@@ -669,6 +669,58 @@ export type Database = {
         }
         Relationships: []
       }
+      empresa_vinculos: {
+        Row: {
+          created_at: string | null
+          empresa_id: string
+          estabelecimento_id: string
+          id: string
+          segmento_id: string | null
+          updated_at: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id: string
+          estabelecimento_id: string
+          id?: string
+          segmento_id?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string
+          estabelecimento_id?: string
+          id?: string
+          segmento_id?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_vinculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_vinculos_segmento_id_fkey"
+            columns: ["segmento_id"]
+            isOneToOne: false
+            referencedRelation: "segmentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_vinculos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresas: {
         Row: {
           bairro: string | null

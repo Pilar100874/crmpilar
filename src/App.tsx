@@ -18,6 +18,7 @@ import Conteudos from "./pages/Conteudos";
 import Contatos from "./pages/Contatos";
 import Empresas from "./pages/Empresas";
 import Todos from "./pages/Todos";
+import VinculosEmpresas from "./pages/VinculosEmpresas";
 import Config from "./pages/Config";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/contatos" element={<Contatos />} />
             <Route path="/empresas" element={<Empresas />} />
             <Route path="/todos" element={<Todos />} />
+            <Route path="/vinculos-empresas" element={<VinculosEmpresas />} />
             <Route path="/config" element={<Config />} />
             <Route path="/config/webhooks" element={<ChatWebhook />} />
             <Route path="/config/variaveis" element={<GlobalVariables />} />
