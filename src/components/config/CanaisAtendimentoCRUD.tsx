@@ -1157,51 +1157,287 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
 function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [widgetColor, setWidgetColor] = useState("#10b981");
   const [welcomeMessage, setWelcomeMessage] = useState("Olá! Como posso ajudar?");
+  const [widgetTitle, setWidgetTitle] = useState("Atendimento");
+  const [widgetPosition, setWidgetPosition] = useState<"right" | "left">("right");
   const [loading, setLoading] = useState(false);
+  const [showScript, setShowScript] = useState(false);
   const { toast } = useToast();
+
+  const generateScript = () => {
+    const baseUrl = window.location.origin;
+    return `<!-- WebChat Widget -->
+<script>
+  (function() {
+    var config = {
+      estabelecimentoId: '${estabelecimentoId}',
+      color: '${widgetColor}',
+      title: '${widgetTitle}',
+      welcomeMessage: '${welcomeMessage}',
+      position: '${widgetPosition}',
+      baseUrl: '${baseUrl}'
+    };
+
+    var css = \`
+      #webchat-button {
+        position: fixed;
+        bottom: 20px;
+        \${config.position}: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: \${config.color};
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        z-index: 999999;
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      #webchat-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      }
+      #webchat-container {
+        position: fixed;
+        bottom: 90px;
+        \${config.position}: 20px;
+        width: 380px;
+        height: 600px;
+        max-height: calc(100vh - 120px);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        overflow: hidden;
+        z-index: 999998;
+        display: none;
+        background: white;
+      }
+      #webchat-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+      @media (max-width: 768px) {
+        #webchat-container {
+          width: calc(100vw - 40px);
+          height: calc(100vh - 120px);
+          bottom: 90px;
+          \${config.position}: 20px;
+        }
+      }
+    \`;
+
+    var style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+
+    var button = document.createElement('button');
+    button.id = 'webchat-button';
+    button.innerHTML = '💬';
+    button.onclick = function() {
+      var container = document.getElementById('webchat-container');
+      if (container.style.display === 'none' || !container.style.display) {
+        container.style.display = 'block';
+        button.innerHTML = '✕';
+      } else {
+        container.style.display = 'none';
+        button.innerHTML = '💬';
+      }
+    };
+
+    var container = document.createElement('div');
+    container.id = 'webchat-container';
+    
+    var iframe = document.createElement('iframe');
+    iframe.id = 'webchat-iframe';
+    iframe.src = config.baseUrl + '/webchat?estabelecimento=' + config.estabelecimentoId + 
+                 '&color=' + encodeURIComponent(config.color) + 
+                 '&title=' + encodeURIComponent(config.title) + 
+                 '&welcome=' + encodeURIComponent(config.welcomeMessage);
+    
+    container.appendChild(iframe);
+    document.body.appendChild(button);
+    document.body.appendChild(container);
+  })();
+</script>
+<!-- Fim WebChat Widget -->`;
+  };
+
+  const copyScript = () => {
+    const script = generateScript();
+    navigator.clipboard.writeText(script);
+    sonnerToast.success("Script copiado para a área de transferência!");
+  };
 
   const handleSave = () => {
     toast({ title: "Configuração do WebChat salva!" });
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>WebChat Widget</CardTitle>
-        <CardDescription>Configure o widget de chat para seu site</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="widget-color">Cor do Widget</Label>
-          <div className="flex gap-2">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>WebChat Widget</CardTitle>
+          <CardDescription>Configure o widget de chat para seu site</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="widget-title">Título do Widget</Label>
             <Input
-              id="widget-color"
-              type="color"
-              value={widgetColor}
-              onChange={(e) => setWidgetColor(e.target.value)}
-              className="w-20 h-10"
-            />
-            <Input
-              value={widgetColor}
-              onChange={(e) => setWidgetColor(e.target.value)}
-              placeholder="#10b981"
+              id="widget-title"
+              placeholder="Atendimento"
+              value={widgetTitle}
+              onChange={(e) => setWidgetTitle(e.target.value)}
             />
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="welcome-msg">Mensagem de Boas-vindas</Label>
-          <Input
-            id="welcome-msg"
-            placeholder="Olá! Como posso ajudar?"
-            value={welcomeMessage}
-            onChange={(e) => setWelcomeMessage(e.target.value)}
-          />
-        </div>
-        <Button onClick={handleSave} disabled={loading} className="w-full">
-          Salvar Configuração
-        </Button>
-      </CardContent>
-    </Card>
+
+          <div className="space-y-2">
+            <Label htmlFor="widget-color">Cor do Widget</Label>
+            <div className="flex gap-2">
+              <Input
+                id="widget-color"
+                type="color"
+                value={widgetColor}
+                onChange={(e) => setWidgetColor(e.target.value)}
+                className="w-20 h-10"
+              />
+              <Input
+                value={widgetColor}
+                onChange={(e) => setWidgetColor(e.target.value)}
+                placeholder="#10b981"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="welcome-msg">Mensagem de Boas-vindas</Label>
+            <Input
+              id="welcome-msg"
+              placeholder="Olá! Como posso ajudar?"
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Posição do Widget</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={widgetPosition === "right" ? "default" : "outline"}
+                onClick={() => setWidgetPosition("right")}
+                className="flex-1"
+              >
+                Direita
+              </Button>
+              <Button
+                variant={widgetPosition === "left" ? "default" : "outline"}
+                onClick={() => setWidgetPosition("left")}
+                className="flex-1"
+              >
+                Esquerda
+              </Button>
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={loading} className="w-full">
+            <Save className="w-4 h-4 mr-2" />
+            Salvar Configuração
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5" />
+            Script de Incorporação
+          </CardTitle>
+          <CardDescription>
+            Copie e cole este script no seu site (compatível com Tray e outros)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Para Tray.com.br:</strong>
+              <ol className="list-decimal ml-4 mt-2 space-y-1 text-sm">
+                <li>Acesse o painel admin da sua loja Tray</li>
+                <li>Vá em: Configurações → Layout → HTML do Rodapé</li>
+                <li>Cole o script abaixo no final do código</li>
+                <li>Clique em Salvar</li>
+              </ol>
+              <p className="mt-2 text-sm">
+                <strong>Para outros sites:</strong> Cole o script antes da tag {'</body>'} do seu site.
+              </p>
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Button onClick={() => setShowScript(!showScript)} variant="outline" className="flex-1">
+                {showScript ? "Ocultar Script" : "Mostrar Script"}
+              </Button>
+              <Button onClick={copyScript} className="flex-1">
+                Copiar Script
+              </Button>
+            </div>
+
+            {showScript && (
+              <div className="relative">
+                <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs">
+                  <code>{generateScript()}</code>
+                </pre>
+              </div>
+            )}
+          </div>
+
+          <Alert>
+            <AlertDescription className="text-sm">
+              <strong>ID do Estabelecimento:</strong> <code className="bg-muted px-2 py-1 rounded">{estabelecimentoId}</code>
+              <p className="mt-2">Este ID está incluído automaticamente no script.</p>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pré-visualização</CardTitle>
+          <CardDescription>Veja como o widget ficará no seu site</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative bg-muted/30 rounded-lg p-8 min-h-[300px] border-2 border-dashed">
+            <p className="text-center text-muted-foreground mb-4">
+              Simulação do seu site
+            </p>
+            <div 
+              style={{
+                position: 'fixed',
+                bottom: '40px',
+                [widgetPosition]: '40px',
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: widgetColor,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              }}
+            >
+              💬
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

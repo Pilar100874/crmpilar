@@ -34,6 +34,7 @@ import Layout from "./components/Layout";
 import Relatorios from "./pages/Relatorios";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
+import WebChat from "./pages/WebChat";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const App = () => (
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
+          <Route path="/webchat" element={<WebChat />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
