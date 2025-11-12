@@ -630,10 +630,22 @@ export default function BotCreate() {
                           {bot.description && (
                             <p className="text-sm text-muted-foreground mb-2">{bot.description}</p>
                           )}
-                          <div className="mb-2">
+                          <div className="mb-2 flex items-center gap-2">
                             {bot.canais && bot.canais.length > 0 && (
                               <Badge variant="secondary" className="text-xs">
                                 {canalLabels[bot.canais[0]] || bot.canais[0]}
+                              </Badge>
+                            )}
+                            {bot.canais && bot.canais.includes('whatsapp') && (
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs ${
+                                  bot.whatsapp_type === 'business' 
+                                    ? 'bg-green-500/10 text-green-700 border-green-500/20' 
+                                    : 'bg-blue-500/10 text-blue-700 border-blue-500/20'
+                                }`}
+                              >
+                                {bot.whatsapp_type === 'business' ? 'Business' : 'WAHA'}
                               </Badge>
                             )}
                           </div>
