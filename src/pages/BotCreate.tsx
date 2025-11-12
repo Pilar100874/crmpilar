@@ -221,13 +221,70 @@ export default function BotCreate() {
 
   const handleToggleActive = async (botId: string, currentActive: boolean) => {
     try {
+      // Se for ativar, aplicar lógica por canal/sessões
       if (!currentActive) {
-        await supabase
+        const estabelecimentoId = await getEstabelecimentoId();
+        if (!estabelecimentoId) {
+          toast.error("Não foi possível identificar o estabelecimento");
+          return;
+        }
+
+        // Carregar o bot que está sendo ativado
+        const { data: botToActivate, error: botError } = await supabase
           .from("bot_flows")
-          .update({ active: false })
+          .select("*")
+          .eq("id", botId)
+          .single();
+
+        if (botError || !botToActivate) {
+          toast.error("Erro ao carregar informações do bot");
+          return;
+        }
+
+        const botCanais = botToActivate.canais || ["whatsapp"];
+
+        // Buscar todos os bots ativos do mesmo estabelecimento (exceto o atual)
+        const { data: activeBots } = await supabase
+          .from("bot_flows")
+          .select("*")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .eq("active", true)
           .neq("id", botId);
+
+        // Determinar conflitos por canal/sessão
+        const botsToDeactivate: string[] = [];
+        for (const activeBot of activeBots || []) {
+          const activeBotCanais = activeBot.canais || ["whatsapp"];
+          const hasOverlap = botCanais.some((canal: string) => activeBotCanais.includes(canal));
+
+          if (hasOverlap) {
+            if (botCanais.includes("whatsapp") && activeBotCanais.includes("whatsapp")) {
+              // Para WhatsApp, permitir múltiplos se tiverem sessões diferentes
+              const { data: sessions } = await supabase
+                .from("whatsapp_sessions")
+                .select("id, bot_flow_id")
+                .or(`bot_flow_id.eq.${botId},bot_flow_id.eq.${activeBot.id}`);
+
+              const botSession = sessions?.find((s: any) => s.bot_flow_id === botId);
+              const activeBotSession = sessions?.find((s: any) => s.bot_flow_id === activeBot.id);
+
+              if (botSession && activeBotSession && botSession.id !== activeBotSession.id) {
+                continue; // sessões diferentes: manter ambos ativos
+              }
+            }
+            botsToDeactivate.push(activeBot.id);
+          }
+        }
+
+        if (botsToDeactivate.length > 0) {
+          await supabase
+            .from("bot_flows")
+            .update({ active: false })
+            .in("id", botsToDeactivate);
+        }
       }
 
+      // Alternar status do bot atual
       const { error } = await supabase
         .from("bot_flows")
         .update({ active: !currentActive })
