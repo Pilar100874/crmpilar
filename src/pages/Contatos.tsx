@@ -2276,6 +2276,12 @@ export default function Contatos() {
             >
               Empresa
             </TabsTrigger>
+            <TabsTrigger 
+              value="vinculos"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Vínculos
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="contato" className="space-y-6">
@@ -2538,6 +2544,71 @@ export default function Contatos() {
               </Button>
               <Button onClick={handleSaveContact} className="shadow-sm">
                 Salvar
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="vinculos" className="p-6">
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Vínculos do Contato</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Visualize os vínculos deste contato com usuários e segmentos.
+                  </p>
+                </div>
+
+                {editingContact && (() => {
+                  const vinculo = vinculos.find(v => v.customer_id === editingContact.id);
+                  const usuario = vinculo?.usuario_id ? usuarios.find(u => u.id === vinculo.usuario_id) : null;
+                  const segmento = vinculo?.segmento_id ? segmentos.find(s => s.id === vinculo.segmento_id) : null;
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+                              Usuário Responsável
+                            </Label>
+                            <p className="text-sm font-medium">
+                              {usuario ? usuario.nome : <span className="text-muted-foreground">Nenhum usuário vinculado</span>}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+                              Segmento
+                            </Label>
+                            <p className="text-sm font-medium">
+                              {segmento ? segmento.nome : <span className="text-muted-foreground">Nenhum segmento vinculado</span>}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M12 16v-4"/>
+                          <path d="M12 8h.01"/>
+                        </svg>
+                        Para alterar os vínculos, use a tela "Vínculo Contatos X Usuário / Segmento" no menu.
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                {!editingContact && (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Salve o contato primeiro para visualizar os vínculos.
+                  </p>
+                )}
+              </div>
+            </Card>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+                Fechar
               </Button>
             </div>
           </TabsContent>

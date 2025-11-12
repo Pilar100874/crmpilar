@@ -1542,6 +1542,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Segmentos
             </TabsTrigger>
+            <TabsTrigger 
+              value="vinculos"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Vínculos
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="empresa" className="space-y-6">
@@ -1791,60 +1797,110 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   </p>
                 </div>
 
-                {segmentos.length > 0 ? (
-                  <div className="space-y-2">
-                    {segmentos.map((segmento) => (
-                      <div key={segmento.id} className="flex items-center space-x-3 p-3 border rounded-md hover:bg-accent transition-colors">
-                        <Checkbox
-                          id={`seg-tab-${segmento.id}`}
-                          checked={segmentosSelecionados.includes(segmento.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSegmentosSelecionados([...segmentosSelecionados, segmento.id]);
-                            } else {
-                              setSegmentosSelecionados(segmentosSelecionados.filter(id => id !== segmento.id));
-                            }
-                          }}
-                        />
-                        <Label
-                          htmlFor={`seg-tab-${segmento.id}`}
-                          className="text-base font-normal cursor-pointer flex-1"
-                        >
-                          {segmento.nome}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                    <p className="text-muted-foreground mb-4">
-                      Nenhum segmento cadastrado
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Configure segmentos nas configurações do estabelecimento para poder categorizar suas empresas.
-                    </p>
-                  </div>
-                )}
-
-                {segmentosSelecionados.length > 0 && (
-                  <div className="pt-4 border-t">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Segmentos selecionados: <span className="font-semibold">{segmentosSelecionados.length}</span>
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {segmentosSelecionados.map((segId) => {
-                        const seg = segmentos.find(s => s.id === segId);
-                        return seg ? (
-                          <Badge key={segId} variant="secondary">
-                            {seg.nome}
-                          </Badge>
-                        ) : null;
-                      })}
+                <div className="space-y-2">
+                  {segmentos.map(segmento => (
+                    <div key={segmento.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
+                      <Checkbox
+                        id={`seg-${segmento.id}`}
+                        checked={segmentosSelecionados.includes(segmento.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSegmentosSelecionados(prev => [...prev, segmento.id]);
+                          } else {
+                            setSegmentosSelecionados(prev => prev.filter(id => id !== segmento.id));
+                          }
+                        }}
+                      />
+                      <label 
+                        htmlFor={`seg-${segmento.id}`}
+                        className="flex-1 text-sm font-medium cursor-pointer"
+                      >
+                        {segmento.nome}
+                      </label>
                     </div>
-                  </div>
+                  ))}
+                  {segmentos.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Nenhum segmento disponível. Crie segmentos na tela de configurações.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={handleSaveEmpresa}>
+                Salvar
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="vinculos" className="p-6">
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Vínculos da Empresa</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Visualize os vínculos desta empresa com usuários e segmentos.
+                  </p>
+                </div>
+
+                {editingEmpresa && (() => {
+                  const vinculo = vinculos.find(v => v.empresa_id === editingEmpresa.id);
+                  const usuario = vinculo?.usuario_id ? usuarios.find(u => u.id === vinculo.usuario_id) : null;
+                  const segmento = vinculo?.segmento_id ? segmentos.find(s => s.id === vinculo.segmento_id) : null;
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+                              Usuário Responsável
+                            </Label>
+                            <p className="text-sm font-medium">
+                              {usuario ? usuario.nome : <span className="text-muted-foreground">Nenhum usuário vinculado</span>}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+                              Segmento
+                            </Label>
+                            <p className="text-sm font-medium">
+                              {segmento ? segmento.nome : <span className="text-muted-foreground">Nenhum segmento vinculado</span>}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M12 16v-4"/>
+                          <path d="M12 8h.01"/>
+                        </svg>
+                        Para alterar os vínculos, use a tela "Vínculo Empresas X Usuário / Segmento" no menu.
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                {!editingEmpresa && (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Salve a empresa primeiro para visualizar os vínculos.
+                  </p>
                 )}
               </div>
             </Card>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+                Fechar
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
         </div>
