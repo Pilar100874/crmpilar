@@ -321,12 +321,12 @@ export default function VinculosEmpresas() {
 
             <div className="space-y-2">
               <Label htmlFor="usuario-select">Vincular a Usuário</Label>
-              <Select value={selectedUsuario} onValueChange={setSelectedUsuario}>
+              <Select value={selectedUsuario || "none"} onValueChange={(value) => setSelectedUsuario(value === "none" ? "" : value)}>
                 <SelectTrigger id="usuario-select">
                   <SelectValue placeholder="Selecione um usuário (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {usuarios.map((usuario) => (
                     <SelectItem key={usuario.id} value={usuario.id}>
                       {usuario.nome}
@@ -338,12 +338,12 @@ export default function VinculosEmpresas() {
 
             <div className="space-y-2">
               <Label htmlFor="segmento-select">Vincular a Segmento</Label>
-              <Select value={selectedSegmento} onValueChange={setSelectedSegmento}>
+              <Select value={selectedSegmento || "none"} onValueChange={(value) => setSelectedSegmento(value === "none" ? "" : value)}>
                 <SelectTrigger id="segmento-select">
                   <SelectValue placeholder="Selecione um segmento (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {segmentos.map((segmento) => (
                     <SelectItem key={segmento.id} value={segmento.id}>
                       {segmento.nome}
