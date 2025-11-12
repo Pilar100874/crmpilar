@@ -74,7 +74,7 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
           <MessageSquare className="h-5 w-5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-80 p-0 rounded-2xl" align="end">
         <div className="p-3 border-b">
           <h4 className="font-semibold">Textos Prontos</h4>
         </div>
@@ -88,14 +88,14 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
               quickReplies.map((reply) => (
                 <Card
                   key={reply.id}
-                  className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="p-3 cursor-pointer hover:bg-muted/50 transition-colors rounded-2xl"
                   onClick={() => handleSelect(reply.content)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         {reply.shortcut && (
-                          <span className="text-xs text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">
+                          <span className="text-xs text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-full">
                             {reply.shortcut}
                           </span>
                         )}
@@ -106,7 +106,7 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
                       </p>
                     </div>
                     {reply.is_global && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                         Global
                       </span>
                     )}

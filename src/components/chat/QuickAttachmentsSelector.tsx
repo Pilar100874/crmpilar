@@ -108,7 +108,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
             <LinkIcon className="h-5 w-5" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[500px] p-0" align="end">
+        <PopoverContent className="w-[500px] p-0 rounded-2xl" align="end">
           <div className="p-4 border-b bg-muted/30 space-y-3">
             <div>
               <h4 className="font-semibold text-lg">📎 Anexos Rápidos</h4>
@@ -123,7 +123,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                 placeholder="Pesquisar anexos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-9 rounded-full"
               />
             </div>
           </div>
@@ -153,12 +153,12 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                   links.map((attachment) => (
                     <Card
                       key={attachment.id}
-                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary"
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary rounded-2xl"
                       onClick={() => handleSelect(attachment)}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex gap-3 flex-1 min-w-0">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                             <LinkIcon className="h-5 w-5 text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -214,7 +214,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                       {images.map((attachment) => (
                         <Card
                           key={attachment.id}
-                          className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200"
+                          className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
                           onClick={() => handleImageClick(attachment)}
                         >
                           <div className="aspect-square relative">
@@ -251,11 +251,11 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                   {pdfs.map((attachment) => (
                     <Card
                       key={attachment.id}
-                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500/20 hover:border-l-red-500"
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500/20 hover:border-l-red-500 rounded-2xl"
                       onClick={() => handleSelect(attachment)}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-2xl bg-red-500/10 flex items-center justify-center">
                           <FileText className="h-5 w-5 text-red-500" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -270,11 +270,11 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                   {excels.map((attachment) => (
                     <Card
                       key={attachment.id}
-                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500/20 hover:border-l-green-500"
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500/20 hover:border-l-green-500 rounded-2xl"
                       onClick={() => handleSelect(attachment)}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-2xl bg-green-500/10 flex items-center justify-center">
                           <FileSpreadsheet className="h-5 w-5 text-green-500" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -294,11 +294,11 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                   {words.map((attachment) => (
                     <Card
                       key={attachment.id}
-                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500/20 hover:border-l-blue-500"
+                      className="p-3 cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500/20 hover:border-l-blue-500 rounded-2xl"
                       onClick={() => handleSelect(attachment)}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-2xl bg-blue-500/10 flex items-center justify-center">
                           <File className="h-5 w-5 text-blue-500" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -332,7 +332,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                             {images.map((attachment) => (
                               <Card
                                 key={attachment.id}
-                                className="group relative overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
+                                className="group relative overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 rounded-2xl"
                                 onClick={() => handleImageClick(attachment)}
                               >
                                 <div className="aspect-square relative">
@@ -370,11 +370,11 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                             {pdfs.map((attachment) => (
                               <Card
                                 key={attachment.id}
-                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-red-500/20"
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-red-500/20 rounded-2xl"
                                 onClick={() => handleSelect(attachment)}
                               >
                                 <div className="flex items-center gap-2">
-                                  <div className="h-8 w-8 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                                  <div className="h-8 w-8 rounded-2xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
                                     <FileText className="h-4 w-4 text-red-500" />
                                   </div>
                                   <p className="text-xs font-medium truncate flex-1">{attachment.title}</p>
@@ -395,11 +395,11 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                             {excels.map((attachment) => (
                               <Card
                                 key={attachment.id}
-                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-green-500/20"
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-green-500/20 rounded-2xl"
                                 onClick={() => handleSelect(attachment)}
                               >
                                 <div className="flex items-center gap-2">
-                                  <div className="h-8 w-8 rounded bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                  <div className="h-8 w-8 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
                                     <FileSpreadsheet className="h-4 w-4 text-green-500" />
                                   </div>
                                   <p className="text-xs font-medium truncate flex-1">{attachment.title}</p>
@@ -420,11 +420,11 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                             {words.map((attachment) => (
                               <Card
                                 key={attachment.id}
-                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-blue-500/20"
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors border-l-2 border-l-blue-500/20 rounded-2xl"
                                 onClick={() => handleSelect(attachment)}
                               >
                                 <div className="flex items-center gap-2">
-                                  <div className="h-8 w-8 rounded bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                                  <div className="h-8 w-8 rounded-2xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                                     <File className="h-4 w-4 text-blue-500" />
                                   </div>
                                   <p className="text-xs font-medium truncate flex-1">{attachment.title}</p>
@@ -442,7 +442,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                             {others.map((attachment) => (
                               <Card
                                 key={attachment.id}
-                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                                className="p-2 cursor-pointer hover:bg-muted/50 transition-colors rounded-2xl"
                                 onClick={() => handleSelect(attachment)}
                               >
                                 <p className="text-xs font-medium truncate">{attachment.title}</p>
@@ -462,12 +462,12 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     </Popover>
 
     <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl rounded-2xl">
         <DialogHeader>
           <DialogTitle>{previewImage?.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="relative rounded-lg overflow-hidden bg-muted">
+          <div className="relative rounded-2xl overflow-hidden bg-muted">
             <img
               src={previewImage?.url}
               alt={previewImage?.title}
@@ -475,10 +475,10 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
             />
           </div>
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setPreviewImage(null)}>
+            <Button variant="outline" onClick={() => setPreviewImage(null)} className="rounded-full">
               Cancelar
             </Button>
-            <Button onClick={() => previewImage && handleSelect(previewImage)}>
+            <Button onClick={() => previewImage && handleSelect(previewImage)} className="rounded-full">
               Inserir Imagem
             </Button>
           </div>
