@@ -28,6 +28,7 @@ import {
   Target,
   Palette,
   Zap,
+  Mail,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -79,7 +80,7 @@ const menuItems: MenuItem[] = [
   { 
     id: "Email",
     title: "E-mail", 
-    icon: Workflow,
+    icon: Mail,
     subItems: [
       { id: "Caixa de Entrada", title: "Caixa de Entrada", url: "/email/inbox", icon: MessageSquare },
       { id: "Enviados", title: "Enviados", url: "/email/sent", icon: MessageSquare },
