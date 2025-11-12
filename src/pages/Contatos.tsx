@@ -2743,12 +2743,12 @@ export default function Contatos() {
 
             <div className="space-y-2">
               <Label>Usuário Responsável</Label>
-              <Select value={usuarioVinculo} onValueChange={setUsuarioVinculo}>
+              <Select value={usuarioVinculo || "none"} onValueChange={(v) => setUsuarioVinculo(v === "none" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um usuário" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {usuarios.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.nome}
@@ -2760,12 +2760,12 @@ export default function Contatos() {
 
             <div className="space-y-2">
               <Label>Segmento</Label>
-              <Select value={segmentoVinculo} onValueChange={setSegmentoVinculo}>
+              <Select value={segmentoVinculo || "none"} onValueChange={(v) => setSegmentoVinculo(v === "none" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um segmento" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {segmentos.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.nome}
