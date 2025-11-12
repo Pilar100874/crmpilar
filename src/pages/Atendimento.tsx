@@ -97,6 +97,9 @@ export default function Atendimento() {
       subscribeToMessages(selectedConversation);
       loadConversationWebhookConfig(selectedConversation);
       loadCustomerCompanies(selectedConversation);
+      // Limpar mensagens de IA ao trocar de conversa
+      setAiMessages([]);
+      setCurrentAISessionId(null);
     }
   }, [selectedConversation]);
 
@@ -366,13 +369,14 @@ export default function Atendimento() {
     const estabId = await getEstabelecimentoId();
     if (!estabId) return;
 
-    // Check for existing session
+    // Check for existing session vinculada a esta conversa específica
     const { data: existingSession } = await supabase
       .from('webhook_chat_sessions')
-      .select('*')
+      .select('id, user_id, webhook_id, session_type, conversation_id, created_at')
       .eq('user_id', user.id)
       .eq('webhook_id', selectedAIWebhook)
       .eq('session_type', 'ai')
+      .eq('conversation_id', selectedConversation)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -386,7 +390,8 @@ export default function Atendimento() {
           user_id: user.id,
           estabelecimento_id: estabId,
           webhook_id: selectedAIWebhook,
-          session_type: 'ai'
+          session_type: 'ai',
+          conversation_id: selectedConversation
         })
         .select()
         .single();
