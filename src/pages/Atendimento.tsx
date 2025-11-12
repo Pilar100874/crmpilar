@@ -660,7 +660,7 @@ ${recentMessages}
           }
         });
 
-        // Buscar contatos pelo telefone da conversa
+        // Buscar contatos pelo telefone da conversa PRIMEIRO
         const phonesMap = new Map();
         for (const conv of data) {
           // Tentar pegar o telefone do metadata ou do customer
@@ -701,13 +701,18 @@ ${recentMessages}
           });
         }
 
-        // Get all customer IDs from both original data and phone lookup
-        const customerIds = [
-          ...data.map(c => c.customer_id).filter(Boolean),
-          ...Array.from(contactsMap.values()).map(c => c.id)
-        ].filter((id, index, self) => self.indexOf(id) === index); // Remove duplicates
+        // AGORA buscar customer IDs corretos (incluindo os encontrados por telefone)
+        const customerIds = new Set<string>();
+        data.forEach(conv => {
+          const phone = phonesMap.get(conv.id);
+          const contactByPhone = phone ? contactsMap.get(phone) : null;
+          const finalCustomerId = contactByPhone?.id || conv.customer_id;
+          if (finalCustomerId) {
+            customerIds.add(finalCustomerId);
+          }
+        });
         
-        // Get all companies for these customers
+        // Get all companies for these customers usando os IDs corretos
         const { data: companiesData } = await supabase
           .from('customer_empresas')
           .select(`
@@ -721,7 +726,7 @@ ${recentMessages}
               cnpj
             )
           `)
-          .in('customer_id', customerIds);
+          .in('customer_id', Array.from(customerIds));
 
         // Create a map of companies by customer_id
         const companiesMap = new Map();
