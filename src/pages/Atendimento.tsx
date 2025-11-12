@@ -1049,8 +1049,8 @@ ${recentMessages}
               <div
                 key={conv.id}
                 onClick={() => setSelectedConversation(conv.id)}
-                className={`px-3 py-3 border-b cursor-pointer hover:bg-accent/50 transition-colors ${
-                  selectedConversation === conv.id ? "bg-accent border-l-4 border-l-primary" : ""
+                className={`px-3 py-3 border-b cursor-pointer hover:bg-gray-200/50 transition-colors ${
+                  selectedConversation === conv.id ? "bg-gray-200 border-l-4 border-l-primary" : ""
                 }`}
               >
                 <div className="flex items-start gap-2.5">
