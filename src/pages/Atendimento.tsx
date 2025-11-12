@@ -1021,9 +1021,9 @@ ${recentMessages}
   }
 
   return (
-    <div className="h-[100vh] flex bg-gray-100 overflow-hidden">
+    <div className="h-full flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
-      <div className="w-80 border-r border-border bg-card flex flex-col h-full">
+      <div className="w-80 border-r border-border bg-gray-100 flex flex-col h-full">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-3">Chat ao Vivo</h2>
           <div className="relative">
