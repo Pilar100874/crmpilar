@@ -1356,17 +1356,26 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [showScript, setShowScript] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [activeBots, setActiveBots] = useState<any[]>([]);
+  const [previewMessages, setPreviewMessages] = useState<any[]>([]);
+  const [previewInput, setPreviewInput] = useState("");
+  const [sessionContext, setSessionContext] = useState<any>({ vars: {} });
   const { toast } = useToast();
 
   useEffect(() => {
     loadActiveBots();
   }, [estabelecimentoId]);
 
+  useEffect(() => {
+    if (showPreview && activeBots.length > 0) {
+      initializePreview();
+    }
+  }, [showPreview, activeBots]);
+
   const loadActiveBots = async () => {
     try {
       const { data, error } = await supabase
         .from('bot_flows')
-        .select('id, name')
+        .select('id, name, nodes, edges')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('active', true)
         .contains('canais', ['webchat'])
@@ -1377,6 +1386,100 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
     } catch (error) {
       console.error('Erro ao carregar bots ativos:', error);
     }
+  };
+
+  const initializePreview = async () => {
+    if (activeBots.length === 0) return;
+
+    setPreviewMessages([{
+      id: 'welcome',
+      text: welcomeMessage,
+      sender: 'bot',
+      timestamp: new Date(),
+    }]);
+    setSessionContext({ vars: {} });
+
+    // Executar o bot a partir do nó start
+    const bot = activeBots[0];
+    await executeBot(bot, '', true);
+  };
+
+  const executeBot = async (bot: any, userMessage: string, isStart = false) => {
+    try {
+      const { FlowEngine } = await import('@/services/flowEngine');
+      
+      const context = {
+        vars: sessionContext.vars,
+        userMessage,
+        sessionId: 'preview-session',
+      };
+
+      const responses: any[] = [];
+      
+      const engine = new FlowEngine(
+        bot.nodes || [],
+        bot.edges || [],
+        context,
+        async (response: any) => {
+          responses.push(response);
+        }
+      );
+
+      await engine.execute();
+
+      // Processar respostas
+      for (const response of responses) {
+        if (response.type === 'message' || response.type === 'question') {
+          const botMessage = {
+            id: Date.now().toString() + Math.random(),
+            text: response.content || response.question || '',
+            sender: 'bot',
+            timestamp: new Date(),
+            buttons: response.buttons,
+          };
+          setPreviewMessages(prev => [...prev, botMessage]);
+        } else if (response.type === 'buttons') {
+          const botMessage = {
+            id: Date.now().toString() + Math.random(),
+            text: response.content || '',
+            sender: 'bot',
+            timestamp: new Date(),
+            buttons: response.buttons,
+            sections: response.sections,
+            cards: response.cards,
+          };
+          setPreviewMessages(prev => [...prev, botMessage]);
+        }
+      }
+
+      // Atualizar contexto
+      setSessionContext({ vars: context.vars });
+    } catch (error) {
+      console.error('Erro ao executar bot:', error);
+      setPreviewMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        text: 'Erro ao processar mensagem. Tente novamente.',
+        sender: 'bot',
+        timestamp: new Date(),
+      }]);
+    }
+  };
+
+  const sendPreviewMessage = async () => {
+    if (!previewInput.trim() || activeBots.length === 0) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      text: previewInput,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+
+    setPreviewMessages(prev => [...prev, userMessage]);
+    const messageText = previewInput;
+    setPreviewInput("");
+
+    await executeBot(activeBots[0], messageText);
   };
 
   const generateScript = () => {
@@ -1744,42 +1847,121 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
                 
                 {/* Messages */}
                 <div style={{ flex: 1, padding: '16px', overflowY: 'auto', background: '#f5f5f5' }}>
-                  <div style={{
-                    background: 'white',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    marginBottom: '8px',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                  }}>
-                    {welcomeMessage}
-                  </div>
-                  <div style={{
-                    padding: '8px 12px',
-                    fontSize: '12px',
-                    color: '#666',
-                    textAlign: 'center',
-                    fontStyle: 'italic'
-                  }}>
-                    Preview apenas visual - o bot selecionado responderia aqui na versão real
-                  </div>
+                  {previewMessages.map((msg) => (
+                    <div 
+                      key={msg.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <div style={{
+                        background: msg.sender === 'user' ? widgetColor : 'white',
+                        color: msg.sender === 'user' ? 'white' : '#333',
+                        padding: '12px',
+                        borderRadius: '12px',
+                        maxWidth: '80%',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      }}>
+                        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {msg.text}
+                        </div>
+                        {msg.buttons && msg.buttons.length > 0 && (
+                          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {msg.buttons.map((btn: any, idx: number) => (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  const userMsg = {
+                                    id: Date.now().toString(),
+                                    text: btn.text || btn.label,
+                                    sender: 'user',
+                                    timestamp: new Date(),
+                                  };
+                                  setPreviewMessages(prev => [...prev, userMsg]);
+                                  executeBot(activeBots[0], btn.value || btn.text || btn.label);
+                                }}
+                                style={{
+                                  padding: '8px 12px',
+                                  border: '1px solid #e5e5e5',
+                                  borderRadius: '8px',
+                                  background: 'white',
+                                  cursor: 'pointer',
+                                  fontSize: '14px',
+                                }}
+                              >
+                                {btn.text || btn.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{
+                          fontSize: '11px',
+                          marginTop: '4px',
+                          opacity: 0.7,
+                        }}>
+                          {msg.timestamp.toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {activeBots.length === 0 && (
+                    <div style={{
+                      padding: '8px 12px',
+                      fontSize: '12px',
+                      color: '#666',
+                      textAlign: 'center',
+                      fontStyle: 'italic'
+                    }}>
+                      Nenhum bot ativo para WebChat. Ative um bot na tela "Criar Bot" com o canal WebChat selecionado.
+                    </div>
+                  )}
                 </div>
                 
                 {/* Input */}
                 <div style={{ padding: '12px', background: 'white', borderTop: '1px solid #e5e5e5' }}>
-                  <input 
-                    type="text" 
-                    placeholder="Digite sua mensagem..."
-                    disabled
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #e5e5e5',
-                      borderRadius: '8px',
-                      outline: 'none',
-                      background: '#f9f9f9',
-                      cursor: 'not-allowed'
-                    }}
-                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Digite sua mensagem..."
+                      value={previewInput}
+                      onChange={(e) => setPreviewInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          sendPreviewMessage();
+                        }
+                      }}
+                      disabled={activeBots.length === 0}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        outline: 'none',
+                        background: activeBots.length === 0 ? '#f9f9f9' : 'white',
+                        cursor: activeBots.length === 0 ? 'not-allowed' : 'text',
+                      }}
+                    />
+                    <button
+                      onClick={sendPreviewMessage}
+                      disabled={!previewInput.trim() || activeBots.length === 0}
+                      style={{
+                        padding: '10px 16px',
+                        background: widgetColor,
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: activeBots.length === 0 || !previewInput.trim() ? 'not-allowed' : 'pointer',
+                        opacity: activeBots.length === 0 || !previewInput.trim() ? 0.5 : 1,
+                      }}
+                    >
+                      ➤
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
