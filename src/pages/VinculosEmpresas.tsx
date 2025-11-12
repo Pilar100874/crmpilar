@@ -329,10 +329,7 @@ export default function VinculosEmpresas() {
                   <SelectItem value="">Nenhum</SelectItem>
                   {usuarios.map((usuario) => (
                     <SelectItem key={usuario.id} value={usuario.id}>
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="h-4 w-4" />
-                        {usuario.nome}
-                      </div>
+                      {usuario.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -349,10 +346,7 @@ export default function VinculosEmpresas() {
                   <SelectItem value="">Nenhum</SelectItem>
                   {segmentos.map((segmento) => (
                     <SelectItem key={segmento.id} value={segmento.id}>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        {segmento.nome}
-                      </div>
+                      {segmento.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
