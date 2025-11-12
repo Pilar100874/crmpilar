@@ -209,7 +209,7 @@ export default function BotTest() {
 
   return (
     <div className="h-full flex flex-col bg-white">
-        <div className="p-4 border-b border-border bg-white shadow-sm flex-shrink-0">
+        <div className="p-4 border-b border-border bg-white shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -296,7 +296,7 @@ export default function BotTest() {
 
         <div className="flex-1 overflow-hidden">
           {nodes.length > 0 ? (
-            <div className="h-full bg-muted m-4 mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <div className="h-full bg-muted rounded-2xl overflow-hidden shadow-lg m-4 mb-6">
               <FlowSimulator 
                 key={key}
                 nodes={nodes} 

@@ -2229,7 +2229,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   return (
     <div className="flex flex-col h-full border-l">
-      <CardHeader className={`flex-shrink-0 border-b ${channelStyle.headerBg}`}>
+      <CardHeader className={`border-b ${channelStyle.headerBg}`}>
         <div className="flex items-center justify-between">
           <CardTitle className={`text-sm flex items-center gap-2 ${channelStyle.headerText}`}>
             <span>{channelStyle.icon}</span>
@@ -2242,7 +2242,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         </div>
       </CardHeader>
 
-      <CardContent className={`flex-1 flex flex-col p-0 overflow-hidden ${channelStyle.bg}`}>
+      <CardContent className={`flex-1 flex flex-col p-0 ${channelStyle.bg}`}>
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-3">
             {messages.map((msg) => (
@@ -2444,7 +2444,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         {Object.keys(context).length > 0 && (
           <>
-            <div className={`flex-shrink-0 p-3 max-h-40 overflow-auto ${channel === 'telegram' ? 'bg-[#1A2633]' : 'bg-muted/50'}`}>
+            <div className={`p-3 max-h-40 overflow-auto ${channel === 'telegram' ? 'bg-[#1A2633]' : 'bg-muted/50'}`}>
               <h4 className={`text-xs font-medium mb-2 ${channel === 'telegram' ? 'text-gray-300' : ''}`}>📦 Contexto (Variáveis)</h4>
               <div className="space-y-1">
                 {Object.entries(context).map(([key, value]) => (
@@ -2465,7 +2465,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           </>
         )}
 
-        <div className={`flex-shrink-0 p-4 border-t ${channel === 'telegram' ? 'bg-[#1A2633] border-gray-700' : 'bg-background'}`}>
+        <div className={`p-4 border-t ${channel === 'telegram' ? 'bg-[#1A2633] border-gray-700' : 'bg-background'}`}>
           <input
             ref={fileInputRef}
             type="file"
