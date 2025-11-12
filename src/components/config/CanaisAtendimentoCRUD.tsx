@@ -1410,15 +1410,26 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           <CardDescription>Veja como o widget ficará no seu site</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative bg-muted/30 rounded-lg p-8 min-h-[300px] border-2 border-dashed">
+          <div className="relative bg-muted/30 rounded-lg p-8 min-h-[400px] border-2 border-dashed overflow-hidden">
             <p className="text-center text-muted-foreground mb-4">
               Simulação do seu site
             </p>
+            
+            {/* Conteúdo simulado do site */}
+            <div className="space-y-3 max-w-md mx-auto">
+              <div className="h-6 bg-muted rounded w-3/4"></div>
+              <div className="h-4 bg-muted rounded w-full"></div>
+              <div className="h-4 bg-muted rounded w-5/6"></div>
+              <div className="h-4 bg-muted rounded w-full"></div>
+              <div className="h-4 bg-muted rounded w-4/5"></div>
+            </div>
+
+            {/* Botão do WebChat */}
             <div 
               style={{
-                position: 'fixed',
-                bottom: '40px',
-                [widgetPosition]: '40px',
+                position: 'absolute',
+                bottom: '20px',
+                [widgetPosition]: '20px',
                 width: '60px',
                 height: '60px',
                 borderRadius: '50%',
@@ -1430,11 +1441,18 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
                 fontSize: '24px',
                 cursor: 'pointer',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                transition: 'transform 0.3s',
               }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              title={`${widgetTitle} - Clique para abrir`}
             >
               💬
             </div>
           </div>
+          <p className="text-sm text-muted-foreground mt-2 text-center">
+            Posição: {widgetPosition === 'right' ? 'Direita' : 'Esquerda'} | Cor: {widgetColor}
+          </p>
         </CardContent>
       </Card>
     </div>
