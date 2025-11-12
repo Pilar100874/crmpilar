@@ -105,18 +105,6 @@ export default function Atendimento() {
     loadAvailableUsers();
   }, []);
 
-  // Disable page scroll on Atendimento; keep only internal areas scrollable
-  useEffect(() => {
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-    };
-  }, []);
-
 
   useEffect(() => {
     if (selectedConversation) {
@@ -1036,7 +1024,7 @@ ${recentMessages}
   return (
     <div className="h-full min-h-0 flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
-      <div className="w-80 border-r border-border bg-gray-100 flex flex-col h-full">
+      <div className="w-80 border-r border-border bg-gray-100 flex flex-col h-full min-h-0">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-3">Chat ao Vivo</h2>
           <div className="relative">
@@ -1458,7 +1446,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetails && (
-        <div className="w-80 bg-card flex flex-col h-full overflow-hidden border-l border-border">
+        <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
           {/* Header com nome do cliente */}
           <div className="p-4 border-b flex-shrink-0">
             <div className="flex flex-col items-center mb-4">
