@@ -208,7 +208,7 @@ export default function BotTest() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
         <div className="p-4 border-b border-border bg-white shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -294,10 +294,10 @@ export default function BotTest() {
           )}
         </div>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           {nodes.length > 0 ? (
-            <div className="h-full bg-muted m-4 mb-6 rounded-2xl overflow-hidden shadow-lg">
-              <FlowSimulator 
+            <div className="h-full">
+              <FlowSimulator
                 key={key}
                 nodes={nodes} 
                 edges={edges}
@@ -305,7 +305,7 @@ export default function BotTest() {
               />
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center">
+            <div className="h-full flex items-center justify-center bg-background">
               <div className="text-center text-muted-foreground">
                 <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
                 <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
