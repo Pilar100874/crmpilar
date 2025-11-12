@@ -1373,18 +1373,43 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
 
   const loadActiveBots = async () => {
     try {
+      console.log('🔍 WebChat: Carregando bots ativos para estabelecimento:', estabelecimentoId);
+      
       const { data, error } = await supabase
         .from('bot_flows')
-        .select('id, name, nodes, edges')
+        .select('id, name, canais, active, flow_data')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('active', true)
-        .contains('canais', ['webchat'])
         .order('name');
 
-      if (error) throw error;
-      setActiveBots(data || []);
+      console.log('📦 WebChat: Todos os bots ativos:', data);
+
+      if (error) {
+        console.error('❌ WebChat: Erro ao carregar bots:', error);
+        throw error;
+      }
+
+      // Filtrar apenas bots que têm 'webchat' no array de canais
+      const webchatBots = (data || []).filter(bot => 
+        bot.canais && Array.isArray(bot.canais) && bot.canais.includes('webchat')
+      );
+
+      console.log('✅ WebChat: Bots filtrados para WebChat:', webchatBots);
+      
+      // Extrair nodes e edges do flow_data para cada bot
+      const botsWithFlowData = webchatBots.map(bot => {
+        const flowData = bot.flow_data as any;
+        return {
+          ...bot,
+          nodes: flowData?.nodes || [],
+          edges: flowData?.edges || []
+        };
+      });
+      
+      setActiveBots(botsWithFlowData);
     } catch (error) {
-      console.error('Erro ao carregar bots ativos:', error);
+      console.error('❌ WebChat: Erro ao carregar bots ativos:', error);
+      setActiveBots([]);
     }
   };
 
@@ -1603,12 +1628,12 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           <CardDescription>Configure o widget de chat para seu site</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {activeBots.length > 0 && (
+        {activeBots.length > 0 ? (
           <Alert className="bg-green-50 border-green-200">
             <Power className="h-4 w-4 text-green-600" />
             <AlertDescription>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-green-900 font-medium">Bots Ativos:</span>
+                <span className="text-green-900 font-medium">Bots Ativos para WebChat:</span>
                 {activeBots.map(bot => (
                   <Badge key={bot.id} variant="default" className="bg-green-600">
                     {bot.name}
@@ -1617,13 +1642,22 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
               </div>
             </AlertDescription>
           </Alert>
-        )}
-
-        {activeBots.length === 0 && (
+        ) : (
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+              <div className="flex items-center justify-between">
+                <span>Nenhum bot ativo para WebChat. O bot será vinculado automaticamente ao ativar na tela de Criar Bot com o canal WebChat selecionado.</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={loadActiveBots}
+                  className="ml-2"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Atualizar
+                </Button>
+              </div>
             </AlertDescription>
           </Alert>
         )}
