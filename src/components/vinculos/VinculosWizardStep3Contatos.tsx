@@ -8,9 +8,8 @@ interface Contato {
   nome: string;
   telefone: string;
   email: string;
-  usuario_vinculado_id: string | null;
-  segmento_vinculado_id: string | null;
-  vinculo_id: string | null;
+  usuarios_vinculados: Array<{ id: string; nome: string }>;
+  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 interface Usuario {

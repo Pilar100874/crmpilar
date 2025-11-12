@@ -14,9 +14,8 @@ interface Contato {
   nome: string;
   telefone: string;
   email: string;
-  usuario_vinculado_id: string | null;
-  segmento_vinculado_id: string | null;
-  vinculo_id: string | null;
+  usuarios_vinculados: Array<{ id: string; nome: string }>;
+  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 interface Usuario {
@@ -79,18 +78,22 @@ export function VinculosWizardStep1Contatos({
     // Filtro por usuário vinculado
     if (filterUsuario !== "all") {
       if (filterUsuario === "none") {
-        result = result.filter((c) => !c.usuario_vinculado_id);
+        result = result.filter((c) => c.usuarios_vinculados.length === 0);
       } else {
-        result = result.filter((c) => c.usuario_vinculado_id === filterUsuario);
+        result = result.filter((c) => 
+          c.usuarios_vinculados.some(u => u.id === filterUsuario)
+        );
       }
     }
 
     // Filtro por segmento vinculado
     if (filterSegmento !== "all") {
       if (filterSegmento === "none") {
-        result = result.filter((c) => !c.segmento_vinculado_id);
+        result = result.filter((c) => c.segmentos_vinculados.length === 0);
       } else {
-        result = result.filter((c) => c.segmento_vinculado_id === filterSegmento);
+        result = result.filter((c) => 
+          c.segmentos_vinculados.some(s => s.id === filterSegmento)
+        );
       }
     }
 
@@ -230,9 +233,6 @@ export function VinculosWizardStep1Contatos({
                   </TableRow>
                 ) : (
                   filteredContatos.map((contato) => {
-                    const usuario = usuarios.find((u) => u.id === contato.usuario_vinculado_id);
-                    const segmento = segmentos.find((s) => s.id === contato.segmento_vinculado_id);
-
                     return (
                       <TableRow key={contato.id}>
                         <TableCell>
@@ -245,15 +245,23 @@ export function VinculosWizardStep1Contatos({
                         <TableCell>{contato.telefone}</TableCell>
                         <TableCell>{contato.email}</TableCell>
                         <TableCell>
-                          {usuario ? (
-                            <Badge variant="outline">{usuario.nome}</Badge>
+                          {contato.usuarios_vinculados.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {contato.usuarios_vinculados.map((u) => (
+                                <Badge key={u.id} variant="outline">{u.nome}</Badge>
+                              ))}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">Sem vínculo</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          {segmento ? (
-                            <Badge variant="outline">{segmento.nome}</Badge>
+                          {contato.segmentos_vinculados.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {contato.segmentos_vinculados.map((s) => (
+                                <Badge key={s.id} variant="outline">{s.nome}</Badge>
+                              ))}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">Sem vínculo</span>
                           )}

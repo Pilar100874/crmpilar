@@ -28,9 +28,8 @@ interface Segmento {
 }
 
 interface ContatoComVinculo extends Contato {
-  usuario_vinculado_id: string | null;
-  segmento_vinculado_id: string | null;
-  vinculo_id: string | null;
+  usuarios_vinculados: Array<{ id: string; nome: string }>;
+  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 export default function VinculosContatos() {
@@ -86,35 +85,45 @@ export default function VinculosContatos() {
 
       if (vinculosError) throw vinculosError;
 
+      const { data: usuariosDataCompleta } = await supabase
+        .from("usuarios")
+        .select("id, nome, email")
+        .eq("estabelecimento_id", estabelecimentoId);
+
+      const { data: segmentosDataCompleta } = await supabase
+        .from("segmentos")
+        .select("id, nome")
+        .eq("estabelecimento_id", estabelecimentoId);
+
       const contatosComVinculos: ContatoComVinculo[] = (contatosData || []).map((contato) => {
-        const vinculo = vinculosData?.find((v) => v.customer_id === contato.id);
+        const vinculosContato = vinculosData?.filter((v) => v.customer_id === contato.id) || [];
+        
+        const usuariosVinculados = vinculosContato
+          .filter(v => v.usuario_id)
+          .map(v => {
+            const user = usuariosDataCompleta?.find(u => u.id === v.usuario_id);
+            return user ? { id: user.id, nome: user.nome } : null;
+          })
+          .filter(Boolean) as Array<{ id: string; nome: string }>;
+
+        const segmentosVinculados = vinculosContato
+          .filter(v => v.segmento_id)
+          .map(v => {
+            const seg = segmentosDataCompleta?.find(s => s.id === v.segmento_id);
+            return seg ? { id: seg.id, nome: seg.nome } : null;
+          })
+          .filter(Boolean) as Array<{ id: string; nome: string }>;
+
         return {
           ...contato,
-          usuario_vinculado_id: vinculo?.usuario_id || null,
-          segmento_vinculado_id: vinculo?.segmento_id || null,
-          vinculo_id: vinculo?.id || null,
+          usuarios_vinculados: usuariosVinculados,
+          segmentos_vinculados: segmentosVinculados,
         };
       });
 
       setContatos(contatosComVinculos);
-
-      const { data: usuariosData, error: usuariosError } = await supabase
-        .from("usuarios")
-        .select("id, nome, email")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .order("nome");
-
-      if (usuariosError) throw usuariosError;
-      setUsuarios(usuariosData || []);
-
-      const { data: segmentosData, error: segmentosError } = await supabase
-        .from("segmentos")
-        .select("id, nome")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .order("nome");
-
-      if (segmentosError) throw segmentosError;
-      setSegmentos(segmentosData || []);
+      setUsuarios(usuariosDataCompleta || []);
+      setSegmentos(segmentosDataCompleta || []);
     } catch (error: any) {
       toast.error("Erro ao carregar dados", {
         description: error.message,
@@ -147,11 +156,11 @@ export default function VinculosContatos() {
     setErrors([]);
     setCompleted(false);
 
-    const contatosSelecionados = contatos.filter((c) => selectedContatos.includes(c.id));
+    const contatosParaProcessar = contatos.filter((c) => selectedContatos.includes(c.id));
     const errosTemp: string[] = [];
 
-    for (let i = 0; i < contatosSelecionados.length; i++) {
-      const contato = contatosSelecionados[i];
+    for (let i = 0; i < contatosParaProcessar.length; i++) {
+      const contato = contatosParaProcessar[i];
       
       try {
         // Remover vínculos existentes do contato

@@ -31,9 +31,8 @@ interface Segmento {
 }
 
 interface EmpresaComVinculo extends Empresa {
-  usuario_vinculado_id: string | null;
-  segmento_vinculado_id: string | null;
-  vinculo_id: string | null;
+  usuarios_vinculados: Array<{ id: string; nome: string }>;
+  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 interface Props {
@@ -89,17 +88,21 @@ export function VinculosWizardStep1({ empresas, usuarios, segmentos, selectedEmp
 
     if (filterUsuario !== "all") {
       if (filterUsuario === "none") {
-        filtered = filtered.filter((e) => !e.usuario_vinculado_id);
+        filtered = filtered.filter((e) => e.usuarios_vinculados.length === 0);
       } else {
-        filtered = filtered.filter((e) => e.usuario_vinculado_id === filterUsuario);
+        filtered = filtered.filter((e) => 
+          e.usuarios_vinculados.some(u => u.id === filterUsuario)
+        );
       }
     }
 
     if (filterSegmento !== "all") {
       if (filterSegmento === "none") {
-        filtered = filtered.filter((e) => !e.segmento_vinculado_id);
+        filtered = filtered.filter((e) => e.segmentos_vinculados.length === 0);
       } else {
-        filtered = filtered.filter((e) => e.segmento_vinculado_id === filterSegmento);
+        filtered = filtered.filter((e) => 
+          e.segmentos_vinculados.some(s => s.id === filterSegmento)
+        );
       }
     }
 
@@ -242,9 +245,6 @@ export function VinculosWizardStep1({ empresas, usuarios, segmentos, selectedEmp
                   </TableRow>
                 ) : (
                   filteredEmpresas.map((empresa) => {
-                    const usuarioAtual = usuarios.find((u) => u.id === empresa.usuario_vinculado_id);
-                    const segmentoAtual = segmentos.find((s) => s.id === empresa.segmento_vinculado_id);
-                    
                     return (
                       <TableRow key={empresa.id}>
                         <TableCell>
@@ -261,15 +261,23 @@ export function VinculosWizardStep1({ empresas, usuarios, segmentos, selectedEmp
                           {empresa.cnpj || "-"}
                         </TableCell>
                         <TableCell>
-                          {usuarioAtual ? (
-                            <Badge variant="outline">{usuarioAtual.nome}</Badge>
+                          {empresa.usuarios_vinculados.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {empresa.usuarios_vinculados.map((u) => (
+                                <Badge key={u.id} variant="outline">{u.nome}</Badge>
+                              ))}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">Sem vínculo</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          {segmentoAtual ? (
-                            <Badge variant="outline">{segmentoAtual.nome}</Badge>
+                          {empresa.segmentos_vinculados.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {empresa.segmentos_vinculados.map((s) => (
+                                <Badge key={s.id} variant="outline">{s.nome}</Badge>
+                              ))}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">Sem vínculo</span>
                           )}

@@ -23,9 +23,8 @@ interface Segmento {
 }
 
 interface EmpresaComVinculo extends Empresa {
-  usuario_vinculado_id: string | null;
-  segmento_vinculado_id: string | null;
-  vinculo_id: string | null;
+  usuarios_vinculados: Array<{ id: string; nome: string }>;
+  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 interface Props {
@@ -98,9 +97,6 @@ export function VinculosWizardStep3({
               </TableHeader>
               <TableBody>
                 {empresasSelecionadas.map((empresa) => {
-                  const usuarioAtual = usuarios.find((u) => u.id === empresa.usuario_vinculado_id);
-                  const segmentoAtual = segmentos.find((s) => s.id === empresa.segmento_vinculado_id);
-
                   return (
                     <TableRow key={empresa.id}>
                       <TableCell className="font-medium">
