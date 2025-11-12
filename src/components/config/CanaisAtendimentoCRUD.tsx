@@ -25,23 +25,13 @@ interface WhatsAppSession {
   created_at: string;
 }
 
-// WhatsApp WAHA Config Component (extracted from EstabelecimentoDetalhes)
+// WhatsApp WAHA Config - Link to full configuration
 function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<any>(null);
   const [sessions, setSessions] = useState<WhatsAppSession[]>([]);
-  
-  const [wahaUrl, setWahaUrl] = useState("");
-  const [wahaApiKey, setWahaApiKey] = useState("");
-  const [newSessionName, setNewSessionName] = useState("");
 
   useEffect(() => {
     loadConfig();
-    const interval = setInterval(() => {
-      refreshSessions();
-    }, 5000);
-    return () => clearInterval(interval);
   }, [estabelecimentoId]);
 
   const loadConfig = async () => {
@@ -52,131 +42,67 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
 
-      if (configData?.waha_url) {
+      if (configData) {
         setConfig(configData);
-        setWahaUrl(configData.waha_url);
-        setWahaApiKey(configData.waha_api_key || "");
       }
 
-      await refreshSessions();
+      const { data: sessionsData } = await supabase
+        .from("whatsapp_sessions")
+        .select("*")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .order("created_at", { ascending: false });
+
+      if (sessionsData) {
+        setSessions(sessionsData);
+      }
     } catch (error) {
       console.error("Error loading config:", error);
     }
   };
 
-  const refreshSessions = async () => {
-    const { data: sessionsData } = await supabase
-      .from("whatsapp_sessions")
-      .select("*")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .order("created_at", { ascending: false });
-
-    if (sessionsData) {
-      setSessions(sessionsData);
-    }
-  };
-
-  const saveConfig = async () => {
-    if (!wahaUrl) {
-      toast({
-        title: "Erro",
-        description: "URL do servidor WAHA é obrigatória",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data: existingConfig } = await supabase
-        .from("whatsapp_config")
-        .select("*")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .maybeSingle();
-
-      if (existingConfig) {
-        await supabase
-          .from("whatsapp_config")
-          .update({
-            waha_url: wahaUrl,
-            waha_api_key: wahaApiKey || null,
-          })
-          .eq("id", existingConfig.id);
-      } else {
-        await supabase
-          .from("whatsapp_config")
-          .insert({
-            estabelecimento_id: estabelecimentoId,
-            waha_url: wahaUrl,
-            waha_api_key: wahaApiKey || null,
-          });
-      }
-      
-      toast({
-        title: "✓ Configuração salva!",
-        description: "Servidor WAHA configurado com sucesso.",
-      });
-      await loadConfig();
-    } catch (error: any) {
-      toast({
-        title: "Erro ao salvar",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Servidor WAHA</CardTitle>
-          <CardDescription>Configure a conexão com seu servidor WAHA</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="waha-url">URL do Servidor WAHA</Label>
-            <Input
-              id="waha-url"
-              placeholder="https://waha.exemplo.com"
-              value={wahaUrl}
-              onChange={(e) => setWahaUrl(e.target.value)}
-            />
+    <Card>
+      <CardHeader>
+        <CardTitle>Configuração WhatsApp WAHA</CardTitle>
+        <CardDescription>
+          Gerencie sessões WAHA para múltiplos números de WhatsApp
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {config ? (
+          <div className="space-y-4">
+            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Servidor WAHA:</span>
+                <span className="text-sm text-muted-foreground">{config.waha_url}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Sessões ativas:</span>
+                <span className="text-sm text-muted-foreground">{sessions.length}</span>
+              </div>
+            </div>
+            <Button
+              onClick={() => window.location.href = '/config?tab=geral'}
+              className="w-full"
+            >
+              Gerenciar Configuração Completa
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="waha-key">Chave de API (opcional)</Label>
-            <Input
-              id="waha-key"
-              type="password"
-              placeholder="sua-chave-api"
-              value={wahaApiKey}
-              onChange={(e) => setWahaApiKey(e.target.value)}
-            />
-          </div>
-          <Button onClick={saveConfig} disabled={loading} className="w-full">
-            {loading ? "Salvando..." : "Salvar Configuração"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {config && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Sessões WAHA</CardTitle>
-            <CardDescription>
-              {sessions.length} sessão(ões) configurada(s)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        ) : (
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Acesse a tela "Configurações Gerais" para gerenciar as sessões WAHA em detalhes.
+              Nenhuma configuração WAHA encontrada. Configure o servidor WAHA na tela de Configurações Gerais.
             </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            <Button
+              onClick={() => window.location.href = '/config?tab=geral'}
+              className="w-full"
+            >
+              Ir para Configurações Gerais
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
