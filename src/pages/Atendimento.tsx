@@ -1021,7 +1021,7 @@ ${recentMessages}
   }
 
   return (
-    <div className="h-full flex bg-gray-100 overflow-hidden">
+    <div className="h-full min-h-0 flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
       <div className="w-80 border-r border-border bg-gray-100 flex flex-col h-full">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
@@ -1230,7 +1230,7 @@ ${recentMessages}
               )}
             </div>
 
-            <div className="border-t bg-card flex-shrink-0 p-4 sticky bottom-0 z-10">
+            <div className="border-t bg-card flex-shrink-0 p-4">
               {/* AI Chat Box */}
               {showAIChat && aiWebhooks.length > 0 && (
                 <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl">
