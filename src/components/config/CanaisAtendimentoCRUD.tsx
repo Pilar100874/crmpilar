@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { MessageSquare, Facebook, Instagram, Send, Globe, Radio, Smartphone, Plus, Trash2, RefreshCw, Save, AlertCircle, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { MessageSquare, Facebook, Instagram, Send, Globe, Radio, Smartphone, Plus, Trash2, RefreshCw, Save, AlertCircle, ExternalLink, Eye, EyeOff, Power } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -57,10 +57,29 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
   const [webhookUrl] = useState(
     "https://kiuztueouxtyqiecgdxk.supabase.co/functions/v1/whatsapp-webhook"
   );
+  const [activeBots, setActiveBots] = useState<any[]>([]);
 
   useEffect(() => {
     loadWhatsAppConfig();
+    loadActiveBots();
   }, [estabelecimentoId]);
+
+  const loadActiveBots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bot_flows')
+        .select('id, name')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('active', true)
+        .contains('canais', ['whatsapp'])
+        .order('name');
+
+      if (error) throw error;
+      setActiveBots(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar bots ativos:', error);
+    }
+  };
 
   const loadWhatsAppConfig = async () => {
     try {
@@ -1003,7 +1022,29 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [pageAccessToken, setPageAccessToken] = useState("");
   const [appSecret, setAppSecret] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeBots, setActiveBots] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadActiveBots();
+  }, [estabelecimentoId]);
+
+  const loadActiveBots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bot_flows')
+        .select('id, name')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('active', true)
+        .contains('canais', ['facebook'])
+        .order('name');
+
+      if (error) throw error;
+      setActiveBots(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar bots ativos:', error);
+    }
+  };
 
   const handleSave = () => {
     if (!pageId || !pageAccessToken) {
@@ -1022,14 +1063,30 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
       <CardHeader>
         <CardTitle>Facebook Messenger</CardTitle>
         <CardDescription>Configure a integração com o Facebook Messenger</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
-          </AlertDescription>
-        </Alert>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {activeBots.length > 0 && (
+            <Alert className="bg-green-50 border-green-200">
+              <Power className="h-4 w-4 text-green-600" />
+              <AlertDescription>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-green-900 font-medium">Bots Ativos:</span>
+                  {activeBots.map(bot => (
+                    <Badge key={bot.id} variant="default" className="bg-green-600">
+                      {bot.name}
+                    </Badge>
+                  ))}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+            </AlertDescription>
+          </Alert>
 
         <div className="space-y-2">
           <Label htmlFor="fb-page-id">Page ID *</Label>
@@ -1073,7 +1130,29 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [instagramAccountId, setInstagramAccountId] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeBots, setActiveBots] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadActiveBots();
+  }, [estabelecimentoId]);
+
+  const loadActiveBots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bot_flows')
+        .select('id, name')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('active', true)
+        .contains('canais', ['instagram'])
+        .order('name');
+
+      if (error) throw error;
+      setActiveBots(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar bots ativos:', error);
+    }
+  };
 
   const handleSave = () => {
     if (!instagramAccountId || !accessToken) {
@@ -1094,6 +1173,22 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
         <CardDescription>Configure a integração com o Instagram</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {activeBots.length > 0 && (
+          <Alert className="bg-green-50 border-green-200">
+            <Power className="h-4 w-4 text-green-600" />
+            <AlertDescription>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-green-900 font-medium">Bots Ativos:</span>
+                {activeBots.map(bot => (
+                  <Badge key={bot.id} variant="default" className="bg-green-600">
+                    {bot.name}
+                  </Badge>
+                ))}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -1132,7 +1227,29 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
 function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [botToken, setBotToken] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeBots, setActiveBots] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadActiveBots();
+  }, [estabelecimentoId]);
+
+  const loadActiveBots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bot_flows')
+        .select('id, name')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('active', true)
+        .contains('canais', ['telegram'])
+        .order('name');
+
+      if (error) throw error;
+      setActiveBots(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar bots ativos:', error);
+    }
+  };
 
   const handleSave = () => {
     if (!botToken) {
@@ -1153,6 +1270,22 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
         <CardDescription>Configure a integração com o Telegram</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {activeBots.length > 0 && (
+          <Alert className="bg-green-50 border-green-200">
+            <Power className="h-4 w-4 text-green-600" />
+            <AlertDescription>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-green-900 font-medium">Bots Ativos:</span>
+                {activeBots.map(bot => (
+                  <Badge key={bot.id} variant="default" className="bg-green-600">
+                    {bot.name}
+                  </Badge>
+                ))}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -1190,7 +1323,29 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [loading, setLoading] = useState(false);
   const [showScript, setShowScript] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [activeBots, setActiveBots] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadActiveBots();
+  }, [estabelecimentoId]);
+
+  const loadActiveBots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bot_flows')
+        .select('id, name')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('active', true)
+        .contains('canais', ['webchat'])
+        .order('name');
+
+      if (error) throw error;
+      setActiveBots(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar bots ativos:', error);
+    }
+  };
 
   const generateScript = () => {
     const baseUrl = window.location.origin;
@@ -1311,14 +1466,30 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
         <CardHeader>
           <CardTitle>WebChat Widget</CardTitle>
           <CardDescription>Configure o widget de chat para seu site</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {activeBots.length > 0 && (
+          <Alert className="bg-green-50 border-green-200">
+            <Power className="h-4 w-4 text-green-600" />
             <AlertDescription>
-              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-green-900 font-medium">Bots Ativos:</span>
+                {activeBots.map(bot => (
+                  <Badge key={bot.id} variant="default" className="bg-green-600">
+                    {bot.name}
+                  </Badge>
+                ))}
+              </div>
             </AlertDescription>
           </Alert>
+        )}
+
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+          </AlertDescription>
+        </Alert>
 
           <div className="space-y-2">
             <Label htmlFor="widget-title">Título do Widget</Label>
