@@ -41,6 +41,7 @@ export default function BotCreate() {
   const [selectedBot, setSelectedBot] = useState<any>(null);
   const [duplicateName, setDuplicateName] = useState("");
   const [duplicateDescription, setDuplicateDescription] = useState("");
+  const [duplicateCanal, setDuplicateCanal] = useState<string>("whatsapp");
   const [renameName, setRenameName] = useState("");
   const [renameDescription, setRenameDescription] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
@@ -383,6 +384,7 @@ export default function BotCreate() {
           flow_data: selectedBot.flow_data,
           active: false,
           estabelecimento_id: estabelecimentoId,
+          canais: [duplicateCanal],
         });
 
       if (error) throw error;
@@ -391,6 +393,7 @@ export default function BotCreate() {
       setDuplicateDialogOpen(false);
       setDuplicateName("");
       setDuplicateDescription("");
+      setDuplicateCanal("whatsapp");
       setSelectedBot(null);
       closeOverlays();
       await loadBots();
@@ -770,6 +773,8 @@ export default function BotCreate() {
           setDuplicateDialogOpen(open);
           if (!open) {
             setDuplicateName("");
+            setDuplicateDescription("");
+            setDuplicateCanal("whatsapp");
             setSelectedBot(null);
           }
         }}
@@ -810,6 +815,24 @@ export default function BotCreate() {
                 }}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="duplicate-canal">Canal de Atendimento *</Label>
+              <Select value={duplicateCanal} onValueChange={setDuplicateCanal}>
+                <SelectTrigger id="duplicate-canal">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="webchat">WebChat</SelectItem>
+                  <SelectItem value="telegram">Telegram</SelectItem>
+                  <SelectItem value="facebook">Facebook</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Selecione o canal onde este bot será usado
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -818,6 +841,7 @@ export default function BotCreate() {
               onClick={() => {
                 setDuplicateName("");
                 setDuplicateDescription("");
+                setDuplicateCanal("whatsapp");
                 setDuplicateDialogOpen(false);
                 setSelectedBot(null);
               }}
@@ -828,7 +852,7 @@ export default function BotCreate() {
             <Button
               type="submit"
               onClick={handleDuplicateBot}
-              disabled={!duplicateName.trim() || isDuplicating}
+              disabled={!duplicateName.trim() || !duplicateCanal || isDuplicating}
             >
               {isDuplicating ? "Duplicando..." : "Duplicar Bot"}
             </Button>
