@@ -857,13 +857,14 @@ ${recentMessages}
   return (
     <div className="h-[100vh] flex bg-background overflow-hidden">
       {/* Conversation List */}
-      <div className="w-96 border-r border-border bg-card flex flex-col h-full">
-        <div className="p-4 border-b bg-card/50 flex-shrink-0">
+      <div className="w-80 border-r border-border bg-card flex flex-col h-full">
+        <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
+          <h2 className="text-lg font-semibold mb-3">Chat ao Vivo</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar conversas..."
-              className="pl-10"
+              className="pl-10 h-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -881,58 +882,42 @@ ${recentMessages}
               <div
                 key={conv.id}
                 onClick={() => setSelectedConversation(conv.id)}
-                className={`p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
-                  selectedConversation === conv.id ? "bg-muted" : ""
+                className={`px-3 py-3 border-b cursor-pointer hover:bg-accent/50 transition-colors ${
+                  selectedConversation === conv.id ? "bg-accent border-l-4 border-l-primary" : ""
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0">
-                    <User className="w-5 h-5" />
+                <div className="flex items-start gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium truncate text-foreground">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="font-semibold text-sm truncate">
                         {conv.customer?.nome || "Cliente"}
                       </span>
-                      <Badge
-                        variant={conv.status === "open" ? "default" : "secondary"}
-                        className="text-xs"
-                      >
-                        {conv.canal}
-                      </Badge>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {conv.lastMessage?.created_at
+                          ? getTimeAgo(conv.lastMessage.created_at)
+                          : getTimeAgo(conv.updated_at)}
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground truncate mb-1">
                       {conv.lastMessage?.text || "Sem mensagens"}
                     </p>
-                    {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                      <div className="flex items-center gap-1 mt-1 flex-wrap">
-                        {conv.customerCompanies.slice(0, 2).map((rel: any, idx: number) => (
-                          <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'Empresa'}
-                            {rel.is_primary && ' ⭐'}
-                          </Badge>
-                        ))}
-                        {conv.customerCompanies.length > 2 && (
-                          <span className="text-[10px] text-muted-foreground">
-                            +{conv.customerCompanies.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3 mt-1">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>
-                          {conv.lastMessage?.created_at
-                            ? getTimeAgo(conv.lastMessage.created_at)
-                            : getTimeAgo(conv.updated_at)}
-                        </span>
-                      </div>
-                      {conv.customer?.telefone && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Phone className="w-3 h-3" />
-                          <span className="truncate">{conv.customer.telefone}</span>
-                        </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {conv.bot_active !== false && (
+                        <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-green-500">
+                          BOT
+                        </Badge>
+                      )}
+                      {conv.customerCompanies && conv.customerCompanies.length > 0 && (
+                        <>
+                          {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0 bg-orange-500 text-white">
+                              {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'COMERCIAL'}
+                            </Badge>
+                          ))}
+                        </>
                       )}
                     </div>
                   </div>
@@ -944,59 +929,31 @@ ${recentMessages}
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0">
+      <div className="flex-1 flex flex-col h-full min-w-0 border-r border-border">
         {selectedConversation && selectedConv ? (
           <>
-            <div className="p-4 border-b bg-card shadow-sm flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                  <User className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-foreground">
-                    {selectedConv.customer?.nome || "Cliente"}
-                  </h3>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                    {selectedConv.customer?.telefone && (
-                      <div className="flex items-center gap-1">
-                        <Phone className="w-3 h-3" />
-                        <span>{selectedConv.customer.telefone}</span>
-                      </div>
-                    )}
-                    {selectedConv.customer?.email && (
-                      <div className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        <span>{selectedConv.customer.email}</span>
-                      </div>
-                    )}
-                    {customerCompanies.length > 0 && (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <FileText className="w-3 h-3" />
-                        {customerCompanies.map((rel, idx) => (
-                          <Badge key={rel.empresa_id} variant="secondary" className="text-xs">
-                            {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'Empresa'}
-                            {rel.is_primary && ' ⭐'}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+            <div className="px-4 py-3 border-b bg-card shadow-sm flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">
+                      {selectedConv.customer?.nome || "Cliente"}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedConv.customer?.telefone || "Sem telefone"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">{selectedConv.canal}</Badge>
-                  <Badge 
-                    variant={selectedConv.bot_active !== false ? "default" : "secondary"}
-                    className="flex items-center gap-1"
-                  >
-                    <div className={`w-2 h-2 rounded-full ${selectedConv.bot_active !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
-                    {selectedConv.bot_active !== false ? "Bot Ativo" : "Bot Pausado"}
-                  </Badge>
                   {selectedConv.bot_active === false && (
                     <Button 
                       size="sm" 
                       variant="outline"
                       onClick={handleReactivateBot}
-                      className="text-xs"
+                      className="text-xs h-7"
                     >
                       Reativar Bot
                     </Button>
@@ -1005,7 +962,7 @@ ${recentMessages}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-muted/20">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-2 bg-muted/10">
               {messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1016,32 +973,32 @@ ${recentMessages}
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`group flex gap-3 ${
+                      className={`group flex gap-2 ${
                         msg.sender === "agent" ? "justify-end" : "justify-start"
                       }`}
                     >
                       {msg.sender !== "agent" && (
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
-                          <User className="h-4 w-4" />
+                        <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <User className="h-3.5 w-3.5 text-primary" />
                         </div>
                       )}
 
                       <div
-                        className={`flex flex-col gap-1 max-w-[70%] ${
+                        className={`flex flex-col ${
                           msg.sender === "agent" ? "items-end" : "items-start"
-                        }`}
+                        } max-w-[70%]`}
                       >
                         <div
-                          className={`relative p-3 rounded-2xl transition-all ${
+                          className={`relative px-3 py-2 rounded-2xl transition-all ${
                             msg.sender === "agent"
-                              ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
-                              : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30"
+                              ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-sm"
+                              : "bg-card border border-border shadow-sm hover:border-primary/30"
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
+                          <p className="text-[13px] whitespace-pre-wrap break-words leading-snug">{msg.text}</p>
                           {msg.attachments && msg.attachments.length > 0 ? (
                             msg.payload?.contentType === "image" ? (
-                              <div className="mt-2">
+                              <div className="mt-1.5">
                                 <img
                                   src={msg.attachments[0]}
                                   alt={msg.payload?.fileName || "imagem"}
@@ -1049,7 +1006,7 @@ ${recentMessages}
                                 />
                               </div>
                             ) : (
-                              <div className="mt-2 space-y-1">
+                              <div className="mt-1.5 space-y-1">
                                 {msg.attachments.map((attachment, idx) => (
                                   <a
                                     key={idx}
@@ -1069,26 +1026,26 @@ ${recentMessages}
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                              className="absolute -top-1.5 -right-1.5 h-6 w-6 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 copyMessageToAI(msg.text);
                               }}
                               title="Copiar para o chat da IA"
                             >
-                              <ArrowDown className="h-3.5 w-3.5" />
+                              <ArrowDown className="h-3 w-3" />
                             </Button>
                           )}
+                          
+                          <span className={`text-[10px] mt-1 block ${msg.sender === "agent" ? "text-white/70" : "text-muted-foreground"}`}>
+                            {format(new Date(msg.created_at), "HH:mm", { locale: ptBR })}
+                          </span>
                         </div>
-
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(msg.created_at), "HH:mm", { locale: ptBR })}
-                        </span>
                       </div>
 
                       {msg.sender === "agent" && (
-                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
-                          <span className="text-xs font-semibold">Você</span>
+                        <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <User className="h-3.5 w-3.5 text-primary" />
                         </div>
                       )}
                     </div>
@@ -1309,6 +1266,124 @@ ${recentMessages}
           </div>
         )}
       </div>
+
+      {/* Right Sidebar - Details Panel */}
+      {selectedConversation && selectedConv && (
+        <div className="w-80 bg-card flex flex-col h-full overflow-hidden">
+          <div className="p-4 border-b flex-shrink-0">
+            <div className="flex flex-col items-center mb-4">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
+                <User className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg">{selectedConv.customer?.nome || "Cliente"}</h3>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Protocolo</span>
+                <span className="font-medium">{selectedConv.id.slice(0, 8).toUpperCase()}</span>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Tags</span>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 rounded-full">
+                  <span className="text-primary">+</span>
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Dispositivo</span>
+                <div className="flex gap-1">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Data e Hora</span>
+                <span className="text-xs">
+                  {format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Canal</span>
+                <Badge variant="secondary" className="bg-green-500 text-white">
+                  {selectedConv.canal}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Satisfação</span>
+                <div className="flex gap-0.5">
+                  {[1, 2, 3].map((star) => (
+                    <span key={star} className="text-orange-400">★</span>
+                  ))}
+                  {[4, 5].map((star) => (
+                    <span key={star} className="text-gray-300">★</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-start justify-between py-2 border-b">
+                <span className="text-muted-foreground">Pergunta</span>
+                <span className="text-right text-xs max-w-[60%]">falar com</span>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Email</span>
+                <span className="text-xs truncate max-w-[60%]">
+                  {selectedConv.customer?.email || "hyp2020g"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Telefone</span>
+                <span className="text-xs">
+                  {selectedConv.customer?.telefone || "(48) 3205"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-muted-foreground">Lead</span>
+                <span className="text-xs">-</span>
+              </div>
+
+              <div className="flex items-start justify-between py-2">
+                <span className="text-muted-foreground">Obs</span>
+                <span className="text-xs text-right max-w-[60%]">-</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Attendant Status Card */}
+          <div className="border-t p-4 flex-shrink-0">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
+                <User className="w-8 h-8 text-primary" />
+              </div>
+              <h4 className="font-semibold">Felipe</h4>
+              <p className="text-xs text-muted-foreground mb-3">CEO</p>
+              
+              <div className="w-full space-y-2">
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="text-sm">Online</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                  <span className="text-sm">Away</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                  <span className="text-sm">Offline</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
