@@ -288,16 +288,7 @@ export default function BotTest() {
             <Alert className="bg-orange-50 border-orange-200">
               <AlertCircle className="h-4 w-4 text-orange-600" />
               <AlertDescription className="text-orange-900 text-sm">
-                <strong>⚠️ Nenhum bot ativo!</strong> Selecione um bot acima e clique em "Ativar Bot" para que ele responda no WhatsApp.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {activeBotId && selectedBotId === activeBotId && (
-            <Alert className="bg-green-50 border-green-200">
-              <Power className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-900 text-sm">
-                <strong>✅ Bot Ativo!</strong> Este bot está respondendo mensagens no WhatsApp.
+                <strong>⚠️ Nenhum bot ativo!</strong> Selecione um bot acima e clique em "Ativar Bot" para que ele responda nos canais.
               </AlertDescription>
             </Alert>
           )}
