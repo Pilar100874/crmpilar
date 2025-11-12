@@ -2,7 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus } from "lucide-react";
+import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -83,6 +84,9 @@ export default function Atendimento() {
   
   // Customer companies
   const [customerCompanies, setCustomerCompanies] = useState<any[]>([]);
+  
+  // Novo contato dialog
+  const [showNovoContatoDialog, setShowNovoContatoDialog] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -1321,92 +1325,132 @@ ${recentMessages}
         )}
       </div>
 
-      {/* Right Sidebar - Details Panel */}
+      {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetails && (
         <div className="w-80 bg-card flex flex-col h-full overflow-hidden border-l border-border">
+          {/* Header com nome do cliente */}
           <div className="p-4 border-b flex-shrink-0">
             <div className="flex flex-col items-center mb-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
                 <User className="w-10 h-10 text-primary" />
               </div>
               <h3 className="font-semibold text-lg">{selectedConv.customer?.nome || "Cliente"}</h3>
+              <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Phone className="w-3 h-3" />
+                  {selectedConv.customer?.telefone}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Protocolo</span>
-                <span className="font-medium">{selectedConv.id.slice(0, 8).toUpperCase()}</span>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Tags</span>
-                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 rounded-full">
-                  <span className="text-primary">+</span>
+          {/* Resumo da Empresa */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Seção de Empresas */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  Empresas Vinculadas
+                </h4>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0 rounded-full"
+                  onClick={() => setShowNovoContatoDialog(true)}
+                >
+                  <Plus className="w-4 h-4 text-primary" />
                 </Button>
               </div>
 
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Dispositivo</span>
-                <div className="flex gap-1">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
+              {customerCompanies.length > 0 ? (
+                <div className="space-y-2">
+                  {customerCompanies.map((companyRel: any) => {
+                    const empresa = companyRel.empresas;
+                    return (
+                      <Card key={companyRel.empresa_id} className="p-3 rounded-2xl">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-medium text-sm truncate">
+                                  {empresa?.nome_fantasia || empresa?.nome}
+                                </p>
+                                {companyRel.is_primary && (
+                                  <Badge variant="secondary" className="text-xs h-5 bg-orange-500 text-white">
+                                    Principal
+                                  </Badge>
+                                )}
+                              </div>
+                              {empresa?.cnpj && (
+                                <p className="text-xs text-muted-foreground">
+                                  CNPJ: {empresa.cnpj}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {companyRel.cargo && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground">Cargo:</span>
+                              <span className="font-medium">{companyRel.cargo}</span>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                <Card className="p-4 rounded-2xl">
+                  <div className="text-center">
+                    <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+                    <p className="text-xs text-muted-foreground">
+                      Nenhuma empresa vinculada
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="mt-2 h-7 text-xs"
+                      onClick={() => setShowNovoContatoDialog(true)}
+                    >
+                      Vincular empresa
+                    </Button>
+                  </div>
+                </Card>
+              )}
+            </div>
 
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Data e Hora</span>
-                <span className="text-xs">
-                  {format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Canal</span>
-                <Badge variant="secondary" className="bg-green-500 text-white">
-                  {selectedConv.canal}
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Satisfação</span>
-                <div className="flex gap-0.5">
-                  {[1, 2, 3].map((star) => (
-                    <span key={star} className="text-orange-400">★</span>
-                  ))}
-                  {[4, 5].map((star) => (
-                    <span key={star} className="text-gray-300">★</span>
-                  ))}
+            {/* Informações da Conversa */}
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm">Informações da Conversa</h4>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="text-muted-foreground text-xs">Protocolo</span>
+                  <span className="font-medium text-xs">{selectedConv.id.slice(0, 8).toUpperCase()}</span>
                 </div>
-              </div>
 
-              <div className="flex items-start justify-between py-2 border-b">
-                <span className="text-muted-foreground">Pergunta</span>
-                <span className="text-right text-xs max-w-[60%]">falar com</span>
-              </div>
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="text-muted-foreground text-xs">Canal</span>
+                  <Badge variant="secondary" className="bg-green-500 text-white text-xs h-5">
+                    {selectedConv.canal}
+                  </Badge>
+                </div>
 
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Email</span>
-                <span className="text-xs truncate max-w-[60%]">
-                  {selectedConv.customer?.email || "hyp2020g"}
-                </span>
-              </div>
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="text-muted-foreground text-xs">Data/Hora</span>
+                  <span className="text-xs">
+                    {format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Telefone</span>
-                <span className="text-xs">
-                  {selectedConv.customer?.telefone || "(48) 3205"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Lead</span>
-                <span className="text-xs">-</span>
-              </div>
-
-              <div className="flex items-start justify-between py-2">
-                <span className="text-muted-foreground">Obs</span>
-                <span className="text-xs text-right max-w-[60%]">-</span>
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="text-muted-foreground text-xs">Email</span>
+                  <span className="text-xs truncate max-w-[60%]">
+                    {selectedConv.customer?.email || "-"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1421,15 +1465,15 @@ ${recentMessages}
               <p className="text-xs text-muted-foreground mb-3">CEO</p>
               
               <div className="w-full space-y-2">
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-full hover:bg-muted/50 transition-colors">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
                   <span className="text-sm">Online</span>
                 </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-full hover:bg-muted/50 transition-colors">
                   <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                   <span className="text-sm">Away</span>
                 </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-full hover:bg-muted/50 transition-colors">
                   <div className="w-2 h-2 rounded-full bg-gray-400"></div>
                   <span className="text-sm">Offline</span>
                 </button>
@@ -1438,6 +1482,12 @@ ${recentMessages}
           </div>
         </div>
       )}
+      
+      {/* Novo Contato Dialog */}
+      <NovoContatoDialog 
+        open={showNovoContatoDialog}
+        onOpenChange={setShowNovoContatoDialog}
+      />
     </div>
   );
 }
