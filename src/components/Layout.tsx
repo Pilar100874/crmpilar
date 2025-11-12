@@ -343,115 +343,67 @@ export default function Layout({ children }: LayoutProps) {
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
         <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
-        <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-64 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
-          <div className="flex flex-col items-center py-4 border-b border-sidebar-border">
-            <div className="w-full flex items-center justify-center px-2 mb-3">
-              <img 
-                src={logo} 
-                alt="Pilar Logo" 
-                className="h-10 object-contain"
-              />
-            </div>
-            {/* Informações do usuário e estabelecimento */}
-            <div className="w-full px-2 space-y-2">
-              {/* Empresa */}
-              {isAdmin ? (
-                <button
-                  onClick={() => setShowEstabelecimentoSelector(true)}
-                  className="flex items-center justify-start gap-3 w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer"
-                >
-                  <Building2 className="w-5 h-5 text-sidebar-foreground/60 flex-shrink-0" />
-                  <span className="text-sm text-sidebar-foreground/80 font-medium text-left">
-                    {estabelecimentoName || "Selecionar"}
-                  </span>
-                </button>
-              ) : (
-                <div className="flex items-center justify-start gap-3 p-2">
-                  <Building2 className="w-5 h-5 text-sidebar-foreground/60 flex-shrink-0" />
-                  <span className="text-sm text-sidebar-foreground/80 font-medium text-left">
-                    {estabelecimentoName || "Empresa"}
-                  </span>
-                </div>
-              )}
-
-              {/* Usuário */}
-              <button
-                onClick={() => setShowUsuarioSelector(true)}
-                className="flex items-center justify-start gap-3 w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer"
-              >
-                <UserIcon className="w-5 h-5 text-sidebar-foreground/60 flex-shrink-0" />
-                <span className="text-sm text-sidebar-foreground/70 text-left">
-                  {userName || user?.email?.split("@")[0] || "Usuário"}
-                </span>
-              </button>
-            </div>
+        <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-16 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
+          {/* Logo no topo */}
+          <div className="flex items-center justify-center py-4 border-b border-sidebar-border/50">
+            <button
+              onClick={() => isAdmin && setShowEstabelecimentoSelector(true)}
+              className="w-10 h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors"
+              title={estabelecimentoName || "Logo"}
+            >
+              <Building2 className="w-5 h-5 text-sidebar-foreground/90" />
+            </button>
           </div>
 
           <ScrollArea className="flex-1 bg-sidebar">
-            <div className="py-2 px-2">
+            <div className="py-2 flex flex-col items-center gap-1">
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   const isMenuOpen = openSubmenuId === item.id;
-                  const shouldHighlight = (isSubItemActive || isMenuOpen) && openSubmenuId === item.id;
+                  const shouldHighlight = isSubItemActive;
                   
                   return (
-                    <div key={item.id} className="relative">
+                    <div key={item.id} className="relative w-full flex justify-center">
                       <button
                         type="button"
                         onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
-                        className={`w-full flex items-center gap-3 py-3 px-3 group relative rounded-md transition-all ${
+                        className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
                           shouldHighlight
-                            ? "bg-sidebar-accent text-primary"
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                         }`}
+                        title={item.title}
                       >
-                        {shouldHighlight && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                        )}
-                        <item.icon className={`w-5 h-5 flex-shrink-0 ${
-                          shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`} />
-                        <span className={`text-sm font-medium flex-1 text-left ${
-                          shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        }`}>
-                          {item.title}
-                        </span>
+                        <item.icon className="w-6 h-6" />
                       </button>
                       
                       {isMenuOpen && (
                         <>
                           {/* Submenu panel */}
-                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-64 top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto">
-                            <div className="px-6 py-8">
-                              <h3 className="text-lg font-bold text-foreground mb-4">
+                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50 overflow-y-auto">
+                            <div className="px-4 py-6">
+                              <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
                                 {item.title}
                               </h3>
-                              <div className="border-t border-border/90 mb-6" />
                               
-                              <div className="space-y-0">
-                                {item.subItems.map((subItem, index) => (
-                                  <div key={subItem.id}>
-                                    {index > 0 && (
-                                      <div className="border-t border-border/60" />
-                                    )}
-                                    <NavLink
-                                      to={subItem.url}
-                                      onClick={() => setOpenSubmenuId(null)}
-                                      className={({ isActive }) =>
-                                        `flex items-center gap-2 py-4 group ${
-                                          isActive
-                                            ? "text-foreground"
-                                            : "text-foreground/70 hover:text-foreground"
-                                        }`
-                                      }
-                                    >
-                                      <span className="text-sm font-medium flex-1">{subItem.title}</span>
-                                      {location.pathname === subItem.url && (
-                                        <ChevronRight className="w-3 h-3 text-muted-foreground opacity-40 flex-shrink-0" />
-                                      )}
-                                    </NavLink>
-                                  </div>
+                              <div className="space-y-1">
+                                {item.subItems.map((subItem) => (
+                                  <NavLink
+                                    key={subItem.id}
+                                    to={subItem.url}
+                                    onClick={() => setOpenSubmenuId(null)}
+                                    className={({ isActive }) =>
+                                      `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                                        isActive
+                                          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                      }`
+                                    }
+                                  >
+                                    <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-sm">{subItem.title}</span>
+                                  </NavLink>
                                 ))}
                               </div>
                             </div>
@@ -467,53 +419,43 @@ export default function Layout({ children }: LayoutProps) {
                   <NavLink
                     key={item.title}
                     to={item.url!}
-                    className={({ isActive }) => {
-                      const shouldHighlight = isActive;
-                      return `flex items-center gap-3 py-3 px-3 group relative rounded-md transition-all ${
-                        shouldHighlight
-                          ? "bg-sidebar-accent text-primary"
+                    className={({ isActive }) =>
+                      `w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                        isActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }`;
-                    }}
+                      }`
+                    }
+                    title={item.title}
                   >
-                    {({ isActive }) => {
-                      const shouldHighlight = isActive;
-                      return (
-                        <>
-                          {shouldHighlight && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                          )}
-                          <item.icon className={`w-5 h-5 flex-shrink-0 ${
-                            shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                          }`} />
-                          <span className={`text-sm font-medium flex-1 text-left ${
-                            shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                          }`}>
-                            {item.title}
-                          </span>
-                        </>
-                      );
-                    }}
+                    <item.icon className="w-6 h-6" />
                   </NavLink>
                 );
               })}
             </div>
           </ScrollArea>
 
-          {/* Botão de sair no final */}
-          <div className="border-t border-sidebar-border bg-sidebar px-2 py-2">
+          {/* Ícones no rodapé */}
+          <div className="border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col items-center gap-2">
+            <button
+              onClick={() => setShowUsuarioSelector(true)}
+              className="w-10 h-10 rounded-full bg-sidebar-accent/50 flex items-center justify-center hover:bg-sidebar-accent transition-colors"
+              title={userName || "Usuário"}
+            >
+              <UserIcon className="w-5 h-5 text-sidebar-foreground/70" />
+            </button>
             <button 
               onClick={handleLogout}
-              className="relative flex items-center gap-3 w-full py-3 px-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all rounded-md"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
+              title="Sair"
             >
-              <LogOut className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm font-medium">Sair</span>
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
         )}
 
-        <main className={`flex-1 flex flex-col bg-background min-w-0 ${sidebarVisible ? 'ml-64' : 'ml-0'}`}>
+        <main className={`flex-1 flex flex-col bg-background min-w-0 ${sidebarVisible ? 'ml-16' : 'ml-0'}`}>
           {!sidebarVisible && (
             <div className="fixed left-0 top-0 z-30 p-2">
               <Button
