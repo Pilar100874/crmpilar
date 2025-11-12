@@ -14,90 +14,62 @@ interface BlockLibraryProps {
   onToggleExpanded: (expanded: boolean) => void;
 }
 
-// Organizar blocos por categoria
+// Organizar blocos por categoria com cores específicas
 const blockCategories = [
   {
     name: "IA",
     icon: "Sparkles",
-    color: "purple",
-    gradient: "from-purple-500/10 to-violet-500/10",
-    border: "border-purple-500/20",
-    borderHover: "hover:border-purple-500/40",
-    iconColor: "text-purple-600",
-    iconHover: "group-hover:text-purple-700",
-    textHover: "group-hover:text-purple-700",
+    iconColor: "#9333ea", // purple-600
+    bgColor: "rgba(147, 51, 234, 0.1)", // purple with opacity
+    borderColor: "rgba(147, 51, 234, 0.2)",
     blocks: ["ai_agent"] as NodeType[],
   },
   {
     name: "Mensagens",
     icon: "MessageSquare",
-    color: "green",
-    gradient: "from-green-500/10 to-emerald-500/10",
-    border: "border-green-500/20",
-    borderHover: "hover:border-green-500/40",
-    iconColor: "text-green-600",
-    iconHover: "group-hover:text-green-700",
-    textHover: "group-hover:text-green-700",
+    iconColor: "#16a34a", // green-600
+    bgColor: "rgba(22, 163, 74, 0.1)",
+    borderColor: "rgba(22, 163, 74, 0.2)",
     blocks: ["send_message", "media", "goodbye"] as NodeType[],
   },
   {
     name: "WhatsApp Essencial",
     icon: "MessageCircle",
-    color: "emerald",
-    gradient: "from-emerald-500/10 to-teal-500/10",
-    border: "border-emerald-500/20",
-    borderHover: "hover:border-emerald-500/40",
-    iconColor: "text-emerald-600",
-    iconHover: "group-hover:text-emerald-700",
-    textHover: "group-hover:text-emerald-700",
+    iconColor: "#059669", // emerald-600
+    bgColor: "rgba(5, 150, 105, 0.1)",
+    borderColor: "rgba(5, 150, 105, 0.2)",
     blocks: ["reply_buttons", "list_buttons", "keyword_options", "message_template", "opt_in_out", "opt_in_check", "audience"] as NodeType[],
   },
   {
     name: "Perguntas",
     icon: "HelpCircle",
-    color: "blue",
-    gradient: "from-blue-500/10 to-cyan-500/10",
-    border: "border-blue-500/20",
-    borderHover: "hover:border-blue-500/40",
-    iconColor: "text-blue-600",
-    iconHover: "group-hover:text-blue-700",
-    textHover: "group-hover:text-blue-700",
+    iconColor: "#2563eb", // blue-600
+    bgColor: "rgba(37, 99, 235, 0.1)",
+    borderColor: "rgba(37, 99, 235, 0.2)",
     blocks: ["ask_name", "ask_question", "ask_email", "ask_number", "ask_phone", "ask_date", "ask_file", "ask_address", "ask_url", "ask_cnpj", "ask_cep"] as NodeType[],
   },
   {
     name: "Lógica",
     icon: "GitBranch",
-    color: "orange",
-    gradient: "from-orange-500/10 to-amber-500/10",
-    border: "border-orange-500/20",
-    borderHover: "hover:border-orange-500/40",
-    iconColor: "text-orange-600",
-    iconHover: "group-hover:text-orange-700",
-    textHover: "group-hover:text-orange-700",
+    iconColor: "#ea580c", // orange-600
+    bgColor: "rgba(234, 88, 12, 0.1)",
+    borderColor: "rgba(234, 88, 12, 0.2)",
     blocks: ["condition", "set_field", "keyword_jump", "global_keywords", "formulas", "jump_to", "lead_scoring", "goal"] as NodeType[],
   },
   {
     name: "Código",
     icon: "Code",
-    color: "rose",
-    gradient: "from-rose-500/10 to-pink-500/10",
-    border: "border-rose-500/20",
-    borderHover: "hover:border-rose-500/40",
-    iconColor: "text-rose-600",
-    iconHover: "group-hover:text-rose-700",
-    textHover: "group-hover:text-rose-700",
+    iconColor: "#e11d48", // rose-600
+    bgColor: "rgba(225, 29, 72, 0.1)",
+    borderColor: "rgba(225, 29, 72, 0.2)",
     blocks: ["webhook", "trigger_automation", "dynamic_data"] as NodeType[],
   },
   {
     name: "Integração CRM",
     icon: "Database",
-    color: "indigo",
-    gradient: "from-indigo-500/10 to-blue-600/10",
-    border: "border-indigo-500/20",
-    borderHover: "hover:border-indigo-500/40",
-    iconColor: "text-indigo-600",
-    iconHover: "group-hover:text-indigo-700",
-    textHover: "group-hover:text-indigo-700",
+    iconColor: "#4f46e5", // indigo-600
+    bgColor: "rgba(79, 70, 229, 0.1)",
+    borderColor: "rgba(79, 70, 229, 0.2)",
     blocks: ["crm_cadastro_empresa", "crm_agenda_rapida", "crm_gerar_relatorio"] as NodeType[],
   },
 ];
@@ -177,17 +149,24 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                 onOpenChange={() => toggleCategory(category.name)}
                 className="group"
               >
-                <CollapsibleTrigger className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all duration-150 group border border-transparent ${category.borderHover}`}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all duration-150 group border border-transparent hover:shadow-sm">
                   <div className="flex items-center gap-2">
                     {CategoryIcon && (
-                      <div className={`p-1 rounded-md bg-gradient-to-br ${category.gradient} border ${category.border} group-hover:${category.border.replace('/20', '/40')} transition-all`}>
-                        <CategoryIcon className={`w-3 h-3 ${category.iconColor} ${category.iconHover}`} />
+                      <div 
+                        className="p-1 rounded-md border transition-all"
+                        style={{
+                          backgroundColor: category.bgColor,
+                          borderColor: category.borderColor,
+                        }}
+                      >
+                        <CategoryIcon className="w-3 h-3" style={{ color: category.iconColor }} />
                       </div>
                     )}
-                    <span className={`font-semibold text-xs text-foreground ${category.textHover} transition-colors`}>{category.name}</span>
+                    <span className="font-semibold text-xs text-foreground transition-colors">{category.name}</span>
                   </div>
                   <ChevronDown 
-                    className={`w-3 h-3 text-muted-foreground transition-all duration-150 ${isOpen ? `rotate-180 ${category.iconColor}` : category.iconHover}`}
+                    className={`w-3 h-3 transition-all duration-150 ${isOpen ? 'rotate-180' : ''}`}
+                    style={{ color: isOpen ? category.iconColor : 'hsl(var(--muted-foreground))' }}
                   />
                 </CollapsibleTrigger>
 
