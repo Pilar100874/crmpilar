@@ -149,8 +149,14 @@ All colors MUST be HSL.
     height: 100%;
   }
 
+  /* Prevent layout shift when vertical scrollbar appears */
+  html {
+    scrollbar-gutter: stable both-edges;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
+    overflow-y: scroll; /* Reserve space for scrollbar to avoid horizontal shift */
   }
 }
 
