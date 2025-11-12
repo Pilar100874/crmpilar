@@ -1175,13 +1175,25 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
         .from('flows')
         .select('id, nome')
         .eq('estabelecimento_id', estabelecimentoId)
-        .eq('published', true)
         .order('nome');
 
       if (error) throw error;
       setBots(data || []);
+      
+      if (!data || data.length === 0) {
+        toast({
+          title: "Nenhum bot encontrado",
+          description: "Crie um bot no menu Bot Builder primeiro.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar bots:', error);
+      toast({
+        title: "Erro ao carregar bots",
+        description: "Não foi possível carregar a lista de bots.",
+        variant: "destructive"
+      });
     }
   };
 
