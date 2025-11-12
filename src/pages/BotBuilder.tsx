@@ -761,11 +761,66 @@ function BotBuilderContent() {
         }
       }
 
-      // Desativar todos os outros bots
-      await supabase
+      // Buscar estabelecimento do bot
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        setErrorDialog({
+          open: true,
+          title: "Erro",
+          description: "Não foi possível identificar o estabelecimento.",
+        });
+        return;
+      }
+
+      const botCanais = botData?.canais || ["whatsapp"];
+
+      // Buscar todos os bots ativos do mesmo estabelecimento
+      const { data: activeBots } = await supabase
         .from("bot_flows")
-        .update({ active: false })
+        .select("*")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("active", true)
         .neq("id", botId);
+
+      // Verificar conflitos de canais
+      const botsToDeactivate: string[] = [];
+      
+      for (const activeBot of activeBots || []) {
+        const activeBotCanais = activeBot.canais || ["whatsapp"];
+        
+        // Verificar se há overlap de canais
+        const hasOverlap = botCanais.some(canal => activeBotCanais.includes(canal));
+        
+        if (hasOverlap) {
+          // Para WhatsApp, verificar se há sessões diferentes
+          if (botCanais.includes("whatsapp") && activeBotCanais.includes("whatsapp")) {
+            // Buscar sessões associadas aos bots
+            const { data: sessions } = await supabase
+              .from("whatsapp_sessions")
+              .select("*")
+              .or(`bot_flow_id.eq.${botId},bot_flow_id.eq.${activeBot.id}`);
+            
+            const botSession = sessions?.find(s => s.bot_flow_id === botId);
+            const activeBotSession = sessions?.find(s => s.bot_flow_id === activeBot.id);
+            
+            // Se ambos têm sessões diferentes, permitir ambos ativos
+            if (botSession && activeBotSession && botSession.id !== activeBotSession.id) {
+              continue; // Não desativar este bot
+            }
+          }
+          
+          // Se chegou aqui, há conflito - desativar o bot ativo
+          botsToDeactivate.push(activeBot.id);
+        }
+      }
+
+      // Desativar bots conflitantes
+      if (botsToDeactivate.length > 0) {
+        await supabase
+          .from("bot_flows")
+          .update({ active: false })
+          .in("id", botsToDeactivate);
+      }
     }
 
     const { error } = await supabase
