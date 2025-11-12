@@ -139,6 +139,7 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -294,7 +295,9 @@ export default function Layout({ children }: LayoutProps) {
     const handleDocumentClick = (e: MouseEvent) => {
       if (!openSubmenuId) return;
       const target = e.target as Node;
-      if (submenuPanelRef.current && !submenuPanelRef.current.contains(target)) {
+      const insideSubmenu = submenuPanelRef.current?.contains(target);
+      const insideSidebar = sidebarRef.current?.contains(target);
+      if (!insideSubmenu && !insideSidebar) {
         setOpenSubmenuId(null);
       }
     };
@@ -339,7 +342,7 @@ export default function Layout({ children }: LayoutProps) {
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
       <SidebarProvider defaultOpen={true} open={true}>
         <div className="min-h-screen flex w-full bg-background">
-        <div className="fixed left-0 top-0 bottom-0 w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
+        <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
           {/* Logo no topo */}
           <div className="flex flex-col items-center py-4 border-b border-sidebar-border">
             <img 
