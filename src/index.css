@@ -18,10 +18,10 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 213 15% 20%;
 
-    /* Primary - Kommo Blue */
-    --primary: 199 89% 48%;
+    /* Primary - Orange */
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 199 89% 58%;
+    --primary-glow: 25 95% 63%;
     
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 213 15% 20%;
@@ -29,15 +29,15 @@ All colors MUST be HSL.
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 199 89% 95%;
-    --accent-foreground: 199 89% 48%;
+    --accent: 25 95% 95%;
+    --accent-foreground: 25 95% 53%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 199 89% 48%;
+    --ring: 25 95% 53%;
 
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
@@ -47,16 +47,16 @@ All colors MUST be HSL.
 
     --radius: 0.25rem;
 
-    /* Gradients - Blue theme */
-    --gradient-primary: linear-gradient(135deg, hsl(199 89% 48%) 0%, hsl(199 89% 58%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(199 89% 48%) 0%, hsl(210 85% 55%) 100%);
+    /* Gradients - Orange theme */
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(25 95% 63%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(30 95% 58%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
     
-    /* Shadows - Subtle with blue tint */
-    --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.08), 0 2px 4px -1px hsl(215 25% 15% / 0.04);
-    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.1), 0 4px 6px -2px hsl(215 25% 15% / 0.05);
-    --shadow-glow: 0 0 30px hsl(199 89% 48% / 0.2);
+    /* Shadows - Subtle with orange tint */
+    --shadow-sm: 0 1px 2px 0 hsl(25 25% 15% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(25 25% 15% / 0.08), 0 2px 4px -1px hsl(25 25% 15% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(25 25% 15% / 0.1), 0 4px 6px -2px hsl(25 25% 15% / 0.05);
+    --shadow-glow: 0 0 30px hsl(25 95% 53% / 0.2);
 
     /* Sidebar - Dark theme like Kommo */
     --sidebar-background: 220 18% 20%;
@@ -69,11 +69,11 @@ All colors MUST be HSL.
     --sidebar-ring: 25 95% 53%;
 
     /* Chart colors */
-    --chart-1: 199 89% 48%;
-    --chart-2: 210 85% 55%;
-    --chart-3: 195 77% 45%;
-    --chart-4: 185 70% 50%;
-    --chart-5: 175 65% 55%;
+    --chart-1: 25 95% 53%;
+    --chart-2: 30 95% 55%;
+    --chart-3: 20 90% 50%;
+    --chart-4: 35 85% 55%;
+    --chart-5: 15 90% 50%;
   }
 
   .dark {
@@ -86,9 +86,9 @@ All colors MUST be HSL.
     --popover: 215 20% 15%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 199 89% 48%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 199 89% 58%;
+    --primary-glow: 25 95% 63%;
 
     --secondary: 215 20% 20%;
     --secondary-foreground: 210 40% 98%;
@@ -104,7 +104,7 @@ All colors MUST be HSL.
 
     --border: 215 20% 25%;
     --input: 215 20% 25%;
-    --ring: 199 89% 48%;
+    --ring: 25 95% 53%;
 
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
@@ -113,15 +113,15 @@ All colors MUST be HSL.
     --warning-foreground: 0 0% 100%;
 
     /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(199 89% 48%) 0%, hsl(199 89% 58%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(199 89% 48%) 0%, hsl(210 85% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(25 95% 63%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(30 95% 58%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(215 20% 15%) 0%, hsl(215 20% 18%) 100%);
 
     /* Dark shadows */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
     --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
-    --shadow-glow: 0 0 40px hsl(199 89% 48% / 0.3);
+    --shadow-glow: 0 0 40px hsl(25 95% 53% / 0.3);
 
     --sidebar-background: 220 18% 20%;
     --sidebar-foreground: 0 0% 100%;
