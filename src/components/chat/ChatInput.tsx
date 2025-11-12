@@ -88,7 +88,8 @@ export default function ChatInput({
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    // Keep single line - no auto-resize
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
   }, [message]);
   
   // Auto-suggestion states
@@ -593,9 +594,9 @@ export default function ChatInput({
             onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="h-[44px] resize-none rounded-full px-4 py-0 leading-[44px] overflow-hidden"
+            className="min-h-[44px] max-h-[120px] resize-none rounded-full px-4"
+            style={{ paddingTop: '12px', paddingBottom: '12px' }}
             disabled={disabled}
-            rows={1}
           />
           
           <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
