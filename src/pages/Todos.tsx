@@ -622,15 +622,15 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-auto">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
               <table className="w-full">
-                <thead className="border-b border-border/40 bg-muted/30">
+                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
-                    <th className="p-4 w-[30px]"></th>
+                    <th className="px-4 py-3.5 w-[30px]"></th>
                     {visibleTodosColumns.map((column) => (
                       <th
                         key={column.id}
-                        className="text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative"
+                        className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative"
                         style={{ width: column.width, minWidth: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
@@ -638,7 +638,7 @@ export default function Todos() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-5 w-5 hover:bg-background/50"
+                            className="h-5 w-5 hover:bg-background/50 rounded-full"
                             onClick={() => handleTodosSort(column.id)}
                           >
                             {getSortIcon(column.id, todosSortConfig)}
@@ -686,13 +686,13 @@ export default function Todos() {
 
                     return (
                       <>
-                        <tr key={`${item.type}-${item.id}`} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
+                        <tr key={`${item.type}-${item.id}`} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
                           <td className="p-3">
                             {hasVinculos && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 w-6 p-0"
+                                className="h-6 w-6 p-0 rounded-full hover:bg-muted"
                                 onClick={() => toggleRow(item.id)}
                               >
                                 {isExpanded ? (
@@ -744,11 +744,11 @@ export default function Todos() {
                               return (
                                 <td key={col.id} className="p-3">
                                   {item.type === 'contato' ? (
-                                    <Badge variant={item.tipo_operador ? "default" : "secondary"}>
+                                    <Badge variant={item.tipo_operador ? "default" : "secondary"} className="rounded-full">
                                       {item.tipo_operador ? "Cliente" : "Prospect"}
                                     </Badge>
                                   ) : (
-                                    <Badge variant="outline">Empresa</Badge>
+                                    <Badge variant="outline" className="rounded-full">Empresa</Badge>
                                   )}
                                 </td>
                               );
@@ -759,29 +759,29 @@ export default function Todos() {
                         </tr>
                         {isExpanded && hasVinculos && (
                           <tr>
-                            <td colSpan={visibleTodosColumns.length + 1} className="bg-muted/20 p-4">
+                            <td colSpan={visibleTodosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
                               <div className="ml-8">
-                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                <p className="text-sm font-semibold text-foreground mb-3">
                                   {item.type === 'contato' ? 'Empresas Vinculadas:' : 'Contatos Vinculados:'}
                                 </p>
-                                <div className="space-y-1">
+                                <div className="space-y-2">
                                   {item.type === 'contato' ? (
                                     contatoEmpresas[item.id]?.map((emp: any) => (
-                                      <div key={emp.id} className="flex items-center gap-2 text-sm">
-                                        <Building2 className="w-3 h-3 text-purple-500" />
-                                        <span>{emp.nome_fantasia}</span>
+                                      <div key={emp.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
+                                        <Building2 className="w-4 h-4 text-purple-500" />
+                                        <span className="font-medium">{emp.nome_fantasia}</span>
                                         {emp.cnpj && (
-                                          <span className="text-muted-foreground">({emp.cnpj})</span>
+                                          <span className="text-muted-foreground text-xs">({emp.cnpj})</span>
                                         )}
                                       </div>
                                     ))
                                   ) : (
                                     empresaContatos[item.id]?.map((cont: any) => (
-                                      <div key={cont.id} className="flex items-center gap-2 text-sm">
-                                        <User className="w-3 h-3 text-blue-500" />
-                                        <span>{cont.nome}</span>
+                                      <div key={cont.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
+                                        <User className="w-4 h-4 text-blue-500" />
+                                        <span className="font-medium">{cont.nome}</span>
                                         {cont.email && (
-                                          <span className="text-muted-foreground">({cont.email})</span>
+                                          <span className="text-muted-foreground text-xs">({cont.email})</span>
                                         )}
                                       </div>
                                     ))
@@ -814,15 +814,15 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-auto">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
               <table className="w-full">
-                <thead className="border-b border-border/40 bg-muted/30">
+                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
-                    <th className="p-4 w-[30px]"></th>
+                    <th className="px-4 py-3.5 w-[30px]"></th>
                     {visibleContatosColumns.map((column) => (
                       <th
                         key={column.id}
-                        className="text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative"
+                        className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative"
                         style={{ width: column.width, minWidth: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
@@ -830,7 +830,7 @@ export default function Todos() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-5 w-5 hover:bg-background/50"
+                            className="h-5 w-5 hover:bg-background/50 rounded-full"
                             onClick={() => handleContatosSort(column.id)}
                           >
                             {getSortIcon(column.id, contatosSortConfig)}
@@ -876,14 +876,14 @@ export default function Todos() {
 
                     return (
                       <>
-                        <tr key={contato.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
+                        <tr key={contato.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
                           <td className="p-3">
                             <div className="flex items-center gap-1">
                               {hasEmpresas && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0"
+                                  className="h-6 w-6 p-0 rounded-full hover:bg-muted"
                                   onClick={() => toggleRow(contato.id)}
                                 >
                                   {isExpanded ? (
@@ -903,7 +903,7 @@ export default function Todos() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => navigate('/contatos', { state: { editContactId: contato.id } })}
-                                    className="h-8 px-2 hover:bg-primary/10"
+                                    className="h-8 px-2 hover:bg-primary/10 rounded-full"
                                   >
                                     <Edit className="w-4 h-4" />
                                   </Button>
@@ -933,18 +933,18 @@ export default function Todos() {
                         </tr>
                         {isExpanded && hasEmpresas && (
                           <tr>
-                            <td colSpan={visibleContatosColumns.length + 1} className="bg-muted/20 p-4">
+                            <td colSpan={visibleContatosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
                               <div className="ml-8">
-                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                <p className="text-sm font-semibold text-foreground mb-3">
                                   Empresas Vinculadas:
                                 </p>
-                                <div className="space-y-1">
+                                <div className="space-y-2">
                                   {contatoEmpresas[contato.id]?.map((emp: any) => (
-                                    <div key={emp.id} className="flex items-center gap-2 text-sm">
-                                      <Building2 className="w-3 h-3 text-purple-500" />
-                                      <span>{emp.nome_fantasia}</span>
+                                    <div key={emp.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
+                                      <Building2 className="w-4 h-4 text-purple-500" />
+                                      <span className="font-medium">{emp.nome_fantasia}</span>
                                       {emp.cnpj && (
-                                        <span className="text-muted-foreground">({emp.cnpj})</span>
+                                        <span className="text-muted-foreground text-xs">({emp.cnpj})</span>
                                       )}
                                     </div>
                                   ))}
@@ -976,15 +976,15 @@ export default function Todos() {
               </p>
             </div>
           ) : (
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-auto">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
               <table className="w-full">
-                <thead className="border-b border-border/40 bg-muted/30">
+                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
-                    <th className="p-4 w-[30px]"></th>
+                    <th className="px-4 py-3.5 w-[30px]"></th>
                     {visibleEmpresasColumns.map((column) => (
                       <th
                         key={column.id}
-                        className="text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative"
+                        className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative"
                         style={{ width: column.width, minWidth: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
@@ -992,7 +992,7 @@ export default function Todos() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-5 w-5 hover:bg-background/50"
+                            className="h-5 w-5 hover:bg-background/50 rounded-full"
                             onClick={() => handleEmpresasSort(column.id)}
                           >
                             {getSortIcon(column.id, empresasSortConfig)}
@@ -1038,14 +1038,14 @@ export default function Todos() {
 
                     return (
                       <>
-                        <tr key={empresa.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
+                        <tr key={empresa.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200">
                           <td className="p-3">
                             <div className="flex items-center gap-1">
                               {hasContatos && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0"
+                                  className="h-6 w-6 p-0 rounded-full hover:bg-muted"
                                   onClick={() => toggleRow(empresa.id)}
                                 >
                                   {isExpanded ? (
@@ -1065,7 +1065,7 @@ export default function Todos() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => navigate('/empresas', { state: { editEmpresaId: empresa.id } })}
-                                    className="h-8 px-2 hover:bg-primary/10"
+                                    className="h-8 px-2 hover:bg-primary/10 rounded-full"
                                   >
                                     <Edit className="w-4 h-4" />
                                   </Button>
@@ -1116,18 +1116,18 @@ export default function Todos() {
                         </tr>
                         {isExpanded && hasContatos && (
                           <tr>
-                            <td colSpan={visibleEmpresasColumns.length + 1} className="bg-muted/20 p-4">
+                            <td colSpan={visibleEmpresasColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
                               <div className="ml-8">
-                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                <p className="text-sm font-semibold text-foreground mb-3">
                                   Contatos Vinculados:
                                 </p>
-                                <div className="space-y-1">
+                                <div className="space-y-2">
                                   {empresaContatos[empresa.id]?.map((cont: any) => (
-                                    <div key={cont.id} className="flex items-center gap-2 text-sm">
-                                      <User className="w-3 h-3 text-blue-500" />
-                                      <span>{cont.nome}</span>
+                                    <div key={cont.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
+                                      <User className="w-4 h-4 text-blue-500" />
+                                      <span className="font-medium">{cont.nome}</span>
                                       {cont.email && (
-                                        <span className="text-muted-foreground">({cont.email})</span>
+                                        <span className="text-muted-foreground text-xs">({cont.email})</span>
                                       )}
                                     </div>
                                   ))}

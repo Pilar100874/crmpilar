@@ -1872,15 +1872,15 @@ export default function Contatos() {
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-lg border border-border/40 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-hidden">
               <table className="w-full">
-                <thead className="border-b border-border/40 bg-muted/30">
+                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
                        <th
                         key={column.id}
-                        className={`text-left p-4 font-medium text-xs uppercase tracking-wider text-muted-foreground relative ${
-                          index === 0 ? 'sticky left-0 bg-muted/30 border-r border-border/40 z-20' : ''
+                        className={`text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
+                          index === 0 ? 'sticky left-0 bg-gradient-to-r from-muted/40 to-muted/20 border-r border-border/40 z-20' : ''
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
                       >
@@ -1890,7 +1890,7 @@ export default function Contatos() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-5 w-5 hover:bg-background/50"
+                              className="h-5 w-5 hover:bg-background/50 rounded-full"
                               onClick={() => handleSort(column.id)}
                             >
                               {getSortIcon(column.id)}
@@ -1936,16 +1936,16 @@ export default function Contatos() {
                 </thead>
                 <tbody>
                   {sortedContacts.map((contact) => (
-                    <tr key={contact.id} className="border-b border-border hover:bg-muted/50 transition-colors group">
+                    <tr key={contact.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200 group">
                       {tableColumns.filter(col => col.visible).map((column, index) => {
                         if (column.id === 'actions') {
                           return (
-                            <td key="actions" className="p-3 sticky left-0 bg-background group-hover:bg-muted/50 border-r border-border">
+                            <td key="actions" className="p-3 sticky left-0 bg-background group-hover:bg-gradient-to-r group-hover:from-muted/50 group-hover:to-muted/30 border-r border-border/40 transition-all duration-200">
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                                  className="h-8 w-8 hover:bg-primary/10 hover:text-primary rounded-full"
                                   onClick={async () => {
                                     setEditingContact(contact);
                                     setFormData({
@@ -1996,7 +1996,7 @@ export default function Contatos() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive rounded-full"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteContact(contact.id);
