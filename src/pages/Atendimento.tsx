@@ -268,11 +268,39 @@ export default function Atendimento() {
     try {
       const { data: convData } = await supabase
         .from('conversations')
-        .select('customer_id')
+        .select('customer_id, metadata, customer:customers!conversations_customer_id_fkey(telefone)')
         .eq('id', conversationId)
         .single();
 
-      if (!convData?.customer_id) {
+      if (!convData) {
+        setCustomerCompanies([]);
+        return;
+      }
+
+      // Tentar obter customer_id diretamente ou buscar pelo telefone
+      let customerId = convData.customer_id;
+      
+      if (!customerId) {
+        // Buscar pelo telefone no metadata ou no customer
+        const metadata = convData.metadata as any;
+        const phone = metadata?.phone || convData.customer?.telefone;
+        
+        if (phone) {
+          const estabId = await getEstabelecimentoId();
+          if (estabId) {
+            const { data: contactData } = await supabase
+              .from('customers')
+              .select('id')
+              .eq('estabelecimento_id', estabId)
+              .eq('telefone', phone)
+              .maybeSingle();
+            
+            customerId = contactData?.id;
+          }
+        }
+      }
+
+      if (!customerId) {
         setCustomerCompanies([]);
         return;
       }
@@ -290,7 +318,7 @@ export default function Atendimento() {
             cnpj
           )
         `)
-        .eq('customer_id', convData.customer_id);
+        .eq('customer_id', customerId);
 
       if (companiesData) {
         setCustomerCompanies(companiesData);
@@ -624,8 +652,38 @@ ${recentMessages}
           }
         });
 
-        // Get all customer IDs
-        const customerIds = data.map(c => c.customer_id).filter(Boolean);
+        // Buscar contatos pelo telefone da conversa
+        const phonesMap = new Map();
+        for (const conv of data) {
+          // Tentar pegar o telefone do metadata ou do customer
+          const metadata = conv.metadata as any;
+          const phone = metadata?.phone || conv.customer?.telefone;
+          if (phone) {
+            phonesMap.set(conv.id, phone);
+          }
+        }
+
+        // Buscar todos os contatos pelo telefone no formato completo
+        const phones = Array.from(phonesMap.values()).filter(Boolean);
+        let contactsMap = new Map();
+        
+        if (phones.length > 0 && estabId) {
+          const { data: contactsData } = await supabase
+            .from('customers')
+            .select('id, nome, email, telefone')
+            .eq('estabelecimento_id', estabId)
+            .in('telefone', phones);
+
+          contactsData?.forEach(contact => {
+            contactsMap.set(contact.telefone, contact);
+          });
+        }
+
+        // Get all customer IDs from both original data and phone lookup
+        const customerIds = [
+          ...data.map(c => c.customer_id).filter(Boolean),
+          ...Array.from(contactsMap.values()).map(c => c.id)
+        ].filter((id, index, self) => self.indexOf(id) === index); // Remove duplicates
         
         // Get all companies for these customers
         const { data: companiesData } = await supabase
@@ -633,9 +691,12 @@ ${recentMessages}
           .select(`
             customer_id,
             is_primary,
+            cargo,
             empresas (
+              id,
               nome_fantasia,
-              nome
+              nome,
+              cnpj
             )
           `)
           .in('customer_id', customerIds);
@@ -649,12 +710,23 @@ ${recentMessages}
           companiesMap.get(rel.customer_id).push(rel);
         });
 
-        // Attach last messages and companies to conversations
-        const conversationsWithMessages = data.map(conv => ({
-          ...conv,
-          lastMessage: lastMessageMap.get(conv.id) || null,
-          customerCompanies: companiesMap.get(conv.customer_id) || [],
-        }));
+        // Attach last messages, contacts by phone, and companies to conversations
+        const conversationsWithMessages = data.map(conv => {
+          const phone = phonesMap.get(conv.id);
+          const contactByPhone = phone ? contactsMap.get(phone) : null;
+          
+          // Usar o contato encontrado pelo telefone ou o customer_id original
+          const finalCustomer = contactByPhone || conv.customer;
+          const finalCustomerId = contactByPhone?.id || conv.customer_id;
+
+          return {
+            ...conv,
+            customer: finalCustomer,
+            customer_id: finalCustomerId,
+            lastMessage: lastMessageMap.get(conv.id) || null,
+            customerCompanies: companiesMap.get(finalCustomerId) || [],
+          };
+        });
 
         setConversations(conversationsWithMessages);
       } else {
