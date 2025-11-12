@@ -60,6 +60,7 @@ export default function Atendimento() {
   const [selectedAIWebhook, setSelectedAIWebhook] = useState<string | null>(null);
   const [aiInput, setAiInput] = useState("");
   const [aiContext, setAiContext] = useState("");
+  const [showContextBox, setShowContextBox] = useState(false);
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [isAILoading, setIsAILoading] = useState(false);
   const aiScrollRef = useRef<HTMLDivElement>(null);
@@ -1116,82 +1117,101 @@ ${recentMessages}
               {showAIChat && aiWebhooks.length > 0 && (
                 <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20">
                   <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-2.5 border-b border-primary/20">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                      <span className="text-sm font-semibold">Chat com IA</span>
-                      {aiWebhooks.length > 1 && (
-                        <select
-                          value={selectedAIWebhook || ""}
-                          onChange={(e) => setSelectedAIWebhook(e.target.value)}
-                          className="ml-auto text-xs border rounded px-2 py-1 bg-card"
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                        <span className="text-sm font-semibold">Chat com IA</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowContextBox(!showContextBox)}
+                          className="h-7 text-xs gap-1 hover:bg-primary/20"
                         >
-                          {aiWebhooks.map(webhook => (
-                            <option key={webhook.id} value={webhook.id}>
-                              {webhook.name}
-                            </option>
-                          ))}
-                        </select>
-                      )}
+                          <FileText className="h-3 w-3" />
+                          {showContextBox ? "Ocultar contexto" : "Adicionar contexto"}
+                        </Button>
+                        {aiWebhooks.length > 1 && (
+                          <select
+                            value={selectedAIWebhook || ""}
+                            onChange={(e) => setSelectedAIWebhook(e.target.value)}
+                            className="text-xs border rounded px-2 py-1 bg-card h-7"
+                          >
+                            {aiWebhooks.map(webhook => (
+                              <option key={webhook.id} value={webhook.id}>
+                                {webhook.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div className="p-4">
-                    {/* Context Field */}
-                    <div className="mb-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-medium">Contexto adicional (opcional)</Label>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={addConversationContext}
-                          className="h-7 text-xs gap-1"
-                          disabled={!selectedConversation}
-                        >
-                          <FileText className="h-3 w-3" />
-                          Adicionar contexto da conversa
-                        </Button>
+                    {/* Context Field - Collapsible */}
+                    {showContextBox && (
+                      <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border/50 space-y-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-xs font-medium">Contexto adicional</Label>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={addConversationContext}
+                            className="h-6 text-xs gap-1"
+                            disabled={!selectedConversation}
+                          >
+                            <FileText className="h-3 w-3" />
+                            Carregar da conversa
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={aiContext}
+                          onChange={(e) => setAiContext(e.target.value)}
+                          placeholder="Cole ou digite informações relevantes..."
+                          className="min-h-[70px] text-xs resize-none bg-background"
+                        />
                       </div>
-                      <Textarea
-                        value={aiContext}
-                        onChange={(e) => setAiContext(e.target.value)}
-                        placeholder="Cole ou digite informações relevantes da conversa..."
-                        className="min-h-[80px] text-xs resize-none bg-background/50"
-                      />
-                    </div>
+                    )}
 
+                    {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
-                      className="max-h-48 overflow-y-auto mb-4 space-y-3"
+                      className="max-h-64 overflow-y-auto mb-4 space-y-3 px-1"
                     >
                       {aiMessages.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
                           <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-20" />
                           <p className="text-xs">Comece uma conversa com a IA</p>
+                          {showContextBox && aiContext && (
+                            <p className="text-xs mt-2 opacity-70">Contexto adicionado ✓</p>
+                          )}
                         </div>
                       ) : (
                         aiMessages.map((msg, idx) => (
                           <div
                             key={idx}
-                            className={`group relative flex gap-3 ${
+                            className={`group relative flex gap-2 ${
                               msg.role === "user" ? "justify-end" : "justify-start"
                             }`}
                           >
                             {msg.role === "assistant" && (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0 mt-1">
-                                <Sparkles className="h-4 w-4 text-primary-foreground" />
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0 mt-1">
+                                <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
                               </div>
                             )}
 
                             <div
                               onClick={() => msg.role === "assistant" && sendAIResponseToChat(msg.content)}
-                              className={`relative max-w-[75%] p-3 rounded-2xl transition-all ${
+                              className={`relative max-w-[80%] px-3 py-2 rounded-xl transition-all ${
                                 msg.role === "user"
                                   ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
-                                  : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30 cursor-pointer"
+                                  : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30 cursor-pointer hover:shadow-md"
                               }`}
                               title={msg.role === "assistant" ? "Clique para enviar ao cliente" : ""}
                             >
-                              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                              <p className="whitespace-pre-wrap break-words text-xs leading-relaxed">
                                 {msg.content}
                               </p>
                               
@@ -1199,21 +1219,21 @@ ${recentMessages}
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                                  className="absolute -top-1 -right-1 h-6 w-6 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     sendAIResponseToChat(msg.content);
                                   }}
                                   title="Enviar para o chat do cliente"
                                 >
-                                  <Send className="h-3.5 w-3.5" />
+                                  <ArrowUp className="h-3 w-3" />
                                 </Button>
                               )}
                             </div>
 
                             {msg.role === "user" && (
-                              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-1">
-                                <span className="text-xs font-semibold">Você</span>
+                              <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-1">
+                                <span className="text-[10px] font-semibold">Eu</span>
                               </div>
                             )}
                           </div>
@@ -1221,6 +1241,7 @@ ${recentMessages}
                       )}
                     </div>
 
+                    {/* AI Input */}
                     <div className="flex gap-2">
                       <Textarea
                         value={aiInput}
@@ -1232,16 +1253,20 @@ ${recentMessages}
                           }
                         }}
                         placeholder="Pergunte algo à IA..."
-                        className="flex-1 min-h-[60px] resize-none"
+                        className="flex-1 min-h-[50px] text-sm resize-none"
                         disabled={isAILoading}
                       />
                       <Button
                         onClick={sendAIMessage}
                         disabled={!aiInput.trim() || isAILoading}
                         size="icon"
-                        className="h-[60px] w-[60px]"
+                        className="h-[50px] w-[50px] shrink-0"
                       >
-                        <Send className="h-4 w-4" />
+                        {isAILoading ? (
+                          <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
