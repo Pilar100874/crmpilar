@@ -593,8 +593,7 @@ export default function ChatInput({
             onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="h-[44px] resize-none rounded-full px-4 overflow-hidden"
-            style={{ paddingTop: '12px', paddingBottom: '12px' }}
+            className="h-[44px] resize-none rounded-full px-4 py-0 leading-[44px] overflow-hidden"
             disabled={disabled}
             rows={1}
           />
