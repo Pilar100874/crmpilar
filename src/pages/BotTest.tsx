@@ -29,6 +29,10 @@ export default function BotTest() {
     loadSavedBots();
   }, []);
 
+  useEffect(() => {
+    loadSavedBots();
+  }, [selectedChannel]);
+
   const loadSavedBots = async () => {
     const estabelecimentoId = await getEstabelecimentoId();
     
@@ -48,13 +52,30 @@ export default function BotTest() {
       toast.error("Erro ao carregar bots");
     } else {
       setSavedBots(data || []);
-      // Auto-select active bot
-      const activeBot = data?.find(b => b.active);
+      
+      // Filtrar bots por canal selecionado
+      const filteredBots = (data || []).filter(bot => {
+        const canais = bot.canais || [];
+        return canais.includes(selectedChannel);
+      });
+
+      // Auto-select active bot do canal atual
+      const activeBot = filteredBots.find(b => b.active);
       setActiveBotId(activeBot?.id || null);
+      
       if (activeBot) {
         setSelectedBotId(activeBot.id);
         setSelectedBotName(activeBot.name);
         loadBot(activeBot.id);
+      } else if (selectedBotId) {
+        // Verificar se o bot selecionado ainda é válido para o canal atual
+        const currentBotValid = filteredBots.find(b => b.id === selectedBotId);
+        if (!currentBotValid) {
+          setSelectedBotId("");
+          setSelectedBotName("");
+          setNodes([]);
+          setEdges([]);
+        }
       }
     }
   };
@@ -222,11 +243,24 @@ export default function BotTest() {
                   <SelectValue placeholder="Selecione um bot" />
                 </SelectTrigger>
                 <SelectContent>
-                  {savedBots.map((bot) => (
-                    <SelectItem key={bot.id} value={bot.id}>
-                      {bot.name} {bot.active && "⭐"}
-                    </SelectItem>
-                  ))}
+                  {savedBots
+                    .filter(bot => {
+                      const canais = bot.canais || [];
+                      return canais.includes(selectedChannel);
+                    })
+                    .map((bot) => (
+                      <SelectItem key={bot.id} value={bot.id}>
+                        {bot.name} {bot.active && "⭐"}
+                      </SelectItem>
+                    ))}
+                  {savedBots.filter(bot => {
+                    const canais = bot.canais || [];
+                    return canais.includes(selectedChannel);
+                  }).length === 0 && (
+                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      Nenhum bot configurado para este canal
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               {selectedBotId && selectedBotId !== activeBotId && (
