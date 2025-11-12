@@ -75,7 +75,7 @@ const menuItems: MenuItem[] = [
       { id: "Contatos", title: "Contatos", url: "/contatos", icon: UserIcon },
       { id: "Empresas", title: "Empresas", url: "/empresas", icon: Building2 },
       { id: "Todos", title: "Todos", url: "/todos", icon: Users },
-      { id: "Vínculos Empresas", title: "Vínculos Empresas", url: "/vinculos-empresas", icon: Building2 },
+      { id: "Vínculos Empresas", title: "Vínculo X Usuário / Segmento", url: "/vinculos-empresas", icon: Building2 },
     ]
   },
   { 

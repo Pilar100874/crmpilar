@@ -255,7 +255,7 @@ export default function VinculosEmpresas() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vínculos de Empresas</h1>
+        <h1 className="text-3xl font-bold text-foreground">Vínculo X Usuário / Segmento</h1>
         <p className="text-muted-foreground mt-2">
           Gerencie os vínculos entre empresas e usuários ou segmentos
         </p>
