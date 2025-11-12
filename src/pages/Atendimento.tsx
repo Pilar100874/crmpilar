@@ -1021,7 +1021,7 @@ ${recentMessages}
   }
 
   return (
-    <div className="h-[100vh] flex bg-background overflow-hidden">
+    <div className="h-[100vh] flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
       <div className="w-80 border-r border-border bg-card flex flex-col h-full">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
@@ -1137,7 +1137,7 @@ ${recentMessages}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-2 bg-muted/10">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-2 bg-gray-100">
               {messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />

@@ -22,6 +22,7 @@ import {
   User as UserIcon,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   Plus,
   TestTube2,
   FileBarChart,
@@ -138,6 +139,7 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -342,9 +344,19 @@ export default function Layout({ children }: LayoutProps) {
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
       <SidebarProvider defaultOpen={true} open={true}>
         <div className="min-h-screen flex w-full bg-background">
+        {sidebarVisible && (
         <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
           {/* Logo no topo */}
-          <div className="flex flex-col items-center py-4 border-b border-sidebar-border">
+          <div className="flex flex-col items-center py-4 border-b border-sidebar-border relative">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSidebarVisible(false)}
+              className="absolute top-2 right-1 h-6 w-6 p-0 hover:bg-sidebar-accent/50 rounded-full"
+              title="Ocultar menu"
+            >
+              <ChevronLeft className="w-3 h-3 text-sidebar-foreground/60" />
+            </Button>
             <img 
               src={logo} 
               alt="Pilar Logo" 
@@ -544,8 +556,21 @@ export default function Layout({ children }: LayoutProps) {
             </button>
           </div>
         </div>
+        )}
 
-        <main className="flex-1 flex flex-col bg-background min-w-0 ml-20">
+        <main className={`flex-1 flex flex-col bg-background min-w-0 ${sidebarVisible ? 'ml-20' : 'ml-0'} transition-all duration-300`}>
+          {!sidebarVisible && (
+            <div className="fixed left-0 top-0 z-30 p-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSidebarVisible(true)}
+                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
           <div className="flex-1 overflow-hidden bg-background">
             {children}
           </div>
