@@ -594,8 +594,8 @@ export default function ChatInput({
             onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="min-h-[44px] max-h-[120px] resize-none rounded-full px-4 text-center"
-            style={{ paddingTop: '10px', paddingBottom: '10px' }}
+            className="h-[44px] resize-none rounded-full px-4 text-left overflow-hidden"
+            rows={1}
             disabled={disabled}
           />
           
