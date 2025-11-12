@@ -1210,7 +1210,7 @@ ${recentMessages}
                           }
                         }}
                         placeholder="Pergunte algo à IA..."
-                        className="flex-1 min-h-[44px] max-h-[120px] text-sm resize-none rounded-full px-4"
+                        className="flex-1 min-h-[44px] max-h-[120px] text-sm resize-none rounded-full px-4 text-center"
                         style={{ paddingTop: '10px', paddingBottom: '10px' }}
                         disabled={isAILoading}
                       />
