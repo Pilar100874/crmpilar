@@ -1324,7 +1324,7 @@ function BotBuilderContent() {
           </div>
 
           {showSimulator && (
-            <div className="fixed right-0 top-[90px] w-96 h-[calc(100vh-90px)] flex flex-col bg-card backdrop-blur-sm border-l border-border z-40">
+            <div className="fixed right-0 top-[90px] w-96 h-[calc(100vh-90px)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40">
               <FlowSimulator
                 nodes={nodes}
                 edges={edges}

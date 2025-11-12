@@ -2228,7 +2228,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <CardHeader className={`flex-shrink-0 border-b ${channelStyle.headerBg}`}>
         <div className="flex items-center justify-between">
           <CardTitle className={`text-sm flex items-center gap-2 ${channelStyle.headerText}`}>
