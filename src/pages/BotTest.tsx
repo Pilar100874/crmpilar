@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RotateCcw, MessageSquare, Smartphone, AlertCircle, Power } from "lucide-react";
+import { RotateCcw, AlertCircle, Power } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { FlowSimulator } from "@/components/flow/FlowSimulator";
-import { WhatsAppQRCode } from "@/components/WhatsAppQRCode";
 
 import { Node, Edge } from "@xyflow/react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
@@ -306,55 +304,23 @@ export default function BotTest() {
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <Tabs defaultValue="simulator" className="h-full flex flex-col">
-            <div className="px-4 pt-4">
-              <TabsList>
-                <TabsTrigger value="simulator">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Simulador Web
-                </TabsTrigger>
-                <TabsTrigger value="whatsapp">
-                  <Smartphone className="w-4 h-4 mr-2" />
-                  WhatsApp Oficial
-                </TabsTrigger>
-              </TabsList>
+          {nodes.length > 0 ? (
+            <div className="h-full bg-muted rounded-2xl overflow-hidden shadow-lg m-4">
+              <FlowSimulator 
+                key={key}
+                nodes={nodes} 
+                edges={edges}
+                channel={selectedChannel}
+              />
             </div>
-
-            <TabsContent value="simulator" className="flex-1 m-0 p-4">
-              {nodes.length > 0 ? (
-                <div className="h-full bg-muted rounded-2xl overflow-hidden shadow-lg">
-                  <FlowSimulator 
-                    key={key}
-                    nodes={nodes} 
-                    edges={edges}
-                    channel={selectedChannel}
-                  />
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
-                    <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-
-
-            <TabsContent value="whatsapp" className="flex-1 m-0 overflow-auto">
-              <div className="max-w-3xl mx-auto p-4">
-                <div className="mb-4 text-center">
-                  <h3 className="text-lg font-bold text-foreground mb-2">
-                    📱 WhatsApp Business API Oficial
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    Para uso em produção com aprovação do Facebook
-                  </p>
-                </div>
-                <WhatsAppQRCode />
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
+                <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
       </div>
   );
