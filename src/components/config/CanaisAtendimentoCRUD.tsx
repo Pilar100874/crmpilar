@@ -324,6 +324,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<any>(null);
   const [sessions, setSessions] = useState<WhatsAppSession[]>([]);
+  const [bots, setBots] = useState<any[]>([]);
   
   const [wahaUrl, setWahaUrl] = useState("");
   const [wahaApiKey, setWahaApiKey] = useState("");
@@ -336,11 +337,29 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
 
   useEffect(() => {
     loadConfig();
+    loadBots();
     const interval = setInterval(() => {
       refreshSessions();
     }, 5000);
     return () => clearInterval(interval);
   }, [estabelecimentoId]);
+
+  const loadBots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bot_flows')
+        .select('id, name')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('active', true)
+        .contains('canais', ['whatsapp'])
+        .order('name');
+
+      if (error) throw error;
+      setBots(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar bots:', error);
+    }
+  };
 
   const loadConfig = async () => {
     try {
@@ -953,11 +972,18 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                       Gerar QR
                     </Button>
                   ) : null}
-                  {session.bot_flow_id && (
-                      <p className="text-xs text-muted-foreground">
-                        Em uso por bot
-                      </p>
-                    )}
+                  {session.bot_flow_id && (() => {
+                    const linkedBot = bots.find(b => b.id === session.bot_flow_id);
+                    return linkedBot ? (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                        <Power className="h-4 w-4 text-green-600" />
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-green-900">Bot Vinculado</p>
+                          <p className="text-xs text-green-700">{linkedBot.name}</p>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
                   </CardContent>
                 </Card>
               ))}
@@ -1081,12 +1107,14 @@ function FacebookConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
             </Alert>
           )}
 
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
-            </AlertDescription>
-          </Alert>
+          {activeBots.length === 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+              </AlertDescription>
+            </Alert>
+          )}
 
         <div className="space-y-2">
           <Label htmlFor="fb-page-id">Page ID *</Label>
@@ -1189,12 +1217,14 @@ function InstagramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           </Alert>
         )}
 
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
-          </AlertDescription>
-        </Alert>
+        {activeBots.length === 0 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="ig-account">Instagram Business Account ID *</Label>
@@ -1286,12 +1316,14 @@ function TelegramConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           </Alert>
         )}
 
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
-          </AlertDescription>
-        </Alert>
+        {activeBots.length === 0 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="tg-token">Bot Token *</Label>
@@ -1484,12 +1516,14 @@ function WebChatConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
           </Alert>
         )}
 
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            O bot será vinculado automaticamente ao ativar na tela de Criar Bot
-          </AlertDescription>
-        </Alert>
+        {activeBots.length === 0 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O bot será vinculado automaticamente ao ativar na tela de Criar Bot
+            </AlertDescription>
+          </Alert>
+        )}
 
           <div className="space-y-2">
             <Label htmlFor="widget-title">Título do Widget</Label>
