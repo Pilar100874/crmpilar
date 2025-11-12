@@ -2420,6 +2420,7 @@ export type Database = {
       }
       webhook_chat_sessions: {
         Row: {
+          conversation_id: string | null
           created_at: string
           estabelecimento_id: string
           id: string
@@ -2429,6 +2430,7 @@ export type Database = {
           webhook_id: string | null
         }
         Insert: {
+          conversation_id?: string | null
           created_at?: string
           estabelecimento_id: string
           id?: string
@@ -2438,6 +2440,7 @@ export type Database = {
           webhook_id?: string | null
         }
         Update: {
+          conversation_id?: string | null
           created_at?: string
           estabelecimento_id?: string
           id?: string
@@ -2447,6 +2450,13 @@ export type Database = {
           webhook_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "webhook_chat_sessions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "webhook_chat_sessions_webhook_id_fkey"
             columns: ["webhook_id"]
