@@ -139,7 +139,6 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -344,97 +343,95 @@ export default function Layout({ children }: LayoutProps) {
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
         <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
-        <div ref={sidebarRef} className={`fixed left-0 top-0 bottom-0 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30 transition-all duration-300 ${sidebarExpanded ? 'w-64' : 'w-20'}`}>
+        <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
           {/* Logo no topo */}
           <div className="flex flex-col items-center py-4 border-b border-sidebar-border relative">
-            <div className="absolute top-2 right-1 flex gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setSidebarExpanded(!sidebarExpanded)}
-                className="h-6 w-6 p-0 hover:bg-sidebar-accent/50 rounded-full"
-                title={sidebarExpanded ? "Reduzir menu" : "Expandir menu"}
-              >
-                {sidebarExpanded ? <ChevronLeft className="w-3 h-3 text-sidebar-foreground/60" /> : <ChevronRight className="w-3 h-3 text-sidebar-foreground/60" />}
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSidebarVisible(false)}
+              className="absolute top-2 right-1 h-6 w-6 p-0 hover:bg-sidebar-accent/50 rounded-full"
+              title="Ocultar menu"
+            >
+              <ChevronLeft className="w-3 h-3 text-sidebar-foreground/60" />
+            </Button>
             <img 
               src={logo} 
               alt="Pilar Logo" 
-              className={`object-contain mb-3 transition-all ${sidebarExpanded ? 'h-12 w-24' : 'h-10 w-18'}`}
+              className="h-10 w-18 object-contain mb-3"
             />
             {/* Informações do usuário e estabelecimento */}
-            {!sidebarExpanded ? (
-              <div className="w-full px-1 space-y-2">
-                {/* Empresa - modo compacto */}
-                {isAdmin ? (
-                  <button
-                    onClick={() => setShowEstabelecimentoSelector(true)}
-                    className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer"
-                  >
-                    <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                    <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                      {estabelecimentoName || "Selecionar"}
-                    </span>
-                  </button>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                    <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
-                      {estabelecimentoName || "Empresa"}
-                    </span>
-                  </div>
-                )}
-
-                {/* Usuário - modo compacto */}
+            <div className="w-full px-1 space-y-2">
+              {/* Empresa - sempre visível */}
+              {isAdmin ? (
                 <button
-                  onClick={() => setShowUsuarioSelector(true)}
-                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
+                  onClick={() => setShowEstabelecimentoSelector(true)}
+                  className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer"
                 >
-                  <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
-                  <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
-                    {userName || user?.email?.split("@")[0] || "Usuário"}
+                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
+                    {estabelecimentoName || "Selecionar"}
                   </span>
                 </button>
-              </div>
-            ) : (
-              <div className="w-full px-3 space-y-2">
-                {/* Empresa - modo expandido */}
-                {isAdmin ? (
-                  <button
-                    onClick={() => setShowEstabelecimentoSelector(true)}
-                    className="flex items-center gap-2 w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer"
-                  >
-                    <Building2 className="w-5 h-5 text-sidebar-foreground/60" />
-                    <span className="text-xs text-sidebar-foreground/80 font-medium truncate">
-                      {estabelecimentoName || "Selecionar Empresa"}
-                    </span>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 p-2">
-                    <Building2 className="w-5 h-5 text-sidebar-foreground/60" />
-                    <span className="text-xs text-sidebar-foreground/80 font-medium truncate">
-                      {estabelecimentoName || "Empresa"}
-                    </span>
-                  </div>
-                )}
-
-                {/* Usuário - modo expandido */}
-                <button
-                  onClick={() => setShowUsuarioSelector(true)}
-                  className="flex items-center gap-2 w-full hover:bg-sidebar-accent/50 rounded-md p-2 transition-colors cursor-pointer"
-                >
-                  <UserIcon className="w-5 h-5 text-sidebar-foreground/60" />
-                  <span className="text-xs text-sidebar-foreground/70 truncate">
-                    {userName || user?.email?.split("@")[0] || "Usuário"}
+              ) : (
+                <div className="flex flex-col items-center">
+                  <Building2 className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                  <span className="text-[9px] text-sidebar-foreground/80 text-center leading-tight line-clamp-2 px-1 font-medium">
+                    {estabelecimentoName || "Empresa"}
                   </span>
-                </button>
-              </div>
-            )}
+                </div>
+              )}
+
+              {/* Usuário - sempre visível */}
+              <button
+                onClick={() => setShowUsuarioSelector(true)}
+                className="flex flex-col items-center w-full hover:bg-sidebar-accent/50 rounded-md p-1 transition-colors cursor-pointer pt-1"
+              >
+                <UserIcon className="w-4 h-4 text-sidebar-foreground/60 mb-1" />
+                <span className="text-[9px] text-sidebar-foreground/70 text-center leading-tight line-clamp-1 px-1">
+                  {userName || user?.email?.split("@")[0] || "Usuário"}
+                </span>
+              </button>
+            </div>
           </div>
 
           <ScrollArea className="flex-1 bg-sidebar">
             <div className="py-2">
+              {/* Atalhos fixos: Empresa e Usuário acima do menu */}
+              <div className="flex flex-col items-center gap-1 mb-2">
+                {/* Empresa */}
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowEstabelecimentoSelector(true)}
+                    className="w-full flex flex-col items-center justify-center gap-1 py-2 px-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md transition-colors"
+                  >
+                    <Building2 className="w-5 h-5" />
+                    <span className="text-[10px] font-medium leading-tight text-center">
+                      {estabelecimentoName || "Selecionar"}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="w-full flex flex-col items-center justify-center gap-1 py-2 px-2 text-sidebar-foreground/70 rounded-md">
+                    <Building2 className="w-5 h-5" />
+                    <span className="text-[10px] font-medium leading-tight text-center">
+                      {estabelecimentoName || "Empresa"}
+                    </span>
+                  </div>
+                )}
+
+                {/* Usuário */}
+                <button
+                  type="button"
+                  onClick={() => setShowUsuarioSelector(true)}
+                  className="w-full flex flex-col items-center justify-center gap-1 py-2 px-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md transition-colors"
+                >
+                  <UserIcon className="w-5 h-5" />
+                  <span className="text-[10px] font-medium leading-tight text-center">
+                    {userName || user?.email?.split("@")[0] || "Usuário"}
+                  </span>
+                </button>
+              </div>
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
@@ -446,7 +443,7 @@ export default function Layout({ children }: LayoutProps) {
                       <button
                         type="button"
                         onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
-                        className={`w-full flex ${sidebarExpanded ? 'flex-row items-center gap-3 px-4' : 'flex-col items-center gap-1 px-2'} justify-start py-3 group relative ${
+                        className={`w-full flex flex-col items-center justify-center gap-1 py-3 px-2 group relative ${
                           shouldHighlight
                             ? "bg-sidebar-accent text-primary"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -455,10 +452,10 @@ export default function Layout({ children }: LayoutProps) {
                         {shouldHighlight && (
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
                         )}
-                        <item.icon className={`${sidebarExpanded ? 'w-5 h-5' : 'w-6 h-6'} ${
+                        <item.icon className={`w-6 h-6 ${
                           shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`} />
-                        <span className={`${sidebarExpanded ? 'text-sm' : 'text-[10px]'} font-medium ${sidebarExpanded ? 'text-left' : 'text-center'} leading-tight ${
+                        <span className={`text-[10px] font-medium text-center leading-tight ${
                           shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                         }`}>
                           {item.title}
@@ -468,7 +465,7 @@ export default function Layout({ children }: LayoutProps) {
                       {isMenuOpen && (
                         <>
                           {/* Submenu panel */}
-                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className={`fixed ${sidebarExpanded ? 'left-64' : 'left-20'} top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto transition-all`}>
+                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-20 top-0 bottom-0 w-72 bg-gray-50 border-r border-border/30 shadow-sm z-50 overflow-y-auto">
                             <div className="px-6 py-8">
                               <h3 className="text-lg font-bold text-foreground mb-4">
                                 {item.title}
@@ -515,7 +512,7 @@ export default function Layout({ children }: LayoutProps) {
                     to={item.url!}
                     className={({ isActive }) => {
                       const shouldHighlight = isActive;
-                      return `flex ${sidebarExpanded ? 'flex-row items-center gap-3 px-4' : 'flex-col items-center gap-1 px-2'} justify-start py-3 group relative ${
+                      return `flex flex-col items-center justify-center gap-1 py-3 px-2 group relative ${
                         shouldHighlight
                           ? "bg-sidebar-accent text-primary"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -529,10 +526,10 @@ export default function Layout({ children }: LayoutProps) {
                           {shouldHighlight && (
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
                           )}
-                          <item.icon className={`${sidebarExpanded ? 'w-5 h-5' : 'w-6 h-6'} ${
+                          <item.icon className={`w-6 h-6 ${
                             shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                           }`} />
-                          <span className={`${sidebarExpanded ? 'text-sm' : 'text-[10px]'} font-medium ${sidebarExpanded ? 'text-left' : 'text-center'} leading-tight ${
+                          <span className={`text-[10px] font-medium text-center leading-tight ${
                             shouldHighlight ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
                           }`}>
                             {item.title}
@@ -550,16 +547,16 @@ export default function Layout({ children }: LayoutProps) {
           <div className="border-t border-sidebar-border bg-sidebar">
             <button 
               onClick={handleLogout}
-              className={`relative flex ${sidebarExpanded ? 'flex-row items-center gap-3 px-4' : 'flex-col items-center'} justify-start w-full py-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
+              className="relative flex flex-col items-center justify-center w-full py-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
             >
-              <LogOut className={`${sidebarExpanded ? 'w-5 h-5' : 'w-6 h-6'}`} />
-              <span className={`${sidebarExpanded ? 'text-sm' : 'text-[10px]'} font-medium ${sidebarExpanded ? '' : 'mt-1'}`}>Sair</span>
+              <LogOut className="w-6 h-6" />
+              <span className="text-[10px] font-medium mt-1">Sair</span>
             </button>
           </div>
         </div>
         )}
 
-        <main className={`flex-1 flex flex-col bg-background min-w-0 ${sidebarVisible ? (sidebarExpanded ? 'ml-64' : 'ml-20') : 'ml-0'} transition-all duration-300`}>
+        <main className={`flex-1 flex flex-col bg-background min-w-0 ${sidebarVisible ? 'ml-20' : 'ml-0'} transition-all duration-300`}>
           {!sidebarVisible && (
             <div className="fixed left-0 top-0 z-30 p-2">
               <Button
