@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -53,6 +53,7 @@ export default function Atendimento() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showClientDetails, setShowClientDetails] = useState(true);
   
   // AI Chat states
   const [showAIChat, setShowAIChat] = useState(false);
@@ -958,6 +959,15 @@ ${recentMessages}
                       Reativar Bot
                     </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowClientDetails(!showClientDetails)}
+                    className="h-7 w-7 p-0"
+                    title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+                  >
+                    {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1072,8 +1082,8 @@ ${recentMessages}
 
               {/* AI Chat Box */}
               {showAIChat && aiWebhooks.length > 0 && (
-                <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20">
-                  <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-2.5 border-b border-primary/20">
+                <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl">
+                  <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-2.5 border-b border-primary/20 rounded-t-2xl">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
@@ -1084,7 +1094,7 @@ ${recentMessages}
                           size="sm"
                           variant="ghost"
                           onClick={() => setShowContextBox(!showContextBox)}
-                          className="h-7 text-xs gap-1 hover:bg-primary/20"
+                          className="h-7 text-xs gap-1 hover:bg-primary/20 rounded-full"
                         >
                           <FileText className="h-3 w-3" />
                           {showContextBox ? "Ocultar contexto" : "Adicionar contexto"}
@@ -1093,7 +1103,7 @@ ${recentMessages}
                           <select
                             value={selectedAIWebhook || ""}
                             onChange={(e) => setSelectedAIWebhook(e.target.value)}
-                            className="text-xs border rounded px-2 py-1 bg-card h-7"
+                            className="text-xs border rounded-full px-2 py-1 bg-card h-7"
                           >
                             {aiWebhooks.map(webhook => (
                               <option key={webhook.id} value={webhook.id}>
@@ -1109,14 +1119,14 @@ ${recentMessages}
                   <div className="p-4">
                     {/* Context Field - Collapsible */}
                     {showContextBox && (
-                      <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border/50 space-y-2">
+                      <div className="mb-4 p-3 bg-muted/50 rounded-2xl border border-border/50 space-y-2">
                         <div className="flex items-center justify-between mb-2">
                           <Label className="text-xs font-medium">Contexto adicional</Label>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={addConversationContext}
-                            className="h-6 text-xs gap-1"
+                            className="h-6 text-xs gap-1 rounded-full"
                             disabled={!selectedConversation}
                           >
                             <FileText className="h-3 w-3" />
@@ -1127,7 +1137,7 @@ ${recentMessages}
                           value={aiContext}
                           onChange={(e) => setAiContext(e.target.value)}
                           placeholder="Cole ou digite informações relevantes..."
-                          className="min-h-[70px] text-xs resize-none bg-background"
+                          className="min-h-[70px] text-xs resize-none bg-background rounded-2xl"
                         />
                       </div>
                     )}
@@ -1135,7 +1145,7 @@ ${recentMessages}
                     {/* AI Messages */}
                     <div
                       ref={aiScrollRef}
-                      className="max-h-64 overflow-y-auto mb-4 space-y-3 px-1"
+                      className="max-h-64 overflow-y-auto mb-4 space-y-2 px-1"
                     >
                       {aiMessages.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
@@ -1154,21 +1164,21 @@ ${recentMessages}
                             }`}
                           >
                             {msg.role === "assistant" && (
-                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shrink-0 mt-1">
-                                <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <Sparkles className="h-3.5 w-3.5 text-white" />
                               </div>
                             )}
 
                             <div
                               onClick={() => msg.role === "assistant" && sendAIResponseToChat(msg.content)}
-                              className={`relative max-w-[80%] px-3 py-2 rounded-xl transition-all ${
+                              className={`relative max-w-[80%] px-3 py-2 rounded-2xl transition-all ${
                                 msg.role === "user"
-                                  ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md rounded-br-sm"
-                                  : "bg-card border border-border shadow-sm rounded-bl-sm hover:border-primary/30 cursor-pointer hover:shadow-md"
+                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-sm"
+                                  : "bg-card border border-border shadow-sm hover:border-primary/30 cursor-pointer hover:shadow-md"
                               }`}
                               title={msg.role === "assistant" ? "Clique para enviar ao cliente" : ""}
                             >
-                              <p className="whitespace-pre-wrap break-words text-xs leading-relaxed">
+                              <p className="whitespace-pre-wrap break-words text-[13px] leading-snug">
                                 {msg.content}
                               </p>
                               
@@ -1176,7 +1186,7 @@ ${recentMessages}
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="absolute -top-1 -right-1 h-6 w-6 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                                  className="absolute -top-1.5 -right-1.5 h-6 w-6 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     sendAIResponseToChat(msg.content);
@@ -1186,11 +1196,15 @@ ${recentMessages}
                                   <ArrowUp className="h-3 w-3" />
                                 </Button>
                               )}
+                              
+                              <span className={`text-[10px] mt-1 block ${msg.role === "user" ? "text-white/70" : "text-muted-foreground"}`}>
+                                {format(new Date(), "HH:mm", { locale: ptBR })}
+                              </span>
                             </div>
 
                             {msg.role === "user" && (
-                              <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-1">
-                                <span className="text-[10px] font-semibold">Eu</span>
+                              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                                <User className="h-3.5 w-3.5 text-primary" />
                               </div>
                             )}
                           </div>
@@ -1199,7 +1213,7 @@ ${recentMessages}
                     </div>
 
                     {/* AI Input */}
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <Textarea
                         value={aiInput}
                         onChange={(e) => setAiInput(e.target.value)}
@@ -1210,14 +1224,14 @@ ${recentMessages}
                           }
                         }}
                         placeholder="Pergunte algo à IA..."
-                        className="flex-1 min-h-[50px] text-sm resize-none"
+                        className="flex-1 min-h-[44px] max-h-[120px] text-sm resize-none rounded-full px-4 py-3 text-center placeholder:text-center"
                         disabled={isAILoading}
                       />
                       <Button
                         onClick={sendAIMessage}
                         disabled={!aiInput.trim() || isAILoading}
                         size="icon"
-                        className="h-[50px] w-[50px] shrink-0"
+                        className="h-11 w-11 shrink-0 rounded-full"
                       >
                         {isAILoading ? (
                           <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
@@ -1268,8 +1282,8 @@ ${recentMessages}
       </div>
 
       {/* Right Sidebar - Details Panel */}
-      {selectedConversation && selectedConv && (
-        <div className="w-80 bg-card flex flex-col h-full overflow-hidden">
+      {selectedConversation && selectedConv && showClientDetails && (
+        <div className="w-80 bg-card flex flex-col h-full overflow-hidden border-l border-border">
           <div className="p-4 border-b flex-shrink-0">
             <div className="flex flex-col items-center mb-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">

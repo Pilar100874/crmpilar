@@ -315,7 +315,7 @@ export default function ChatInput({
     <>
       <div className="flex flex-col gap-3">
         {/* Action Buttons Row */}
-        <div className="flex gap-1.5 items-center flex-wrap">
+        <div className="flex gap-1.5 items-center flex-wrap justify-center">
           <QuickRepliesSelector onSelect={handleQuickReplySelect} disabled={disabled} />
           
           <QuickAttachmentsSelector onSelect={handleQuickAttachmentSelect} disabled={disabled} />
@@ -564,7 +564,7 @@ export default function ChatInput({
         </div>
 
         {/* Text Input Row with Emoji (left), Text Area (center), Audio & Send (right) */}
-        <div className="flex items-end gap-2">
+        <div className="flex items-center gap-2">
           <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
           
           <Textarea
@@ -573,7 +573,7 @@ export default function ChatInput({
             onChange={handleMessageChange}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="min-h-[44px] max-h-[120px] resize-none rounded-full px-4 py-3"
+            className="min-h-[44px] max-h-[120px] resize-none rounded-full px-4 py-3 text-center placeholder:text-center"
             disabled={disabled}
           />
           
