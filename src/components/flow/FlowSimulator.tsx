@@ -87,10 +87,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         icon: "📷"
       },
       telegram: {
-        bg: "bg-[#17212B]",
-        userBubble: "bg-[#2B5278]",
-        botBubble: "bg-[#182533]",
-        headerBg: "bg-[#17212B]",
+        bg: "bg-[#0E1621]",
+        userBubble: "bg-[#3390EC] text-white",
+        botBubble: "bg-[#212D3B] text-white",
+        headerBg: "bg-[#2B5278]",
         headerText: "text-white",
         name: "Telegram",
         icon: "✈️"
@@ -2253,12 +2253,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 }`}
               >
                 {msg.sender === "system" ? (
-                  <div className="w-full flex items-center gap-2 text-xs text-muted-foreground bg-white/60 px-3 py-2 rounded-lg">
+                  <div className={`w-full flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${channel === 'telegram' ? 'text-gray-300 bg-[#1A2633]' : 'text-muted-foreground bg-white/60'}`}>
                     <AlertCircle className="w-3 h-3" />
                     <span>{msg.text}</span>
                   </div>
                 ) : msg.sender === "success" ? (
-                  <div className="w-full flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                  <div className={`w-full flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${channel === 'telegram' ? 'text-green-400 bg-[#1A2633]' : 'text-green-600 bg-green-50'}`}>
                     <CheckCircle className="w-3 h-3" />
                     <span>{msg.text}</span>
                   </div>
@@ -2267,7 +2267,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     className={`max-w-[80%] rounded-2xl overflow-hidden shadow-sm ${
                       msg.sender === "user"
                         ? `${channelStyle.userBubble} ${channel === 'facebook' || channel === 'telegram' || channel === 'instagram' ? 'text-white' : 'text-foreground'}`
-                        : `${channelStyle.botBubble} text-foreground`
+                        : `${channelStyle.botBubble} ${channel === 'telegram' ? 'text-white' : 'text-foreground'}`
                     }`}
                   >
                     {msg.mediaUrl && (
@@ -2368,7 +2368,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                   {msg.listSections.map((section, secIdx) => (
                                     <div key={secIdx}>
                                       {section.title && (
-                                        <div className="px-4 py-2 bg-muted/50 text-xs font-semibold text-muted-foreground">
+                                        <div className={`px-4 py-2 bg-muted/50 text-xs font-semibold ${channel === 'telegram' ? 'text-gray-300 bg-[#1A2633]' : 'text-muted-foreground'}`}>
                                           {section.title}
                                         </div>
                                       )}
@@ -2384,11 +2384,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                             }, msg.nodeId);
                                           }}
                                           disabled={!isWaitingInput || msg.id !== activeListId}
-                                          className="w-full px-4 py-3 text-left hover:bg-accent/50 border-b border-border last:border-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          className={`w-full px-4 py-3 text-left hover:bg-accent/50 border-b border-border last:border-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${channel === 'telegram' ? 'text-white hover:bg-[#2B5278]/50' : ''}`}
                                         >
-                                          <div className="text-sm font-medium">{item.label}</div>
+                                          <div className={`text-sm font-medium ${channel === 'telegram' ? 'text-white' : ''}`}>{item.label}</div>
                                           {item.description && (
-                                            <div className="text-xs text-muted-foreground mt-0.5">{item.description}</div>
+                                            <div className={`text-xs mt-0.5 ${channel === 'telegram' ? 'text-gray-300' : 'text-muted-foreground'}`}>{item.description}</div>
                                           )}
                                         </button>
                                       ))}
@@ -2402,7 +2402,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                 size="sm"
                                 onClick={() => setExpandedListId(msg.id)}
                                 disabled={!isWaitingInput || msg.id !== activeListId}
-                                className="w-full justify-between"
+                                className={`w-full justify-between ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
                               >
                                 <span>{msg.listButtonText || "Ver opções"}</span>
                                 <span className="ml-2">▼</span>
@@ -2418,7 +2418,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                 key={idx}
                                 variant="outline"
                                 size="sm"
-                              className="w-full justify-start"
+                                className={`w-full justify-start ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
                                 onClick={() => handleButtonClick(button, msg.nodeId)}
                                 disabled={!isWaitingInput}
                               >
@@ -2444,15 +2444,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         {Object.keys(context).length > 0 && (
           <>
-            <div className="p-3 bg-muted/50 max-h-40 overflow-auto">
-              <h4 className="text-xs font-medium mb-2">📦 Contexto (Variáveis)</h4>
+            <div className={`p-3 max-h-40 overflow-auto ${channel === 'telegram' ? 'bg-[#1A2633]' : 'bg-muted/50'}`}>
+              <h4 className={`text-xs font-medium mb-2 ${channel === 'telegram' ? 'text-gray-300' : ''}`}>📦 Contexto (Variáveis)</h4>
               <div className="space-y-1">
                 {Object.entries(context).map(([key, value]) => (
                   <div key={key} className="flex gap-2 text-xs">
-                    <Badge variant="outline" className="font-mono text-xs">
+                    <Badge variant="outline" className={`font-mono text-xs ${channel === 'telegram' ? 'text-white border-gray-600' : ''}`}>
                       {key}
                     </Badge>
-                    <span className="text-muted-foreground truncate">
+                    <span className={`truncate ${channel === 'telegram' ? 'text-gray-400' : 'text-muted-foreground'}`}>
                       {typeof value === "object" 
                         ? JSON.stringify(value).substring(0, 50) + "..."
                         : String(value).substring(0, 50)}
@@ -2465,7 +2465,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           </>
         )}
 
-        <div className="p-4 border-t bg-background">
+        <div className={`p-4 border-t ${channel === 'telegram' ? 'bg-[#1A2633] border-gray-700' : 'bg-background'}`}>
           <input
             ref={fileInputRef}
             type="file"
@@ -2480,7 +2480,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               size="icon"
               onClick={() => fileInputRef.current?.click()}
               title="Anexar arquivo"
-              className="flex-shrink-0 rounded-full"
+              className={`flex-shrink-0 rounded-full ${channel === 'telegram' ? 'bg-[#2B5278] hover:bg-[#3A6B92] text-white border-transparent' : ''}`}
             >
               📎
             </Button>
@@ -2495,7 +2495,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 if (e.key === "Enter" && !selectedFile) handleSendMessage();
               }}
               readOnly={!!selectedFile}
-              className="rounded-full"
+              className={`rounded-full ${channel === 'telegram' ? 'bg-[#212D3B] text-white border-gray-600 placeholder:text-gray-400' : ''}`}
             />
             
             <Button
