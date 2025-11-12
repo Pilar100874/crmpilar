@@ -5,7 +5,6 @@ import { Session, User } from "@supabase/supabase-js";
 import {
   Sidebar,
   SidebarContent,
-  SidebarProvider,
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -342,8 +341,7 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
-      <SidebarProvider defaultOpen={true} open={true}>
-        <div className="min-h-screen flex w-full bg-background">
+        <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
         <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-20 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
           {/* Logo no topo */}
@@ -591,7 +589,6 @@ export default function Layout({ children }: LayoutProps) {
         onClose={() => setShowUsuarioSelector(false)}
         estabelecimentoId={estabelecimentoId}
       />
-    </SidebarProvider>
     </LayoutContext.Provider>
   );
 }
