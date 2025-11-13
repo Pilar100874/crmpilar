@@ -863,20 +863,17 @@ export default function Calendario() {
     userId?: string;
     isAutomatic?: boolean; // Flag para indicar se é inserção automática (rotinas) ou manual
   }) => {
-    // Verificar regra "dia todo" - se já existe tarefa de dia todo no dia selecionado
-    if (!taskData.isAllDay && calendarioRegras.validacao_dia_todo) {
-      const hasAllDayTask = await checkAllDayTasks(taskData.date);
+    // Verificar regra "dia todo" - SOMENTE se a data for FUTURA e for inserção automática
+    if (!taskData.isAllDay && calendarioRegras.validacao_dia_todo && taskData.isAutomatic) {
+      // Só verificar se a data for diferente da data atual
+      const today = startOfDay(new Date());
+      const taskDate = startOfDay(taskData.date);
       
-      if (hasAllDayTask) {
-        // Se for inserção MANUAL: perguntar se realmente quer agendar
-        if (!taskData.isAutomatic) {
-          setAllDayPendingTask({
-            taskData: taskData,
-          });
-          setIsAllDayDialogOpen(true);
-          return;
-        } else {
-          // Se for inserção AUTOMÁTICA: realocar para o próximo dia disponível
+      if (taskDate > today) {
+        const hasAllDayTask = await checkAllDayTasks(taskData.date);
+        
+        if (hasAllDayTask) {
+          // Realocar SOMENTE para inserções automáticas em datas futuras
           let nextDate = addDays(taskData.date, 1);
           let hasAllDay = await checkAllDayTasks(nextDate);
           
@@ -887,10 +884,13 @@ export default function Calendario() {
           }
           
           taskData.date = nextDate;
-          toast.info(`Tarefa realocada para ${format(nextDate, "dd/MM/yyyy")} devido a tarefa de dia todo no dia original`);
+          toast.info(`Tarefa automática realocada para ${format(nextDate, "dd/MM/yyyy")} devido a tarefa de dia todo`);
         }
       }
     }
+
+    // Para inserções MANUAIS (usuário criando), NUNCA bloquear ou realocar
+    // O usuário tem controle total sobre suas tarefas manuais
 
     // Verificar se é fim de semana (regra: bloqueio_finais_semana)
     if (checkWeekend(taskData.date) && calendarioRegras.bloqueio_finais_semana) {
@@ -924,8 +924,9 @@ export default function Calendario() {
             .maybeSingle();
           
           if (userData) {
-            const horaInicial = userData.hora_inicial || "08:00:00";
-            const horaFinal = userData.hora_final || "18:00:00";
+            // Extrair apenas HH:mm dos campos que podem vir como HH:mm:ss
+            const horaInicial = (userData.hora_inicial || "08:00:00").substring(0, 5);
+            const horaFinal = (userData.hora_final || "18:00:00").substring(0, 5);
             
             // Se não está dentro do horário comercial
             if (!isWithinBusinessHours(taskData.time, horaInicial, horaFinal)) {
@@ -1003,12 +1004,14 @@ export default function Calendario() {
           .single();
         
         if (userError || !userData) {
+          console.error("Erro ao buscar jornada:", userError);
           toast.error("Erro ao buscar jornada de trabalho do usuário");
           return;
         }
         
-        const horaInicial = userData.hora_inicial || "08:00";
-        const horaFinal = userData.hora_final || "18:00";
+        // Extrair apenas HH:mm dos campos que podem vir como HH:mm:ss
+        const horaInicial = (userData.hora_inicial || "08:00:00").substring(0, 5);
+        const horaFinal = (userData.hora_final || "18:00:00").substring(0, 5);
         
         const [startHour, startMinute] = horaInicial.split(':').map(Number);
         const [endHour, endMinute] = horaFinal.split(':').map(Number);
