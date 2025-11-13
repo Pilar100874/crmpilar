@@ -282,7 +282,15 @@ const ProjectsPanel = () => {
                 className="group hover:shadow-md transition-all overflow-hidden cursor-pointer"
                 onClick={() => handleLoadClick(project)}
               >
-                <div className="aspect-[4/3] bg-muted relative overflow-hidden flex items-center justify-center">
+                <div 
+                  className="bg-muted relative overflow-hidden flex items-center justify-center"
+                  style={{
+                    aspectRatio: project.dimensions 
+                      ? `${project.dimensions.width} / ${project.dimensions.height}`
+                      : '4 / 3',
+                    minHeight: '120px'
+                  }}
+                >
                   <img 
                     src={project.thumbnail} 
                     alt={project.name}
