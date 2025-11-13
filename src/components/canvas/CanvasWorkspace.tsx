@@ -34,13 +34,21 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    let canvas: FabricCanvas | null = null;
+    let handleObjectAdded: (() => void) | null = null;
+    let handleObjectModified: (() => void) | null = null;
+    let handleObjectRemoved: (() => void) | null = null;
+    let onCanvasUndo: (() => void) | null = null;
+    let onCanvasRedo: (() => void) | null = null;
+    let handleKeyDown: ((e: KeyboardEvent) => void) | null = null;
+
     setIsLoading(true);
     setLoadingProgress?.(10);
     
     const initCanvas = async () => {
       try {
         // Calcular dimensões do canvas
-        const container = canvasRef.current.parentElement;
+        const container = canvasRef.current?.parentElement;
         if (!container) throw new Error('Container não encontrado');
         
         const containerRect = container.getBoundingClientRect();
@@ -71,7 +79,7 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
         });
         setLoadingProgress?.(30);
       
-        const canvas = new FabricCanvas(canvasRef.current, {
+        canvas = new FabricCanvas(canvasRef.current!, {
           width,
           height,
           backgroundColor: '#ffffff',
@@ -196,9 +204,9 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
 
         saveState();
 
-        const handleObjectAdded = () => saveState();
-        const handleObjectModified = () => saveState();
-        const handleObjectRemoved = () => saveState();
+        handleObjectAdded = () => saveState();
+        handleObjectModified = () => saveState();
+        handleObjectRemoved = () => saveState();
 
         canvas.on('object:added', handleObjectAdded);
         canvas.on('object:modified', handleObjectModified);
@@ -232,7 +240,7 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
         ;(window as any).getCanvasHistory = () => ({ index: historyStepRef.current, length: historyRef.current.length });
 
         // Undo/Redo
-        const onCanvasUndo = () => {
+        onCanvasUndo = () => {
           console.info('history:undo:request', { index: historyStepRef.current, length: historyRef.current.length });
           if (historyStepRef.current > 0) {
             isLoadingStateRef.current = true;
@@ -252,7 +260,7 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
           }
         };
 
-        const onCanvasRedo = () => {
+        onCanvasRedo = () => {
           console.info('history:redo:request', { index: historyStepRef.current, length: historyRef.current.length });
           if (historyStepRef.current < historyRef.current.length - 1) {
             isLoadingStateRef.current = true;
@@ -278,7 +286,7 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
         window.addEventListener('canvas-redo', onCanvasRedo as EventListener);
 
         // Keyboard handler
-        const handleKeyDown = (e: KeyboardEvent) => {
+        handleKeyDown = (e: KeyboardEvent) => {
           const target = e.target as HTMLElement | null;
           const tag = target?.tagName?.toLowerCase();
           const isEditableTarget = !!(
@@ -320,24 +328,6 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
 
         window.addEventListener('resize', handleResize);
         window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-          window.removeEventListener('resize', handleResize);
-          window.removeEventListener('keydown', handleKeyDown);
-          canvas.off('selection:created', handleSelection);
-          canvas.off('selection:updated', handleSelection);
-          canvas.off('selection:cleared');
-          canvas.off('object:added', handleObjectAdded);
-          canvas.off('object:modified', handleObjectModified);
-          canvas.off('object:removed', handleObjectRemoved);
-          window.removeEventListener('canvas-undo', onCanvasUndo as EventListener);
-          window.removeEventListener('canvas-redo', onCanvasRedo as EventListener);
-          delete (window as any).canvasUndo;
-          delete (window as any).canvasRedo;
-          delete (window as any).getCanvasHistory;
-          canvas.dispose();
-          setContextCanvas(null);
-        };
       } catch (error) {
         console.error('Erro ao inicializar editor:', error);
         toast.error("Erro ao carregar o editor");
@@ -346,6 +336,25 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
     };
 
     initCanvas();
+
+    // Cleanup function
+    return () => {
+      if (canvas) {
+        if (handleObjectAdded) canvas.off('object:added', handleObjectAdded);
+        if (handleObjectModified) canvas.off('object:modified', handleObjectModified);
+        if (handleObjectRemoved) canvas.off('object:removed', handleObjectRemoved);
+        if (onCanvasUndo) window.removeEventListener('canvas-undo', onCanvasUndo as EventListener);
+        if (onCanvasRedo) window.removeEventListener('canvas-redo', onCanvasRedo as EventListener);
+        if (handleKeyDown) window.removeEventListener('keydown', handleKeyDown);
+        delete (window as any).canvasUndo;
+        delete (window as any).canvasRedo;
+        delete (window as any).getCanvasHistory;
+        delete (window as any).fabricCanvas;
+        canvas.dispose();
+        setContextCanvas(null);
+        setFabricCanvas(null);
+      }
+    };
   }, [setIsLoading, setContextCanvas, platformPreset]);
 
   const handleOpenCutLineDialog = () => {
