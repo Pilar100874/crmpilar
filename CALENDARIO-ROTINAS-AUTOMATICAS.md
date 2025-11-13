@@ -1,5 +1,17 @@
 # Guia de Integração - Rotinas Automáticas com Calendário
 
+## Rotina Automática de Movimentação de Tarefas
+
+O sistema possui uma **rotina automática diária** que executa às 00:00 (meia-noite) para mover todas as tarefas pendentes (não realizadas) para o próximo dia útil, respeitando as regras configuradas.
+
+### Como Funciona
+- Executa todos os dias às 00:00
+- Move tarefas com status "pending" e data anterior ao dia atual
+- Aplica as regras do calendário (Bloqueio Finais de Semana, Horário Comercial)
+- Para mais detalhes, consulte: `CALENDARIO-TAREFAS-AUTOMATICAS.md`
+
+---
+
 ## Como usar a flag `isAutomatic` ao criar tarefas automaticamente
 
 Quando você criar rotinas automáticas na tela de atendimento ou em qualquer outro lugar que crie tarefas de forma programática (não manual pelo usuário), você DEVE passar a flag `isAutomatic: true` para que as regras de calendário funcionem corretamente.
