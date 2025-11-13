@@ -163,7 +163,7 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
             historyStepRef.current--;
           }
 
-          // notify listeners (e.g., UI) about history change
+          console.info('history:save', { index: historyStepRef.current, length: historyRef.current.length });
           window.dispatchEvent(
             new CustomEvent('canvas-history', {
               detail: { index: historyStepRef.current, length: historyRef.current.length },
@@ -210,13 +210,17 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
 
         // Undo/Redo
         const onCanvasUndo = () => {
+          console.info('history:undo:request', { index: historyStepRef.current, length: historyRef.current.length });
           if (historyStepRef.current > 0) {
             isLoadingStateRef.current = true;
             historyStepRef.current--;
-            const state = historyRef.current[historyStepRef.current];
-            canvas.loadFromJSON(state).then(() => {
+            const stateStr = historyRef.current[historyStepRef.current];
+            let json: any = stateStr;
+            try { json = JSON.parse(stateStr); } catch {}
+            canvas.loadFromJSON(json).then(() => {
               canvas.renderAll();
               isLoadingStateRef.current = false;
+              console.info('history:undo:done', { index: historyStepRef.current, length: historyRef.current.length });
               window.dispatchEvent(new CustomEvent('canvas-history', { detail: { index: historyStepRef.current, length: historyRef.current.length } }));
             }).catch((e) => {
               isLoadingStateRef.current = false;
@@ -226,13 +230,17 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
         };
 
         const onCanvasRedo = () => {
+          console.info('history:redo:request', { index: historyStepRef.current, length: historyRef.current.length });
           if (historyStepRef.current < historyRef.current.length - 1) {
             isLoadingStateRef.current = true;
             historyStepRef.current++;
-            const state = historyRef.current[historyStepRef.current];
-            canvas.loadFromJSON(state).then(() => {
+            const stateStr = historyRef.current[historyStepRef.current];
+            let json: any = stateStr;
+            try { json = JSON.parse(stateStr); } catch {}
+            canvas.loadFromJSON(json).then(() => {
               canvas.renderAll();
               isLoadingStateRef.current = false;
+              console.info('history:redo:done', { index: historyStepRef.current, length: historyRef.current.length });
               window.dispatchEvent(new CustomEvent('canvas-history', { detail: { index: historyStepRef.current, length: historyRef.current.length } }));
             }).catch((e) => {
               isLoadingStateRef.current = false;
