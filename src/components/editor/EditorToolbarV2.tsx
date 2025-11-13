@@ -245,7 +245,7 @@ const EditorToolbarV2 = ({ onBack }: EditorToolbarV2Props) => {
           <Button
             size="sm"
             onClick={saveDesign}
-            className="bg-cyan-500 hover:bg-cyan-600 text-white h-9"
+            className="h-9"
           >
             <Save className="h-4 w-4 mr-2" />
             Salvar
@@ -275,7 +275,7 @@ const EditorToolbarV2 = ({ onBack }: EditorToolbarV2Props) => {
             <Button variant="outline" onClick={() => setShowSaveAsDialog(false)} className="bg-white text-slate-900">
               Cancelar
             </Button>
-            <Button onClick={confirmSaveAs} disabled={!newProjectName.trim()} className="bg-cyan-500 hover:bg-cyan-600">
+            <Button onClick={confirmSaveAs} disabled={!newProjectName.trim()}>
               Salvar
             </Button>
           </DialogFooter>
