@@ -152,7 +152,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     
     // Para empresas
     if (contact.type === 'empresa') {
-      const nomeFantasia = contact.name.toLowerCase();
+      const nomeFantasia = (contact.name || '').toLowerCase();
       const razaoSocial = (contact.razaoSocial || '').toLowerCase();
       const cnpj = (contact.cnpj || '').toLowerCase();
       const telefone = (contact.phone || '').toLowerCase();
@@ -168,7 +168,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     }
     
     // Para contatos
-    const nome = contact.name.toLowerCase();
+    const nome = (contact.name || '').toLowerCase();
     const telefone = (contact.phone || '').toLowerCase();
     const email = (contact.email || '').toLowerCase();
     const cpfCnpj = (contact.customFields?.cpf_cnpj || '').toString().toLowerCase();
