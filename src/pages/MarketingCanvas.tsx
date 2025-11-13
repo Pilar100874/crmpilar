@@ -31,6 +31,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Progress } from "@/components/ui/progress";
 import { TemplateSelectionDialog } from "@/components/editor/TemplateSelectionDialog";
+import { PlatformSelectionDialog, PlatformPreset } from "@/components/editor/PlatformSelectionDialog";
 import { FabricImage, Rect } from "fabric";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
@@ -65,10 +66,16 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [showPlatformDialog, setShowPlatformDialog] = useState(true);
+  const [platformPreset, setPlatformPreset] = useState<PlatformPreset | null>(null);
   const [productData, setProductData] = useState<any>(null);
   const isMobile = useIsMobile();
 
-  // Check if canvas has content (excluding masks/guides)
+  const handlePlatformSelect = (preset: PlatformPreset) => {
+    setPlatformPreset(preset);
+    setShowPlatformDialog(false);
+    toast.success(`Canvas configurado para ${preset.label}`);
+  };
   const hasCanvasContent = () => {
     const fabricCanvas = (window as any).fabricCanvas;
     if (!fabricCanvas) return false;
@@ -357,6 +364,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           {/* Toolbar */}
           <EditorToolbarV2 
             onBack={onBack || (() => handleNavigateAway(() => navigate(-1)))}
+            onChangePlatform={() => setShowPlatformDialog(true)}
+            currentPlatform={platformPreset?.label}
           />
           
           <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
@@ -375,7 +384,10 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
 
           <div className="flex-1 relative overflow-hidden bg-muted/30">
             <LoadingOverlay />
-            <CanvasWorkspace selectedSize={selectedSize} />
+            <CanvasWorkspace 
+              selectedSize={selectedSize} 
+              platformPreset={platformPreset}
+            />
             <FloatingObjectToolbar />
             <ObjectActionsMenu />
           </div>
@@ -428,6 +440,12 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           gabaritoCanvasUrl={productData?.gabarito_canvas_url || null}
           gabaritoCanvasRetangularUrl={productData?.gabarito_canvas_retangular_url || null}
           />
+        
+        <PlatformSelectionDialog
+          open={showPlatformDialog}
+          onSelect={handlePlatformSelect}
+          onClose={() => setShowPlatformDialog(false)}
+        />
         </div>
     </div>
   </CanvasProvider>
