@@ -338,15 +338,7 @@ export default function Calendario() {
   
   // Configuração de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
-    const saved = localStorage.getItem("calendarTableColumns");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // Se houver erro ao parsear, usar valores padrão
-      }
-    }
-    return [
+    const defaultColumns = [
       { id: "status", label: "Status", visible: true, width: 100, locked: true },
       { id: "title", label: "Título", visible: true, width: 250, locked: true },
       { id: "date", label: "Data", visible: true, width: 120 },
@@ -357,6 +349,38 @@ export default function Calendario() {
       { id: "description", label: "Descrição", visible: false, width: 300 },
       { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
     ];
+
+    const saved = localStorage.getItem("calendarTableColumns");
+    if (saved) {
+      try {
+        const savedColumns = JSON.parse(saved);
+        // Mesclar colunas salvas com as padrão, adicionando novas colunas que não existem
+        const savedIds = new Set(savedColumns.map((c: TableColumn) => c.id));
+        const newColumns = defaultColumns.filter(col => !savedIds.has(col.id));
+        
+        // Inserir novas colunas na posição correta (userName antes de assignedTo)
+        if (newColumns.length > 0) {
+          const merged = [...savedColumns];
+          newColumns.forEach(newCol => {
+            if (newCol.id === 'userName') {
+              const assignedToIndex = merged.findIndex(c => c.id === 'assignedTo');
+              if (assignedToIndex >= 0) {
+                merged.splice(assignedToIndex, 0, newCol);
+              } else {
+                merged.push(newCol);
+              }
+            } else {
+              merged.push(newCol);
+            }
+          });
+          return merged;
+        }
+        return savedColumns;
+      } catch {
+        // Se houver erro ao parsear, usar valores padrão
+      }
+    }
+    return defaultColumns;
   });
 
   // Estado de ordenação
