@@ -1232,7 +1232,7 @@ export default function Calendario() {
     setActiveId(event.active.id as string);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
 
@@ -1254,15 +1254,17 @@ export default function Calendario() {
         return;
       }
       
-      // Se a tarefa tem horário e a nova data é hoje, verificar se o horário já passou (regra: bloquear_horarios_passados)
+      // Se a tarefa tem horário e a nova data é hoje, ajustar horário se já passou (regra: bloquear_horarios_passados)
+      let adjustedTime = task.time;
       if (calendarioRegras.bloquear_horarios_passados && task.time && isSameDay(newDate, now)) {
         const [hours, minutes] = task.time.split(':').map(Number);
         const taskDateTime = new Date(newDate);
         taskDateTime.setHours(hours, minutes, 0, 0);
         
         if (taskDateTime < now) {
-          toast.error("Não é possível mover tarefa para horário passado");
-          return;
+          // Ajustar para o horário atual ao invés de bloquear
+          adjustedTime = format(now, 'HH:mm');
+          toast.info(`Horário ajustado para ${adjustedTime} (horário atual)`);
         }
       }
       
@@ -1273,25 +1275,30 @@ export default function Calendario() {
       }
 
       // Verificar se já existem tarefas no mesmo horário (regra: deteccao_conflitos)
-      if (calendarioRegras.deteccao_conflitos && task.time) {
+      if (calendarioRegras.deteccao_conflitos && adjustedTime) {
         const existingTasks = tasks.filter(t => 
           t.id !== taskId &&
           isSameDay(t.date, newDate) && 
-          t.time === task.time
+          t.time === adjustedTime
         );
 
         if (existingTasks.length > 0) {
           setConflictingTasks(existingTasks);
-          setPendingTask({ ...task, date: newDate });
+          setPendingTask({ ...task, date: newDate, time: adjustedTime });
           setIsConflictDialogOpen(true);
           return;
         }
       }
       
+      const updatedTask = { ...task, date: newDate, time: adjustedTime };
       const updatedTasks = tasks.map(t =>
-        t.id === taskId ? { ...t, date: newDate } : t
+        t.id === taskId ? updatedTask : t
       );
       setTasks(updatedTasks);
+      
+      // Atualizar no banco de dados
+      await updateTaskInDatabase(taskId, { date: newDate, time: adjustedTime });
+      
       toast.success("Tarefa movida com sucesso");
     }
   };
