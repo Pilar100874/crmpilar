@@ -422,7 +422,7 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
       const imageElement = selectedObject.getElement() as HTMLImageElement;
       const processedDataUrl = await applyOffsetWrapWithCutLine(imageElement, cutLinePosition);
 
-      FabricImage.fromURL(processedDataUrl).then((newImg) => {
+      FabricImage.fromURL(processedDataUrl, { crossOrigin: 'anonymous' }).then((newImg) => {
         newImg.set({
           left: selectedObject.left,
           top: selectedObject.top,

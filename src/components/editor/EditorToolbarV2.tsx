@@ -44,7 +44,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     toast.success("Download iniciado!");
   };
 
-  const saveDesign = () => {
+  const saveDesign = async () => {
     if (!fabricCanvas) {
       toast.error("Canvas não está pronto");
       return;
@@ -52,6 +52,27 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     
     try {
       const json = JSON.stringify(fabricCanvas.toJSON());
+      
+      // Garantir que todas as imagens estão carregadas antes de gerar thumbnail
+      const objects = fabricCanvas.getObjects();
+      const imagePromises = objects
+        .filter((obj: any) => obj.type === 'image')
+        .map((img: any) => {
+          return new Promise((resolve) => {
+            const element = img.getElement();
+            if (element && element.complete) {
+              resolve(true);
+            } else if (element) {
+              element.onload = () => resolve(true);
+              element.onerror = () => resolve(false);
+            } else {
+              resolve(false);
+            }
+          });
+        });
+      
+      await Promise.all(imagePromises);
+      fabricCanvas.renderAll();
       
       // Salvar thumbnail mantendo proporção e tamanho razoável
       const canvasWidth = fabricCanvas.width || 800;
@@ -63,6 +84,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
         format: 'png',
         quality: 0.8,
         multiplier: scale,
+        enableRetinaScaling: false,
       });
       
       const savedProject = saveProject(
@@ -87,7 +109,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     setShowSaveAsDialog(true);
   };
 
-  const confirmSaveAs = () => {
+  const confirmSaveAs = async () => {
     if (!fabricCanvas) {
       toast.error("Canvas não está pronto");
       return;
@@ -101,6 +123,27 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     try {
       const json = JSON.stringify(fabricCanvas.toJSON());
       
+      // Garantir que todas as imagens estão carregadas antes de gerar thumbnail
+      const objects = fabricCanvas.getObjects();
+      const imagePromises = objects
+        .filter((obj: any) => obj.type === 'image')
+        .map((img: any) => {
+          return new Promise((resolve) => {
+            const element = img.getElement();
+            if (element && element.complete) {
+              resolve(true);
+            } else if (element) {
+              element.onload = () => resolve(true);
+              element.onerror = () => resolve(false);
+            } else {
+              resolve(false);
+            }
+          });
+        });
+      
+      await Promise.all(imagePromises);
+      fabricCanvas.renderAll();
+      
       // Salvar thumbnail mantendo proporção e tamanho razoável
       const canvasWidth = fabricCanvas.width || 800;
       const canvasHeight = fabricCanvas.height || 600;
@@ -111,6 +154,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
         format: 'png',
         quality: 0.8,
         multiplier: scale,
+        enableRetinaScaling: false,
       });
       
       const savedProject = saveProject(

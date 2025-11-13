@@ -160,7 +160,7 @@ const ElementsPanel = () => {
           const blob = new Blob([svgData], { type: 'image/svg+xml' });
           const url = URL.createObjectURL(blob);
 
-          FabricImage.fromURL(url).then((img) => {
+          FabricImage.fromURL(url, { crossOrigin: 'anonymous' }).then((img) => {
             img.scale(0.5);
             img.set({
               left: 100,

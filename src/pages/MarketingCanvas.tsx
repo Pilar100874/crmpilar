@@ -244,6 +244,27 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
       try {
         const jsonData = exportCanvasToJSON(fabricCanvas);
         
+        // Garantir que todas as imagens estão carregadas antes de gerar thumbnail
+        const objects = fabricCanvas.getObjects();
+        const imagePromises = objects
+          .filter((obj: any) => obj.type === 'image')
+          .map((img: any) => {
+            return new Promise((resolve) => {
+              const element = img.getElement();
+              if (element && element.complete) {
+                resolve(true);
+              } else if (element) {
+                element.onload = () => resolve(true);
+                element.onerror = () => resolve(false);
+              } else {
+                resolve(false);
+              }
+            });
+          });
+        
+        await Promise.all(imagePromises);
+        fabricCanvas.renderAll();
+        
         // Salvar thumbnail mantendo proporção e tamanho razoável
         const canvasWidth = fabricCanvas.width || 800;
         const canvasHeight = fabricCanvas.height || 600;
@@ -253,7 +274,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
         const pngDataUrl = fabricCanvas.toDataURL({ 
           format: 'png', 
           quality: 0.8, 
-          multiplier: scale 
+          multiplier: scale,
+          enableRetinaScaling: false,
         });
         const productData = sessionStorage.getItem('productForDesign');
         const product = productData ? JSON.parse(productData) : null;
