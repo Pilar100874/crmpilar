@@ -833,10 +833,13 @@ export default function Calendario() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
+      // Se admin selecionou um usuário, verificar tarefas desse usuário
+      const targetUserId = (isAdmin && selectedUserId) ? selectedUserId : user.id;
+
       const { data: allDayTasks } = await (supabase as any)
         .from('calendario_tarefas')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', targetUserId)
         .eq('date', format(date, 'yyyy-MM-dd'))
         .eq('is_all_day', true)
         .limit(1);
@@ -978,12 +981,15 @@ export default function Calendario() {
         return;
       }
 
+      // Se admin selecionou um usuário específico, criar tarefa para ele
+      const targetUserId = (isAdmin && selectedUserId) ? selectedUserId : user.id;
+
       // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
       if (taskData.isAllDay) {
-        const { data: userData, error: userError } = await supabase
+        const { data: userData, error: userError } = await (supabase as any)
           .from("usuarios")
           .select("hora_inicial, hora_final")
-          .eq("id", user.id)
+          .eq("id", targetUserId)
           .single();
         
         if (userError || !userData) {
@@ -1008,7 +1014,7 @@ export default function Calendario() {
           const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
           
           tarefasParaInserir.push({
-            user_id: user.id,
+            user_id: targetUserId,
             estabelecimento_id: estabelecimentoId,
             contact_id: taskData.contactId,
             contact_name: taskData.contactName,
@@ -1038,7 +1044,7 @@ export default function Calendario() {
         const { error } = await (supabase as any)
           .from('calendario_tarefas')
           .insert({
-            user_id: user.id,
+            user_id: targetUserId,
             estabelecimento_id: estabelecimentoId,
             contact_id: taskData.contactId,
             contact_name: taskData.contactName,
@@ -1053,11 +1059,14 @@ export default function Calendario() {
 
         if (error) {
           console.error("Erro ao criar tarefa:", error);
-          toast.error("Erro ao criar tarefa");
+          toast.error(`Erro ao criar tarefa: ${error.message}`);
           return;
         }
 
-        toast.success("Tarefa adicionada com sucesso");
+        const nomeUsuario = isAdmin && selectedUserId 
+          ? usuarios.find(u => u.id === selectedUserId)?.nome 
+          : "você";
+        toast.success(`Tarefa adicionada com sucesso${isAdmin && selectedUserId ? ` para ${nomeUsuario}` : ''}`);
       }
       
       setShowTaskDialog(false);
