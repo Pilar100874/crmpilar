@@ -4,6 +4,48 @@
 
 Quando você criar rotinas automáticas na tela de atendimento ou em qualquer outro lugar que crie tarefas de forma programática (não manual pelo usuário), você DEVE passar a flag `isAutomatic: true` para que as regras de calendário funcionem corretamente.
 
+## Rotina Automática de Movimentação de Tarefas
+
+O sistema possui uma rotina automática que é executada **todos os dias às 00:00**. Esta rotina:
+
+1. **Busca todas as tarefas pendentes** de datas anteriores ao dia atual
+2. **Move essas tarefas** para o próximo dia útil
+3. **Respeita todas as regras do calendário**:
+   - Bloqueio de finais de semana
+   - Horário comercial do usuário
+   - Ajuste automático de horários
+
+### Exemplo de Funcionamento
+
+```
+Cenário: Tarefa agendada para segunda-feira às 09:00 não foi realizada
+
+Dia: Segunda (tarefa não realizada)
+↓
+Terça às 00:00: Rotina automática executa
+↓
+Resultado: Tarefa movida para terça-feira às 09:00
+
+---
+
+Cenário: Tarefa agendada para sexta-feira não foi realizada
+
+Dia: Sexta (tarefa não realizada)
+↓
+Sábado às 00:00: Rotina automática executa
+↓
+Resultado: Se "Bloqueio Finais de Semana" estiver ATIVO:
+           Tarefa movida para segunda-feira (próximo dia útil)
+```
+
+### Armazenamento de Tarefas
+
+As tarefas do calendário são armazenadas na tabela `calendario_tarefas` do banco de dados, permitindo:
+- Sincronização entre dispositivos
+- Backup automático
+- Processamento por rotinas automatizadas
+- Acesso compartilhado entre usuários do mesmo estabelecimento
+
 ## Comportamento das Regras do Calendário
 
 ### 1. Regra "Bloqueio Finais de Semana"
