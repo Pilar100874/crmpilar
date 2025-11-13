@@ -739,17 +739,27 @@ export default function Calendario() {
     }
   };
 
-  // Verificar tarefas atrasadas ao carregar e a cada hora
-  useEffect(() => {
+  // Verificar tarefas atrasadas ao carregar e a cada hora (com proteção de repetição diária)
+  const processOverdueIfNeeded = () => {
+    const now = new Date();
+    const todayKey = format(now, 'yyyy-MM-dd');
+    const lastProcessed = localStorage.getItem('calendar_overdue_last_processed');
+    if (lastProcessed === todayKey) {
+      return;
+    }
     moveOverdueTasks();
-    
-    // Verificar a cada hora
+    localStorage.setItem('calendar_overdue_last_processed', todayKey);
+  };
+
+  useEffect(() => {
+    processOverdueIfNeeded();
+
     const interval = setInterval(() => {
-      moveOverdueTasks();
+      processOverdueIfNeeded();
     }, 3600000); // 1 hora
 
     return () => clearInterval(interval);
-  }, [tasks]);
+  }, []);
 
   // Navegação
   const handlePrevious = () => {
@@ -1022,7 +1032,10 @@ export default function Calendario() {
           console.log("Verificando se o problema é RLS ou dados realmente não existem");
           
           // Tarefa simples sem dia todo
-          toast.error("Configuração de jornada não encontrada. Criando tarefa única sem divisão por horários.");
+          if (!sessionStorage.getItem('jornada_missing_warned')) {
+            toast.error("Configuração de jornada não encontrada. Criando tarefa única sem divisão por horários.");
+            sessionStorage.setItem('jornada_missing_warned', '1');
+          }
           
           // Criar apenas uma tarefa ao invés de múltiplas
           const { error } = await (supabase as any)
