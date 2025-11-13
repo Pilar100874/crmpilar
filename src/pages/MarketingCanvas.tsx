@@ -272,8 +272,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
         const scale = Math.min(maxDimension / canvasWidth, maxDimension / canvasHeight);
         
         const pngDataUrl = fabricCanvas.toDataURL({ 
-          format: 'png', 
-          quality: 0.8, 
+          format: 'jpeg', 
+          quality: 0.6, 
           multiplier: scale,
           enableRetinaScaling: false,
         });

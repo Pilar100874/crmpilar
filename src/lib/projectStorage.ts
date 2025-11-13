@@ -21,11 +21,8 @@ export const saveProject = (
   dimensions?: { width: number; height: number }
 ): SavedProject => {
   try {
-    // Comprimir thumbnail reduzindo qualidade
-    const compressedThumbnail = thumbnail.length > 50000 
-      ? thumbnail.substring(0, thumbnail.indexOf(',') + 1) + 
-        thumbnail.substring(thumbnail.indexOf(',') + 1).substring(0, 30000) + '...' 
-      : thumbnail;
+    // Usar o thumbnail exatamente como foi gerado (já vem otimizado pelo editor)
+    const storedThumbnail = thumbnail;
 
     const projects = getProjects();
     
@@ -38,7 +35,7 @@ export const saveProject = (
       id: Date.now().toString(),
       name,
       data: canvasData,
-      thumbnail: compressedThumbnail,
+      thumbnail: storedThumbnail,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       platform,
@@ -56,16 +53,13 @@ export const saveProject = (
       try {
         localStorage.removeItem(STORAGE_KEY);
         
-        const compressedThumbnail = thumbnail.length > 50000 
-          ? thumbnail.substring(0, thumbnail.indexOf(',') + 1) + 
-            thumbnail.substring(thumbnail.indexOf(',') + 1).substring(0, 20000) + '...' 
-          : thumbnail;
+        const storedThumbnail = thumbnail;
         
         const project: SavedProject = {
           id: Date.now().toString(),
           name,
           data: canvasData,
-          thumbnail: compressedThumbnail,
+          thumbnail: storedThumbnail,
           createdAt: Date.now(),
           updatedAt: Date.now(),
           platform,

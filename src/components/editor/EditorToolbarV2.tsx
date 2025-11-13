@@ -81,8 +81,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
       const scale = Math.min(maxDimension / canvasWidth, maxDimension / canvasHeight);
       
       const thumbnail = fabricCanvas.toDataURL({
-        format: 'png',
-        quality: 0.8,
+        format: 'jpeg',
+        quality: 0.6,
         multiplier: scale,
         enableRetinaScaling: false,
       });
@@ -151,8 +151,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
       const scale = Math.min(maxDimension / canvasWidth, maxDimension / canvasHeight);
       
       const thumbnail = fabricCanvas.toDataURL({
-        format: 'png',
-        quality: 0.8,
+        format: 'jpeg',
+        quality: 0.6,
         multiplier: scale,
         enableRetinaScaling: false,
       });
