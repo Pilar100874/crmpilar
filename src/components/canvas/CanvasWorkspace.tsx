@@ -385,43 +385,51 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
       const container = canvasRef.current?.parentElement;
       if (!container) return;
 
-      const containerRect = container.getBoundingClientRect();
-      const containerWidth = Math.max(300, containerRect.width - 64);
-      const containerHeight = Math.max(300, containerRect.height - 64);
-      const scaleX = containerWidth / platformPreset.width;
-      const scaleY = containerHeight / platformPreset.height;
-      const scale = Math.min(scaleX, scaleY);
-      
-      const newWidth = Math.floor(platformPreset.width * scale);
-      const newHeight = Math.floor(platformPreset.height * scale);
+      // Usar setTimeout para garantir que o container está com o tamanho correto
+      setTimeout(() => {
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = Math.max(300, containerRect.width - 64);
+        const containerHeight = Math.max(300, containerRect.height - 64);
+        const scaleX = containerWidth / platformPreset.width;
+        const scaleY = containerHeight / platformPreset.height;
+        const scale = Math.min(scaleX, scaleY);
+        
+        const newWidth = Math.floor(platformPreset.width * scale);
+        const newHeight = Math.floor(platformPreset.height * scale);
 
-      console.log('Recalculando canvas:', {
-        container: { width: containerRect.width, height: containerRect.height },
-        platform: { width: platformPreset.width, height: platformPreset.height },
-        scale,
-        canvas: { width: newWidth, height: newHeight }
-      });
+        console.log('Recalculando canvas para', platformPreset.label, ':', {
+          container: { width: containerRect.width, height: containerRect.height },
+          platform: { width: platformPreset.width, height: platformPreset.height },
+          scale,
+          newSize: { width: newWidth, height: newHeight },
+          currentSize: { width: fabricCanvas.width, height: fabricCanvas.height }
+        });
 
-      // Only resize if dimensions actually changed
-      if (fabricCanvas.width !== newWidth || fabricCanvas.height !== newHeight) {
+        // Sempre aplicar o novo tamanho
         fabricCanvas.setDimensions({ width: newWidth, height: newHeight });
         setCanvasSize({ width: newWidth, height: newHeight });
         fabricCanvas.renderAll();
-      }
+        fabricCanvas.requestRenderAll();
+      }, 100);
     };
 
     // Recalcular imediatamente
     recalculateSize();
 
-    // Adicionar listener para resize da janela
+    // Adicionar listener para resize da janela com debounce
+    let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
-      recalculateSize();
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        recalculateSize();
+      }, 150);
     };
 
     window.addEventListener('resize', handleResize);
     
     return () => {
       window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
     };
   }, [platformPreset, fabricCanvas]);
 
