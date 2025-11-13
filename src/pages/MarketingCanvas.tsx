@@ -424,7 +424,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
             </div>
           )}
 
-          <div className="flex-1 relative overflow-hidden bg-muted/30">
+          <div className="flex-1 relative overflow-hidden bg-muted/30" data-canvas-area>
             <LoadingOverlay />
             <CanvasWorkspace 
               selectedSize={selectedSize} 
