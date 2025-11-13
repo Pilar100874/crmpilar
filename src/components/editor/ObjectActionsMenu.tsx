@@ -43,6 +43,15 @@ export const ObjectActionsMenu = () => {
     fabricCanvas.on('selection:cleared', () => setSelectedObject(null));
     window.addEventListener('canvas-history', handleHistory as EventListener);
 
+    // initialize state from current history
+    try {
+      const info = (window as any).getCanvasHistory?.();
+      if (info) {
+        setCanUndo(info.index > 0);
+        setCanRedo(info.index < info.length - 1);
+      }
+    } catch {}
+
     return () => {
       fabricCanvas.off('selection:created', updateActiveObject);
       fabricCanvas.off('selection:updated', updateActiveObject);
