@@ -97,7 +97,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
 
   const loadConnections = async () => {
     try {
-      const estabId = await getEstabelecimentoId(estabelecimentoId);
+      const estabId = await getEstabelecimentoId();
       
       let query = supabase
         .from("database_connections")
@@ -245,7 +245,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
         if (error) throw error;
         toast.success("Endpoint atualizado com sucesso!");
       } else {
-        const estabId = await getEstabelecimentoId(estabelecimentoId);
+        const estabId = await getEstabelecimentoId();
         if (!estabId) {
           toast.error("Estabelecimento não identificado");
           return;

@@ -140,7 +140,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
   }, [estabelecimentoId]);
 
   const loadWebhooks = async () => {
-    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    const estabId = await getEstabelecimentoId();
     if (!estabId) return;
 
     const { data, error } = await supabase
@@ -173,7 +173,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
   };
 
   const loadTypesAndLocations = async () => {
-    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    const estabId = await getEstabelecimentoId();
     if (!estabId) return;
 
     // Load webhook types
@@ -248,7 +248,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
       return;
     }
 
-    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    const estabId = await getEstabelecimentoId();
     if (!estabId) {
       toast.error("Estabelecimento não identificado");
       return;
@@ -339,7 +339,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
       return;
     }
 
-    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    const estabId = await getEstabelecimentoId();
     if (!estabId) {
       toast.error("Estabelecimento não identificado");
       return;

@@ -24,7 +24,7 @@ export const SegurancaCRUD = ({ estabelecimentoId }: SegurancaCRUDProps) => {
   }, [estabelecimentoId]);
 
   const fetchConfig = async () => {
-    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    const estabId = await getEstabelecimentoId();
     if (!estabId) return;
 
     const { data, error } = await supabase
@@ -50,7 +50,7 @@ export const SegurancaCRUD = ({ estabelecimentoId }: SegurancaCRUDProps) => {
   const handleSave = async () => {
     setLoading(true);
 
-    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    const estabId = await getEstabelecimentoId();
     if (!estabId) {
       toast({
         title: "Erro",
