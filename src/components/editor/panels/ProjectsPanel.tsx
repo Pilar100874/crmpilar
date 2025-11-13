@@ -282,11 +282,11 @@ const ProjectsPanel = () => {
                 className="group hover:shadow-md transition-all overflow-hidden cursor-pointer"
                 onClick={() => handleLoadClick(project)}
               >
-                <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                <div className="aspect-[4/3] bg-muted relative overflow-hidden flex items-center justify-center">
                   <img 
                     src={project.thumbnail} 
                     alt={project.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform"
                   />
                   <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground px-2.5 py-1 rounded-md font-medium text-[10px]">
