@@ -35,7 +35,7 @@ const DesktopSidebar = ({ activePanel, onPanelChange }: DesktopSidebarProps) => 
     <div className="fixed md:static right-0 top-1/2 md:top-0 -translate-y-1/2 md:translate-y-0 
                     flex md:hidden lg:flex w-12 md:w-16 lg:w-20 bg-card border-l md:border-r md:border-l-0 
                     border-border flex-col items-center py-6 gap-2 md:gap-3 rounded-l-2xl md:rounded-none 
-                    shadow-lg md:shadow-none z-30">
+                    shadow-lg md:shadow-none z-50">
       {tools.map((tool) => {
         const Icon = tool.icon;
         const isActive = activePanel === tool.id;
@@ -58,7 +58,7 @@ const DesktopSidebar = ({ activePanel, onPanelChange }: DesktopSidebarProps) => 
                 <Icon className="h-5 w-5 lg:h-6 lg:w-6" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md z-[100]">
+            <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md z-[9999]">
               <p>{tool.label}</p>
             </TooltipContent>
           </Tooltip>
@@ -86,7 +86,7 @@ const DesktopSidebar = ({ activePanel, onPanelChange }: DesktopSidebarProps) => 
             <Layers className="h-5 w-5 lg:h-6 lg:w-6" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md z-[100]">
+        <TooltipContent side="right" className="bg-popover text-popover-foreground border shadow-md z-[9999]">
           <p>Camadas</p>
         </TooltipContent>
       </Tooltip>
