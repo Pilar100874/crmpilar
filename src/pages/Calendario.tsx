@@ -478,13 +478,21 @@ export default function Calendario() {
   const loadUsuarios = async () => {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
-      if (!estabelecimentoId) return;
+      console.log("Carregando usuários para estabelecimento:", estabelecimentoId);
+      
+      if (!estabelecimentoId) {
+        console.log("Nenhum estabelecimento_id encontrado");
+        return;
+      }
 
       const { data, error } = await (supabase as any)
         .from('usuarios')
         .select('id, nome, auth_user_id')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('nome');
+
+      console.log("Usuários carregados:", data?.length || 0, "usuários");
+      console.log("Usuários com auth_user_id:", data?.filter((u: any) => u.auth_user_id).length || 0);
 
       if (!error && data) {
         setUsuarios(data);
@@ -507,10 +515,14 @@ export default function Calendario() {
         // Se admin selecionou usuários específicos, mostrar admin + usuários selecionados
         // Se admin não selecionou nada, mostrar apenas suas tarefas
         // Se não é admin, mostrar apenas suas tarefas
+        console.log("Filtrando tarefas - isAdmin:", isAdmin, "selectedUserIds:", selectedUserIds, "currentAdminId:", currentAdminId);
+        
         if (isAdmin && selectedUserIds.length > 0) {
           const allIds = currentAdminId ? [currentAdminId, ...selectedUserIds] : selectedUserIds;
+          console.log("Buscando tarefas para IDs:", allIds);
           query = query.in('user_id', allIds);
         } else {
+          console.log("Buscando tarefas apenas para usuário atual:", user.id);
           query = query.eq('user_id', user.id);
         }
 
