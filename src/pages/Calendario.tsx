@@ -999,15 +999,17 @@ export default function Calendario() {
       if (taskData.isAllDay) {
         console.log("=== Buscando jornada de trabalho ===");
         console.log("Target User ID para jornada:", targetUserId);
+        console.log("User ID autenticado:", user.id);
+        console.log("Estabelecimento ID:", estabelecimentoId);
         
         const { data: userData, error: userError } = await (supabase as any)
           .from("usuarios")
-          .select("hora_inicial, hora_final")
+          .select("hora_inicial, hora_final, id, nome")
           .eq("id", targetUserId)
           .limit(1)
           .maybeSingle();
         
-        console.log("Resposta da query de jornada:", { userData, userError });
+        console.log("Resposta completa da query:", { userData, userError });
         
         if (userError) {
           console.error("Erro na query de jornada:", userError);
@@ -1016,11 +1018,42 @@ export default function Calendario() {
         }
         
         if (!userData) {
-          console.error("userData é null/undefined");
-          toast.error("Usuário não encontrado no sistema");
+          console.error("userData é null - usuário não encontrado na tabela usuarios");
+          console.log("Verificando se o problema é RLS ou dados realmente não existem");
+          
+          // Tarefa simples sem dia todo
+          toast.error("Configuração de jornada não encontrada. Criando tarefa única sem divisão por horários.");
+          
+          // Criar apenas uma tarefa ao invés de múltiplas
+          const { error } = await (supabase as any)
+            .from('calendario_tarefas')
+            .insert({
+              user_id: targetUserId,
+              estabelecimento_id: estabelecimentoId,
+              contact_id: taskData.contactId,
+              contact_name: taskData.contactName,
+              title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+              description: taskData.observation,
+              date: format(taskData.date, 'yyyy-MM-dd'),
+              time: '08:00',
+              type: taskData.type,
+              status: "pending",
+              is_all_day: true,
+            })
+            .select();
+
+          if (error) {
+            console.error("Erro ao criar tarefa única:", error);
+            toast.error(`Erro ao criar tarefa: ${error.message}`);
+            return;
+          }
+
+          toast.success("Tarefa de dia todo adicionada com sucesso");
+          setShowTaskDialog(false);
           return;
         }
         
+        console.log("Usuário encontrado:", userData.nome);
         console.log("hora_inicial raw:", userData.hora_inicial);
         console.log("hora_final raw:", userData.hora_final);
         
