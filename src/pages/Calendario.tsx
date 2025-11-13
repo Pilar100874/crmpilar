@@ -1516,15 +1516,39 @@ export default function Calendario() {
                   {hourTasks.map(task => (
                     <div
                       key={task.id}
-                      className={`p-2 rounded border cursor-pointer ${
+                      className={`group p-2 rounded border ${
                         task.status === "completed"
                           ? "bg-muted text-muted-foreground line-through border-muted"
                           : "bg-primary/10 border-primary"
                       }`}
-                      onClick={() => handleToggleTaskStatus(task.id)}
                     >
-                      <div className="font-medium text-sm">{task.title}</div>
-                      {task.description && <div className="text-xs text-muted-foreground mt-1">{task.description}</div>}
+                      <div className="flex items-center justify-between">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => handleToggleTaskStatus(task.id)}
+                        >
+                          <div className="font-medium text-sm">{task.title}</div>
+                          {task.description && <div className="text-xs text-muted-foreground mt-1">{task.description}</div>}
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleEditTask(task)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
+                            onClick={() => handleDeleteTask(task.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1776,14 +1800,24 @@ export default function Calendario() {
                       if (column.id === 'actions') {
                         return (
                           <td key="actions" className="p-3">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleDeleteTask(task.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleEditTask(task)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive"
+                                onClick={() => handleDeleteTask(task.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </td>
                         );
                       }

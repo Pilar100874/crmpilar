@@ -68,6 +68,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
+  const [noTimeSet, setNoTimeSet] = useState(false); // Novo estado para "sem horário definido"
   const [taskType, setTaskType] = useState("accompany");
   const [assignedTo, setAssignedTo] = useState("me");
   const [observation, setObservation] = useState("");
@@ -92,8 +93,10 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         setHours(h);
         setMinutes(m);
         setIsAllDay(false);
+        setNoTimeSet(false);
       } else {
         setIsAllDay(editingTask.isAllDay || false);
+        setNoTimeSet(!editingTask.isAllDay); // Se não tem horário e não é dia todo, é "sem horário definido"
         setHours("");
         setMinutes("");
       }
@@ -123,6 +126,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setHours("");
       setMinutes("");
       setIsAllDay(false);
+      setNoTimeSet(false);
       setTaskType("accompany");
       setObservation("");
       setShowContactList(false);
@@ -373,13 +377,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       return;
     }
 
-    if (!isAllDay && (!hours || !minutes)) {
-      toast.error("Selecione hora e minutos");
+    if (!isAllDay && !noTimeSet && (!hours || !minutes)) {
+      toast.error("Selecione hora e minutos ou marque 'Sem horário definido'");
       return;
     }
 
-    // Validar hora e minutos
-    if (!isAllDay) {
+    // Validar hora e minutos se não for dia todo e tiver horário definido
+    if (!isAllDay && !noTimeSet) {
       const h = parseInt(hours);
       const m = parseInt(minutes);
       if (isNaN(h) || h < 0 || h > 23) {
@@ -392,71 +396,14 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       }
     }
 
-    // Validar se a data/hora não é anterior ao momento atual
-    const now = new Date();
-    const taskDate = new Date(date);
-    
-    if (!isAllDay) {
-      taskDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      
-      if (taskDate < now) {
-        toast.error("Não é possível adicionar tarefas com data/hora anterior ao momento atual");
-        return;
-      }
-    }
-
-    // Verificar conflitos se for "dia todo"
+    // Definir o timeString baseado nas opções
+    let timeString = "";
     if (isAllDay) {
-      const savedTasks = localStorage.getItem("calendar_tasks");
-      if (savedTasks) {
-        const tasks = JSON.parse(savedTasks);
-        const dateStr = format(date, "yyyy-MM-dd");
-        const conflicts = tasks.filter((t: any) => 
-          format(new Date(t.date), "yyyy-MM-dd") === dateStr
-        );
-        
-        if (conflicts.length > 0) {
-          // Mostrar diálogo de conflito
-          setConflictingTasks(conflicts);
-          setPendingTaskData({
-            contactId: selectedContact.id,
-            contactName: selectedContact.name,
-            date,
-            time: "",
-            type: taskType,
-            observation,
-          });
-          setConflictDialogOpen(true);
-          return;
-        }
-      }
-    }
-
-    const timeString = isAllDay ? "" : `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-
-    // Se estiver editando uma tarefa existente, atualizar ao invés de criar nova
-    if (editingTaskId) {
-      const savedTasks = localStorage.getItem("calendar_tasks");
-      if (savedTasks) {
-        const tasks = JSON.parse(savedTasks);
-        const updatedTasks = tasks.map((t: any) => {
-          if (t.id === editingTaskId) {
-            return {
-              ...t,
-              date,
-              time: timeString,
-              type: taskType,
-              observation,
-            };
-          }
-          return t;
-        });
-        localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
-        toast.success("Tarefa atualizada com sucesso");
-        setEditingTaskId(null);
-        onOpenChange(false);
-        return;
-      }
+      timeString = ""; // Dia todo não tem horário
+    } else if (noTimeSet) {
+      timeString = ""; // Sem horário definido também não tem horário
+    } else {
+      timeString = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
     }
 
     onSave({
@@ -770,7 +717,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                           setHours(value);
                         }
                       }}
-                      disabled={isAllDay}
+                      disabled={isAllDay || noTimeSet}
                       className="pr-8"
                       maxLength={2}
                     />
@@ -819,7 +766,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                           setMinutes(value);
                         }
                       }}
-                      disabled={isAllDay}
+                      disabled={isAllDay || noTimeSet}
                       className="pr-8"
                       maxLength={2}
                     />
@@ -862,11 +809,31 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                 if (checked) {
                   setHours("");
                   setMinutes("");
+                  setNoTimeSet(false);
                 }
               }}
             />
             <label htmlFor="allday" className="text-sm cursor-pointer">
               Dia todo
+            </label>
+          </div>
+
+          {/* Checkbox sem horário definido */}
+          <div className="flex items-center gap-2">
+            <Checkbox 
+              id="notime" 
+              checked={noTimeSet}
+              onCheckedChange={(checked) => {
+                setNoTimeSet(checked as boolean);
+                if (checked) {
+                  setHours("");
+                  setMinutes("");
+                  setIsAllDay(false);
+                }
+              }}
+            />
+            <label htmlFor="notime" className="text-sm cursor-pointer">
+              Sem horário definido
             </label>
           </div>
 
