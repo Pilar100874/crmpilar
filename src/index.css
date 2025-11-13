@@ -131,12 +131,49 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 15% 18%;
     --sidebar-ring: 25 95% 53%;
+  }
 
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+  /* Slide-out Menu Styles */
+  .slide-out-menu {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    z-index: 30;
+    transition: left 0.3s ease;
+  }
+
+  .slide-out-menu.open {
+    left: 0;
+  }
+
+  .slide-out-menu-tab {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 120px;
+    background: hsl(var(--sidebar-background));
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .slide-out-menu-tab:hover {
+    width: 45px;
+    background: hsl(var(--sidebar-accent));
+  }
+
+  .slide-out-menu-tab svg {
+    color: hsl(var(--sidebar-foreground));
+    opacity: 0.7;
   }
 }
 
