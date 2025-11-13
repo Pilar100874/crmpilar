@@ -539,14 +539,14 @@ export default function Calendario() {
         }
 
         if (tarefas) {
-          // Buscar nomes dos usuários separadamente
-          const userIds = [...new Set(tarefas.map((t: any) => t.user_id))];
+          // Buscar nomes dos usuários pela nova coluna auth_user_id
+          const authUserIds = [...new Set(tarefas.map((t: any) => t.user_id))];
           const { data: usuariosData } = await (supabase as any)
             .from('usuarios')
-            .select('id, nome')
-            .in('id', userIds);
+            .select('auth_user_id, nome')
+            .in('auth_user_id', authUserIds);
           
-          const usuariosMap = new Map(usuariosData?.map((u: any) => [u.id, u.nome]) || []);
+          const usuariosMap = new Map(usuariosData?.map((u: any) => [u.auth_user_id, u.nome]) || []);
           
           const tasksWithDates = tarefas.map((task: any) => ({
             id: task.id,
@@ -748,43 +748,47 @@ export default function Calendario() {
   };
 
   // Mover tarefas não realizadas para o próximo dia útil
-  const moveOverdueTasks = () => {
+  const moveOverdueTasks = async () => {
     const now = new Date();
     const today = startOfDay(now);
-    let movedCount = 0;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-    const updatedTasks = tasks.map(task => {
-      // Verificar se a tarefa está pendente e a data já passou
-      if (task.status === "pending" && startOfDay(task.date) < today) {
-        movedCount++;
-        return {
-          ...task,
-          date: getNextBusinessDay(now),
-        };
-      }
-      return task;
-    });
+    const targetUserId = (isAdmin && selectedUserId) ? selectedUserId : user.id;
 
-    if (movedCount > 0) {
-      setTasks(updatedTasks);
-      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+    const { data: overdueTasks } = await (supabase as any)
+      .from('calendario_tarefas')
+      .select('id, date')
+      .eq('user_id', targetUserId)
+      .eq('status', 'pending')
+      .lt('date', format(today, 'yyyy-MM-dd'));
+
+    if (overdueTasks && overdueTasks.length > 0) {
       const nextDay = getNextBusinessDay(now);
+      const taskIds = overdueTasks.map((t: any) => t.id);
+
+      await (supabase as any)
+        .from('calendario_tarefas')
+        .update({ date: format(nextDay, 'yyyy-MM-dd') })
+        .in('id', taskIds);
+
       toast.info(
-        `${movedCount} tarefa${movedCount > 1 ? 's' : ''} não realizada${movedCount > 1 ? 's' : ''} movida${movedCount > 1 ? 's' : ''} para ${format(nextDay, "dd/MM/yyyy", { locale: ptBR })}`
+        `${overdueTasks.length} tarefa${overdueTasks.length > 1 ? 's' : ''} não realizada${overdueTasks.length > 1 ? 's' : ''} movida${overdueTasks.length > 1 ? 's' : ''} para ${format(nextDay, "dd/MM/yyyy", { locale: ptBR })}`
       );
     }
   };
 
   // Verificar tarefas atrasadas ao carregar e a cada hora (com proteção de repetição diária)
-  const processOverdueIfNeeded = () => {
+  const processOverdueIfNeeded = async () => {
     const now = new Date();
     const todayKey = format(now, 'yyyy-MM-dd');
-    const lastProcessed = localStorage.getItem('calendar_overdue_last_processed');
+    const lastProcessed = sessionStorage.getItem('calendar_overdue_last_processed');
     if (lastProcessed === todayKey) {
       return;
     }
-    moveOverdueTasks();
-    localStorage.setItem('calendar_overdue_last_processed', todayKey);
+    await moveOverdueTasks();
+    sessionStorage.setItem('calendar_overdue_last_processed', todayKey);
   };
 
   useEffect(() => {
@@ -1288,7 +1292,6 @@ export default function Calendario() {
         t.id === taskId ? { ...t, date: newDate } : t
       );
       setTasks(updatedTasks);
-      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
       toast.success("Tarefa movida com sucesso");
     }
   };
@@ -1304,7 +1307,6 @@ export default function Calendario() {
     );
 
     setTasks(updatedTasks);
-    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
     setIsConflictDialogOpen(false);
     setPendingTask(null);
     setConflictingTasks([]);
@@ -1319,7 +1321,6 @@ export default function Calendario() {
     );
     
     setTasks(updatedTasks);
-    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
     setIsConflictDialogOpen(false);
     setPendingTask(null);
     setConflictingTasks([]);
@@ -1526,7 +1527,6 @@ export default function Calendario() {
     });
 
     setTasks(updatedTasks);
-    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
     setEditingCell(null);
     setEditingValue("");
     toast.success("Tarefa atualizada");
@@ -2124,7 +2124,6 @@ export default function Calendario() {
                     t.id === editingTask.id ? editingTask : t
                   );
                   setTasks(updatedTasks);
-                  localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
                   toast.success("Tarefa atualizada com sucesso");
                   setIsEditDialogOpen(false);
                   setEditingTask(null);
@@ -2200,7 +2199,6 @@ export default function Calendario() {
                         : t
                     );
                     setTasks(updatedTasks);
-                    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
                     toast.success("Tarefa movida para fim de semana");
                   } else if (weekendPendingTask.taskData) {
                     // Criar nova tarefa
@@ -2226,7 +2224,6 @@ export default function Calendario() {
                         : t
                     );
                     setTasks(updatedTasks);
-                    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
                     toast.success(`Tarefa movida para ${format(nextBusinessDay, "dd/MM/yyyy", { locale: ptBR })}`);
                   } else if (weekendPendingTask.taskData) {
                     // Criar nova tarefa
