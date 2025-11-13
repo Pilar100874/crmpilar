@@ -246,8 +246,10 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
                             variant="ghost"
                             size="sm"
                             onClick={() => openConfigDialog(regra)}
+                            title="Configurar níveis de alerta"
                           >
-                            <Settings className="h-4 w-4" />
+                            <Settings className="h-4 w-4 mr-1" />
+                            Configurar
                           </Button>
                         )}
                       </TableCell>
