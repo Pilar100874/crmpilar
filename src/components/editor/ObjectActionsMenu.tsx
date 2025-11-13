@@ -19,9 +19,8 @@ import { useState, useEffect } from "react";
 export const ObjectActionsMenu = () => {
   const { fabricCanvas } = useCanvas();
   const [selectedObject, setSelectedObject] = useState<any>(null);
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyStep, setHistoryStep] = useState(-1);
-  const [isUndoRedoing, setIsUndoRedoing] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   useEffect(() => {
     if (!fabricCanvas) return;
@@ -31,100 +30,47 @@ export const ObjectActionsMenu = () => {
       setSelectedObject(obj);
     };
 
-    const saveState = () => {
-      // Don't save state during undo/redo operations
-      if (isUndoRedoing) return;
-      
-      try {
-        const json = JSON.stringify(fabricCanvas.toJSON());
-        
-        setHistory(prev => {
-          // Remove any future states if we're not at the end
-          const newHistory = prev.slice(0, historyStep + 1);
-          newHistory.push(json);
-          // Keep last 50 states
-          return newHistory.slice(-50);
-        });
-        
-        setHistoryStep(prev => {
-          const newStep = prev + 1;
-          return Math.min(newStep, 49);
-        });
-      } catch (error) {
-        console.error("Erro ao salvar estado:", error);
-      }
+    const handleHistory = (e: Event) => {
+      const detail: any = (e as CustomEvent).detail;
+      const index = detail?.index ?? 0;
+      const length = detail?.length ?? 0;
+      setCanUndo(index > 0);
+      setCanRedo(index < length - 1);
     };
 
     fabricCanvas.on('selection:created', updateActiveObject);
     fabricCanvas.on('selection:updated', updateActiveObject);
     fabricCanvas.on('selection:cleared', () => setSelectedObject(null));
-    fabricCanvas.on('object:added', saveState);
-    fabricCanvas.on('object:modified', saveState);
-    fabricCanvas.on('object:removed', saveState);
-
-    // Save initial state only once
-    if (history.length === 0) {
-      try {
-        const initialJson = JSON.stringify(fabricCanvas.toJSON());
-        setHistory([initialJson]);
-        setHistoryStep(0);
-      } catch (error) {
-        console.error("Erro ao salvar estado inicial:", error);
-      }
-    }
+    window.addEventListener('canvas-history', handleHistory as EventListener);
 
     return () => {
       fabricCanvas.off('selection:created', updateActiveObject);
       fabricCanvas.off('selection:updated', updateActiveObject);
       fabricCanvas.off('selection:cleared');
-      fabricCanvas.off('object:added', saveState);
-      fabricCanvas.off('object:modified', saveState);
-      fabricCanvas.off('object:removed', saveState);
+      window.removeEventListener('canvas-history', handleHistory as EventListener);
     };
-  }, [fabricCanvas, historyStep, isUndoRedoing, history.length]);
+  }, [fabricCanvas]);
 
   // Show menu even without selection for undo/redo
   if (!fabricCanvas) return null;
 
   const handleUndo = () => {
-    if (historyStep > 0 && fabricCanvas) {
-      setIsUndoRedoing(true);
-      const prevStep = historyStep - 1;
-      
-      try {
-        const jsonData = JSON.parse(history[prevStep]);
-        fabricCanvas.loadFromJSON(jsonData, () => {
-          fabricCanvas.renderAll();
-          setHistoryStep(prevStep);
-          setIsUndoRedoing(false);
-          toast.success("Desfeito!");
-        });
-      } catch (err) {
-        console.error("Erro ao desfazer:", err);
-        setIsUndoRedoing(false);
-        toast.error("Erro ao desfazer");
-      }
+    try {
+      (window as any).canvasUndo?.();
+      toast.success("Desfeito!");
+    } catch (err) {
+      console.error("Erro ao desfazer:", err);
+      toast.error("Erro ao desfazer");
     }
   };
 
   const handleRedo = () => {
-    if (historyStep < history.length - 1 && fabricCanvas) {
-      setIsUndoRedoing(true);
-      const nextStep = historyStep + 1;
-      
-      try {
-        const jsonData = JSON.parse(history[nextStep]);
-        fabricCanvas.loadFromJSON(jsonData, () => {
-          fabricCanvas.renderAll();
-          setHistoryStep(nextStep);
-          setIsUndoRedoing(false);
-          toast.success("Refeito!");
-        });
-      } catch (err) {
-        console.error("Erro ao refazer:", err);
-        setIsUndoRedoing(false);
-        toast.error("Erro ao refazer");
-      }
+    try {
+      (window as any).canvasRedo?.();
+      toast.success("Refeito!");
+    } catch (err) {
+      console.error("Erro ao refazer:", err);
+      toast.error("Erro ao refazer");
     }
   };
 
@@ -195,8 +141,7 @@ export const ObjectActionsMenu = () => {
     toast.success("Objeto removido!");
   };
 
-  const canUndo = historyStep > 0;
-  const canRedo = historyStep < history.length - 1;
+// canUndo/canRedo são controlados via evento 'canvas-history' emitido pelo CanvasWorkspace
 
   const globalActions = [
     { id: 'undo', icon: Undo, label: 'Desfazer', onClick: handleUndo, disabled: !canUndo, variant: undefined },

@@ -162,6 +162,13 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
             historyRef.current.shift();
             historyStepRef.current--;
           }
+
+          // notify listeners (e.g., UI) about history change
+          window.dispatchEvent(
+            new CustomEvent('canvas-history', {
+              detail: { index: historyStepRef.current, length: historyRef.current.length },
+            })
+          );
         };
 
         saveState();
@@ -207,6 +214,10 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
             canvas.loadFromJSON(state).then(() => {
               canvas.renderAll();
               isLoadingStateRef.current = false;
+              window.dispatchEvent(new CustomEvent('canvas-history', { detail: { index: historyStepRef.current, length: historyRef.current.length } }));
+            }).catch((e) => {
+              isLoadingStateRef.current = false;
+              console.error('Erro ao desfazer (loadFromJSON):', e);
             });
           }
         };
@@ -219,6 +230,10 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
             canvas.loadFromJSON(state).then(() => {
               canvas.renderAll();
               isLoadingStateRef.current = false;
+              window.dispatchEvent(new CustomEvent('canvas-history', { detail: { index: historyStepRef.current, length: historyRef.current.length } }));
+            }).catch((e) => {
+              isLoadingStateRef.current = false;
+              console.error('Erro ao refazer (loadFromJSON):', e);
             });
           }
         };
