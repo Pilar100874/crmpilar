@@ -47,8 +47,32 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
     
     const initCanvas = async () => {
       try {
+        // CRITICAL FIX: Remove any existing fabric canvas elements
+        const canvasElement = canvasRef.current;
+        if (!canvasElement) return;
+        
+        // Remove upper-canvas and canvas-container if they exist
+        const parent = canvasElement.parentElement;
+        if (parent) {
+          const upperCanvas = parent.querySelector('.upper-canvas');
+          if (upperCanvas) upperCanvas.remove();
+          
+          const canvasContainer = parent.querySelector('.canvas-container');
+          if (canvasContainer && canvasContainer !== parent) {
+            // Move the original canvas back to parent if it was wrapped
+            if (canvasElement.parentElement === canvasContainer) {
+              parent.appendChild(canvasElement);
+            }
+            canvasContainer.remove();
+          }
+        }
+        
+        // Clear any fabric-related attributes
+        canvasElement.removeAttribute('class');
+        canvasElement.className = '';
+        
         // Calcular dimensões do canvas
-        const container = canvasRef.current?.parentElement;
+        const container = canvasElement.parentElement;
         if (!container) throw new Error('Container não encontrado');
         
         const containerRect = container.getBoundingClientRect();
@@ -350,7 +374,27 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
         delete (window as any).canvasRedo;
         delete (window as any).getCanvasHistory;
         delete (window as any).fabricCanvas;
+        
+        // Dispose canvas
         canvas.dispose();
+        
+        // CRITICAL: Clean up fabric-created elements
+        const canvasElement = canvasRef.current;
+        if (canvasElement && canvasElement.parentElement) {
+          const parent = canvasElement.parentElement;
+          const upperCanvas = parent.querySelector('.upper-canvas');
+          if (upperCanvas) upperCanvas.remove();
+          
+          const canvasContainer = parent.querySelector('.canvas-container');
+          if (canvasContainer) {
+            // Move original canvas back if needed
+            if (canvasElement.parentElement === canvasContainer) {
+              parent.appendChild(canvasElement);
+            }
+            canvasContainer.remove();
+          }
+        }
+        
         setContextCanvas(null);
         setFabricCanvas(null);
       }
