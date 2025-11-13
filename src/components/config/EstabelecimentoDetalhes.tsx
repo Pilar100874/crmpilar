@@ -19,7 +19,8 @@ import { ProdutoGruposCRUD } from "./ProdutoGruposCRUD";
 import { CondicoesPagamentoCRUD } from "./CondicoesPagamentoCRUD";
 import { TabelasPrecoCRUD } from "./TabelasPrecoCRUD";
 import { TiposPagamentoCRUD } from "./TiposPagamentoCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet } from "lucide-react";
+import { CalendarioRegrasCRUD } from "./CalendarioRegrasCRUD";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -549,6 +550,18 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <TiposPagamentoCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="calendario-regras" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="font-medium">Regras do Calendário</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <CalendarioRegrasCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
