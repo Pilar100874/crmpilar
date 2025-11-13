@@ -5,11 +5,11 @@
   background-color: hsl(var(--background)) !important;
 }
 
-/* Painel lateral (mantém posição original) */
+/* Painel lateral */
 #rbro_menu_panel {
-  background: hsl(var(--card)) !important;
-  border-right: 1px solid hsl(var(--border)) !important;
-  box-shadow: 2px 0 8px hsl(var(--foreground) / 0.05) !important;
+  background: hsl(var(--primary)) !important;
+  border-right: 1px solid hsl(var(--primary) / 0.8) !important;
+  box-shadow: 2px 0 8px hsl(0 0% 0% / 0.15) !important;
 }
 
 /* Painel de propriedades */
@@ -51,13 +51,13 @@ img[alt*="logo" i],
 /* ===== MENU LATERAL ESQUERDO ===== */
 #rbro_menu_panel {
   padding: 8px 0 !important;
-  background: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--primary)) !important;
+  color: hsl(0 0% 10%) !important;
 }
 
 /* Itens do menu lateral com boa legibilidade */
 .rbroMenuItem {
-  color: hsl(var(--foreground)) !important;
+  color: hsl(0 0% 10%) !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   border-radius: 8px !important;
   margin: 4px 8px !important;
@@ -68,24 +68,24 @@ img[alt*="logo" i],
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
-  background: hsl(var(--card)) !important;
+  background: hsl(0 0% 100% / 0.15) !important;
 }
 
 .rbroMenuItem:hover {
-  background: hsl(var(--accent)) !important;
-  color: hsl(var(--accent-foreground)) !important;
-  border-color: hsl(var(--border)) !important;
+  background: hsl(0 0% 100% / 0.25) !important;
+  color: hsl(0 0% 5%) !important;
+  border-color: hsl(0 0% 100% / 0.3) !important;
   transform: translateX(2px) !important;
-  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1) !important;
+  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.2) !important;
 }
 
 .rbroMenuItem.rbroMenuItemActive,
 .rbroMenuItem.rbroActive {
-  background: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3) !important;
+  background: hsl(0 0% 100% / 0.35) !important;
+  color: hsl(0 0% 0%) !important;
+  box-shadow: 0 2px 8px hsl(0 0% 0% / 0.3) !important;
   font-weight: 600 !important;
-  border-color: hsl(var(--primary)) !important;
+  border-color: hsl(0 0% 100% / 0.4) !important;
 }
 
 .rbroMenuItem svg,
