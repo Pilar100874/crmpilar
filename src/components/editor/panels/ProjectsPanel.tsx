@@ -20,7 +20,9 @@ const ProjectsPanel = () => {
   const [projects, setProjects] = useState<SavedProject[]>([]);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showLoadConfirmDialog, setShowLoadConfirmDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [projectToLoad, setProjectToLoad] = useState<SavedProject | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<SavedProject | null>(null);
   const [projectName, setProjectName] = useState("Novo Design");
   const { fabricCanvas } = useCanvas();
 
@@ -94,10 +96,24 @@ const ProjectsPanel = () => {
     return 'outros';
   }
 
-  const handleDelete = (id: string) => {
-    deleteProject(id);
-    loadProjects();
-    toast.success("Projeto excluído!");
+  const handleDeleteClick = (project: SavedProject) => {
+    setProjectToDelete(project);
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete.id);
+      loadProjects();
+      toast.success("Projeto excluído!");
+      setShowDeleteConfirmDialog(false);
+      setProjectToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmDialog(false);
+    setProjectToDelete(null);
   };
 
   const handleLoadClick = (project: SavedProject) => {
@@ -309,7 +325,7 @@ const ProjectsPanel = () => {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete(project.id);
+                      handleDeleteClick(project);
                     }}
                     className="flex-1 h-6 text-[10px] px-1 text-destructive hover:text-destructive"
                   >
@@ -404,6 +420,42 @@ const ProjectsPanel = () => {
               className="w-full sm:w-auto"
             >
               Sobrepor
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmação para excluir projeto */}
+      <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Excluir Projeto</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir este projeto?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              O projeto <span className="font-semibold text-foreground">"{projectToDelete?.name}"</span> será excluído permanentemente. Esta ação não pode ser desfeita.
+            </p>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir
             </Button>
           </DialogFooter>
         </DialogContent>

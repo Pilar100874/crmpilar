@@ -53,9 +53,9 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     try {
       const json = JSON.stringify(fabricCanvas.toJSON());
       const thumbnail = fabricCanvas.toDataURL({
-        format: 'jpeg',
-        quality: 0.3,
-        multiplier: 0.2,
+        format: 'png',
+        quality: 0.8,
+        multiplier: 1,
       });
       
       const savedProject = saveProject(
@@ -94,9 +94,9 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     try {
       const json = JSON.stringify(fabricCanvas.toJSON());
       const thumbnail = fabricCanvas.toDataURL({
-        format: 'jpeg',
-        quality: 0.3,
-        multiplier: 0.2,
+        format: 'png',
+        quality: 0.8,
+        multiplier: 1,
       });
       
       const savedProject = saveProject(

@@ -243,7 +243,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
     if (fabricCanvas && hasCanvasContent()) {
       try {
         const jsonData = exportCanvasToJSON(fabricCanvas);
-        const pngDataUrl = fabricCanvas.toDataURL({ format: 'png', quality: 0.5, multiplier: 0.5 });
+        const pngDataUrl = fabricCanvas.toDataURL({ format: 'png', quality: 0.8, multiplier: 1 });
         const productData = sessionStorage.getItem('productForDesign');
         const product = productData ? JSON.parse(productData) : null;
         const projectName = product ? `${product.name} - ${new Date().toLocaleDateString()}` : `Design - ${new Date().toLocaleDateString()}`;
