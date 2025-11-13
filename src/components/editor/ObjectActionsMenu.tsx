@@ -65,8 +65,7 @@ export const ObjectActionsMenu = () => {
 
   const handleUndo = () => {
     try {
-      (window as any).canvasUndo?.();
-      toast.success("Desfeito!");
+      window.dispatchEvent(new Event('canvas-undo'));
     } catch (err) {
       console.error("Erro ao desfazer:", err);
       toast.error("Erro ao desfazer");
@@ -75,8 +74,7 @@ export const ObjectActionsMenu = () => {
 
   const handleRedo = () => {
     try {
-      (window as any).canvasRedo?.();
-      toast.success("Refeito!");
+      window.dispatchEvent(new Event('canvas-redo'));
     } catch (err) {
       console.error("Erro ao refazer:", err);
       toast.error("Erro ao refazer");
