@@ -140,13 +140,29 @@ const ProjectsPanel = () => {
     
     try {
       const data = JSON.parse(project.data);
+      console.log('Carregando projeto:', project.name, 'Dados:', data);
       
       // Limpar o canvas antes de carregar
       fabricCanvas.clear();
       fabricCanvas.backgroundColor = "#ffffff";
       
-      // Carregar o JSON
-      fabricCanvas.loadFromJSON(data).then(() => {
+      // Carregar o JSON com tratamento adequado de imagens
+      fabricCanvas.loadFromJSON(data, () => {
+        console.log('JSON carregado, objetos no canvas:', fabricCanvas.getObjects().length);
+        
+        // Verificar se há imagens e se foram carregadas
+        const objects = fabricCanvas.getObjects();
+        objects.forEach((obj: any, index: number) => {
+          console.log(`Objeto ${index}:`, obj.type, obj);
+          if (obj.type === 'image') {
+            console.log('Imagem encontrada:', {
+              src: obj.getSrc ? obj.getSrc() : 'N/A',
+              width: obj.width,
+              height: obj.height
+            });
+          }
+        });
+        
         fabricCanvas.renderAll();
         fabricCanvas.requestRenderAll();
         toast.success(`Projeto "${project.name}" carregado!`);
@@ -155,7 +171,7 @@ const ProjectsPanel = () => {
         setTimeout(() => {
           fabricCanvas.renderAll();
           fabricCanvas.requestRenderAll();
-        }, 50);
+        }, 100);
       }).catch((error: any) => {
         console.error('Erro ao carregar JSON:', error);
         toast.error("Erro ao carregar projeto");
@@ -164,7 +180,7 @@ const ProjectsPanel = () => {
       setShowLoadConfirmDialog(false);
       setProjectToLoad(null);
     } catch (error) {
-      console.error('Erro ao carregar projeto:', error);
+      console.error('Erro ao fazer parse do projeto:', error);
       toast.error("Erro ao carregar projeto");
     }
   };
