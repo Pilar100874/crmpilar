@@ -327,6 +327,7 @@ export default function Calendario() {
     bloqueio_finais_semana: boolean;
     horario_comercial: boolean;
     validacao_dia_todo: boolean;
+    realocacao_diaria: boolean;
   }>({
     bloquear_datas_passadas: true,
     bloquear_horarios_passados: true,
@@ -334,6 +335,7 @@ export default function Calendario() {
     bloqueio_finais_semana: false,
     horario_comercial: false,
     validacao_dia_todo: false,
+    realocacao_diaria: false,
   });
   
   // Configuração de colunas da tabela
@@ -630,6 +632,7 @@ export default function Calendario() {
             bloqueio_finais_semana: regrasMap.bloqueio_finais_semana ?? false,
             horario_comercial: regrasMap.horario_comercial ?? false,
             validacao_dia_todo: regrasMap.validacao_dia_todo ?? false,
+            realocacao_diaria: regrasMap.realocacao_diaria ?? false,
           });
         }
       } catch (error) {
@@ -1288,6 +1291,12 @@ export default function Calendario() {
           adjustedTime = format(now, 'HH:mm');
           toast.info(`Horário ajustado para ${adjustedTime} (horário atual)`);
         }
+      }
+      
+      // Aplicar regra de realocação diária: ao mover para data diferente, remover horário (regra: realocacao_diaria)
+      if (calendarioRegras.realocacao_diaria && !isSameDay(task.date, newDate)) {
+        adjustedTime = "";
+        toast.info("Horário removido - tarefa definida como 'sem horário definido'");
       }
       
       // Verificar se é fim de semana (regra: bloqueio_finais_semana)
