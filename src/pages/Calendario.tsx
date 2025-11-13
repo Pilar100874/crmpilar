@@ -285,6 +285,21 @@ export default function Calendario() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   
+  // Estado para regras do calendário
+  const [calendarioRegras, setCalendarioRegras] = useState<{
+    bloquear_datas_passadas: boolean;
+    bloquear_horarios_passados: boolean;
+    confirmacao_fim_semana: boolean;
+    deteccao_conflitos: boolean;
+    bloqueio_finais_semana: boolean;
+  }>({
+    bloquear_datas_passadas: true,
+    bloquear_horarios_passados: true,
+    confirmacao_fim_semana: true,
+    deteccao_conflitos: true,
+    bloqueio_finais_semana: false,
+  });
+  
   // Configuração de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
     const saved = localStorage.getItem("calendarTableColumns");
@@ -372,6 +387,50 @@ export default function Calendario() {
         toast.error("Erro ao carregar tarefas salvas");
       }
     }
+  }, []);
+
+  // Carregar regras do calendário do banco
+  useEffect(() => {
+    const loadRegras = async () => {
+      try {
+        // Buscar estabelecimento_id do usuário atual
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) return;
+
+        const { data: usuarioData } = await supabase
+          .from('usuarios')
+          .select('estabelecimento_id')
+          .eq('id', userData.user.id)
+          .single();
+
+        if (!usuarioData?.estabelecimento_id) return;
+
+        // Buscar regras ativas do estabelecimento
+        const { data: regras } = await (supabase as any)
+          .from('calendario_regras')
+          .select('tipo, ativa')
+          .eq('estabelecimento_id', usuarioData.estabelecimento_id);
+
+        if (regras) {
+          const regrasMap: any = {};
+          regras.forEach((regra: any) => {
+            regrasMap[regra.tipo] = regra.ativa;
+          });
+
+          setCalendarioRegras({
+            bloquear_datas_passadas: regrasMap.bloquear_datas_passadas ?? true,
+            bloquear_horarios_passados: regrasMap.bloquear_horarios_passados ?? true,
+            confirmacao_fim_semana: regrasMap.confirmacao_fim_semana ?? true,
+            deteccao_conflitos: regrasMap.deteccao_conflitos ?? true,
+            bloqueio_finais_semana: regrasMap.bloqueio_finais_semana ?? false,
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar regras do calendário:', error);
+      }
+    };
+
+    loadRegras();
   }, []);
 
   // Função para obter o próximo dia útil
@@ -468,16 +527,23 @@ export default function Calendario() {
     isAllDay?: boolean;
     userId?: string;
   }) => {
-    // Verificar se é fim de semana
+    // Verificar se é fim de semana (regra: confirmacao_fim_semana ou bloqueio_finais_semana)
     if (checkWeekend(taskData.date)) {
-      setWeekendPendingTask({
-        taskData: taskData,
-        existingTask: null,
-        targetDate: taskData.date,
-        isMove: false
-      });
-      setIsWeekendDialogOpen(true);
-      return;
+      if (calendarioRegras.bloqueio_finais_semana) {
+        toast.error("Agendamentos bloqueados para finais de semana");
+        return;
+      }
+      
+      if (calendarioRegras.confirmacao_fim_semana) {
+        setWeekendPendingTask({
+          taskData: taskData,
+          existingTask: null,
+          targetDate: taskData.date,
+          isMove: false
+        });
+        setIsWeekendDialogOpen(true);
+        return;
+      }
     }
 
     await saveTaskInternal(taskData);
@@ -615,14 +681,14 @@ export default function Calendario() {
       const newDate = overData.date as Date;
       const now = new Date();
       
-      // Verificar se a nova data é anterior à data atual
-      if (newDate < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+      // Verificar se a nova data é anterior à data atual (regra: bloquear_datas_passadas)
+      if (calendarioRegras.bloquear_datas_passadas && newDate < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
         toast.error("Não é possível mover tarefa para data passada");
         return;
       }
       
-      // Se a tarefa tem horário e a nova data é hoje, verificar se o horário já passou
-      if (task.time && isSameDay(newDate, now)) {
+      // Se a tarefa tem horário e a nova data é hoje, verificar se o horário já passou (regra: bloquear_horarios_passados)
+      if (calendarioRegras.bloquear_horarios_passados && task.time && isSameDay(newDate, now)) {
         const [hours, minutes] = task.time.split(':').map(Number);
         const taskDateTime = new Date(newDate);
         taskDateTime.setHours(hours, minutes, 0, 0);
@@ -633,20 +699,27 @@ export default function Calendario() {
         }
       }
       
-      // Verificar se é fim de semana
+      // Verificar se é fim de semana (regra: confirmacao_fim_semana ou bloqueio_finais_semana)
       if (checkWeekend(newDate)) {
-        setWeekendPendingTask({
-          taskData: null,
-          existingTask: task,
-          targetDate: newDate,
-          isMove: true
-        });
-        setIsWeekendDialogOpen(true);
-        return;
+        if (calendarioRegras.bloqueio_finais_semana) {
+          toast.error("Agendamentos bloqueados para finais de semana");
+          return;
+        }
+        
+        if (calendarioRegras.confirmacao_fim_semana) {
+          setWeekendPendingTask({
+            taskData: null,
+            existingTask: task,
+            targetDate: newDate,
+            isMove: true
+          });
+          setIsWeekendDialogOpen(true);
+          return;
+        }
       }
 
-      // Verificar se já existem tarefas no mesmo horário
-      if (task.time) {
+      // Verificar se já existem tarefas no mesmo horário (regra: deteccao_conflitos)
+      if (calendarioRegras.deteccao_conflitos && task.time) {
         const existingTasks = tasks.filter(t => 
           t.id !== taskId &&
           isSameDay(t.date, newDate) && 
@@ -1485,17 +1558,24 @@ export default function Calendario() {
                 onClick={() => {
                   if (!editingTask) return;
                   
-                  // Verificar se é fim de semana
+                  // Verificar se é fim de semana (regra: confirmacao_fim_semana ou bloqueio_finais_semana)
                   if (checkWeekend(editingTask.date)) {
-                    setWeekendPendingTask({
-                      taskData: null,
-                      existingTask: editingTask,
-                      targetDate: editingTask.date,
-                      isMove: true
-                    });
-                    setIsWeekendDialogOpen(true);
-                    setIsEditDialogOpen(false);
-                    return;
+                    if (calendarioRegras.bloqueio_finais_semana) {
+                      toast.error("Agendamentos bloqueados para finais de semana");
+                      return;
+                    }
+                    
+                    if (calendarioRegras.confirmacao_fim_semana) {
+                      setWeekendPendingTask({
+                        taskData: null,
+                        existingTask: editingTask,
+                        targetDate: editingTask.date,
+                        isMove: true
+                      });
+                      setIsWeekendDialogOpen(true);
+                      setIsEditDialogOpen(false);
+                      return;
+                    }
                   }
 
                   const updatedTasks = tasks.map(t => 

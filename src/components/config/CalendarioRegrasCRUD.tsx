@@ -92,6 +92,9 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
       'bloqueio_finais_semana': 'Bloqueio Finais de Semana',
       'alerta_urgente': 'Alerta Tarefas Urgentes',
       'confirmacao_fim_semana': 'Confirmação em Finais de Semana',
+      'bloquear_datas_passadas': 'Bloquear Datas Passadas',
+      'bloquear_horarios_passados': 'Bloquear Horários Passados',
+      'deteccao_conflitos': 'Detecção de Conflitos',
     };
     return tipos[tipo] || tipo;
   };
@@ -102,6 +105,9 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
       'bloqueio_finais_semana': 'bg-red-500',
       'alerta_urgente': 'bg-yellow-500',
       'confirmacao_fim_semana': 'bg-purple-500',
+      'bloquear_datas_passadas': 'bg-orange-500',
+      'bloquear_horarios_passados': 'bg-pink-500',
+      'deteccao_conflitos': 'bg-cyan-500',
     };
     return cores[tipo] || 'bg-gray-500';
   };
