@@ -56,18 +56,18 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
         // Use platformPreset dimensions if available, otherwise use container size
         let width, height;
         if (platformPreset) {
-          // Calculate scale to fit preset dimensions in container
-          const containerWidth = Math.max(300, containerRect.width - 32);
-          const containerHeight = Math.max(300, containerRect.height - 32);
+          // Calculate scale to fit preset dimensions in container - maximize screen usage
+          const containerWidth = Math.max(300, containerRect.width - 64);
+          const containerHeight = Math.max(300, containerRect.height - 64);
           const scaleX = containerWidth / platformPreset.width;
           const scaleY = containerHeight / platformPreset.height;
-          const scale = Math.min(scaleX, scaleY, 1); // Never scale up
+          const scale = Math.min(scaleX, scaleY); // Remover limite - permite escalar para cima
           
           width = Math.floor(platformPreset.width * scale);
           height = Math.floor(platformPreset.height * scale);
         } else {
-          width = Math.max(300, containerRect.width - 32);
-          height = Math.max(300, containerRect.height - 32);
+          width = Math.max(300, containerRect.width - 64);
+          height = Math.max(300, containerRect.height - 64);
         }
         
         console.log('Canvas size:', { 
@@ -385,11 +385,11 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
     if (!container) return;
 
     const containerRect = container.getBoundingClientRect();
-    const containerWidth = Math.max(300, containerRect.width - 32);
-    const containerHeight = Math.max(300, containerRect.height - 32);
+    const containerWidth = Math.max(300, containerRect.width - 64);
+    const containerHeight = Math.max(300, containerRect.height - 64);
     const scaleX = containerWidth / platformPreset.width;
     const scaleY = containerHeight / platformPreset.height;
-    const scale = Math.min(scaleX, scaleY, 1);
+    const scale = Math.min(scaleX, scaleY); // Permitir escalar para cima
     
     const newWidth = Math.floor(platformPreset.width * scale);
     const newHeight = Math.floor(platformPreset.height * scale);
