@@ -495,10 +495,7 @@ export default function Calendario() {
 
         let query = (supabase as any)
           .from('calendario_tarefas')
-          .select(`
-            *,
-            usuarios!calendario_tarefas_user_id_fkey(nome)
-          `);
+          .select('*');
 
         // Se admin selecionou um usuário específico, filtrar por ele
         // Se admin não selecionou nada, mostrar todos
@@ -518,6 +515,15 @@ export default function Calendario() {
         }
 
         if (tarefas) {
+          // Buscar nomes dos usuários separadamente
+          const userIds = [...new Set(tarefas.map((t: any) => t.user_id))];
+          const { data: usuariosData } = await (supabase as any)
+            .from('usuarios')
+            .select('id, nome')
+            .in('id', userIds);
+          
+          const usuariosMap = new Map(usuariosData?.map((u: any) => [u.id, u.nome]) || []);
+          
           const tasksWithDates = tarefas.map((task: any) => ({
             id: task.id,
             title: task.title,
@@ -532,7 +538,7 @@ export default function Calendario() {
             contactName: task.contact_name,
             isAllDay: task.is_all_day || false,
             userId: task.user_id,
-            userName: task.usuarios?.nome || 'Usuário não identificado',
+            userName: usuariosMap.get(task.user_id) || 'Usuário não identificado',
           }));
           setTasks(tasksWithDates);
         }
