@@ -526,15 +526,32 @@ export default function Calendario() {
     observation?: string;
     isAllDay?: boolean;
     userId?: string;
+    isAutomatic?: boolean; // Flag para indicar se é inserção automática (rotinas) ou manual
   }) => {
     // Verificar se é fim de semana (regra: confirmacao_fim_semana ou bloqueio_finais_semana)
     if (checkWeekend(taskData.date)) {
+      // Se a regra de bloqueio está ativa
       if (calendarioRegras.bloqueio_finais_semana) {
-        toast.error("Agendamentos bloqueados para finais de semana");
-        return;
+        // Se for inserção MANUAL: perguntar se realmente quer agendar
+        if (!taskData.isAutomatic) {
+          setWeekendPendingTask({
+            taskData: taskData,
+            existingTask: null,
+            targetDate: taskData.date,
+            isMove: false
+          });
+          setIsWeekendDialogOpen(true);
+          return;
+        } else {
+          // Se for inserção AUTOMÁTICA (rotinas): realocar para próximo dia útil
+          const nextBusinessDay = getNextBusinessDay(taskData.date);
+          toast.info(`Data realocada de ${format(taskData.date, "dd/MM/yyyy")} para ${format(nextBusinessDay, "dd/MM/yyyy")} (próximo dia útil)`);
+          taskData.date = nextBusinessDay;
+        }
       }
       
-      if (calendarioRegras.confirmacao_fim_semana) {
+      // Regra de confirmação (apenas para inserção manual se bloqueio não está ativo)
+      if (!calendarioRegras.bloqueio_finais_semana && calendarioRegras.confirmacao_fim_semana && !taskData.isAutomatic) {
         setWeekendPendingTask({
           taskData: taskData,
           existingTask: null,
