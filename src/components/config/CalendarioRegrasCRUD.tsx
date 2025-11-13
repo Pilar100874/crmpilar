@@ -169,11 +169,13 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
       'horario_comercial': 'bg-blue-500',
       'bloqueio_finais_semana': 'bg-red-500',
       'alerta_urgente': 'bg-yellow-500',
+      'alerta_tarefas_urgentes': 'bg-yellow-500',
       'confirmacao_fim_semana': 'bg-purple-500',
       'bloquear_datas_passadas': 'bg-orange-500',
       'bloquear_horarios_passados': 'bg-pink-500',
       'deteccao_conflitos': 'bg-cyan-500',
       'realocacao_diaria_tarefas': 'bg-green-500',
+      'validacao_dia_todo': 'bg-indigo-500',
     };
     return cores[tipo] || 'bg-gray-500';
   };
@@ -241,7 +243,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {regra.tipo === 'alerta_tarefas_urgentes' && (
+                        {(regra.tipo === 'alerta_tarefas_urgentes' || regra.tipo === 'alerta_urgente') && (
                           <Button
                             variant="ghost"
                             size="sm"
