@@ -417,14 +417,50 @@ export default function Calendario() {
   const checkAdminStatus = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log("Usuário não autenticado");
+        return;
+      }
 
-      const { data, error } = await supabase
+      console.log("Verificando admin para usuário:", user.id);
+
+      // Verificar na tabela user_roles
+      const { data: roleData, error: roleError } = await supabase
         .rpc('has_role', { _user_id: user.id, _role: 'admin' });
 
-      if (!error && data) {
+      if (!roleError && roleData) {
+        console.log("Usuário é admin via user_roles");
         setIsAdmin(true);
+        return;
       }
+
+      // Verificar na tabela administradores
+      const { data: adminData } = await (supabase as any)
+        .from('administradores')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (adminData) {
+        console.log("Usuário é admin via administradores");
+        setIsAdmin(true);
+        return;
+      }
+
+      // Verificar se usuário tem grupo de acesso com permissões de admin
+      const { data: usuarioData } = await (supabase as any)
+        .from('usuarios')
+        .select('grupo_acesso_id, grupos_acesso(nome)')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (usuarioData?.grupos_acesso?.nome?.toLowerCase().includes('admin')) {
+        console.log("Usuário é admin via grupo de acesso");
+        setIsAdmin(true);
+        return;
+      }
+
+      console.log("Usuário não é admin");
     } catch (error) {
       console.error("Erro ao verificar status de admin:", error);
     }
