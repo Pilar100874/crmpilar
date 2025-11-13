@@ -277,6 +277,20 @@ export default function Calendario() {
     targetDate: Date;
     isMove: boolean;
   } | null>(null);
+  const [isBusinessHoursDialogOpen, setIsBusinessHoursDialogOpen] = useState(false);
+  const [businessHoursPendingTask, setBusinessHoursPendingTask] = useState<{ 
+    taskData: {
+      contactId: string;
+      contactName: string;
+      date: Date;
+      time: string;
+      type: string;
+      observation?: string;
+      isAllDay?: boolean;
+      userId?: string;
+    } | null;
+    suggestedTime: string;
+  } | null>(null);
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
   const [pendingTask, setPendingTask] = useState<Task | null>(null);
@@ -292,12 +306,14 @@ export default function Calendario() {
     confirmacao_fim_semana: boolean;
     deteccao_conflitos: boolean;
     bloqueio_finais_semana: boolean;
+    horario_comercial: boolean;
   }>({
     bloquear_datas_passadas: true,
     bloquear_horarios_passados: true,
     confirmacao_fim_semana: true,
     deteccao_conflitos: true,
     bloqueio_finais_semana: false,
+    horario_comercial: false,
   });
   
   // Configuração de colunas da tabela
@@ -423,6 +439,7 @@ export default function Calendario() {
             confirmacao_fim_semana: regrasMap.confirmacao_fim_semana ?? true,
             deteccao_conflitos: regrasMap.deteccao_conflitos ?? true,
             bloqueio_finais_semana: regrasMap.bloqueio_finais_semana ?? false,
+            horario_comercial: regrasMap.horario_comercial ?? false,
           });
         }
       } catch (error) {
@@ -516,6 +533,51 @@ export default function Calendario() {
     return dayOfWeek === 0 || dayOfWeek === 6; // 0 = domingo, 6 = sábado
   };
 
+  // Verificar se o horário está dentro do horário comercial
+  const isWithinBusinessHours = (time: string, horaInicial: string, horaFinal: string): boolean => {
+    const [hour, minute] = time.split(':').map(Number);
+    const [startHour, startMinute] = horaInicial.split(':').map(Number);
+    const [endHour, endMinute] = horaFinal.split(':').map(Number);
+    
+    const timeInMinutes = hour * 60 + minute;
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
+    
+    return timeInMinutes >= startTimeInMinutes && timeInMinutes < endTimeInMinutes;
+  };
+
+  // Ajustar horário para dentro do horário comercial
+  const adjustToBusinessHours = (time: string, date: Date, horaInicial: string, horaFinal: string): { adjustedTime: string; adjustedDate: Date; message: string } => {
+    const [hour, minute] = time.split(':').map(Number);
+    const [startHour, startMinute] = horaInicial.split(':').map(Number);
+    const [endHour, endMinute] = horaFinal.split(':').map(Number);
+    
+    const timeInMinutes = hour * 60 + minute;
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
+    
+    // Se for antes do horário inicial, ajusta para o horário inicial
+    if (timeInMinutes < startTimeInMinutes) {
+      return {
+        adjustedTime: horaInicial.substring(0, 5), // Pega apenas HH:MM
+        adjustedDate: date,
+        message: `Horário ajustado de ${time} para ${horaInicial.substring(0, 5)} (início do expediente)`
+      };
+    }
+    
+    // Se for depois do horário final, agenda para o horário inicial do próximo dia útil
+    if (timeInMinutes >= endTimeInMinutes) {
+      const nextDay = getNextBusinessDay(addDays(date, 1));
+      return {
+        adjustedTime: horaInicial.substring(0, 5),
+        adjustedDate: nextDay,
+        message: `Horário ${time} está fora do expediente. Reagendado para ${format(nextDay, "dd/MM/yyyy")} às ${horaInicial.substring(0, 5)}`
+      };
+    }
+    
+    return { adjustedTime: time, adjustedDate: date, message: '' };
+  };
+
   // Adicionar tarefa
   const handleSaveTask = async (taskData: {
     contactId: string;
@@ -560,6 +622,49 @@ export default function Calendario() {
         });
         setIsWeekendDialogOpen(true);
         return;
+      }
+    }
+
+    // Verificar horário comercial (se não for dia todo)
+    if (!taskData.isAllDay && calendarioRegras.horario_comercial && taskData.time) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: userData } = await supabase
+            .from("usuarios")
+            .select("hora_inicial, hora_final")
+            .eq("id", user.id)
+            .maybeSingle();
+          
+          if (userData) {
+            const horaInicial = userData.hora_inicial || "08:00:00";
+            const horaFinal = userData.hora_final || "18:00:00";
+            
+            // Se não está dentro do horário comercial
+            if (!isWithinBusinessHours(taskData.time, horaInicial, horaFinal)) {
+              // Inserção MANUAL: perguntar se realmente deseja
+              if (!taskData.isAutomatic) {
+                const adjustment = adjustToBusinessHours(taskData.time, taskData.date, horaInicial, horaFinal);
+                setBusinessHoursPendingTask({
+                  taskData: taskData,
+                  suggestedTime: adjustment.adjustedTime
+                });
+                setIsBusinessHoursDialogOpen(true);
+                return;
+              } else {
+                // Inserção AUTOMÁTICA: ajustar automaticamente
+                const adjustment = adjustToBusinessHours(taskData.time, taskData.date, horaInicial, horaFinal);
+                taskData.time = adjustment.adjustedTime;
+                taskData.date = adjustment.adjustedDate;
+                if (adjustment.message) {
+                  toast.info(adjustment.message);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar horário comercial:", error);
       }
     }
 
@@ -1713,6 +1818,59 @@ export default function Calendario() {
               }}
             >
               Mover para Próximo Dia Útil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de horário comercial */}
+      <Dialog open={isBusinessHoursDialogOpen} onOpenChange={setIsBusinessHoursDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fora do Horário Comercial</DialogTitle>
+            <DialogDescription>
+              O horário selecionado ({businessHoursPendingTask?.taskData?.time}) está fora do seu horário de trabalho.
+              <br />
+              Horário sugerido: {businessHoursPendingTask?.suggestedTime}
+              <br />
+              O que você deseja fazer?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsBusinessHoursDialogOpen(false);
+                setBusinessHoursPendingTask(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (businessHoursPendingTask?.taskData) {
+                  await saveTaskInternal(businessHoursPendingTask.taskData);
+                }
+                setIsBusinessHoursDialogOpen(false);
+                setBusinessHoursPendingTask(null);
+              }}
+            >
+              Manter Horário Original
+            </Button>
+            <Button
+              onClick={async () => {
+                if (businessHoursPendingTask?.taskData && businessHoursPendingTask.suggestedTime) {
+                  await saveTaskInternal({
+                    ...businessHoursPendingTask.taskData,
+                    time: businessHoursPendingTask.suggestedTime
+                  });
+                }
+                setIsBusinessHoursDialogOpen(false);
+                setBusinessHoursPendingTask(null);
+              }}
+            >
+              Usar Horário Sugerido
             </Button>
           </DialogFooter>
         </DialogContent>
