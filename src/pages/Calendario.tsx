@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DndContext,
   DragEndEvent,
@@ -262,6 +263,9 @@ export default function Calendario() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [isWeekendDialogOpen, setIsWeekendDialogOpen] = useState(false);
   const [weekendPendingTask, setWeekendPendingTask] = useState<{ 
     taskData: {
@@ -401,16 +405,70 @@ export default function Calendario() {
 
   // Carregar tarefas do Supabase ao montar o componente
   useEffect(() => {
+    checkAdminStatus();
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadUsuarios();
+    }
+  }, [isAdmin]);
+
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+
+      if (!error && data) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error("Erro ao verificar status de admin:", error);
+    }
+  };
+
+  const loadUsuarios = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+
+      if (!error && data) {
+        setUsuarios(data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar usuários:", error);
+    }
+  };
+
+  useEffect(() => {
     const loadTasks = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: tarefas, error } = await (supabase as any)
+        let query = (supabase as any)
           .from('calendario_tarefas')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: true });
+          .select('*');
+
+        // Se admin selecionou um usuário específico, filtrar por ele
+        // Se admin não selecionou nada, mostrar todos
+        // Se não é admin, mostrar apenas suas tarefas
+        if (isAdmin && selectedUserId) {
+          query = query.eq('user_id', selectedUserId);
+        } else if (!isAdmin) {
+          query = query.eq('user_id', user.id);
+        }
+
+        const { data: tarefas, error } = await query.order('date', { ascending: true });
 
         if (error) {
           console.error("Erro ao carregar tarefas:", error);
@@ -463,7 +521,7 @@ export default function Calendario() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [selectedUserId, isAdmin]);
 
   // Carregar regras do calendário do banco
   useEffect(() => {
@@ -1724,6 +1782,26 @@ export default function Calendario() {
               >
                 Minhas tarefas
               </Button>
+              {isAdmin && (
+                <Select value={selectedUserId || "all"} onValueChange={(value) => setSelectedUserId(value === "all" ? null : value)}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Todos os usuários" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Todos os usuários
+                      </div>
+                    </SelectItem>
+                    {usuarios.map((usuario) => (
+                      <SelectItem key={usuario.id} value={usuario.id}>
+                        {usuario.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <Button variant="outline" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
                 Novo filtro
