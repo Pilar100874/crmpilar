@@ -29,6 +29,7 @@ import {
 } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface Task {
   id: string;
@@ -508,25 +509,6 @@ export default function Calendario() {
 
     loadRegras();
   }, []);
-
-  // Funções auxiliares para operações no Supabase
-  const getEstabelecimentoId = async (): Promise<string | null> => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
-      const { data: usuarioData } = await supabase
-        .from('usuarios')
-        .select('estabelecimento_id')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      return usuarioData?.estabelecimento_id || null;
-    } catch (error) {
-      console.error('Erro ao buscar estabelecimento:', error);
-      return null;
-    }
-  };
 
   const saveTaskToDatabase = async (task: Task): Promise<boolean> => {
     try {
