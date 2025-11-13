@@ -38,7 +38,7 @@ const variableTypeIcons = {
 };
 
 const variableTypeColors = {
-  text: "text-blue-600",
+  text: "text-primary",
   number: "text-green-600",
   date: "text-purple-600",
   array: "text-orange-600",
@@ -129,7 +129,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
       <SheetContent className="w-[600px] sm:w-[700px] bg-white border-slate-200">
         <SheetHeader>
           <SheetTitle className="text-slate-900 flex items-center gap-2">
-            <Database className="h-5 w-5 text-blue-600" />
+            <Database className="h-5 w-5 text-primary" />
             Monitor do Bloco
           </SheetTitle>
           <SheetDescription className="text-slate-600">
@@ -153,7 +153,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-blue-50">
+                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-primary/5">
                       <TableHead className="text-slate-900 font-bold">Variável</TableHead>
                       <TableHead className="text-slate-900 font-bold w-[100px]">Tipo</TableHead>
                       <TableHead className="text-slate-900 font-bold">Valor</TableHead>
@@ -171,7 +171,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
                       return (
                         <TableRow 
                           key={variable.id} 
-                          className="border-slate-200 hover:bg-blue-50/30"
+                          className="border-slate-200 hover:bg-primary/5"
                         >
                           <TableCell className="align-top">
                             <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -247,7 +247,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
                 <p className="text-xs font-semibold text-slate-700 mb-2">Legenda:</p>
                 <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
                   <div className="flex items-center gap-2">
-                    <Type className="h-3 w-3 text-blue-600" />
+                    <Type className="h-3 w-3 text-primary" />
                     <span>Texto</span>
                   </div>
                   <div className="flex items-center gap-2">

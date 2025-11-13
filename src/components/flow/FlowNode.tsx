@@ -66,7 +66,7 @@ export const FlowNode = memo((props: any) => {
         keywords: keywords.map((kw: any, index: number) => ({
           id: `keyword_${index}`,
           label: kw.keyword || `Palavra ${index + 1}`,
-          color: "bg-blue-500"
+          color: "bg-primary"
         }))
       };
     }
@@ -168,7 +168,7 @@ export const FlowNode = memo((props: any) => {
     
     return `${baseClass} bg-white border border-slate-300 ${
       selected 
-        ? "ring-2 ring-blue-400 border-blue-400" 
+        ? "ring-2 ring-primary border-primary" 
         : "hover:border-slate-400"
     }`;
   };
@@ -191,8 +191,8 @@ export const FlowNode = memo((props: any) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               {IconComponent && (
-                <div className="p-1 rounded bg-blue-50 border border-blue-200">
-                  <IconComponent className="w-3.5 h-3.5 text-blue-600" />
+                <div className="p-1 rounded bg-primary/5 border border-primary/20">
+                  <IconComponent className="w-3.5 h-3.5 text-primary" />
                 </div>
               )}
               <span className="font-semibold text-sm text-slate-900 truncate">{blockDef.label}</span>
@@ -235,7 +235,7 @@ export const FlowNode = memo((props: any) => {
                 }}
                 className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
               >
-                <Copy className="w-4 h-4 mr-2 text-blue-500" />
+                <Copy className="w-4 h-4 mr-2 text-primary" />
                 Duplicar Bloco
               </DropdownMenuItem>
               
@@ -291,10 +291,10 @@ export const FlowNode = memo((props: any) => {
             
             {/* Fallback */}
             {dynamicHandles.fallback && (
-              <div className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-blue-100 border border-blue-200 rounded-md group hover:bg-blue-200 transition-colors">
-                <div className="flex items-center gap-2">
-                  <Icons.HelpCircle className="w-3.5 h-3.5 text-blue-600" />
-                  <span className="text-xs font-medium truncate text-blue-800">{dynamicHandles.fallback.label}</span>
+              <div className="relative flex items-center justify-between gap-2 py-2.5 px-3 bg-primary/10 border border-primary/20 rounded-md group hover:bg-primary/20 transition-colors">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Icons.HelpCircle className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-medium truncate text-primary">{dynamicHandles.fallback.label}</span>
                 </div>
                 <div className="relative">
                   <Handle
@@ -385,12 +385,12 @@ export const FlowNode = memo((props: any) => {
               <div key={path.id} className={`relative flex items-center justify-between gap-2 py-2.5 px-3 rounded-md group transition-colors ${
                 path.color === 'bg-green-500' 
                   ? 'bg-pink-500 hover:bg-pink-600' 
-                  : 'bg-blue-100 border border-blue-200 hover:bg-blue-200'
+                  : 'bg-primary/10 border border-primary/20 hover:bg-primary/20'
               }`}>
                 {path.color === 'bg-red-500' && (
                   <div className="flex items-center gap-2">
-                    <Icons.HelpCircle className="w-3.5 h-3.5 text-blue-600" />
-                    <span className="text-xs font-medium truncate text-blue-800">{path.label}</span>
+                    <Icons.HelpCircle className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-medium truncate text-primary">{path.label}</span>
                   </div>
                 )}
                 {path.color === 'bg-green-500' && (
@@ -459,7 +459,7 @@ export const FlowNode = memo((props: any) => {
           onClick={() => data.onDuplicate?.(id)}
           className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
         >
-          <Copy className="w-4 h-4 mr-2 text-blue-500" />
+          <Copy className="w-4 h-4 mr-2 text-primary" />
           Duplicar Bloco
         </ContextMenuItem>
         

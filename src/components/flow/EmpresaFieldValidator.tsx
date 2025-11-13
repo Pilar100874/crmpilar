@@ -186,7 +186,7 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
       <SheetContent className="w-[600px] sm:w-[800px] bg-white border-slate-200">
         <SheetHeader>
           <SheetTitle className="text-slate-900 flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-blue-600" />
+            <Building2 className="h-5 w-5 text-primary" />
             Validação de Campos - Cadastro de Empresa
           </SheetTitle>
           <SheetDescription className="text-slate-600">
@@ -234,7 +234,7 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-blue-50">
+                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-primary/5">
                       <TableHead className="text-slate-900 font-bold w-[180px]">Campo</TableHead>
                       <TableHead className="text-slate-900 font-bold">Valor Atual</TableHead>
                       <TableHead className="text-slate-900 font-bold w-[200px]">Formato Esperado</TableHead>
@@ -297,9 +297,9 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
               </div>
 
               {/* Dicas de formato */}
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs font-semibold text-blue-900 mb-2">💡 Formatos esperados:</p>
-                <div className="grid grid-cols-2 gap-2 text-xs text-blue-800">
+              <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="text-xs font-semibold text-primary mb-2">💡 Formatos esperados:</p>
+                <div className="grid grid-cols-2 gap-2 text-xs text-primary/80">
                   <div><strong>CNPJ:</strong> Apenas números (14 dígitos)</div>
                   <div><strong>CEP:</strong> Apenas números (8 dígitos)</div>
                   <div><strong>Telefone:</strong> DDD + número (10-11 dígitos)</div>

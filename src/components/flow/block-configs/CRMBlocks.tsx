@@ -134,7 +134,7 @@ export const CRMCadastroEmpresaConfig = ({ config, handleConfigChange, nodes, ed
           Clique em "Usar campo" dentro de cada caixa para selecionar variáveis. 
           <strong className="text-destructive"> Campos obrigatórios (*) devem ser preenchidos.</strong>
         </p>
-        <p className="text-xs text-blue-600">
+        <p className="text-xs text-primary">
           ℹ️ Os campos listados aqui vêm da configuração de "Campos de Empresa" na tela de Contatos.
         </p>
         <p className="text-xs text-green-600 font-medium">

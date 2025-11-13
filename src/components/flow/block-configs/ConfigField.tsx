@@ -55,13 +55,13 @@ export const ConfigInput = ({
 }) => (
   <div className="space-y-2">
     <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
-      <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+      <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
-      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-blue-200 text-blue-700">obrigatório</Badge>}
+      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
     </Label>
     <div className="relative">
       {prefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-bold">
           {prefix}
         </span>
       )}
@@ -71,15 +71,15 @@ export const ConfigInput = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20",
+          "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20",
           prefix && "pl-7",
           className
         )}
       />
     </div>
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>
     )}
@@ -110,9 +110,9 @@ export const ConfigTextarea = ({
 }) => (
   <div className="space-y-2">
     <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
-      <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+      <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
-      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-blue-200 text-blue-700">obrigatório</Badge>}
+      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
     </Label>
     <Textarea
       value={value}
@@ -120,14 +120,14 @@ export const ConfigTextarea = ({
       placeholder={placeholder}
       rows={rows}
       className={cn(
-        "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none",
+        "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none",
         monospace && "font-mono text-xs",
         className
       )}
     />
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>
     )}
@@ -154,12 +154,12 @@ export const ConfigSelect = ({
 }) => (
   <div className="space-y-2">
     <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
-      <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+      <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
-      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-blue-200 text-blue-700">obrigatório</Badge>}
+      {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
     </Label>
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="bg-white border-slate-200 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+      <SelectTrigger className="bg-white border-slate-200 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="bg-white border-slate-200 text-slate-900">
@@ -171,8 +171,8 @@ export const ConfigSelect = ({
       </SelectContent>
     </Select>
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>
     )}
@@ -192,20 +192,20 @@ export const ConfigSwitch = ({
   info?: string;
 }) => (
   <div className="space-y-2">
-    <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-slate-200 hover:border-blue-300 transition-colors">
+    <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-slate-200 hover:border-primary/30 transition-colors">
       <Label className="text-slate-900 text-sm font-medium flex items-center gap-2 cursor-pointer">
-        <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+        <span className="w-1 h-4 bg-primary rounded-full"></span>
         {label}
       </Label>
       <Switch 
         checked={checked} 
         onCheckedChange={onChange}
-        className="data-[state=checked]:bg-blue-600"
+        className="data-[state=checked]:bg-primary"
       />
     </div>
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-blue-50 p-2 rounded border border-blue-200">
-        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-600" />
+      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+        <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>
     )}
@@ -221,7 +221,7 @@ export const ConfigInfo = ({
   variant?: "info" | "warning" | "success";
 }) => {
   const variants = {
-    info: "bg-blue-50 border-blue-200 text-blue-700",
+    info: "bg-primary/5 border-primary/20 text-primary",
     warning: "bg-yellow-50 border-yellow-200 text-yellow-700",
     success: "bg-green-50 border-green-200 text-green-700"
   };

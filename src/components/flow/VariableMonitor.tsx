@@ -34,7 +34,7 @@ const variableTypeIcons = {
 };
 
 const variableTypeColors = {
-  text: "text-blue-600",
+  text: "text-primary",
   number: "text-green-600",
   date: "text-purple-600",
   array: "text-orange-600",
@@ -120,7 +120,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
       <SheetContent className="w-[600px] sm:w-[700px] bg-white border-slate-200">
         <SheetHeader>
           <SheetTitle className="text-slate-900 flex items-center gap-2">
-            <Eye className="h-5 w-5 text-blue-600" />
+            <Eye className="h-5 w-5 text-primary" />
             Monitor de Variáveis
           </SheetTitle>
           <SheetDescription className="text-slate-600">
@@ -140,7 +140,7 @@ export function VariableMonitor({ variables, context }: VariableMonitorProps) {
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-blue-50">
+                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-primary/5">
                       <TableHead className="text-slate-900 font-bold">Variável</TableHead>
                       <TableHead className="text-slate-900 font-bold w-[100px]">Tipo</TableHead>
                       <TableHead className="text-slate-900 font-bold">Valor Atual</TableHead>
