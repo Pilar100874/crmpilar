@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
  * Obtém o estabelecimento_id do perfil do usuário autenticado.
  * Usa apenas Supabase Auth e a tabela profiles.
  * 
+ * Para administradores, verifica se há um estabelecimento selecionado no sessionStorage.
+ * Se não houver, retorna null (admin pode ver tudo).
+ * 
  * @returns O ID do estabelecimento ou null se não encontrado
  */
 export async function getEstabelecimentoId(): Promise<string | null> {
@@ -17,6 +20,16 @@ export async function getEstabelecimentoId(): Promise<string | null> {
       .select('estabelecimento_id, is_admin')
       .eq('id', user.id)
       .maybeSingle();
+
+    // Se for admin e tiver estabelecimento selecionado no sessionStorage, usa ele
+    if (profile?.is_admin) {
+      const selectedEstab = sessionStorage.getItem('selectedEstabelecimentoId');
+      if (selectedEstab) {
+        return selectedEstab;
+      }
+      // Admin sem estabelecimento selecionado: retorna null para ver tudo
+      return null;
+    }
 
     return profile?.estabelecimento_id || null;
   } catch (error) {
