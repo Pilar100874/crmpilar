@@ -29,6 +29,8 @@ import {
   Palette,
   Zap,
   Mail,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -143,6 +145,7 @@ export default function Layout({ children }: LayoutProps) {
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuLocked, setMenuLocked] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -297,6 +300,7 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   const handleMenuMouseEnter = () => {
+    if (menuLocked) return; // Não abre automaticamente se travado
     if (menuTimeoutRef.current) {
       clearTimeout(menuTimeoutRef.current);
       menuTimeoutRef.current = null;
@@ -305,10 +309,18 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const handleMenuMouseLeave = () => {
+    if (menuLocked) return; // Não fecha automaticamente se travado
     menuTimeoutRef.current = setTimeout(() => {
       setMenuOpen(false);
       setOpenSubmenuId(null);
     }, 300);
+  };
+
+  const handleToggleLock = () => {
+    setMenuLocked(!menuLocked);
+    if (!menuLocked) {
+      setMenuOpen(true); // Abre ao travar
+    }
   };
 
   const handleLogout = async () => {
@@ -349,14 +361,20 @@ export default function Layout({ children }: LayoutProps) {
         {sidebarVisible && (
         <div 
           ref={sidebarRef} 
-          className={`slide-out-menu border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col ${menuOpen ? 'open' : ''}`}
+          className={`${
+            menuLocked 
+              ? 'fixed left-0 top-0 bottom-0 w-16 z-30' 
+              : `slide-out-menu ${menuOpen ? 'open' : ''}`
+          } border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col`}
           onMouseEnter={handleMenuMouseEnter}
           onMouseLeave={handleMenuMouseLeave}
         >
-          {/* Aba lateral */}
-          <div className="slide-out-menu-tab">
-            <ChevronRight className="w-5 h-5" />
-          </div>
+          {/* Aba lateral - só aparece quando não está travado */}
+          {!menuLocked && (
+            <div className="slide-out-menu-tab">
+              <ChevronRight className="w-5 h-5" />
+            </div>
+          )}
 
           {/* Logo no topo */}
           <div className="flex items-center justify-center py-4 border-b border-sidebar-border/50">
@@ -370,13 +388,64 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           <ScrollArea className="flex-1 bg-sidebar">
-            <div className="py-2 px-4 flex flex-col gap-1">
+            <div className={`py-2 flex flex-col gap-1 ${menuLocked ? 'items-center' : 'px-4'}`}>
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   const isMenuOpen = openSubmenuId === item.id;
                   const shouldHighlight = isSubItemActive;
                   
+                  // Estilo travado (ícones apenas)
+                  if (menuLocked) {
+                    return (
+                      <div key={item.id} className="relative w-full flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
+                          className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                            shouldHighlight
+                              ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          }`}
+                          title={item.title}
+                        >
+                          <item.icon className="w-6 h-6" />
+                        </button>
+                        
+                        {isMenuOpen && (
+                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50 overflow-y-auto">
+                            <div className="px-4 py-6">
+                              <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
+                                {item.title}
+                              </h3>
+                              
+                              <div className="space-y-1">
+                                {item.subItems.map((subItem) => (
+                                  <NavLink
+                                    key={subItem.id}
+                                    to={subItem.url}
+                                    onClick={() => setOpenSubmenuId(null)}
+                                    className={({ isActive }) =>
+                                      `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                                        isActive
+                                          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                      }`
+                                    }
+                                  >
+                                    <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-sm">{subItem.title}</span>
+                                  </NavLink>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  
+                  // Estilo destravado (slide-out com texto)
                   return (
                     <div key={item.id} className="relative w-full">
                       <button
@@ -420,6 +489,25 @@ export default function Layout({ children }: LayoutProps) {
                 }
                 
                 // Menu normal sem submenu
+                if (menuLocked) {
+                  return (
+                    <NavLink
+                      key={item.title}
+                      to={item.url!}
+                      className={({ isActive }) =>
+                        `w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                          isActive
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                        }`
+                      }
+                      title={item.title}
+                    >
+                      <item.icon className="w-6 h-6" />
+                    </NavLink>
+                  );
+                }
+                
                 return (
                   <NavLink
                     key={item.title}
@@ -442,28 +530,57 @@ export default function Layout({ children }: LayoutProps) {
           </ScrollArea>
 
           {/* Ícones no rodapé */}
-          <div className="border-t border-sidebar-border/50 bg-sidebar py-3 px-4 flex flex-col gap-2">
+          <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
+            {/* Botão de travar/destravar */}
+            <button
+              onClick={handleToggleLock}
+              className={`${
+                menuLocked 
+                  ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
+                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+              } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
+              title={menuLocked ? "Destravar menu" : "Travar menu"}
+            >
+              {menuLocked ? (
+                <Pin className="w-5 h-5" />
+              ) : (
+                <>
+                  <PinOff className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-medium">Travar Menu</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => setShowUsuarioSelector(true)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
+              className={`${
+                menuLocked 
+                  ? 'w-10 h-10 rounded-full flex items-center justify-center' 
+                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+              } bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors`}
               title={userName || "Usuário"}
             >
               <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
-              <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>
+              {!menuLocked && <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>}
             </button>
+            
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
+              className={`${
+                menuLocked 
+                  ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
+                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+              } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
               title="Sair"
             >
               <LogOut className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm font-medium">Sair</span>
+              {!menuLocked && <span className="text-sm font-medium">Sair</span>}
             </button>
           </div>
         </div>
         )}
 
-        <main className="flex-1 flex flex-col bg-background min-w-0">
+        <main className={`flex-1 flex flex-col bg-background min-w-0 ${menuLocked ? 'ml-16' : ''}`}>
           {!sidebarVisible && (
             <div className="fixed left-0 top-0 z-30 p-2">
               <Button
