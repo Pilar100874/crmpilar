@@ -61,7 +61,7 @@ export default function QuickAttachmentsCRUD({ estabelecimentoId }: QuickAttachm
   }, [estabelecimentoId]);
 
   const loadQuickAttachments = async () => {
-    const estabId = await getEstabelecimentoId();
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
     
     let query = supabase
       .from("quick_attachments")
@@ -112,7 +112,7 @@ export default function QuickAttachmentsCRUD({ estabelecimentoId }: QuickAttachm
       return;
     }
 
-    const estabId = await getEstabelecimentoId();
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
     if (!estabId) {
       toast.error("Estabelecimento não identificado");
       return;

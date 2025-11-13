@@ -55,7 +55,7 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
   }, [estabelecimentoId]);
 
   const loadQuickReplies = async () => {
-    const estabId = await getEstabelecimentoId();
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
     
     let query = supabase
       .from("quick_replies")
@@ -101,7 +101,7 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
       return;
     }
 
-    const estabId = await getEstabelecimentoId();
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
     if (!estabId) {
       toast.error("Estabelecimento não identificado");
       return;

@@ -1,113 +1,55 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Obtém o estabelecimento_id do perfil do usuário autenticado.
- * Usa apenas Supabase Auth e a tabela profiles.
+ * Obtém o estabelecimento_id para o contexto atual.
  * 
- * Para administradores, verifica se há um estabelecimento selecionado no sessionStorage.
- * Se não houver, retorna null (admin pode ver tudo).
+ * Prioridade:
+ * 1. estabelecimentoId passado como parâmetro (prop)
+ * 2. selectedEstabelecimentoId do localStorage (para administradores)
+ * 3. estabelecimento_id do usuário na tabela usuarios
  * 
+ * @param estabelecimentoId - ID do estabelecimento passado como prop (opcional)
  * @returns O ID do estabelecimento ou null se não encontrado
  */
-export async function getEstabelecimentoId(): Promise<string | null> {
+export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<string | null> {
+  // 1. Se foi passado como parâmetro, usa ele
+  if (estabelecimentoId) {
+    return estabelecimentoId;
+  }
+
+  // 2. Verifica se há um estabelecimento selecionado no localStorage (para admins)
+  const selectedEstabelecimentoId = localStorage.getItem('selectedEstabelecimentoId');
+  if (selectedEstabelecimentoId) {
+    return selectedEstabelecimentoId;
+  }
+
+  // 3. Busca o estabelecimento_id do usuário na tabela usuarios
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    // Busca o perfil do usuário na tabela profiles
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('estabelecimento_id, is_admin')
+    // Verifica se é administrador
+    const { data: adminData } = await supabase
+      .from('administradores')
+      .select('id')
       .eq('id', user.id)
       .maybeSingle();
 
-    // Se for admin e tiver estabelecimento selecionado no sessionStorage, usa ele
-    if (profile?.is_admin) {
-      const selectedEstab = sessionStorage.getItem('selectedEstabelecimentoId');
-      if (selectedEstab) {
-        return selectedEstab;
-      }
-      // Admin sem estabelecimento selecionado: retorna null para ver tudo
+    // Se é administrador mas não selecionou estabelecimento, retorna null
+    if (adminData) {
       return null;
     }
 
-    return profile?.estabelecimento_id || null;
+    // Se não é admin, busca na tabela usuarios
+    const { data: userData } = await supabase
+      .from('usuarios')
+      .select('estabelecimento_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    return userData?.estabelecimento_id || null;
   } catch (error) {
     console.error('Erro ao obter estabelecimento_id:', error);
     return null;
-  }
-}
-
-/**
- * Verifica se o usuário atual é administrador
- */
-export async function isUserAdmin(): Promise<boolean> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    return profile?.is_admin || false;
-  } catch (error) {
-    console.error('Erro ao verificar se é admin:', error);
-    return false;
-  }
-}
-
-/**
- * Obtém o perfil completo do usuário
- */
-export async function getUserProfile() {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    return profile;
-  } catch (error) {
-    console.error('Erro ao obter perfil:', error);
-    return null;
-  }
-}
-
-/**
- * Atualiza o estabelecimento do usuário (apenas para admins)
- */
-export async function updateUserEstabelecimento(estabelecimentoId: string): Promise<boolean> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-
-    // Verifica se é admin
-    const admin = await isUserAdmin();
-    if (!admin) {
-      console.error('Apenas administradores podem mudar de estabelecimento');
-      return false;
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ estabelecimento_id: estabelecimentoId })
-      .eq('id', user.id);
-
-    if (error) {
-      console.error('Erro ao atualizar estabelecimento:', error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Erro ao atualizar estabelecimento:', error);
-    return false;
   }
 }

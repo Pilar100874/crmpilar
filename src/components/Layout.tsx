@@ -36,7 +36,8 @@ import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast-config";
 import logo from "@/assets/logo_branco_sidebar.png";
-import { AdminEstabelecimentoSelector } from "@/components/AdminEstabelecimentoSelector";
+import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
+import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { LayoutContext } from "@/contexts/LayoutContext";
 
@@ -135,6 +136,8 @@ export default function Layout({ children }: LayoutProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
+  const [showUsuarioSelector, setShowUsuarioSelector] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
@@ -375,19 +378,16 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Logo no topo */}
           <div className="flex items-center justify-center py-4 border-b border-sidebar-border/50">
-            <div className="w-10 h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center">
+            <button
+              onClick={() => isAdmin && setShowEstabelecimentoSelector(true)}
+              className="w-10 h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors"
+              title={estabelecimentoName || "Logo"}
+            >
               <Building2 className="w-5 h-5 text-sidebar-foreground/90" />
-            </div>
+            </button>
           </div>
 
           <ScrollArea className="flex-1 bg-sidebar">
-            {/* Seletor de estabelecimento para admins */}
-            {isAdmin && !menuLocked && (
-              <div className="px-4 pt-4 pb-2">
-                <AdminEstabelecimentoSelector />
-              </div>
-            )}
-            
             <div className={`py-2 flex flex-col gap-1 ${menuLocked ? 'items-center' : 'px-4'}`}>
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
@@ -550,6 +550,19 @@ export default function Layout({ children }: LayoutProps) {
                 </>
               )}
             </button>
+
+            <button
+              onClick={() => setShowUsuarioSelector(true)}
+              className={`${
+                menuLocked 
+                  ? 'w-10 h-10 rounded-full flex items-center justify-center' 
+                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+              } bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors`}
+              title={userName || "Usuário"}
+            >
+              <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
+              {!menuLocked && <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>}
+            </button>
             
             <button 
               onClick={handleLogout}
@@ -585,6 +598,21 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </main>
       </div>
+
+      <EstabelecimentoSelector
+        open={showEstabelecimentoSelector}
+        onSelectEstabelecimento={(estabelecimentoId) => {
+          setShowEstabelecimentoSelector(false);
+          window.location.reload(); // Recarrega a página para aplicar o novo estabelecimento
+        }}
+        onClose={() => setShowEstabelecimentoSelector(false)}
+      />
+
+      <UsuarioSelector
+        open={showUsuarioSelector}
+        onClose={() => setShowUsuarioSelector(false)}
+        estabelecimentoId={estabelecimentoId}
+      />
     </LayoutContext.Provider>
   );
 }

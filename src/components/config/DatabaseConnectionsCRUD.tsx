@@ -91,7 +91,7 @@ export function DatabaseConnectionsCRUD({ estabelecimentoId, onConnectionsChange
         if (error) throw error;
         toast.success("Conexão atualizada com sucesso!");
       } else {
-        const estabId = await getEstabelecimentoId();
+        const estabId = await getEstabelecimentoId(estabelecimentoId);
         if (!estabId) {
           toast.error("Estabelecimento não identificado");
           return;

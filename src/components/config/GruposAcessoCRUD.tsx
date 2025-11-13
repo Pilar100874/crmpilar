@@ -43,7 +43,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   }, [estabelecimentoId]);
 
   const fetchGrupos = async () => {
-    const targetEstabelecimentoId = await getEstabelecimentoId();
+    const targetEstabelecimentoId = await getEstabelecimentoId(estabelecimentoId);
     if (!targetEstabelecimentoId) return;
 
     const { data, error } = await supabase
@@ -107,7 +107,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
         await fetchGrupos();
       }
     } else {
-      const targetEstabelecimentoId = await getEstabelecimentoId();
+      const targetEstabelecimentoId = await getEstabelecimentoId(estabelecimentoId);
       console.log("Estabelecimento ID:", targetEstabelecimentoId);
 
       if (!targetEstabelecimentoId) {
