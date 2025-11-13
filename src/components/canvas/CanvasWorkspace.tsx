@@ -48,7 +48,7 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
     const initCanvas = async () => {
       try {
         // Calcular dimensões do canvas
-        const container = canvasRef.current?.parentElement;
+        const container = (canvasRef.current?.closest('[data-canvas-area]') as HTMLElement | null) ?? canvasRef.current?.parentElement;
         if (!container) throw new Error('Container não encontrado');
         
         const containerRect = container.getBoundingClientRect();
@@ -57,8 +57,8 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
         let width, height;
         if (platformPreset) {
           // Calculate scale to fit preset dimensions in container - maximize screen usage
-          const containerWidth = Math.max(300, containerRect.width - 64);
-          const containerHeight = Math.max(300, containerRect.height - 64);
+          const containerWidth = Math.max(300, containerRect.width - 32);
+          const containerHeight = Math.max(300, containerRect.height - 32);
           const scaleX = containerWidth / platformPreset.width;
           const scaleY = containerHeight / platformPreset.height;
           const scale = Math.min(scaleX, scaleY); // Remover limite - permite escalar para cima
@@ -66,8 +66,8 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
           width = Math.floor(platformPreset.width * scale);
           height = Math.floor(platformPreset.height * scale);
         } else {
-          width = Math.max(300, containerRect.width - 64);
-          height = Math.max(300, containerRect.height - 64);
+          width = Math.max(300, containerRect.width - 32);
+          height = Math.max(300, containerRect.height - 32);
         }
         
         console.log('Canvas size:', { 
@@ -314,7 +314,7 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
 
         // Resize handler
         const handleResize = () => {
-          const container = canvasRef.current?.parentElement;
+          const container = (canvasRef.current?.closest('[data-canvas-area]') as HTMLElement | null) ?? canvasRef.current?.parentElement;
           if (!container) return;
           
           const containerRect = container.getBoundingClientRect();
@@ -382,14 +382,14 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
     if (!fabricCanvas || !platformPreset) return;
 
     const recalculateSize = () => {
-      const container = canvasRef.current?.parentElement;
+      const container = (canvasRef.current?.closest('[data-canvas-area]') as HTMLElement | null) ?? canvasRef.current?.parentElement;
       if (!container) return;
 
       // Usar setTimeout para garantir que o container está com o tamanho correto
       setTimeout(() => {
         const containerRect = container.getBoundingClientRect();
-        const containerWidth = Math.max(300, containerRect.width - 64);
-        const containerHeight = Math.max(300, containerRect.height - 64);
+        const containerWidth = Math.max(300, containerRect.width - 32);
+        const containerHeight = Math.max(300, containerRect.height - 32);
         const scaleX = containerWidth / platformPreset.width;
         const scaleY = containerHeight / platformPreset.height;
         const scale = Math.min(scaleX, scaleY);
