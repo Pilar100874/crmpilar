@@ -176,7 +176,7 @@ export const BotManager = ({
                     onKeyPress={(e) => e.key === "Enter" && handleNameSave()}
                     className="bg-white border-slate-200 text-slate-900"
                   />
-                  <Button size="icon" onClick={handleNameSave} className="bg-blue-600 hover:bg-blue-700">
+                  <Button size="icon" onClick={handleNameSave} className="bg-primary hover:bg-primary/90">
                     <Check className="w-4 h-4" />
                   </Button>
                 </>
@@ -204,7 +204,7 @@ export const BotManager = ({
           </div>
 
           {/* New Bot Button */}
-          <Button onClick={onNewBot} className="w-full bg-blue-600 hover:bg-blue-700">
+          <Button onClick={onNewBot} className="w-full bg-primary hover:bg-primary/90">
             Criar Novo Bot
           </Button>
 
@@ -223,7 +223,7 @@ export const BotManager = ({
                     <Card
                       key={bot.id}
                       className={`p-3 bg-white border-slate-200 hover:bg-slate-50 transition-colors ${
-                        currentBotId === bot.id ? "border-blue-500" : ""
+                        currentBotId === bot.id ? "border-primary" : ""
                       }`}
                     >
                       <div className="space-y-2">
@@ -231,7 +231,7 @@ export const BotManager = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <h4
-                                className="font-medium truncate cursor-pointer hover:text-blue-600"
+                                className="font-medium truncate cursor-pointer hover:text-primary"
                                 onClick={() => onLoadBot(bot.id)}
                               >
                                 {bot.name}
@@ -242,7 +242,7 @@ export const BotManager = ({
                                 </Badge>
                               )}
                               {currentBotId === bot.id && (
-                                <Badge variant="outline" className="text-xs border-blue-200 text-blue-700">
+                                <Badge variant="outline" className="text-xs border-primary/20 text-primary">
                                   Atual
                                 </Badge>
                               )}

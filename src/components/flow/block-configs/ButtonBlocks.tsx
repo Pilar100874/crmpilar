@@ -47,7 +47,7 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
       <ConfigSection title="Mensagem">
         <div className="space-y-2">
           <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
-            <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+            <span className="w-1 h-4 bg-primary rounded-full"></span>
             Texto da Mensagem
           </Label>
           <RichTextEditor
@@ -229,7 +229,7 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
       <ConfigSection title="Mensagem">
         <div className="space-y-2">
           <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
-            <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+            <span className="w-1 h-4 bg-primary rounded-full"></span>
             Texto da Mensagem
           </Label>
           <RichTextEditor

@@ -20,7 +20,7 @@ const FieldIcon = ({ type, locked }: { type: string; locked?: boolean }) => {
   
   switch (type) {
     case "id":
-      return <div className={cn(wrapperClass, "bg-blue-500")}>B</div>;
+      return <div className={cn(wrapperClass, "bg-primary")}>B</div>;
     case "text":
       return <div className={cn(wrapperClass, "bg-pink-500")}>T</div>;
     case "date":
@@ -140,7 +140,7 @@ export const FormulasConfigNew = ({ config, handleConfigChange }: ConfigProps) =
           <Label className="text-xs font-semibold">Saídas do Bloco</Label>
           <div className="flex gap-2 flex-wrap">
             <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 border-0">SUCCESS / ERROR</Badge>
-            <Badge variant="outline" className="border-blue-500/50 text-blue-600 dark:text-blue-400">TRUE / FALSE</Badge>
+            <Badge variant="outline" className="border-primary/50 text-primary dark:text-primary">TRUE / FALSE</Badge>
             <Badge variant="outline" className="border-purple-500/50 text-purple-600 dark:text-purple-400">CUSTOM</Badge>
           </div>
         </div>
@@ -286,7 +286,7 @@ export const FormulasConfigNew = ({ config, handleConfigChange }: ConfigProps) =
             </div>
 
             <div className="border rounded-lg p-4 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20 text-center border-dashed">
-              <Globe className="w-10 h-10 mx-auto mb-2 text-blue-500/50 dark:text-blue-400/50" />
+              <Globe className="w-10 h-10 mx-auto mb-2 text-primary/50 dark:text-primary/50" />
               <p className="text-sm text-muted-foreground font-medium">
                 ✨ Explore funções e operações na coluna esquerda
               </p>
@@ -295,14 +295,14 @@ export const FormulasConfigNew = ({ config, handleConfigChange }: ConfigProps) =
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 shadow-sm">
+            <div className="bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 border border-primary/20 dark:border-primary/30 rounded-lg p-3 shadow-sm">
               <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <Info className="h-4 w-4 text-primary dark:text-primary flex-shrink-0 mt-0.5" />
                 <div className="text-xs space-y-1.5">
-                  <p className="font-bold text-blue-900 dark:text-blue-100">💡 Dicas Importantes:</p>
-                  <p className="text-blue-800 dark:text-blue-200">• Fórmulas são sensíveis a maiúsculas → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">Sum(...)</code> ✓ <code className="bg-white/50 dark:bg-black/20 px-1 rounded">SUM(...)</code> ✗</p>
-                  <p className="text-blue-800 dark:text-blue-200">• Campos do sistema precisam de aspas → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">"@today"</code> ✓</p>
-                  <p className="text-blue-800 dark:text-blue-200">• Você pode combinar funções → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">Sum(2, Sum(4, 2))</code> ✓</p>
+                  <p className="font-bold text-primary dark:text-primary">💡 Dicas Importantes:</p>
+                  <p className="text-primary/80 dark:text-primary/80">• Fórmulas são sensíveis a maiúsculas → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">Sum(...)</code> ✓ <code className="bg-white/50 dark:bg-black/20 px-1 rounded">SUM(...)</code> ✗</p>
+                  <p className="text-primary/80 dark:text-primary/80">• Campos do sistema precisam de aspas → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">"@today"</code> ✓</p>
+                  <p className="text-primary/80 dark:text-primary/80">• Você pode combinar funções → <code className="bg-white/50 dark:bg-black/20 px-1 rounded">Sum(2, Sum(4, 2))</code> ✓</p>
                 </div>
               </div>
             </div>

@@ -180,7 +180,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
       <SheetContent className="w-[500px] sm:w-[600px] bg-white border-slate-200">
         <SheetHeader>
           <SheetTitle className="text-slate-900 flex items-center gap-2">
-            <Variable className="h-5 w-5 text-blue-600" />
+            <Variable className="h-5 w-5 text-primary" />
             Gerenciar Variáveis Locais
           </SheetTitle>
           <SheetDescription className="text-slate-600">
@@ -212,7 +212,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
 
         <div className="mt-6 space-y-6">
           {/* Adicionar nova variável */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-4">
             <h3 className="text-sm font-semibold text-slate-900">Adicionar Nova Variável Local</h3>
             <p className="text-xs text-slate-600 -mt-2">Disponível apenas neste bot</p>
             
@@ -347,12 +347,12 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                     return (
                       <div
                         key={variable.id}
-                        className="bg-gradient-to-r from-blue-50 to-white border border-blue-200 rounded-lg p-3 hover:border-blue-300 transition-all hover:shadow-sm"
+                        className="bg-gradient-to-r from-primary/5 to-white border border-primary/20 rounded-lg p-3 hover:border-primary/30 transition-all hover:shadow-sm"
                       >
                       <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Icon className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                              <Icon className="h-4 w-4 text-primary flex-shrink-0" />
                               <span className="font-mono text-sm font-semibold text-slate-900 break-all">
                                 {`{{${variable.name}}}`}
                               </span>
@@ -366,7 +366,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                                 </span>
                               )}
                               {variable.scope === "local" && (
-                                <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded flex items-center gap-1 border border-blue-200 flex-shrink-0">
+                                <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1 border border-primary/20 flex-shrink-0">
                                   <User className="h-3 w-3" />
                                   Local
                                 </span>

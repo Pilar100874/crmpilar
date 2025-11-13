@@ -642,7 +642,7 @@ export default function BotCreate() {
                                 className={`text-xs ${
                                   bot.whatsapp_type === 'business' 
                                     ? 'bg-green-500/10 text-green-700 border-green-500/20' 
-                                    : 'bg-blue-500/10 text-blue-700 border-blue-500/20'
+                                    : 'bg-primary/10 text-primary border-primary/20'
                                 }`}
                               >
                                 {bot.whatsapp_type === 'business' ? 'Business' : 'WAHA'}

@@ -19,8 +19,8 @@ interface VariableExplorerProps {
 
 // Type icons and colors mapping
 const typeConfig = {
-  text: { icon: Type, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
-  string: { icon: Type, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
+  text: { icon: Type, color: "text-primary", bgColor: "bg-primary/5", borderColor: "border-primary/20" },
+  string: { icon: Type, color: "text-primary", bgColor: "bg-primary/5", borderColor: "border-primary/20" },
   number: { icon: Hash, color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" },
   date: { icon: Calendar, color: "text-purple-600", bgColor: "bg-purple-50", borderColor: "border-purple-200" },
   datetime: { icon: Calendar, color: "text-purple-600", bgColor: "bg-purple-50", borderColor: "border-purple-200" },
@@ -394,7 +394,7 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
       <Card className="mt-4 bg-slate-50 border-slate-200">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2 text-slate-900">
-            <Database className="w-4 h-4 text-blue-600" />
+            <Database className="w-4 h-4 text-primary" />
             Variáveis Disponíveis
             {expectedType && expectedType !== "any" && (
               <Badge variant="outline" className="text-xs ml-auto border-slate-200 text-slate-700">
@@ -418,10 +418,10 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
     <Card className="mt-4 bg-slate-50 border-slate-200">
       <CardHeader>
         <CardTitle className="text-sm flex items-center gap-2 text-slate-900">
-          <Database className="w-4 h-4 text-blue-600" />
+          <Database className="w-4 h-4 text-primary" />
           Variáveis Disponíveis
           {expectedType && expectedType !== "any" && (
-            <Badge variant="outline" className="text-xs ml-auto border-blue-200 text-blue-700">
+            <Badge variant="outline" className="text-xs ml-auto border-primary/20 text-primary">
               Filtro: {expectedType}
             </Badge>
           )}
@@ -434,7 +434,7 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
               <div key={blockIdx} className="space-y-2">
                 <div className="flex items-center gap-2">
                   {block.blockType === "custom" ? (
-                    <Badge variant="default" className="text-xs bg-blue-600 hover:bg-blue-700 text-white">
+                    <Badge variant="default" className="text-xs bg-primary hover:bg-primary/90 text-white">
                       <Variable className="w-3 h-3 mr-1" />
                       {block.blockName}
                     </Badge>
@@ -485,7 +485,7 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
         <div className="mt-3 pt-3 border-t border-slate-200">
           <div className="flex flex-wrap gap-2 mb-2">
             <div className="flex items-center gap-1 text-xs">
-              <Type className="w-3 h-3 text-blue-600" />
+              <Type className="w-3 h-3 text-primary" />
               <span className="text-slate-600">Texto</span>
             </div>
             <div className="flex items-center gap-1 text-xs">

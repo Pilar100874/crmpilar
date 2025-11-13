@@ -853,14 +853,14 @@ export const PropertiesPanel = ({
       <div className="p-4 border-b border-slate-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center">
               <span className="text-xl">⚙️</span>
             </div>
             <div>
               <h3 className="font-semibold text-base text-slate-900">Propriedades</h3>
               {blockDef && (
-                <div className="text-xs text-blue-600 flex items-center gap-1.5 font-medium mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 block"></span>
+                <div className="text-xs text-primary flex items-center gap-1.5 font-medium mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary block"></span>
                   {blockDef.label}
                 </div>
               )}

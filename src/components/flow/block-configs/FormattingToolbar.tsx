@@ -64,15 +64,15 @@ export const FormattingToolbar = ({ onFormat, onVariableClick }: FormattingToolb
       </div>
       
       {/* WhatsApp formatting guide */}
-      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+      <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
         <div className="flex items-start gap-2">
-          <div className="text-blue-600 mt-0.5">
+          <div className="text-primary mt-0.5">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div className="flex-1 text-xs text-slate-700 space-y-1">
-            <p className="font-semibold text-blue-700">Formatação WhatsApp:</p>
+            <p className="font-semibold text-primary">Formatação WhatsApp:</p>
             <div className="space-y-0.5">
               <p>• <span className="font-mono bg-white px-1 rounded">*negrito*</span> = <strong>negrito</strong></p>
               <p>• <span className="font-mono bg-white px-1 rounded">_itálico_</span> = <em>itálico</em></p>
