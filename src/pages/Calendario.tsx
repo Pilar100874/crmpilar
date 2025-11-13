@@ -559,7 +559,7 @@ export default function Calendario() {
             id: task.id,
             title: task.title,
             description: task.description || '',
-            date: new Date(task.date),
+            date: parseISO(task.date + 'T12:00:00'),
             time: task.time || '',
             assignedTo: task.contact_name,
             status: task.status as "pending" | "completed",
