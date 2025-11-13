@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Share2, ZoomIn, ZoomOut, Save, Copy, Home } from "lucide-react";
+import { Download, Share2, ZoomIn, ZoomOut, Save, Copy, Home, MonitorSmartphone } from "lucide-react";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { toast } from "@/lib/toast-config";
 import { useState } from "react";
@@ -14,12 +14,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EditorToolbarV2Props {
   onBack?: () => void;
+  onChangePlatform?: () => void;
+  currentPlatform?: string;
 }
 
-const EditorToolbarV2 = ({ onBack }: EditorToolbarV2Props) => {
+const EditorToolbarV2 = ({ onBack, onChangePlatform, currentPlatform }: EditorToolbarV2Props) => {
   const navigate = useNavigate();
   const { fabricCanvas } = useCanvas();
   const [projectName, setProjectName] = useState("Design sem título");
@@ -212,6 +215,25 @@ const EditorToolbarV2 = ({ onBack }: EditorToolbarV2Props) => {
 
         {/* Right section - Action buttons */}
         <div className="flex items-center gap-2">
+          {onChangePlatform && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onChangePlatform}
+                  className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50 h-9"
+                >
+                  <MonitorSmartphone className="h-4 w-4 mr-2" />
+                  {currentPlatform || 'Plataforma'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Alterar tamanho e plataforma</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          
           <Button
             variant="outline"
             size="sm"

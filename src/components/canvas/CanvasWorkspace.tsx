@@ -12,12 +12,14 @@ import {
 import { Copy, Trash2, Lock, Unlock, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown } from "lucide-react";
 import { applyOffsetWrap, applyOffsetWrapWithCutLine } from "@/lib/utils";
 import { CutLineDialog } from "@/components/editor/CutLineDialog";
+import { PlatformPreset } from "@/components/editor/PlatformSelectionDialog";
 
 interface CanvasWorkspaceProps {
   selectedSize: string;
+  platformPreset?: PlatformPreset | null;
 }
 
-const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
+const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [selectedObject, setSelectedObject] = useState<any>(null);
@@ -37,15 +39,36 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
     
     const initCanvas = async () => {
       try {
-        // Calcular dimensões do canvas - usar 100% do container
+        // Calcular dimensões do canvas
         const container = canvasRef.current.parentElement;
         if (!container) throw new Error('Container não encontrado');
         
         const containerRect = container.getBoundingClientRect();
-        const width = Math.max(300, containerRect.width - 32); // 32px = padding
-        const height = Math.max(300, containerRect.height - 32);
         
-        console.log('Canvas size:', { width, height, containerWidth: containerRect.width, containerHeight: containerRect.height });
+        // Use platformPreset dimensions if available, otherwise use container size
+        let width, height;
+        if (platformPreset) {
+          // Calculate scale to fit preset dimensions in container
+          const containerWidth = Math.max(300, containerRect.width - 32);
+          const containerHeight = Math.max(300, containerRect.height - 32);
+          const scaleX = containerWidth / platformPreset.width;
+          const scaleY = containerHeight / platformPreset.height;
+          const scale = Math.min(scaleX, scaleY, 1); // Never scale up
+          
+          width = Math.floor(platformPreset.width * scale);
+          height = Math.floor(platformPreset.height * scale);
+        } else {
+          width = Math.max(300, containerRect.width - 32);
+          height = Math.max(300, containerRect.height - 32);
+        }
+        
+        console.log('Canvas size:', { 
+          width, 
+          height, 
+          preset: platformPreset ? `${platformPreset.label} (${platformPreset.width}x${platformPreset.height})` : 'auto',
+          containerWidth: containerRect.width, 
+          containerHeight: containerRect.height 
+        });
         setLoadingProgress?.(30);
       
         const canvas = new FabricCanvas(canvasRef.current, {
@@ -323,7 +346,7 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
     };
 
     initCanvas();
-  }, [setIsLoading, setContextCanvas]);
+  }, [setIsLoading, setContextCanvas, platformPreset]);
 
   const handleOpenCutLineDialog = () => {
     if (!selectedObject || !(selectedObject instanceof FabricImage)) {
