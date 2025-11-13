@@ -1882,10 +1882,6 @@ export default function Calendario() {
             <span className="text-sm text-muted-foreground">
               {getTotalTasks()} tarefa{getTotalTasks() !== 1 ? 's' : ''}
             </span>
-            <Button variant="outline" size="sm">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              SINCRONIZAR
-            </Button>
             <Button onClick={() => handleOpenNewTask()} className="gap-2">
               <Plus className="w-4 h-4" />
               NOVA TAREFA
@@ -1910,19 +1906,6 @@ export default function Calendario() {
                 {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </h2>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const tabs = document.querySelector<HTMLElement>('[role="tablist"]');
-                if (tabs) {
-                  const listButton = Array.from(tabs.querySelectorAll('button')).find(b => !b.getAttribute('data-state'));
-                  if (listButton) listButton.click();
-                }
-              }}
-            >
-              Ver lista
-            </Button>
           </div>
         )}
 
