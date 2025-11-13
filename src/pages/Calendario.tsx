@@ -382,25 +382,70 @@ export default function Calendario() {
     })
   );
 
-  // Carregar tarefas do localStorage ao montar o componente
+  // Carregar tarefas do Supabase ao montar o componente
   useEffect(() => {
-    const savedTasks = localStorage.getItem("calendar_tasks");
-    if (savedTasks) {
+    const loadTasks = async () => {
       try {
-        const parsedTasks = JSON.parse(savedTasks);
-        // Converter strings de data para objetos Date e garantir tipos corretos
-        const tasksWithDates = parsedTasks.map((task: any) => ({
-          ...task,
-          date: new Date(task.date),
-          createdAt: new Date(task.createdAt),
-          status: (task.status === "completed" ? "completed" : "pending") as "pending" | "completed",
-        }));
-        setTasks(tasksWithDates);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: tarefas, error } = await (supabase as any)
+          .from('calendario_tarefas')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: true });
+
+        if (error) {
+          console.error("Erro ao carregar tarefas:", error);
+          toast.error("Erro ao carregar tarefas");
+          return;
+        }
+
+        if (tarefas) {
+          const tasksWithDates = tarefas.map((task: any) => ({
+            id: task.id,
+            title: task.title,
+            description: task.description || '',
+            date: new Date(task.date),
+            time: task.time || '',
+            assignedTo: task.contact_name,
+            status: task.status as "pending" | "completed",
+            type: task.type as Task["type"],
+            createdAt: new Date(task.created_at),
+            contactId: task.contact_id,
+            contactName: task.contact_name,
+            isAllDay: task.is_all_day || false,
+            userId: task.user_id,
+          }));
+          setTasks(tasksWithDates);
+        }
       } catch (error) {
         console.error("Erro ao carregar tarefas:", error);
-        toast.error("Erro ao carregar tarefas salvas");
+        toast.error("Erro ao carregar tarefas");
       }
-    }
+    };
+
+    loadTasks();
+
+    // Configurar realtime para atualizações automáticas
+    const channel = supabase
+      .channel('calendario_tarefas_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'calendario_tarefas'
+        },
+        () => {
+          loadTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Carregar regras do calendário do banco
@@ -446,6 +491,120 @@ export default function Calendario() {
 
     loadRegras();
   }, []);
+
+  // Funções auxiliares para operações no Supabase
+  const getEstabelecimentoId = async (): Promise<string | null> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: usuarioData } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      return usuarioData?.estabelecimento_id || null;
+    } catch (error) {
+      console.error('Erro ao buscar estabelecimento:', error);
+      return null;
+    }
+  };
+
+  const saveTaskToDatabase = async (task: Task): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return false;
+      }
+
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return false;
+      }
+
+      const { error } = await (supabase as any)
+        .from('calendario_tarefas')
+        .insert({
+          user_id: user.id,
+          estabelecimento_id: estabelecimentoId,
+          contact_id: task.contactId,
+          contact_name: task.contactName,
+          title: task.title,
+          description: task.description,
+          date: format(task.date, 'yyyy-MM-dd'),
+          time: task.time,
+          type: task.type,
+          status: task.status,
+          is_all_day: task.isAllDay || false,
+        });
+
+      if (error) {
+        console.error('Erro ao salvar tarefa:', error);
+        toast.error("Erro ao salvar tarefa");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao salvar tarefa:', error);
+      toast.error("Erro ao salvar tarefa");
+      return false;
+    }
+  };
+
+  const updateTaskInDatabase = async (taskId: string, updates: Partial<Task>): Promise<boolean> => {
+    try {
+      const dbUpdates: any = {};
+      
+      if (updates.date) dbUpdates.date = format(updates.date, 'yyyy-MM-dd');
+      if (updates.time !== undefined) dbUpdates.time = updates.time;
+      if (updates.status) dbUpdates.status = updates.status;
+      if (updates.title) dbUpdates.title = updates.title;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.type) dbUpdates.type = updates.type;
+
+      const { error } = await (supabase as any)
+        .from('calendario_tarefas')
+        .update(dbUpdates)
+        .eq('id', taskId);
+
+      if (error) {
+        console.error('Erro ao atualizar tarefa:', error);
+        toast.error("Erro ao atualizar tarefa");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar tarefa:', error);
+      toast.error("Erro ao atualizar tarefa");
+      return false;
+    }
+  };
+
+  const deleteTaskFromDatabase = async (taskId: string): Promise<boolean> => {
+    try {
+      const { error } = await (supabase as any)
+        .from('calendario_tarefas')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) {
+        console.error('Erro ao deletar tarefa:', error);
+        toast.error("Erro ao deletar tarefa");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+      toast.error("Erro ao deletar tarefa");
+      return false;
+    }
+  };
 
   // Função para obter o próximo dia útil
   const getNextBusinessDay = (date: Date): Date => {
@@ -663,23 +822,28 @@ export default function Calendario() {
     isAllDay?: boolean;
     userId?: string;
   }) => {
-    // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
-    if (taskData.isAllDay) {
-      try {
-        // Buscar jornada de trabalho do usuário atual do Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error("Usuário não autenticado");
-          return;
-        }
-        
-        const { data: userData, error } = await supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
+      if (taskData.isAllDay) {
+        const { data: userData, error: userError } = await supabase
           .from("usuarios")
           .select("hora_inicial, hora_final")
           .eq("id", user.id)
           .single();
         
-        if (error || !userData) {
+        if (userError || !userData) {
           toast.error("Erro ao buscar jornada de trabalho do usuário");
           return;
         }
@@ -687,69 +851,77 @@ export default function Calendario() {
         const horaInicial = userData.hora_inicial || "08:00";
         const horaFinal = userData.hora_final || "18:00";
         
-        // Gerar slots de 15 minutos entre hora inicial e final
         const [startHour, startMinute] = horaInicial.split(':').map(Number);
         const [endHour, endMinute] = horaFinal.split(':').map(Number);
         
         const startTime = startHour * 60 + startMinute;
         const endTime = endHour * 60 + endMinute;
         
-        const newTasks: Task[] = [];
+        const tarefasParaInserir = [];
         
         for (let time = startTime; time < endTime; time += 15) {
           const hour = Math.floor(time / 60);
           const minute = time % 60;
           const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
           
-          newTasks.push({
-            id: `task_${Date.now()}_${time}`,
+          tarefasParaInserir.push({
+            user_id: user.id,
+            estabelecimento_id: estabelecimentoId,
+            contact_id: taskData.contactId,
+            contact_name: taskData.contactName,
             title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
             description: taskData.observation,
-            date: taskData.date,
+            date: format(taskData.date, 'yyyy-MM-dd'),
             time: timeString,
-            assignedTo: taskData.contactName,
+            type: taskData.type,
             status: "pending",
-            type: taskData.type as Task["type"],
-            createdAt: new Date(),
-            contactId: taskData.contactId,
-            contactName: taskData.contactName,
-            isAllDay: true,
-            userId: user.id,
+            is_all_day: true,
           });
         }
         
-        const updatedTasks = [...tasks, ...newTasks];
-        setTasks(updatedTasks);
-        localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
-        toast.success(`${newTasks.length} tarefas adicionadas para o dia todo`);
-      } catch (error) {
-        console.error("Erro ao criar tarefas de dia todo:", error);
-        toast.error("Erro ao criar tarefas de dia todo");
-      }
-    } else {
-      // Tarefa normal com horário específico
-      const newTask: Task = {
-        id: `task_${Date.now()}`,
-        title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
-        description: taskData.observation,
-        date: taskData.date,
-        time: taskData.time,
-        assignedTo: taskData.contactName,
-        status: "pending",
-        type: taskData.type as Task["type"],
-        createdAt: new Date(),
-        contactId: taskData.contactId,
-        contactName: taskData.contactName,
-        isAllDay: false,
-      };
+        const { error } = await (supabase as any)
+          .from('calendario_tarefas')
+          .insert(tarefasParaInserir);
 
-      const updatedTasks = [...tasks, newTask];
-      setTasks(updatedTasks);
-      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
-      toast.success("Tarefa adicionada com sucesso");
+        if (error) {
+          console.error("Erro ao criar tarefas de dia todo:", error);
+          toast.error("Erro ao criar tarefas de dia todo");
+          return;
+        }
+
+        toast.success(`${tarefasParaInserir.length} tarefas adicionadas para o dia todo`);
+      } else {
+        // Tarefa normal com horário específico
+        const { error } = await (supabase as any)
+          .from('calendario_tarefas')
+          .insert({
+            user_id: user.id,
+            estabelecimento_id: estabelecimentoId,
+            contact_id: taskData.contactId,
+            contact_name: taskData.contactName,
+            title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+            description: taskData.observation,
+            date: format(taskData.date, 'yyyy-MM-dd'),
+            time: taskData.time,
+            type: taskData.type,
+            status: "pending",
+            is_all_day: false,
+          });
+
+        if (error) {
+          console.error("Erro ao criar tarefa:", error);
+          toast.error("Erro ao criar tarefa");
+          return;
+        }
+
+        toast.success("Tarefa adicionada com sucesso");
+      }
+      
+      setShowTaskDialog(false);
+    } catch (error) {
+      console.error("Erro ao salvar tarefa:", error);
+      toast.error("Erro ao salvar tarefa");
     }
-    
-    setShowTaskDialog(false);
   };
 
   const handleOpenNewTask = (date?: Date) => {
@@ -757,12 +929,19 @@ export default function Calendario() {
     setShowTaskDialog(true);
   };
 
-  const handleToggleTaskStatus = (taskId: string) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === taskId ? { ...task, status: task.status === "pending" ? "completed" as const : "pending" as const } : task
-    );
-    setTasks(updatedTasks);
-    localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
+  const handleToggleTaskStatus = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    const newStatus = task.status === "pending" ? "completed" : "pending";
+    const success = await updateTaskInDatabase(taskId, { status: newStatus });
+    
+    if (success) {
+      const updatedTasks = tasks.map(t =>
+        t.id === taskId ? { ...t, status: newStatus as "pending" | "completed" } : t
+      );
+      setTasks(updatedTasks);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -1083,12 +1262,14 @@ export default function Calendario() {
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDeleteTask = () => {
+  const confirmDeleteTask = async () => {
     if (taskToDelete) {
-      const updatedTasks = tasks.filter(t => t.id !== taskToDelete);
-      setTasks(updatedTasks);
-      localStorage.setItem("calendar_tasks", JSON.stringify(updatedTasks));
-      toast.success("Tarefa excluída");
+      const success = await deleteTaskFromDatabase(taskToDelete);
+      if (success) {
+        const updatedTasks = tasks.filter(t => t.id !== taskToDelete);
+        setTasks(updatedTasks);
+        toast.success("Tarefa excluída");
+      }
       setTaskToDelete(null);
     }
     setDeleteConfirmOpen(false);
