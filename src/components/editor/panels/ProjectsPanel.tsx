@@ -39,20 +39,60 @@ const ProjectsPanel = () => {
     setProjects(savedProjects);
   };
 
-  // Agrupar projetos por plataforma
+  // Agrupar projetos por plataforma e depois por tipo
   const groupedProjects = projects.reduce((groups, project) => {
     const platform = project.platform || 'outros';
-    const platformLabel = project.platformLabel || 'Outros';
+    const platformName = getPlatformName(platform);
+    const type = getProjectType(project);
+    const typeLabel = project.platformLabel || 'Outros';
     
     if (!groups[platform]) {
       groups[platform] = {
-        label: platformLabel,
+        name: platformName,
+        types: {}
+      };
+    }
+    
+    if (!groups[platform].types[type]) {
+      groups[platform].types[type] = {
+        label: typeLabel,
         projects: []
       };
     }
-    groups[platform].projects.push(project);
+    
+    groups[platform].types[type].projects.push(project);
     return groups;
-  }, {} as Record<string, { label: string; projects: SavedProject[] }>);
+  }, {} as Record<string, { 
+    name: string; 
+    types: Record<string, { label: string; projects: SavedProject[] }> 
+  }>);
+
+  function getPlatformName(platform: string): string {
+    const names: Record<string, string> = {
+      'instagram': 'Instagram',
+      'whatsapp': 'WhatsApp',
+      'facebook': 'Facebook',
+      'telegram': 'Telegram',
+      'custom': 'Personalizado',
+      'outros': 'Outros'
+    };
+    return names[platform] || 'Outros';
+  }
+
+  function getProjectType(project: SavedProject): string {
+    if (!project.platformLabel) return 'outros';
+    
+    const label = project.platformLabel.toLowerCase();
+    if (label.includes('reel')) return 'reel';
+    if (label.includes('stories') || label.includes('story')) return 'story';
+    if (label.includes('post')) return 'post';
+    if (label.includes('status')) return 'status';
+    if (label.includes('perfil') || label.includes('profile')) return 'profile';
+    if (label.includes('capa') || label.includes('cover')) return 'cover';
+    if (label.includes('grupo') || label.includes('group')) return 'group';
+    
+    return 'outros';
+  }
 
   const handleDelete = (id: string) => {
     deleteProject(id);
@@ -201,16 +241,26 @@ const ProjectsPanel = () => {
           </div>
         ) : (
           <>
-            {Object.entries(groupedProjects).map(([platformKey, group]) => (
-              <div key={platformKey} className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
-                  <span className="h-px flex-1 bg-border"></span>
-                  {group.label}
-                  <span className="text-[10px] text-muted-foreground font-normal">({group.projects.length})</span>
-                  <span className="h-px flex-1 bg-border"></span>
-                </h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                  {group.projects.map((project) => (
+            {Object.entries(groupedProjects).map(([platformKey, platform]) => (
+              <div key={platformKey} className="space-y-4 mb-6">
+                {/* Platform Header */}
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-foreground">
+                    {platform.name}
+                  </h2>
+                </div>
+                
+                {/* Types within Platform */}
+                {Object.entries(platform.types).map(([typeKey, type]) => (
+                  <div key={`${platformKey}-${typeKey}`} className="space-y-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-2 pl-2">
+                      <span className="h-px flex-1 bg-border"></span>
+                      {type.label}
+                      <span className="text-[10px] font-normal">({type.projects.length})</span>
+                      <span className="h-px flex-1 bg-border"></span>
+                    </h3>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                      {type.projects.map((project) => (
               <Card 
                 key={project.id} 
                 className="group hover:shadow-md transition-all overflow-hidden cursor-pointer"
@@ -270,11 +320,13 @@ const ProjectsPanel = () => {
               </Card>
             ))}
           </div>
-        </div>
-      ))}
-    </>
-  )}
-</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
 
       {/* Dialog para Novo Projeto */}
       <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
