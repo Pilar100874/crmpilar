@@ -39,7 +39,8 @@ interface NewTaskDialogProps {
     contactName: string;
     date: Date;
     time: string;
-    type: string;
+    origem: string;
+    campaignId?: string;
     observation?: string;
     isAllDay?: boolean;
     userId?: string;
@@ -51,7 +52,8 @@ interface NewTaskDialogProps {
     contactName?: string;
     date: Date;
     time?: string;
-    type: string;
+    origem: string;
+    campaignId?: string;
     description?: string;
     isAllDay?: boolean;
     userId?: string;
@@ -69,7 +71,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [noTimeSet, setNoTimeSet] = useState(false); // Novo estado para "sem horário definido"
-  const [taskType, setTaskType] = useState("accompany");
+  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email_enviado" | "email_recebido" | "pedido_orcamento" | "pedido_negociacao" | "pedido_aprovacao">("bot");
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+  const [campaigns, setCampaigns] = useState<Array<{ id: string; nome: string }>>([]);
   const [assignedTo, setAssignedTo] = useState("me");
   const [observation, setObservation] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -101,7 +105,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         setMinutes("");
       }
       
-      setTaskType(editingTask.type);
+      setTaskOrigem(editingTask.origem as typeof taskOrigem);
+      setSelectedCampaignId(editingTask.campaignId || "");
       setObservation(editingTask.description || "");
       setEditingTaskId(editingTask.id);
       
@@ -127,7 +132,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setMinutes("");
       setIsAllDay(false);
       setNoTimeSet(false);
-      setTaskType("accompany");
+      setTaskOrigem("bot");
+      setSelectedCampaignId("");
       setObservation("");
       setShowContactList(false);
     }
@@ -200,7 +206,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setHours("");
       setMinutes("");
       setIsAllDay(false);
-      setTaskType("accompany");
+      setTaskOrigem("bot");
+      setSelectedCampaignId("");
       setAssignedTo("me");
       setObservation("");
     } else {
@@ -412,7 +419,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       contactName: selectedContact.name,
       date,
       time: timeString,
-      type: taskType,
+      origem: taskOrigem,
+      campaignId: taskOrigem === 'campanha' ? selectedCampaignId : undefined,
       observation,
       isAllDay,
     });
@@ -483,7 +491,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setMinutes("");
     }
     
-    setTaskType(task.type);
+    setTaskOrigem(task.origem as typeof taskOrigem);
+    setSelectedCampaignId(task.campaignId || "");
     setObservation(task.observation || "");
     
     toast.info("Editando tarefa existente");
@@ -837,21 +846,45 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             </label>
           </div>
 
-          {/* Tipo de tarefa */}
-          <div className="space-y-2">
-            <Label className="text-sm">Tipo</Label>
-            <RadioGroup value={taskType} onValueChange={setTaskType} className="flex gap-4">
+          {/* Origem da tarefa */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Origem da Tarefa</Label>
+            <RadioGroup value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)} className="grid grid-cols-2 gap-3">
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="accompany" id="accompany" />
-                <Label htmlFor="accompany" className="text-sm cursor-pointer">Acompanhar</Label>
+                <RadioGroupItem value="bot" id="bot" />
+                <Label htmlFor="bot" className="text-sm cursor-pointer">BOT</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="call" id="call" />
-                <Label htmlFor="call" className="text-sm cursor-pointer">Ligação</Label>
+                <RadioGroupItem value="campanha" id="campanha" />
+                <Label htmlFor="campanha" className="text-sm cursor-pointer">Campanha</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="meeting" id="meeting" />
-                <Label htmlFor="meeting" className="text-sm cursor-pointer">Reunião</Label>
+                <RadioGroupItem value="ligacao" id="ligacao" />
+                <Label htmlFor="ligacao" className="text-sm cursor-pointer">Ligação</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="visita" id="visita" />
+                <Label htmlFor="visita" className="text-sm cursor-pointer">Visita</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="email_enviado" id="email_enviado" />
+                <Label htmlFor="email_enviado" className="text-sm cursor-pointer">Email (Enviado)</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="email_recebido" id="email_recebido" />
+                <Label htmlFor="email_recebido" className="text-sm cursor-pointer">Email (Recebido)</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pedido_orcamento" id="pedido_orcamento" />
+                <Label htmlFor="pedido_orcamento" className="text-sm cursor-pointer">Pedido - Orçamento</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pedido_negociacao" id="pedido_negociacao" />
+                <Label htmlFor="pedido_negociacao" className="text-sm cursor-pointer">Pedido - Negociação</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pedido_aprovacao" id="pedido_aprovacao" />
+                <Label htmlFor="pedido_aprovacao" className="text-sm cursor-pointer">Pedido - Aprovação</Label>
               </div>
             </RadioGroup>
           </div>

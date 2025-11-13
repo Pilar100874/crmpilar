@@ -40,7 +40,9 @@ interface Task {
   time?: string;
   assignedTo?: string;
   status: "pending" | "completed";
-  type: "accompany" | "call" | "meeting" | "other";
+  origem: "bot" | "campanha" | "ligacao" | "visita" | "email_enviado" | "email_recebido" | "pedido_orcamento" | "pedido_negociacao" | "pedido_aprovacao";
+  campaignId?: string;
+  campaignName?: string;
   createdAt: Date;
   contactId?: string;
   contactName?: string;
@@ -276,7 +278,8 @@ export default function Calendario() {
       contactName: string;
       date: Date;
       time: string;
-      type: string;
+      origem: string;
+      campaignId?: string;
       observation?: string;
       isAllDay?: boolean;
       userId?: string;
@@ -292,7 +295,8 @@ export default function Calendario() {
       contactName: string;
       date: Date;
       time: string;
-      type: string;
+      origem: string;
+      campaignId?: string;
       observation?: string;
       isAllDay?: boolean;
       userId?: string;
@@ -306,7 +310,8 @@ export default function Calendario() {
       contactName: string;
       date: Date;
       time: string;
-      type: string;
+      origem: string;
+      campaignId?: string;
       observation?: string;
       isAllDay?: boolean;
       userId?: string;
@@ -347,7 +352,7 @@ export default function Calendario() {
       { id: "title", label: "Título", visible: true, width: 250, locked: true },
       { id: "date", label: "Data", visible: true, width: 120 },
       { id: "time", label: "Hora", visible: true, width: 100 },
-      { id: "type", label: "Tipo", visible: true, width: 150 },
+      { id: "origem", label: "Origem", visible: true, width: 180 },
       { id: "userName", label: "Usuário", visible: true, width: 180 },
       { id: "assignedTo", label: "Atribuído para", visible: true, width: 180 },
       { id: "description", label: "Descrição", visible: false, width: 300 },
@@ -555,6 +560,17 @@ export default function Calendario() {
           
           const usuariosMap = new Map(usuariosData?.map((u: any) => [u.auth_user_id, u.nome]) || []);
           
+          // Buscar nomes de campanhas se houver campaign_ids
+          const campaignIds = [...new Set(tarefas.filter((t: any) => t.campaign_id).map((t: any) => t.campaign_id))];
+          let campanhasMap = new Map();
+          if (campaignIds.length > 0) {
+            const { data: campanhasData } = await (supabase as any)
+              .from('campaigns')
+              .select('id, nome')
+              .in('id', campaignIds);
+            campanhasMap = new Map(campanhasData?.map((c: any) => [c.id, c.nome]) || []);
+          }
+          
           const tasksWithDates = tarefas.map((task: any) => ({
             id: task.id,
             title: task.title,
@@ -563,7 +579,9 @@ export default function Calendario() {
             time: task.time || '',
             assignedTo: task.contact_name,
             status: task.status as "pending" | "completed",
-            type: task.type as Task["type"],
+            origem: task.origem as Task["origem"],
+            campaignId: task.campaign_id,
+            campaignName: task.campaign_id ? campanhasMap.get(task.campaign_id) : undefined,
             createdAt: new Date(task.created_at),
             contactId: task.contact_id,
             contactName: task.contact_name,
@@ -673,7 +691,8 @@ export default function Calendario() {
           description: task.description,
           date: format(task.date, 'yyyy-MM-dd'),
           time: task.time,
-          type: task.type,
+          origem: task.origem,
+          campaign_id: task.campaignId,
           status: task.status,
           is_all_day: task.isAllDay || false,
         });
@@ -701,7 +720,8 @@ export default function Calendario() {
       if (updates.status) dbUpdates.status = updates.status;
       if (updates.title) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
-      if (updates.type) dbUpdates.type = updates.type;
+      if (updates.origem) dbUpdates.origem = updates.origem;
+      if (updates.campaignId !== undefined) dbUpdates.campaign_id = updates.campaignId;
 
       const { error } = await (supabase as any)
         .from('calendario_tarefas')
@@ -916,7 +936,8 @@ export default function Calendario() {
     contactName: string;
     date: Date;
     time: string;
-    type: string;
+    origem: string;
+    campaignId?: string;
     observation?: string;
     isAllDay?: boolean;
     userId?: string;
@@ -1024,7 +1045,8 @@ export default function Calendario() {
     contactName: string;
     date: Date;
     time: string;
-    type: string;
+    origem: string;
+    campaignId?: string;
     observation?: string;
     isAllDay?: boolean;
     userId?: string;
@@ -1095,11 +1117,12 @@ export default function Calendario() {
               estabelecimento_id: estabelecimentoId,
               contact_id: taskData.contactId,
               contact_name: taskData.contactName,
-              title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+              title: `${taskData.origem === 'ligacao' ? 'Ligação' : taskData.origem === 'visita' ? 'Visita' : taskData.origem === 'campanha' ? 'Campanha' : 'Tarefa'} - ${taskData.contactName}`,
               description: taskData.observation,
               date: format(taskData.date, 'yyyy-MM-dd'),
               time: '08:00',
-              type: taskData.type,
+              origem: taskData.origem,
+              campaign_id: taskData.campaignId,
               status: "pending",
               is_all_day: true,
             })
@@ -1149,11 +1172,12 @@ export default function Calendario() {
             estabelecimento_id: estabelecimentoId,
             contact_id: taskData.contactId,
             contact_name: taskData.contactName,
-            title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+            title: `${taskData.origem === 'ligacao' ? 'Ligação' : taskData.origem === 'visita' ? 'Visita' : taskData.origem === 'campanha' ? 'Campanha' : 'Tarefa'} - ${taskData.contactName}`,
             description: taskData.observation,
             date: format(taskData.date, 'yyyy-MM-dd'),
             time: timeString,
-            type: taskData.type,
+            origem: taskData.origem,
+            campaign_id: taskData.campaignId,
             status: "pending",
             is_all_day: true,
           });
@@ -1181,11 +1205,12 @@ export default function Calendario() {
           estabelecimento_id: estabelecimentoId,
           contact_id: taskData.contactId,
           contact_name: taskData.contactName,
-          title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+          title: `${taskData.origem === 'ligacao' ? 'Ligação' : taskData.origem === 'visita' ? 'Visita' : taskData.origem === 'campanha' ? 'Campanha' : 'Tarefa'} - ${taskData.contactName}`,
           description: taskData.observation,
           date: format(taskData.date, 'yyyy-MM-dd'),
           time: taskData.time,
-          type: taskData.type,
+          origem: taskData.origem,
+          campaign_id: taskData.campaignId,
           status: "pending",
           is_all_day: false,
         };
@@ -1624,14 +1649,19 @@ export default function Calendario() {
     setShowTaskDialog(true);
   };
 
-  const getTypeLabel = (type: Task["type"]) => {
-    const labels = {
-      accompany: "Acompanhar",
-      call: "Ligar",
-      meeting: "Reunião",
-      other: "Outro"
+  const getOrigemLabel = (origem: Task["origem"], campaignName?: string) => {
+    const labels: Record<Task["origem"], string> = {
+      bot: "BOT",
+      campanha: campaignName || "Campanha",
+      ligacao: "Ligação",
+      visita: "Visita",
+      email_enviado: "Email (Enviado)",
+      email_recebido: "Email (Recebido)",
+      pedido_orcamento: "Pedido - Orçamento",
+      pedido_negociacao: "Pedido - Negociação",
+      pedido_aprovacao: "Pedido - Aprovação"
     };
-    return labels[type] || type;
+    return labels[origem] || origem;
   };
 
   // Filtrar e ordenar tarefas para a tabela
@@ -1665,9 +1695,9 @@ export default function Calendario() {
             aValue = a.time || '';
             bValue = b.time || '';
             break;
-          case 'type':
-            aValue = getTypeLabel(a.type);
-            bValue = getTypeLabel(b.type);
+          case 'origem':
+            aValue = getOrigemLabel(a.origem, a.campaignName);
+            bValue = getOrigemLabel(b.origem, b.campaignName);
             break;
           case 'userName':
             aValue = a.userName || '';
@@ -1868,12 +1898,12 @@ export default function Calendario() {
                                 {column.id === 'title' && task.title}
                                 {column.id === 'date' && format(task.date, "dd/MM/yyyy", { locale: ptBR })}
                                 {column.id === 'time' && (task.time || "-")}
-                                {column.id === 'type' && getTypeLabel(task.type)}
+                                {column.id === 'origem' && getOrigemLabel(task.origem, task.campaignName)}
                                 {column.id === 'userName' && (task.userName || "-")}
                                 {column.id === 'assignedTo' && (task.assignedTo || "-")}
                                 {column.id === 'description' && (task.description || "-")}
                               </span>
-                              {column.id !== 'date' && column.id !== 'type' && column.id !== 'userName' && (
+                              {column.id !== 'date' && column.id !== 'origem' && column.id !== 'userName' && (
                                 <Button
                                   size="icon"
                                   variant="ghost"
@@ -2157,7 +2187,8 @@ export default function Calendario() {
           contactName: editingTask.contactName,
           date: editingTask.date,
           time: editingTask.time,
-          type: editingTask.type,
+          origem: editingTask.origem,
+          campaignId: editingTask.campaignId,
           description: editingTask.description,
           isAllDay: editingTask.isAllDay,
           userId: editingTask.userId,
