@@ -142,8 +142,10 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -294,21 +296,20 @@ export default function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener('keydown', handleEscape);
   }, []);
 
-  // Close submenu when clicking outside the panel
-  useEffect(() => {
-    const handleDocumentClick = (e: MouseEvent) => {
-      if (!openSubmenuId) return;
-      const target = e.target as Node;
-      const insideSubmenu = submenuPanelRef.current?.contains(target);
-      const insideSidebar = sidebarRef.current?.contains(target);
-      if (!insideSubmenu && !insideSidebar) {
-        setOpenSubmenuId(null);
-      }
-    };
+  const handleMenuMouseEnter = () => {
+    if (menuTimeoutRef.current) {
+      clearTimeout(menuTimeoutRef.current);
+      menuTimeoutRef.current = null;
+    }
+    setMenuOpen(true);
+  };
 
-    document.addEventListener('click', handleDocumentClick);
-    return () => document.removeEventListener('click', handleDocumentClick);
-  }, [openSubmenuId]);
+  const handleMenuMouseLeave = () => {
+    menuTimeoutRef.current = setTimeout(() => {
+      setMenuOpen(false);
+      setOpenSubmenuId(null);
+    }, 300);
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -346,7 +347,17 @@ export default function Layout({ children }: LayoutProps) {
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
         <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
-        <div ref={sidebarRef} className="fixed left-0 top-0 bottom-0 w-16 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col z-30">
+        <div 
+          ref={sidebarRef} 
+          className={`slide-out-menu border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col ${menuOpen ? 'open' : ''}`}
+          onMouseEnter={handleMenuMouseEnter}
+          onMouseLeave={handleMenuMouseLeave}
+        >
+          {/* Aba lateral */}
+          <div className="slide-out-menu-tab">
+            <ChevronRight className="w-5 h-5" />
+          </div>
+
           {/* Logo no topo */}
           <div className="flex items-center justify-center py-4 border-b border-sidebar-border/50">
             <button
@@ -359,7 +370,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           <ScrollArea className="flex-1 bg-sidebar">
-            <div className="py-2 flex flex-col items-center gap-1">
+            <div className="py-2 px-4 flex flex-col gap-1">
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
@@ -367,51 +378,42 @@ export default function Layout({ children }: LayoutProps) {
                   const shouldHighlight = isSubItemActive;
                   
                   return (
-                    <div key={item.id} className="relative w-full flex justify-center">
+                    <div key={item.id} className="relative w-full">
                       <button
                         type="button"
                         onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
-                        className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                           shouldHighlight
                             ? "bg-sidebar-primary text-sidebar-primary-foreground"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                         }`}
                         title={item.title}
                       >
-                        <item.icon className="w-6 h-6" />
+                        <item.icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-sm font-medium flex-1 text-left">{item.title}</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
                       
                       {isMenuOpen && (
-                        <>
-                          {/* Submenu panel */}
-                          <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50 overflow-y-auto">
-                            <div className="px-4 py-6">
-                              <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
-                                {item.title}
-                              </h3>
-                              
-                              <div className="space-y-1">
-                                {item.subItems.map((subItem) => (
-                                  <NavLink
-                                    key={subItem.id}
-                                    to={subItem.url}
-                                    onClick={() => setOpenSubmenuId(null)}
-                                    className={({ isActive }) =>
-                                      `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                                        isActive
-                                          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                                      }`
-                                    }
-                                  >
-                                    <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm">{subItem.title}</span>
-                                  </NavLink>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </>
+                        <div className="mt-1 ml-8 space-y-1">
+                          {item.subItems.map((subItem) => (
+                            <NavLink
+                              key={subItem.id}
+                              to={subItem.url}
+                              onClick={() => setOpenSubmenuId(null)}
+                              className={({ isActive }) =>
+                                `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                  isActive
+                                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                }`
+                              }
+                            >
+                              <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                              <span className="text-sm">{subItem.title}</span>
+                            </NavLink>
+                          ))}
+                        </div>
                       )}
                     </div>
                   );
@@ -423,7 +425,7 @@ export default function Layout({ children }: LayoutProps) {
                     key={item.title}
                     to={item.url!}
                     className={({ isActive }) =>
-                      `w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                      `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                         isActive
                           ? "bg-sidebar-primary text-sidebar-primary-foreground"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -431,7 +433,8 @@ export default function Layout({ children }: LayoutProps) {
                     }
                     title={item.title}
                   >
-                    <item.icon className="w-6 h-6" />
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="text-sm font-medium">{item.title}</span>
                   </NavLink>
                 );
               })}
@@ -439,26 +442,28 @@ export default function Layout({ children }: LayoutProps) {
           </ScrollArea>
 
           {/* Ícones no rodapé */}
-          <div className="border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col items-center gap-2">
+          <div className="border-t border-sidebar-border/50 bg-sidebar py-3 px-4 flex flex-col gap-2">
             <button
               onClick={() => setShowUsuarioSelector(true)}
-              className="w-10 h-10 rounded-full bg-sidebar-accent/50 flex items-center justify-center hover:bg-sidebar-accent transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
               title={userName || "Usuário"}
             >
-              <UserIcon className="w-5 h-5 text-sidebar-foreground/70" />
+              <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
+              <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>
             </button>
             <button 
               onClick={handleLogout}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
               title="Sair"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm font-medium">Sair</span>
             </button>
           </div>
         </div>
         )}
 
-        <main className={`flex-1 flex flex-col bg-background min-w-0 ${sidebarVisible ? 'ml-16' : 'ml-0'}`}>
+        <main className="flex-1 flex flex-col bg-background min-w-0">
           {!sidebarVisible && (
             <div className="fixed left-0 top-0 z-30 p-2">
               <Button
