@@ -39,6 +39,21 @@ const ProjectsPanel = () => {
     setProjects(savedProjects);
   };
 
+  // Agrupar projetos por plataforma
+  const groupedProjects = projects.reduce((groups, project) => {
+    const platform = project.platform || 'outros';
+    const platformLabel = project.platformLabel || 'Outros';
+    
+    if (!groups[platform]) {
+      groups[platform] = {
+        label: platformLabel,
+        projects: []
+      };
+    }
+    groups[platform].projects.push(project);
+    return groups;
+  }, {} as Record<string, { label: string; projects: SavedProject[] }>);
+
   const handleDelete = (id: string) => {
     deleteProject(id);
     loadProjects();
@@ -178,15 +193,24 @@ const ProjectsPanel = () => {
         </Button>
       </div>
       
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 space-y-6">
         {projects.length === 0 ? (
           <div className="text-center py-4 text-muted-foreground">
             <p className="text-[10px]">Nenhum projeto salvo</p>
             <p className="text-[9px] mt-0.5 opacity-75">Salve seus designs aqui</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-            {projects.map((project) => (
+          <>
+            {Object.entries(groupedProjects).map(([platformKey, group]) => (
+              <div key={platformKey} className="space-y-2">
+                <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
+                  <span className="h-px flex-1 bg-border"></span>
+                  {group.label}
+                  <span className="text-[10px] text-muted-foreground font-normal">({group.projects.length})</span>
+                  <span className="h-px flex-1 bg-border"></span>
+                </h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                  {group.projects.map((project) => (
               <Card 
                 key={project.id} 
                 className="group hover:shadow-md transition-all overflow-hidden cursor-pointer"
@@ -238,8 +262,11 @@ const ProjectsPanel = () => {
               </Card>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      ))}
+    </>
+  )}
+</div>
 
       {/* Dialog para Novo Projeto */}
       <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>

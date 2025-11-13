@@ -5,11 +5,21 @@ export interface SavedProject {
   thumbnail: string;
   createdAt: number;
   updatedAt: number;
+  platform?: string;
+  platformLabel?: string;
+  dimensions?: { width: number; height: number };
 }
 
 const STORAGE_KEY = 'pilarcup_projects';
 
-export const saveProject = (name: string, canvasData: string, thumbnail: string): SavedProject => {
+export const saveProject = (
+  name: string, 
+  canvasData: string, 
+  thumbnail: string,
+  platform?: string,
+  platformLabel?: string,
+  dimensions?: { width: number; height: number }
+): SavedProject => {
   try {
     // Comprimir thumbnail reduzindo qualidade
     const compressedThumbnail = thumbnail.length > 50000 
@@ -31,6 +41,9 @@ export const saveProject = (name: string, canvasData: string, thumbnail: string)
       thumbnail: compressedThumbnail,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      platform,
+      platformLabel,
+      dimensions,
     };
     
     projects.push(project);
@@ -55,6 +68,9 @@ export const saveProject = (name: string, canvasData: string, thumbnail: string)
           thumbnail: compressedThumbnail,
           createdAt: Date.now(),
           updatedAt: Date.now(),
+          platform,
+          platformLabel,
+          dimensions,
         };
         
         localStorage.setItem(STORAGE_KEY, JSON.stringify([project]));

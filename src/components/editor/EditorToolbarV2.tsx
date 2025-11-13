@@ -17,15 +17,15 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EditorToolbarV2Props {
-  onBack?: () => void;
+  projectName: string;
+  onProjectNameChange: (name: string) => void;
+  currentPlatform?: { platform: string; label: string; width: number; height: number } | null;
   onChangePlatform?: () => void;
-  currentPlatform?: string;
 }
 
-const EditorToolbarV2 = ({ onBack, onChangePlatform, currentPlatform }: EditorToolbarV2Props) => {
+const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, onChangePlatform }: EditorToolbarV2Props) => {
   const navigate = useNavigate();
   const { fabricCanvas } = useCanvas();
-  const [projectName, setProjectName] = useState("Design sem título");
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -58,7 +58,14 @@ const EditorToolbarV2 = ({ onBack, onChangePlatform, currentPlatform }: EditorTo
         multiplier: 0.2,
       });
       
-      const savedProject = saveProject(projectName, json, thumbnail);
+      const savedProject = saveProject(
+        projectName, 
+        json, 
+        thumbnail,
+        currentPlatform?.platform,
+        currentPlatform?.label,
+        currentPlatform ? { width: currentPlatform.width, height: currentPlatform.height } : undefined
+      );
       console.log('Projeto salvo:', savedProject);
       toast.success(`Projeto "${projectName}" salvo!`);
       window.dispatchEvent(new CustomEvent('projectSaved'));
@@ -92,9 +99,16 @@ const EditorToolbarV2 = ({ onBack, onChangePlatform, currentPlatform }: EditorTo
         multiplier: 0.2,
       });
       
-      const savedProject = saveProject(newProjectName, json, thumbnail);
+      const savedProject = saveProject(
+        newProjectName, 
+        json, 
+        thumbnail,
+        currentPlatform?.platform,
+        currentPlatform?.label,
+        currentPlatform ? { width: currentPlatform.width, height: currentPlatform.height } : undefined
+      );
       console.log('Projeto salvo como:', savedProject);
-      setProjectName(newProjectName);
+      onProjectNameChange(newProjectName);
       setShowSaveAsDialog(false);
       toast.success(`Projeto salvo como "${newProjectName}"!`);
       window.dispatchEvent(new CustomEvent('projectSaved'));
@@ -179,7 +193,7 @@ const EditorToolbarV2 = ({ onBack, onChangePlatform, currentPlatform }: EditorTo
           <Button
             variant="outline"
             size="icon"
-            onClick={() => onBack ? onBack() : navigate('/')}
+            onClick={() => navigate('/')}
             className="h-10 w-10 rounded-full bg-white border-slate-300 hover:bg-slate-50"
             title="Voltar"
           >
@@ -225,7 +239,7 @@ const EditorToolbarV2 = ({ onBack, onChangePlatform, currentPlatform }: EditorTo
                   className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50 h-9"
                 >
                   <MonitorSmartphone className="h-4 w-4 mr-2" />
-                  {currentPlatform || 'Plataforma'}
+                  {currentPlatform?.label || 'Plataforma'}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>

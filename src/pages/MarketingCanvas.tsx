@@ -69,6 +69,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   const [showPlatformDialog, setShowPlatformDialog] = useState(true);
   const [platformPreset, setPlatformPreset] = useState<PlatformPreset | null>(null);
   const [productData, setProductData] = useState<any>(null);
+  const [projectName, setProjectName] = useState("Novo Design");
   const isMobile = useIsMobile();
 
   const handlePlatformSelect = (preset: PlatformPreset) => {
@@ -247,7 +248,14 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
         const product = productData ? JSON.parse(productData) : null;
         const projectName = product ? `${product.name} - ${new Date().toLocaleDateString()}` : `Design - ${new Date().toLocaleDateString()}`;
         
-        const savedProject = saveProject(projectName, jsonData, pngDataUrl);
+        const savedProject = saveProject(
+          projectName, 
+          jsonData, 
+          pngDataUrl,
+          platformPreset?.platform,
+          platformPreset?.label,
+          platformPreset ? { width: platformPreset.width, height: platformPreset.height } : undefined
+        );
         toast.success('Projeto salvo com sucesso!');
       } catch (error: any) {
         console.error('Error saving project:', error);
@@ -362,11 +370,12 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           </div>
           
           {/* Toolbar */}
-          <EditorToolbarV2 
-            onBack={onBack || (() => handleNavigateAway(() => navigate(-1)))}
-            onChangePlatform={() => setShowPlatformDialog(true)}
-            currentPlatform={platformPreset?.label}
-          />
+            <EditorToolbarV2 
+              projectName={projectName}
+              onProjectNameChange={setProjectName}
+              currentPlatform={platformPreset}
+              onChangePlatform={() => setShowPlatformDialog(true)}
+            />
           
           <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
             <div className="hidden lg:block">

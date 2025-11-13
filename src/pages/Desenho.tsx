@@ -496,7 +496,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
         <div className="h-screen flex flex-col overflow-hidden bg-background">
           {/* Toolbar */}
           <EditorToolbarV2 
-            onBack={onBack || (() => handleNavigateAway(() => navigate(-1)))}
+            projectName="Produto sem título"
+            onProjectNameChange={() => {}}
           />
           
           <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
