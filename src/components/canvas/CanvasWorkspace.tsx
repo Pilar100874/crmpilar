@@ -381,25 +381,48 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
   useEffect(() => {
     if (!fabricCanvas || !platformPreset) return;
 
-    const container = canvasRef.current?.parentElement;
-    if (!container) return;
+    const recalculateSize = () => {
+      const container = canvasRef.current?.parentElement;
+      if (!container) return;
 
-    const containerRect = container.getBoundingClientRect();
-    const containerWidth = Math.max(300, containerRect.width - 64);
-    const containerHeight = Math.max(300, containerRect.height - 64);
-    const scaleX = containerWidth / platformPreset.width;
-    const scaleY = containerHeight / platformPreset.height;
-    const scale = Math.min(scaleX, scaleY); // Permitir escalar para cima
+      const containerRect = container.getBoundingClientRect();
+      const containerWidth = Math.max(300, containerRect.width - 64);
+      const containerHeight = Math.max(300, containerRect.height - 64);
+      const scaleX = containerWidth / platformPreset.width;
+      const scaleY = containerHeight / platformPreset.height;
+      const scale = Math.min(scaleX, scaleY);
+      
+      const newWidth = Math.floor(platformPreset.width * scale);
+      const newHeight = Math.floor(platformPreset.height * scale);
+
+      console.log('Recalculando canvas:', {
+        container: { width: containerRect.width, height: containerRect.height },
+        platform: { width: platformPreset.width, height: platformPreset.height },
+        scale,
+        canvas: { width: newWidth, height: newHeight }
+      });
+
+      // Only resize if dimensions actually changed
+      if (fabricCanvas.width !== newWidth || fabricCanvas.height !== newHeight) {
+        fabricCanvas.setDimensions({ width: newWidth, height: newHeight });
+        setCanvasSize({ width: newWidth, height: newHeight });
+        fabricCanvas.renderAll();
+      }
+    };
+
+    // Recalcular imediatamente
+    recalculateSize();
+
+    // Adicionar listener para resize da janela
+    const handleResize = () => {
+      recalculateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
     
-    const newWidth = Math.floor(platformPreset.width * scale);
-    const newHeight = Math.floor(platformPreset.height * scale);
-
-    // Only resize if dimensions actually changed
-    if (fabricCanvas.width !== newWidth || fabricCanvas.height !== newHeight) {
-      fabricCanvas.setDimensions({ width: newWidth, height: newHeight });
-      setCanvasSize({ width: newWidth, height: newHeight });
-      fabricCanvas.renderAll();
-    }
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, [platformPreset, fabricCanvas]);
 
   const handleOpenCutLineDialog = () => {
