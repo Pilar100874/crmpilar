@@ -70,8 +70,10 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
-  const [noTimeSet, setNoTimeSet] = useState(false); // Novo estado para "sem horário definido"
-  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email_enviado" | "email_recebido" | "pedido_orcamento" | "pedido_negociacao" | "pedido_aprovacao">("bot");
+  const [noTimeSet, setNoTimeSet] = useState(false);
+  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido">("bot");
+  const [emailTipo, setEmailTipo] = useState<"enviado" | "recebido">("enviado");
+  const [pedidoTipo, setPedidoTipo] = useState<"orcamento" | "negociacao" | "aprovacao">("orcamento");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [campaigns, setCampaigns] = useState<Array<{ id: string; nome: string }>>([]);
   const [assignedTo, setAssignedTo] = useState("me");
@@ -105,7 +107,27 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         setMinutes("");
       }
       
-      setTaskOrigem(editingTask.origem as typeof taskOrigem);
+      // Converter origem antiga para nova
+      const origemValue = editingTask.origem;
+      if (origemValue === 'email_enviado') {
+        setTaskOrigem('email');
+        setEmailTipo('enviado');
+      } else if (origemValue === 'email_recebido') {
+        setTaskOrigem('email');
+        setEmailTipo('recebido');
+      } else if (origemValue === 'pedido_orcamento') {
+        setTaskOrigem('pedido');
+        setPedidoTipo('orcamento');
+      } else if (origemValue === 'pedido_negociacao') {
+        setTaskOrigem('pedido');
+        setPedidoTipo('negociacao');
+      } else if (origemValue === 'pedido_aprovacao') {
+        setTaskOrigem('pedido');
+        setPedidoTipo('aprovacao');
+      } else {
+        setTaskOrigem(origemValue as typeof taskOrigem);
+      }
+      
       setSelectedCampaignId(editingTask.campaignId || "");
       setObservation(editingTask.description || "");
       setEditingTaskId(editingTask.id);
@@ -133,6 +155,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setIsAllDay(false);
       setNoTimeSet(false);
       setTaskOrigem("bot");
+      setEmailTipo("enviado");
+      setPedidoTipo("orcamento");
       setSelectedCampaignId("");
       setObservation("");
       setShowContactList(false);
@@ -143,8 +167,28 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   useEffect(() => {
     if (open) {
       loadContactsAndCompanies();
+      loadCampaigns();
     }
   }, [open]);
+
+  const loadCampaigns = async () => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabId)
+        .order('nome');
+
+      if (!error && data) {
+        setCampaigns(data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar campanhas:", error);
+    }
+  };
 
   const loadContactsAndCompanies = async () => {
     const estabId = await getEstabelecimentoId();
@@ -207,6 +251,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setMinutes("");
       setIsAllDay(false);
       setTaskOrigem("bot");
+      setEmailTipo("enviado");
+      setPedidoTipo("orcamento");
       setSelectedCampaignId("");
       setAssignedTo("me");
       setObservation("");
@@ -413,13 +459,21 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       timeString = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
     }
 
+    // Determinar origem final
+    let origemFinal: string = taskOrigem;
+    if (taskOrigem === 'email') {
+      origemFinal = `email_${emailTipo}`;
+    } else if (taskOrigem === 'pedido') {
+      origemFinal = `pedido_${pedidoTipo}`;
+    }
+    
     onSave({
       id: editingTaskId || undefined,
       contactId: selectedContact.id,
       contactName: selectedContact.name,
       date,
       time: timeString,
-      origem: taskOrigem,
+      origem: origemFinal,
       campaignId: taskOrigem === 'campanha' ? selectedCampaignId : undefined,
       observation,
       isAllDay,
@@ -491,7 +545,27 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setMinutes("");
     }
     
-    setTaskOrigem(task.origem as typeof taskOrigem);
+    // Converter origem antiga para nova se for tarefa existente
+    const origemValue = task.origem;
+    if (origemValue === 'email_enviado') {
+      setTaskOrigem('email');
+      setEmailTipo('enviado');
+    } else if (origemValue === 'email_recebido') {
+      setTaskOrigem('email');
+      setEmailTipo('recebido');
+    } else if (origemValue === 'pedido_orcamento') {
+      setTaskOrigem('pedido');
+      setPedidoTipo('orcamento');
+    } else if (origemValue === 'pedido_negociacao') {
+      setTaskOrigem('pedido');
+      setPedidoTipo('negociacao');
+    } else if (origemValue === 'pedido_aprovacao') {
+      setTaskOrigem('pedido');
+      setPedidoTipo('aprovacao');
+    } else {
+      setTaskOrigem(origemValue as typeof taskOrigem);
+    }
+    
     setSelectedCampaignId(task.campaignId || "");
     setObservation(task.observation || "");
     
@@ -867,26 +941,71 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                 <Label htmlFor="visita" className="text-sm cursor-pointer">Visita</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="email_enviado" id="email_enviado" />
-                <Label htmlFor="email_enviado" className="text-sm cursor-pointer">Email (Enviado)</Label>
+                <RadioGroupItem value="email" id="email" />
+                <Label htmlFor="email" className="text-sm cursor-pointer">Email</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="email_recebido" id="email_recebido" />
-                <Label htmlFor="email_recebido" className="text-sm cursor-pointer">Email (Recebido)</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="pedido_orcamento" id="pedido_orcamento" />
-                <Label htmlFor="pedido_orcamento" className="text-sm cursor-pointer">Pedido - Orçamento</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="pedido_negociacao" id="pedido_negociacao" />
-                <Label htmlFor="pedido_negociacao" className="text-sm cursor-pointer">Pedido - Negociação</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="pedido_aprovacao" id="pedido_aprovacao" />
-                <Label htmlFor="pedido_aprovacao" className="text-sm cursor-pointer">Pedido - Aprovação</Label>
+                <RadioGroupItem value="pedido" id="pedido" />
+                <Label htmlFor="pedido" className="text-sm cursor-pointer">Pedido</Label>
               </div>
             </RadioGroup>
+            
+            {/* Seletor de tipo de Email */}
+            {taskOrigem === 'email' && (
+              <div className="space-y-2 pl-6">
+                <Label className="text-sm">Tipo de Email</Label>
+                <RadioGroup value={emailTipo} onValueChange={(value) => setEmailTipo(value as typeof emailTipo)} className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="enviado" id="email-enviado" />
+                    <Label htmlFor="email-enviado" className="text-sm cursor-pointer">Enviado</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="recebido" id="email-recebido" />
+                    <Label htmlFor="email-recebido" className="text-sm cursor-pointer">Recebido</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+            
+            {/* Seletor de Campanha */}
+            {taskOrigem === 'campanha' && (
+              <div className="space-y-2 pl-6">
+                <Label className="text-sm">Selecione a Campanha</Label>
+                <select 
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value)}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Selecione uma campanha</option>
+                  {campaigns.map((campaign) => (
+                    <option key={campaign.id} value={campaign.id}>
+                      {campaign.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            {/* Seletor de tipo de Pedido */}
+            {taskOrigem === 'pedido' && (
+              <div className="space-y-2 pl-6">
+                <Label className="text-sm">Tipo de Pedido</Label>
+                <RadioGroup value={pedidoTipo} onValueChange={(value) => setPedidoTipo(value as typeof pedidoTipo)} className="flex flex-col gap-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="orcamento" id="pedido-orcamento" />
+                    <Label htmlFor="pedido-orcamento" className="text-sm cursor-pointer">Orçamento</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="negociacao" id="pedido-negociacao" />
+                    <Label htmlFor="pedido-negociacao" className="text-sm cursor-pointer">Negociação</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="aprovacao" id="pedido-aprovacao" />
+                    <Label htmlFor="pedido-aprovacao" className="text-sm cursor-pointer">Aprovação</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
           </div>
 
           {/* Atribuição */}

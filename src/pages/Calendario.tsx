@@ -455,9 +455,9 @@ export default function Calendario() {
       if (!user) {
         console.log("Usuário não autenticado");
         return;
+      }
       
       setCurrentAdminId(user.id);
-      }
 
       console.log("Verificando admin para usuário:", user.id);
 
