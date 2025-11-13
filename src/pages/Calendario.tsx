@@ -1004,7 +1004,8 @@ export default function Calendario() {
           .from("usuarios")
           .select("hora_inicial, hora_final")
           .eq("id", targetUserId)
-          .single();
+          .limit(1)
+          .maybeSingle();
         
         console.log("Resposta da query de jornada:", { userData, userError });
         
