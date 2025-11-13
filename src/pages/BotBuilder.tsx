@@ -1167,7 +1167,7 @@ function BotBuilderContent() {
               <Save className={`w-4 h-4 mr-2 ${isSaving ? "animate-pulse" : ""}`} />
               {isSaving ? "Salvando..." : "Salvar"}
             </Button>
-            <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg">
+            <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg">
               <Play className="w-4 h-4 mr-2" />
               {showSimulator ? "Fechar Teste" : "Testar Fluxo"}
             </Button>
@@ -1299,12 +1299,12 @@ function BotBuilderContent() {
               autoPanOnConnect={false}
               autoPanOnNodeDrag={true}
               defaultEdgeOptions={{
-                style: { stroke: '#06b6d4', strokeWidth: 1.33 },
+                style: { stroke: 'hsl(var(--primary))', strokeWidth: 1.33 },
                 markerEnd: {
                   type: 'arrowclosed',
                   width: 20,
                   height: 20,
-                  color: '#06b6d4',
+                  color: 'hsl(var(--primary))',
                 },
                 type: 'smoothstep',
               }}
