@@ -230,7 +230,15 @@ const ProjectsPanel = () => {
                 </div>
                 <CardContent className="p-2">
                   <h3 className="font-medium text-[11px] truncate">{project.name}</h3>
-                  <p className="text-[9px] text-muted-foreground">{new Date(project.updatedAt).toLocaleDateString('pt-BR')}</p>
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="text-[9px] text-muted-foreground">{new Date(project.updatedAt).toLocaleDateString('pt-BR')}</p>
+                    {project.platformLabel && (
+                      <span className="text-[9px] text-primary font-medium truncate">{project.platformLabel}</span>
+                    )}
+                  </div>
+                  {project.dimensions && (
+                    <p className="text-[8px] text-muted-foreground">{project.dimensions.width}x{project.dimensions.height}px</p>
+                  )}
                 </CardContent>
                 
                 <div className="flex gap-0.5 px-1.5 pb-1.5 bg-muted/10">
