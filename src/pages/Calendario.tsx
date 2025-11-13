@@ -291,6 +291,20 @@ export default function Calendario() {
     } | null;
     suggestedTime: string;
   } | null>(null);
+  const [isAllDayDialogOpen, setIsAllDayDialogOpen] = useState(false);
+  const [allDayPendingTask, setAllDayPendingTask] = useState<{ 
+    taskData: {
+      contactId: string;
+      contactName: string;
+      date: Date;
+      time: string;
+      type: string;
+      observation?: string;
+      isAllDay?: boolean;
+      userId?: string;
+    } | null;
+    nextAvailableDate?: Date;
+  } | null>(null);
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
   const [pendingTask, setPendingTask] = useState<Task | null>(null);
@@ -306,12 +320,14 @@ export default function Calendario() {
     deteccao_conflitos: boolean;
     bloqueio_finais_semana: boolean;
     horario_comercial: boolean;
+    validacao_dia_todo: boolean;
   }>({
     bloquear_datas_passadas: true,
     bloquear_horarios_passados: true,
     deteccao_conflitos: true,
     bloqueio_finais_semana: false,
     horario_comercial: false,
+    validacao_dia_todo: false,
   });
   
   // Configuração de colunas da tabela
@@ -482,6 +498,7 @@ export default function Calendario() {
             deteccao_conflitos: regrasMap.deteccao_conflitos ?? true,
             bloqueio_finais_semana: regrasMap.bloqueio_finais_semana ?? false,
             horario_comercial: regrasMap.horario_comercial ?? false,
+            validacao_dia_todo: regrasMap.validacao_dia_todo ?? false,
           });
         }
       } catch (error) {
@@ -734,6 +751,27 @@ export default function Calendario() {
     return { adjustedTime: time, adjustedDate: date, message: '' };
   };
 
+  // Verificar se há tarefas de dia todo na data
+  const checkAllDayTasks = async (date: Date): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data: allDayTasks } = await (supabase as any)
+        .from('calendario_tarefas')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('date', format(date, 'yyyy-MM-dd'))
+        .eq('is_all_day', true)
+        .limit(1);
+
+      return allDayTasks && allDayTasks.length > 0;
+    } catch (error) {
+      console.error('Erro ao verificar tarefas de dia todo:', error);
+      return false;
+    }
+  };
+
   // Adicionar tarefa
   const handleSaveTask = async (taskData: {
     contactId: string;
@@ -746,6 +784,35 @@ export default function Calendario() {
     userId?: string;
     isAutomatic?: boolean; // Flag para indicar se é inserção automática (rotinas) ou manual
   }) => {
+    // Verificar regra "dia todo" - se já existe tarefa de dia todo no dia selecionado
+    if (!taskData.isAllDay && calendarioRegras.validacao_dia_todo) {
+      const hasAllDayTask = await checkAllDayTasks(taskData.date);
+      
+      if (hasAllDayTask) {
+        // Se for inserção MANUAL: perguntar se realmente quer agendar
+        if (!taskData.isAutomatic) {
+          setAllDayPendingTask({
+            taskData: taskData,
+          });
+          setIsAllDayDialogOpen(true);
+          return;
+        } else {
+          // Se for inserção AUTOMÁTICA: realocar para o próximo dia disponível
+          let nextDate = addDays(taskData.date, 1);
+          let hasAllDay = await checkAllDayTasks(nextDate);
+          
+          // Procurar o próximo dia sem tarefa de dia todo
+          while (hasAllDay) {
+            nextDate = addDays(nextDate, 1);
+            hasAllDay = await checkAllDayTasks(nextDate);
+          }
+          
+          taskData.date = nextDate;
+          toast.info(`Tarefa realocada para ${format(nextDate, "dd/MM/yyyy")} devido a tarefa de dia todo no dia original`);
+        }
+      }
+    }
+
     // Verificar se é fim de semana (regra: bloqueio_finais_semana)
     if (checkWeekend(taskData.date) && calendarioRegras.bloqueio_finais_semana) {
       // Se for inserção MANUAL: perguntar se realmente quer agendar
@@ -2007,6 +2074,42 @@ export default function Calendario() {
               }}
             >
               Usar Horário Sugerido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de tarefa dia todo */}
+      <Dialog open={isAllDayDialogOpen} onOpenChange={setIsAllDayDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dia já Ocupado com Tarefa de Dia Todo</DialogTitle>
+            <DialogDescription>
+              Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
+              <br />
+              Deseja adicionar esta nova tarefa mesmo assim?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAllDayDialogOpen(false);
+                setAllDayPendingTask(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                if (allDayPendingTask?.taskData) {
+                  await saveTaskInternal(allDayPendingTask.taskData);
+                }
+                setIsAllDayDialogOpen(false);
+                setAllDayPendingTask(null);
+              }}
+            >
+              Confirmar Agendamento
             </Button>
           </DialogFooter>
         </DialogContent>
