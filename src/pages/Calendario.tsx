@@ -46,6 +46,7 @@ interface Task {
   contactName?: string;
   isAllDay?: boolean;
   userId?: string;
+  userName?: string;
 }
 
 type ViewMode = "day" | "week" | "month" | "list" | "table";
@@ -351,6 +352,7 @@ export default function Calendario() {
       { id: "date", label: "Data", visible: true, width: 120 },
       { id: "time", label: "Hora", visible: true, width: 100 },
       { id: "type", label: "Tipo", visible: true, width: 150 },
+      { id: "userName", label: "Usuário", visible: true, width: 180 },
       { id: "assignedTo", label: "Atribuído para", visible: true, width: 180 },
       { id: "description", label: "Descrição", visible: false, width: 300 },
       { id: "actions", label: "Ações", visible: true, width: 80, locked: true },
@@ -493,7 +495,10 @@ export default function Calendario() {
 
         let query = (supabase as any)
           .from('calendario_tarefas')
-          .select('*');
+          .select(`
+            *,
+            usuarios!calendario_tarefas_user_id_fkey(nome)
+          `);
 
         // Se admin selecionou um usuário específico, filtrar por ele
         // Se admin não selecionou nada, mostrar todos
@@ -527,6 +532,7 @@ export default function Calendario() {
             contactName: task.contact_name,
             isAllDay: task.is_all_day || false,
             userId: task.user_id,
+            userName: task.usuarios?.nome || 'Usuário não identificado',
           }));
           setTasks(tasksWithDates);
         }
@@ -1542,6 +1548,7 @@ export default function Calendario() {
       task.title.toLowerCase().includes(query) ||
       task.description?.toLowerCase().includes(query) ||
       task.assignedTo?.toLowerCase().includes(query) ||
+      task.userName?.toLowerCase().includes(query) ||
       format(task.date, "dd/MM/yyyy").includes(query)
     );
   });
@@ -1567,6 +1574,10 @@ export default function Calendario() {
           case 'type':
             aValue = getTypeLabel(a.type);
             bValue = getTypeLabel(b.type);
+            break;
+          case 'userName':
+            aValue = a.userName || '';
+            bValue = b.userName || '';
             break;
           case 'assignedTo':
             aValue = a.assignedTo || '';
@@ -1754,10 +1765,11 @@ export default function Calendario() {
                                 {column.id === 'date' && format(task.date, "dd/MM/yyyy", { locale: ptBR })}
                                 {column.id === 'time' && (task.time || "-")}
                                 {column.id === 'type' && getTypeLabel(task.type)}
+                                {column.id === 'userName' && (task.userName || "-")}
                                 {column.id === 'assignedTo' && (task.assignedTo || "-")}
                                 {column.id === 'description' && (task.description || "-")}
                               </span>
-                              {column.id !== 'date' && column.id !== 'type' && (
+                              {column.id !== 'date' && column.id !== 'type' && column.id !== 'userName' && (
                                 <Button
                                   size="icon"
                                   variant="ghost"
