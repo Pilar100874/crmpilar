@@ -243,7 +243,18 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
     if (fabricCanvas && hasCanvasContent()) {
       try {
         const jsonData = exportCanvasToJSON(fabricCanvas);
-        const pngDataUrl = fabricCanvas.toDataURL({ format: 'png', quality: 0.8, multiplier: 1 });
+        
+        // Salvar thumbnail mantendo proporção e tamanho razoável
+        const canvasWidth = fabricCanvas.width || 800;
+        const canvasHeight = fabricCanvas.height || 600;
+        const maxDimension = 400;
+        const scale = Math.min(maxDimension / canvasWidth, maxDimension / canvasHeight);
+        
+        const pngDataUrl = fabricCanvas.toDataURL({ 
+          format: 'png', 
+          quality: 0.8, 
+          multiplier: scale 
+        });
         const productData = sessionStorage.getItem('productForDesign');
         const product = productData ? JSON.parse(productData) : null;
         const projectName = product ? `${product.name} - ${new Date().toLocaleDateString()}` : `Design - ${new Date().toLocaleDateString()}`;

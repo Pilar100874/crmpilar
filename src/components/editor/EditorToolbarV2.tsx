@@ -52,10 +52,17 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     
     try {
       const json = JSON.stringify(fabricCanvas.toJSON());
+      
+      // Salvar thumbnail mantendo proporção e tamanho razoável
+      const canvasWidth = fabricCanvas.width || 800;
+      const canvasHeight = fabricCanvas.height || 600;
+      const maxDimension = 400;
+      const scale = Math.min(maxDimension / canvasWidth, maxDimension / canvasHeight);
+      
       const thumbnail = fabricCanvas.toDataURL({
         format: 'png',
         quality: 0.8,
-        multiplier: 1,
+        multiplier: scale,
       });
       
       const savedProject = saveProject(
@@ -93,10 +100,17 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
     
     try {
       const json = JSON.stringify(fabricCanvas.toJSON());
+      
+      // Salvar thumbnail mantendo proporção e tamanho razoável
+      const canvasWidth = fabricCanvas.width || 800;
+      const canvasHeight = fabricCanvas.height || 600;
+      const maxDimension = 400;
+      const scale = Math.min(maxDimension / canvasWidth, maxDimension / canvasHeight);
+      
       const thumbnail = fabricCanvas.toDataURL({
         format: 'png',
         quality: 0.8,
-        multiplier: 1,
+        multiplier: scale,
       });
       
       const savedProject = saveProject(
