@@ -203,16 +203,16 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                         key={blockDef.type}
                         draggable
                         onDragStart={(event) => onDragStart(event, blockDef.type)}
-                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-cyan-500/40 transition-all duration-150 hover:shadow-md group rounded-lg"
+                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-2xl"
                       >
                         <div className="flex items-center gap-2">
                           {IconComponent && (
-                            <div className="p-1 rounded-md bg-gradient-to-br from-cyan-500/15 to-blue-500/15 border border-cyan-500/25 group-hover:border-cyan-400/50 transition-all flex-shrink-0">
-                              <IconComponent className="w-3 h-3 text-cyan-600 group-hover:text-cyan-700" />
+                            <div className="p-1 rounded-md bg-gradient-to-br from-primary/15 to-primary/10 border border-primary/25 group-hover:border-primary/50 transition-all flex-shrink-0">
+                              <IconComponent className="w-3 h-3 text-primary group-hover:text-primary" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-xs text-foreground group-hover:text-cyan-700 transition-colors truncate">
+                            <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
                               {blockDef.label}
                             </h4>
                           </div>
