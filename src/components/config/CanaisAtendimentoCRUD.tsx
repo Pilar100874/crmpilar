@@ -2014,7 +2014,7 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId: propEstabId }: Canais
 
   useEffect(() => {
     const loadEstabelecimento = async () => {
-      const estabId = await getEstabelecimentoId(propEstabId);
+      const estabId = await getEstabelecimentoId();
       if (estabId) {
         setEstabelecimentoId(estabId);
       }

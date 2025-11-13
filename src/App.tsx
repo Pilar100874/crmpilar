@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Atendimento from "./pages/Atendimento";
@@ -33,6 +34,7 @@ import Orcamentos from "./pages/Orcamentos";
 import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Relatorios from "./pages/Relatorios";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
@@ -42,9 +44,11 @@ const queryClient = new QueryClient();
 
 // Layout wrapper component
 const LayoutWrapper = () => (
-  <Layout>
-    <Outlet />
-  </Layout>
+  <ProtectedRoute>
+    <Layout>
+      <Outlet />
+    </Layout>
+  </ProtectedRoute>
 );
 
 const App = () => (
@@ -54,9 +58,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Login />} />
+          {/* Public auth routes */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
+          <Route path="/webchat" element={<WebChat />} />
+          
+          {/* Protected routes with layout */}
           <Route element={<LayoutWrapper />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/atendimento" element={<Atendimento />} />
             <Route path="/email" element={<Email />} />
             <Route path="/email/:folder" element={<Email />} />
@@ -89,9 +100,7 @@ const App = () => (
             <Route path="/meus-anexos" element={<MeusAnexos />} />
             <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
           </Route>
-          {/* Public routes (no layout) */}
-          <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
-          <Route path="/webchat" element={<WebChat />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
