@@ -34,6 +34,7 @@ interface NewTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (task: {
+    id?: string;
     contactId: string;
     contactName: string;
     date: Date;
@@ -44,9 +45,20 @@ interface NewTaskDialogProps {
     userId?: string;
   }) => void;
   initialDate?: Date;
+  editingTask?: {
+    id: string;
+    contactId?: string;
+    contactName?: string;
+    date: Date;
+    time?: string;
+    type: string;
+    description?: string;
+    isAllDay?: boolean;
+    userId?: string;
+  };
 }
 
-export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTaskDialogProps) {
+export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask }: NewTaskDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -68,6 +80,54 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
   const [pendingTaskData, setPendingTaskData] = useState<any>(null);
   const [contactExistingTasks, setContactExistingTasks] = useState<any[]>([]);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // Preencher dados quando estiver editando
+  useEffect(() => {
+    if (editingTask && open) {
+      setDate(editingTask.date);
+      setDateInput(format(editingTask.date, "dd/MM/yyyy"));
+      
+      if (editingTask.time) {
+        const [h, m] = editingTask.time.split(':');
+        setHours(h);
+        setMinutes(m);
+        setIsAllDay(false);
+      } else {
+        setIsAllDay(editingTask.isAllDay || false);
+        setHours("");
+        setMinutes("");
+      }
+      
+      setTaskType(editingTask.type);
+      setObservation(editingTask.description || "");
+      setEditingTaskId(editingTask.id);
+      
+      // Pré-selecionar o contato se houver
+      if (editingTask.contactId && editingTask.contactName) {
+        setSelectedContact({
+          id: editingTask.contactId,
+          name: editingTask.contactName,
+          type: 'contato',
+          phone: '',
+          email: ''
+        });
+        setSearchQuery(editingTask.contactName);
+      }
+    } else if (!open) {
+      // Resetar ao fechar
+      setEditingTaskId(null);
+      setSelectedContact(null);
+      setSearchQuery("");
+      setDate(initialDate || new Date());
+      setDateInput("");
+      setHours("");
+      setMinutes("");
+      setIsAllDay(false);
+      setTaskType("accompany");
+      setObservation("");
+      setShowContactList(false);
+    }
+  }, [editingTask, open, initialDate]);
 
   // Carregar contatos e empresas do Supabase
   useEffect(() => {
@@ -400,6 +460,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     }
 
     onSave({
+      id: editingTaskId || undefined,
       contactId: selectedContact.id,
       contactName: selectedContact.name,
       date,
@@ -501,7 +562,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate }: NewTa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader className="sr-only">
-          <DialogTitle>Nova tarefa</DialogTitle>
+          <DialogTitle>{editingTaskId ? 'Editar tarefa' : 'Nova tarefa'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           {/* Campo de busca de contato */}

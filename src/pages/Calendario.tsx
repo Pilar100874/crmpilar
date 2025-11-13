@@ -903,6 +903,7 @@ export default function Calendario() {
 
   // Adicionar tarefa
   const handleSaveTask = async (taskData: {
+    id?: string;
     contactId: string;
     contactName: string;
     date: Date;
@@ -1010,6 +1011,7 @@ export default function Calendario() {
   };
 
   const saveTaskInternal = async (taskData: {
+    id?: string;
     contactId: string;
     contactName: string;
     date: Date;
@@ -1162,11 +1164,11 @@ export default function Calendario() {
         toast.success(`${tarefasParaInserir.length} tarefas adicionadas para o dia todo`);
       } else {
         // Tarefa normal com horário específico
-        console.log("Criando tarefa para user_id:", targetUserId);
+        console.log(taskData.id ? "Atualizando tarefa para user_id:" : "Criando tarefa para user_id:", targetUserId);
         console.log("Estabelecimento ID:", estabelecimentoId);
         console.log("Data da tarefa:", format(taskData.date, 'yyyy-MM-dd'));
         
-        const tarefaData = {
+        const tarefaPayload = {
           user_id: targetUserId,
           estabelecimento_id: estabelecimentoId,
           contact_id: taskData.contactId,
@@ -1180,25 +1182,45 @@ export default function Calendario() {
           is_all_day: false,
         };
         
-        console.log("Dados da tarefa:", tarefaData);
+        console.log("Dados da tarefa:", tarefaPayload);
         
-        const { data, error } = await (supabase as any)
-          .from('calendario_tarefas')
-          .insert(tarefaData)
-          .select();
+        // Se tem ID, é uma atualização
+        if (taskData.id) {
+          const { data, error } = await (supabase as any)
+            .from('calendario_tarefas')
+            .update(tarefaPayload)
+            .eq('id', taskData.id)
+            .select();
 
-        if (error) {
-          console.error("Erro ao criar tarefa:", error);
-          console.error("Detalhes do erro:", JSON.stringify(error, null, 2));
-          toast.error(`Erro ao criar tarefa: ${error.message || 'Erro desconhecido'}`);
-          return;
+          if (error) {
+            console.error("Erro ao atualizar tarefa:", error);
+            console.error("Detalhes do erro:", JSON.stringify(error, null, 2));
+            toast.error(`Erro ao atualizar tarefa: ${error.message || 'Erro desconhecido'}`);
+            return;
+          }
+
+          console.log("Tarefa atualizada com sucesso:", data);
+          toast.success("Tarefa atualizada com sucesso");
+        } else {
+          // Senão, é uma criação
+          const { data, error } = await (supabase as any)
+            .from('calendario_tarefas')
+            .insert(tarefaPayload)
+            .select();
+
+          if (error) {
+            console.error("Erro ao criar tarefa:", error);
+            console.error("Detalhes do erro:", JSON.stringify(error, null, 2));
+            toast.error(`Erro ao criar tarefa: ${error.message || 'Erro desconhecido'}`);
+            return;
+          }
+
+          console.log("Tarefa criada com sucesso:", data);
+          const nomeUsuario = isAdmin && selectedUserId 
+            ? usuarios.find(u => u.id === selectedUserId)?.nome 
+            : "você";
+          toast.success(`Tarefa adicionada com sucesso${isAdmin && selectedUserId ? ` para ${nomeUsuario}` : ''}`);
         }
-
-        console.log("Tarefa criada com sucesso:", data);
-        const nomeUsuario = isAdmin && selectedUserId 
-          ? usuarios.find(u => u.id === selectedUserId)?.nome 
-          : "você";
-        toast.success(`Tarefa adicionada com sucesso${isAdmin && selectedUserId ? ` para ${nomeUsuario}` : ''}`);
       }
       
       setShowTaskDialog(false);
@@ -1564,7 +1586,7 @@ export default function Calendario() {
 
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
-    setIsEditDialogOpen(true);
+    setShowTaskDialog(true);
   };
 
   const getTypeLabel = (type: Task["type"]) => {
@@ -2041,107 +2063,27 @@ export default function Calendario() {
         {viewMode === "table" && renderTableView()}
       </div>
 
-      {/* Dialog para adicionar tarefa */}
+      {/* Dialog para adicionar/editar tarefa */}
       <NewTaskDialog
         open={showTaskDialog}
-        onOpenChange={setShowTaskDialog}
+        onOpenChange={(open) => {
+          setShowTaskDialog(open);
+          if (!open) setEditingTask(null);
+        }}
         onSave={handleSaveTask}
         initialDate={selectedDate || undefined}
+        editingTask={editingTask ? {
+          id: editingTask.id,
+          contactId: editingTask.contactId,
+          contactName: editingTask.contactName,
+          date: editingTask.date,
+          time: editingTask.time,
+          type: editingTask.type,
+          description: editingTask.description,
+          isAllDay: editingTask.isAllDay,
+          userId: editingTask.userId,
+        } : undefined}
       />
-
-      {/* Dialog para editar tarefa */}
-      {editingTask && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Editar Tarefa</DialogTitle>
-              <DialogDescription>
-                Edite as informações da tarefa abaixo.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div>
-                <label className="text-sm font-medium">Data</label>
-                <Input
-                  type="date"
-                  defaultValue={format(editingTask.date, "yyyy-MM-dd")}
-                  onChange={(e) => {
-                    const newDate = new Date(e.target.value);
-                    setEditingTask({ ...editingTask, date: newDate });
-                  }}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Horário</label>
-                <Input
-                  type="time"
-                  defaultValue={editingTask.time}
-                  onChange={(e) => {
-                    setEditingTask({ ...editingTask, time: e.target.value });
-                  }}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Tipo</label>
-                <select
-                  className="w-full p-2 border rounded"
-                  defaultValue={editingTask.type}
-                  onChange={(e) => {
-                    setEditingTask({ ...editingTask, type: e.target.value as any });
-                  }}
-                >
-                  <option value="accompany">Acompanhamento</option>
-                  <option value="call">Ligação</option>
-                  <option value="meeting">Reunião</option>
-                  <option value="other">Outro</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Observação</label>
-                <Textarea
-                  defaultValue={editingTask.description}
-                  onChange={(e) => {
-                    setEditingTask({ ...editingTask, description: e.target.value });
-                  }}
-                  rows={3}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsEditDialogOpen(false);
-                  setEditingTask(null);
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={() => {
-                  if (!editingTask) return;
-                  
-                  // Verificar se é fim de semana (regra: bloqueio_finais_semana)
-                  if (checkWeekend(editingTask.date) && calendarioRegras.bloqueio_finais_semana) {
-                    toast.error("Agendamentos bloqueados para finais de semana");
-                    return;
-                  }
-
-                  const updatedTasks = tasks.map(t => 
-                    t.id === editingTask.id ? editingTask : t
-                  );
-                  setTasks(updatedTasks);
-                  toast.success("Tarefa atualizada com sucesso");
-                  setIsEditDialogOpen(false);
-                  setEditingTask(null);
-                }}
-              >
-                Salvar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Dialog de conflito */}
       <Dialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
