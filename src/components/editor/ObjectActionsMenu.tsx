@@ -35,20 +35,24 @@ export const ObjectActionsMenu = () => {
       // Don't save state during undo/redo operations
       if (isUndoRedoing) return;
       
-      const json = JSON.stringify(fabricCanvas.toJSON());
-      
-      setHistory(prev => {
-        // Remove any future states if we're not at the end
-        const newHistory = prev.slice(0, historyStep + 1);
-        newHistory.push(json);
-        // Keep last 50 states
-        return newHistory.slice(-50);
-      });
-      
-      setHistoryStep(prev => {
-        const newStep = prev + 1;
-        return Math.min(newStep, 49);
-      });
+      try {
+        const json = JSON.stringify(fabricCanvas.toJSON());
+        
+        setHistory(prev => {
+          // Remove any future states if we're not at the end
+          const newHistory = prev.slice(0, historyStep + 1);
+          newHistory.push(json);
+          // Keep last 50 states
+          return newHistory.slice(-50);
+        });
+        
+        setHistoryStep(prev => {
+          const newStep = prev + 1;
+          return Math.min(newStep, 49);
+        });
+      } catch (error) {
+        console.error("Erro ao salvar estado:", error);
+      }
     };
 
     fabricCanvas.on('selection:created', updateActiveObject);
@@ -60,9 +64,13 @@ export const ObjectActionsMenu = () => {
 
     // Save initial state only once
     if (history.length === 0) {
-      const initialJson = JSON.stringify(fabricCanvas.toJSON());
-      setHistory([initialJson]);
-      setHistoryStep(0);
+      try {
+        const initialJson = JSON.stringify(fabricCanvas.toJSON());
+        setHistory([initialJson]);
+        setHistoryStep(0);
+      } catch (error) {
+        console.error("Erro ao salvar estado inicial:", error);
+      }
     }
 
     return () => {
@@ -83,16 +91,19 @@ export const ObjectActionsMenu = () => {
       setIsUndoRedoing(true);
       const prevStep = historyStep - 1;
       
-      fabricCanvas.loadFromJSON(history[prevStep]).then(() => {
-        fabricCanvas.renderAll();
-        setHistoryStep(prevStep);
-        setIsUndoRedoing(false);
-        toast.success("Desfeito!");
-      }).catch((err) => {
+      try {
+        const jsonData = JSON.parse(history[prevStep]);
+        fabricCanvas.loadFromJSON(jsonData, () => {
+          fabricCanvas.renderAll();
+          setHistoryStep(prevStep);
+          setIsUndoRedoing(false);
+          toast.success("Desfeito!");
+        });
+      } catch (err) {
         console.error("Erro ao desfazer:", err);
         setIsUndoRedoing(false);
         toast.error("Erro ao desfazer");
-      });
+      }
     }
   };
 
@@ -101,16 +112,19 @@ export const ObjectActionsMenu = () => {
       setIsUndoRedoing(true);
       const nextStep = historyStep + 1;
       
-      fabricCanvas.loadFromJSON(history[nextStep]).then(() => {
-        fabricCanvas.renderAll();
-        setHistoryStep(nextStep);
-        setIsUndoRedoing(false);
-        toast.success("Refeito!");
-      }).catch((err) => {
+      try {
+        const jsonData = JSON.parse(history[nextStep]);
+        fabricCanvas.loadFromJSON(jsonData, () => {
+          fabricCanvas.renderAll();
+          setHistoryStep(nextStep);
+          setIsUndoRedoing(false);
+          toast.success("Refeito!");
+        });
+      } catch (err) {
         console.error("Erro ao refazer:", err);
         setIsUndoRedoing(false);
         toast.error("Erro ao refazer");
-      });
+      }
     }
   };
 
