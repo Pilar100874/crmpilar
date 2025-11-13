@@ -555,24 +555,32 @@ export default function Calendario() {
             campanhasMap = new Map(campanhasData?.map((c: any) => [c.id, c.nome]) || []);
           }
           
-          const tasksWithDates = tarefas.map((task: any) => ({
-            id: task.id,
-            title: task.title,
-            description: task.description || '',
-            date: parseISO(task.date + 'T12:00:00'),
-            time: task.time || '',
-            assignedTo: task.contact_name,
-            status: task.status as "pending" | "completed",
-            origem: task.origem as Task["origem"],
-            campaignId: task.campaign_id,
-            campaignName: task.campaign_id ? campanhasMap.get(task.campaign_id) : undefined,
-            createdAt: new Date(task.created_at),
-            contactId: task.contact_id,
-            contactName: task.contact_name,
-            isAllDay: task.is_all_day || false,
-            userId: task.user_id,
-            userName: usuariosMap.get(task.user_id) || 'Usuário não identificado',
-          }));
+          console.log("=== DEBUG TAREFAS CARREGADAS ===");
+          console.log("Primeira tarefa raw do banco:", tarefas[0]);
+          
+          const tasksWithDates = tarefas.map((task: any) => {
+            const parsedDate = parseISO(task.date + 'T12:00:00');
+            console.log(`Tarefa ${task.id}: date do banco="${task.date}", parsed="${parsedDate.toISOString()}", localDate="${parsedDate.toLocaleDateString()}"`)
+            
+            return {
+              id: task.id,
+              title: task.title,
+              description: task.description || '',
+              date: parsedDate,
+              time: task.time || '',
+              assignedTo: task.contact_name,
+              status: task.status as "pending" | "completed",
+              origem: task.origem as Task["origem"],
+              campaignId: task.campaign_id,
+              campaignName: task.campaign_id ? campanhasMap.get(task.campaign_id) : undefined,
+              createdAt: new Date(task.created_at),
+              contactId: task.contact_id,
+              contactName: task.contact_name,
+              isAllDay: task.is_all_day || false,
+              userId: task.user_id,
+              userName: usuariosMap.get(task.user_id) || 'Usuário não identificado',
+            };
+          });
           setTasks(tasksWithDates);
         }
       } catch (error) {
@@ -761,6 +769,7 @@ export default function Calendario() {
 
   // Mover tarefas não realizadas para o próximo dia útil
   const moveOverdueTasks = async () => {
+    console.log("=== VERIFICANDO TAREFAS ATRASADAS ===");
     const now = new Date();
     const today = startOfDay(now);
     
@@ -771,12 +780,14 @@ export default function Calendario() {
 
     const { data: overdueTasks } = await (supabase as any)
       .from('calendario_tarefas')
-      .select('id, date')
+      .select('id, date, title')
       .eq('user_id', targetUserId)
       .eq('status', 'pending')
       .lt('date', format(today, 'yyyy-MM-dd'));
 
+    console.log(`Encontradas ${overdueTasks?.length || 0} tarefas atrasadas`);
     if (overdueTasks && overdueTasks.length > 0) {
+      console.log("Tarefas atrasadas:", overdueTasks);
       const nextDay = getNextBusinessDay(now);
       const taskIds = overdueTasks.map((t: any) => t.id);
 
@@ -785,6 +796,7 @@ export default function Calendario() {
         .update({ date: format(nextDay, 'yyyy-MM-dd') })
         .in('id', taskIds);
 
+      console.log(`Tarefas movidas para: ${format(nextDay, 'yyyy-MM-dd')}`);
       toast.info(
         `${overdueTasks.length} tarefa${overdueTasks.length > 1 ? 's' : ''} não realizada${overdueTasks.length > 1 ? 's' : ''} movida${overdueTasks.length > 1 ? 's' : ''} para ${format(nextDay, "dd/MM/yyyy", { locale: ptBR })}`
       );
@@ -793,14 +805,16 @@ export default function Calendario() {
 
   // Verificar tarefas atrasadas ao carregar e a cada hora (com proteção de repetição diária)
   const processOverdueIfNeeded = async () => {
-    const now = new Date();
-    const todayKey = format(now, 'yyyy-MM-dd');
-    const lastProcessed = sessionStorage.getItem('calendar_overdue_last_processed');
-    if (lastProcessed === todayKey) {
-      return;
-    }
-    await moveOverdueTasks();
-    sessionStorage.setItem('calendar_overdue_last_processed', todayKey);
+    console.log("=== DESABILITADO: Movimentação automática de tarefas atrasadas ===");
+    // DESABILITADO TEMPORARIAMENTE - estava movendo tarefas automaticamente
+    // const now = new Date();
+    // const todayKey = format(now, 'yyyy-MM-dd');
+    // const lastProcessed = sessionStorage.getItem('calendar_overdue_last_processed');
+    // if (lastProcessed === todayKey) {
+    //   return;
+    // }
+    // await moveOverdueTasks();
+    // sessionStorage.setItem('calendar_overdue_last_processed', todayKey);
   };
 
   useEffect(() => {
