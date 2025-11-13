@@ -1066,7 +1066,7 @@ function BotBuilderContent() {
                 variant="outline" 
                 size="icon" 
                 onClick={() => setIsBlockLibraryExpanded(true)}
-                className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
                 title="Adicionar blocos"
               >
                 <Plus className="h-5 w-5" />

@@ -137,8 +137,8 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-md bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30">
-                <Plus className="h-3.5 w-3.5 text-cyan-600" />
+              <div className="p-1.5 rounded-md bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">
+                <Plus className="h-3.5 w-3.5 text-primary" />
               </div>
               <h3 className="font-bold text-sm text-foreground">Blocos</h3>
             </div>
