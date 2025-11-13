@@ -265,8 +265,10 @@ export default function Calendario() {
   const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
+  const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string; auth_user_id: string | null }>>([]);
+  const [showUserSelector, setShowUserSelector] = useState(false);
   const [isWeekendDialogOpen, setIsWeekendDialogOpen] = useState(false);
   const [weekendPendingTask, setWeekendPendingTask] = useState<{ 
     taskData: {
@@ -448,6 +450,8 @@ export default function Calendario() {
       if (!user) {
         console.log("Usuário não autenticado");
         return;
+      
+      setCurrentAdminId(user.id);
       }
 
       console.log("Verificando admin para usuário:", user.id);
@@ -499,9 +503,9 @@ export default function Calendario() {
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) return;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('usuarios')
-        .select('id, nome')
+        .select('id, nome, auth_user_id')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('nome');
 
@@ -523,12 +527,13 @@ export default function Calendario() {
           .from('calendario_tarefas')
           .select('*');
 
-        // Se admin selecionou um usuário específico, filtrar por ele
-        // Se admin não selecionou nada, mostrar todos
+        // Se admin selecionou usuários específicos, mostrar admin + usuários selecionados
+        // Se admin não selecionou nada, mostrar apenas suas tarefas
         // Se não é admin, mostrar apenas suas tarefas
-        if (isAdmin && selectedUserId) {
-          query = query.eq('user_id', selectedUserId);
-        } else if (!isAdmin) {
+        if (isAdmin && selectedUserIds.length > 0) {
+          const allIds = currentAdminId ? [currentAdminId, ...selectedUserIds] : selectedUserIds;
+          query = query.in('user_id', allIds);
+        } else {
           query = query.eq('user_id', user.id);
         }
 
@@ -595,7 +600,7 @@ export default function Calendario() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedUserId, isAdmin]);
+  }, [selectedUserIds, isAdmin, currentAdminId]);
 
   // Carregar regras do calendário do banco
   useEffect(() => {
@@ -758,7 +763,7 @@ export default function Calendario() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const targetUserId = (isAdmin && selectedUserId) ? selectedUserId : user.id;
+    const targetUserId = user.id; // Sempre usa o ID do usuário atual
 
     const { data: overdueTasks } = await (supabase as any)
       .from('calendario_tarefas')
@@ -886,8 +891,8 @@ export default function Calendario() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // Se admin selecionou um usuário, verificar tarefas desse usuário
-      const targetUserId = (isAdmin && selectedUserId) ? selectedUserId : user.id;
+      // Sempre verificar tarefas do usuário atual
+      const targetUserId = user.id;
 
       const { data: allDayTasks } = await (supabase as any)
         .from('calendario_tarefas')
@@ -1035,7 +1040,7 @@ export default function Calendario() {
 
       console.log("Usuário autenticado:", user.id, user.email);
       console.log("isAdmin:", isAdmin);
-      console.log("selectedUserId:", selectedUserId);
+      console.log("selectedUserIds:", selectedUserIds);
 
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
@@ -1046,8 +1051,8 @@ export default function Calendario() {
 
       console.log("Estabelecimento ID obtido:", estabelecimentoId);
 
-      // Se admin selecionou um usuário específico, criar tarefa para ele
-      const targetUserId = (isAdmin && selectedUserId) ? selectedUserId : user.id;
+      // Sempre criar tarefa para o usuário atual (admin visualizando não cria tarefas para outros)
+      const targetUserId = user.id;
       console.log("Target User ID:", targetUserId);
 
       // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
@@ -1219,10 +1224,7 @@ export default function Calendario() {
           }
 
           console.log("Tarefa criada com sucesso:", data);
-          const nomeUsuario = isAdmin && selectedUserId 
-            ? usuarios.find(u => u.id === selectedUserId)?.nome 
-            : "você";
-          toast.success(`Tarefa adicionada com sucesso${isAdmin && selectedUserId ? ` para ${nomeUsuario}` : ''}`);
+          toast.success("Tarefa adicionada com sucesso");
         }
       }
       
@@ -2029,24 +2031,58 @@ export default function Calendario() {
                 Minhas tarefas
               </Button>
               {isAdmin && (
-                <Select value={selectedUserId || "all"} onValueChange={(value) => setSelectedUserId(value === "all" ? null : value)}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Todos os usuários" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        Todos os usuários
-                      </div>
-                    </SelectItem>
-                    {usuarios.map((usuario) => (
-                      <SelectItem key={usuario.id} value={usuario.id}>
-                        {usuario.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Dialog open={showUserSelector} onOpenChange={setShowUserSelector}>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowUserSelector(true)}
+                    className="gap-2"
+                  >
+                    <Users className="w-4 h-4" />
+                    Visualizar Usuários {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
+                  </Button>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Selecionar Usuários para Visualizar</DialogTitle>
+                      <DialogDescription>
+                        Escolha os usuários cujas agendas deseja visualizar junto com a sua
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
+                      {usuarios.filter(u => u.auth_user_id).map((usuario) => (
+                        <div key={usuario.id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`user-${usuario.id}`}
+                            checked={selectedUserIds.includes(usuario.auth_user_id!)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedUserIds([...selectedUserIds, usuario.auth_user_id!]);
+                              } else {
+                                setSelectedUserIds(selectedUserIds.filter(id => id !== usuario.auth_user_id));
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-input"
+                          />
+                          <label 
+                            htmlFor={`user-${usuario.id}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {usuario.nome}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setSelectedUserIds([])}>
+                        Limpar Seleção
+                      </Button>
+                      <Button onClick={() => setShowUserSelector(false)}>
+                        Aplicar
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               )}
               <Button variant="outline" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
