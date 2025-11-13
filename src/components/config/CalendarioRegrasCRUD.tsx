@@ -95,6 +95,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
       'bloquear_datas_passadas': 'Bloquear Datas Passadas',
       'bloquear_horarios_passados': 'Bloquear Horários Passados',
       'deteccao_conflitos': 'Detecção de Conflitos',
+      'realocacao_diaria_tarefas': 'Realocação Diária de Tarefas',
     };
     return tipos[tipo] || tipo;
   };
@@ -108,6 +109,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
       'bloquear_datas_passadas': 'bg-orange-500',
       'bloquear_horarios_passados': 'bg-pink-500',
       'deteccao_conflitos': 'bg-cyan-500',
+      'realocacao_diaria_tarefas': 'bg-green-500',
     };
     return cores[tipo] || 'bg-gray-500';
   };
