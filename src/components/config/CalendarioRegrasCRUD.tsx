@@ -35,7 +35,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
   const loadRegras = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('calendario_regras')
         .select('*')
         .eq('estabelecimento_id', estabelecimentoId)
@@ -43,7 +43,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
 
       if (error) throw error;
 
-      setRegras(data || []);
+      setRegras((data || []) as CalendarioRegra[]);
     } catch (error: any) {
       console.error('Erro ao carregar regras:', error);
       toast({
@@ -58,7 +58,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
 
   const toggleRegra = async (regraId: string, novoStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('calendario_regras')
         .update({ 
           ativa: novoStatus,
