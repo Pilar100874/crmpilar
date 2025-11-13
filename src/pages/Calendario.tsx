@@ -997,21 +997,42 @@ export default function Calendario() {
 
       // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
       if (taskData.isAllDay) {
+        console.log("=== Buscando jornada de trabalho ===");
+        console.log("Target User ID para jornada:", targetUserId);
+        
         const { data: userData, error: userError } = await (supabase as any)
           .from("usuarios")
           .select("hora_inicial, hora_final")
           .eq("id", targetUserId)
           .single();
         
-        if (userError || !userData) {
-          console.error("Erro ao buscar jornada:", userError);
-          toast.error("Erro ao buscar jornada de trabalho do usuário");
+        console.log("Resposta da query de jornada:", { userData, userError });
+        
+        if (userError) {
+          console.error("Erro na query de jornada:", userError);
+          toast.error(`Erro ao buscar jornada: ${userError.message}`);
           return;
         }
         
+        if (!userData) {
+          console.error("userData é null/undefined");
+          toast.error("Usuário não encontrado no sistema");
+          return;
+        }
+        
+        console.log("hora_inicial raw:", userData.hora_inicial);
+        console.log("hora_final raw:", userData.hora_final);
+        
         // Extrair apenas HH:mm dos campos que podem vir como HH:mm:ss
-        const horaInicial = (userData.hora_inicial || "08:00:00").substring(0, 5);
-        const horaFinal = (userData.hora_final || "18:00:00").substring(0, 5);
+        const horaInicial = userData.hora_inicial 
+          ? userData.hora_inicial.toString().substring(0, 5) 
+          : "08:00";
+        const horaFinal = userData.hora_final 
+          ? userData.hora_final.toString().substring(0, 5) 
+          : "18:00";
+        
+        console.log("hora_inicial processada:", horaInicial);
+        console.log("hora_final processada:", horaFinal);
         
         const [startHour, startMinute] = horaInicial.split(':').map(Number);
         const [endHour, endMinute] = horaFinal.split(':').map(Number);
