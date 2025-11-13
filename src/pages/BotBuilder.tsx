@@ -1261,14 +1261,14 @@ function BotBuilderContent() {
               edges={edges.map((edge) => ({
                 ...edge,
                 style: {
-                  stroke: edge.selected ? '#f59e0b' : '#06b6d4',
+                  stroke: edge.selected ? 'hsl(var(--primary) / 0.7)' : 'hsl(var(--primary))',
                   strokeWidth: edge.selected ? 2 : 1.33,
                 },
                 markerEnd: {
                   type: 'arrowclosed',
                   width: 20,
                   height: 20,
-                  color: edge.selected ? '#f59e0b' : '#06b6d4',
+                  color: edge.selected ? 'hsl(var(--primary) / 0.7)' : 'hsl(var(--primary))',
                 },
                 type: 'smoothstep',
               }))}

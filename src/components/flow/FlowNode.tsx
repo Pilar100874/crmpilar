@@ -118,7 +118,7 @@ export const FlowNode = memo((props: any) => {
         buttons: cards.map((card: any, index: number) => ({
           id: `card_${index}`,
           label: card.keyword || `Card ${index + 1}`,
-          color: "bg-cyan-500"
+          color: "bg-primary"
         }))
       };
     }
@@ -181,7 +181,7 @@ export const FlowNode = memo((props: any) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="!bg-cyan-400 !w-3 !h-3 !border-2 !border-white" 
+        className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
       />
       
       <div className="p-3">
@@ -281,7 +281,7 @@ export const FlowNode = memo((props: any) => {
                     type="source"
                     position={Position.Right}
                     id={cond.id}
-                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform !flex !items-center !justify-center"
+                    className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform !flex !items-center !justify-center"
                     style={{ position: 'relative' }}
                   />
                   <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -301,7 +301,7 @@ export const FlowNode = memo((props: any) => {
                     type="source"
                     position={Position.Right}
                     id={dynamicHandles.fallback.id}
-                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
                     style={{ position: 'relative' }}
                   />
                   <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -318,7 +318,7 @@ export const FlowNode = memo((props: any) => {
                     type="source"
                     position={Position.Right}
                     id={kw.id}
-                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
                     style={{ position: 'relative' }}
                   />
                   <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -353,7 +353,7 @@ export const FlowNode = memo((props: any) => {
                         type="source"
                         position={Position.Right}
                         id={item.id}
-                        className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform !cursor-pointer"
+                        className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform !cursor-pointer"
                         style={{ position: 'relative' }}
                       />
                       <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -372,7 +372,7 @@ export const FlowNode = memo((props: any) => {
                     type="source"
                     position={Position.Right}
                     id={btn.id}
-                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
                     style={{ position: 'relative' }}
                   />
                   <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -401,7 +401,7 @@ export const FlowNode = memo((props: any) => {
                     type="source"
                     position={Position.Right}
                     id={path.id}
-                    className="!bg-cyan-400 !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
+                    className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
                     style={{ position: 'relative' }}
                   />
                   <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -418,7 +418,7 @@ export const FlowNode = memo((props: any) => {
           <Handle 
             type="source" 
             position={Position.Bottom} 
-            className="!bg-cyan-400 !w-5 !h-5 !border-2 !border-white !rounded-full" 
+            className="!bg-primary !w-5 !h-5 !border-2 !border-white !rounded-full" 
           />
           <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
