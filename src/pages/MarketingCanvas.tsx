@@ -394,7 +394,6 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           <div className="flex-1 relative overflow-hidden bg-muted/30">
             <LoadingOverlay />
             <CanvasWorkspace 
-              key={platformPreset ? `${platformPreset.platform}-${platformPreset.type}` : 'default'}
               selectedSize={selectedSize} 
               platformPreset={platformPreset}
             />
