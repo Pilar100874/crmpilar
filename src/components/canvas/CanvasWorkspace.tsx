@@ -375,7 +375,32 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
         setFabricCanvas(null);
       }
     };
-  }, [setIsLoading, setContextCanvas, platformPreset]);
+  }, [setIsLoading, setContextCanvas]);
+
+  // Separate effect to handle platform preset changes without destroying the canvas
+  useEffect(() => {
+    if (!fabricCanvas || !platformPreset) return;
+
+    const container = canvasRef.current?.parentElement;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerWidth = Math.max(300, containerRect.width - 32);
+    const containerHeight = Math.max(300, containerRect.height - 32);
+    const scaleX = containerWidth / platformPreset.width;
+    const scaleY = containerHeight / platformPreset.height;
+    const scale = Math.min(scaleX, scaleY, 1);
+    
+    const newWidth = Math.floor(platformPreset.width * scale);
+    const newHeight = Math.floor(platformPreset.height * scale);
+
+    // Only resize if dimensions actually changed
+    if (fabricCanvas.width !== newWidth || fabricCanvas.height !== newHeight) {
+      fabricCanvas.setDimensions({ width: newWidth, height: newHeight });
+      setCanvasSize({ width: newWidth, height: newHeight });
+      fabricCanvas.renderAll();
+    }
+  }, [platformPreset, fabricCanvas]);
 
   const handleOpenCutLineDialog = () => {
     if (!selectedObject || !(selectedObject instanceof FabricImage)) {
