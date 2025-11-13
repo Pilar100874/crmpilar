@@ -413,7 +413,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
               <Button variant="outline" onClick={handleConfirmExit}>
                 Sair sem salvar
               </Button>
-              <AlertDialogAction onClick={handleSaveAndExit}>
+              <AlertDialogAction onClick={handleSaveAndExit} className="bg-primary hover:bg-primary/90">
                 Salvar e sair
               </AlertDialogAction>
             </AlertDialogFooter>
