@@ -969,20 +969,30 @@ export default function Calendario() {
     userId?: string;
   }) => {
     try {
+      console.log("=== Iniciando saveTaskInternal ===");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.error("Usuário não autenticado");
         toast.error("Usuário não autenticado");
         return;
       }
 
+      console.log("Usuário autenticado:", user.id, user.email);
+      console.log("isAdmin:", isAdmin);
+      console.log("selectedUserId:", selectedUserId);
+
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
+        console.error("Estabelecimento não encontrado");
         toast.error("Estabelecimento não encontrado");
         return;
       }
 
+      console.log("Estabelecimento ID obtido:", estabelecimentoId);
+
       // Se admin selecionou um usuário específico, criar tarefa para ele
       const targetUserId = (isAdmin && selectedUserId) ? selectedUserId : user.id;
+      console.log("Target User ID:", targetUserId);
 
       // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
       if (taskData.isAllDay) {
@@ -1041,28 +1051,39 @@ export default function Calendario() {
         toast.success(`${tarefasParaInserir.length} tarefas adicionadas para o dia todo`);
       } else {
         // Tarefa normal com horário específico
-        const { error } = await (supabase as any)
+        console.log("Criando tarefa para user_id:", targetUserId);
+        console.log("Estabelecimento ID:", estabelecimentoId);
+        console.log("Data da tarefa:", format(taskData.date, 'yyyy-MM-dd'));
+        
+        const tarefaData = {
+          user_id: targetUserId,
+          estabelecimento_id: estabelecimentoId,
+          contact_id: taskData.contactId,
+          contact_name: taskData.contactName,
+          title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
+          description: taskData.observation,
+          date: format(taskData.date, 'yyyy-MM-dd'),
+          time: taskData.time,
+          type: taskData.type,
+          status: "pending",
+          is_all_day: false,
+        };
+        
+        console.log("Dados da tarefa:", tarefaData);
+        
+        const { data, error } = await (supabase as any)
           .from('calendario_tarefas')
-          .insert({
-            user_id: targetUserId,
-            estabelecimento_id: estabelecimentoId,
-            contact_id: taskData.contactId,
-            contact_name: taskData.contactName,
-            title: `${taskData.type === 'call' ? 'Ligação' : taskData.type === 'meeting' ? 'Reunião' : taskData.type === 'accompany' ? 'Acompanhamento' : 'Tarefa'} - ${taskData.contactName}`,
-            description: taskData.observation,
-            date: format(taskData.date, 'yyyy-MM-dd'),
-            time: taskData.time,
-            type: taskData.type,
-            status: "pending",
-            is_all_day: false,
-          });
+          .insert(tarefaData)
+          .select();
 
         if (error) {
           console.error("Erro ao criar tarefa:", error);
-          toast.error(`Erro ao criar tarefa: ${error.message}`);
+          console.error("Detalhes do erro:", JSON.stringify(error, null, 2));
+          toast.error(`Erro ao criar tarefa: ${error.message || 'Erro desconhecido'}`);
           return;
         }
 
+        console.log("Tarefa criada com sucesso:", data);
         const nomeUsuario = isAdmin && selectedUserId 
           ? usuarios.find(u => u.id === selectedUserId)?.nome 
           : "você";
