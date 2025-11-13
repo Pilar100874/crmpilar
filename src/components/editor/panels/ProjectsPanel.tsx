@@ -292,8 +292,9 @@ const ProjectsPanel = () => {
                   }}
                 >
                   <img 
-                    src={project.thumbnail} 
+                    src={project.thumbnail || '/placeholder.svg'} 
                     alt={project.name}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.svg'; }}
                     className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform"
                   />
                   <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center">
