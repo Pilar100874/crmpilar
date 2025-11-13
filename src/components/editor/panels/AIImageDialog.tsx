@@ -64,7 +64,7 @@ const AIImageDialog = ({ open, onOpenChange, provider = 'lovable-ai' }: AIImageD
       }
 
       // Adicionar a imagem ao canvas
-      FabricImage.fromURL(data.imageUrl).then((img) => {
+      FabricImage.fromURL(data.imageUrl, { crossOrigin: 'anonymous' }).then((img) => {
         img.scale(0.5);
         img.set({
           left: 100,

@@ -368,7 +368,7 @@ export const FloatingObjectToolbar = () => {
       const currentAngle = activeObject.angle || 0;
 
       const dataUrl = await applyOffsetWrap(imgElement);
-      FabricImage.fromURL(dataUrl).then((newImg) => {
+      FabricImage.fromURL(dataUrl, { crossOrigin: 'anonymous' }).then((newImg) => {
         newImg.set({
           left: currentLeft,
           top: currentTop,
@@ -407,7 +407,7 @@ export const FloatingObjectToolbar = () => {
       const currentAngle = activeObject.angle || 0;
 
       const dataUrl = await applyOffsetWrapLeft(imgElement);
-      FabricImage.fromURL(dataUrl).then((newImg) => {
+      FabricImage.fromURL(dataUrl, { crossOrigin: 'anonymous' }).then((newImg) => {
         newImg.set({
           left: currentLeft,
           top: currentTop,
@@ -494,7 +494,7 @@ export const FloatingObjectToolbar = () => {
 
       const dataUrl = await applyPattern(imgElement, patternRepeatX, patternRepeatY);
 
-      FabricImage.fromURL(dataUrl).then((newImg) => {
+      FabricImage.fromURL(dataUrl, { crossOrigin: 'anonymous' }).then((newImg) => {
         newImg.set({
           left: currentLeft,
           top: currentTop,
@@ -535,7 +535,7 @@ export const FloatingObjectToolbar = () => {
       const fraction = Math.min(0.9, Math.max(0.1, cutLinePosition / 100));
       const dataUrl = await applyOffsetWrapWithCutLine(imgElement, fraction);
 
-      FabricImage.fromURL(dataUrl).then((newImg) => {
+      FabricImage.fromURL(dataUrl, { crossOrigin: 'anonymous' }).then((newImg) => {
         newImg.set({
           left: currentLeft,
           top: currentTop,

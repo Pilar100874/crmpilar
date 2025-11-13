@@ -79,7 +79,7 @@ const BarcodePanel = () => {
       }
 
       // Load image and add to canvas
-      FabricImage.fromURL(imageUrl).then((img) => {
+      FabricImage.fromURL(imageUrl, { crossOrigin: 'anonymous' }).then((img) => {
         img.set({
           left: 100,
           top: 100,
