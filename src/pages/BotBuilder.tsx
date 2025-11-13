@@ -1261,14 +1261,14 @@ function BotBuilderContent() {
               edges={edges.map((edge) => ({
                 ...edge,
                 style: {
-                  stroke: edge.selected ? 'hsl(var(--primary) / 0.7)' : 'hsl(var(--primary))',
-                  strokeWidth: edge.selected ? 2 : 1.33,
+                  stroke: edge.selected ? '#ea580c' : '#f97316',
+                  strokeWidth: edge.selected ? 2.5 : 1.33,
                 },
                 markerEnd: {
                   type: 'arrowclosed',
                   width: 20,
                   height: 20,
-                  color: edge.selected ? 'hsl(var(--primary) / 0.7)' : 'hsl(var(--primary))',
+                  color: edge.selected ? '#ea580c' : '#f97316',
                 },
                 type: 'smoothstep',
               }))}
@@ -1299,12 +1299,12 @@ function BotBuilderContent() {
               autoPanOnConnect={false}
               autoPanOnNodeDrag={true}
               defaultEdgeOptions={{
-                style: { stroke: 'hsl(var(--primary))', strokeWidth: 1.33 },
+                style: { stroke: '#f97316', strokeWidth: 1.33 },
                 markerEnd: {
                   type: 'arrowclosed',
                   width: 20,
                   height: 20,
-                  color: 'hsl(var(--primary))',
+                  color: '#f97316',
                 },
                 type: 'smoothstep',
               }}
