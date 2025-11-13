@@ -205,6 +205,9 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
           }
         });
 
+        // History helpers
+        ;(window as any).getCanvasHistory = () => ({ index: historyStepRef.current, length: historyRef.current.length });
+
         // Undo/Redo
         (window as any).canvasUndo = () => {
           if (historyStepRef.current > 0) {
@@ -293,6 +296,7 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
           canvas.off('object:removed', handleObjectRemoved);
           delete (window as any).canvasUndo;
           delete (window as any).canvasRedo;
+          delete (window as any).getCanvasHistory;
           canvas.dispose();
           setContextCanvas(null);
         };
