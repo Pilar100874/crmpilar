@@ -209,7 +209,7 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
         ;(window as any).getCanvasHistory = () => ({ index: historyStepRef.current, length: historyRef.current.length });
 
         // Undo/Redo
-        (window as any).canvasUndo = () => {
+        const onCanvasUndo = () => {
           if (historyStepRef.current > 0) {
             isLoadingStateRef.current = true;
             historyStepRef.current--;
@@ -225,7 +225,7 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
           }
         };
 
-        (window as any).canvasRedo = () => {
+        const onCanvasRedo = () => {
           if (historyStepRef.current < historyRef.current.length - 1) {
             isLoadingStateRef.current = true;
             historyStepRef.current++;
@@ -240,6 +240,11 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
             });
           }
         };
+
+        (window as any).canvasUndo = onCanvasUndo;
+        (window as any).canvasRedo = onCanvasRedo;
+        window.addEventListener('canvas-undo', onCanvasUndo as EventListener);
+        window.addEventListener('canvas-redo', onCanvasRedo as EventListener);
 
         // Keyboard handler
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -294,6 +299,8 @@ const CanvasWorkspace = ({ selectedSize }: CanvasWorkspaceProps) => {
           canvas.off('object:added', handleObjectAdded);
           canvas.off('object:modified', handleObjectModified);
           canvas.off('object:removed', handleObjectRemoved);
+          window.removeEventListener('canvas-undo', onCanvasUndo as EventListener);
+          window.removeEventListener('canvas-redo', onCanvasRedo as EventListener);
           delete (window as any).canvasUndo;
           delete (window as any).canvasRedo;
           delete (window as any).getCanvasHistory;
