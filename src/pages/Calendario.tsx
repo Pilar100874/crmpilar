@@ -1399,7 +1399,15 @@ export default function Calendario() {
       }
       
       // Verificar se é fim de semana (regra: bloqueio_finais_semana)
+      console.log('[DRAG] Verificando fim de semana:', {
+        isWeekend: checkWeekend(newDate),
+        newDate: format(newDate, 'yyyy-MM-dd (EEEE)', { locale: ptBR }),
+        dayOfWeek: newDate.getDay(),
+        regraBloqueioAtiva: calendarioRegras.bloqueio_finais_semana
+      });
+      
       if (checkWeekend(newDate) && calendarioRegras.bloqueio_finais_semana) {
+        console.log('[DRAG] BLOQUEADO: Tentativa de mover para fim de semana');
         toast.error("Agendamentos bloqueados para finais de semana");
         return;
       }
@@ -2255,37 +2263,41 @@ export default function Calendario() {
         )}
       </div>
 
-      {/* Legenda de usuários */}
-      {(isAdmin && selectedUserIds.length > 0) && (
-        <div className="border-b border-border bg-muted/30 px-6 py-3">
-          <div className="flex items-center gap-4 flex-wrap">
-            <span className="text-xs font-semibold text-muted-foreground uppercase">Legenda:</span>
-            {/* Admin atual */}
-            {currentAdminId && userColors[currentAdminId] && (
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-4 h-4 rounded border border-border"
-                  style={{ backgroundColor: userColors[currentAdminId] }}
-                />
-                <span className="text-xs font-medium">Você (Admin)</span>
-              </div>
-            )}
-            {/* Usuários selecionados */}
-            {usuarios
-              .filter(u => u.auth_user_id && selectedUserIds.includes(u.auth_user_id))
-              .map(usuario => (
-                <div key={usuario.id} className="flex items-center gap-2">
-                  <div 
-                    className="w-4 h-4 rounded border border-border"
-                    style={{ backgroundColor: userColors[usuario.auth_user_id!] }}
-                  />
-                  <span className="text-xs font-medium">{usuario.nome}</span>
-                </div>
-              ))
-            }
+      {/* Legenda de usuários - sempre visível quando há múltiplos usuários */}
+      {(() => {
+        // Calcular usuários únicos com tarefas visíveis
+        const uniqueUserIds = new Set(tasks.map(t => t.userId).filter(Boolean));
+        const shouldShowLegend = uniqueUserIds.size > 1;
+        
+        if (!shouldShowLegend) return null;
+        
+        return (
+          <div className="border-b border-border bg-muted/30 px-6 py-3">
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Legenda de usuários:</span>
+              {Array.from(uniqueUserIds).map(userId => {
+                const usuario = usuarios.find(u => u.auth_user_id === userId);
+                const isCurrentUser = userId === currentAdminId;
+                const color = userColors[userId];
+                
+                if (!color) return null;
+                
+                return (
+                  <div key={userId} className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded border border-border"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="text-xs font-medium">
+                      {isCurrentUser ? 'Você' : (usuario?.nome || 'Usuário')}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
