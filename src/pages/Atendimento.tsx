@@ -1335,13 +1335,13 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          <TabsList className="grid grid-cols-4 gap-3 mx-2 my-3 flex-shrink-0 bg-transparent p-0">
+          <TabsList className="grid grid-cols-4 gap-3 mx-2 mt-4 mb-2 flex-shrink-0 bg-transparent p-0">
             <TabsTrigger 
               value="chat" 
               className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {activeConversationsCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-2 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
+                <Badge variant="secondary" className="absolute -top-1 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
                   {activeConversationsCount}
                 </Badge>
               )}
@@ -1353,7 +1353,7 @@ ${recentMessages}
               className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {todayTasksCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-2 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
+                <Badge variant="secondary" className="absolute -top-1 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
                   {todayTasksCount}
                 </Badge>
               )}
@@ -1365,7 +1365,7 @@ ${recentMessages}
               className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {unreadEmailsCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-2 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
+                <Badge variant="secondary" className="absolute -top-1 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
                   {unreadEmailsCount}
                 </Badge>
               )}
@@ -1377,7 +1377,7 @@ ${recentMessages}
               className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {orcamentosEmAndamentoCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-2 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
+                <Badge variant="secondary" className="absolute -top-1 left-1/2 -translate-x-1/2 h-4 min-w-4 px-1 bg-gray-600 text-white text-[10px] rounded-full">
                   {orcamentosEmAndamentoCount}
                 </Badge>
               )}
@@ -1387,7 +1387,7 @@ ${recentMessages}
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-2">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1450,7 +1450,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0">
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 pt-2">
             {/* Agenda Controls */}
             <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b bg-background space-y-2">
               {/* Date Navigation */}
@@ -1690,7 +1690,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 py-2 space-y-2">
+          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-4 pb-2 space-y-2">
             {userEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1738,7 +1738,7 @@ ${recentMessages}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 py-2 space-y-2">
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-4 pb-2 space-y-2">
             {orcamentos.filter(o => o.status !== 'cancelado' && o.status !== 'ganho').length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Receipt className="w-12 h-12 mx-auto mb-3 opacity-20" />
