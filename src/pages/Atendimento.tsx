@@ -1399,9 +1399,8 @@ ${recentMessages}
 
   return (
     <div className="h-screen min-h-0 flex bg-gray-100 overflow-hidden">
-      {/* Conversation List - Oculta quando orçamento está aberto */}
-      {!orcamentoSheetOpen && (
-        <div className="w-80 border-r border-border flex flex-col h-full min-h-0 transition-colors bg-gray-300">
+      {/* Conversation List */}
+      <div className="w-80 border-r border-border flex flex-col h-full min-h-0 transition-colors bg-gray-300">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-3">Painel de Atendimento</h2>
           <div className="relative">
@@ -1899,7 +1898,6 @@ ${recentMessages}
           </TabsContent>
         </Tabs>
       </div>
-      )}
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden min-w-0 border-r border-border">
@@ -2420,8 +2418,8 @@ ${recentMessages}
       {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
         <>
           {/* POSView */}
-          <div className={`${showClientDetails ? 'w-[calc(100%-320px)]' : 'w-full'} h-screen bg-gray-100 border-l shadow-lg overflow-hidden transition-all duration-300`}>
-            <POSView
+          <div className={`${showClientDetails ? 'w-[calc(100%-320px-320px)]' : 'w-[calc(100%-320px)]'} h-screen bg-gray-100 border-l shadow-lg overflow-hidden transition-all duration-300`}>
+            <POSView 
               estabelecimentoId={estabelecimentoId} 
               orcamentoId={selectedOrcamentoId}
               onClose={() => {
