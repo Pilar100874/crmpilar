@@ -1740,10 +1740,9 @@ export default function Calendario() {
           <DroppableDay
             key={day.toString()}
             date={currentDay}
-            className={`min-h-[140px] border-r border-b border-border cursor-pointer hover:bg-muted/50 transition-colors flex flex-col ${
+            className={`min-h-[140px] border-r border-b border-border hover:bg-muted/50 transition-colors flex flex-col ${
               !isCurrentMonth ? "bg-muted/20 text-muted-foreground" : ""
             } ${isTodayDate ? "bg-primary/5" : ""}`}
-            onClick={() => handleOpenNewTask(currentDay)}
           >
             <div className="flex items-center justify-between px-2 py-1 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-[5]">
               <span 
@@ -1780,15 +1779,11 @@ export default function Calendario() {
                 />
               ))}
               {dayTasks.length > 5 && (
-                <button 
-                  className="text-xs text-primary hover:text-primary/80 px-2 w-full text-left"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenNewTask(currentDay);
-                  }}
+                <div 
+                  className="text-xs text-muted-foreground px-2 w-full text-left"
                 >
                   +{dayTasks.length - 5} mais tarefas
-                </button>
+                </div>
               )}
             </div>
           </DroppableDay>
