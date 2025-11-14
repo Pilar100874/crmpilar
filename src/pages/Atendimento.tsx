@@ -1272,32 +1272,32 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          <TabsList className="w-full grid grid-cols-3 mx-4 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
+          <TabsList className="w-full grid grid-cols-3 mx-4 my-2 flex-shrink-0 bg-muted/30 p-1.5 rounded-xl gap-1">
             <TabsTrigger 
               value="chat" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/30 transition-all duration-300 hover:bg-muted/50"
             >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span className="font-medium">Chat</span>
+              <MessageSquare className="w-4 h-4" />
+              <span className="font-semibold">Chat</span>
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-purple-500/30 transition-all duration-300 hover:bg-muted/50"
             >
-              <Calendar className="w-3.5 h-3.5" />
-              <span className="font-medium">Agenda</span>
+              <Calendar className="w-4 h-4" />
+              <span className="font-semibold">Agenda</span>
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-green-500/30 transition-all duration-300 hover:bg-muted/50"
             >
-              <Mail className="w-3.5 h-3.5" />
-              <span className="font-medium">Email</span>
+              <Mail className="w-4 h-4" />
+              <span className="font-semibold">Email</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 bg-gradient-to-b from-blue-50/30 to-transparent dark:from-blue-950/10">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1360,9 +1360,9 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0">
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 bg-gradient-to-b from-purple-50/30 to-transparent dark:from-purple-950/10">
             {/* Agenda Controls */}
-            <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b bg-background space-y-2">
+            <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b bg-background/50 backdrop-blur-sm space-y-2">
               {/* Date Navigation */}
               <div className="flex items-center justify-between gap-2">
                 <Button 
@@ -1600,7 +1600,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2">
+          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2 bg-gradient-to-b from-green-50/30 to-transparent dark:from-green-950/10">
             {userEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
