@@ -166,6 +166,107 @@ export type Database = {
           },
         ]
       }
+      calendario_regras: {
+        Row: {
+          ativa: boolean
+          configuracao: Json | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          ordem: number | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativa?: boolean
+          configuracao?: Json | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          ordem?: number | null
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativa?: boolean
+          configuracao?: Json | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          ordem?: number | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      calendario_tarefas: {
+        Row: {
+          campaign_id: string | null
+          contact_id: string | null
+          contact_name: string
+          created_at: string
+          date: string
+          description: string | null
+          estabelecimento_id: string
+          id: string
+          is_all_day: boolean | null
+          origem: string
+          status: string
+          time: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          contact_id?: string | null
+          contact_name: string
+          created_at?: string
+          date: string
+          description?: string | null
+          estabelecimento_id: string
+          id?: string
+          is_all_day?: boolean | null
+          origem: string
+          status?: string
+          time?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string | null
+          contact_id?: string | null
+          contact_name?: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          estabelecimento_id?: string
+          id?: string
+          is_all_day?: boolean | null
+          origem?: string
+          status?: string
+          time?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendario_tarefas_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string | null
@@ -1706,6 +1807,50 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          estabelecimento_id: string | null
+          grupo_acesso_id: string | null
+          id: string
+          is_admin: boolean | null
+          nome: string
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          estabelecimento_id?: string | null
+          grupo_acesso_id?: string | null
+          id: string
+          is_admin?: boolean | null
+          nome: string
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          estabelecimento_id?: string | null
+          grupo_acesso_id?: string | null
+          id?: string
+          is_admin?: boolean | null
+          nome?: string
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quick_attachments: {
         Row: {
           created_at: string | null
@@ -2379,6 +2524,7 @@ export type Database = {
       }
       usuarios: {
         Row: {
+          auth_user_id: string | null
           created_at: string | null
           email: string
           estabelecimento_id: string | null
@@ -2399,6 +2545,7 @@ export type Database = {
           usar_autenticacao: boolean | null
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string | null
           email: string
           estabelecimento_id?: string | null
@@ -2419,6 +2566,7 @@ export type Database = {
           usar_autenticacao?: boolean | null
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string | null
           email?: string
           estabelecimento_id?: string | null
