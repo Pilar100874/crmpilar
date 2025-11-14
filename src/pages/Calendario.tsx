@@ -505,6 +505,8 @@ export default function Calendario() {
   useEffect(() => {
     const loadTasks = async () => {
       try {
+        console.log('[LOAD_TASKS] Iniciando carregamento - isAdmin:', isAdmin, 'selectedUserIds:', selectedUserIds);
+        
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
@@ -707,8 +709,24 @@ export default function Calendario() {
     }
   };
 
-  const updateTaskInDatabase = async (taskId: string, updates: Partial<Task>): Promise<boolean> => {
+  const updateTaskInDatabase = async (
+    taskId: string, 
+    updates: Partial<Task>,
+    source: 'drag' | 'toggle-status' | 'explicit' = 'explicit'
+  ): Promise<boolean> => {
     try {
+      // Log detalhado de todas as atualizações
+      console.log('[UPDATE_TASK]', { 
+        taskId, 
+        updates: { 
+          date: updates.date ? format(updates.date, 'yyyy-MM-dd') : undefined,
+          time: updates.time,
+          status: updates.status 
+        }, 
+        source,
+        timestamp: new Date().toISOString()
+      });
+
       const dbUpdates: any = {};
       
       if (updates.date) dbUpdates.date = format(updates.date, 'yyyy-MM-dd');
@@ -1272,7 +1290,7 @@ export default function Calendario() {
     if (!task) return;
     
     const newStatus = task.status === "pending" ? "completed" : "pending";
-    const success = await updateTaskInDatabase(taskId, { status: newStatus });
+    const success = await updateTaskInDatabase(taskId, { status: newStatus }, 'toggle-status');
     
     if (success) {
       const updatedTasks = tasks.map(t =>
@@ -1357,7 +1375,7 @@ export default function Calendario() {
       setTasks(updatedTasks);
       
       // Atualizar no banco de dados
-      await updateTaskInDatabase(taskId, { date: newDate, time: adjustedTime });
+      await updateTaskInDatabase(taskId, { date: newDate, time: adjustedTime }, 'drag');
       
       toast.success("Tarefa movida com sucesso");
     }
