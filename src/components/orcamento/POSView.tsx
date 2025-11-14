@@ -26,9 +26,7 @@ import {
   Grid,
   List,
   Check,
-  ChevronsUpDown,
-  ChevronRight,
-  ChevronLeft
+  ChevronsUpDown
 } from "lucide-react";
 import {
   Select,
@@ -422,17 +420,6 @@ export default function POSView({
               </Button>
             </div>
             <div className="flex gap-2">
-              {onToggleClientDetails && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={onToggleClientDetails}
-                  className="h-9 w-9 p-0"
-                  title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
-                >
-                  {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                </Button>
-              )}
               {onClose && (
                 <Button 
                   variant="outline" 
