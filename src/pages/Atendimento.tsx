@@ -1335,7 +1335,7 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          <TabsList className="grid grid-cols-4 gap-3 mx-2 mt-3 mb-2 flex-shrink-0 bg-transparent p-0">
+          <TabsList className="grid grid-cols-4 gap-3 mx-2 mt-1 mb-2 flex-shrink-0 bg-transparent p-0">
             <TabsTrigger 
               value="chat" 
               className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
