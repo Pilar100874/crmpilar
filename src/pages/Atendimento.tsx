@@ -184,6 +184,14 @@ export default function Atendimento() {
     setOrcamentosEmAndamentoCount(emAndamentoCount);
   }, [orcamentos]);
 
+  // Fechar POSView ao trocar de aba
+  useEffect(() => {
+    if (activeTab !== 'orcamento') {
+      setOrcamentoSheetOpen(false);
+      setSelectedOrcamentoId(null);
+    }
+  }, [activeTab]);
+
 
   const loadWebhooksForAutoResponse = async () => {
     const estabId = await getEstabelecimentoId();
