@@ -52,7 +52,7 @@ export default function OrcamentoCard({ orcamento, onClick, onDelete, onEtapaCha
       style={style}
       className="cursor-pointer hover:shadow-md transition-shadow"
     >
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-5 space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex-1" {...attributes} {...listeners} onClick={onClick}>
             <h4 className="font-semibold text-sm line-clamp-1">
@@ -142,7 +142,7 @@ export default function OrcamentoCard({ orcamento, onClick, onDelete, onEtapaCha
         </div>
 
         {orcamento.itens && orcamento.itens.length > 0 && (
-          <div className="pt-2 border-t">
+          <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
               {orcamento.itens.length} {orcamento.itens.length === 1 ? 'item' : 'itens'}
             </p>
