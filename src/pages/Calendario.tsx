@@ -1350,7 +1350,7 @@ export default function Calendario() {
           origem: taskData.origem,
           campaign_id: taskData.campaignId,
           status: "pending",
-          is_all_day: false,
+          is_all_day: taskData.isAllDay || false,
         };
         
         console.log("Dados da tarefa:", tarefaPayload);
