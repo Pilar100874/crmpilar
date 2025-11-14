@@ -1368,16 +1368,19 @@ export default function Calendario() {
         }
       }
       
-      const updatedTask = { ...task, date: newDate, time: adjustedTime };
-      const updatedTasks = tasks.map(t =>
-        t.id === taskId ? updatedTask : t
-      );
-      setTasks(updatedTasks);
+      // Atualizar no banco de dados primeiro
+      const success = await updateTaskInDatabase(taskId, { date: newDate, time: adjustedTime }, 'drag');
       
-      // Atualizar no banco de dados
-      await updateTaskInDatabase(taskId, { date: newDate, time: adjustedTime }, 'drag');
-      
-      toast.success("Tarefa movida com sucesso");
+      if (success) {
+        const updatedTask = { ...task, date: newDate, time: adjustedTime };
+        const updatedTasks = tasks.map(t =>
+          t.id === taskId ? updatedTask : t
+        );
+        setTasks(updatedTasks);
+        toast.success("Tarefa movida com sucesso");
+      } else {
+        toast.error("Não foi possível mover a tarefa (regras/permissões).");
+      }
     }
   };
 
