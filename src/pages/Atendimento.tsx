@@ -102,6 +102,7 @@ export default function Atendimento() {
   const [activeTab, setActiveTab] = useState("chat");
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
+  const [orcamentos, setOrcamentos] = useState<any[]>([]);
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
@@ -124,6 +125,7 @@ export default function Atendimento() {
   const [activeConversationsCount, setActiveConversationsCount] = useState(0);
   const [todayTasksCount, setTodayTasksCount] = useState(0);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
+  const [orcamentosEmAndamentoCount, setOrcamentosEmAndamentoCount] = useState(0);
 
   useEffect(() => {
     loadConversations();
@@ -134,6 +136,7 @@ export default function Atendimento() {
     loadAvailableUsers();
     loadTodayTasks();
     loadUserEmails();
+    loadOrcamentos();
   }, []);
 
 
@@ -163,6 +166,13 @@ export default function Atendimento() {
     const unreadCount = userEmails.filter(e => !e.read).length;
     setUnreadEmailsCount(unreadCount);
   }, [userEmails]);
+  
+  useEffect(() => {
+    const emAndamentoCount = orcamentos.filter(o => 
+      o.status !== 'cancelado' && o.status !== 'ganho'
+    ).length;
+    setOrcamentosEmAndamentoCount(emAndamentoCount);
+  }, [orcamentos]);
 
 
   const loadWebhooksForAutoResponse = async () => {
@@ -656,6 +666,41 @@ export default function Atendimento() {
       setUserEmails(emailsData || []);
     } catch (error) {
       console.error("Erro ao carregar emails:", error);
+    }
+  };
+  
+  // Load orçamentos
+  const loadOrcamentos = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data: orcamentosData, error } = await supabase
+        .from('orcamentos')
+        .select(`
+          *,
+          customers:cliente_id (
+            nome,
+            telefone,
+            email
+          ),
+          empresas:empresa_id (
+            nome_fantasia,
+            nome
+          )
+        `)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error("Erro ao carregar orçamentos:", error);
+        return;
+      }
+
+      setOrcamentos(orcamentosData || []);
+    } catch (error) {
+      console.error("Erro ao carregar orçamentos:", error);
     }
   };
 
@@ -1277,7 +1322,8 @@ ${recentMessages}
       <div className={`w-80 border-r border-border flex flex-col h-full min-h-0 transition-colors ${
         activeTab === 'chat' ? 'bg-blue-50/40' : 
         activeTab === 'agenda' ? 'bg-green-50/40' : 
-        'bg-orange-50/40'
+        activeTab === 'email' ? 'bg-orange-50/40' :
+        'bg-purple-50/40'
       }`}>
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-3">Painel de Atendimento</h2>
@@ -1294,7 +1340,7 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          <TabsList className="w-full grid grid-cols-3 mx-4 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
+          <TabsList className="w-full grid grid-cols-4 mx-4 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="chat" 
               className="flex items-center gap-1.5 data-[state=active]:bg-blue-100 data-[state=active]:shadow-sm transition-all"
@@ -1328,6 +1374,18 @@ ${recentMessages}
               {unreadEmailsCount > 0 && (
                 <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-orange-500 text-white text-xs rounded-full">
                   {unreadEmailsCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="orcamento" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-purple-100 data-[state=active]:shadow-sm transition-all"
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              <span className="font-medium">Orçam.</span>
+              {orcamentosEmAndamentoCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-purple-500 text-white text-xs rounded-full">
+                  {orcamentosEmAndamentoCount}
                 </Badge>
               )}
             </TabsTrigger>
@@ -1681,6 +1739,53 @@ ${recentMessages}
                   </div>
                 </Card>
               ))
+            )}
+          </TabsContent>
+          
+          {/* Orçamento Tab */}
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 py-2 space-y-2">
+            {orcamentos.filter(o => o.status !== 'cancelado' && o.status !== 'ganho').length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <Receipt className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">Nenhum orçamento em andamento</p>
+              </div>
+            ) : (
+              orcamentos
+                .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
+                .map((orc) => (
+                  <Card 
+                    key={orc.id} 
+                    className="p-3 cursor-pointer hover:bg-muted/50 transition-all"
+                    onClick={() => navigate('/orcamentos')}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <Receipt className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-medium text-sm truncate">
+                            {orc.customers?.nome || orc.empresas?.nome_fantasia || orc.empresas?.nome || 'Cliente'}
+                          </p>
+                          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                            {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-primary">
+                            {new Intl.NumberFormat('pt-BR', { 
+                              style: 'currency', 
+                              currency: 'BRL' 
+                            }).format(orc.valor_total || 0)}
+                          </p>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {orc.etapa || orc.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
             )}
           </TabsContent>
         </Tabs>
