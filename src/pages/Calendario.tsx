@@ -799,7 +799,7 @@ export default function Calendario() {
           title: task.title,
           description: task.description,
           date: format(task.date, 'yyyy-MM-dd'),
-          time: task.time,
+          time: task.time || null, // Converter string vazia em null
           origem: task.origem,
           campaign_id: task.campaignId,
           status: task.status,
@@ -841,7 +841,7 @@ export default function Calendario() {
       const dbUpdates: any = {};
       
       if (updates.date) dbUpdates.date = format(updates.date, 'yyyy-MM-dd');
-      if (updates.time !== undefined) dbUpdates.time = updates.time;
+      if (updates.time !== undefined) dbUpdates.time = updates.time || null; // Converter string vazia em null
       if (updates.status) dbUpdates.status = updates.status;
       if (updates.title) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
@@ -1339,7 +1339,7 @@ export default function Calendario() {
           title: `${taskData.origem === 'ligacao' ? 'Ligação' : taskData.origem === 'visita' ? 'Visita' : taskData.origem === 'campanha' ? 'Campanha' : 'Tarefa'} - ${taskData.contactName}`,
           description: taskData.observation,
           date: format(taskData.date, 'yyyy-MM-dd'),
-          time: taskData.time,
+          time: taskData.time || null, // Converter string vazia em null
           origem: taskData.origem,
           campaign_id: taskData.campaignId,
           status: "pending",
