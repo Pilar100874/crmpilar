@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import OrcamentoDetailsDialog from "@/components/orcamento/OrcamentoDetailsDialog";
 
 interface Conversation {
   id: string;
@@ -104,6 +105,8 @@ export default function Atendimento() {
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
+  const [selectedOrcamento, setSelectedOrcamento] = useState<any | null>(null);
+  const [orcamentoDialogOpen, setOrcamentoDialogOpen] = useState(false);
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
@@ -702,6 +705,36 @@ export default function Atendimento() {
       setOrcamentos(orcamentosData || []);
     } catch (error) {
       console.error("Erro ao carregar orçamentos:", error);
+    }
+  };
+
+  // Load full orcamento details with items
+  const loadOrcamentoDetails = async (orcamentoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .select(`
+          *,
+          cliente:cliente_id (*),
+          empresa:empresa_id (*),
+          vendedor:vendedor_id (*),
+          unidade:unidade_id (*),
+          condicao_pagamento:condicao_pagamento_id (*),
+          itens:orcamento_itens (
+            *,
+            produto:produto_id (*)
+          )
+        `)
+        .eq('id', orcamentoId)
+        .single();
+
+      if (error) throw error;
+      
+      setSelectedOrcamento(data);
+      setOrcamentoDialogOpen(true);
+    } catch (error) {
+      console.error("Erro ao carregar detalhes do orçamento:", error);
+      toast.error("Erro ao carregar detalhes do orçamento");
     }
   };
 
@@ -1780,7 +1813,7 @@ ${recentMessages}
                   <Card 
                     key={orc.id} 
                     className="p-3 cursor-pointer hover:bg-muted/50 transition-all"
-                    onClick={() => navigate('/orcamentos')}
+                    onClick={() => loadOrcamentoDetails(orc.id)}
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 mt-0.5">
@@ -2330,6 +2363,19 @@ ${recentMessages}
         open={showNovoContatoDialog}
         onOpenChange={setShowNovoContatoDialog}
       />
+
+      {/* Orçamento Details Dialog */}
+      {selectedOrcamento && (
+        <OrcamentoDetailsDialog
+          orcamento={selectedOrcamento}
+          open={orcamentoDialogOpen}
+          onOpenChange={setOrcamentoDialogOpen}
+          onSave={() => {
+            loadOrcamentos();
+            setOrcamentoDialogOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
