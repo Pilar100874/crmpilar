@@ -484,6 +484,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       campaignId: taskOrigem === 'campanha' ? selectedCampaignId : undefined,
       observation,
       isAllDay,
+      userId: editingTask?.userId, // Preservar o userId original ao editar
     });
 
     onOpenChange(false);
