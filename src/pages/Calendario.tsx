@@ -1248,9 +1248,13 @@ export default function Calendario() {
 
       console.log("Estabelecimento ID obtido:", estabelecimentoId);
 
-      // Se for edição, preservar o userId original; caso contrário, usar o usuário atual
-      const targetUserId = taskData.id && taskData.userId ? taskData.userId : user.id;
-      console.log("Target User ID:", targetUserId, taskData.id ? "(editando - preservado)" : "(criando)");
+      // Usar o userId passado ou o usuário atual
+      const targetUserId = taskData.userId || user.id;
+      console.log("=== TARGET USER DEBUG ===");
+      console.log("taskData.userId:", taskData.userId);
+      console.log("user.id (current):", user.id);
+      console.log("targetUserId (final):", targetUserId);
+      console.log("========================");
 
       // Se for dia todo, atualizar a tarefa se estiver editando; caso contrário, criar baseado na jornada
       if (taskData.isAllDay) {
