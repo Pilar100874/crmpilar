@@ -468,6 +468,7 @@ export default function Calendario() {
     adjustedTime?: string;
     nextAvailableDate?: Date;
     allDayTaskTitle?: string;
+    targetDate?: Date;
   } | null>(null);
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
@@ -2805,6 +2806,7 @@ export default function Calendario() {
                         adjustedTime: weekendPendingTask.adjustedTime,
                         nextAvailableDate: nextAvailableDay,
                         allDayTaskTitle: allDayCheck.taskTitle,
+                        targetDate: nextBusinessDay, // Data com tarefa de dia todo
                       });
                       setIsAllDayDialogOpen(true);
                       setIsWeekendDialogOpen(false);
@@ -2941,27 +2943,28 @@ export default function Calendario() {
               variant="outline"
               className="w-full sm:w-auto order-2 whitespace-normal h-auto py-2"
               onClick={async () => {
-                if (allDayPendingTask?.taskData) {
-                  // Permitir agendar no dia com tarefa de dia todo
-                  if (allDayPendingTask.isMove && allDayPendingTask.existingTask) {
-                    const adjustedTime = allDayPendingTask.adjustedTime ?? allDayPendingTask.existingTask.time;
-                    const success = await updateTaskInDatabase(
-                      allDayPendingTask.existingTask.id,
-                      { date: allDayPendingTask.taskData.date, time: adjustedTime },
-                      'drag'
+                // Permitir agendar no dia com tarefa de dia todo
+                if (allDayPendingTask?.isMove && allDayPendingTask.existingTask) {
+                  // Caso 1: Movendo uma tarefa existente
+                  const targetDate = allDayPendingTask.targetDate || allDayPendingTask.taskData?.date || allDayPendingTask.existingTask.date;
+                  const adjustedTime = allDayPendingTask.adjustedTime ?? allDayPendingTask.existingTask.time;
+                  const success = await updateTaskInDatabase(
+                    allDayPendingTask.existingTask.id,
+                    { date: targetDate, time: adjustedTime },
+                    'drag'
+                  );
+                  if (success) {
+                    const updatedTasks = tasks.map(t =>
+                      t.id === allDayPendingTask.existingTask!.id
+                        ? { ...t, date: targetDate, time: adjustedTime }
+                        : t
                     );
-                    if (success) {
-                      const updatedTasks = tasks.map(t =>
-                        t.id === allDayPendingTask.existingTask!.id
-                          ? { ...t, date: allDayPendingTask.taskData!.date, time: adjustedTime }
-                          : t
-                      );
-                      setTasks(updatedTasks);
-                      toast.success(`Tarefa movida para ${format(allDayPendingTask.taskData.date, "dd/MM/yyyy", { locale: ptBR })}`);
-                    }
-                  } else {
-                    await saveTaskInternal(allDayPendingTask.taskData);
+                    setTasks(updatedTasks);
+                    toast.success(`Tarefa movida para ${format(targetDate, "dd/MM/yyyy", { locale: ptBR })}`);
                   }
+                } else if (allDayPendingTask?.taskData) {
+                  // Caso 2: Criando nova tarefa
+                  await saveTaskInternal(allDayPendingTask.taskData);
                 }
                 setIsAllDayDialogOpen(false);
                 setAllDayPendingTask(null);
