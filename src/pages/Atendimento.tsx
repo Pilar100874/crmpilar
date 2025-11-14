@@ -1396,7 +1396,7 @@ ${recentMessages}
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-0">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-1">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1411,14 +1411,55 @@ ${recentMessages}
                     selectedConversation === conv.id ? "bg-gray-200 border-l-4 border-l-primary" : ""
                   }`}
                 >
-...
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="font-semibold text-sm truncate">
+                          {conv.customer?.nome || "Cliente"}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {conv.lastMessage?.created_at
+                            ? getTimeAgo(conv.lastMessage.created_at)
+                            : getTimeAgo(conv.updated_at)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate mb-1">
+                        {conv.lastMessage?.text || "Sem mensagens"}
+                      </p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {conv.bot_active !== false && (
+                          <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-green-500">
+                            BOT
+                          </Badge>
+                        )}
+                        {conv.customerCompanies && conv.customerCompanies.length > 0 && (
+                          <>
+                            {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
+                              <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1">
+                                <Building2 className="w-2.5 h-2.5" />
+                                {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
+                              </Badge>
+                            ))}
+                            {conv.customerCompanies.length > 1 && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                +{conv.customerCompanies.length - 1}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))
             )}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 p-0">
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 pt-1">
             {/* Agenda Controls */}
             <div className="flex-shrink-0 px-3 pt-1 pb-2 border-b bg-background space-y-2">
               {/* Date Navigation */}
@@ -1658,98 +1699,117 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-0">
-            <div className="px-3 pt-2 pb-2 space-y-2">
-              {userEmails.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">Nenhum email recebido</p>
-                </div>
-              ) : (
-                userEmails.map((email) => (
-                  <Card 
-                    key={email.id} 
-                    className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
-                      !email.read ? 'bg-primary/5 border-primary/30 shadow-sm' : ''
-                    }`}
-                    onClick={() => navigate('/email')}
-                  >
-...
-                  </Card>
-                ))
-              )}
-            </div>
+          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-1 pb-2 space-y-2">
+            {userEmails.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">Nenhum email recebido</p>
+              </div>
+            ) : (
+              userEmails.map((email) => (
+                <Card 
+                  key={email.id} 
+                  className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
+                    !email.read ? 'bg-primary/5 border-primary/30 shadow-sm' : ''
+                  }`}
+                  onClick={() => navigate('/email')}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {email.read ? (
+                        <MailOpen className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <Mail className="w-4 h-4 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`font-medium text-sm truncate ${!email.read ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                          {email.from_email}
+                        </p>
+                        <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                          {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
+                        </span>
+                      </div>
+                      <p className={`text-sm truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
+                        {email.subject}
+                      </p>
+                      {!email.read && (
+                        <Badge variant="default" className="mt-1.5 text-[10px] px-1.5 py-0">
+                          Novo
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-0">
-            <div className="px-3 pt-2 pb-2">
-              {/* Filtro de Status */}
-              <div className="mb-3">
-                <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Todos os status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="orcamento">Orçamento</SelectItem>
-                    <SelectItem value="negociacao">Negociação</SelectItem>
-                    <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-1 pb-2 space-y-2">
+            {/* Filtro de Status */}
+            <div className="mb-2">
+              <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="orcamento">Orçamento</SelectItem>
+                  <SelectItem value="negociacao">Negociação</SelectItem>
+                  <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {orcamentos
+            {orcamentos
+              .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
+              .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
+              .length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <Receipt className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">Nenhum orçamento em andamento</p>
+              </div>
+            ) : (
+              orcamentos
                 .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
                 .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
-                .length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <Receipt className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">Nenhum orçamento em andamento</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {orcamentos
-                    .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
-                    .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
-                    .map((orc) => (
-                      <Card 
-                        key={orc.id} 
-                        className="p-3 cursor-pointer hover:bg-muted/50 transition-all"
-                        onClick={() => navigate('/orcamentos')}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 mt-0.5">
-                            <Receipt className="w-4 h-4 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="font-medium text-sm truncate">
-                                {orc.customers?.nome || orc.empresas?.nome_fantasia || orc.empresas?.nome || 'Cliente'}
-                              </p>
-                              <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                                {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-primary">
-                                {new Intl.NumberFormat('pt-BR', { 
-                                  style: 'currency', 
-                                  currency: 'BRL' 
-                                }).format(orc.valor_total || 0)}
-                              </p>
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                {orc.etapa || orc.status}
-                              </Badge>
-                            </div>
-                          </div>
+                .map((orc) => (
+                  <Card 
+                    key={orc.id} 
+                    className="p-3 cursor-pointer hover:bg-muted/50 transition-all"
+                    onClick={() => navigate('/orcamentos')}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <Receipt className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-medium text-sm truncate">
+                            {orc.customers?.nome || orc.empresas?.nome_fantasia || orc.empresas?.nome || 'Cliente'}
+                          </p>
+                          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                            {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
+                          </span>
                         </div>
-                      </Card>
-                    ))
-                  }
-                </div>
-              )}
-            </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-primary">
+                            {new Intl.NumberFormat('pt-BR', { 
+                              style: 'currency', 
+                              currency: 'BRL' 
+                            }).format(orc.valor_total || 0)}
+                          </p>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {orc.etapa || orc.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+            )}
           </TabsContent>
         </Tabs>
       </div>
