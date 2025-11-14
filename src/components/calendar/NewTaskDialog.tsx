@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -71,11 +72,14 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [minutes, setMinutes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [noTimeSet, setNoTimeSet] = useState(false);
-  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido">("bot");
+  const [taskOrigem, setTaskOrigem] = useState<"bot" | "campanha" | "ligacao" | "visita" | "email" | "pedido" | "chat">("bot");
   const [emailTipo, setEmailTipo] = useState<"enviado" | "recebido">("enviado");
   const [pedidoTipo, setPedidoTipo] = useState<"orcamento" | "negociacao" | "aprovacao">("orcamento");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [campaigns, setCampaigns] = useState<Array<{ id: string; nome: string }>>([]);
+  const [chatChannel, setChatChannel] = useState<"whatsapp" | "telegram" | "webchat" | "instagram">("whatsapp");
+  const [bots, setBots] = useState<Array<{ id: string; nome: string }>>([]);
+  const [selectedBotId, setSelectedBotId] = useState<string>("");
   const [assignedTo, setAssignedTo] = useState("me");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
