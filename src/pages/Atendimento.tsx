@@ -19,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import POSView from "@/components/orcamento/POSView";
 
 interface Conversation {
   id: string;
@@ -104,6 +106,9 @@ export default function Atendimento() {
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
+  const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
+  const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
@@ -129,6 +134,11 @@ export default function Atendimento() {
   const [orcamentosEmAndamentoCount, setOrcamentosEmAndamentoCount] = useState(0);
 
   useEffect(() => {
+    const initEstabelecimento = async () => {
+      const id = await getEstabelecimentoId();
+      if (id) setEstabelecimentoId(id);
+    };
+    initEstabelecimento();
     loadConversations();
     subscribeToConversations();
     loadAIWebhooks();
@@ -1780,7 +1790,10 @@ ${recentMessages}
                   <Card 
                     key={orc.id} 
                     className="p-3 cursor-pointer hover:bg-muted/50 transition-all"
-                    onClick={() => navigate('/orcamentos')}
+                    onClick={() => {
+                      setSelectedOrcamentoId(orc.id);
+                      setOrcamentoSheetOpen(true);
+                    }}
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 mt-0.5">
@@ -2330,6 +2343,19 @@ ${recentMessages}
         open={showNovoContatoDialog}
         onOpenChange={setShowNovoContatoDialog}
       />
+
+      {/* Orçamento Sheet Lateral */}
+      <Sheet open={orcamentoSheetOpen} onOpenChange={setOrcamentoSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-[calc(100vw-400px)] p-0 overflow-hidden">
+          {selectedOrcamentoId && estabelecimentoId && (
+            <POSView 
+              estabelecimentoId={estabelecimentoId} 
+              orcamentoId={selectedOrcamentoId}
+              onClose={() => setOrcamentoSheetOpen(false)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
