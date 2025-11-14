@@ -724,7 +724,17 @@ export default function Calendario() {
           .select('auth_user_id, nome')
           .in('auth_user_id', authUserIds);
         
-        const usuariosMap = new Map(usuariosData?.map((u: any) => [u.auth_user_id, u.nome]) || []);
+        // Buscar também nomes dos administradores
+        const { data: adminData } = await (supabase as any)
+          .from('administradores')
+          .select('id, nome')
+          .in('id', authUserIds);
+        
+        // Combinar os dois maps
+        const usuariosMap = new Map([
+          ...(usuariosData?.map((u: any) => [u.auth_user_id, u.nome]) || []),
+          ...(adminData?.map((a: any) => [a.id, a.nome]) || [])
+        ]);
         
         // Buscar nomes de campanhas se houver campaign_ids
         const campaignIds = [...new Set(tarefas.filter((t: any) => t.campaign_id).map((t: any) => t.campaign_id))];
