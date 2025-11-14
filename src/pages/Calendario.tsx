@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -166,6 +166,11 @@ function DraggableTask({
         }}
       >
         {task.time && `${task.time} `}{task.title}
+        {task.userName && (
+          <span className="ml-1 text-[10px] opacity-60">
+            ({task.userName})
+          </span>
+        )}
       </span>
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         {onEdit && (
@@ -252,6 +257,12 @@ function DraggableTaskCard({
               </span>
               {task.time && (
                 <span className="text-xs text-muted-foreground">{task.time}</span>
+              )}
+              {task.userName && (
+                <Badge variant="outline" className="text-xs">
+                  <User className="w-3 h-3 mr-1" />
+                  {task.userName}
+                </Badge>
               )}
               {task.assignedTo && (
                 <Badge variant="outline" className="text-xs">
@@ -1795,6 +1806,12 @@ export default function Calendario() {
             onClick={() => handleToggleTaskStatus(task.id)}
           >
             <div className="font-medium text-sm">{task.title}</div>
+            {task.userName && (
+              <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                <User className="w-3 h-3" />
+                {task.userName}
+              </div>
+            )}
             {task.description && <div className="text-xs text-muted-foreground mt-1">{task.description}</div>}
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
