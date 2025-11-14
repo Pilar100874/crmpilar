@@ -467,6 +467,7 @@ export default function Calendario() {
     isMove?: boolean;
     adjustedTime?: string;
     nextAvailableDate?: Date;
+    allDayTaskTitle?: string;
   } | null>(null);
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [conflictingTasks, setConflictingTasks] = useState<Task[]>([]);
@@ -990,13 +991,13 @@ export default function Calendario() {
     
     // Se a regra de dia todo estiver ativa, verificar se há tarefa de dia todo PARA O MESMO USUÁRIO
     if (calendarioRegras.validacao_dia_todo) {
-      let hasAllDay = await checkAllDayTasks(nextDay, userIdOverride);
+      let allDayCheck = await checkAllDayTasks(nextDay, userIdOverride);
       
       // Enquanto houver tarefa de dia todo do mesmo usuário, avança para próximo dia útil
-      while (hasAllDay) {
+      while (allDayCheck.hasTask) {
         console.log(`[NEXT_DAY] Dia ${format(nextDay, 'dd/MM/yyyy')} tem tarefa de dia todo para o usuário alvo, avançando...`);
         nextDay = getNextBusinessDay(nextDay);
-        hasAllDay = await checkAllDayTasks(nextDay, userIdOverride);
+        allDayCheck = await checkAllDayTasks(nextDay, userIdOverride);
       }
       
       console.log(`[NEXT_DAY] Próximo dia disponível: ${format(nextDay, 'dd/MM/yyyy')}`);
@@ -1142,27 +1143,30 @@ export default function Calendario() {
   };
 
   // Verificar se há tarefas de dia todo na data (por usuário)
-  const checkAllDayTasks = async (date: Date, userIdOverride?: string): Promise<boolean> => {
+  const checkAllDayTasks = async (date: Date, userIdOverride?: string): Promise<{ hasTask: boolean; taskTitle?: string }> => {
     try {
       let targetUserId = userIdOverride;
       if (!targetUserId) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
+        if (!user) return { hasTask: false };
         targetUserId = user.id;
       }
 
       const { data: allDayTasks } = await (supabase as any)
         .from('calendario_tarefas')
-        .select('id')
+        .select('id, title')
         .eq('user_id', targetUserId)
         .eq('date', format(date, 'yyyy-MM-dd'))
         .eq('is_all_day', true)
         .limit(1);
 
-      return Array.isArray(allDayTasks) && allDayTasks.length > 0;
+      if (Array.isArray(allDayTasks) && allDayTasks.length > 0) {
+        return { hasTask: true, taskTitle: allDayTasks[0].title };
+      }
+      return { hasTask: false };
     } catch (error) {
       console.error('Erro ao verificar tarefas de dia todo:', error);
-      return false;
+      return { hasTask: false };
     }
   };
 
@@ -1188,17 +1192,17 @@ export default function Calendario() {
       
       if (taskDate > today) {
         // Validar pelo usuário da tarefa (não pelo admin que está criando)
-        const hasAllDayTask = await checkAllDayTasks(taskData.date, taskData.userId);
+        const allDayCheck = await checkAllDayTasks(taskData.date, taskData.userId);
         
-        if (hasAllDayTask) {
+        if (allDayCheck.hasTask) {
           // Realocar SOMENTE para inserções automáticas em datas futuras
           let nextDate = addDays(taskData.date, 1);
-          let hasAllDay = await checkAllDayTasks(nextDate, taskData.userId);
+          let nextCheck = await checkAllDayTasks(nextDate, taskData.userId);
           
           // Procurar o próximo dia sem tarefa de dia todo para o usuário
-          while (hasAllDay) {
+          while (nextCheck.hasTask) {
             nextDate = addDays(nextDate, 1);
-            hasAllDay = await checkAllDayTasks(nextDate, taskData.userId);
+            nextCheck = await checkAllDayTasks(nextDate, taskData.userId);
           }
           
           taskData.date = nextDate;
@@ -2787,9 +2791,9 @@ export default function Calendario() {
                   // Verificar se o próximo dia útil tem tarefa de dia todo (validar pelo usuário da tarefa)
                   if (calendarioRegras.validacao_dia_todo) {
                     const taskUserId = weekendPendingTask.existingTask?.userId;
-                    const hasAllDay = await checkAllDayTasks(nextBusinessDay, taskUserId);
+                    const allDayCheck = await checkAllDayTasks(nextBusinessDay, taskUserId);
                     
-                    if (hasAllDay) {
+                    if (allDayCheck.hasTask) {
                       // Calcular o próximo dia disponível (sem tarefa de dia todo para o usuário)
                       const nextAvailableDay = await getNextAvailableDay(weekendPendingTask.targetDate, taskUserId);
                       
@@ -2800,6 +2804,7 @@ export default function Calendario() {
                         isMove: weekendPendingTask.isMove,
                         adjustedTime: weekendPendingTask.adjustedTime,
                         nextAvailableDate: nextAvailableDay,
+                        allDayTaskTitle: allDayCheck.taskTitle,
                       });
                       setIsAllDayDialogOpen(true);
                       setIsWeekendDialogOpen(false);
@@ -2898,6 +2903,13 @@ export default function Calendario() {
             <DialogTitle>Dia já Ocupado com Tarefa de Dia Todo</DialogTitle>
             <DialogDescription>
               Já existe uma tarefa marcada como "dia todo" para {format(allDayPendingTask?.taskData?.date || new Date(), "dd/MM/yyyy", { locale: ptBR })}.
+              {allDayPendingTask?.allDayTaskTitle && (
+                <>
+                  <br />
+                  <br />
+                  <strong>Tarefa existente:</strong> {allDayPendingTask.allDayTaskTitle}
+                </>
+              )}
               {allDayPendingTask?.nextAvailableDate && (
                 <>
                   <br />
