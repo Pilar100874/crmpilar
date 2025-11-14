@@ -378,34 +378,34 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900">
+    <div className="flex flex-col h-screen bg-gray-100">
       <div className="flex flex-1 overflow-hidden">
         {/* Grade de Produtos - Lado Esquerdo */}
-        <div className="flex-1 flex flex-col bg-slate-900">
+        <div className="flex-1 flex flex-col bg-gray-100">
         {/* Header de Busca e Filtros */}
-        <div className="p-4 border-b border-slate-700">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3 mb-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder="Buscar produtos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 h-12 text-base"
+                className="pl-10 bg-background border-border placeholder:text-muted-foreground h-12 text-base"
               />
             </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="icon"
-                className="bg-slate-800 border-slate-600 text-white hover:bg-slate-700"
+                className="bg-background border-border hover:bg-muted"
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
               >
                 {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
               </Button>
               <Button
                 variant="outline"
-                className="bg-slate-800 border-slate-600 text-white hover:bg-slate-700"
+                className="bg-background border-border hover:bg-muted"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 Filtros {showFilters ? '▲' : '▼'}
@@ -414,7 +414,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             {onClose && (
               <Button 
                 variant="outline" 
-                className="bg-slate-800 border-slate-600 text-white hover:bg-slate-700"
+                className="bg-background border-border hover:bg-muted"
                 onClick={onClose}
               >
                 Voltar
@@ -424,12 +424,12 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
 
           {/* Filtros Avançados */}
           {showFilters && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-muted rounded-lg border border-border">
               {/* Grupo */}
               <div className="col-span-2">
-                <label className="text-xs text-slate-400 mb-1 block">Grupo</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Grupo</label>
                 <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectTrigger className="bg-background border-border">
                     <SelectValue placeholder="Todos os grupos" />
                   </SelectTrigger>
                   <SelectContent>
@@ -445,67 +445,67 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
 
               {/* Gramatura */}
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Gramatura Mín</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Gramatura Mín</label>
                 <Input
                   type="number"
                   placeholder="0"
                   value={gramaturaMin}
                   onChange={(e) => setGramaturaMin(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white h-10"
+                  className="bg-background border-border h-10"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Gramatura Máx</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Gramatura Máx</label>
                 <Input
                   type="number"
                   placeholder="999"
                   value={gramaturaMax}
                   onChange={(e) => setGramaturaMax(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white h-10"
+                  className="bg-background border-border h-10"
                 />
               </div>
 
               {/* Largura */}
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Largura Mín</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Largura Mín</label>
                 <Input
                   type="number"
                   placeholder="0"
                   value={larguraMin}
                   onChange={(e) => setLarguraMin(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white h-10"
+                  className="bg-background border-border h-10"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Largura Máx</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Largura Máx</label>
                 <Input
                   type="number"
                   placeholder="999"
                   value={larguraMax}
                   onChange={(e) => setLarguraMax(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white h-10"
+                  className="bg-background border-border h-10"
                 />
               </div>
 
               {/* Comprimento */}
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Comprimento Mín</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Comprimento Mín</label>
                 <Input
                   type="number"
                   placeholder="0"
                   value={comprimentoMin}
                   onChange={(e) => setComprimentoMin(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white h-10"
+                  className="bg-background border-border h-10"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Comprimento Máx</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Comprimento Máx</label>
                 <Input
                   type="number"
                   placeholder="999"
                   value={comprimentoMax}
                   onChange={(e) => setComprimentoMax(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white h-10"
+                  className="bg-background border-border h-10"
                 />
               </div>
 
@@ -514,7 +514,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                  className="bg-background border-border hover:bg-muted"
                   onClick={() => {
                     setSelectedGrupo("all");
                     setGramaturaMin("");
@@ -539,10 +539,10 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
               {filteredProdutos.map((produto) => (
                 <Card
                   key={produto.id}
-                  className="bg-slate-800 border-slate-700 hover:border-blue-500 cursor-pointer transition-all overflow-hidden group"
+                  className="bg-background border-border hover:border-primary cursor-pointer transition-all overflow-hidden group"
                   onClick={() => addToCart(produto)}
                 >
-                  <div className="aspect-square bg-slate-700 relative overflow-hidden">
+                  <div className="aspect-square bg-muted relative overflow-hidden">
                     {produto.foto_url ? (
                       <img 
                         src={produto.foto_url} 
@@ -551,25 +551,25 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-4xl text-slate-500">{produto.nome[0]}</span>
+                        <span className="text-4xl text-muted-foreground">{produto.nome[0]}</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                     
                     {cartItems.has(produto.id) && (
-                      <Badge className="absolute top-2 right-2 bg-blue-600 text-white">
+                      <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">
                         {cartItems.get(produto.id)?.quantity}
                       </Badge>
                     )}
                   </div>
                   
                   <div className="p-3">
-                    <h3 className="font-medium text-white text-sm line-clamp-2 min-h-[2.5rem]">
+                    <h3 className="font-medium text-sm line-clamp-2 min-h-[2.5rem]">
                       {produto.nome}
                     </h3>
                     
                     <div className="mt-2">
-                      <span className="text-base font-bold text-blue-400">
+                      <span className="text-base font-bold text-primary">
                         R$ 10,00
                       </span>
                     </div>
