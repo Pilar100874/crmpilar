@@ -1747,9 +1747,9 @@ ${recentMessages}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-1 pb-2 space-y-2">
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-0">
             {/* Filtro de Status */}
-            <div className="mb-1">
+            <div className="px-3 pt-2 pb-3 border-b bg-background">
               <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-full h-9">
                   <SelectValue placeholder="Todos os status" />
@@ -1763,6 +1763,7 @@ ${recentMessages}
               </Select>
             </div>
 
+            <div className="px-3 pt-2 pb-2 space-y-2">
             {orcamentos
               .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
               .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
@@ -1810,6 +1811,7 @@ ${recentMessages}
                   </Card>
                 ))
             )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
