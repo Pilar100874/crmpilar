@@ -588,10 +588,9 @@ export default function Atendimento() {
 
   const handleOrigemChange = (origem: string) => {
     setNewOrigemFilter({ origem, subItem: '' });
+    setAvailableSubItems([]);
     if (origem) {
       loadSubItemsForOrigem(origem);
-    } else {
-      setAvailableSubItems([]);
     }
   };
 
@@ -610,11 +609,10 @@ export default function Atendimento() {
         default: return criterion.field;
       }
     } else {
-      const parts = [`Origem: ${criterion.origem}`];
       if (criterion.subItem) {
-        parts.push(`Sub-item: ${criterion.subItem}`);
+        return `${criterion.origem} - ${criterion.subItem}`;
       }
-      return parts.join(' | ');
+      return `${criterion.origem} (todos)`;
     }
   };
 
@@ -1498,41 +1496,51 @@ ${recentMessages}
                         {/* Add origem filter section */}
                         <div>
                           <Label className="text-sm font-medium mb-2 block">
-                            Adicionar Filtro de Origem
+                            Adicionar Filtro por Origem
                           </Label>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Prioriza tarefas da origem selecionada. Você pode adicionar a mesma origem várias vezes com sub-itens diferentes.
+                          </p>
                           <div className="space-y-2">
-                            <Select 
-                              value={newOrigemFilter.origem} 
-                              onValueChange={handleOrigemChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione a Origem" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {availableOrigens.map((origem) => (
-                                  <SelectItem key={origem} value={origem}>
-                                    {origem}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            
-                            {newOrigemFilter.origem && availableSubItems.length > 0 && (
-                              <Select
-                                value={newOrigemFilter.subItem}
-                                onValueChange={(value) => setNewOrigemFilter({ ...newOrigemFilter, subItem: value })}
+                            <div>
+                              <Label className="text-xs mb-1 block">Origem</Label>
+                              <Select 
+                                value={newOrigemFilter.origem} 
+                                onValueChange={handleOrigemChange}
                               >
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o Sub-item (opcional)" />
+                                  <SelectValue placeholder="Selecione a Origem" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {availableSubItems.map((subItem) => (
-                                    <SelectItem key={subItem} value={subItem}>
-                                      {subItem}
+                                  {availableOrigens.map((origem) => (
+                                    <SelectItem key={origem} value={origem}>
+                                      {origem}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
+                            </div>
+                            
+                            {newOrigemFilter.origem && availableSubItems.length > 0 && (
+                              <div>
+                                <Label className="text-xs mb-1 block">Sub-item (opcional)</Label>
+                                <Select
+                                  value={newOrigemFilter.subItem}
+                                  onValueChange={(value) => setNewOrigemFilter({ ...newOrigemFilter, subItem: value })}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Todos os sub-itens" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="">Todos os sub-itens</SelectItem>
+                                    {availableSubItems.map((subItem) => (
+                                      <SelectItem key={subItem} value={subItem}>
+                                        {subItem}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             )}
                             
                             <Button
@@ -1542,7 +1550,7 @@ ${recentMessages}
                               className="w-full"
                             >
                               <Plus className="w-4 h-4 mr-1" />
-                              Adicionar Filtro de Origem
+                              Adicionar à Ordenação
                             </Button>
                           </div>
                         </div>
