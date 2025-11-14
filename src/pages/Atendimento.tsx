@@ -119,6 +119,11 @@ export default function Atendimento() {
   const [newOrigemFilter, setNewOrigemFilter] = useState({ origem: '', subItem: '' });
   const [availableOrigens, setAvailableOrigens] = useState<string[]>([]);
   const [availableSubItems, setAvailableSubItems] = useState<string[]>([]);
+  
+  // Tab counters
+  const [activeConversationsCount, setActiveConversationsCount] = useState(0);
+  const [todayTasksCount, setTodayTasksCount] = useState(0);
+  const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
 
   useEffect(() => {
     loadConversations();
@@ -147,6 +152,18 @@ export default function Atendimento() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  
+  // Update counters when data changes
+  useEffect(() => {
+    const activeCount = conversations.filter(c => c.status === 'open').length;
+    setActiveConversationsCount(activeCount);
+  }, [conversations]);
+  
+  useEffect(() => {
+    const unreadCount = userEmails.filter(e => !e.read).length;
+    setUnreadEmailsCount(unreadCount);
+  }, [userEmails]);
+
 
   const loadWebhooksForAutoResponse = async () => {
     const estabId = await getEstabelecimentoId();
@@ -459,6 +476,7 @@ export default function Atendimento() {
       // Apply custom sorting
       const sortedTasks = sortTasks(tasksData || []);
       setTodayTasks(sortedTasks);
+      setTodayTasksCount(sortedTasks.length);
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
     }
@@ -1275,29 +1293,44 @@ ${recentMessages}
           <TabsList className="w-full grid grid-cols-3 mx-4 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="chat" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-blue-100 data-[state=active]:shadow-sm transition-all"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span className="font-medium">Chat</span>
+              {activeConversationsCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-blue-500 text-white text-xs rounded-full">
+                  {activeConversationsCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-green-100 data-[state=active]:shadow-sm transition-all"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span className="font-medium">Agenda</span>
+              {todayTasksCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-green-500 text-white text-xs rounded-full">
+                  {todayTasksCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-orange-100 data-[state=active]:shadow-sm transition-all"
             >
               <Mail className="w-3.5 h-3.5" />
               <span className="font-medium">Email</span>
+              {unreadEmailsCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-orange-500 text-white text-xs rounded-full">
+                  {unreadEmailsCount}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 bg-blue-50/30">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1360,7 +1393,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0">
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 bg-green-50/30">
             {/* Agenda Controls */}
             <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b bg-background space-y-2">
               {/* Date Navigation */}
@@ -1600,7 +1633,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2">
+          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2 bg-orange-50/30">
             {userEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
