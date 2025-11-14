@@ -106,6 +106,7 @@ export default function Atendimento() {
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
+  const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
   const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   
@@ -721,6 +722,68 @@ export default function Atendimento() {
       console.error("Erro ao carregar orçamentos:", error);
     }
   };
+
+  // Load dados do orçamento selecionado
+  const loadSelectedOrcamento = async (orcamentoId: string) => {
+    try {
+      const { data: orcamentoData, error } = await supabase
+        .from('orcamentos')
+        .select(`
+          *,
+          customers:cliente_id (
+            id,
+            nome,
+            telefone,
+            email
+          ),
+          empresas:empresa_id (
+            id,
+            nome_fantasia,
+            nome,
+            cnpj
+          )
+        `)
+        .eq('id', orcamentoId)
+        .single();
+
+      if (error) {
+        console.error("Erro ao carregar orçamento:", error);
+        return;
+      }
+
+      setSelectedOrcamentoData(orcamentoData);
+
+      // Se o orçamento tem cliente_id, carregar empresas vinculadas
+      if (orcamentoData?.customers?.id) {
+        const { data: companiesData } = await supabase
+          .from('customer_empresas')
+          .select(`
+            *,
+            empresas:empresa_id (
+              id,
+              nome,
+              nome_fantasia,
+              cnpj
+            )
+          `)
+          .eq('customer_id', orcamentoData.customers.id);
+
+        if (companiesData) {
+          setCustomerCompanies(companiesData);
+        }
+      } else {
+        setCustomerCompanies([]);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar orçamento:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedOrcamentoId) {
+      loadSelectedOrcamento(selectedOrcamentoId);
+    }
+  }, [selectedOrcamentoId]);
 
   // Create or load AI session
   useEffect(() => {
@@ -2369,7 +2432,7 @@ ${recentMessages}
           </div>
 
           {/* Right Sidebar - Client Details Panel para Orçamento */}
-          {showClientDetails && selectedConversation && selectedConv && (
+          {showClientDetails && selectedOrcamentoData && (
             <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
               {/* Header com nome do cliente */}
               <div className="p-4 border-b flex-shrink-0">
@@ -2377,13 +2440,17 @@ ${recentMessages}
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
                     <User className="w-10 h-10 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-lg">{selectedConv.customer?.nome || "Cliente"}</h3>
-                  <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      {selectedConv.customer?.telefone}
-                    </span>
-                  </div>
+                  <h3 className="font-semibold text-lg">
+                    {selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
+                  </h3>
+                  {selectedOrcamentoData.customers?.telefone && (
+                    <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {selectedOrcamentoData.customers.telefone}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2396,14 +2463,16 @@ ${recentMessages}
                       <Building2 className="w-4 h-4 text-primary" />
                       Empresas Vinculadas
                     </h4>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 w-7 p-0 rounded-full"
-                      onClick={() => setShowNovoContatoDialog(true)}
-                    >
-                      <Plus className="w-4 h-4 text-primary" />
-                    </Button>
+                    {selectedOrcamentoData.customers?.id && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 rounded-full"
+                        onClick={() => setShowNovoContatoDialog(true)}
+                      >
+                        <Plus className="w-4 h-4 text-primary" />
+                      </Button>
+                    )}
                   </div>
 
                   {customerCompanies.length > 0 ? (
@@ -2444,6 +2513,23 @@ ${recentMessages}
                         );
                       })}
                     </div>
+                  ) : selectedOrcamentoData.empresas ? (
+                    <Card className="p-3 rounded-2xl">
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {selectedOrcamentoData.empresas.nome_fantasia || selectedOrcamentoData.empresas.nome}
+                            </p>
+                            {selectedOrcamentoData.empresas.cnpj && (
+                              <p className="text-xs text-muted-foreground">
+                                CNPJ: {selectedOrcamentoData.empresas.cnpj}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
                   ) : (
                     <Card className="p-4 rounded-2xl">
                       <div className="text-center">
@@ -2451,79 +2537,97 @@ ${recentMessages}
                         <p className="text-xs text-muted-foreground">
                           Nenhuma empresa vinculada
                         </p>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="mt-2 h-7 text-xs"
-                          onClick={() => setShowNovoContatoDialog(true)}
-                        >
-                          Vincular empresa
-                        </Button>
+                        {selectedOrcamentoData.customers?.id && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="mt-2 h-7 text-xs"
+                            onClick={() => setShowNovoContatoDialog(true)}
+                          >
+                            Vincular empresa
+                          </Button>
+                        )}
                       </div>
                     </Card>
                   )}
                 </div>
 
-                {/* Informações da Conversa */}
+                {/* Informações do Orçamento */}
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Informações da Conversa</h4>
+                  <h4 className="font-semibold text-sm">Informações do Orçamento</h4>
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-muted-foreground text-xs">Protocolo</span>
-                      <span className="font-medium text-xs">{selectedConv.id.slice(0, 8).toUpperCase()}</span>
+                      <span className="font-medium text-xs">{selectedOrcamentoData.id.slice(0, 8).toUpperCase()}</span>
                     </div>
 
                     <div className="flex items-center justify-between py-2 border-b">
-                      <span className="text-muted-foreground text-xs">Canal</span>
-                      <Badge variant="secondary" className="bg-green-500 text-white text-xs h-5">
-                        {selectedConv.canal}
+                      <span className="text-muted-foreground text-xs">Status</span>
+                      <Badge variant="secondary" className="text-xs h-5">
+                        {selectedOrcamentoData.status || selectedOrcamentoData.etapa}
                       </Badge>
                     </div>
 
                     <div className="flex items-center justify-between py-2 border-b">
-                      <span className="text-muted-foreground text-xs">Data/Hora</span>
+                      <span className="text-muted-foreground text-xs">Data</span>
                       <span className="text-xs">
-                        {format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        {format(new Date(selectedOrcamentoData.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-2 border-b">
-                      <span className="text-muted-foreground text-xs">Email</span>
-                      <span className="text-xs truncate max-w-[60%]">
-                        {selectedConv.customer?.email || "-"}
-                      </span>
-                    </div>
+                    {selectedOrcamentoData.customers?.email && (
+                      <div className="flex items-center justify-between py-2 border-b">
+                        <span className="text-muted-foreground text-xs">Email</span>
+                        <span className="text-xs truncate max-w-[60%]">
+                          {selectedOrcamentoData.customers.email}
+                        </span>
+                      </div>
+                    )}
+
+                    {selectedOrcamentoData.valor_total && (
+                      <div className="flex items-center justify-between py-2 border-b">
+                        <span className="text-muted-foreground text-xs">Valor Total</span>
+                        <span className="text-xs font-semibold text-primary">
+                          {new Intl.NumberFormat('pt-BR', { 
+                            style: 'currency', 
+                            currency: 'BRL' 
+                          }).format(selectedOrcamentoData.valor_total)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Ações Rápidas */}
               <div className="border-t p-4 flex-shrink-0 space-y-2">
-                <Button
-                  className="w-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                  onClick={() => {
-                    if (selectedConv.customer?.id) {
-                      navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
-                    }
-                  }}
-                >
-                  <Receipt className="w-4 h-4 mr-2" />
-                  Abrir Orçamento
-                </Button>
-                
-                <Button
-                  className="w-full rounded-full"
-                  variant="outline"
-                  onClick={() => {
-                    if (selectedConv.customer?.email) {
-                      navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
-                    }
-                  }}
-                >
-                  <Inbox className="w-4 h-4 mr-2" />
-                  Ver Emails
-                </Button>
+                {selectedOrcamentoData.customers?.id && (
+                  <>
+                    <Button
+                      className="w-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                      onClick={() => {
+                        navigate(`/orcamentos?cliente_id=${selectedOrcamentoData.customers.id}`);
+                      }}
+                    >
+                      <Receipt className="w-4 h-4 mr-2" />
+                      Ver Todos Orçamentos
+                    </Button>
+                    
+                    {selectedOrcamentoData.customers.email && (
+                      <Button
+                        className="w-full rounded-full"
+                        variant="outline"
+                        onClick={() => {
+                          navigate(`/email?filter=${encodeURIComponent(selectedOrcamentoData.customers.email)}`);
+                        }}
+                      >
+                        <Inbox className="w-4 h-4 mr-2" />
+                        Ver Emails
+                      </Button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}
