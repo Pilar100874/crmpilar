@@ -105,8 +105,9 @@ export default function Atendimento() {
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
-  const [taskSortOrder, setTaskSortOrder] = useState<Array<'created_at' | 'origem' | 'origem_sub_item' | 'time'>>(['time', 'created_at', 'origem', 'origem_sub_item']);
+  const [taskSortOrder, setTaskSortOrder] = useState<Array<'created_at' | 'origem' | 'origem_sub_item' | 'time'>>(['time', 'created_at']);
   const [showSortDialog, setShowSortDialog] = useState(false);
+  const [newSortField, setNewSortField] = useState<'created_at' | 'origem' | 'origem_sub_item' | 'time' | ''>('');
 
   useEffect(() => {
     loadConversations();
@@ -501,6 +502,23 @@ export default function Atendimento() {
       [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
       setTaskSortOrder(newOrder);
     }
+  };
+
+  const removeSortCriterion = (index: number) => {
+    const newOrder = taskSortOrder.filter((_, i) => i !== index);
+    setTaskSortOrder(newOrder);
+  };
+
+  const addSortCriterion = () => {
+    if (newSortField && !taskSortOrder.includes(newSortField)) {
+      setTaskSortOrder([...taskSortOrder, newSortField]);
+      setNewSortField('');
+    }
+  };
+
+  const getAvailableSortFields = () => {
+    const allFields: Array<'created_at' | 'origem' | 'origem_sub_item' | 'time'> = ['created_at', 'origem', 'origem_sub_item', 'time'];
+    return allFields.filter(field => !taskSortOrder.includes(field));
   };
 
   const getSortLabel = (criterion: string) => {
@@ -1316,7 +1334,7 @@ ${recentMessages}
                         Defina a ordem de prioridade dos critérios de ordenação
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-2 py-4">
+                    <div className="space-y-4 py-4">
                       {taskSortOrder.map((criterion, index) => (
                         <Card key={criterion} className="p-3">
                           <div className="flex items-center justify-between">
@@ -1347,10 +1365,47 @@ ${recentMessages}
                               >
                                 <ArrowDown className="w-4 h-4" />
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeSortCriterion(index)}
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              >
+                                <span className="text-lg">×</span>
+                              </Button>
                             </div>
                           </div>
                         </Card>
                       ))}
+                      
+                      {/* Add new criterion section */}
+                      <div className="border-t pt-4 mt-4">
+                        <Label className="text-sm font-medium mb-2 block">
+                          Adicionar Novo Campo
+                        </Label>
+                        <div className="flex gap-2">
+                          <Select value={newSortField} onValueChange={(value: any) => setNewSortField(value)}>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Selecione um campo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getAvailableSortFields().map((field) => (
+                                <SelectItem key={field} value={field}>
+                                  {getSortLabel(field)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            onClick={addSortCriterion}
+                            disabled={!newSortField}
+                            size="sm"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Adicionar
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
