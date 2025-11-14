@@ -1335,10 +1335,10 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          <TabsList className="w-full grid grid-cols-4 mx-4 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
+          <TabsList className="grid grid-cols-4 mx-2 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="chat" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-lg data-[state=active]:scale-105 data-[state=active]:border data-[state=active]:border-gray-500/30 transition-all duration-300 rounded-md"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span className="font-medium">Chat</span>
@@ -1350,7 +1350,7 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-lg data-[state=active]:scale-105 data-[state=active]:border data-[state=active]:border-gray-500/30 transition-all duration-300 rounded-md"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span className="font-medium">Agenda</span>
@@ -1362,7 +1362,7 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-lg data-[state=active]:scale-105 data-[state=active]:border data-[state=active]:border-gray-500/30 transition-all duration-300 rounded-md"
             >
               <Mail className="w-3.5 h-3.5" />
               <span className="font-medium">Email</span>
@@ -1374,7 +1374,7 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="orcamento" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-lg data-[state=active]:scale-105 data-[state=active]:border data-[state=active]:border-gray-500/30 transition-all duration-300 rounded-md"
             >
               <Receipt className="w-3.5 h-3.5" />
               <span className="font-medium">Orçam.</span>
