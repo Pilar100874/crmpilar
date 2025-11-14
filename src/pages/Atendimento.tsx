@@ -19,7 +19,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import POSView from "@/components/orcamento/POSView";
 
 interface Conversation {
@@ -2344,18 +2343,19 @@ ${recentMessages}
         onOpenChange={setShowNovoContatoDialog}
       />
 
-      {/* Orçamento Sheet Lateral */}
-      <Sheet open={orcamentoSheetOpen} onOpenChange={setOrcamentoSheetOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-[calc(100vw-400px)] p-0 overflow-hidden">
-          {selectedOrcamentoId && estabelecimentoId && (
-            <POSView 
-              estabelecimentoId={estabelecimentoId} 
-              orcamentoId={selectedOrcamentoId}
-              onClose={() => setOrcamentoSheetOpen(false)}
-            />
-          )}
-        </SheetContent>
-      </Sheet>
+      {/* Orçamento Panel Lateral - Sem Overlay */}
+      {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
+        <div className="fixed inset-y-0 right-0 w-[calc(100vw-400px)] bg-background border-l shadow-2xl z-40">
+          <POSView 
+            estabelecimentoId={estabelecimentoId} 
+            orcamentoId={selectedOrcamentoId}
+            onClose={() => {
+              setOrcamentoSheetOpen(false);
+              setSelectedOrcamentoId(null);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
