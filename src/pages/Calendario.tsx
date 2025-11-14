@@ -109,6 +109,15 @@ function DraggableTask({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+  
+  // Debug: verificar se cor está chegando
+  if (task.userId && !userColor) {
+    console.log('[TASK_COLOR] Tarefa sem cor:', { 
+      taskId: task.id.substring(0, 8), 
+      userId: task.userId.substring(0, 8),
+      userColor 
+    });
+  }
 
   return (
     <div
@@ -466,11 +475,12 @@ export default function Calendario() {
   // Carregar tarefas do Supabase ao montar o componente
   useEffect(() => {
     checkAdminStatus();
+    loadUsuarios(); // Carregar usuários sempre para gerar cores
   }, []);
 
   useEffect(() => {
     if (isAdmin) {
-      loadUsuarios();
+      loadUsuarios(); // Recarregar quando vira admin para garantir
     }
   }, [isAdmin]);
 
@@ -525,6 +535,7 @@ export default function Calendario() {
         // Gerar cores para cada usuário
         const colors = generateUserColors(data);
         setUserColors(colors);
+        console.log('[COLORS] Estado userColors atualizado:', colors);
       }
     } catch (error) {
       console.error("Erro ao carregar usuários:", error);
@@ -551,6 +562,7 @@ export default function Calendario() {
       }
     });
     
+    console.log('[COLORS] Cores geradas para usuários:', colors);
     return colors;
   };
 
@@ -639,6 +651,14 @@ export default function Calendario() {
               userName: usuariosMap.get(task.user_id) || 'Usuário não identificado',
             };
           });
+          
+          console.log('[COLORS] userColors state:', userColors);
+          console.log('[COLORS] Tarefas carregadas:', tasksWithDates.map(t => ({ 
+            id: t.id.substring(0, 8), 
+            userId: t.userId?.substring(0, 8),
+            color: t.userId ? userColors[t.userId] : 'NO_COLOR'
+          })));
+          
           setTasks(tasksWithDates);
         }
       } catch (error) {
@@ -706,6 +726,11 @@ export default function Calendario() {
             horario_comercial: regrasMap.horario_comercial ?? false,
             validacao_dia_todo: regrasMap.validacao_dia_todo ?? false,
             realocacao_diaria: regrasMap.realocacao_diaria ?? false,
+          });
+          
+          console.log('[REGRAS] Regras do calendário carregadas:', {
+            bloqueio_finais_semana: regrasMap.bloqueio_finais_semana ?? false,
+            todas: regrasMap
           });
         }
       } catch (error) {
