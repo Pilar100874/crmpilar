@@ -212,15 +212,13 @@ export default function Orcamentos() {
             <Select value={filterEtapa || "all"} onValueChange={(value) => setFilterEtapa(value === "all" ? "" : value)}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Todas as etapas" />
+                <SelectValue placeholder="Filtrar status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as etapas</SelectItem>
-                {ETAPAS_CONFIG.map(etapa => (
-                  <SelectItem key={etapa.id} value={etapa.id}>
-                    {etapa.title}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="orcamento">Orçamento</SelectItem>
+                <SelectItem value="negociacao">Negociação</SelectItem>
+                <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
               </SelectContent>
             </Select>
 
