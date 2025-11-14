@@ -1528,44 +1528,44 @@ ${recentMessages}
           <TabsList className="grid grid-cols-4 gap-3 mx-2 mt-1 mb-0 flex-shrink-0 bg-transparent p-0 border-b border-border/50">
             <TabsTrigger 
               value="chat" 
-              className="relative flex items-center justify-center py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <MessageSquare className="w-5 h-5" />
+              <MessageSquare className="w-4.5 h-4.5" />
               {activeConversationsCount > 0 && (
-                <Badge variant="secondary" className="absolute top-1 left-1 h-4 min-w-4 px-1 bg-gray-600 text-white text-[9px] rounded-full">
+                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {activeConversationsCount}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="relative flex items-center justify-center py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-4.5 h-4.5" />
               {todayTasksCount > 0 && (
-                <Badge variant="secondary" className="absolute top-1 left-1 h-4 min-w-4 px-1 bg-gray-600 text-white text-[9px] rounded-full">
+                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {todayTasksCount}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="relative flex items-center justify-center py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <Mail className="w-5 h-5" />
+              <Mail className="w-4.5 h-4.5" />
               {unreadEmailsCount > 0 && (
-                <Badge variant="secondary" className="absolute top-1 left-1 h-4 min-w-4 px-1 bg-gray-600 text-white text-[9px] rounded-full">
+                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {unreadEmailsCount}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger 
               value="orcamento" 
-              className="relative flex items-center justify-center py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <Receipt className="w-5 h-5" />
+              <Receipt className="w-4.5 h-4.5" />
               {orcamentosEmAndamentoCount > 0 && (
-                <Badge variant="secondary" className="absolute top-1 left-1 h-4 min-w-4 px-1 bg-gray-600 text-white text-[9px] rounded-full">
+                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {orcamentosEmAndamentoCount}
                 </Badge>
               )}
