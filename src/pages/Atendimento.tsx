@@ -1747,9 +1747,9 @@ ${recentMessages}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-3 pb-2 space-y-2">
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-0 pb-2 space-y-2">
             {/* Filtro de Status */}
-            <div className="mb-2">
+            <div className="mb-2 mt-2">
               <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-full h-9">
                   <SelectValue placeholder="Todos os status" />
