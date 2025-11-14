@@ -1335,54 +1335,54 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          <TabsList className="grid grid-cols-4 gap-3 mx-2 mt-6 mb-2 flex-shrink-0 bg-gray-300 p-2 rounded-xl">
+          <TabsList className="grid grid-cols-4 gap-3 mx-2 mt-6 mb-2 flex-shrink-0 bg-transparent p-0">
             <TabsTrigger 
               value="chat" 
-              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-gray-300 data-[state=active]:bg-gray-300 data-[state=active]:shadow-[inset_-2px_-2px_5px_rgba(255,255,255,0.7),inset_2px_2px_5px_rgba(0,0,0,0.15)] shadow-[-2px_-2px_5px_rgba(255,255,255,0.7),2px_2px_5px_rgba(0,0,0,0.15)] transition-all duration-200 rounded-lg"
+              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {activeConversationsCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full shadow-md">
+                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full">
                   {activeConversationsCount}
                 </Badge>
               )}
               <MessageSquare className="w-4 h-4" />
-              <span className="font-medium text-xs">Chat</span>
+              <span className="font-normal text-xs">Chat</span>
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-gray-300 data-[state=active]:bg-gray-300 data-[state=active]:shadow-[inset_-2px_-2px_5px_rgba(255,255,255,0.7),inset_2px_2px_5px_rgba(0,0,0,0.15)] shadow-[-2px_-2px_5px_rgba(255,255,255,0.7),2px_2px_5px_rgba(0,0,0,0.15)] transition-all duration-200 rounded-lg"
+              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {todayTasksCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full shadow-md">
+                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full">
                   {todayTasksCount}
                 </Badge>
               )}
               <Calendar className="w-4 h-4" />
-              <span className="font-medium text-xs">Agenda</span>
+              <span className="font-normal text-xs">Agenda</span>
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-gray-300 data-[state=active]:bg-gray-300 data-[state=active]:shadow-[inset_-2px_-2px_5px_rgba(255,255,255,0.7),inset_2px_2px_5px_rgba(0,0,0,0.15)] shadow-[-2px_-2px_5px_rgba(255,255,255,0.7),2px_2px_5px_rgba(0,0,0,0.15)] transition-all duration-200 rounded-lg"
+              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {unreadEmailsCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full shadow-md">
+                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full">
                   {unreadEmailsCount}
                 </Badge>
               )}
               <Mail className="w-4 h-4" />
-              <span className="font-medium text-xs">Email</span>
+              <span className="font-normal text-xs">Email</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orcamento" 
-              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-gray-300 data-[state=active]:bg-gray-300 data-[state=active]:shadow-[inset_-2px_-2px_5px_rgba(255,255,255,0.7),inset_2px_2px_5px_rgba(0,0,0,0.15)] shadow-[-2px_-2px_5px_rgba(255,255,255,0.7),2px_2px_5px_rgba(0,0,0,0.15)] transition-all duration-200 rounded-lg"
+              className="relative flex flex-col items-center justify-center gap-2 py-3 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
               {orcamentosEmAndamentoCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full shadow-md">
+                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-[10px] rounded-full">
                   {orcamentosEmAndamentoCount}
                 </Badge>
               )}
               <Receipt className="w-4 h-4" />
-              <span className="font-medium text-xs">Orçam.</span>
+              <span className="font-normal text-xs">Orçam.</span>
             </TabsTrigger>
           </TabsList>
 
