@@ -313,9 +313,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     setContacts(allContacts);
   };
 
-  // Resetar ao fechar
+  // Resetar ao fechar (mas não quando abre para editar)
   useEffect(() => {
-    if (!open) {
+    if (!open && !editingTask) {
       setSearchQuery("");
       setSelectedContact(null);
       setShowContactList(false);
@@ -330,10 +330,10 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setSelectedCampaignId("");
       setAssignedTo("me");
       setObservation("");
-    } else {
+    } else if (open && !editingTask) {
       setDateInput(format(initialDate || new Date(), "dd/MM/yyyy"));
     }
-  }, [open, initialDate]);
+  }, [open, initialDate, editingTask]);
 
   // Filtrar contatos e empresas baseado na busca
   const filteredContacts = contacts.filter(contact => {
@@ -698,8 +698,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               }}
               onFocus={() => searchQuery.length > 0 && setShowContactList(true)}
               className="w-full"
+              disabled={!!editingTaskId}
             />
-            {selectedContact && (
+            {selectedContact && !editingTaskId && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -1044,7 +1045,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="chat" id="chat" />
-                <Label htmlFor="chat" className="text-sm cursor-pointer">Chat (WhatsApp / Telegram / Webchat / Instagram)</Label>
+                <Label htmlFor="chat" className="text-sm cursor-pointer">Chat</Label>
               </div>
             </RadioGroup>
             
