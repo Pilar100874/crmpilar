@@ -117,6 +117,8 @@ export default function Atendimento() {
   const [showSortDialog, setShowSortDialog] = useState(false);
   const [newSortField, setNewSortField] = useState<'created_at' | 'time' | ''>('');
   const [newOrigemFilter, setNewOrigemFilter] = useState({ origem: '', subItem: '' });
+  const [availableOrigens, setAvailableOrigens] = useState<string[]>([]);
+  const [availableSubItems, setAvailableSubItems] = useState<string[]>([]);
 
   useEffect(() => {
     loadConversations();
@@ -495,8 +497,46 @@ export default function Atendimento() {
   useEffect(() => {
     if (activeTab === 'agenda') {
       loadTodayTasks(agendaDate);
+      loadAvailableOrigens();
     }
   }, [agendaDate, taskSortOrder, activeTab]);
+
+  const loadAvailableOrigens = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      const { data, error } = await supabase
+        .from('calendario_tarefas')
+        .select('origem')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .not('origem', 'is', null);
+
+      if (!error && data) {
+        const uniqueOrigens = Array.from(new Set(data.map(t => t.origem).filter(Boolean)));
+        setAvailableOrigens(uniqueOrigens);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar origens:", error);
+    }
+  };
+
+  const loadSubItemsForOrigem = async (origem: string) => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      const { data, error } = await supabase
+        .from('calendario_tarefas')
+        .select('origem_sub_item')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('origem', origem)
+        .not('origem_sub_item', 'is', null);
+
+      if (!error && data) {
+        const uniqueSubItems = Array.from(new Set(data.map(t => t.origem_sub_item).filter(Boolean)));
+        setAvailableSubItems(uniqueSubItems);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar sub-items:", error);
+    }
+  };
 
   const handlePreviousDay = () => {
     setAgendaDate(prev => subDays(prev, 1));
@@ -542,6 +582,16 @@ export default function Atendimento() {
       };
       setTaskSortOrder([...taskSortOrder, criterion]);
       setNewOrigemFilter({ origem: '', subItem: '' });
+      setAvailableSubItems([]);
+    }
+  };
+
+  const handleOrigemChange = (origem: string) => {
+    setNewOrigemFilter({ origem, subItem: '' });
+    if (origem) {
+      loadSubItemsForOrigem(origem);
+    } else {
+      setAvailableSubItems([]);
     }
   };
 
@@ -1451,16 +1501,40 @@ ${recentMessages}
                             Adicionar Filtro de Origem
                           </Label>
                           <div className="space-y-2">
-                            <Input
-                              placeholder="Nome da Origem (ex: WhatsApp, Email)"
-                              value={newOrigemFilter.origem}
-                              onChange={(e) => setNewOrigemFilter({ ...newOrigemFilter, origem: e.target.value })}
-                            />
-                            <Input
-                              placeholder="Sub-item (opcional)"
-                              value={newOrigemFilter.subItem}
-                              onChange={(e) => setNewOrigemFilter({ ...newOrigemFilter, subItem: e.target.value })}
-                            />
+                            <Select 
+                              value={newOrigemFilter.origem} 
+                              onValueChange={handleOrigemChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione a Origem" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableOrigens.map((origem) => (
+                                  <SelectItem key={origem} value={origem}>
+                                    {origem}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            
+                            {newOrigemFilter.origem && availableSubItems.length > 0 && (
+                              <Select
+                                value={newOrigemFilter.subItem}
+                                onValueChange={(value) => setNewOrigemFilter({ ...newOrigemFilter, subItem: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o Sub-item (opcional)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableSubItems.map((subItem) => (
+                                    <SelectItem key={subItem} value={subItem}>
+                                      {subItem}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                            
                             <Button
                               onClick={addOrigemFilter}
                               disabled={!newOrigemFilter.origem}
