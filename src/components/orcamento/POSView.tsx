@@ -665,18 +665,18 @@ export default function POSView({
         </div>
 
       {/* Painel Lateral - Lado Direito */}
-      <div className="w-[360px] bg-card border-l border-border flex flex-col overflow-hidden">
+      <div className="w-[300px] bg-card border-l border-border flex flex-col overflow-hidden">
 
         {/* Header com Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="border-b border-border">
-            <TabsList className="w-full grid grid-cols-2 bg-transparent h-12 rounded-none">
-              <TabsTrigger value="cart" className="data-[state=active]:bg-muted">
-                <ShoppingCart className="w-4 h-4 mr-2" />
+            <TabsList className="w-full grid grid-cols-2 bg-transparent h-10 rounded-none">
+              <TabsTrigger value="cart" className="data-[state=active]:bg-muted text-xs">
+                <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
                 Carrinho
               </TabsTrigger>
-              <TabsTrigger value="details" className="data-[state=active]:bg-muted">
-                <Tag className="w-4 h-4 mr-2" />
+              <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs">
+                <Tag className="w-3.5 h-3.5 mr-1.5" />
                 Detalhes
               </TabsTrigger>
             </TabsList>
@@ -684,61 +684,61 @@ export default function POSView({
 
           {/* Conteúdo das Tabs */}
           <TabsContent value="cart" className="flex-1 m-0">
-            <ScrollArea className="h-[calc(100vh-400px)] p-4">
+            <ScrollArea className="h-[calc(100vh-400px)] p-2">
               {cartArray.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                  <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
-                  <p className="text-sm">Carrinho vazio</p>
+                  <ShoppingCart className="w-10 h-10 mb-2 opacity-20" />
+                  <p className="text-xs">Carrinho vazio</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {cartArray.map(({ produto, quantity }) => (
-                    <div key={produto.id} className="bg-muted rounded-lg p-3 border border-border">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-muted/60 rounded flex items-center justify-center flex-shrink-0">
+                    <div key={produto.id} className="bg-muted/50 rounded p-2 border border-border/50">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-muted rounded flex items-center justify-center flex-shrink-0">
                           {produto.foto_url ? (
                             <img src={produto.foto_url} alt="" className="w-full h-full object-cover rounded" />
                           ) : (
-                            <span className="text-muted-foreground">{produto.nome[0]}</span>
+                            <span className="text-muted-foreground text-xs">{produto.nome[0]}</span>
                           )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <p className="text-foreground font-medium truncate">{produto.nome}</p>
-                          <p className="text-muted-foreground text-sm">R$ 10,00</p>
+                          <p className="text-foreground text-xs font-medium truncate">{produto.nome}</p>
+                          <p className="text-muted-foreground text-[10px]">R$ 10,00</p>
                         </div>
 
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => removeFromCart(produto.id)}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                       
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-1">
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-8 w-8 bg-background border-border hover:bg-muted"
+                            className="h-6 w-6 bg-background border-border hover:bg-muted"
                             onClick={() => updateQuantity(produto.id, -1)}
                           >
-                            <Minus className="w-4 h-4" />
+                            <Minus className="w-3 h-3" />
                           </Button>
-                          <span className="text-foreground font-medium w-12 text-center">{quantity}</span>
+                          <span className="text-foreground text-xs font-medium w-8 text-center">{quantity}</span>
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-8 w-8 bg-background border-border hover:bg-muted"
+                            className="h-6 w-6 bg-background border-border hover:bg-muted"
                             onClick={() => updateQuantity(produto.id, 1)}
                           >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-3 h-3" />
                           </Button>
                         </div>
-                        <span className="text-foreground font-bold">
+                        <span className="text-foreground text-xs font-bold">
                           R$ {(quantity * 10).toFixed(2)}
                         </span>
                       </div>
@@ -750,36 +750,36 @@ export default function POSView({
           </TabsContent>
 
           <TabsContent value="details" className="flex-1 m-0">
-            <ScrollArea className="h-[calc(100vh-400px)] p-4">
-              <div className="space-y-3">
-                <div className="bg-muted rounded-lg p-4 border border-border">
-                  <h4 className="text-sm font-medium text-foreground mb-3">Status do Orçamento</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-primary rounded-full"></div>
-                      <span className="text-sm text-foreground">Em Orçamento</span>
+            <ScrollArea className="h-[calc(100vh-400px)] p-2">
+              <div className="space-y-2">
+                <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                  <h4 className="text-xs font-medium text-foreground mb-2">Status</h4>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      <span className="text-xs text-foreground">Em Orçamento</span>
                     </div>
-                    <p className="text-xs text-muted-foreground ml-6">
+                    <p className="text-[10px] text-muted-foreground ml-4">
                       Aguardando finalização
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-muted rounded-lg p-4 border border-border">
-                  <h4 className="text-sm font-medium text-foreground mb-3">Informações</h4>
-                  <div className="space-y-2 text-sm">
+                <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                  <h4 className="text-xs font-medium text-foreground mb-2">Informações</h4>
+                  <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Produtos:</span>
+                      <span className="text-muted-foreground text-[10px]">Produtos:</span>
                       <span className="text-foreground">{cartArray.length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Quantidade Total:</span>
+                      <span className="text-muted-foreground text-[10px]">Qtd. Total:</span>
                       <span className="text-foreground">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
                     </div>
                     {selectedEmpresa && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Empresa:</span>
-                        <span className="text-foreground">
+                        <span className="text-muted-foreground text-[10px]">Empresa:</span>
+                        <span className="text-foreground text-[10px] truncate max-w-[140px]">
                           {empresas.find(e => e.id === selectedEmpresa)?.nome_fantasia}
                         </span>
                       </div>
@@ -794,8 +794,8 @@ export default function POSView({
         {/* Empresa e Botões de Ação */}
         <div className="border-t border-border bg-card mt-auto">
           {/* Empresa */}
-          <div className="p-4 border-b border-border">
-            <label className="text-xs font-medium text-muted-foreground mb-2 block">
+          <div className="p-2 border-b border-border">
+            <label className="text-[10px] font-medium text-muted-foreground mb-1 block">
               Empresa
             </label>
             <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
@@ -804,22 +804,22 @@ export default function POSView({
                   variant="outline"
                   role="combobox"
                   aria-expanded={openEmpresaCombobox}
-                  className="w-full justify-between bg-background border-border hover:bg-muted h-10"
+                  className="w-full justify-between bg-background border-border hover:bg-muted h-8 text-xs"
                 >
                   {selectedEmpresa
                     ? empresas.find((empresa) => empresa.id === selectedEmpresa)?.nome_fantasia
-                    : "Selecione a empresa..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    : "Selecionar..."}
+                  <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0 bg-card border-border">
+              <PopoverContent className="w-[300px] p-0 bg-card border-border z-50">
                 <Command className="bg-card">
                   <CommandInput 
-                    placeholder="Buscar empresa por nome ou CNPJ..." 
-                    className="bg-card border-border"
+                    placeholder="Buscar empresa..." 
+                    className="bg-card border-border text-xs h-8"
                   />
                   <CommandList>
-                    <CommandEmpty className="text-muted-foreground py-6 text-center text-sm">
+                    <CommandEmpty className="text-muted-foreground py-4 text-center text-xs">
                       Nenhuma empresa encontrada.
                     </CommandEmpty>
                     <CommandGroup>
@@ -855,43 +855,43 @@ export default function POSView({
           </div>
 
           {/* Botões de Ação */}
-          <div className="p-4 grid grid-cols-4 gap-2">
+          <div className="p-2 grid grid-cols-4 gap-1">
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
+              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
               onClick={() => setShowPhotoModal(true)}
             >
-              <Camera className="w-5 h-5 mb-1" />
-              <span className="text-xs">Foto</span>
+              <Camera className="w-3.5 h-3.5 mb-0.5" />
+              <span>Foto</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
+              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
               onClick={() => setShowSuggestionsModal(true)}
             >
-              <Lightbulb className="w-5 h-5 mb-1" />
-              <span className="text-xs">Sugestões</span>
+              <Lightbulb className="w-3.5 h-3.5 mb-0.5" />
+              <span>Sugestões</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
+              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
               onClick={() => setShowShareModal(true)}
               disabled={!shareLink}
             >
-              <Share2 className="w-5 h-5 mb-1" />
-              <span className="text-xs">Compartilhar</span>
+              <Share2 className="w-3.5 h-3.5 mb-0.5" />
+              <span>Compartilhar</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
+              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
               onClick={() => setActiveTab("details")}
             >
-              <History className="w-5 h-5 mb-1" />
-              <span className="text-xs">Status</span>
+              <History className="w-3.5 h-3.5 mb-0.5" />
+              <span>Status</span>
             </Button>
           </div>
         </div>
