@@ -92,84 +92,100 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
 
   // Preencher dados quando estiver editando
   useEffect(() => {
-    if (editingTask && open) {
-      setDate(editingTask.date);
-      setDateInput(format(editingTask.date, "dd/MM/yyyy"));
-      
-      // Priorizar flag de dia todo ao preencher o formulário
-      if (editingTask.isAllDay) {
-        setIsAllDay(true);
-        setNoTimeSet(false);
+    const checkUserAndFillForm = async () => {
+      if (editingTask && open) {
+        setDate(editingTask.date);
+        setDateInput(format(editingTask.date, "dd/MM/yyyy"));
+        
+        // Priorizar flag de dia todo ao preencher o formulário
+        if (editingTask.isAllDay) {
+          setIsAllDay(true);
+          setNoTimeSet(false);
+          setHours("");
+          setMinutes("");
+        } else if (editingTask.time) {
+          const [h, m] = editingTask.time.split(':');
+          setHours(h);
+          setMinutes(m);
+          setIsAllDay(false);
+          setNoTimeSet(false);
+        } else {
+          // Sem horário definido
+          setIsAllDay(false);
+          setNoTimeSet(true);
+          setHours("");
+          setMinutes("");
+        }
+        
+        // Converter origem antiga para nova
+        const origemValue = editingTask.origem;
+        if (origemValue === 'email_enviado') {
+          setTaskOrigem('email');
+          setEmailTipo('enviado');
+        } else if (origemValue === 'email_recebido') {
+          setTaskOrigem('email');
+          setEmailTipo('recebido');
+        } else if (origemValue === 'pedido_orcamento') {
+          setTaskOrigem('pedido');
+          setPedidoTipo('orcamento');
+        } else if (origemValue === 'pedido_negociacao') {
+          setTaskOrigem('pedido');
+          setPedidoTipo('negociacao');
+        } else if (origemValue === 'pedido_aprovacao') {
+          setTaskOrigem('pedido');
+          setPedidoTipo('aprovacao');
+        } else {
+          setTaskOrigem(origemValue as typeof taskOrigem);
+        }
+        
+        setSelectedCampaignId(editingTask.campaignId || "");
+        setObservation(editingTask.description || "");
+        setEditingTaskId(editingTask.id);
+        
+        // Configurar atribuição da tarefa - verificar se é de outro usuário
+        const { data: { user } } = await supabase.auth.getUser();
+        if (editingTask.userId && editingTask.userId !== user?.id) {
+          setAssignedTo("other");
+          setSelectedUserId(editingTask.userId);
+        } else {
+          setAssignedTo("me");
+          setSelectedUserId(null);
+        }
+        
+        // Pré-selecionar o contato se houver
+        if (editingTask.contactId && editingTask.contactName) {
+          setSelectedContact({
+            id: editingTask.contactId,
+            name: editingTask.contactName,
+            type: 'contato',
+            phone: '',
+            email: ''
+          });
+          setSearchQuery(editingTask.contactName);
+        }
+      } else if (!open) {
+        // Resetar ao fechar
+        setEditingTaskId(null);
+        setSelectedContact(null);
+        setSearchQuery("");
+        setDate(initialDate || new Date());
+        setDateInput("");
         setHours("");
         setMinutes("");
-      } else if (editingTask.time) {
-        const [h, m] = editingTask.time.split(':');
-        setHours(h);
-        setMinutes(m);
         setIsAllDay(false);
         setNoTimeSet(false);
-      } else {
-        // Sem horário definido
-        setIsAllDay(false);
-        setNoTimeSet(true);
-        setHours("");
-        setMinutes("");
+        setTaskOrigem("bot");
+        setEmailTipo("enviado");
+        setPedidoTipo("orcamento");
+        setSelectedCampaignId("");
+        setObservation("");
+        setAssignedTo("me");
+        setSelectedUserId(null);
+        setShowContactList(false);
       }
-      
-      // Converter origem antiga para nova
-      const origemValue = editingTask.origem;
-      if (origemValue === 'email_enviado') {
-        setTaskOrigem('email');
-        setEmailTipo('enviado');
-      } else if (origemValue === 'email_recebido') {
-        setTaskOrigem('email');
-        setEmailTipo('recebido');
-      } else if (origemValue === 'pedido_orcamento') {
-        setTaskOrigem('pedido');
-        setPedidoTipo('orcamento');
-      } else if (origemValue === 'pedido_negociacao') {
-        setTaskOrigem('pedido');
-        setPedidoTipo('negociacao');
-      } else if (origemValue === 'pedido_aprovacao') {
-        setTaskOrigem('pedido');
-        setPedidoTipo('aprovacao');
-      } else {
-        setTaskOrigem(origemValue as typeof taskOrigem);
-      }
-      
-      setSelectedCampaignId(editingTask.campaignId || "");
-      setObservation(editingTask.description || "");
-      setEditingTaskId(editingTask.id);
-      
-      // Pré-selecionar o contato se houver
-      if (editingTask.contactId && editingTask.contactName) {
-        setSelectedContact({
-          id: editingTask.contactId,
-          name: editingTask.contactName,
-          type: 'contato',
-          phone: '',
-          email: ''
-        });
-        setSearchQuery(editingTask.contactName);
-      }
-    } else if (!open) {
-      // Resetar ao fechar
-      setEditingTaskId(null);
-      setSelectedContact(null);
-      setSearchQuery("");
-      setDate(initialDate || new Date());
-      setDateInput("");
-      setHours("");
-      setMinutes("");
-      setIsAllDay(false);
-      setNoTimeSet(false);
-      setTaskOrigem("bot");
-      setEmailTipo("enviado");
-      setPedidoTipo("orcamento");
-      setSelectedCampaignId("");
-      setObservation("");
-      setShowContactList(false);
-    }
+    };
+    
+    checkUserAndFillForm();
   }, [editingTask, open, initialDate]);
 
   // Carregar contatos e empresas do Supabase
@@ -500,6 +516,13 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       origemFinal = `pedido_${pedidoTipo}`;
     }
     
+    const userIdToSave = assignedTo === "other" && selectedUserId ? selectedUserId : undefined;
+    console.log("=== SALVANDO TAREFA ===");
+    console.log("assignedTo:", assignedTo);
+    console.log("selectedUserId:", selectedUserId);
+    console.log("userIdToSave:", userIdToSave);
+    console.log("editingTaskId:", editingTaskId);
+    
     onSave({
       id: editingTaskId || undefined,
       contactId: selectedContact.id,
@@ -510,7 +533,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       campaignId: taskOrigem === 'campanha' ? selectedCampaignId : undefined,
       observation,
       isAllDay,
-      userId: editingTask?.userId || (assignedTo === "other" ? selectedUserId! : undefined),
+      userId: userIdToSave,
     });
 
     onOpenChange(false);
