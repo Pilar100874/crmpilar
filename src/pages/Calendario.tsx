@@ -1215,8 +1215,43 @@ export default function Calendario() {
       const targetUserId = user.id;
       console.log("Target User ID:", targetUserId);
 
-      // Se for dia todo, criar múltiplas tarefas baseadas na jornada do usuário
+      // Se for dia todo, atualizar a tarefa se estiver editando; caso contrário, criar baseado na jornada
       if (taskData.isAllDay) {
+        // Atualização de tarefa existente para "dia todo"
+        if (taskData.id) {
+          const titleComputed = `${taskData.origem === 'ligacao' ? 'Ligação' : taskData.origem === 'visita' ? 'Visita' : taskData.origem === 'campanha' ? 'Campanha' : 'Tarefa'} - ${taskData.contactName}`;
+          const { data, error } = await (supabase as any)
+            .from('calendario_tarefas')
+            .update({
+              user_id: targetUserId,
+              estabelecimento_id: estabelecimentoId,
+              contact_id: taskData.contactId,
+              contact_name: taskData.contactName,
+              title: titleComputed,
+              description: taskData.observation,
+              date: format(taskData.date, 'yyyy-MM-dd'),
+              time: null, // Dia todo não tem horário específico
+              origem: taskData.origem,
+              campaign_id: taskData.campaignId,
+              status: 'pending',
+              is_all_day: true,
+            })
+            .eq('id', taskData.id)
+            .select();
+
+          if (error) {
+            console.error('Erro ao atualizar tarefa para dia todo:', error);
+            toast.error('Erro ao atualizar tarefa');
+            return;
+          }
+
+          console.log('Tarefa atualizada para dia todo:', data);
+          toast.success('Tarefa atualizada para dia todo');
+          await loadTasks();
+          setShowTaskDialog(false);
+          return;
+        }
+
         console.log("=== Buscando jornada de trabalho ===");
         console.log("Target User ID para jornada:", targetUserId);
         console.log("User ID autenticado:", user.id);
