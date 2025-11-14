@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, Receipt, Inbox, ChevronRight, ChevronLeft } from "lucide-react";
+import { User, Phone, Building2, Plus, Receipt, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -15,17 +15,13 @@ interface ClientDetailsPanelProps {
   companies?: any[];
   additionalInfo?: React.ReactNode;
   onAddCompany?: () => void;
-  showClientDetails?: boolean;
-  onToggleClientDetails?: () => void;
 }
 
 export function ClientDetailsPanel({ 
   customer, 
   companies = [], 
   additionalInfo,
-  onAddCompany,
-  showClientDetails = true,
-  onToggleClientDetails
+  onAddCompany
 }: ClientDetailsPanelProps) {
   const navigate = useNavigate();
 
@@ -42,21 +38,8 @@ export function ClientDetailsPanel({
 
   return (
     <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
-      {/* Header com nome do cliente e botão toggle */}
+      {/* Header com nome do cliente */}
       <div className="p-4 border-b flex-shrink-0">
-        {onToggleClientDetails && (
-          <div className="flex justify-end mb-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={onToggleClientDetails}
-              className="h-8 w-8 p-0"
-              title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
-            >
-              {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          </div>
-        )}
         <div className="flex flex-col items-center mb-4">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
             <User className="w-10 h-10 text-primary" />

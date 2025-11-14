@@ -2664,8 +2664,6 @@ ${recentMessages}
                 telefone: selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone,
                 email: selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email
               }}
-              showClientDetails={showClientDetailsOrcamento}
-              onToggleClientDetails={() => setShowClientDetailsOrcamento(!showClientDetailsOrcamento)}
               additionalInfo={
                 <div className="space-y-2">
                   <div>
