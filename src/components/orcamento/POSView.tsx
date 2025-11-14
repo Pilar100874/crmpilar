@@ -663,32 +663,32 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
           <TabsContent value="cart" className="flex-1 m-0">
             <ScrollArea className="h-[calc(100vh-400px)] p-4">
               {cartArray.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
                   <p className="text-sm">Carrinho vazio</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {cartArray.map(({ produto, quantity }) => (
-                    <div key={produto.id} className="bg-slate-700 rounded-lg p-3">
+                    <div key={produto.id} className="bg-muted rounded-lg p-3 border border-border">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-slate-600 rounded flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 bg-muted/60 rounded flex items-center justify-center flex-shrink-0">
                           {produto.foto_url ? (
                             <img src={produto.foto_url} alt="" className="w-full h-full object-cover rounded" />
                           ) : (
-                            <span className="text-slate-400">{produto.nome[0]}</span>
+                            <span className="text-muted-foreground">{produto.nome[0]}</span>
                           )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <p className="text-white font-medium truncate">{produto.nome}</p>
-                          <p className="text-slate-400 text-sm">R$ 10,00</p>
+                          <p className="text-foreground font-medium truncate">{produto.nome}</p>
+                          <p className="text-muted-foreground text-sm">R$ 10,00</p>
                         </div>
 
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => removeFromCart(produto.id)}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -700,22 +700,22 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-8 w-8 bg-slate-600 border-slate-500 hover:bg-slate-500"
+                            className="h-8 w-8 bg-background border-border hover:bg-muted"
                             onClick={() => updateQuantity(produto.id, -1)}
                           >
-                            <Minus className="w-4 h-4 text-white" />
+                            <Minus className="w-4 h-4" />
                           </Button>
-                          <span className="text-white font-medium w-12 text-center">{quantity}</span>
+                          <span className="text-foreground font-medium w-12 text-center">{quantity}</span>
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-8 w-8 bg-slate-600 border-slate-500 hover:bg-slate-500"
+                            className="h-8 w-8 bg-background border-border hover:bg-muted"
                             onClick={() => updateQuantity(produto.id, 1)}
                           >
-                            <Plus className="w-4 h-4 text-white" />
+                            <Plus className="w-4 h-4" />
                           </Button>
                         </div>
-                        <span className="text-white font-bold">
+                        <span className="text-foreground font-bold">
                           R$ {(quantity * 10).toFixed(2)}
                         </span>
                       </div>
@@ -729,34 +729,34 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
           <TabsContent value="details" className="flex-1 m-0">
             <ScrollArea className="h-[calc(100vh-400px)] p-4">
               <div className="space-y-3">
-                <div className="bg-slate-700 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-white mb-3">Status do Orçamento</h4>
+                <div className="bg-muted rounded-lg p-4 border border-border">
+                  <h4 className="text-sm font-medium text-foreground mb-3">Status do Orçamento</h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm text-white">Em Orçamento</span>
+                      <div className="w-3 h-3 bg-primary rounded-full"></div>
+                      <span className="text-sm text-foreground">Em Orçamento</span>
                     </div>
-                    <p className="text-xs text-slate-400 ml-6">
+                    <p className="text-xs text-muted-foreground ml-6">
                       Aguardando finalização
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-slate-700 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-white mb-3">Informações</h4>
+                <div className="bg-muted rounded-lg p-4 border border-border">
+                  <h4 className="text-sm font-medium text-foreground mb-3">Informações</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Produtos:</span>
-                      <span className="text-white">{cartArray.length}</span>
+                      <span className="text-muted-foreground">Produtos:</span>
+                      <span className="text-foreground">{cartArray.length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Quantidade Total:</span>
-                      <span className="text-white">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                      <span className="text-muted-foreground">Quantidade Total:</span>
+                      <span className="text-foreground">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
                     </div>
                     {selectedEmpresa && (
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Empresa:</span>
-                        <span className="text-white">
+                        <span className="text-muted-foreground">Empresa:</span>
+                        <span className="text-foreground">
                           {empresas.find(e => e.id === selectedEmpresa)?.nome_fantasia}
                         </span>
                       </div>
@@ -769,10 +769,10 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         </Tabs>
 
         {/* Empresa e Botões de Ação */}
-        <div className="border-t border-slate-700 bg-slate-800 mt-auto">
+        <div className="border-t border-border bg-card mt-auto">
           {/* Empresa */}
-          <div className="p-4 border-b border-slate-700">
-            <label className="text-xs font-medium text-slate-400 mb-2 block">
+          <div className="p-4 border-b border-border">
+            <label className="text-xs font-medium text-muted-foreground mb-2 block">
               Empresa
             </label>
             <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
@@ -781,7 +781,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                   variant="outline"
                   role="combobox"
                   aria-expanded={openEmpresaCombobox}
-                  className="w-full justify-between bg-slate-700 border-slate-600 text-white hover:bg-slate-600 hover:text-white h-10"
+                  className="w-full justify-between bg-background border-border hover:bg-muted h-10"
                 >
                   {selectedEmpresa
                     ? empresas.find((empresa) => empresa.id === selectedEmpresa)?.nome_fantasia
@@ -789,14 +789,14 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0 bg-slate-800 border-slate-700">
-                <Command className="bg-slate-800">
+              <PopoverContent className="w-[400px] p-0 bg-card border-border">
+                <Command className="bg-card">
                   <CommandInput 
                     placeholder="Buscar empresa por nome ou CNPJ..." 
-                    className="bg-slate-800 text-white border-slate-700"
+                    className="bg-card border-border"
                   />
                   <CommandList>
-                    <CommandEmpty className="text-slate-400 py-6 text-center text-sm">
+                    <CommandEmpty className="text-muted-foreground py-6 text-center text-sm">
                       Nenhuma empresa encontrada.
                     </CommandEmpty>
                     <CommandGroup>
@@ -808,7 +808,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                             setSelectedEmpresa(empresa.id);
                             setOpenEmpresaCombobox(false);
                           }}
-                          className="text-white hover:bg-slate-700 cursor-pointer"
+                          className="hover:bg-muted cursor-pointer"
                         >
                           <Check
                             className={cn(
@@ -819,7 +819,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                           <div className="flex flex-col">
                             <span>{empresa.nome_fantasia}</span>
                             {empresa.cnpj && (
-                              <span className="text-xs text-slate-400">{empresa.cnpj}</span>
+                              <span className="text-xs text-muted-foreground">{empresa.cnpj}</span>
                             )}
                           </div>
                         </CommandItem>
@@ -836,7 +836,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-slate-700 border-slate-600 hover:bg-slate-600"
+              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
               onClick={() => setShowPhotoModal(true)}
             >
               <Camera className="w-5 h-5 mb-1" />
@@ -845,7 +845,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-slate-700 border-slate-600 hover:bg-slate-600"
+              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
               onClick={() => setShowSuggestionsModal(true)}
             >
               <Lightbulb className="w-5 h-5 mb-1" />
@@ -854,7 +854,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-slate-700 border-slate-600 hover:bg-slate-600"
+              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
               onClick={() => setShowShareModal(true)}
               disabled={!shareLink}
             >
@@ -864,7 +864,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-16 bg-slate-700 border-slate-600 hover:bg-slate-600"
+              className="flex-col h-16 bg-muted border-border hover:bg-muted/80"
               onClick={() => setActiveTab("details")}
             >
               <History className="w-5 h-5 mb-1" />
@@ -876,14 +876,14 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         {/* Modal de Foto */}
         {showPhotoModal && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-slate-800 rounded-lg p-6 w-[90%] max-w-md max-h-[80vh] overflow-auto">
+            <div className="bg-card rounded-lg p-6 w-[90%] max-w-md max-h-[80vh] overflow-auto border border-border">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-white">Extrair Itens por Foto</h3>
+                <h3 className="text-lg font-bold text-foreground">Extrair Itens por Foto</h3>
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={() => setShowPhotoModal(false)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -899,19 +899,19 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         {/* Modal de Sugestões */}
         {showSuggestionsModal && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-slate-800 rounded-lg p-6 w-[90%] max-w-md">
+            <div className="bg-card rounded-lg p-6 w-[90%] max-w-md border border-border">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-white">Sugestões de Produtos</h3>
+                <h3 className="text-lg font-bold text-foreground">Sugestões de Produtos</h3>
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={() => setShowSuggestionsModal(false)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </Button>
               </div>
-              <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                 <Lightbulb className="w-12 h-12 mb-3 opacity-20" />
                 <p className="text-sm text-center">Sugestões de produtos</p>
                 <p className="text-xs text-center mt-1">Baseadas no histórico do cliente</p>
@@ -923,41 +923,41 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         {/* Modal de Compartilhar */}
         {showShareModal && shareLink && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-slate-800 rounded-lg p-6 w-[90%] max-w-md">
+            <div className="bg-card rounded-lg p-6 w-[90%] max-w-md border border-border">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-white">Compartilhar Orçamento</h3>
+                <h3 className="text-lg font-bold text-foreground">Compartilhar Orçamento</h3>
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={() => setShowShareModal(false)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </Button>
               </div>
               <div className="space-y-4">
                 <div className="flex flex-col items-center py-4">
-                  <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-3">
-                    <Share2 className="w-8 h-8 text-white" />
+                  <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-3">
+                    <Share2 className="w-8 h-8 text-primary-foreground" />
                   </div>
-                  <p className="text-sm text-slate-400 text-center">
+                  <p className="text-sm text-muted-foreground text-center">
                     Link de compartilhamento criado!
                   </p>
                 </div>
 
-                <div className="bg-slate-700 rounded-lg p-4">
+                <div className="bg-muted rounded-lg p-4 border border-border">
                   <div className="flex gap-2">
                     <Input
                       value={shareLink}
                       readOnly
-                      className="bg-slate-600 border-slate-500 text-white text-sm"
+                      className="bg-background border-border text-sm"
                     />
                     <Button
                       onClick={() => {
                         handleCopyLink();
                         setShowShareModal(false);
                       }}
-                      className="bg-blue-600 hover:bg-blue-700"
+                      className="bg-primary hover:bg-primary/90"
                     >
                       Copiar
                     </Button>
@@ -971,9 +971,9 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
       </div>
 
       {/* Barra de Total Inferior */}
-      <div className="bg-slate-800 border-t border-slate-700 px-6 py-4 flex items-center justify-between">
+      <div className="bg-card border-t border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-2 text-muted-foreground">
             <User className="w-5 h-5" />
             <span className="text-sm">
               {selectedEmpresa 
@@ -981,10 +981,10 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                 : 'Nenhuma empresa selecionada'}
             </span>
           </div>
-          <div className="h-8 w-px bg-slate-700" />
+          <div className="h-8 w-px bg-border" />
           <div>
-            <div className="text-slate-400 text-xs mb-1">Total</div>
-            <div className="text-white font-bold text-3xl">
+            <div className="text-muted-foreground text-xs mb-1">Total</div>
+            <div className="text-foreground font-bold text-3xl">
               {new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL'
@@ -994,7 +994,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         </div>
         
         <Button 
-          className="bg-blue-600 hover:bg-blue-700 text-white h-14 px-8 text-base font-semibold"
+          className="bg-primary hover:bg-primary/90 h-14 px-8 text-base font-semibold"
           onClick={handleFinalize}
           disabled={loading || cartArray.length === 0 || !selectedEmpresa}
         >
