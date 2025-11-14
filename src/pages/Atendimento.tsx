@@ -1319,12 +1319,7 @@ ${recentMessages}
   return (
     <div className="h-screen min-h-0 flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
-      <div className={`w-80 border-r border-border flex flex-col h-full min-h-0 transition-colors ${
-        activeTab === 'chat' ? 'bg-blue-50/40' : 
-        activeTab === 'agenda' ? 'bg-green-50/40' : 
-        activeTab === 'email' ? 'bg-orange-50/40' :
-        'bg-purple-50/40'
-      }`}>
+      <div className="w-80 border-r border-border flex flex-col h-full min-h-0 transition-colors bg-gray-300">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-3">Painel de Atendimento</h2>
           <div className="relative">
@@ -1343,48 +1338,48 @@ ${recentMessages}
           <TabsList className="w-full grid grid-cols-4 mx-4 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="chat" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-blue-100 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span className="font-medium">Chat</span>
               {activeConversationsCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-blue-500 text-white text-xs rounded-full">
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-xs rounded-full">
                   {activeConversationsCount}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-green-100 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span className="font-medium">Agenda</span>
               {todayTasksCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-green-500 text-white text-xs rounded-full">
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-xs rounded-full">
                   {todayTasksCount}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-orange-100 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
             >
               <Mail className="w-3.5 h-3.5" />
               <span className="font-medium">Email</span>
               {unreadEmailsCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-orange-500 text-white text-xs rounded-full">
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-xs rounded-full">
                   {unreadEmailsCount}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger 
               value="orcamento" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-purple-100 data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-1.5 data-[state=active]:bg-gray-400 data-[state=active]:shadow-sm transition-all"
             >
               <Receipt className="w-3.5 h-3.5" />
               <span className="font-medium">Orçam.</span>
               {orcamentosEmAndamentoCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-purple-500 text-white text-xs rounded-full">
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 bg-gray-600 text-white text-xs rounded-full">
                   {orcamentosEmAndamentoCount}
                 </Badge>
               )}
