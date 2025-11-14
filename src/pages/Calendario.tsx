@@ -83,9 +83,16 @@ function DroppableDay({
   return (
     <div
       ref={setNodeRef}
-      className={`${className} ${isOver ? "ring-2 ring-primary ring-inset" : ""}`}
+      className={`${className} ${isOver ? "ring-2 ring-primary ring-inset bg-primary/10" : ""} relative`}
       onClick={onClick}
     >
+      {isOver && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <div className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm font-medium shadow-lg">
+            Soltar aqui
+          </div>
+        </div>
+      )}
       {children}
     </div>
   );
@@ -1582,20 +1589,25 @@ export default function Calendario() {
           <DroppableDay
             key={day.toString()}
             date={currentDay}
-            className={`min-h-[120px] border-r border-b border-border p-2 cursor-pointer hover:bg-muted/50 transition-colors ${
+            className={`min-h-[140px] border-r border-b border-border cursor-pointer hover:bg-muted/50 transition-colors flex flex-col ${
               !isCurrentMonth ? "bg-muted/20 text-muted-foreground" : ""
             } ${isTodayDate ? "bg-primary/5" : ""}`}
             onClick={() => handleOpenNewTask(currentDay)}
           >
-            <div className="text-right mb-1">
+            <div className="flex items-center justify-between px-2 py-1 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-[5]">
               <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm ${
                 isTodayDate ? "bg-primary text-primary-foreground font-bold" : ""
               }`}>
                 {format(day, "d")}
               </span>
+              {dayTasks.length > 0 && (
+                <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                  {dayTasks.length}
+                </span>
+              )}
             </div>
-            <div className="space-y-1">
-              {dayTasks.slice(0, 3).map(task => (
+            <div className="flex-1 p-2 space-y-1 overflow-y-auto max-h-[100px]">
+              {dayTasks.slice(0, 5).map(task => (
                 <DraggableTask
                   key={task.id}
                   task={task}
@@ -1608,10 +1620,16 @@ export default function Calendario() {
                   userColor={task.userId ? userColors[task.userId] : undefined}
                 />
               ))}
-              {dayTasks.length > 3 && (
-                <div className="text-xs text-muted-foreground px-2">
-                  +{dayTasks.length - 3} mais
-                </div>
+              {dayTasks.length > 5 && (
+                <button 
+                  className="text-xs text-primary hover:text-primary/80 px-2 w-full text-left"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenNewTask(currentDay);
+                  }}
+                >
+                  +{dayTasks.length - 5} mais tarefas
+                </button>
               )}
             </div>
           </DroppableDay>
