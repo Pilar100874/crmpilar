@@ -26,7 +26,9 @@ import {
   Grid,
   List,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 import {
   Select,
@@ -656,17 +658,28 @@ export default function POSView({
 
         {/* Header com Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <div className="border-b border-border">
-            <TabsList className="w-full grid grid-cols-2 bg-transparent h-10 rounded-none">
-              <TabsTrigger value="cart" className="data-[state=active]:bg-muted text-xs">
+          <div className="border-b border-border flex items-center justify-between px-2 py-1">
+            <TabsList className="bg-transparent h-10 rounded-none flex-1">
+              <TabsTrigger value="cart" className="data-[state=active]:bg-muted text-xs flex-1">
                 <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
                 Carrinho
               </TabsTrigger>
-              <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs">
+              <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs flex-1">
                 <Tag className="w-3.5 h-3.5 mr-1.5" />
                 Detalhes
               </TabsTrigger>
             </TabsList>
+            {onToggleClientDetails && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onToggleClientDetails}
+                className="h-8 w-8 p-0 ml-1"
+                title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+              >
+                {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+            )}
           </div>
 
           {/* Conteúdo das Tabs */}
