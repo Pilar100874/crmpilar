@@ -32,6 +32,16 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
+// Utilitário para aplicar alpha em cores HSL, gerando hsla()
+const toAlpha = (hslColor: string, alpha: number) => {
+  try {
+    if (!hslColor.startsWith("hsl(")) return hslColor;
+    return hslColor.replace("hsl(", "hsla(").replace(")", `, ${alpha})`);
+  } catch {
+    return hslColor;
+  }
+};
+
 interface Task {
   id: string;
   title: string;
@@ -125,9 +135,9 @@ function DraggableTask({
       style={{
         ...style,
         ...(userColor && task.status !== "completed" ? {
-          backgroundColor: userColor,
+          backgroundColor: toAlpha(userColor, 0.22),
           borderLeft: `3px solid ${userColor}`,
-          filter: 'brightness(1.1)'
+          filter: 'brightness(1.02)'
         } : {})
       }}
       className={`group text-xs px-2 py-1 rounded flex items-center gap-1 ${
@@ -218,7 +228,7 @@ function DraggableTaskCard({
         ...style,
         ...(userColor && task.status !== "completed" ? {
           borderLeft: `4px solid ${userColor}`,
-          backgroundColor: `${userColor}15`
+          backgroundColor: toAlpha(userColor, 0.12)
         } : {})
       }} 
       className="mb-2"
@@ -316,14 +326,14 @@ export default function Calendario() {
     if (missing.length === 0) return;
 
     const palette = [
-      'hsl(142, 71%, 45%)', // verde
-      'hsl(221, 83%, 53%)', // azul
-      'hsl(262, 83%, 58%)', // roxo
-      'hsl(346, 77%, 50%)', // vermelho/rosa
-      'hsl(25, 95%, 53%)',  // laranja
-      'hsl(48, 96%, 53%)',  // amarelo
-      'hsl(173, 58%, 39%)', // teal
-      'hsl(280, 67%, 47%)', // magenta
+      'hsl(142, 45%, 82%)', // verde pastel
+      'hsl(221, 65%, 85%)', // azul pastel
+      'hsl(262, 50%, 88%)', // roxo pastel
+      'hsl(346, 60%, 88%)', // rosa pastel
+      'hsl(25, 75%, 86%)',  // laranja pastel
+      'hsl(48, 85%, 84%)',  // amarelo pastel
+      'hsl(173, 45%, 84%)', // teal pastel
+      'hsl(300, 50%, 88%)', // magenta pastel
     ];
 
     setUserColors(prev => {
@@ -577,14 +587,14 @@ export default function Calendario() {
   // Função para gerar cores únicas para cada usuário
   const generateUserColors = (users: Array<{ id: string; nome: string; auth_user_id: string | null }>) => {
     const colorPalette = [
-      'hsl(142, 71%, 45%)', // verde
-      'hsl(221, 83%, 53%)', // azul
-      'hsl(262, 83%, 58%)', // roxo
-      'hsl(346, 77%, 50%)', // vermelho/rosa
-      'hsl(25, 95%, 53%)',  // laranja
-      'hsl(48, 96%, 53%)',  // amarelo
-      'hsl(173, 58%, 39%)', // teal
-      'hsl(280, 67%, 47%)', // magenta
+      'hsl(142, 45%, 82%)', // verde pastel
+      'hsl(221, 65%, 85%)', // azul pastel
+      'hsl(262, 50%, 88%)', // roxo pastel
+      'hsl(346, 60%, 88%)', // rosa pastel
+      'hsl(25, 75%, 86%)',  // laranja pastel
+      'hsl(48, 85%, 84%)',  // amarelo pastel
+      'hsl(173, 45%, 84%)', // teal pastel
+      'hsl(300, 50%, 88%)', // magenta pastel
     ];
     
     const colors: Record<string, string> = {};
@@ -726,23 +736,14 @@ export default function Calendario() {
   useEffect(() => {
     const loadRegras = async () => {
       try {
-        // Buscar estabelecimento_id do usuário atual
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData?.user) return;
-
-        const { data: usuarioData } = await (supabase as any)
-          .from('usuarios')
-          .select('estabelecimento_id')
-          .eq('auth_user_id', userData.user.id)
-          .single();
-
-        if (!usuarioData?.estabelecimento_id) return;
+        const estabelecimentoId = await getEstabelecimentoId();
+        if (!estabelecimentoId) return;
 
         // Buscar regras ativas do estabelecimento
         const { data: regras } = await (supabase as any)
           .from('calendario_regras')
           .select('tipo, ativa')
-          .eq('estabelecimento_id', usuarioData.estabelecimento_id);
+          .eq('estabelecimento_id', estabelecimentoId);
 
         if (regras) {
           const regrasMap: any = {};
@@ -1701,7 +1702,7 @@ export default function Calendario() {
                       }`}
                       style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
                         borderLeft: `4px solid ${userColors[task.userId]}`,
-                        backgroundColor: `${userColors[task.userId]}15`
+                        backgroundColor: toAlpha(userColors[task.userId], 0.12)
                       } : {}}
                     >
                       <div className="flex items-center justify-between">
@@ -1974,7 +1975,7 @@ export default function Calendario() {
                     className="border-b border-border hover:bg-muted/50 transition-colors"
                     style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
                       borderLeft: `4px solid ${userColors[task.userId]}`,
-                      backgroundColor: `${userColors[task.userId]}10`
+                      backgroundColor: toAlpha(userColors[task.userId], 0.08)
                     } : {}}
                   >
                     {tableColumns.filter(col => col.visible).map((column) => {
