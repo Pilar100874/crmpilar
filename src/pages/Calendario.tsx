@@ -2432,7 +2432,7 @@ export default function Calendario() {
 
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] flex flex-col max-w-md">
           <DialogHeader>
             <DialogTitle>Tarefa em Fim de Semana</DialogTitle>
             <DialogDescription>
@@ -2440,9 +2440,10 @@ export default function Calendario() {
               <br />O que você deseja fazer?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 flex-col sm:flex-row">
+          <DialogFooter className="gap-2 flex-col sm:flex-row mt-4">
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setIsWeekendDialogOpen(false);
                 setWeekendPendingTask(null);
@@ -2452,6 +2453,7 @@ export default function Calendario() {
             </Button>
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={async () => {
                 if (weekendPendingTask) {
                   if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
@@ -2483,6 +2485,7 @@ export default function Calendario() {
               Manter na Data
             </Button>
             <Button
+              className="w-full sm:w-auto"
               onClick={async () => {
                 if (weekendPendingTask) {
                   const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
