@@ -910,19 +910,19 @@ export default function Calendario() {
     return nextDay;
   };
 
-  // Função para obter o próximo dia disponível considerando regra de dia todo
-  const getNextAvailableDay = async (date: Date): Promise<Date> => {
+  // Função para obter o próximo dia disponível considerando regra de dia todo (por usuário)
+  const getNextAvailableDay = async (date: Date, userIdOverride?: string): Promise<Date> => {
     let nextDay = getNextBusinessDay(date);
     
-    // Se a regra de dia todo estiver ativa, verificar se há tarefa de dia todo
+    // Se a regra de dia todo estiver ativa, verificar se há tarefa de dia todo PARA O MESMO USUÁRIO
     if (calendarioRegras.validacao_dia_todo) {
-      let hasAllDay = await checkAllDayTasks(nextDay);
+      let hasAllDay = await checkAllDayTasks(nextDay, userIdOverride);
       
-      // Enquanto houver tarefa de dia todo, avança para próximo dia útil
+      // Enquanto houver tarefa de dia todo do mesmo usuário, avança para próximo dia útil
       while (hasAllDay) {
-        console.log(`[NEXT_DAY] Dia ${format(nextDay, 'dd/MM/yyyy')} tem tarefa de dia todo, avançando...`);
+        console.log(`[NEXT_DAY] Dia ${format(nextDay, 'dd/MM/yyyy')} tem tarefa de dia todo para o usuário alvo, avançando...`);
         nextDay = getNextBusinessDay(nextDay);
-        hasAllDay = await checkAllDayTasks(nextDay);
+        hasAllDay = await checkAllDayTasks(nextDay, userIdOverride);
       }
       
       console.log(`[NEXT_DAY] Próximo dia disponível: ${format(nextDay, 'dd/MM/yyyy')}`);
@@ -1067,14 +1067,15 @@ export default function Calendario() {
     return { adjustedTime: time, adjustedDate: date, message: '' };
   };
 
-  // Verificar se há tarefas de dia todo na data
-  const checkAllDayTasks = async (date: Date): Promise<boolean> => {
+  // Verificar se há tarefas de dia todo na data (por usuário)
+  const checkAllDayTasks = async (date: Date, userIdOverride?: string): Promise<boolean> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-
-      // Sempre verificar tarefas do usuário atual
-      const targetUserId = user.id;
+      let targetUserId = userIdOverride;
+      if (!targetUserId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        targetUserId = user.id;
+      }
 
       const { data: allDayTasks } = await (supabase as any)
         .from('calendario_tarefas')
@@ -1084,7 +1085,7 @@ export default function Calendario() {
         .eq('is_all_day', true)
         .limit(1);
 
-      return allDayTasks && allDayTasks.length > 0;
+      return Array.isArray(allDayTasks) && allDayTasks.length > 0;
     } catch (error) {
       console.error('Erro ao verificar tarefas de dia todo:', error);
       return false;
