@@ -907,6 +907,27 @@ export default function Calendario() {
     return nextDay;
   };
 
+  // Função para obter o próximo dia disponível considerando regra de dia todo
+  const getNextAvailableDay = async (date: Date): Promise<Date> => {
+    let nextDay = getNextBusinessDay(date);
+    
+    // Se a regra de dia todo estiver ativa, verificar se há tarefa de dia todo
+    if (calendarioRegras.validacao_dia_todo) {
+      let hasAllDay = await checkAllDayTasks(nextDay);
+      
+      // Enquanto houver tarefa de dia todo, avança para próximo dia útil
+      while (hasAllDay) {
+        console.log(`[NEXT_DAY] Dia ${format(nextDay, 'dd/MM/yyyy')} tem tarefa de dia todo, avançando...`);
+        nextDay = getNextBusinessDay(nextDay);
+        hasAllDay = await checkAllDayTasks(nextDay);
+      }
+      
+      console.log(`[NEXT_DAY] Próximo dia disponível: ${format(nextDay, 'dd/MM/yyyy')}`);
+    }
+    
+    return nextDay;
+  };
+
   // Mover tarefas não realizadas para o próximo dia útil
   const moveOverdueTasks = async () => {
     console.log("=== VERIFICANDO TAREFAS ATRASADAS ===");
@@ -928,7 +949,7 @@ export default function Calendario() {
     console.log(`Encontradas ${overdueTasks?.length || 0} tarefas atrasadas`);
     if (overdueTasks && overdueTasks.length > 0) {
       console.log("Tarefas atrasadas:", overdueTasks);
-      const nextDay = getNextBusinessDay(now);
+      const nextDay = await getNextAvailableDay(now);
       const taskIds = overdueTasks.map((t: any) => t.id);
 
       await (supabase as any)
@@ -1123,8 +1144,8 @@ export default function Calendario() {
         setIsWeekendDialogOpen(true);
         return;
       } else {
-        // Se for inserção AUTOMÁTICA (rotinas): realocar para próximo dia útil
-        const nextBusinessDay = getNextBusinessDay(taskData.date);
+        // Se for inserção AUTOMÁTICA (rotinas): realocar para próximo dia disponível
+        const nextBusinessDay = await getNextAvailableDay(taskData.date);
         toast.info(`Data realocada de ${format(taskData.date, "dd/MM/yyyy")} para ${format(nextBusinessDay, "dd/MM/yyyy")} (próximo dia útil)`);
         taskData.date = nextBusinessDay;
       }
@@ -2546,7 +2567,7 @@ export default function Calendario() {
               className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center bg-primary hover:bg-primary/90"
               onClick={async () => {
                 if (weekendPendingTask) {
-                  const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
+                  const nextBusinessDay = await getNextAvailableDay(weekendPendingTask.targetDate);
                   
                   if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
                     // Mover tarefa existente para próximo dia útil com horário ajustado (se houver)
