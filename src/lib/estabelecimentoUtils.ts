@@ -41,10 +41,10 @@ export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<
     }
 
     // Se não é admin, busca na tabela usuarios
-    const { data: userData } = await supabase
+    const { data: userData } = await (supabase as any)
       .from('usuarios')
       .select('estabelecimento_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .maybeSingle();
 
     return userData?.estabelecimento_id || null;

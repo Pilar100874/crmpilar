@@ -305,6 +305,38 @@ export default function Calendario() {
   // Mapa de cores para cada usuário
   const [userColors, setUserColors] = useState<Record<string, string>>({});
   
+  // Preencher cores faltantes a partir das tarefas visíveis (fallback)
+  useEffect(() => {
+    // IDs únicos de usuários presentes nas tarefas
+    const ids = Array.from(new Set(tasks.map(t => t.userId).filter(Boolean))) as string[];
+    if (ids.length === 0) return;
+
+    // Verificar quais IDs ainda não possuem cor
+    const missing = ids.filter(id => !userColors[id]);
+    if (missing.length === 0) return;
+
+    const palette = [
+      'hsl(142, 71%, 45%)', // verde
+      'hsl(221, 83%, 53%)', // azul
+      'hsl(262, 83%, 58%)', // roxo
+      'hsl(346, 77%, 50%)', // vermelho/rosa
+      'hsl(25, 95%, 53%)',  // laranja
+      'hsl(48, 96%, 53%)',  // amarelo
+      'hsl(173, 58%, 39%)', // teal
+      'hsl(280, 67%, 47%)', // magenta
+    ];
+
+    setUserColors(prev => {
+      const startIndex = Object.keys(prev).length % palette.length;
+      const additions: Record<string, string> = {};
+      missing.forEach((id, idx) => {
+        additions[id] = palette[(startIndex + idx) % palette.length];
+      });
+      console.log('[COLORS] Cores preenchidas a partir das tarefas:', additions);
+      return { ...prev, ...additions };
+    });
+  }, [tasks, userColors]);
+  
   const [isWeekendDialogOpen, setIsWeekendDialogOpen] = useState(false);
   const [weekendPendingTask, setWeekendPendingTask] = useState<{ 
     taskData: {
@@ -698,10 +730,10 @@ export default function Calendario() {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData?.user) return;
 
-        const { data: usuarioData } = await supabase
+        const { data: usuarioData } = await (supabase as any)
           .from('usuarios')
           .select('estabelecimento_id')
-          .eq('id', userData.user.id)
+          .eq('auth_user_id', userData.user.id)
           .single();
 
         if (!usuarioData?.estabelecimento_id) return;
