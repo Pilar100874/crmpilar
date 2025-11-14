@@ -94,15 +94,22 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setDate(editingTask.date);
       setDateInput(format(editingTask.date, "dd/MM/yyyy"));
       
-      if (editingTask.time) {
+      // Priorizar flag de dia todo ao preencher o formulário
+      if (editingTask.isAllDay) {
+        setIsAllDay(true);
+        setNoTimeSet(false);
+        setHours("");
+        setMinutes("");
+      } else if (editingTask.time) {
         const [h, m] = editingTask.time.split(':');
         setHours(h);
         setMinutes(m);
         setIsAllDay(false);
         setNoTimeSet(false);
       } else {
-        setIsAllDay(editingTask.isAllDay || false);
-        setNoTimeSet(!editingTask.isAllDay); // Se não tem horário e não é dia todo, é "sem horário definido"
+        // Sem horário definido
+        setIsAllDay(false);
+        setNoTimeSet(true);
         setHours("");
         setMinutes("");
       }
