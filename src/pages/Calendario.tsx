@@ -1745,19 +1745,33 @@ export default function Calendario() {
             } ${isTodayDate ? "bg-primary/5" : ""}`}
           >
             <div className="flex items-center justify-between px-2 py-1 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-[5]">
-              <span 
-                className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm cursor-pointer hover:bg-primary/20 transition-colors ${
-                  isTodayDate ? "bg-primary text-primary-foreground font-bold" : ""
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentDate(currentDay);
-                  setViewMode("day");
-                }}
-                title="Ver dia"
-              >
-                {format(day, "d")}
-              </span>
+              <div className="flex items-center gap-1">
+                <span 
+                  className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm cursor-pointer hover:bg-primary/20 transition-colors ${
+                    isTodayDate ? "bg-primary text-primary-foreground font-bold" : ""
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentDate(currentDay);
+                    setViewMode("day");
+                  }}
+                  title="Ver dia"
+                >
+                  {format(day, "d")}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 hover:bg-primary/20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenNewTask(currentDay);
+                  }}
+                  title="Nova tarefa"
+                >
+                  <Plus className="w-3 h-3" />
+                </Button>
+              </div>
               {dayTasks.length > 0 && (
                 <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                   {dayTasks.length}
