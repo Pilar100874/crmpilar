@@ -2752,7 +2752,7 @@ export default function Calendario() {
             </Button>
             <Button
               variant="secondary"
-              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center"
+              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center hover:bg-orange-500 hover:text-white transition-colors"
               onClick={async () => {
                 if (weekendPendingTask) {
                   if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
