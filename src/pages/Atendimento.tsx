@@ -2353,16 +2353,181 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
-        <div className="w-[calc(100%-320px)] h-screen bg-gray-100 border-l shadow-lg overflow-hidden">
-          <POSView 
-            estabelecimentoId={estabelecimentoId} 
-            orcamentoId={selectedOrcamentoId}
-            onClose={() => {
-              setOrcamentoSheetOpen(false);
-              setSelectedOrcamentoId(null);
-            }}
-          />
-        </div>
+        <>
+          {/* POSView */}
+          <div className={`${showClientDetails ? 'w-[calc(100%-320px-320px)]' : 'w-[calc(100%-320px)]'} h-screen bg-gray-100 border-l shadow-lg overflow-hidden transition-all duration-300`}>
+            <POSView 
+              estabelecimentoId={estabelecimentoId} 
+              orcamentoId={selectedOrcamentoId}
+              onClose={() => {
+                setOrcamentoSheetOpen(false);
+                setSelectedOrcamentoId(null);
+              }}
+              showClientDetails={showClientDetails}
+              onToggleClientDetails={() => setShowClientDetails(!showClientDetails)}
+            />
+          </div>
+
+          {/* Right Sidebar - Client Details Panel para Orçamento */}
+          {showClientDetails && selectedConversation && selectedConv && (
+            <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
+              {/* Header com nome do cliente */}
+              <div className="p-4 border-b flex-shrink-0">
+                <div className="flex flex-col items-center mb-4">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
+                    <User className="w-10 h-10 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg">{selectedConv.customer?.nome || "Cliente"}</h3>
+                  <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {selectedConv.customer?.telefone}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Resumo da Empresa */}
+              <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-4">
+                {/* Seção de Empresas */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      Empresas Vinculadas
+                    </h4>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 rounded-full"
+                      onClick={() => setShowNovoContatoDialog(true)}
+                    >
+                      <Plus className="w-4 h-4 text-primary" />
+                    </Button>
+                  </div>
+
+                  {customerCompanies.length > 0 ? (
+                    <div className="space-y-2">
+                      {customerCompanies.map((companyRel: any) => {
+                        const empresa = companyRel.empresas;
+                        return (
+                          <Card key={companyRel.empresa_id} className="p-3 rounded-2xl">
+                            <div className="space-y-2">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="font-medium text-sm truncate">
+                                      {empresa?.nome_fantasia || empresa?.nome}
+                                    </p>
+                                    {companyRel.is_primary && (
+                                      <Badge variant="secondary" className="text-xs h-5 bg-orange-500 text-white">
+                                        Principal
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  {empresa?.cnpj && (
+                                    <p className="text-xs text-muted-foreground">
+                                      CNPJ: {empresa.cnpj}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {companyRel.cargo && (
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-muted-foreground">Cargo:</span>
+                                  <span className="font-medium">{companyRel.cargo}</span>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <Card className="p-4 rounded-2xl">
+                      <div className="text-center">
+                        <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+                        <p className="text-xs text-muted-foreground">
+                          Nenhuma empresa vinculada
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-2 h-7 text-xs"
+                          onClick={() => setShowNovoContatoDialog(true)}
+                        >
+                          Vincular empresa
+                        </Button>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Informações da Conversa */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Informações da Conversa</h4>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2 border-b">
+                      <span className="text-muted-foreground text-xs">Protocolo</span>
+                      <span className="font-medium text-xs">{selectedConv.id.slice(0, 8).toUpperCase()}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 border-b">
+                      <span className="text-muted-foreground text-xs">Canal</span>
+                      <Badge variant="secondary" className="bg-green-500 text-white text-xs h-5">
+                        {selectedConv.canal}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 border-b">
+                      <span className="text-muted-foreground text-xs">Data/Hora</span>
+                      <span className="text-xs">
+                        {format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 border-b">
+                      <span className="text-muted-foreground text-xs">Email</span>
+                      <span className="text-xs truncate max-w-[60%]">
+                        {selectedConv.customer?.email || "-"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ações Rápidas */}
+              <div className="border-t p-4 flex-shrink-0 space-y-2">
+                <Button
+                  className="w-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                  onClick={() => {
+                    if (selectedConv.customer?.id) {
+                      navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
+                    }
+                  }}
+                >
+                  <Receipt className="w-4 h-4 mr-2" />
+                  Abrir Orçamento
+                </Button>
+                
+                <Button
+                  className="w-full rounded-full"
+                  variant="outline"
+                  onClick={() => {
+                    if (selectedConv.customer?.email) {
+                      navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
+                    }
+                  }}
+                >
+                  <Inbox className="w-4 h-4 mr-2" />
+                  Ver Emails
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

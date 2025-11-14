@@ -26,7 +26,9 @@ import {
   Grid,
   List,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 import {
   Select,
@@ -55,9 +57,17 @@ interface POSViewProps {
   estabelecimentoId: string;
   orcamentoId?: string | null;
   onClose?: () => void;
+  showClientDetails?: boolean;
+  onToggleClientDetails?: () => void;
 }
 
-export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POSViewProps) {
+export default function POSView({ 
+  estabelecimentoId, 
+  orcamentoId, 
+  onClose,
+  showClientDetails = false,
+  onToggleClientDetails
+}: POSViewProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
   const [empresas, setEmpresas] = useState<any[]>([]);
@@ -411,15 +421,28 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                 Filtros {showFilters ? '▲' : '▼'}
               </Button>
             </div>
-            {onClose && (
-              <Button 
-                variant="outline" 
-                className="bg-background border-border hover:bg-muted"
-                onClick={onClose}
-              >
-                Voltar
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {onToggleClientDetails && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={onToggleClientDetails}
+                  className="h-9 w-9 p-0"
+                  title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+                >
+                  {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </Button>
+              )}
+              {onClose && (
+                <Button 
+                  variant="outline" 
+                  className="bg-background border-border hover:bg-muted"
+                  onClick={onClose}
+                >
+                  Voltar
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Filtros Avançados */}
