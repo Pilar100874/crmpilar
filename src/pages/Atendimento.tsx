@@ -1654,7 +1654,7 @@ ${recentMessages}
               showClientDetailsAgenda && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
             }`}>
             {/* Agenda Controls */}
-            <div className="flex-shrink-0 px-3 pt-4 pb-2 border-b bg-background space-y-2">
+            <div className="flex-shrink-0 px-3 pt-5 pb-2 border-b bg-background space-y-2">
               {/* Date Navigation + Toggle Button */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-1">
