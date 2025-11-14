@@ -2,13 +2,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays } from "lucide-react";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { format, startOfDay, endOfDay } from "date-fns";
+import { format, startOfDay, endOfDay, addDays, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
 import { toast } from "@/lib/toast-config";
@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Conversation {
   id: string;
@@ -101,6 +102,11 @@ export default function Atendimento() {
   const [activeTab, setActiveTab] = useState("chat");
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
+  
+  // Agenda states
+  const [agendaDate, setAgendaDate] = useState(new Date());
+  const [taskSortOrder, setTaskSortOrder] = useState<Array<'created_at' | 'origem' | 'time'>>(['time', 'created_at', 'origem']);
+  const [showSortDialog, setShowSortDialog] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -417,32 +423,90 @@ export default function Atendimento() {
     }
   };
 
-  // Load today's tasks
-  const loadTodayTasks = async () => {
+  // Load tasks for selected date
+  const loadTodayTasks = async (date: Date = agendaDate) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const today = new Date();
-      const startDate = startOfDay(today);
-      const endDate = endOfDay(today);
+      const startDate = startOfDay(date);
+      const endDate = endOfDay(date);
 
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
         .select('*')
         .eq('user_id', user.id)
         .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', endDate.toISOString().split('T')[0])
-        .order('time', { ascending: true });
+        .lte('date', endDate.toISOString().split('T')[0]);
 
       if (error) {
         console.error("Erro ao carregar tarefas:", error);
         return;
       }
 
-      setTodayTasks(tasksData || []);
+      // Apply custom sorting
+      const sortedTasks = sortTasks(tasksData || []);
+      setTodayTasks(sortedTasks);
     } catch (error) {
       console.error("Erro ao carregar tarefas:", error);
+    }
+  };
+
+  // Sort tasks based on custom order
+  const sortTasks = (tasks: any[]) => {
+    return [...tasks].sort((a, b) => {
+      for (const criterion of taskSortOrder) {
+        let comparison = 0;
+        
+        if (criterion === 'created_at') {
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        } else if (criterion === 'origem') {
+          comparison = (a.origem || '').localeCompare(b.origem || '');
+        } else if (criterion === 'time') {
+          comparison = (a.time || '').localeCompare(b.time || '');
+        }
+        
+        if (comparison !== 0) return comparison;
+      }
+      return 0;
+    });
+  };
+
+  // Reload tasks when date or sort order changes
+  useEffect(() => {
+    if (activeTab === 'agenda') {
+      loadTodayTasks(agendaDate);
+    }
+  }, [agendaDate, taskSortOrder, activeTab]);
+
+  const handlePreviousDay = () => {
+    setAgendaDate(prev => subDays(prev, 1));
+  };
+
+  const handleNextDay = () => {
+    setAgendaDate(prev => addDays(prev, 1));
+  };
+
+  const handleToday = () => {
+    setAgendaDate(new Date());
+  };
+
+  const moveSortCriterion = (index: number, direction: 'up' | 'down') => {
+    const newOrder = [...taskSortOrder];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex >= 0 && targetIndex < newOrder.length) {
+      [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
+      setTaskSortOrder(newOrder);
+    }
+  };
+
+  const getSortLabel = (criterion: string) => {
+    switch (criterion) {
+      case 'created_at': return 'Data de Entrada';
+      case 'origem': return 'Origem';
+      case 'time': return 'Horário';
+      default: return criterion;
     }
   };
 
@@ -1102,18 +1166,27 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          <TabsList className="w-full grid grid-cols-3 mx-4 my-2 flex-shrink-0">
-            <TabsTrigger value="chat" className="flex items-center gap-1">
-              <MessageSquare className="w-3 h-3" />
-              Chat
+          <TabsList className="w-full grid grid-cols-3 mx-4 my-2 flex-shrink-0 bg-muted/50 p-1 rounded-lg">
+            <TabsTrigger 
+              value="chat" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span className="font-medium">Chat</span>
             </TabsTrigger>
-            <TabsTrigger value="agenda" className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              Agenda
+            <TabsTrigger 
+              value="agenda" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span className="font-medium">Agenda</span>
             </TabsTrigger>
-            <TabsTrigger value="email" className="flex items-center gap-1">
-              <Mail className="w-3 h-3" />
-              Email
+            <TabsTrigger 
+              value="email" 
+              className="flex items-center gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span className="font-medium">Email</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1181,33 +1254,142 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2">
-            {todayTasks.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Nenhuma tarefa para hoje</p>
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0">
+            {/* Agenda Controls */}
+            <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b bg-background space-y-2">
+              {/* Date Navigation */}
+              <div className="flex items-center justify-between gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handlePreviousDay}
+                  className="h-8"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                <div className="flex-1 text-center">
+                  <p className="text-sm font-semibold">
+                    {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {format(agendaDate, "EEEE", { locale: ptBR })}
+                  </p>
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleNextDay}
+                  className="h-8"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
-            ) : (
-              todayTasks.map((task) => (
-                <Card key={task.id} className="p-3 hover:bg-muted/50 transition-colors">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                      task.status === 'concluida' ? 'text-green-500' : 'text-muted-foreground'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{task.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
-                      {task.time && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          <Clock className="w-3 h-3 inline mr-1" />
-                          {task.time}
-                        </p>
-                      )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={handleToday}
+                  className="flex-1 h-8"
+                >
+                  <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
+                  Hoje
+                </Button>
+                
+                <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 h-8">
+                      <ArrowUpDown className="w-3.5 h-3.5 mr-1.5" />
+                      Ordenação
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Configurar Ordenação</DialogTitle>
+                      <DialogDescription>
+                        Defina a ordem de prioridade dos critérios de ordenação
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2 py-4">
+                      {taskSortOrder.map((criterion, index) => (
+                        <Card key={criterion} className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Badge variant="secondary" className="font-mono">
+                                {index + 1}
+                              </Badge>
+                              <span className="text-sm font-medium">
+                                {getSortLabel(criterion)}
+                              </span>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => moveSortCriterion(index, 'up')}
+                                disabled={index === 0}
+                                className="h-8 w-8 p-0"
+                              >
+                                <ArrowUp className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => moveSortCriterion(index, 'down')}
+                                disabled={index === taskSortOrder.length - 1}
+                                className="h-8 w-8 p-0"
+                              >
+                                <ArrowDown className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
-                  </div>
-                </Card>
-              ))
-            )}
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Tasks List */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {todayTasks.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">Nenhuma tarefa para esta data</p>
+                </div>
+              ) : (
+                todayTasks.map((task) => (
+                  <Card key={task.id} className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                        task.status === 'concluida' ? 'text-success' : 'text-muted-foreground'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{task.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          {task.time && (
+                            <span className="text-xs text-muted-foreground flex items-center">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {task.time}
+                            </span>
+                          )}
+                          {task.origem && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              {task.origem}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
           </TabsContent>
 
           {/* Email Tab */}
@@ -1221,13 +1403,13 @@ ${recentMessages}
               userEmails.map((email) => (
                 <Card 
                   key={email.id} 
-                  className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${
-                    !email.read ? 'bg-primary/5 border-primary/20' : ''
+                  className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
+                    !email.read ? 'bg-primary/5 border-primary/30 shadow-sm' : ''
                   }`}
                   onClick={() => navigate('/email')}
                 >
-                  <div className="flex items-start gap-2">
-                    <div className="flex-shrink-0">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
                       {email.read ? (
                         <MailOpen className="w-4 h-4 text-muted-foreground" />
                       ) : (
@@ -1236,16 +1418,21 @@ ${recentMessages}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <p className={`font-medium text-sm truncate ${!email.read ? 'font-semibold' : ''}`}>
+                        <p className={`font-medium text-sm truncate ${!email.read ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
                           {email.from_email}
                         </p>
-                        <span className="text-xs text-muted-foreground ml-2">
+                        <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
                           {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
                         </span>
                       </div>
                       <p className={`text-sm truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
                         {email.subject}
                       </p>
+                      {!email.read && (
+                        <Badge variant="default" className="mt-1.5 text-[10px] px-1.5 py-0">
+                          Novo
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </Card>
