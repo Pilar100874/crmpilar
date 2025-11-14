@@ -217,6 +217,7 @@ export type Database = {
           id: string
           is_all_day: boolean | null
           origem: string
+          origem_sub_item: string | null
           status: string
           time: string | null
           title: string
@@ -234,6 +235,7 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           origem: string
+          origem_sub_item?: string | null
           status?: string
           time?: string | null
           title: string
@@ -251,6 +253,7 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           origem?: string
+          origem_sub_item?: string | null
           status?: string
           time?: string | null
           title?: string

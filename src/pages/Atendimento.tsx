@@ -105,7 +105,7 @@ export default function Atendimento() {
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
-  const [taskSortOrder, setTaskSortOrder] = useState<Array<'created_at' | 'origem' | 'time'>>(['time', 'created_at', 'origem']);
+  const [taskSortOrder, setTaskSortOrder] = useState<Array<'created_at' | 'origem' | 'origem_sub_item' | 'time'>>(['time', 'created_at', 'origem', 'origem_sub_item']);
   const [showSortDialog, setShowSortDialog] = useState(false);
 
   useEffect(() => {
@@ -462,6 +462,8 @@ export default function Atendimento() {
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         } else if (criterion === 'origem') {
           comparison = (a.origem || '').localeCompare(b.origem || '');
+        } else if (criterion === 'origem_sub_item') {
+          comparison = (a.origem_sub_item || '').localeCompare(b.origem_sub_item || '');
         } else if (criterion === 'time') {
           comparison = (a.time || '').localeCompare(b.time || '');
         }
@@ -505,6 +507,7 @@ export default function Atendimento() {
     switch (criterion) {
       case 'created_at': return 'Data de Entrada';
       case 'origem': return 'Origem';
+      case 'origem_sub_item': return 'Sub-item da Origem';
       case 'time': return 'Horário';
       default: return criterion;
     }
