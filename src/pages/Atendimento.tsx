@@ -2343,9 +2343,9 @@ ${recentMessages}
         onOpenChange={setShowNovoContatoDialog}
       />
 
-      {/* Orçamento Panel Lateral - Sem Overlay */}
+      {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
-        <div className="fixed inset-y-0 right-0 w-[calc(100vw-400px)] bg-background border-l shadow-2xl z-40">
+        <div className="w-[calc(100%-320px)] h-screen bg-gray-100 border-l shadow-lg overflow-hidden">
           <POSView 
             estabelecimentoId={estabelecimentoId} 
             orcamentoId={selectedOrcamentoId}
