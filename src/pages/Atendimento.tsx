@@ -1573,7 +1573,7 @@ ${recentMessages}
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-4">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1636,7 +1636,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-row min-h-0 m-0">
+          <TabsContent value="agenda" className="flex-1 flex flex-row min-h-0 m-0 pt-4">
             {/* Main Content */}
             <div className={`flex flex-col transition-all duration-300 ${
               showClientDetailsAgenda && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
@@ -1936,7 +1936,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0">
+          <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0 pt-4">
             {/* Main Content */}
             <div className={`flex flex-col transition-all duration-300 ${
               showClientDetailsEmail && selectedEmailData?.customer ? 'w-[calc(100%-320px)]' : 'w-full'
@@ -2040,7 +2040,7 @@ ${recentMessages}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-0">
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-4">
             {/* Filtro de Status */}
             <div className="mt-4 px-3 pt-1 pb-2 border-b bg-background">
               <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
