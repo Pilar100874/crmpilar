@@ -2432,7 +2432,7 @@ export default function Calendario() {
 
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg">
+        <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-xl">Tarefa em Fim de Semana</DialogTitle>
             <DialogDescription className="text-base leading-relaxed">
@@ -2441,10 +2441,10 @@ export default function Calendario() {
               <span className="block mt-2">O que você deseja fazer?</span>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col sm:flex-row gap-3 mt-6">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mt-6">
             <Button
               variant="outline"
-              className="w-full sm:flex-1"
+              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center"
               onClick={() => {
                 setIsWeekendDialogOpen(false);
                 setWeekendPendingTask(null);
@@ -2454,7 +2454,7 @@ export default function Calendario() {
             </Button>
             <Button
               variant="secondary"
-              className="w-full sm:flex-1"
+              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center"
               onClick={async () => {
                 if (weekendPendingTask) {
                   if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
@@ -2486,7 +2486,7 @@ export default function Calendario() {
               Manter na Data
             </Button>
             <Button
-              className="w-full sm:flex-1 bg-primary hover:bg-primary/90"
+              className="w-full sm:basis-0 sm:flex-1 min-w-0 whitespace-normal text-center bg-primary hover:bg-primary/90"
               onClick={async () => {
                 if (weekendPendingTask) {
                   const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
