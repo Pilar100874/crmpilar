@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.0';
+import { toZonedTime, formatInTimeZone } from 'https://esm.sh/date-fns-tz@3.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -107,12 +108,15 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Obter data de hoje
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const hojeStr = hoje.toISOString().split('T')[0];
+    // Obter data de hoje em America/Sao_Paulo
+    const tz = 'America/Sao_Paulo';
+    const now = new Date();
+    const hojeStr = formatInTimeZone(now, tz, 'yyyy-MM-dd');
+    // Construir um Date no UTC representando 00:00 do dia em São Paulo
+    const [y, m, d] = hojeStr.split('-').map(Number);
+    const hojeUtc = new Date(Date.UTC(y, (m as number) - 1, d as number));
 
-    console.log(`📅 Data de referência: ${hojeStr}`);
+    console.log(`📅 Data de referência (BRT): ${hojeStr}`);
 
     // Buscar todas as tarefas pendentes de datas anteriores a hoje
     const { data: tarefasPendentes, error: tarefasError } = await supabase
@@ -153,9 +157,8 @@ Deno.serve(async (req) => {
 
         if (usuarioError || !usuario) {
           console.error(`⚠️ Usuário não encontrado para tarefa ${tarefa.id}. User ID: ${tarefa.user_id}`);
-          // Se não encontrar o usuário, tenta mover a tarefa mesmo assim para o dia seguinte
-          // usando horário padrão
-          const novaDataStr = new Date(hoje.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          // usando data de hoje (BRT)
+          const novaDataStr = hojeStr;
           
           const { error: updateError } = await supabase
             .from('calendario_tarefas')
@@ -188,9 +191,8 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Calcular nova data (próximo dia)
-        let novaData = new Date(hoje);
-        novaData.setDate(novaData.getDate() + 1);
+        // Calcular nova data (hoje em BRT)
+        let novaData = new Date(hojeUtc);
 
         // Aplicar regra de fim de semana se ativa
         if (regrasMap.bloqueio_finais_semana && isWeekend(novaData)) {
