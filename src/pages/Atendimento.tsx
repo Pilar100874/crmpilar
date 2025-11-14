@@ -66,7 +66,12 @@ export default function Atendimento() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showClientDetails, setShowClientDetails] = useState(true);
+  
+  // Estados independentes de Client Details por aba
+  const [showClientDetailsChat, setShowClientDetailsChat] = useState(true);
+  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(true);
+  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(true);
+  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(true);
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -1635,7 +1640,7 @@ ${recentMessages}
           <TabsContent value="agenda" className="flex-1 flex flex-row min-h-0 m-0">
             {/* Main Content */}
             <div className={`flex flex-col transition-all duration-300 ${
-              showClientDetails && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
+              showClientDetailsAgenda && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
             }`}>
             {/* Agenda Controls */}
             <div className="flex-shrink-0 px-3 pt-4 pb-2 border-b bg-background space-y-2">
@@ -1674,11 +1679,11 @@ ${recentMessages}
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => setShowClientDetails(!showClientDetails)}
+                  onClick={() => setShowClientDetailsAgenda(!showClientDetailsAgenda)}
                   className="h-8 w-8 p-0"
-                  title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+                  title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
                 >
-                  {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                 </Button>
               </div>
 
@@ -1864,8 +1869,8 @@ ${recentMessages}
                     className="p-3 hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => {
                       setSelectedTaskId(task.id);
-                      if (!showClientDetails) {
-                        setShowClientDetails(true);
+                      if (!showClientDetailsAgenda) {
+                        setShowClientDetailsAgenda(true);
                       }
                     }}
                   >
@@ -1898,7 +1903,7 @@ ${recentMessages}
             </div>
 
             {/* Client Details Panel - Agenda */}
-            {showClientDetails && selectedTaskData?.customers && (
+            {showClientDetailsAgenda && selectedTaskData?.customers && (
               <ClientDetailsPanel
                 customer={{
                   id: selectedTaskData.customers.id,
@@ -1935,18 +1940,18 @@ ${recentMessages}
           <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0">
             {/* Main Content */}
             <div className={`flex flex-col transition-all duration-300 ${
-              showClientDetails && selectedEmailData?.customer ? 'w-[calc(100%-320px)]' : 'w-full'
+              showClientDetailsEmail && selectedEmailData?.customer ? 'w-[calc(100%-320px)]' : 'w-full'
             } overflow-y-auto min-h-0 overscroll-contain px-3 pt-3 pb-2 space-y-2`}>
             {/* Header with Toggle */}
             <div className="flex items-center justify-end mb-2">
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setShowClientDetails(!showClientDetails)}
+                onClick={() => setShowClientDetailsEmail(!showClientDetailsEmail)}
                 className="h-8 w-8 p-0"
-                title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+                title={showClientDetailsEmail ? "Ocultar detalhes" : "Mostrar detalhes"}
               >
-                {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                {showClientDetailsEmail ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
               </Button>
             </div>
             
@@ -1962,12 +1967,12 @@ ${recentMessages}
                   className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
                     !email.read ? 'bg-primary/5 border-primary/30 shadow-sm' : ''
                   }`}
-                  onClick={() => {
-                    setSelectedEmailId(email.id);
-                    if (!showClientDetails) {
-                      setShowClientDetails(true);
-                    }
-                  }}
+                    onClick={() => {
+                      setSelectedEmailId(email.id);
+                      if (!showClientDetailsEmail) {
+                        setShowClientDetailsEmail(true);
+                      }
+                    }}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
@@ -2002,7 +2007,7 @@ ${recentMessages}
             </div>
 
             {/* Client Details Panel - Email */}
-            {showClientDetails && selectedEmailData?.customer && (
+            {showClientDetailsEmail && selectedEmailData?.customer && (
               <ClientDetailsPanel
                 customer={{
                   id: selectedEmailData.customer.id,
@@ -2141,11 +2146,11 @@ ${recentMessages}
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setShowClientDetails(!showClientDetails)}
+                    onClick={() => setShowClientDetailsChat(!showClientDetailsChat)}
                     className="h-7 w-7 p-0"
-                    title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+                    title={showClientDetailsChat ? "Ocultar detalhes" : "Mostrar detalhes"}
                   >
-                    {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    {showClientDetailsChat ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
@@ -2458,7 +2463,7 @@ ${recentMessages}
       </div>
 
       {/* Right Sidebar - Company Details Panel */}
-      {selectedConversation && selectedConv && showClientDetails && (
+      {selectedConversation && selectedConv && showClientDetailsChat && (
         <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
           {/* Header com nome do cliente */}
           <div className="p-4 border-b flex-shrink-0">
@@ -2626,7 +2631,7 @@ ${recentMessages}
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
         <>
-          <div className={`transition-all duration-300 ${showClientDetails && selectedOrcamentoData ? 'w-[calc(100%-320px-320px)]' : 'w-[calc(100%-320px)]'} h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
+          <div className={`transition-all duration-300 ${showClientDetailsOrcamento && selectedOrcamentoData ? 'w-[calc(100%-320px-320px)]' : 'w-[calc(100%-320px)]'} h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
             <POSView 
               estabelecimentoId={estabelecimentoId} 
               orcamentoId={selectedOrcamentoId}
@@ -2634,13 +2639,13 @@ ${recentMessages}
                 setOrcamentoSheetOpen(false);
                 setSelectedOrcamentoId(null);
               }}
-              showClientDetails={showClientDetails}
-              onToggleClientDetails={() => setShowClientDetails(!showClientDetails)}
+              showClientDetails={showClientDetailsOrcamento}
+              onToggleClientDetails={() => setShowClientDetailsOrcamento(!showClientDetailsOrcamento)}
             />
           </div>
 
           {/* Client Details Panel - Orçamento */}
-          {showClientDetails && selectedOrcamentoData && (
+          {showClientDetailsOrcamento && selectedOrcamentoData && (
             <ClientDetailsPanel
               customer={{
                 id: selectedOrcamentoData.customers?.id || selectedOrcamentoData.empresas?.id,
