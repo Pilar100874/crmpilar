@@ -2432,18 +2432,19 @@ export default function Calendario() {
 
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
-        <DialogContent className="max-h-[90vh] flex flex-col max-w-md">
-          <DialogHeader>
-            <DialogTitle>Tarefa em Fim de Semana</DialogTitle>
-            <DialogDescription>
-              Esta tarefa está agendada para {format(weekendPendingTask?.targetDate || new Date(), "EEEE, dd/MM/yyyy", { locale: ptBR })}.
-              <br />O que você deseja fazer?
+        <DialogContent className="max-w-md">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl">Tarefa em Fim de Semana</DialogTitle>
+            <DialogDescription className="text-base leading-relaxed">
+              Esta tarefa está agendada para <span className="font-medium text-foreground">{format(weekendPendingTask?.targetDate || new Date(), "EEEE, dd/MM/yyyy", { locale: ptBR })}</span>.
+              <br />
+              <span className="block mt-2">O que você deseja fazer?</span>
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 flex-col sm:flex-row mt-4">
+          <DialogFooter className="gap-3 flex-col sm:flex-row mt-6">
             <Button
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto order-first sm:order-none"
               onClick={() => {
                 setIsWeekendDialogOpen(false);
                 setWeekendPendingTask(null);
@@ -2452,7 +2453,7 @@ export default function Calendario() {
               Cancelar
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               className="w-full sm:w-auto"
               onClick={async () => {
                 if (weekendPendingTask) {
@@ -2485,7 +2486,7 @@ export default function Calendario() {
               Manter na Data
             </Button>
             <Button
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90"
               onClick={async () => {
                 if (weekendPendingTask) {
                   const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
