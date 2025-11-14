@@ -2432,7 +2432,7 @@ export default function Calendario() {
 
       {/* Dialog de fim de semana */}
       <Dialog open={isWeekendDialogOpen} onOpenChange={setIsWeekendDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md sm:max-w-lg">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-xl">Tarefa em Fim de Semana</DialogTitle>
             <DialogDescription className="text-base leading-relaxed">
@@ -2441,10 +2441,10 @@ export default function Calendario() {
               <span className="block mt-2">O que você deseja fazer?</span>
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-3 flex-col sm:flex-row mt-6">
+          <div className="flex flex-col sm:flex-row gap-3 mt-6">
             <Button
               variant="outline"
-              className="w-full sm:w-auto order-first sm:order-none"
+              className="w-full sm:flex-1"
               onClick={() => {
                 setIsWeekendDialogOpen(false);
                 setWeekendPendingTask(null);
@@ -2454,7 +2454,7 @@ export default function Calendario() {
             </Button>
             <Button
               variant="secondary"
-              className="w-full sm:w-auto"
+              className="w-full sm:flex-1"
               onClick={async () => {
                 if (weekendPendingTask) {
                   if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
@@ -2486,7 +2486,7 @@ export default function Calendario() {
               Manter na Data
             </Button>
             <Button
-              className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+              className="w-full sm:flex-1 bg-primary hover:bg-primary/90"
               onClick={async () => {
                 if (weekendPendingTask) {
                   const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
@@ -2519,7 +2519,7 @@ export default function Calendario() {
             >
               Mover para Próximo Dia Útil
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
