@@ -363,6 +363,7 @@ export default function Calendario() {
     existingTask: Task | null;
     targetDate: Date;
     isMove: boolean;
+    adjustedTime?: string; // Para usar quando for drag com horário ajustado
   } | null>(null);
   const [isBusinessHoursDialogOpen, setIsBusinessHoursDialogOpen] = useState(false);
   const [businessHoursPendingTask, setBusinessHoursPendingTask] = useState<{ 
@@ -1465,10 +1466,19 @@ export default function Calendario() {
       });
       
       if (checkWeekend(newDate) && calendarioRegras.bloqueio_finais_semana) {
-        console.log('[DRAG] BLOQUEADO: Tentativa de mover para fim de semana');
-        toast.error("Agendamentos bloqueados para finais de semana");
+        console.log('[DRAG] Fim de semana detectado - mostrando dialog de confirmação');
+        // Drag é ação MANUAL, então deve perguntar ao usuário
+        setWeekendPendingTask({
+          taskData: null,
+          existingTask: task,
+          targetDate: newDate,
+          isMove: true,
+          adjustedTime: adjustedTime
+        });
+        setIsWeekendDialogOpen(true);
         return;
       }
+
 
       // Verificar se já existem tarefas no mesmo horário (regra: deteccao_conflitos)
       if (calendarioRegras.deteccao_conflitos && adjustedTime) {
@@ -2445,14 +2455,22 @@ export default function Calendario() {
               onClick={async () => {
                 if (weekendPendingTask) {
                   if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
-                    // Mover tarefa existente
-                    const updatedTasks = tasks.map(t =>
-                      t.id === weekendPendingTask.existingTask!.id 
-                        ? { ...t, date: weekendPendingTask.targetDate } 
-                        : t
+                    // Mover tarefa existente para fim de semana com horário ajustado (se houver)
+                    const adjustedTime = weekendPendingTask.adjustedTime ?? weekendPendingTask.existingTask.time;
+                    const success = await updateTaskInDatabase(
+                      weekendPendingTask.existingTask.id, 
+                      { date: weekendPendingTask.targetDate, time: adjustedTime },
+                      'drag'
                     );
-                    setTasks(updatedTasks);
-                    toast.success("Tarefa movida para fim de semana");
+                    if (success) {
+                      const updatedTasks = tasks.map(t =>
+                        t.id === weekendPendingTask.existingTask!.id 
+                          ? { ...t, date: weekendPendingTask.targetDate, time: adjustedTime } 
+                          : t
+                      );
+                      setTasks(updatedTasks);
+                      toast.success("Tarefa movida para fim de semana");
+                    }
                   } else if (weekendPendingTask.taskData) {
                     // Criar nova tarefa
                     await saveTaskInternal(weekendPendingTask.taskData);
@@ -2470,14 +2488,22 @@ export default function Calendario() {
                   const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
                   
                   if (weekendPendingTask.isMove && weekendPendingTask.existingTask) {
-                    // Mover tarefa existente
-                    const updatedTasks = tasks.map(t =>
-                      t.id === weekendPendingTask.existingTask!.id 
-                        ? { ...t, date: nextBusinessDay } 
-                        : t
+                    // Mover tarefa existente para próximo dia útil com horário ajustado (se houver)
+                    const adjustedTime = weekendPendingTask.adjustedTime ?? weekendPendingTask.existingTask.time;
+                    const success = await updateTaskInDatabase(
+                      weekendPendingTask.existingTask.id, 
+                      { date: nextBusinessDay, time: adjustedTime },
+                      'drag'
                     );
-                    setTasks(updatedTasks);
-                    toast.success(`Tarefa movida para ${format(nextBusinessDay, "dd/MM/yyyy", { locale: ptBR })}`);
+                    if (success) {
+                      const updatedTasks = tasks.map(t =>
+                        t.id === weekendPendingTask.existingTask!.id 
+                          ? { ...t, date: nextBusinessDay, time: adjustedTime } 
+                          : t
+                      );
+                      setTasks(updatedTasks);
+                      toast.success(`Tarefa movida para ${format(nextBusinessDay, "dd/MM/yyyy", { locale: ptBR })}`);
+                    }
                   } else if (weekendPendingTask.taskData) {
                     // Criar nova tarefa
                     await saveTaskInternal({ ...weekendPendingTask.taskData, date: nextBusinessDay });
