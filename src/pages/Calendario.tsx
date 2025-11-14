@@ -2680,7 +2680,7 @@ export default function Calendario() {
 
       {/* Dialog de tarefa dia todo */}
       <Dialog open={isAllDayDialogOpen} onOpenChange={setIsAllDayDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Dia já Ocupado com Tarefa de Dia Todo</DialogTitle>
             <DialogDescription>
@@ -2697,9 +2697,10 @@ export default function Calendario() {
               O que você deseja fazer?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 flex-col sm:flex-row">
+          <DialogFooter className="gap-2 flex-col sm:flex-row sm:flex-wrap">
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setIsAllDayDialogOpen(false);
                 setAllDayPendingTask(null);
@@ -2713,6 +2714,7 @@ export default function Calendario() {
             </Button>
             <Button
               variant="outline"
+              className="w-full sm:flex-1 min-w-0 whitespace-normal text-center"
               onClick={async () => {
                 if (allDayPendingTask?.taskData) {
                   // Permitir agendar no dia com tarefa de dia todo
@@ -2744,6 +2746,7 @@ export default function Calendario() {
             </Button>
             {allDayPendingTask?.nextAvailableDate && (
               <Button
+                className="w-full sm:flex-1 min-w-0 whitespace-normal text-center bg-primary hover:bg-primary/90"
                 onClick={async () => {
                   if (allDayPendingTask?.nextAvailableDate) {
                     if (allDayPendingTask.isMove && allDayPendingTask.existingTask) {
