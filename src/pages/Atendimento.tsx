@@ -197,17 +197,28 @@ export default function Atendimento() {
     setOrcamentosEmAndamentoCount(emAndamentoCount);
   }, [orcamentos]);
 
-  // Fechar POSView ao trocar de aba
+  // Fechar POSView e limpar conteúdo ao trocar de aba
   useEffect(() => {
+    // Limpar conversa quando não estiver na aba chat
+    if (activeTab !== 'chat') {
+      setSelectedConversation(null);
+      setMessages([]);
+    }
+    
+    // Limpar orçamento quando não estiver na aba orçamento
     if (activeTab !== 'orcamento') {
       setOrcamentoSheetOpen(false);
       setSelectedOrcamentoId(null);
+      setSelectedOrcamentoData(null);
     }
-    // Limpar seleções ao trocar de aba
+    
+    // Limpar agenda quando não estiver na aba agenda
     if (activeTab !== 'agenda') {
       setSelectedTaskId(null);
       setSelectedTaskData(null);
     }
+    
+    // Limpar email quando não estiver na aba email
     if (activeTab !== 'email') {
       setSelectedEmailId(null);
       setSelectedEmailData(null);
