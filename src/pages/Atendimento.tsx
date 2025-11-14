@@ -1274,7 +1274,11 @@ ${recentMessages}
   return (
     <div className="h-screen min-h-0 flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
-      <div className="w-80 border-r border-border bg-gray-100 flex flex-col h-full min-h-0">
+      <div className={`w-80 border-r border-border flex flex-col h-full min-h-0 transition-colors ${
+        activeTab === 'chat' ? 'bg-blue-50/40' : 
+        activeTab === 'agenda' ? 'bg-green-50/40' : 
+        'bg-orange-50/40'
+      }`}>
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-3">Painel de Atendimento</h2>
           <div className="relative">
@@ -1330,7 +1334,7 @@ ${recentMessages}
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 bg-blue-50/30">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1393,7 +1397,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 bg-green-50/30">
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0">
             {/* Agenda Controls */}
             <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b bg-background space-y-2">
               {/* Date Navigation */}
@@ -1633,7 +1637,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2 bg-orange-50/30">
+          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 py-2 space-y-2">
             {userEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
