@@ -952,7 +952,7 @@ export default function Calendario() {
     console.log(`Encontradas ${overdueTasks?.length || 0} tarefas atrasadas`);
     if (overdueTasks && overdueTasks.length > 0) {
       console.log("Tarefas atrasadas:", overdueTasks);
-      const nextDay = await getNextAvailableDay(now);
+      const nextDay = await getNextAvailableDay(now, targetUserId);
       const taskIds = overdueTasks.map((t: any) => t.id);
 
       await (supabase as any)
@@ -1113,17 +1113,18 @@ export default function Calendario() {
       const taskDate = startOfDay(taskData.date);
       
       if (taskDate > today) {
-        const hasAllDayTask = await checkAllDayTasks(taskData.date);
+        // Validar pelo usuário da tarefa (não pelo admin que está criando)
+        const hasAllDayTask = await checkAllDayTasks(taskData.date, taskData.userId);
         
         if (hasAllDayTask) {
           // Realocar SOMENTE para inserções automáticas em datas futuras
           let nextDate = addDays(taskData.date, 1);
-          let hasAllDay = await checkAllDayTasks(nextDate);
+          let hasAllDay = await checkAllDayTasks(nextDate, taskData.userId);
           
-          // Procurar o próximo dia sem tarefa de dia todo
+          // Procurar o próximo dia sem tarefa de dia todo para o usuário
           while (hasAllDay) {
             nextDate = addDays(nextDate, 1);
-            hasAllDay = await checkAllDayTasks(nextDate);
+            hasAllDay = await checkAllDayTasks(nextDate, taskData.userId);
           }
           
           taskData.date = nextDate;
@@ -1149,7 +1150,7 @@ export default function Calendario() {
         return;
       } else {
         // Se for inserção AUTOMÁTICA (rotinas): realocar para próximo dia disponível
-        const nextBusinessDay = await getNextAvailableDay(taskData.date);
+        const nextBusinessDay = await getNextAvailableDay(taskData.date, taskData.userId);
         toast.info(`Data realocada de ${format(taskData.date, "dd/MM/yyyy")} para ${format(nextBusinessDay, "dd/MM/yyyy")} (próximo dia útil)`);
         taskData.date = nextBusinessDay;
       }
@@ -1552,9 +1553,11 @@ export default function Calendario() {
 
 
       // Verificar se já existem tarefas no mesmo horário (regra: deteccao_conflitos)
+      // Admin validando: verificar conflitos apenas para o usuário vinculado à tarefa
       if (calendarioRegras.deteccao_conflitos && adjustedTime) {
         const existingTasks = tasks.filter(t => 
           t.id !== taskId &&
+          t.userId === task.userId && // Conflito apenas com tarefas do mesmo usuário
           isSameDay(t.date, newDate) && 
           t.time === adjustedTime
         );
@@ -1768,6 +1771,54 @@ export default function Calendario() {
     const dayTasks = getTasksForDay(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
+    // Separar tarefas em 3 grupos
+    const allDayTasks = dayTasks.filter(task => task.isAllDay);
+    const noTimeTasks = dayTasks.filter(task => !task.isAllDay && !task.time);
+    const timedTasks = dayTasks.filter(task => !task.isAllDay && task.time);
+
+    const renderTaskCard = (task: Task) => (
+      <div
+        key={task.id}
+        className={`group p-2 rounded border ${
+          task.status === "completed"
+            ? "bg-muted text-muted-foreground line-through border-muted"
+            : "bg-primary/10 border-primary"
+        }`}
+        style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
+          borderLeft: `4px solid ${userColors[task.userId]}`,
+          backgroundColor: toAlpha(userColors[task.userId], 0.12)
+        } : {}}
+      >
+        <div className="flex items-center justify-between">
+          <div 
+            className="flex-1 cursor-pointer"
+            onClick={() => handleToggleTaskStatus(task.id)}
+          >
+            <div className="font-medium text-sm">{task.title}</div>
+            {task.description && <div className="text-xs text-muted-foreground mt-1">{task.description}</div>}
+          </div>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => handleEditTask(task)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
+              onClick={() => handleDeleteTask(task.id)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+
     return (
       <div className="border border-border rounded">
         <div className="p-4 border-b border-border bg-muted/30">
@@ -1776,56 +1827,44 @@ export default function Calendario() {
           </h3>
         </div>
         <div className="max-h-[600px] overflow-y-auto">
+          {/* Seção: Tarefas Dia Todo */}
+          {allDayTasks.length > 0 && (
+            <div className="border-b-2 border-border bg-accent/5">
+              <div className="flex">
+                <div className="w-20 p-2 text-sm font-semibold text-foreground border-r border-border">
+                  Dia Todo
+                </div>
+                <div className="flex-1 p-2 space-y-1">
+                  {allDayTasks.map(renderTaskCard)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Seção: Tarefas Sem Horário */}
+          {noTimeTasks.length > 0 && (
+            <div className="border-b-2 border-border bg-muted/10">
+              <div className="flex">
+                <div className="w-20 p-2 text-sm font-semibold text-foreground border-r border-border">
+                  Sem Horário
+                </div>
+                <div className="flex-1 p-2 space-y-1">
+                  {noTimeTasks.map(renderTaskCard)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Seção: Tarefas com Horário */}
           {hours.map(hour => {
-            const hourTasks = dayTasks.filter(task => task.time?.startsWith(String(hour).padStart(2, '0')));
+            const hourTasks = timedTasks.filter(task => task.time?.startsWith(String(hour).padStart(2, '0')));
             return (
               <div key={hour} className="flex border-b border-border hover:bg-muted/30">
                 <div className="w-20 p-2 text-sm text-muted-foreground border-r border-border">
                   {String(hour).padStart(2, '0')}:00
                 </div>
                 <div className="flex-1 p-2 space-y-1">
-                  {hourTasks.map(task => (
-                    <div
-                      key={task.id}
-                      className={`group p-2 rounded border ${
-                        task.status === "completed"
-                          ? "bg-muted text-muted-foreground line-through border-muted"
-                          : "bg-primary/10 border-primary"
-                      }`}
-                      style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
-                        borderLeft: `4px solid ${userColors[task.userId]}`,
-                        backgroundColor: toAlpha(userColors[task.userId], 0.12)
-                      } : {}}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div 
-                          className="flex-1 cursor-pointer"
-                          onClick={() => handleToggleTaskStatus(task.id)}
-                        >
-                          <div className="font-medium text-sm">{task.title}</div>
-                          {task.description && <div className="text-xs text-muted-foreground mt-1">{task.description}</div>}
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => handleEditTask(task)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
-                            onClick={() => handleDeleteTask(task.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  {hourTasks.map(renderTaskCard)}
                 </div>
               </div>
             );
@@ -2573,13 +2612,14 @@ export default function Calendario() {
                 if (weekendPendingTask) {
                   const nextBusinessDay = getNextBusinessDay(weekendPendingTask.targetDate);
                   
-                  // Verificar se o próximo dia útil tem tarefa de dia todo
+                  // Verificar se o próximo dia útil tem tarefa de dia todo (validar pelo usuário da tarefa)
                   if (calendarioRegras.validacao_dia_todo) {
-                    const hasAllDay = await checkAllDayTasks(nextBusinessDay);
+                    const taskUserId = weekendPendingTask.existingTask?.userId;
+                    const hasAllDay = await checkAllDayTasks(nextBusinessDay, taskUserId);
                     
                     if (hasAllDay) {
-                      // Calcular o próximo dia disponível (sem tarefa de dia todo)
-                      const nextAvailableDay = await getNextAvailableDay(weekendPendingTask.targetDate);
+                      // Calcular o próximo dia disponível (sem tarefa de dia todo para o usuário)
+                      const nextAvailableDay = await getNextAvailableDay(weekendPendingTask.targetDate, taskUserId);
                       
                       // Mostrar dialog de confirmação
                       setAllDayPendingTask({
