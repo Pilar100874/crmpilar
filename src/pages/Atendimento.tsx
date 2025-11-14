@@ -1395,7 +1395,7 @@ ${recentMessages}
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-2">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-4">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1458,7 +1458,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 pt-2">
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 pt-4">
             {/* Agenda Controls */}
             <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b bg-background space-y-2">
               {/* Date Navigation */}
@@ -1698,7 +1698,7 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-2 pb-2 space-y-2">
+          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-4 pb-2 space-y-2">
             {userEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1746,7 +1746,7 @@ ${recentMessages}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-2 pb-2 space-y-2">
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-4 pb-2 space-y-2">
             {orcamentos.filter(o => o.status !== 'cancelado' && o.status !== 'ganho').length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Receipt className="w-12 h-12 mx-auto mb-3 opacity-20" />
