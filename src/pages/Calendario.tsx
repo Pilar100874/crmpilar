@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -616,107 +616,107 @@ export default function Calendario() {
     return colors;
   };
 
-  useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        console.log('[LOAD_TASKS] Iniciando carregamento - isAdmin:', isAdmin, 'selectedUserIds:', selectedUserIds);
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  const loadTasks = useCallback(async () => {
+    try {
+      console.log('[LOAD_TASKS] Iniciando carregamento - isAdmin:', isAdmin, 'selectedUserIds:', selectedUserIds);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        let query = (supabase as any)
-          .from('calendario_tarefas')
-          .select('*');
+      let query = (supabase as any)
+        .from('calendario_tarefas')
+        .select('*');
 
-        // Se admin selecionou usuários específicos, mostrar admin + usuários selecionados
-        // Se admin não selecionou nada, mostrar apenas suas tarefas
-        // Se não é admin, mostrar apenas suas tarefas
-        console.log("Filtrando tarefas - isAdmin:", isAdmin, "selectedUserIds:", selectedUserIds, "currentAdminId:", currentAdminId);
-        
-        if (isAdmin && selectedUserIds.length > 0) {
-          const allIds = currentAdminId ? [currentAdminId, ...selectedUserIds] : selectedUserIds;
-          console.log("Buscando tarefas para IDs:", allIds);
-          query = query.in('user_id', allIds);
-        } else {
-          console.log("Buscando tarefas apenas para usuário atual:", user.id);
-          query = query.eq('user_id', user.id);
-        }
+      // Se admin selecionou usuários específicos, mostrar admin + usuários selecionados
+      // Se admin não selecionou nada, mostrar apenas suas tarefas
+      // Se não é admin, mostrar apenas suas tarefas
+      console.log("Filtrando tarefas - isAdmin:", isAdmin, "selectedUserIds:", selectedUserIds, "currentAdminId:", currentAdminId);
+      
+      if (isAdmin && selectedUserIds.length > 0) {
+        const allIds = currentAdminId ? [currentAdminId, ...selectedUserIds] : selectedUserIds;
+        console.log("Buscando tarefas para IDs:", allIds);
+        query = query.in('user_id', allIds);
+      } else {
+        console.log("Buscando tarefas apenas para usuário atual:", user.id);
+        query = query.eq('user_id', user.id);
+      }
 
-        const { data: tarefas, error } = await query.order('date', { ascending: true });
+      const { data: tarefas, error } = await query.order('date', { ascending: true });
 
-        if (error) {
-          console.error("Erro ao carregar tarefas:", error);
-          toast.error("Erro ao carregar tarefas");
-          return;
-        }
-
-        if (tarefas) {
-          // Buscar nomes dos usuários pela nova coluna auth_user_id
-          const authUserIds = [...new Set(tarefas.map((t: any) => t.user_id))];
-          const { data: usuariosData } = await (supabase as any)
-            .from('usuarios')
-            .select('auth_user_id, nome')
-            .in('auth_user_id', authUserIds);
-          
-          const usuariosMap = new Map(usuariosData?.map((u: any) => [u.auth_user_id, u.nome]) || []);
-          
-          // Buscar nomes de campanhas se houver campaign_ids
-          const campaignIds = [...new Set(tarefas.filter((t: any) => t.campaign_id).map((t: any) => t.campaign_id))];
-          let campanhasMap = new Map();
-          if (campaignIds.length > 0) {
-            const { data: campanhasData } = await (supabase as any)
-              .from('campaigns')
-              .select('id, nome')
-              .in('id', campaignIds);
-            campanhasMap = new Map(campanhasData?.map((c: any) => [c.id, c.nome]) || []);
-          }
-          
-          console.log("=== DEBUG TAREFAS CARREGADAS ===");
-          console.log("Primeira tarefa raw do banco:", tarefas[0]);
-          
-          const tasksWithDates = tarefas.map((task: any) => {
-            // Parse date in LOCAL timezone without relying on ISO parsing to avoid UTC shifts
-            // Expected DB format: 'yyyy-MM-dd'
-            const [year, month, day] = (task.date || "").split("-").map(Number);
-            // Use noon to be extra safe against DST edges while remaining in local time
-            const parsedDate = new Date(year, (month || 1) - 1, day || 1, 12, 0, 0, 0);
-            console.log(`Tarefa ${task.id}: date do banco="${task.date}", parsed="${parsedDate.toString()}", localDate="${parsedDate.toLocaleDateString()}"`)
-            
-            return {
-              id: task.id,
-              title: task.title,
-              description: task.description || '',
-              date: parsedDate,
-              time: task.time || '',
-              assignedTo: task.contact_name,
-              status: task.status as "pending" | "completed",
-              origem: task.origem as Task["origem"],
-              campaignId: task.campaign_id,
-              campaignName: task.campaign_id ? campanhasMap.get(task.campaign_id) : undefined,
-              createdAt: new Date(task.created_at),
-              contactId: task.contact_id,
-              contactName: task.contact_name,
-              isAllDay: task.is_all_day || false,
-              userId: task.user_id,
-              userName: usuariosMap.get(task.user_id) || 'Usuário não identificado',
-            };
-          });
-          
-          console.log('[COLORS] userColors state:', userColors);
-          console.log('[COLORS] Tarefas carregadas:', tasksWithDates.map(t => ({ 
-            id: t.id.substring(0, 8), 
-            userId: t.userId?.substring(0, 8),
-            color: t.userId ? userColors[t.userId] : 'NO_COLOR'
-          })));
-          
-          setTasks(tasksWithDates);
-        }
-      } catch (error) {
+      if (error) {
         console.error("Erro ao carregar tarefas:", error);
         toast.error("Erro ao carregar tarefas");
+        return;
       }
-    };
 
+      if (tarefas) {
+        // Buscar nomes dos usuários pela nova coluna auth_user_id
+        const authUserIds = [...new Set(tarefas.map((t: any) => t.user_id))];
+        const { data: usuariosData } = await (supabase as any)
+          .from('usuarios')
+          .select('auth_user_id, nome')
+          .in('auth_user_id', authUserIds);
+        
+        const usuariosMap = new Map(usuariosData?.map((u: any) => [u.auth_user_id, u.nome]) || []);
+        
+        // Buscar nomes de campanhas se houver campaign_ids
+        const campaignIds = [...new Set(tarefas.filter((t: any) => t.campaign_id).map((t: any) => t.campaign_id))];
+        let campanhasMap = new Map();
+        if (campaignIds.length > 0) {
+          const { data: campanhasData } = await (supabase as any)
+            .from('campaigns')
+            .select('id, nome')
+            .in('id', campaignIds);
+          campanhasMap = new Map(campanhasData?.map((c: any) => [c.id, c.nome]) || []);
+        }
+        
+        console.log("=== DEBUG TAREFAS CARREGADAS ===");
+        console.log("Primeira tarefa raw do banco:", tarefas[0]);
+        
+        const tasksWithDates = tarefas.map((task: any) => {
+          // Parse date in LOCAL timezone without relying on ISO parsing to avoid UTC shifts
+          // Expected DB format: 'yyyy-MM-dd'
+          const [year, month, day] = (task.date || "").split("-").map(Number);
+          // Use noon to be extra safe against DST edges while remaining in local time
+          const parsedDate = new Date(year, (month || 1) - 1, day || 1, 12, 0, 0, 0);
+          console.log(`Tarefa ${task.id}: date do banco="${task.date}", parsed="${parsedDate.toString()}", localDate="${parsedDate.toLocaleDateString()}"`)
+          
+          return {
+            id: task.id,
+            title: task.title,
+            description: task.description || '',
+            date: parsedDate,
+            time: task.time || '',
+            assignedTo: task.contact_name,
+            status: task.status as "pending" | "completed",
+            origem: task.origem as Task["origem"],
+            campaignId: task.campaign_id,
+            campaignName: task.campaign_id ? campanhasMap.get(task.campaign_id) : undefined,
+            createdAt: new Date(task.created_at),
+            contactId: task.contact_id,
+            contactName: task.contact_name,
+            isAllDay: task.is_all_day || false,
+            userId: task.user_id,
+            userName: usuariosMap.get(task.user_id) || 'Usuário não identificado',
+          };
+        });
+        
+        console.log('[COLORS] userColors state:', userColors);
+        console.log('[COLORS] Tarefas carregadas:', tasksWithDates.map(t => ({ 
+          id: t.id.substring(0, 8), 
+          userId: t.userId?.substring(0, 8),
+          color: t.userId ? userColors[t.userId] : 'NO_COLOR'
+        })));
+        
+        setTasks(tasksWithDates);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar tarefas:", error);
+      toast.error("Erro ao carregar tarefas");
+    }
+  }, [selectedUserIds, isAdmin, currentAdminId, userColors]);
+
+  useEffect(() => {
     loadTasks();
 
     // Configurar realtime para atualizações automáticas
@@ -738,7 +738,7 @@ export default function Calendario() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedUserIds, isAdmin, currentAdminId]);
+  }, [loadTasks]);
 
   // Carregar regras do calendário do banco
   useEffect(() => {
@@ -1273,6 +1273,7 @@ export default function Calendario() {
           }
 
           toast.success("Tarefa de dia todo adicionada com sucesso");
+          await loadTasks(); // Recarregar lista após criar
           setShowTaskDialog(false);
           return;
         }
@@ -1332,6 +1333,7 @@ export default function Calendario() {
         }
 
         toast.success(`${tarefasParaInserir.length} tarefas adicionadas para o dia todo`);
+        await loadTasks(); // Recarregar lista após criar
       } else {
         // Tarefa normal com horário específico
         console.log(taskData.id ? "Atualizando tarefa para user_id:" : "Criando tarefa para user_id:", targetUserId);
@@ -1372,6 +1374,7 @@ export default function Calendario() {
 
           console.log("Tarefa atualizada com sucesso:", data);
           toast.success("Tarefa atualizada com sucesso");
+          await loadTasks(); // Recarregar lista após atualizar
         } else {
           // Senão, é uma criação
           const { data, error } = await (supabase as any)
@@ -1388,6 +1391,7 @@ export default function Calendario() {
 
           console.log("Tarefa criada com sucesso:", data);
           toast.success("Tarefa adicionada com sucesso");
+          await loadTasks(); // Recarregar lista após criar
         }
       }
       
