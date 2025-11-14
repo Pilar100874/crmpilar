@@ -105,9 +105,18 @@ export default function Atendimento() {
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
-  const [taskSortOrder, setTaskSortOrder] = useState<Array<'created_at' | 'origem' | 'origem_sub_item' | 'time'>>(['time', 'created_at']);
+  
+  type SortCriterion = 
+    | { type: 'field'; field: 'created_at' | 'time' }
+    | { type: 'origem_filter'; origem: string; subItem?: string };
+  
+  const [taskSortOrder, setTaskSortOrder] = useState<SortCriterion[]>([
+    { type: 'field', field: 'time' },
+    { type: 'field', field: 'created_at' }
+  ]);
   const [showSortDialog, setShowSortDialog] = useState(false);
-  const [newSortField, setNewSortField] = useState<'created_at' | 'origem' | 'origem_sub_item' | 'time' | ''>('');
+  const [newSortField, setNewSortField] = useState<'created_at' | 'time' | ''>('');
+  const [newOrigemFilter, setNewOrigemFilter] = useState({ origem: '', subItem: '' });
 
   useEffect(() => {
     loadConversations();
@@ -459,14 +468,21 @@ export default function Atendimento() {
       for (const criterion of taskSortOrder) {
         let comparison = 0;
         
-        if (criterion === 'created_at') {
-          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        } else if (criterion === 'origem') {
-          comparison = (a.origem || '').localeCompare(b.origem || '');
-        } else if (criterion === 'origem_sub_item') {
-          comparison = (a.origem_sub_item || '').localeCompare(b.origem_sub_item || '');
-        } else if (criterion === 'time') {
-          comparison = (a.time || '').localeCompare(b.time || '');
+        if (criterion.type === 'field') {
+          if (criterion.field === 'created_at') {
+            comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          } else if (criterion.field === 'time') {
+            comparison = (a.time || '').localeCompare(b.time || '');
+          }
+        } else if (criterion.type === 'origem_filter') {
+          // Prioriza tarefas que correspondem à origem/subItem especificados
+          const aMatches = a.origem === criterion.origem && 
+                          (!criterion.subItem || a.origem_sub_item === criterion.subItem);
+          const bMatches = b.origem === criterion.origem && 
+                          (!criterion.subItem || b.origem_sub_item === criterion.subItem);
+          
+          if (aMatches && !bMatches) return -1;
+          if (!aMatches && bMatches) return 1;
         }
         
         if (comparison !== 0) return comparison;
@@ -509,25 +525,46 @@ export default function Atendimento() {
     setTaskSortOrder(newOrder);
   };
 
-  const addSortCriterion = () => {
-    if (newSortField && !taskSortOrder.includes(newSortField)) {
-      setTaskSortOrder([...taskSortOrder, newSortField]);
+  const addSortField = () => {
+    if (newSortField) {
+      const criterion: SortCriterion = { type: 'field', field: newSortField };
+      setTaskSortOrder([...taskSortOrder, criterion]);
       setNewSortField('');
     }
   };
 
-  const getAvailableSortFields = () => {
-    const allFields: Array<'created_at' | 'origem' | 'origem_sub_item' | 'time'> = ['created_at', 'origem', 'origem_sub_item', 'time'];
-    return allFields.filter(field => !taskSortOrder.includes(field));
+  const addOrigemFilter = () => {
+    if (newOrigemFilter.origem) {
+      const criterion: SortCriterion = {
+        type: 'origem_filter',
+        origem: newOrigemFilter.origem,
+        subItem: newOrigemFilter.subItem || undefined
+      };
+      setTaskSortOrder([...taskSortOrder, criterion]);
+      setNewOrigemFilter({ origem: '', subItem: '' });
+    }
   };
 
-  const getSortLabel = (criterion: string) => {
-    switch (criterion) {
-      case 'created_at': return 'Data de Entrada';
-      case 'origem': return 'Origem';
-      case 'origem_sub_item': return 'Sub-item da Origem';
-      case 'time': return 'Horário';
-      default: return criterion;
+  const getAvailableSortFields = (): Array<'created_at' | 'time'> => {
+    const allFields: Array<'created_at' | 'time'> = ['created_at', 'time'];
+    return allFields.filter(field => 
+      !taskSortOrder.some(c => c.type === 'field' && c.field === field)
+    );
+  };
+
+  const getSortLabel = (criterion: SortCriterion) => {
+    if (criterion.type === 'field') {
+      switch (criterion.field) {
+        case 'created_at': return 'Data de Entrada';
+        case 'time': return 'Horário';
+        default: return criterion.field;
+      }
+    } else {
+      const parts = [`Origem: ${criterion.origem}`];
+      if (criterion.subItem) {
+        parts.push(`Sub-item: ${criterion.subItem}`);
+      }
+      return parts.join(' | ');
     }
   };
 
@@ -1336,7 +1373,7 @@ ${recentMessages}
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       {taskSortOrder.map((criterion, index) => (
-                        <Card key={criterion} className="p-3">
+                        <Card key={index} className="p-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <Badge variant="secondary" className="font-mono">
@@ -1378,32 +1415,62 @@ ${recentMessages}
                         </Card>
                       ))}
                       
-                      {/* Add new criterion section */}
-                      <div className="border-t pt-4 mt-4">
-                        <Label className="text-sm font-medium mb-2 block">
-                          Adicionar Novo Campo
-                        </Label>
-                        <div className="flex gap-2">
-                          <Select value={newSortField} onValueChange={(value: any) => setNewSortField(value)}>
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Selecione um campo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getAvailableSortFields().map((field) => (
-                                <SelectItem key={field} value={field}>
-                                  {getSortLabel(field)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            onClick={addSortCriterion}
-                            disabled={!newSortField}
-                            size="sm"
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Adicionar
-                          </Button>
+                      {/* Add new field section */}
+                      <div className="border-t pt-4 mt-4 space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Adicionar Campo Simples
+                          </Label>
+                          <div className="flex gap-2">
+                            <Select value={newSortField} onValueChange={(value: any) => setNewSortField(value)}>
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Selecione um campo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getAvailableSortFields().map((field) => (
+                                  <SelectItem key={field} value={field}>
+                                    {getSortLabel({ type: 'field', field })}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              onClick={addSortField}
+                              disabled={!newSortField}
+                              size="sm"
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Adicionar
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Add origem filter section */}
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Adicionar Filtro de Origem
+                          </Label>
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Nome da Origem (ex: WhatsApp, Email)"
+                              value={newOrigemFilter.origem}
+                              onChange={(e) => setNewOrigemFilter({ ...newOrigemFilter, origem: e.target.value })}
+                            />
+                            <Input
+                              placeholder="Sub-item (opcional)"
+                              value={newOrigemFilter.subItem}
+                              onChange={(e) => setNewOrigemFilter({ ...newOrigemFilter, subItem: e.target.value })}
+                            />
+                            <Button
+                              onClick={addOrigemFilter}
+                              disabled={!newOrigemFilter.origem}
+                              size="sm"
+                              className="w-full"
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Adicionar Filtro de Origem
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
