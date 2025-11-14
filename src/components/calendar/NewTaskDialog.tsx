@@ -138,6 +138,10 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         } else if (origemValue === 'pedido_aprovacao') {
           setTaskOrigem('pedido');
           setPedidoTipo('aprovacao');
+        } else if (origemValue?.startsWith('chat_')) {
+          setTaskOrigem('chat');
+          const channel = origemValue.split('_')[1];
+          setChatChannel(channel as typeof chatChannel);
         } else {
           setTaskOrigem(origemValue as typeof taskOrigem);
         }
@@ -181,7 +185,9 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
         setTaskOrigem("bot");
         setEmailTipo("enviado");
         setPedidoTipo("orcamento");
+        setChatChannel("whatsapp");
         setSelectedCampaignId("");
+        setSelectedBotId("");
         setObservation("");
         setAssignedTo("me");
         setSelectedUserId(null);
@@ -197,6 +203,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     if (open) {
       loadContactsAndCompanies();
       loadCampaigns();
+      loadBots();
       loadUsuarios();
     }
   }, [open]);
@@ -217,6 +224,25 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       }
     } catch (error) {
       console.error("Erro ao carregar campanhas:", error);
+    }
+  };
+
+  const loadBots = async () => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      const { data, error } = await supabase
+        .from('flows')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabId)
+        .order('nome');
+
+      if (!error && data) {
+        setBots(data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar bots:", error);
     }
   };
 
@@ -518,6 +544,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       origemFinal = `email_${emailTipo}`;
     } else if (taskOrigem === 'pedido') {
       origemFinal = `pedido_${pedidoTipo}`;
+    } else if (taskOrigem === 'chat') {
+      origemFinal = `chat_${chatChannel}`;
     }
     
     const userIdToSave = assignedTo === "other" && selectedUserId ? selectedUserId : undefined;
@@ -651,15 +679,18 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-6 pt-10">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">{editingTaskId ? 'Editar tarefa' : 'Nova tarefa'}</DialogTitle>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="border-b pb-4">
+          <DialogTitle className="text-xl font-bold">
+            {editingTaskId ? 'Editar Tarefa' : 'Nova Tarefa'}
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 mt-4">
+        <div className="space-y-5 mt-6">
           {/* Campo de busca de contato */}
           <div className="relative">
+            <Label className="text-sm font-semibold mb-2 block">Vincular Contato ou Empresa</Label>
             <Input
-              placeholder="Pesquisar e vincular uma empresa ou contato"
+              placeholder="Pesquisar contato ou empresa..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -672,7 +703,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 z-10"
+                className="absolute right-2 top-9 h-6 w-6 p-0 z-10"
                 onClick={() => {
                   setSelectedContact(null);
                   setSearchQuery("");
@@ -771,219 +802,221 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           )}
 
           {/* Grid de data e hora */}
-          <div className="grid grid-cols-3 gap-3">
-            {/* Campo de data editável */}
-            <div className="space-y-2">
-              <Label className="text-sm">Data</Label>
-              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-                <PopoverTrigger asChild>
-                  <div className="relative">
-                    <Input
-                      placeholder="dd/mm/aaaa"
-                      value={dateInput}
-                      onChange={(e) => handleDateInputChange(e.target.value)}
-                      className="pr-8"
+          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+            <Label className="text-sm font-semibold">Data e Horário</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {/* Campo de data editável */}
+              <div className="space-y-2">
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="relative">
+                      <Input
+                        placeholder="dd/mm/aaaa"
+                        value={dateInput}
+                        onChange={(e) => handleDateInputChange(e.target.value)}
+                        className="pr-8"
+                      />
+                      <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 flex bg-background z-50 pointer-events-auto" align="start">
+                    {/* Opções rápidas */}
+                    <div className="border-r bg-background">
+                      <ScrollArea className="h-[300px] w-[140px]">
+                        <div className="p-2 space-y-1">
+                          {[
+                            { id: "15m", label: "Após 15 min", days: -1 },
+                            { id: "30m", label: "Após 30 min", days: -2 },
+                            { id: "1h", label: "Em 1 hora", days: -3 },
+                            { id: "today", label: "Hoje", days: 0 },
+                            { id: "tomorrow", label: "Amanhã", days: 1 },
+                            { id: "7d", label: "Em 7 dias", days: 7 },
+                            { id: "30d", label: "Em 30 dias", days: 30 },
+                            { id: "1y", label: "Em 1 ano", days: 365 },
+                          ].map(({ id, label, days }) => (
+                            <button
+                              key={id}
+                              type="button"
+                              role="option"
+                              className={cn(
+                                "w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors",
+                                "hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50",
+                                selectedQuickOption === id && "bg-accent text-accent-foreground font-medium"
+                              )}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleQuickDate(days, id);
+                              }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleQuickDate(days, id);
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                    {/* Calendário */}
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={(newDate) => {
+                        if (newDate) {
+                          setDate(newDate);
+                          setDateInput(format(newDate, "dd/MM/yyyy"));
+                          setSelectedQuickOption(null);
+                        }
+                      }}
+                      initialFocus
+                      locale={ptBR}
+                      className="pointer-events-auto"
                     />
-                    <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 flex bg-background z-50 pointer-events-auto" align="start">
-                  {/* Opções rápidas */}
-                  <div className="border-r bg-background">
-                    <ScrollArea className="h-[300px] w-[140px]">
-                      <div className="p-2 space-y-1">
-                        {[
-                          { id: "15m", label: "Após 15 min", days: -1 },
-                          { id: "30m", label: "Após 30 min", days: -2 },
-                          { id: "1h", label: "Em 1 hora", days: -3 },
-                          { id: "today", label: "Hoje", days: 0 },
-                          { id: "tomorrow", label: "Amanhã", days: 1 },
-                          { id: "7d", label: "Em 7 dias", days: 7 },
-                          { id: "30d", label: "Em 30 dias", days: 30 },
-                          { id: "1y", label: "Em 1 ano", days: 365 },
-                        ].map(({ id, label, days }) => (
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Seletor de hora */}
+              <div className="space-y-2">
+                <Popover open={hourPickerOpen} onOpenChange={setHourPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="relative">
+                      <Input
+                        placeholder="HH"
+                        value={hours}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 2);
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
+                            setHours(value);
+                          }
+                        }}
+                        disabled={isAllDay || noTimeSet}
+                        className="pr-8"
+                        maxLength={2}
+                      />
+                      <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[120px] p-0 bg-background z-50" align="start">
+                    <ScrollArea className="h-[320px]">
+                      <div className="p-2 grid grid-cols-2 gap-1">
+                        {hourSlots.map((hour) => (
                           <button
-                            key={id}
+                            key={hour}
                             type="button"
-                            role="option"
                             className={cn(
-                              "w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors",
-                              "hover:bg-accent/50 hover:text-accent-foreground focus:bg-accent/50",
-                              selectedQuickOption === id && "bg-accent text-accent-foreground font-medium"
+                              "w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
+                              hours === hour && "bg-accent font-medium"
                             )}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleQuickDate(days, id);
-                            }}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleQuickDate(days, id);
+                              setHours(hour);
+                              setHourPickerOpen(false);
                             }}
                           >
-                            {label}
+                            {hour}
                           </button>
                         ))}
                       </div>
                     </ScrollArea>
-                  </div>
-                  {/* Calendário */}
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(newDate) => {
-                      if (newDate) {
-                        setDate(newDate);
-                        setDateInput(format(newDate, "dd/MM/yyyy"));
-                        setDatePickerOpen(false);
-                      }
-                    }}
-                    locale={ptBR}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            {/* Seletor de hora */}
-            <div className="space-y-2">
-              <Label className="text-sm">Hora</Label>
-              <Popover open={hourPickerOpen} onOpenChange={setHourPickerOpen}>
-                <PopoverTrigger asChild>
-                  <div className="relative">
-                    <Input
-                      placeholder="HH"
-                      value={hours}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 2);
-                        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
-                          setHours(value);
-                        }
-                      }}
-                      disabled={isAllDay || noTimeSet}
-                      className="pr-8"
-                      maxLength={2}
-                    />
-                    <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-[120px] p-0 bg-background z-50" align="start">
-                  <ScrollArea className="h-[320px]">
-                    <div className="p-2 grid grid-cols-2 gap-1">
-                      {hourSlots.map((hour) => (
+              {/* Seletor de minutos */}
+              <div className="space-y-2">
+                <Popover open={minutePickerOpen} onOpenChange={setMinutePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="relative">
+                      <Input
+                        placeholder="MM"
+                        value={minutes}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 2);
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
+                            setMinutes(value);
+                          }
+                        }}
+                        disabled={isAllDay || noTimeSet}
+                        className="pr-8"
+                        maxLength={2}
+                      />
+                      <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[100px] p-0 bg-background z-50" align="start">
+                    <div className="p-2 space-y-1">
+                      {minuteSlots.map((minute) => (
                         <button
-                          key={hour}
+                          key={minute}
                           type="button"
                           className={cn(
                             "w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
-                            hours === hour && "bg-accent font-medium"
+                            minutes === minute && "bg-accent font-medium"
                           )}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setHours(hour);
-                            setHourPickerOpen(false);
+                            setMinutes(minute);
+                            setMinutePickerOpen(false);
                           }}
                         >
-                          {hour}
+                          {minute}
                         </button>
                       ))}
                     </div>
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
-            {/* Seletor de minutos */}
-            <div className="space-y-2">
-              <Label className="text-sm">Minutos</Label>
-              <Popover open={minutePickerOpen} onOpenChange={setMinutePickerOpen}>
-                <PopoverTrigger asChild>
-                  <div className="relative">
-                    <Input
-                      placeholder="MM"
-                      value={minutes}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 2);
-                        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
-                          setMinutes(value);
-                        }
-                      }}
-                      disabled={isAllDay || noTimeSet}
-                      className="pr-8"
-                      maxLength={2}
-                    />
-                    <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-[100px] p-0 bg-background z-50" align="start">
-                  <div className="p-2 space-y-1">
-                    {minuteSlots.map((minute) => (
-                      <button
-                        key={minute}
-                        type="button"
-                        className={cn(
-                          "w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors",
-                          minutes === minute && "bg-accent font-medium"
-                        )}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setMinutes(minute);
-                          setMinutePickerOpen(false);
-                        }}
-                      >
-                        {minute}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+            {/* Checkboxes para opções especiais */}
+            <div className="flex gap-6 pt-2">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="allday" 
+                  checked={isAllDay}
+                  onCheckedChange={(checked) => {
+                    setIsAllDay(checked as boolean);
+                    if (checked) {
+                      setHours("");
+                      setMinutes("");
+                      setNoTimeSet(false);
+                    }
+                  }}
+                />
+                <label htmlFor="allday" className="text-sm cursor-pointer font-medium">
+                  Dia todo
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="notime" 
+                  checked={noTimeSet}
+                  onCheckedChange={(checked) => {
+                    setNoTimeSet(checked as boolean);
+                    if (checked) {
+                      setHours("");
+                      setMinutes("");
+                      setIsAllDay(false);
+                    }
+                  }}
+                />
+                <label htmlFor="notime" className="text-sm cursor-pointer font-medium">
+                  Sem horário definido
+                </label>
+              </div>
             </div>
-          </div>
-
-          {/* Checkbox dia todo */}
-          <div className="flex items-center gap-2">
-            <Checkbox 
-              id="allday" 
-              checked={isAllDay}
-              onCheckedChange={(checked) => {
-                setIsAllDay(checked as boolean);
-                if (checked) {
-                  setHours("");
-                  setMinutes("");
-                  setNoTimeSet(false);
-                }
-              }}
-            />
-            <label htmlFor="allday" className="text-sm cursor-pointer">
-              Dia todo
-            </label>
-          </div>
-
-          {/* Checkbox sem horário definido */}
-          <div className="flex items-center gap-2">
-            <Checkbox 
-              id="notime" 
-              checked={noTimeSet}
-              onCheckedChange={(checked) => {
-                setNoTimeSet(checked as boolean);
-                if (checked) {
-                  setHours("");
-                  setMinutes("");
-                  setIsAllDay(false);
-                }
-              }}
-            />
-            <label htmlFor="notime" className="text-sm cursor-pointer">
-              Sem horário definido
-            </label>
           </div>
 
           {/* Origem da tarefa */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Origem da Tarefa</Label>
+          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+            <Label className="text-sm font-semibold">Origem da Tarefa</Label>
             <RadioGroup value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)} className="grid grid-cols-2 gap-3">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="bot" id="bot" />
@@ -1017,118 +1050,151 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             
             {/* Seletor de tipo de Email */}
             {taskOrigem === 'email' && (
-              <div className="space-y-2 pl-6">
-                <Label className="text-sm">Tipo de Email</Label>
-                <RadioGroup value={emailTipo} onValueChange={(value) => setEmailTipo(value as typeof emailTipo)} className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="enviado" id="email-enviado" />
-                    <Label htmlFor="email-enviado" className="text-sm cursor-pointer">Enviado</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="recebido" id="email-recebido" />
-                    <Label htmlFor="email-recebido" className="text-sm cursor-pointer">Recebido</Label>
-                  </div>
-                </RadioGroup>
+              <div className="space-y-2 pl-0 pt-2">
+                <Label className="text-sm font-medium">Tipo de Email</Label>
+                <Select value={emailTipo} onValueChange={(value) => setEmailTipo(value as typeof emailTipo)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="enviado">Enviado</SelectItem>
+                    <SelectItem value="recebido">Recebido</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
             
             {/* Seletor de Campanha */}
             {taskOrigem === 'campanha' && (
-              <div className="space-y-2 pl-6">
-                <Label className="text-sm">Selecione a Campanha</Label>
-                <select 
-                  value={selectedCampaignId}
-                  onChange={(e) => setSelectedCampaignId(e.target.value)}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">Selecione uma campanha</option>
-                  {campaigns.map((campaign) => (
-                    <option key={campaign.id} value={campaign.id}>
-                      {campaign.nome}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-2 pl-0 pt-2">
+                <Label className="text-sm font-medium">Selecione a Campanha</Label>
+                <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione uma campanha" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {campaigns.map((campaign) => (
+                      <SelectItem key={campaign.id} value={campaign.id}>
+                        {campaign.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Seletor de Bot */}
+            {taskOrigem === 'bot' && (
+              <div className="space-y-2 pl-0 pt-2">
+                <Label className="text-sm font-medium">Selecione o Bot</Label>
+                <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um bot" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bots.map((bot) => (
+                      <SelectItem key={bot.id} value={bot.id}>
+                        {bot.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Seletor de Canal (Chat) */}
+            {taskOrigem === 'chat' && (
+              <div className="space-y-2 pl-0 pt-2">
+                <Label className="text-sm font-medium">Canal de Chat</Label>
+                <Select value={chatChannel} onValueChange={(value) => setChatChannel(value as typeof chatChannel)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o canal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    <SelectItem value="telegram">Telegram</SelectItem>
+                    <SelectItem value="webchat">Webchat</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
             
             {/* Seletor de tipo de Pedido */}
             {taskOrigem === 'pedido' && (
-              <div className="space-y-2 pl-6">
-                <Label className="text-sm">Tipo de Pedido</Label>
-                <RadioGroup value={pedidoTipo} onValueChange={(value) => setPedidoTipo(value as typeof pedidoTipo)} className="flex flex-col gap-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="orcamento" id="pedido-orcamento" />
-                    <Label htmlFor="pedido-orcamento" className="text-sm cursor-pointer">Orçamento</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="negociacao" id="pedido-negociacao" />
-                    <Label htmlFor="pedido-negociacao" className="text-sm cursor-pointer">Negociação</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="aprovacao" id="pedido-aprovacao" />
-                    <Label htmlFor="pedido-aprovacao" className="text-sm cursor-pointer">Aprovação</Label>
-                  </div>
-                </RadioGroup>
+              <div className="space-y-2 pl-0 pt-2">
+                <Label className="text-sm font-medium">Tipo de Pedido</Label>
+                <Select value={pedidoTipo} onValueChange={(value) => setPedidoTipo(value as typeof pedidoTipo)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="orcamento">Orçamento</SelectItem>
+                    <SelectItem value="negociacao">Negociação</SelectItem>
+                    <SelectItem value="aprovacao">Aprovação</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>
 
           {/* Atribuição */}
-          <div className="space-y-2">
-            <Label className="text-sm">Atribuir para</Label>
+          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+            <Label className="text-sm font-semibold">Atribuir Tarefa Para</Label>
             <RadioGroup value={assignedTo} onValueChange={(value) => {
               setAssignedTo(value);
               if (value === "me") {
                 setSelectedUserId(null);
               }
-            }} className="flex gap-4">
+            }} className="flex gap-6">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="me" id="me" />
-                <Label htmlFor="me" className="text-sm cursor-pointer">Eu</Label>
+                <Label htmlFor="me" className="text-sm cursor-pointer font-medium">Eu</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="other" id="other" />
-                <Label htmlFor="other" className="text-sm cursor-pointer">Outro usuário</Label>
+                <Label htmlFor="other" className="text-sm cursor-pointer font-medium">Outro usuário</Label>
               </div>
             </RadioGroup>
             
             {/* Seletor de usuário quando "Outro usuário" é selecionado */}
             {assignedTo === "other" && (
-              <div className="mt-2">
-                <select
-                  value={selectedUserId || ""}
-                  onChange={(e) => setSelectedUserId(e.target.value || null)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">Selecione um usuário</option>
-                  {usuarios.map((usuario) => (
-                    <option key={usuario.id} value={usuario.id}>
-                      {usuario.nome}
-                    </option>
-                  ))}
-                </select>
+              <div className="mt-3">
+                <Label className="text-sm font-medium mb-2 block">Selecione o Usuário</Label>
+                <Select value={selectedUserId || ""} onValueChange={(value) => setSelectedUserId(value || null)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usuarios.map((usuario) => (
+                      <SelectItem key={usuario.id} value={usuario.id}>
+                        {usuario.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>
 
           {/* Observação */}
-          <div className="space-y-2">
-            <Label className="text-sm">Observação (opcional)</Label>
+          <div className="space-y-2 p-4 bg-muted/30 rounded-lg border">
+            <Label className="text-sm font-semibold">Observação (opcional)</Label>
             <Textarea
-              placeholder="Adicione uma observação..."
+              placeholder="Adicione detalhes ou observações sobre a tarefa..."
               value={observation}
               onChange={(e) => setObservation(e.target.value)}
-              className="min-h-[80px] resize-none"
+              className="min-h-[100px] resize-y"
             />
           </div>
 
           {/* Botões de ação */}
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button variant="ghost" onClick={() => onOpenChange(false)} size="sm">
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => onOpenChange(false)} size="default">
               Cancelar
             </Button>
-            <Button onClick={handleSave} size="sm">
-              Salvar
+            <Button onClick={handleSave} size="default" className="min-w-[120px]">
+              {editingTaskId ? 'Atualizar' : 'Salvar Tarefa'}
             </Button>
           </div>
         </div>
