@@ -77,6 +77,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [campaigns, setCampaigns] = useState<Array<{ id: string; nome: string }>>([]);
   const [assignedTo, setAssignedTo] = useState("me");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [observation, setObservation] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [hourPickerOpen, setHourPickerOpen] = useState(false);
@@ -175,6 +177,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
     if (open) {
       loadContactsAndCompanies();
       loadCampaigns();
+      loadUsuarios();
     }
   }, [open]);
 
@@ -194,6 +197,24 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       }
     } catch (error) {
       console.error("Erro ao carregar campanhas:", error);
+    }
+  };
+
+  const loadUsuarios = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+
+      if (error) throw error;
+      setUsuarios(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
     }
   };
 
@@ -442,6 +463,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       return;
     }
 
+    if (assignedTo === "other" && !selectedUserId) {
+      toast.error("Selecione um usuário para atribuir a tarefa");
+      return;
+    }
+
     // Validar hora e minutos se não for dia todo e tiver horário definido
     if (!isAllDay && !noTimeSet) {
       const h = parseInt(hours);
@@ -484,7 +510,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       campaignId: taskOrigem === 'campanha' ? selectedCampaignId : undefined,
       observation,
       isAllDay,
-      userId: editingTask?.userId, // Preservar o userId original ao editar
+      userId: editingTask?.userId || (assignedTo === "other" ? selectedUserId! : undefined),
     });
 
     onOpenChange(false);
@@ -598,11 +624,11 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-6">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{editingTaskId ? 'Editar tarefa' : 'Nova tarefa'}</DialogTitle>
+      <DialogContent className="max-w-2xl p-6 pt-10">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">{editingTaskId ? 'Editar tarefa' : 'Nova tarefa'}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 mt-4">
           {/* Campo de busca de contato */}
           <div className="relative">
             <Input
@@ -619,7 +645,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 z-10"
                 onClick={() => {
                   setSelectedContact(null);
                   setSearchQuery("");
@@ -1019,7 +1045,12 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
           {/* Atribuição */}
           <div className="space-y-2">
             <Label className="text-sm">Atribuir para</Label>
-            <RadioGroup value={assignedTo} onValueChange={setAssignedTo} className="flex gap-4">
+            <RadioGroup value={assignedTo} onValueChange={(value) => {
+              setAssignedTo(value);
+              if (value === "me") {
+                setSelectedUserId(null);
+              }
+            }} className="flex gap-4">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="me" id="me" />
                 <Label htmlFor="me" className="text-sm cursor-pointer">Eu</Label>
@@ -1029,6 +1060,24 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                 <Label htmlFor="other" className="text-sm cursor-pointer">Outro usuário</Label>
               </div>
             </RadioGroup>
+            
+            {/* Seletor de usuário quando "Outro usuário" é selecionado */}
+            {assignedTo === "other" && (
+              <div className="mt-2">
+                <select
+                  value={selectedUserId || ""}
+                  onChange={(e) => setSelectedUserId(e.target.value || null)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">Selecione um usuário</option>
+                  {usuarios.map((usuario) => (
+                    <option key={usuario.id} value={usuario.id}>
+                      {usuario.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Observação */}
