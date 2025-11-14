@@ -1837,19 +1837,35 @@ export default function Calendario() {
           className="flex-1 border-r border-b border-border"
         >
           <div 
-            className={`p-3 border-b border-border text-center cursor-pointer hover:bg-primary/10 transition-colors ${isTodayDate ? "bg-primary/5" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setCurrentDate(day);
-              setViewMode("day");
-            }}
-            title="Ver dia"
+            className={`p-3 border-b border-border flex flex-col items-center ${isTodayDate ? "bg-primary/5" : ""}`}
           >
             <div className="text-xs text-muted-foreground uppercase">
               {format(day, "EEE", { locale: ptBR })}
             </div>
-            <div className={`text-lg font-medium ${isTodayDate ? "text-primary" : ""}`}>
-              {format(day, "d")}
+            <div className="flex items-center gap-1">
+              <div 
+                className={`text-lg font-medium cursor-pointer hover:bg-primary/20 rounded px-2 py-1 transition-colors ${isTodayDate ? "text-primary" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentDate(day);
+                  setViewMode("day");
+                }}
+                title="Ver dia"
+              >
+                {format(day, "d")}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-primary/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenNewTask(day);
+                }}
+                title="Nova tarefa"
+              >
+                <Plus className="w-3 h-3" />
+              </Button>
             </div>
           </div>
           <div className="p-2 space-y-2 min-h-[400px]">
