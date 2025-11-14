@@ -1005,6 +1005,10 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                 <RadioGroupItem value="pedido" id="pedido" />
                 <Label htmlFor="pedido" className="text-sm cursor-pointer">Pedido</Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="chat" id="chat" />
+                <Label htmlFor="chat" className="text-sm cursor-pointer">Chat (WhatsApp / Telegram / Webchat / Instagram)</Label>
+              </div>
             </RadioGroup>
             
             {/* Seletor de tipo de Email */}

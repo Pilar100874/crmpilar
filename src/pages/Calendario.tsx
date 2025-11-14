@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram } from "lucide-react";
 import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -50,7 +50,7 @@ interface Task {
   time?: string;
   assignedTo?: string;
   status: "pending" | "completed";
-  origem: "bot" | "campanha" | "ligacao" | "visita" | "email_enviado" | "email_recebido" | "pedido_orcamento" | "pedido_negociacao" | "pedido_aprovacao";
+  origem: "bot" | "campanha" | "ligacao" | "visita" | "email_enviado" | "email_recebido" | "pedido_orcamento" | "pedido_negociacao" | "pedido_aprovacao" | "chat";
   campaignId?: string;
   campaignName?: string;
   createdAt: Date;
@@ -136,6 +136,23 @@ function DraggableTask({
     });
   }
 
+  const getOrigemIcon = (origem: Task['origem']) => {
+    const iconClass = "w-3 h-3 flex-shrink-0";
+    switch (origem) {
+      case "bot": return <Bot className={iconClass} />;
+      case "campanha": return <Megaphone className={iconClass} />;
+      case "ligacao": return <Phone className={iconClass} />;
+      case "visita": return <MapPin className={iconClass} />;
+      case "email_enviado": return <Mail className={iconClass} />;
+      case "email_recebido": return <MailOpen className={iconClass} />;
+      case "pedido_orcamento": return <FileText className={iconClass} />;
+      case "pedido_negociacao": return <FileText className={iconClass} />;
+      case "pedido_aprovacao": return <FileText className={iconClass} />;
+      case "chat": return <MessageSquare className={iconClass} />;
+      default: return null;
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -158,6 +175,10 @@ function DraggableTask({
       <div {...attributes} {...listeners} className="cursor-move">
         <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
+      {task.isAllDay && (
+        <Calendar className="w-3 h-3 text-secondary-foreground flex-shrink-0" />
+      )}
+      {getOrigemIcon(task.origem)}
       <span 
         className="truncate flex-1 cursor-pointer"
         onClick={(e) => {
@@ -233,6 +254,23 @@ function DraggableTaskCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const getOrigemIcon = (origem: Task['origem']) => {
+    const iconClass = "w-3.5 h-3.5 flex-shrink-0";
+    switch (origem) {
+      case "bot": return <Bot className={iconClass} />;
+      case "campanha": return <Megaphone className={iconClass} />;
+      case "ligacao": return <Phone className={iconClass} />;
+      case "visita": return <MapPin className={iconClass} />;
+      case "email_enviado": return <Mail className={iconClass} />;
+      case "email_recebido": return <MailOpen className={iconClass} />;
+      case "pedido_orcamento": return <FileText className={iconClass} />;
+      case "pedido_negociacao": return <FileText className={iconClass} />;
+      case "pedido_aprovacao": return <FileText className={iconClass} />;
+      case "chat": return <MessageSquare className={iconClass} />;
+      default: return null;
+    }
+  };
+
   return (
     <Card 
       ref={setNodeRef} 
@@ -243,24 +281,36 @@ function DraggableTaskCard({
           backgroundColor: toAlpha(userColor, 0.12)
         } : {})
       }} 
-      className="mb-2"
+      className="mb-3 hover:shadow-md transition-shadow"
     >
-      <CardContent className="p-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <div {...attributes} {...listeners}>
-                <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-grab" />
-              </div>
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <div {...attributes} {...listeners} className="mt-1">
+            <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-grab" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium">
                 {format(task.date, "dd/MM/yyyy", { locale: ptBR })}
               </span>
               {task.time && (
                 <span className="text-xs text-muted-foreground">{task.time}</span>
               )}
+              {task.isAllDay && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Dia todo
+                </Badge>
+              )}
+              {getOrigemIcon(task.origem) && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  {getOrigemIcon(task.origem)}
+                  {task.origem}
+                </Badge>
+              )}
               {task.userName && (
-                <Badge variant="outline" className="text-xs">
-                  <User className="w-3 h-3 mr-1" />
+                <Badge variant="outline" className="text-xs gap-1">
+                  <User className="w-3 h-3" />
                   {task.userName}
                 </Badge>
               )}
@@ -270,27 +320,29 @@ function DraggableTaskCard({
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2">
               <input
                 type="checkbox"
                 checked={task.status === "completed"}
                 onChange={onToggle}
-                className="cursor-pointer"
+                className="cursor-pointer mt-1"
               />
-              <span className={task.status === "completed" ? "line-through text-muted-foreground" : ""}>
-                {task.title}
-              </span>
+              <div className="flex-1">
+                <span className={`${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
+                  {task.title}
+                </span>
+                {task.description && (
+                  <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                )}
+              </div>
             </div>
-            {task.description && (
-              <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-            )}
           </div>
-          <div className="flex items-center gap-1 ml-2">
+          <div className="flex items-center gap-1">
             {onEdit && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-8 w-8"
                 onClick={onEdit}
               >
                 <Edit className="w-4 h-4" />
@@ -300,7 +352,7 @@ function DraggableTaskCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
+                className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive"
                 onClick={onDelete}
               >
                 <Trash2 className="w-4 h-4" />
@@ -1677,9 +1729,17 @@ export default function Calendario() {
             onClick={() => handleOpenNewTask(currentDay)}
           >
             <div className="flex items-center justify-between px-2 py-1 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-[5]">
-              <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm ${
-                isTodayDate ? "bg-primary text-primary-foreground font-bold" : ""
-              }`}>
+              <span 
+                className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm cursor-pointer hover:bg-primary/20 transition-colors ${
+                  isTodayDate ? "bg-primary text-primary-foreground font-bold" : ""
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentDate(currentDay);
+                  setViewMode("day");
+                }}
+                title="Ver dia"
+              >
                 {format(day, "d")}
               </span>
               {dayTasks.length > 0 && (
@@ -1750,7 +1810,15 @@ export default function Calendario() {
           date={day}
           className="flex-1 border-r border-b border-border"
         >
-          <div className={`p-3 border-b border-border text-center ${isTodayDate ? "bg-primary/5" : ""}`}>
+          <div 
+            className={`p-3 border-b border-border text-center cursor-pointer hover:bg-primary/10 transition-colors ${isTodayDate ? "bg-primary/5" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrentDate(day);
+              setViewMode("day");
+            }}
+            title="Ver dia"
+          >
             <div className="text-xs text-muted-foreground uppercase">
               {format(day, "EEE", { locale: ptBR })}
             </div>
@@ -1958,7 +2026,8 @@ export default function Calendario() {
       email_recebido: "Email (Recebido)",
       pedido_orcamento: "Pedido - Orçamento",
       pedido_negociacao: "Pedido - Negociação",
-      pedido_aprovacao: "Pedido - Aprovação"
+      pedido_aprovacao: "Pedido - Aprovação",
+      chat: "Chat",
     };
     return labels[origem] || origem;
   };
