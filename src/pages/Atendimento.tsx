@@ -1750,12 +1750,12 @@ ${recentMessages}
           <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-2 pb-2 space-y-2">
             {/* Filtro de Status */}
             <div className="mb-3">
-              <Select value={orcamentosStatusFilter} onValueChange={setOrcamentosStatusFilter}>
+              <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-full h-9">
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="orcamento">Orçamento</SelectItem>
                   <SelectItem value="negociacao">Negociação</SelectItem>
                   <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
