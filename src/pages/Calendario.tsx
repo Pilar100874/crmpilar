@@ -475,6 +475,7 @@ export default function Calendario() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [relocating, setRelocating] = useState(false);
   
   // Estado para regras do calendário
   const [calendarioRegras, setCalendarioRegras] = useState<{
@@ -2527,6 +2528,36 @@ export default function Calendario() {
               <h2 className="text-lg font-semibold ml-4">
                 {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={relocating}
+                onClick={async () => {
+                  try {
+                    setRelocating(true);
+                    const { data, error } = await supabase.functions.invoke('mover-tarefas-pendentes', {
+                      body: { manual: true }
+                    });
+                    if (error) {
+                      console.error('Erro ao executar realocação manual:', error);
+                      toast.error('Erro ao executar realocação manual');
+                    } else {
+                      toast.success(`Realocação concluída: ${data?.tarefasMovidas ?? 0} movidas de ${data?.tarefasProcessadas ?? 0}`);
+                      await loadTasks();
+                    }
+                  } catch (err) {
+                    console.error('Erro inesperado na realocação manual:', err);
+                    toast.error('Erro inesperado');
+                  } finally {
+                    setRelocating(false);
+                  }
+                }}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${relocating ? 'animate-spin' : ''}`} />
+                Realocar pendentes agora
+              </Button>
             </div>
           </div>
         )}
