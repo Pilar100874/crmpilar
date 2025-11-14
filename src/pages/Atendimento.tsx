@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import POSView from "@/components/orcamento/POSView";
+import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 
 interface Conversation {
   id: string;
@@ -66,6 +67,12 @@ export default function Atendimento() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showClientDetails, setShowClientDetails] = useState(true);
+  
+  // Estados específicos por aba
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+  const [selectedTaskData, setSelectedTaskData] = useState<any>(null);
+  const [selectedEmailData, setSelectedEmailData] = useState<any>(null);
   
   // AI Chat states
   const [showAIChat, setShowAIChat] = useState(false);
@@ -190,6 +197,15 @@ export default function Atendimento() {
     if (activeTab !== 'orcamento') {
       setOrcamentoSheetOpen(false);
       setSelectedOrcamentoId(null);
+    }
+    // Limpar seleções ao trocar de aba
+    if (activeTab !== 'agenda') {
+      setSelectedTaskId(null);
+      setSelectedTaskData(null);
+    }
+    if (activeTab !== 'email') {
+      setSelectedEmailId(null);
+      setSelectedEmailData(null);
     }
   }, [activeTab]);
 
@@ -784,6 +800,83 @@ export default function Atendimento() {
       loadSelectedOrcamento(selectedOrcamentoId);
     }
   }, [selectedOrcamentoId]);
+
+  // Carregar dados da tarefa selecionada
+  const loadSelectedTask = async (taskId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("calendario_tarefas")
+        .select(`
+          *,
+          customers:contact_id (
+            id,
+            nome,
+            telefone,
+            email,
+            custom_fields
+          )
+        `)
+        .eq("id", taskId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setSelectedTaskData(data);
+    } catch (error: any) {
+      console.error("Erro ao carregar tarefa:", error);
+    }
+  };
+
+  // Carregar dados do email selecionado e buscar contato
+  const loadSelectedEmail = async (emailId: string) => {
+    try {
+      const { data: emailData, error: emailError } = await supabase
+        .from("emails")
+        .select("*")
+        .eq("id", emailId)
+        .single();
+
+      if (emailError) throw emailError;
+
+      // Buscar contato pelo email
+      const { data: customerData, error: customerError } = await supabase
+        .from("customers")
+        .select(`
+          *,
+          customer_empresas!customer_empresas_customer_id_fkey (
+            empresas (
+              id,
+              nome,
+              nome_fantasia,
+              cnpj,
+              telefone
+            )
+          )
+        `)
+        .eq("email", emailData.from_email)
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+
+      setSelectedEmailData({
+        ...emailData,
+        customer: customerData || null
+      });
+    } catch (error: any) {
+      console.error("Erro ao carregar email:", error);
+    }
+  };
+
+  // UseEffects para carregar dados selecionados
+  useEffect(() => {
+    if (selectedTaskId) {
+      loadSelectedTask(selectedTaskId);
+    }
+  }, [selectedTaskId]);
+
+  useEffect(() => {
+    if (selectedEmailId) {
+      loadSelectedEmail(selectedEmailId);
+    }
+  }, [selectedEmailId]);
 
   // Create or load AI session
   useEffect(() => {
@@ -1539,36 +1632,53 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0 pt-3">
+          <TabsContent value="agenda" className="flex-1 flex flex-row min-h-0 m-0">
+            {/* Main Content */}
+            <div className={`flex flex-col transition-all duration-300 ${
+              showClientDetails && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
+            }`}>
             {/* Agenda Controls */}
-            <div className="flex-shrink-0 px-3 pt-1 pb-2 border-b bg-background space-y-2">
-              {/* Date Navigation */}
+            <div className="flex-shrink-0 px-3 pt-4 pb-2 border-b bg-background space-y-2">
+              {/* Date Navigation + Toggle Button */}
               <div className="flex items-center justify-between gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handlePreviousDay}
-                  className="h-8"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                
-                <div className="flex-1 text-center">
-                  <p className="text-sm font-semibold">
-                    {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(agendaDate, "EEEE", { locale: ptBR })}
-                  </p>
+                <div className="flex items-center gap-2 flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePreviousDay}
+                    className="h-8"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  <div className="flex-1 text-center">
+                    <p className="text-sm font-semibold">
+                      {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(agendaDate, "EEEE", { locale: ptBR })}
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleNextDay}
+                    className="h-8"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
                 </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleNextDay}
-                  className="h-8"
+
+                {/* Toggle Details Button */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowClientDetails(!showClientDetails)}
+                  className="h-8 w-8 p-0"
+                  title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                 </Button>
               </div>
 
@@ -1748,8 +1858,17 @@ ${recentMessages}
                   <p className="text-sm">Nenhuma tarefa para esta data</p>
                 </div>
               ) : (
-                todayTasks.map((task) => (
-                  <Card key={task.id} className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                 todayTasks.map((task) => (
+                  <Card 
+                    key={task.id} 
+                    className="p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedTaskId(task.id);
+                      if (!showClientDetails) {
+                        setShowClientDetails(true);
+                      }
+                    }}
+                  >
                     <div className="flex items-start gap-3">
                       <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
                         task.status === 'concluida' ? 'text-success' : 'text-muted-foreground'
@@ -1776,10 +1895,61 @@ ${recentMessages}
                 ))
               )}
             </div>
+            </div>
+
+            {/* Client Details Panel - Agenda */}
+            {showClientDetails && selectedTaskData?.customers && (
+              <ClientDetailsPanel
+                customer={{
+                  id: selectedTaskData.customers.id,
+                  nome: selectedTaskData.customers.nome,
+                  telefone: selectedTaskData.customers.telefone,
+                  email: selectedTaskData.customers.email,
+                  custom_fields: selectedTaskData.customers.custom_fields
+                }}
+                additionalInfo={
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Tarefa</p>
+                      <p className="text-sm font-medium">{selectedTaskData.title}</p>
+                    </div>
+                    {selectedTaskData.description && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Descrição</p>
+                        <p className="text-sm">{selectedTaskData.description}</p>
+                      </div>
+                    )}
+                    {selectedTaskData.date && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Data</p>
+                        <p className="text-sm">{format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+            )}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-3 pb-2 space-y-2">
+          <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0">
+            {/* Main Content */}
+            <div className={`flex flex-col transition-all duration-300 ${
+              showClientDetails && selectedEmailData?.customer ? 'w-[calc(100%-320px)]' : 'w-full'
+            } overflow-y-auto min-h-0 overscroll-contain px-3 pt-3 pb-2 space-y-2`}>
+            {/* Header with Toggle */}
+            <div className="flex items-center justify-end mb-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowClientDetails(!showClientDetails)}
+                className="h-8 w-8 p-0"
+                title={showClientDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+              >
+                {showClientDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+            </div>
+            
             {userEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1792,7 +1962,12 @@ ${recentMessages}
                   className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
                     !email.read ? 'bg-primary/5 border-primary/30 shadow-sm' : ''
                   }`}
-                  onClick={() => navigate('/email')}
+                  onClick={() => {
+                    setSelectedEmailId(email.id);
+                    if (!showClientDetails) {
+                      setShowClientDetails(true);
+                    }
+                  }}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
@@ -1823,6 +1998,40 @@ ${recentMessages}
                   </div>
                 </Card>
               ))
+            )}
+            </div>
+
+            {/* Client Details Panel - Email */}
+            {showClientDetails && selectedEmailData?.customer && (
+              <ClientDetailsPanel
+                customer={{
+                  id: selectedEmailData.customer.id,
+                  nome: selectedEmailData.customer.nome,
+                  telefone: selectedEmailData.customer.telefone,
+                  email: selectedEmailData.customer.email,
+                  custom_fields: selectedEmailData.customer.custom_fields
+                }}
+                companies={selectedEmailData.customer.customer_empresas?.map((ce: any) => ({
+                  ...ce,
+                  empresas: ce.empresas
+                })) || []}
+                additionalInfo={
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Assunto</p>
+                      <p className="text-sm font-medium">{selectedEmailData.subject}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">De</p>
+                      <p className="text-sm">{selectedEmailData.from_email}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Data</p>
+                      <p className="text-sm">{format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                    </div>
+                  </div>
+                }
+              />
             )}
           </TabsContent>
           
@@ -2416,16 +2625,50 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
-        <div className="w-[calc(100%-320px)] h-screen bg-gray-100 border-l shadow-lg overflow-hidden">
-          <POSView 
-            estabelecimentoId={estabelecimentoId} 
-            orcamentoId={selectedOrcamentoId}
-            onClose={() => {
-              setOrcamentoSheetOpen(false);
-              setSelectedOrcamentoId(null);
-            }}
-          />
-        </div>
+        <>
+          <div className={`transition-all duration-300 ${showClientDetails && selectedOrcamentoData ? 'w-[calc(100%-320px-320px)]' : 'w-[calc(100%-320px)]'} h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
+            <POSView 
+              estabelecimentoId={estabelecimentoId} 
+              orcamentoId={selectedOrcamentoId}
+              onClose={() => {
+                setOrcamentoSheetOpen(false);
+                setSelectedOrcamentoId(null);
+              }}
+              showClientDetails={showClientDetails}
+              onToggleClientDetails={() => setShowClientDetails(!showClientDetails)}
+            />
+          </div>
+
+          {/* Client Details Panel - Orçamento */}
+          {showClientDetails && selectedOrcamentoData && (
+            <ClientDetailsPanel
+              customer={{
+                id: selectedOrcamentoData.customers?.id || selectedOrcamentoData.empresas?.id,
+                nome: selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente",
+                telefone: selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone,
+                email: selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email
+              }}
+              additionalInfo={
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Protocolo</p>
+                    <p className="text-sm font-mono">{selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Status</p>
+                    <Badge variant="secondary">{selectedOrcamentoData.etapa || selectedOrcamentoData.status}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Valor Total</p>
+                    <p className="text-sm font-semibold text-primary">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedOrcamentoData.valor_total || 0)}
+                    </p>
+                  </div>
+                </div>
+              }
+            />
+          )}
+        </>
       )}
     </div>
   );
