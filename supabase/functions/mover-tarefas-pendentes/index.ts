@@ -147,12 +147,31 @@ Deno.serve(async (req) => {
         // Buscar informações do usuário
         const { data: usuario, error: usuarioError } = await supabase
           .from('usuarios')
-          .select('id, estabelecimento_id, hora_inicial, hora_final')
-          .eq('id', tarefa.user_id)
+          .select('id, estabelecimento_id, hora_inicial, hora_final, auth_user_id')
+          .eq('auth_user_id', tarefa.user_id)
           .maybeSingle();
 
         if (usuarioError || !usuario) {
-          console.error(`⚠️ Usuário não encontrado para tarefa ${tarefa.id}`);
+          console.error(`⚠️ Usuário não encontrado para tarefa ${tarefa.id}. User ID: ${tarefa.user_id}`);
+          // Se não encontrar o usuário, tenta mover a tarefa mesmo assim para o dia seguinte
+          // usando horário padrão
+          const novaDataStr = new Date(hoje.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          
+          const { error: updateError } = await supabase
+            .from('calendario_tarefas')
+            .update({
+              date: novaDataStr,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', tarefa.id);
+
+          if (updateError) {
+            console.error(`❌ Erro ao atualizar tarefa sem usuário ${tarefa.id}:`, updateError);
+            erros++;
+          } else {
+            console.log(`✅ Tarefa ${tarefa.id} movida para ${novaDataStr} (sem validação de usuário)`);
+            tarefasMovidas++;
+          }
           continue;
         }
 
