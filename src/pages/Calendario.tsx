@@ -1301,12 +1301,28 @@ export default function Calendario() {
 
       console.log("Estabelecimento ID obtido:", estabelecimentoId);
 
-      // Usar o userId passado ou o usuário atual
-      const targetUserId = taskData.userId || user.id;
+      // Buscar o auth_user_id se taskData.userId for fornecido (é o ID da tabela usuarios)
+      let targetUserId = user.id;
+      if (taskData.userId) {
+        const { data: usuarioData, error: usuarioError } = await supabase
+          .from('usuarios')
+          .select('auth_user_id')
+          .eq('id', taskData.userId)
+          .maybeSingle();
+        
+        if (usuarioError || !usuarioData) {
+          console.error("Erro ao buscar auth_user_id do usuário:", usuarioError);
+          toast.error("Usuário não encontrado");
+          return;
+        }
+        // @ts-ignore - auth_user_id existe mas pode não estar nos tipos gerados
+        targetUserId = usuarioData.auth_user_id;
+      }
+      
       console.log("=== TARGET USER DEBUG ===");
-      console.log("taskData.userId:", taskData.userId);
-      console.log("user.id (current):", user.id);
-      console.log("targetUserId (final):", targetUserId);
+      console.log("taskData.userId (usuarios.id):", taskData.userId);
+      console.log("user.id (current auth):", user.id);
+      console.log("targetUserId (final auth_user_id):", targetUserId);
       console.log("========================");
 
       // Se for dia todo, atualizar a tarefa se estiver editando; caso contrário, criar baseado na jornada
