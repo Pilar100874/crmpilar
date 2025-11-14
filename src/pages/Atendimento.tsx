@@ -2,13 +2,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen } from "lucide-react";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ChatInput from "@/components/chat/ChatInput";
 import { toast } from "@/lib/toast-config";
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Conversation {
   id: string;
@@ -95,6 +96,11 @@ export default function Atendimento() {
   
   // Novo contato dialog
   const [showNovoContatoDialog, setShowNovoContatoDialog] = useState(false);
+  
+  // Tab states
+  const [activeTab, setActiveTab] = useState("chat");
+  const [todayTasks, setTodayTasks] = useState<any[]>([]);
+  const [userEmails, setUserEmails] = useState<any[]>([]);
 
   useEffect(() => {
     loadConversations();
@@ -103,6 +109,8 @@ export default function Atendimento() {
     loadAvailableBots();
     loadWebhooksForAutoResponse();
     loadAvailableUsers();
+    loadTodayTasks();
+    loadUserEmails();
   }, []);
 
 
@@ -406,6 +414,60 @@ export default function Atendimento() {
       if (aiAtendimentoWebhooks.length > 0) {
         setSelectedAIWebhook(aiAtendimentoWebhooks[0].id);
       }
+    }
+  };
+
+  // Load today's tasks
+  const loadTodayTasks = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const today = new Date();
+      const startDate = startOfDay(today);
+      const endDate = endOfDay(today);
+
+      const { data: tasksData, error } = await supabase
+        .from('calendario_tarefas')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0])
+        .order('time', { ascending: true });
+
+      if (error) {
+        console.error("Erro ao carregar tarefas:", error);
+        return;
+      }
+
+      setTodayTasks(tasksData || []);
+    } catch (error) {
+      console.error("Erro ao carregar tarefas:", error);
+    }
+  };
+
+  // Load user emails
+  const loadUserEmails = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: emailsData, error } = await supabase
+        .from('emails')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('folder', 'inbox')
+        .order('date', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error("Erro ao carregar emails:", error);
+        return;
+      }
+
+      setUserEmails(emailsData || []);
+    } catch (error) {
+      console.error("Erro ao carregar emails:", error);
     }
   };
 
@@ -1038,61 +1100,159 @@ ${recentMessages}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
-          {filteredConversations.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">Nenhuma conversa encontrada</p>
-            </div>
-          ) : (
-            filteredConversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => setSelectedConversation(conv.id)}
-                className={`px-3 py-3 border-b cursor-pointer hover:bg-gray-200/50 transition-colors ${
-                  selectedConversation === conv.id ? "bg-gray-200 border-l-4 border-l-primary" : ""
-                }`}
-              >
-                <div className="flex items-start gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="font-semibold text-sm truncate">
-                        {conv.customer?.nome || "Cliente"}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-2">
-                        {conv.lastMessage?.created_at
-                          ? getTimeAgo(conv.lastMessage.created_at)
-                          : getTimeAgo(conv.updated_at)}
-                      </span>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+          <TabsList className="w-full grid grid-cols-3 mx-4 my-2 flex-shrink-0">
+            <TabsTrigger value="chat" className="flex items-center gap-1">
+              <MessageSquare className="w-3 h-3" />
+              Chat
+            </TabsTrigger>
+            <TabsTrigger value="agenda" className="flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Agenda
+            </TabsTrigger>
+            <TabsTrigger value="email" className="flex items-center gap-1">
+              <Mail className="w-3 h-3" />
+              Email
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Chat Tab */}
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
+            {filteredConversations.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">Nenhuma conversa encontrada</p>
+              </div>
+            ) : (
+              filteredConversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => setSelectedConversation(conv.id)}
+                  className={`px-3 py-3 border-b cursor-pointer hover:bg-gray-200/50 transition-colors ${
+                    selectedConversation === conv.id ? "bg-gray-200 border-l-4 border-l-primary" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-primary" />
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mb-1">
-                      {conv.lastMessage?.text || "Sem mensagens"}
-                    </p>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {conv.bot_active !== false && (
-                        <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-green-500">
-                          BOT
-                        </Badge>
-                      )}
-                      {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                        <>
-                          {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
-                            <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0 bg-orange-500 text-white">
-                              {rel.empresas?.nome_fantasia || rel.empresas?.nome || 'COMERCIAL'}
-                            </Badge>
-                          ))}
-                        </>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="font-semibold text-sm truncate">
+                          {conv.customer?.nome || "Cliente"}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {conv.lastMessage?.created_at
+                            ? getTimeAgo(conv.lastMessage.created_at)
+                            : getTimeAgo(conv.updated_at)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate mb-1">
+                        {conv.lastMessage?.text || "Sem mensagens"}
+                      </p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {conv.bot_active !== false && (
+                          <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-green-500">
+                            BOT
+                          </Badge>
+                        )}
+                        {conv.customerCompanies && conv.customerCompanies.length > 0 && (
+                          <>
+                            {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
+                              <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1">
+                                <Building2 className="w-2.5 h-2.5" />
+                                {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
+                              </Badge>
+                            ))}
+                            {conv.customerCompanies.length > 1 && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                +{conv.customerCompanies.length - 1}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+              ))
+            )}
+          </TabsContent>
+
+          {/* Agenda Tab */}
+          <TabsContent value="agenda" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2">
+            {todayTasks.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">Nenhuma tarefa para hoje</p>
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              todayTasks.map((task) => (
+                <Card key={task.id} className="p-3 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                      task.status === 'concluida' ? 'text-green-500' : 'text-muted-foreground'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{task.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
+                      {task.time && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {task.time}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          {/* Email Tab */}
+          <TabsContent value="email" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 p-3 space-y-2">
+            {userEmails.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">Nenhum email recebido</p>
+              </div>
+            ) : (
+              userEmails.map((email) => (
+                <Card 
+                  key={email.id} 
+                  className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${
+                    !email.read ? 'bg-primary/5 border-primary/20' : ''
+                  }`}
+                  onClick={() => navigate('/email')}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0">
+                      {email.read ? (
+                        <MailOpen className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <Mail className="w-4 h-4 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`font-medium text-sm truncate ${!email.read ? 'font-semibold' : ''}`}>
+                          {email.from_email}
+                        </p>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
+                        </span>
+                      </div>
+                      <p className={`text-sm truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
+                        {email.subject}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Chat Area */}
