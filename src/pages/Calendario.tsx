@@ -1248,9 +1248,9 @@ export default function Calendario() {
 
       console.log("Estabelecimento ID obtido:", estabelecimentoId);
 
-      // Sempre criar tarefa para o usuário atual (admin visualizando não cria tarefas para outros)
-      const targetUserId = user.id;
-      console.log("Target User ID:", targetUserId);
+      // Se for edição, preservar o userId original; caso contrário, usar o usuário atual
+      const targetUserId = taskData.id && taskData.userId ? taskData.userId : user.id;
+      console.log("Target User ID:", targetUserId, taskData.id ? "(editando - preservado)" : "(criando)");
 
       // Se for dia todo, atualizar a tarefa se estiver editando; caso contrário, criar baseado na jornada
       if (taskData.isAllDay) {
