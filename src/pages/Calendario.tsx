@@ -86,12 +86,14 @@ function DraggableTask({
   task, 
   onClick, 
   onEdit, 
-  onDelete 
+  onDelete,
+  userColor
 }: { 
   task: Task; 
   onClick?: (e?: any) => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  userColor?: string;
 }) {
   const {
     attributes,
@@ -111,13 +113,20 @@ function DraggableTask({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{
+        ...style,
+        ...(userColor && task.status !== "completed" ? {
+          backgroundColor: userColor,
+          borderLeft: `3px solid ${userColor}`,
+          filter: 'brightness(1.1)'
+        } : {})
+      }}
       className={`group text-xs px-2 py-1 rounded flex items-center gap-1 ${
         task.status === "completed"
           ? "bg-muted text-muted-foreground line-through"
           : task.isAllDay
           ? "bg-secondary/30 text-secondary-foreground hover:bg-secondary/40"
-          : "bg-primary/10 text-primary hover:bg-primary/20"
+          : !userColor ? "bg-primary/10 text-primary hover:bg-primary/20" : "hover:brightness-110"
       }`}
     >
       <div {...attributes} {...listeners} className="cursor-move">
@@ -169,12 +178,14 @@ function DraggableTaskCard({
   task, 
   onToggle,
   onEdit,
-  onDelete 
+  onDelete,
+  userColor
 }: { 
   task: Task; 
   onToggle: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  userColor?: string;
 }) {
   const {
     attributes,
@@ -192,7 +203,17 @@ function DraggableTaskCard({
   };
 
   return (
-    <Card ref={setNodeRef} style={style} className="mb-2">
+    <Card 
+      ref={setNodeRef} 
+      style={{
+        ...style,
+        ...(userColor && task.status !== "completed" ? {
+          borderLeft: `4px solid ${userColor}`,
+          backgroundColor: `${userColor}15`
+        } : {})
+      }} 
+      className="mb-2"
+    >
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -271,6 +292,10 @@ export default function Calendario() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string; auth_user_id: string | null }>>([]);
   const [showUserSelector, setShowUserSelector] = useState(false);
+  
+  // Mapa de cores para cada usuário
+  const [userColors, setUserColors] = useState<Record<string, string>>({});
+  
   const [isWeekendDialogOpen, setIsWeekendDialogOpen] = useState(false);
   const [weekendPendingTask, setWeekendPendingTask] = useState<{ 
     taskData: {
@@ -496,10 +521,37 @@ export default function Calendario() {
 
       if (!error && data) {
         setUsuarios(data);
+        
+        // Gerar cores para cada usuário
+        const colors = generateUserColors(data);
+        setUserColors(colors);
       }
     } catch (error) {
       console.error("Erro ao carregar usuários:", error);
     }
+  };
+
+  // Função para gerar cores únicas para cada usuário
+  const generateUserColors = (users: Array<{ id: string; nome: string; auth_user_id: string | null }>) => {
+    const colorPalette = [
+      'hsl(142, 71%, 45%)', // verde
+      'hsl(221, 83%, 53%)', // azul
+      'hsl(262, 83%, 58%)', // roxo
+      'hsl(346, 77%, 50%)', // vermelho/rosa
+      'hsl(25, 95%, 53%)',  // laranja
+      'hsl(48, 96%, 53%)',  // amarelo
+      'hsl(173, 58%, 39%)', // teal
+      'hsl(280, 67%, 47%)', // magenta
+    ];
+    
+    const colors: Record<string, string> = {};
+    users.forEach((user, index) => {
+      if (user.auth_user_id) {
+        colors[user.auth_user_id] = colorPalette[index % colorPalette.length];
+      }
+    });
+    
+    return colors;
   };
 
   useEffect(() => {
@@ -1477,6 +1529,7 @@ export default function Calendario() {
                   }}
                   onEdit={() => handleEditTask(task)}
                   onDelete={() => handleDeleteTask(task.id)}
+                  userColor={task.userId ? userColors[task.userId] : undefined}
                 />
               ))}
               {dayTasks.length > 3 && (
@@ -1537,6 +1590,7 @@ export default function Calendario() {
                 onClick={() => handleToggleTaskStatus(task.id)}
                 onEdit={() => handleEditTask(task)}
                 onDelete={() => handleDeleteTask(task.id)}
+                userColor={task.userId ? userColors[task.userId] : undefined}
               />
             ))}
           </div>
@@ -1580,6 +1634,10 @@ export default function Calendario() {
                           ? "bg-muted text-muted-foreground line-through border-muted"
                           : "bg-primary/10 border-primary"
                       }`}
+                      style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
+                        borderLeft: `4px solid ${userColors[task.userId]}`,
+                        backgroundColor: `${userColors[task.userId]}15`
+                      } : {}}
                     >
                       <div className="flex items-center justify-between">
                         <div 
@@ -1846,7 +1904,14 @@ export default function Calendario() {
               </thead>
               <tbody>
                 {sortedTasks.map((task) => (
-                  <tr key={task.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                  <tr 
+                    key={task.id} 
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                    style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
+                      borderLeft: `4px solid ${userColors[task.userId]}`,
+                      backgroundColor: `${userColors[task.userId]}10`
+                    } : {}}
+                  >
                     {tableColumns.filter(col => col.visible).map((column) => {
                       if (column.id === 'status') {
                         return (
@@ -1992,6 +2057,7 @@ export default function Calendario() {
               onToggle={() => handleToggleTaskStatus(task.id)}
               onEdit={() => handleEditTask(task)}
               onDelete={() => handleDeleteTask(task.id)}
+              userColor={task.userId ? userColors[task.userId] : undefined}
             />
           )}
         </div>
@@ -2008,6 +2074,7 @@ export default function Calendario() {
               onToggle={() => handleToggleTaskStatus(task.id)}
               onEdit={() => handleEditTask(task)}
               onDelete={() => handleDeleteTask(task.id)}
+              userColor={task.userId ? userColors[task.userId] : undefined}
             />
           )}
         </div>
@@ -2024,6 +2091,7 @@ export default function Calendario() {
               onToggle={() => handleToggleTaskStatus(task.id)}
               onEdit={() => handleEditTask(task)}
               onDelete={() => handleDeleteTask(task.id)}
+              userColor={task.userId ? userColors[task.userId] : undefined}
             />
           )}
         </div>
@@ -2040,6 +2108,7 @@ export default function Calendario() {
               onToggle={() => handleToggleTaskStatus(task.id)}
               onEdit={() => handleEditTask(task)}
               onDelete={() => handleDeleteTask(task.id)}
+              userColor={task.userId ? userColors[task.userId] : undefined}
             />
           )}
         </div>
@@ -2185,6 +2254,38 @@ export default function Calendario() {
           </div>
         )}
       </div>
+
+      {/* Legenda de usuários */}
+      {(isAdmin && selectedUserIds.length > 0) && (
+        <div className="border-b border-border bg-muted/30 px-6 py-3">
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="text-xs font-semibold text-muted-foreground uppercase">Legenda:</span>
+            {/* Admin atual */}
+            {currentAdminId && userColors[currentAdminId] && (
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-4 h-4 rounded border border-border"
+                  style={{ backgroundColor: userColors[currentAdminId] }}
+                />
+                <span className="text-xs font-medium">Você (Admin)</span>
+              </div>
+            )}
+            {/* Usuários selecionados */}
+            {usuarios
+              .filter(u => u.auth_user_id && selectedUserIds.includes(u.auth_user_id))
+              .map(usuario => (
+                <div key={usuario.id} className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded border border-border"
+                    style={{ backgroundColor: userColors[usuario.auth_user_id!] }}
+                  />
+                  <span className="text-xs font-medium">{usuario.nome}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
