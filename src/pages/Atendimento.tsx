@@ -1155,7 +1155,7 @@ ${recentMessages}
       {/* Conversation List */}
       <div className="w-80 border-r border-border bg-gray-100 flex flex-col h-full min-h-0">
         <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
-          <h2 className="text-lg font-semibold mb-3">Chat ao Vivo</h2>
+          <h2 className="text-lg font-semibold mb-3">Painel de Atendimento</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
