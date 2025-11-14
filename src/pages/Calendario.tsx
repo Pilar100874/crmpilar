@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, GripVertical, Search, ArrowUpDown, ArrowUp, ArrowDown, Check, Pencil, Trash2, Edit, X, Users, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare, Calendar, Instagram } from "lucide-react";
-import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay } from "date-fns";
+import { format, addDays, addMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameMonth, isSameDay, isToday, isTomorrow, parseISO, differenceInDays, addWeeks, isWeekend, startOfDay, isBefore } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
 import { NewTaskDialog } from "@/components/calendar/NewTaskDialog";
@@ -1774,18 +1774,20 @@ export default function Calendario() {
                 >
                   {format(day, "d")}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 hover:bg-primary/20"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenNewTask(currentDay);
-                  }}
-                  title="Nova tarefa"
-                >
-                  <Plus className="w-3 h-3" />
-                </Button>
+                {!isBefore(startOfDay(currentDay), startOfDay(new Date())) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 hover:bg-primary/20"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenNewTask(currentDay);
+                    }}
+                    title="Nova tarefa"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                )}
               </div>
               {dayTasks.length > 0 && (
                 <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
@@ -1869,18 +1871,20 @@ export default function Calendario() {
               >
                 {format(day, "d")}
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hover:bg-primary/20"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenNewTask(day);
-                }}
-                title="Nova tarefa"
-              >
-                <Plus className="w-3 h-3" />
-              </Button>
+              {!isBefore(startOfDay(day), startOfDay(new Date())) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 hover:bg-primary/20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenNewTask(day);
+                  }}
+                  title="Nova tarefa"
+                >
+                  <Plus className="w-3 h-3" />
+                </Button>
+              )}
             </div>
           </div>
           <div className="p-2 space-y-2 min-h-[400px]">
