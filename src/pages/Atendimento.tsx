@@ -103,6 +103,7 @@ export default function Atendimento() {
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
   
   // Agenda states
   const [agendaDate, setAgendaDate] = useState(new Date());
@@ -690,7 +691,7 @@ export default function Atendimento() {
           )
         `)
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true })
         .limit(50);
 
       if (error) {
@@ -1746,8 +1747,26 @@ ${recentMessages}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-4 pb-2 space-y-2">
-            {orcamentos.filter(o => o.status !== 'cancelado' && o.status !== 'ganho').length === 0 ? (
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-3 pt-2 pb-2 space-y-2">
+            {/* Filtro de Status */}
+            <div className="mb-3">
+              <Select value={orcamentosStatusFilter} onValueChange={setOrcamentosStatusFilter}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="orcamento">Orçamento</SelectItem>
+                  <SelectItem value="negociacao">Negociação</SelectItem>
+                  <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {orcamentos
+              .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
+              .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
+              .length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Receipt className="w-12 h-12 mx-auto mb-3 opacity-20" />
                 <p className="text-sm">Nenhum orçamento em andamento</p>
@@ -1755,6 +1774,7 @@ ${recentMessages}
             ) : (
               orcamentos
                 .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
+                .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
                 .map((orc) => (
                   <Card 
                     key={orc.id} 
