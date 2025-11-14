@@ -582,11 +582,11 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
               {filteredProdutos.map((produto) => (
                 <Card
                   key={produto.id}
-                  className="bg-slate-800 border-slate-700 hover:border-blue-500 cursor-pointer transition-all overflow-hidden"
+                  className="bg-card border-border hover:border-primary cursor-pointer transition-all overflow-hidden"
                   onClick={() => addToCart(produto)}
                 >
                   <div className="flex items-center gap-4 p-3">
-                    <div className="w-16 h-16 bg-slate-700 rounded flex-shrink-0 overflow-hidden">
+                    <div className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden">
                       {produto.foto_url ? (
                         <img 
                           src={produto.foto_url} 
@@ -595,21 +595,21 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-2xl text-slate-500">{produto.nome[0]}</span>
+                          <span className="text-2xl text-muted-foreground">{produto.nome[0]}</span>
                         </div>
                       )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-white text-sm truncate">
+                      <h3 className="font-medium text-sm truncate">
                         {produto.nome}
                       </h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-base font-bold text-blue-400">
+                        <span className="text-base font-bold text-primary">
                           R$ 10,00
                         </span>
                         {cartItems.has(produto.id) && (
-                          <Badge className="bg-blue-600 text-white text-xs">
+                          <Badge className="bg-primary text-primary-foreground text-xs">
                             {cartItems.get(produto.id)?.quantity} no carrinho
                           </Badge>
                         )}
@@ -618,7 +618,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
                     
                     <Button
                       size="icon"
-                      className="bg-blue-600 hover:bg-blue-700 flex-shrink-0"
+                      className="bg-primary hover:bg-primary/90 flex-shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         addToCart(produto);
@@ -633,7 +633,7 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
           )}
 
           {filteredProdutos.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <Search className="w-16 h-16 mb-4 opacity-20" />
               <p className="text-sm">Nenhum produto encontrado</p>
             </div>
@@ -642,17 +642,17 @@ export default function POSView({ estabelecimentoId, orcamentoId, onClose }: POS
         </div>
 
       {/* Painel Lateral - Lado Direito */}
-      <div className="w-[420px] bg-slate-800 border-l border-slate-700 flex flex-col overflow-hidden">
+      <div className="w-[420px] bg-card border-l border-border flex flex-col overflow-hidden">
 
         {/* Header com Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <div className="border-b border-slate-700">
+          <div className="border-b border-border">
             <TabsList className="w-full grid grid-cols-2 bg-transparent h-12 rounded-none">
-              <TabsTrigger value="cart" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
+              <TabsTrigger value="cart" className="data-[state=active]:bg-muted">
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Carrinho
               </TabsTrigger>
-              <TabsTrigger value="details" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
+              <TabsTrigger value="details" className="data-[state=active]:bg-muted">
                 <Tag className="w-4 h-4 mr-2" />
                 Detalhes
               </TabsTrigger>
