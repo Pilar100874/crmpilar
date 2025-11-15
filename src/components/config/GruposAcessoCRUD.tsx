@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { MENUS_DISPONIVEIS } from "@/lib/menus";
+import { MENUS_DISPONIVEIS, MENU_CONFIG } from "@/lib/menus";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -255,6 +255,11 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
     return labels[key];
   };
 
+  const getMenuLabel = (menuId: string) => {
+    const menuConfig = MENU_CONFIG.find(m => m.id === menuId);
+    return menuConfig ? menuConfig.label : menuId;
+  };
+
   const formatPermissions = (permissions: Record<string, MenuPermissions>) => {
     return Object.entries(permissions)
       .map(([menu, perms]) => {
@@ -262,7 +267,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           .filter(([, value]) => value)
           .map(([key]) => getPermissionLabel(key as keyof MenuPermissions))
           .join(', ');
-        return `${menu} (${actions})`;
+        return `${getMenuLabel(menu)} (${actions})`;
       })
       .join(' | ');
   };
@@ -333,7 +338,7 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
                 return (
                   <Card key={menu} className={`p-4 transition-all ${hasAnyMenuPermission ? 'border-primary/50 bg-primary/5' : ''}`}>
                     <div className="flex items-start justify-between gap-4">
-                      <div className="font-medium text-sm min-w-[180px]">{menu}</div>
+                      <div className="font-medium text-sm min-w-[180px]">{getMenuLabel(menu)}</div>
                       <div className="flex gap-6 flex-wrap">
                         {(['view', 'create', 'edit', 'delete'] as const).map((perm) => (
                           <div key={perm} className="flex items-center space-x-2">
