@@ -39,12 +39,12 @@ serve(async (req) => {
       throw new Error('Destinatário, assunto e corpo do email são obrigatórios');
     }
 
-    // Buscar estabelecimento do usuário
+    // Buscar estabelecimento do usuário usando auth_user_id
     const { data: usuario, error: usuarioError } = await supabase
       .from('usuarios')
       .select('estabelecimento_id, email')
-      .eq('id', user.id)
-      .single();
+      .eq('auth_user_id', user.id)
+      .maybeSingle();
 
     if (usuarioError || !usuario?.estabelecimento_id) {
       throw new Error('Usuário não vinculado a um estabelecimento');
@@ -55,7 +55,7 @@ serve(async (req) => {
       .from('resend_config')
       .select('*')
       .eq('estabelecimento_id', usuario.estabelecimento_id)
-      .single();
+      .maybeSingle();
 
     if (configError || !resendConfig) {
       throw new Error('Configuração Resend não encontrada. Configure o Resend nas configurações do estabelecimento.');
