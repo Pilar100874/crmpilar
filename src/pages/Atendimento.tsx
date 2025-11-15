@@ -519,15 +519,13 @@ export default function Atendimento() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const startDate = startOfDay(date);
-      const endDate = endOfDay(date);
+      const dateStr = format(date, 'yyyy-MM-dd');
 
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', endDate.toISOString().split('T')[0]);
+        .eq('date', dateStr);
 
       if (error) {
         console.error("Erro ao carregar tarefas:", error);
