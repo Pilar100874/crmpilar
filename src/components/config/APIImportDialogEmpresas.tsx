@@ -24,8 +24,9 @@ interface APIImportDialogEmpresasProps {
 }
 
 interface FieldMapping {
-  apiField: string;
   systemField: string;
+  apiField?: string;
+  fixedValue?: string;
   conversion?: string;
 }
 
@@ -111,8 +112,15 @@ export function APIImportDialogEmpresas({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [fieldFilters, setFieldFilters] = useState<Record<string, string>>({});
 
-  // Etapa 4: Mapeamento
-  const [fieldMappings, setFieldMappings] = useState<FieldMapping[]>([]);
+  // Etapa 4: Mapeamento (baseado em SYSTEM_FIELDS)
+  const [fieldMappings, setFieldMappings] = useState<FieldMapping[]>(
+    SYSTEM_FIELDS.map(field => ({
+      systemField: field.id,
+      apiField: undefined,
+      fixedValue: undefined,
+      conversion: "none"
+    }))
+  );
 
   // Etapa 5 e 6: Preview
   const [previewRecords, setPreviewRecords] = useState<PreviewRecord[]>([]);
@@ -366,19 +374,32 @@ export function APIImportDialogEmpresas({
     // Atualizar filteredData com os dados filtrados
     setFilteredData(dataToProcess);
     
-    // Inicializar mapeamentos
-    const initialMappings: FieldMapping[] = enabledFields.map((field) => ({
-      apiField: field,
-      systemField: "",
-      conversion: "none",
-    }));
+    // Inicializar mapeamentos baseados em SYSTEM_FIELDS
+    const cnpjPatterns = /cnpj|cpf|documento|doc/i;
+    const nomePatterns = /nome|razao|razaosocial|raz.o/i;
     
-    // Auto-mapear CNPJ
-    const cnpjMappingIndex = initialMappings.findIndex((m) => m.apiField === cnpjField);
-    if (cnpjMappingIndex !== -1) {
-      initialMappings[cnpjMappingIndex].systemField = "cnpj";
-      initialMappings[cnpjMappingIndex].conversion = "remove_mask";
-    }
+    const cnpjFieldAuto = enabledFields.find((field) => cnpjPatterns.test(field));
+    const nomeFieldAuto = enabledFields.find((field) => nomePatterns.test(field));
+    
+    const initialMappings: FieldMapping[] = SYSTEM_FIELDS.map((sysField) => {
+      let apiField: string | undefined = undefined;
+      let conversion = "none";
+      
+      // Mapeamento automático
+      if (sysField.id === "cnpj" && cnpjFieldAuto) {
+        apiField = cnpjFieldAuto;
+        conversion = "remove_mask";
+      } else if (sysField.id === "nome" && nomeFieldAuto) {
+        apiField = nomeFieldAuto;
+      }
+      
+      return {
+        systemField: sysField.id,
+        apiField,
+        fixedValue: undefined,
+        conversion,
+      };
+    });
     
     setFieldMappings(initialMappings);
     toast.success(`${dataToProcess.length} registros prontos para mapeamento`);
@@ -386,11 +407,16 @@ export function APIImportDialogEmpresas({
   };
 
   // ============ ETAPA 4: Mapeamento (De-Para) ============
-  const updateMapping = (apiField: string, systemField: string, conversion?: string) => {
+  const updateMapping = (systemField: string, apiField?: string, fixedValue?: string, conversion?: string) => {
     setFieldMappings((prev) =>
       prev.map((m) =>
-        m.apiField === apiField
-          ? { ...m, systemField, conversion: conversion || m.conversion }
+        m.systemField === systemField
+          ? {
+              ...m,
+              apiField: apiField === "none" ? undefined : apiField,
+              fixedValue,
+              conversion: conversion !== undefined ? conversion : m.conversion,
+            }
           : m
       )
     );
@@ -398,21 +424,25 @@ export function APIImportDialogEmpresas({
 
   const isRequiredFieldsMapped = () => {
     const requiredFields = SYSTEM_FIELDS.filter((f) => f.required).map((f) => f.id);
-    const mappedSystemFields = fieldMappings
-      .filter((m) => m.systemField)
-      .map((m) => m.systemField);
     
-    return requiredFields.every((rf) => mappedSystemFields.includes(rf));
+    return requiredFields.every((rf) => {
+      const mapping = fieldMappings.find((m) => m.systemField === rf);
+      return mapping && (!!mapping.apiField || !!mapping.fixedValue);
+    });
   };
 
   const goToStep5 = () => {
     if (!isRequiredFieldsMapped()) {
       const missing = SYSTEM_FIELDS.filter((f) => f.required)
-        .map((f) => f.id)
-        .filter((id) => !fieldMappings.find((m) => m.systemField === id));
+        .filter((field) => {
+          const mapping = fieldMappings.find((m) => m.systemField === field.id);
+          return !mapping || (!mapping.apiField && !mapping.fixedValue);
+        })
+        .map((f) => f.label);
       toast.error(`Campos obrigatórios não mapeados: ${missing.join(", ")}`);
       return;
     }
+    generatePreview();
     setStep(5);
   };
 
@@ -798,77 +828,127 @@ export function APIImportDialogEmpresas({
                 <CardHeader>
                   <CardTitle>4. Mapeamento de Campos (De-Para)</CardTitle>
                   <CardDescription>
-                    Configure como os campos da API serão importados para o sistema
+                    Configure como cada campo do sistema será preenchido (usando campo da API ou valor fixo)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {fieldMappings.map((mapping) => (
-                    <div
-                      key={mapping.apiField}
-                      className="grid grid-cols-3 gap-4 items-center p-3 border rounded-md"
-                    >
-                      <div>
-                        <Label className="text-sm font-medium">{mapping.apiField}</Label>
-                        <p className="text-xs text-muted-foreground">Campo da API</p>
-                      </div>
+                  {SYSTEM_FIELDS.map((systemField) => {
+                    const mapping = fieldMappings.find(m => m.systemField === systemField.id);
+                    const useFixedValue = mapping?.fixedValue !== undefined && mapping?.fixedValue !== "";
+                    
+                    return (
+                      <div
+                        key={systemField.id}
+                        className="grid grid-cols-[200px,1fr,200px] gap-4 items-start p-3 border rounded-md"
+                      >
+                        <div>
+                          <Label className="text-sm font-medium">
+                            {systemField.label}
+                            {systemField.required && (
+                              <Badge variant="destructive" className="ml-2 text-xs">
+                                Obrigatório
+                              </Badge>
+                            )}
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">Campo do Sistema</p>
+                        </div>
 
-                      <div>
-                        <Select
-                          value={mapping.systemField || "none"}
-                          onValueChange={(value) =>
-                            updateMapping(mapping.apiField, value === "none" ? "" : value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o campo do sistema" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Não importar</SelectItem>
-                            {SYSTEM_FIELDS.map((field) => (
-                              <SelectItem key={field.id} value={field.id}>
-                                {field.label}
-                                {field.required && (
-                                  <Badge variant="destructive" className="ml-2 text-xs">
-                                    Obrigatório
-                                  </Badge>
-                                )}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                        <div className="space-y-2">
+                          <Select
+                            value={mapping?.apiField || "none"}
+                            onValueChange={(value) =>
+                              updateMapping(
+                                systemField.id,
+                                value === "none" ? undefined : value,
+                                useFixedValue ? mapping?.fixedValue : undefined,
+                                mapping?.conversion
+                              )
+                            }
+                            disabled={useFixedValue}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione campo da API" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Não vincular</SelectItem>
+                              {enabledFields.map((field) => (
+                                <SelectItem key={field} value={field}>
+                                  {field}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id={`fixed-${systemField.id}`}
+                              checked={useFixedValue}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  updateMapping(systemField.id, undefined, "", mapping?.conversion);
+                                } else {
+                                  updateMapping(systemField.id, mapping?.apiField, undefined, mapping?.conversion);
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`fixed-${systemField.id}`} className="text-xs cursor-pointer">
+                              Usar valor fixo
+                            </Label>
+                          </div>
+                          
+                          {useFixedValue && (
+                            <Input
+                              placeholder="Digite o valor fixo"
+                              value={mapping?.fixedValue || ""}
+                              onChange={(e) =>
+                                updateMapping(
+                                  systemField.id,
+                                  undefined,
+                                  e.target.value,
+                                  mapping?.conversion
+                                )
+                              }
+                            />
+                          )}
+                        </div>
 
-                      <div>
-                        <Select
-                          value={mapping.conversion || "none"}
-                          onValueChange={(value) =>
-                            updateMapping(mapping.apiField, mapping.systemField, value)
-                          }
-                          disabled={!mapping.systemField}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Conversão" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CONVERSION_OPTIONS.map((option) => (
-                              <SelectItem key={option.id} value={option.id}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div>
+                          <Select
+                            value={mapping?.conversion || "none"}
+                            onValueChange={(value) =>
+                              updateMapping(
+                                systemField.id,
+                                mapping?.apiField,
+                                mapping?.fixedValue,
+                                value
+                              )
+                            }
+                            disabled={!mapping?.apiField && !mapping?.fixedValue}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Conversão" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CONVERSION_OPTIONS.map((option) => (
+                                <SelectItem key={option.id} value={option.id}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <Separator />
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Validação de Campos Obrigatórios</Label>
                     {SYSTEM_FIELDS.filter((f) => f.required).map((field) => {
-                      const isMapped = fieldMappings.find(
-                        (m) => m.systemField === field.id
-                      );
+                      const mapping = fieldMappings.find((m) => m.systemField === field.id);
+                      const isMapped = mapping && (!!mapping.apiField || !!mapping.fixedValue);
+                      
                       return (
                         <div
                           key={field.id}
