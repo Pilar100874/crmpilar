@@ -76,6 +76,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
   const [testViewMode, setTestViewMode] = useState<'table' | 'json'>('table');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [endpointToDelete, setEndpointToDelete] = useState<string | null>(null);
+  const [locaisPermitidos, setLocaisPermitidos] = useState<string[]>(['relatorio', 'importar_empresa', 'criacao_bot']);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -221,6 +222,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
         http_method: formData.http_method,
         endpoint_path: endpointPath,
         parameters: parameters,
+        locais_permitidos: locaisPermitidos,
       };
 
       if (formData.connection_id) {
@@ -273,6 +275,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
         endpoint_path: "",
       });
       setParameters([]);
+      setLocaisPermitidos(['relatorio', 'importar_empresa', 'criacao_bot']);
       setTestResult(null);
       loadEndpoints();
     } catch (error: any) {
@@ -295,6 +298,7 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
       endpoint_path: endpoint.endpoint_path,
     });
     setParameters(endpoint.parameters || []);
+    setLocaisPermitidos((endpoint as any).locais_permitidos || ['relatorio', 'importar_empresa', 'criacao_bot']);
     setEditingId(endpoint.id);
     setShowForm(true);
   };
@@ -617,6 +621,60 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
                     {formData.database_type === 'sqlite' && 'Use ? na query para adicionar parâmetros (Ex: WHERE id = ?)'}
                     {formData.database_type === 'firebird' && 'Use :nome_parametro na query (Ex: WHERE id = :id)'}
                   </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Locais onde a API pode ser exibida</Label>
+                  <div className="flex flex-col gap-2 p-3 border rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="local-relatorio"
+                        checked={locaisPermitidos.includes('relatorio')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setLocaisPermitidos([...locaisPermitidos, 'relatorio']);
+                          } else {
+                            setLocaisPermitidos(locaisPermitidos.filter(l => l !== 'relatorio'));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="local-relatorio" className="font-normal cursor-pointer">Relatórios</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="local-importar"
+                        checked={locaisPermitidos.includes('importar_empresa')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setLocaisPermitidos([...locaisPermitidos, 'importar_empresa']);
+                          } else {
+                            setLocaisPermitidos(locaisPermitidos.filter(l => l !== 'importar_empresa'));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="local-importar" className="font-normal cursor-pointer">Tela de importar empresa</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="local-bot"
+                        checked={locaisPermitidos.includes('criacao_bot')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setLocaisPermitidos([...locaisPermitidos, 'criacao_bot']);
+                          } else {
+                            setLocaisPermitidos(locaisPermitidos.filter(l => l !== 'criacao_bot'));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="local-bot" className="font-normal cursor-pointer">Tela de criação de bot</Label>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">

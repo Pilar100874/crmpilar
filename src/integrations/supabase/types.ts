@@ -54,6 +54,7 @@ export type Database = {
           http_method: string
           id: string
           is_custom: boolean | null
+          locais_permitidos: string[] | null
           name: string
           parameters: Json | null
           query: string
@@ -74,6 +75,7 @@ export type Database = {
           http_method: string
           id?: string
           is_custom?: boolean | null
+          locais_permitidos?: string[] | null
           name: string
           parameters?: Json | null
           query: string
@@ -94,6 +96,7 @@ export type Database = {
           http_method?: string
           id?: string
           is_custom?: boolean | null
+          locais_permitidos?: string[] | null
           name?: string
           parameters?: Json | null
           query?: string
