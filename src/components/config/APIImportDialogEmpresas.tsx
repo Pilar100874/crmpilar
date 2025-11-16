@@ -467,6 +467,7 @@ export function APIImportDialogEmpresas({
                 </CardHeader>
                 <CardContent>
                   <APIDataSourceSelector
+                    localUso="importar_empresa"
                     onSelect={handleSelectAPI}
                     onTest={handleTestAPI}
                   />
