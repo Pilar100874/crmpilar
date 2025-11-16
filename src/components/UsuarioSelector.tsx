@@ -71,16 +71,13 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId }: UsuarioSel
         return;
       }
 
-      // Fazer logout do usuário atual
-      await supabase.auth.signOut();
-
-      // Fazer login com o novo usuário
-      const { error } = await supabase.auth.signInWithPassword({
+      // Fazer login com o novo usuário ANTES de fazer logout
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email: usuario.email,
         password: password,
       });
 
-      if (error) {
+      if (signInError) {
         toast.error("Senha incorreta ou erro ao trocar usuário");
         setIsLoading(false);
         return;
@@ -98,7 +95,7 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId }: UsuarioSel
       setSelectedUsuario("");
       onClose();
       
-      // Navegar para o dashboard ao invés de recarregar
+      // Navegar para o dashboard
       window.location.href = "/dashboard";
     } catch (error) {
       console.error("Erro ao trocar usuário:", error);
