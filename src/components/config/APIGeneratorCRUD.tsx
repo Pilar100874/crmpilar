@@ -212,6 +212,19 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
     e.preventDefault();
     
     try {
+      // Validar nome duplicado
+      const { data: existingEndpoint } = await supabase
+        .from("api_endpoints")
+        .select("id")
+        .eq("name", formData.name)
+        .neq("id", editingId || "")
+        .single();
+
+      if (existingEndpoint) {
+        toast.error("Já existe uma API com este nome");
+        return;
+      }
+
       const endpointPath = formData.endpoint_path || generateEndpointPath();
       
       let endpointData: any = {
@@ -802,90 +815,297 @@ export function APIGeneratorCRUD({ estabelecimentoId }: APIGeneratorCRUDProps = 
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
-                {endpoints.map((endpoint) => (
-                  <Card key={endpoint.id} className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold break-words">{endpoint.name}</h3>
-                          {endpoint.description && (
-                            <p className="text-sm text-muted-foreground break-words">{endpoint.description}</p>
-                          )}
-                        </div>
-                        <Switch
-                          checked={endpoint.active}
-                          onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
-                        />
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="gap-1">
-                          <Database className="h-3 w-3" />
-                          {endpoint.database_type}
-                        </Badge>
-                        <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
-                          {endpoint.http_method}
-                        </Badge>
-                      </div>
+              <div className="space-y-6">
+                {/* Relatórios */}
+                {endpoints.some(e => (e as any).locais_permitidos?.includes('relatorio')) && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Database className="h-5 w-5" />
+                      APIs para Relatórios
+                    </h3>
+                    <div className="space-y-4">
+                      {endpoints
+                        .filter(e => (e as any).locais_permitidos?.includes('relatorio'))
+                        .map((endpoint) => (
+                          <Card key={endpoint.id} className="p-4">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold break-words">{endpoint.name}</h3>
+                                  {endpoint.description && (
+                                    <p className="text-sm text-muted-foreground break-words">{endpoint.description}</p>
+                                  )}
+                                </div>
+                                <Switch
+                                  checked={endpoint.active}
+                                  onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
+                                />
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="outline" className="gap-1">
+                                  <Database className="h-3 w-3" />
+                                  {endpoint.database_type}
+                                </Badge>
+                                <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
+                                  {endpoint.http_method}
+                                </Badge>
+                              </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold">Endpoint:</Label>
-                        {renderUrlWithParams(endpoint)}
-                      </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-semibold">Endpoint:</Label>
+                                {renderUrlWithParams(endpoint)}
+                              </div>
 
-                      <div className="flex flex-wrap gap-1 pt-2 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openTestDialog(endpoint)}
-                          className="gap-1"
-                        >
-                          <Play className="h-3 w-3" />
-                          Testar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => editEndpoint(endpoint)}
-                          className="gap-1"
-                        >
-                          <Edit className="h-3 w-3" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(endpoint)}
-                          className="gap-1"
-                        >
-                          <Copy className="h-3 w-3" />
-                          Copiar
-                        </Button>
-                        {endpoint.parameters?.length > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => showDocumentation(endpoint)}
-                            className="gap-1"
-                          >
-                            <Eye className="h-3 w-3" />
-                            Docs
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deleteEndpoint(endpoint.id)}
-                          className="gap-1 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Excluir
-                        </Button>
-                      </div>
+                              <div className="flex flex-wrap gap-1 pt-2 border-t">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openTestDialog(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Play className="h-3 w-3" />
+                                  Testar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => editEndpoint(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                  Copiar
+                                </Button>
+                                {endpoint.parameters?.length > 0 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => showDocumentation(endpoint)}
+                                    className="gap-1"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Docs
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteEndpoint(endpoint.id)}
+                                  className="gap-1 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Excluir
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
                     </div>
-                  </Card>
-                ))}
+                  </div>
+                )}
+
+                {/* Importar Empresa */}
+                {endpoints.some(e => (e as any).locais_permitidos?.includes('importar_empresa')) && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Database className="h-5 w-5" />
+                      APIs para Importar Empresas
+                    </h3>
+                    <div className="space-y-4">
+                      {endpoints
+                        .filter(e => (e as any).locais_permitidos?.includes('importar_empresa'))
+                        .map((endpoint) => (
+                          <Card key={endpoint.id} className="p-4">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold break-words">{endpoint.name}</h3>
+                                  {endpoint.description && (
+                                    <p className="text-sm text-muted-foreground break-words">{endpoint.description}</p>
+                                  )}
+                                </div>
+                                <Switch
+                                  checked={endpoint.active}
+                                  onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
+                                />
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="outline" className="gap-1">
+                                  <Database className="h-3 w-3" />
+                                  {endpoint.database_type}
+                                </Badge>
+                                <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
+                                  {endpoint.http_method}
+                                </Badge>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className="text-xs font-semibold">Endpoint:</Label>
+                                {renderUrlWithParams(endpoint)}
+                              </div>
+
+                              <div className="flex flex-wrap gap-1 pt-2 border-t">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openTestDialog(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Play className="h-3 w-3" />
+                                  Testar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => editEndpoint(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                  Copiar
+                                </Button>
+                                {endpoint.parameters?.length > 0 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => showDocumentation(endpoint)}
+                                    className="gap-1"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Docs
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteEndpoint(endpoint.id)}
+                                  className="gap-1 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Excluir
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Criação de Bot */}
+                {endpoints.some(e => (e as any).locais_permitidos?.includes('criacao_bot')) && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Database className="h-5 w-5" />
+                      APIs para Criação de Bot
+                    </h3>
+                    <div className="space-y-4">
+                      {endpoints
+                        .filter(e => (e as any).locais_permitidos?.includes('criacao_bot'))
+                        .map((endpoint) => (
+                          <Card key={endpoint.id} className="p-4">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold break-words">{endpoint.name}</h3>
+                                  {endpoint.description && (
+                                    <p className="text-sm text-muted-foreground break-words">{endpoint.description}</p>
+                                  )}
+                                </div>
+                                <Switch
+                                  checked={endpoint.active}
+                                  onCheckedChange={() => toggleActive(endpoint.id, endpoint.active)}
+                                />
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="outline" className="gap-1">
+                                  <Database className="h-3 w-3" />
+                                  {endpoint.database_type}
+                                </Badge>
+                                <Badge variant={endpoint.http_method === 'GET' ? 'secondary' : 'default'}>
+                                  {endpoint.http_method}
+                                </Badge>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className="text-xs font-semibold">Endpoint:</Label>
+                                {renderUrlWithParams(endpoint)}
+                              </div>
+
+                              <div className="flex flex-wrap gap-1 pt-2 border-t">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openTestDialog(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Play className="h-3 w-3" />
+                                  Testar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => editEndpoint(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(endpoint)}
+                                  className="gap-1"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                  Copiar
+                                </Button>
+                                {endpoint.parameters?.length > 0 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => showDocumentation(endpoint)}
+                                    className="gap-1"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Docs
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteEndpoint(endpoint.id)}
+                                  className="gap-1 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Excluir
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
