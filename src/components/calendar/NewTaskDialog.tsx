@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { X, CalendarIcon, Clock, Pencil, Trash2, Building2, User } from "lucide-react";
+import { X, CalendarIcon, Clock, Pencil, Trash2, Building2, User, Bot, Megaphone, Phone, MapPin, Mail, MailOpen, FileText, MessageSquare } from "lucide-react";
 import { format, addDays, addMinutes, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -62,6 +62,25 @@ interface NewTaskDialogProps {
 }
 
 export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editingTask }: NewTaskDialogProps) {
+  // Função centralizada para obter cor de origem
+  const getOrigemColor = (origem: string) => {
+    switch (origem) {
+      case "bot": return "hsl(210, 85%, 65%)";
+      case "campanha": return "hsl(280, 70%, 60%)";
+      case "ligacao": return "hsl(145, 65%, 50%)";
+      case "visita": return "hsl(25, 85%, 60%)";
+      case "email": 
+      case "email_enviado": return "hsl(200, 75%, 55%)";
+      case "email_recebido": return "hsl(190, 70%, 50%)";
+      case "pedido":
+      case "pedido_orcamento": return "hsl(40, 90%, 55%)";
+      case "pedido_negociacao": return "hsl(35, 85%, 58%)";
+      case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
+      case "chat": return "hsl(260, 70%, 62%)";
+      default: return "hsl(0, 0%, 50%)";
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -1021,31 +1040,52 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             <RadioGroup value={taskOrigem} onValueChange={(value) => setTaskOrigem(value as typeof taskOrigem)} className="grid grid-cols-2 gap-3">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="bot" id="bot" />
-                <Label htmlFor="bot" className="text-sm cursor-pointer">BOT</Label>
+                <Label htmlFor="bot" className="text-sm cursor-pointer flex items-center gap-2">
+                  <Bot className="w-4 h-4" style={{ color: getOrigemColor("bot") }} />
+                  BOT
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="campanha" id="campanha" />
-                <Label htmlFor="campanha" className="text-sm cursor-pointer">Campanha</Label>
+                <Label htmlFor="campanha" className="text-sm cursor-pointer flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" style={{ color: getOrigemColor("campanha") }} />
+                  Campanha
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="ligacao" id="ligacao" />
-                <Label htmlFor="ligacao" className="text-sm cursor-pointer">Ligação</Label>
+                <Label htmlFor="ligacao" className="text-sm cursor-pointer flex items-center gap-2">
+                  <Phone className="w-4 h-4" style={{ color: getOrigemColor("ligacao") }} />
+                  Ligação
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="visita" id="visita" />
-                <Label htmlFor="visita" className="text-sm cursor-pointer">Visita</Label>
+                <Label htmlFor="visita" className="text-sm cursor-pointer flex items-center gap-2">
+                  <MapPin className="w-4 h-4" style={{ color: getOrigemColor("visita") }} />
+                  Visita
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="email" id="email" />
-                <Label htmlFor="email" className="text-sm cursor-pointer">Email</Label>
+                <Label htmlFor="email" className="text-sm cursor-pointer flex items-center gap-2">
+                  <Mail className="w-4 h-4" style={{ color: getOrigemColor("email") }} />
+                  Email
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="pedido" id="pedido" />
-                <Label htmlFor="pedido" className="text-sm cursor-pointer">Pedido</Label>
+                <Label htmlFor="pedido" className="text-sm cursor-pointer flex items-center gap-2">
+                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido") }} />
+                  Pedido
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="chat" id="chat" />
-                <Label htmlFor="chat" className="text-sm cursor-pointer">Chat</Label>
+                <Label htmlFor="chat" className="text-sm cursor-pointer flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
+                  Chat
+                </Label>
               </div>
             </RadioGroup>
             
