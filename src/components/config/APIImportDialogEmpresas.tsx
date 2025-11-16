@@ -94,6 +94,8 @@ export function APIImportDialogEmpresas({
   // Estados para as 6 etapas
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // Etapa 1: Dados da API
   const [apiData, setApiData] = useState<any[]>([]);
@@ -129,8 +131,20 @@ export function APIImportDialogEmpresas({
       setFieldMappings([]);
       setPreviewRecords([]);
       setExistingCNPJs(new Set());
+      setLoadingProgress(0);
+      setAbortController(null);
     }
   }, [open]);
+
+  const cancelLoading = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setLoading(false);
+      setLoadingProgress(0);
+      toast.info("Carregamento cancelado");
+    }
+  };
 
   // ============ ETAPA 1: Carregar API ============
   const handleTestAPI = async (
@@ -138,7 +152,19 @@ export function APIImportDialogEmpresas({
     params: Record<string, any>,
     options?: { httpMethod?: string; paramType?: string }
   ) => {
+    const controller = new AbortController();
+    setAbortController(controller);
     setLoading(true);
+    setLoadingProgress(0);
+    
+    // Simular progresso
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 90) return prev;
+        return prev + 10;
+      });
+    }, 300);
+
     try {
       const method = options?.httpMethod || "GET";
       const paramType = options?.paramType || "query";
@@ -159,12 +185,14 @@ export function APIImportDialogEmpresas({
           "Content-Type": "application/json",
         },
         body,
+        signal: controller.signal,
       });
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
+      setLoadingProgress(70);
       const data = await response.json();
       
       // Processar resposta
@@ -183,6 +211,7 @@ export function APIImportDialogEmpresas({
         return;
       }
       
+      setLoadingProgress(90);
       setApiData(processedData);
       
       // Extrair campos únicos
@@ -192,12 +221,20 @@ export function APIImportDialogEmpresas({
       });
       
       setApiFields(Array.from(fields));
+      setLoadingProgress(100);
       toast.success(`${processedData.length} registros carregados com ${fields.size} campos`);
     } catch (error: any) {
-      console.error("Erro ao testar API:", error);
-      toast.error("Erro ao carregar dados: " + error.message);
+      if (error.name === 'AbortError') {
+        console.log("Requisição cancelada pelo usuário");
+      } else {
+        console.error("Erro ao testar API:", error);
+        toast.error("Erro ao carregar dados: " + error.message);
+      }
     } finally {
+      clearInterval(progressInterval);
       setLoading(false);
+      setLoadingProgress(0);
+      setAbortController(null);
     }
   };
 
@@ -466,6 +503,32 @@ export function APIImportDialogEmpresas({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {loading && (
+                    <div className="space-y-3 mb-4 p-4 border rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">Carregando dados da API...</p>
+                          <p className="text-xs text-muted-foreground">{loadingProgress}% concluído</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={cancelLoading}
+                          className="gap-2"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Cancelar
+                        </Button>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2.5">
+                        <div
+                          className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                          style={{ width: `${loadingProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <APIDataSourceSelector
                     localUso="importar_empresa"
                     onSelect={handleSelectAPI}
@@ -879,7 +942,10 @@ export function APIImportDialogEmpresas({
                   else if (step === 3) goToStep4();
                   else if (step === 4) goToStep5();
                 }}
-                disabled={loading}
+                disabled={
+                  loading || 
+                  (step === 1 && apiData.length === 0)
+                }
               >
                 Próximo
                 <ChevronRight className="h-4 w-4 ml-1" />
