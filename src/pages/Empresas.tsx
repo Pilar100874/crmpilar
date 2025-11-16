@@ -25,6 +25,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpresas";
 
 
 interface CustomField {
@@ -83,6 +84,9 @@ export default function Empresas() {
   // Estados para gerenciar vínculos na aba
   const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
   const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
+  
+  // Estado para dialog de importação via API
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   // Gerenciamento de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -1268,6 +1272,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 <Plus className="w-4 h-4" />
                 Nova Empresa
               </Button>
+              <Button 
+                onClick={() => setImportDialogOpen(true)} 
+                variant="outline" 
+                className="gap-2 shadow-sm"
+              >
+                <Upload className="w-4 h-4" />
+                Importar via API
+              </Button>
             </div>
           </div>
           
@@ -2039,6 +2051,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog de Importação via API */}
+      {estabelecimentoId && (
+        <APIImportDialogEmpresas
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onImportComplete={() => fetchEmpresas(estabelecimentoId)}
+          estabelecimentoId={estabelecimentoId}
+        />
+      )}
     </>
   );
 }
