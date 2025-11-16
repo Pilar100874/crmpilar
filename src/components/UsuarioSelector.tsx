@@ -86,6 +86,13 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId }: UsuarioSel
         return;
       }
 
+      // Salvar informações no localStorage antes de recarregar
+      localStorage.setItem("userType", "user");
+      localStorage.setItem("userId", selectedUsuario);
+      if (estabelecimentoId) {
+        localStorage.setItem("estabelecimentoId", estabelecimentoId);
+      }
+
       toast.success("Usuário trocado com sucesso!");
       setPassword("");
       setSelectedUsuario("");
