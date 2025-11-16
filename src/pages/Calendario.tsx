@@ -176,7 +176,7 @@ function DraggableTask({
         <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
       {task.isAllDay && (
-        <Calendar className="w-3 h-3 text-secondary-foreground flex-shrink-0" />
+        <Calendar className="w-3 h-3 flex-shrink-0" style={{ color: "hsl(0, 85%, 60%)" }} />
       )}
       {getOrigemIcon(task.origem)}
       <span 
@@ -254,19 +254,37 @@ function DraggableTaskCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const getOrigemIcon = (origem: Task['origem']) => {
-    const iconClass = "w-3.5 h-3.5 flex-shrink-0";
+  const getOrigemColor = (origem: Task['origem']) => {
     switch (origem) {
-      case "bot": return <Bot className={iconClass} />;
-      case "campanha": return <Megaphone className={iconClass} />;
-      case "ligacao": return <Phone className={iconClass} />;
-      case "visita": return <MapPin className={iconClass} />;
-      case "email_enviado": return <Mail className={iconClass} />;
-      case "email_recebido": return <MailOpen className={iconClass} />;
-      case "pedido_orcamento": return <FileText className={iconClass} />;
-      case "pedido_negociacao": return <FileText className={iconClass} />;
-      case "pedido_aprovacao": return <FileText className={iconClass} />;
-      case "chat": return <MessageSquare className={iconClass} />;
+      case "bot": return "hsl(210, 85%, 65%)";
+      case "campanha": return "hsl(280, 70%, 60%)";
+      case "ligacao": return "hsl(145, 65%, 50%)";
+      case "visita": return "hsl(25, 85%, 60%)";
+      case "email_enviado": return "hsl(200, 75%, 55%)";
+      case "email_recebido": return "hsl(190, 70%, 50%)";
+      case "pedido_orcamento": return "hsl(40, 90%, 55%)";
+      case "pedido_negociacao": return "hsl(35, 85%, 58%)";
+      case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
+      case "chat": return "hsl(260, 70%, 62%)";
+      default: return "hsl(0, 0%, 50%)";
+    }
+  };
+
+  const getOrigemIcon = (origem: Task['origem']) => {
+    const color = getOrigemColor(origem);
+    const iconClass = "w-3.5 h-3.5 flex-shrink-0";
+    const style = { color };
+    switch (origem) {
+      case "bot": return <Bot className={iconClass} style={style} />;
+      case "campanha": return <Megaphone className={iconClass} style={style} />;
+      case "ligacao": return <Phone className={iconClass} style={style} />;
+      case "visita": return <MapPin className={iconClass} style={style} />;
+      case "email_enviado": return <Mail className={iconClass} style={style} />;
+      case "email_recebido": return <MailOpen className={iconClass} style={style} />;
+      case "pedido_orcamento": return <FileText className={iconClass} style={style} />;
+      case "pedido_negociacao": return <FileText className={iconClass} style={style} />;
+      case "pedido_aprovacao": return <FileText className={iconClass} style={style} />;
+      case "chat": return <MessageSquare className={iconClass} style={style} />;
       default: return null;
     }
   };
@@ -298,7 +316,7 @@ function DraggableTaskCard({
               )}
               {task.isAllDay && (
                 <Badge variant="secondary" className="text-xs gap-1">
-                  <Calendar className="w-3 h-3" />
+                  <Calendar className="w-3 h-3" style={{ color: "hsl(0, 85%, 60%)" }} />
                   Dia todo
                 </Badge>
               )}
@@ -380,7 +398,8 @@ export default function Calendario() {
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string; auth_user_id: string | null }>>([]);
-  const [showUserSelector, setShowUserSelector] = useState(false);
+  const [selectedOrigens, setSelectedOrigens] = useState<Task['origem'][]>([]);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
   
   // Mapa de cores para cada usuário
   const [userColors, setUserColors] = useState<Record<string, string>>({});
@@ -1718,7 +1737,11 @@ export default function Calendario() {
 
   // Obter tarefas do dia
   const getTasksForDay = (date: Date) => {
-    return tasks.filter(task => isSameDay(task.date, date));
+    return tasks.filter(task => {
+      if (!isSameDay(task.date, date)) return false;
+      if (selectedOrigens.length > 0 && !selectedOrigens.includes(task.origem)) return false;
+      return true;
+    });
   };
 
   // Renderizar calendário mensal
@@ -2095,15 +2118,25 @@ export default function Calendario() {
 
   // Filtrar e ordenar tarefas para a tabela
   const filteredTasks = tasks.filter(task => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      task.title.toLowerCase().includes(query) ||
-      task.description?.toLowerCase().includes(query) ||
-      task.assignedTo?.toLowerCase().includes(query) ||
-      task.userName?.toLowerCase().includes(query) ||
-      format(task.date, "dd/MM/yyyy").includes(query)
-    );
+    // Filtro de busca
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = (
+        task.title.toLowerCase().includes(query) ||
+        task.description?.toLowerCase().includes(query) ||
+        task.assignedTo?.toLowerCase().includes(query) ||
+        task.userName?.toLowerCase().includes(query) ||
+        format(task.date, "dd/MM/yyyy").includes(query)
+      );
+      if (!matchesSearch) return false;
+    }
+    
+    // Filtro de origem
+    if (selectedOrigens.length > 0 && !selectedOrigens.includes(task.origem)) {
+      return false;
+    }
+    
+    return true;
   });
 
   const sortedTasks = sortConfig
@@ -2380,15 +2413,22 @@ export default function Calendario() {
     const nextWeekStart = addDays(today, 1);
     const nextWeekEnd = addWeeks(today, 1);
 
-    const todayTasks = tasks.filter(task => isSameDay(task.date, today) && task.status === "pending");
-    const tomorrowTasks = tasks.filter(task => isSameDay(task.date, tomorrow) && task.status === "pending");
+    const filterByOrigem = (task: Task) => {
+      if (selectedOrigens.length > 0 && !selectedOrigens.includes(task.origem)) {
+        return false;
+      }
+      return true;
+    };
+
+    const todayTasks = tasks.filter(task => isSameDay(task.date, today) && task.status === "pending" && filterByOrigem(task));
+    const tomorrowTasks = tasks.filter(task => isSameDay(task.date, tomorrow) && task.status === "pending" && filterByOrigem(task));
     const nextWeekTasks = tasks.filter(task => {
       const diff = differenceInDays(task.date, today);
-      return diff > 1 && diff <= 7 && task.status === "pending";
+      return diff > 1 && diff <= 7 && task.status === "pending" && filterByOrigem(task);
     });
     const futureTasks = tasks.filter(task => {
       const diff = differenceInDays(task.date, today);
-      return diff > 7 && task.status === "pending";
+      return diff > 7 && task.status === "pending" && filterByOrigem(task);
     });
 
     return (
@@ -2500,64 +2540,156 @@ export default function Calendario() {
               >
                 Minhas tarefas
               </Button>
-              {isAdmin && (
-                <Dialog open={showUserSelector} onOpenChange={setShowUserSelector}>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowUserSelector(true)}
-                    className="gap-2"
-                  >
-                    <Users className="w-4 h-4" />
-                    Visualizar Usuários {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
-                  </Button>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Selecionar Usuários para Visualizar</DialogTitle>
-                      <DialogDescription>
-                        Escolha os usuários cujas agendas deseja visualizar junto com a sua
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
-                      {usuarios.filter(u => u.auth_user_id).map((usuario) => (
-                        <div key={usuario.id} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`user-${usuario.id}`}
-                            checked={selectedUserIds.includes(usuario.auth_user_id!)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedUserIds([...selectedUserIds, usuario.auth_user_id!]);
-                              } else {
-                                setSelectedUserIds(selectedUserIds.filter(id => id !== usuario.auth_user_id));
+              <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowFilterDialog(true)}
+                  className="gap-2"
+                >
+                  <Filter className="w-4 h-4" />
+                  Filtros {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && `(${selectedOrigens.length + selectedUserIds.length})`}
+                </Button>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Filtrar Tarefas</DialogTitle>
+                    <DialogDescription>
+                      Selecione por origem e/ou usuários para visualizar
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6 py-4">
+                    {/* Filtro por Origem */}
+                    <div>
+                      <h3 className="text-sm font-semibold mb-3">Por Origem</h3>
+                      <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                        {(['bot', 'campanha', 'ligacao', 'visita', 'email_enviado', 'email_recebido', 'pedido_orcamento', 'pedido_negociacao', 'pedido_aprovacao', 'chat'] as const).map((origem) => {
+                          const getOrigemIcon = (origem: Task['origem']) => {
+                            const color = (() => {
+                              switch (origem) {
+                                case "bot": return "hsl(210, 85%, 65%)";
+                                case "campanha": return "hsl(280, 70%, 60%)";
+                                case "ligacao": return "hsl(145, 65%, 50%)";
+                                case "visita": return "hsl(25, 85%, 60%)";
+                                case "email_enviado": return "hsl(200, 75%, 55%)";
+                                case "email_recebido": return "hsl(190, 70%, 50%)";
+                                case "pedido_orcamento": return "hsl(40, 90%, 55%)";
+                                case "pedido_negociacao": return "hsl(35, 85%, 58%)";
+                                case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
+                                case "chat": return "hsl(260, 70%, 62%)";
+                                default: return "hsl(0, 0%, 50%)";
                               }
-                            }}
-                            className="w-4 h-4 rounded border-input"
-                          />
-                          <label 
-                            htmlFor={`user-${usuario.id}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            {usuario.nome}
-                          </label>
-                        </div>
-                      ))}
+                            })();
+                            const iconClass = "w-4 h-4 flex-shrink-0";
+                            const style = { color };
+                            switch (origem) {
+                              case "bot": return <Bot className={iconClass} style={style} />;
+                              case "campanha": return <Megaphone className={iconClass} style={style} />;
+                              case "ligacao": return <Phone className={iconClass} style={style} />;
+                              case "visita": return <MapPin className={iconClass} style={style} />;
+                              case "email_enviado": return <Mail className={iconClass} style={style} />;
+                              case "email_recebido": return <MailOpen className={iconClass} style={style} />;
+                              case "pedido_orcamento": return <FileText className={iconClass} style={style} />;
+                              case "pedido_negociacao": return <FileText className={iconClass} style={style} />;
+                              case "pedido_aprovacao": return <FileText className={iconClass} style={style} />;
+                              case "chat": return <MessageSquare className={iconClass} style={style} />;
+                              default: return <Calendar className={iconClass} style={style} />;
+                            }
+                          };
+                          
+                          const origemLabels = {
+                            bot: "Bot",
+                            campanha: "Campanha",
+                            ligacao: "Ligação",
+                            visita: "Visita",
+                            email_enviado: "Email Enviado",
+                            email_recebido: "Email Recebido",
+                            pedido_orcamento: "Pedido - Orçamento",
+                            pedido_negociacao: "Pedido - Negociação",
+                            pedido_aprovacao: "Pedido - Aprovação",
+                            chat: "Chat",
+                          };
+                          
+                          return (
+                            <div key={origem} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`origem-${origem}`}
+                                checked={selectedOrigens.includes(origem)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedOrigens([...selectedOrigens, origem]);
+                                  } else {
+                                    setSelectedOrigens(selectedOrigens.filter(o => o !== origem));
+                                  }
+                                }}
+                                className="w-4 h-4 rounded border-input"
+                              />
+                              <label 
+                                htmlFor={`origem-${origem}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                              >
+                                {getOrigemIcon(origem)}
+                                {origemLabels[origem]}
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setSelectedUserIds([])}>
-                        Limpar Seleção
-                      </Button>
-                      <Button onClick={() => setShowUserSelector(false)}>
-                        Aplicar
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Novo filtro
-              </Button>
+
+                    {/* Filtro por Usuários (apenas para admins) */}
+                    {isAdmin && (
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          Por Usuários
+                        </h3>
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                          {usuarios.filter(u => u.auth_user_id).map((usuario) => (
+                            <div key={usuario.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`user-${usuario.id}`}
+                                checked={selectedUserIds.includes(usuario.auth_user_id!)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedUserIds([...selectedUserIds, usuario.auth_user_id!]);
+                                  } else {
+                                    setSelectedUserIds(selectedUserIds.filter(id => id !== usuario.auth_user_id));
+                                  }
+                                }}
+                                className="w-4 h-4 rounded border-input"
+                              />
+                              <label 
+                                htmlFor={`user-${usuario.id}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {usuario.nome}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedOrigens([]);
+                        setSelectedUserIds([]);
+                      }}
+                    >
+                      Limpar Tudo
+                    </Button>
+                    <Button onClick={() => setShowFilterDialog(false)}>
+                      Aplicar
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
