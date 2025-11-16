@@ -663,16 +663,16 @@ export function APIImportDialogEmpresas({
 
                       <div>
                         <Select
-                          value={mapping.systemField}
+                          value={mapping.systemField || "none"}
                           onValueChange={(value) =>
-                            updateMapping(mapping.apiField, value)
+                            updateMapping(mapping.apiField, value === "none" ? "" : value)
                           }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o campo do sistema" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Não importar</SelectItem>
+                            <SelectItem value="none">Não importar</SelectItem>
                             {SYSTEM_FIELDS.map((field) => (
                               <SelectItem key={field.id} value={field.id}>
                                 {field.label}
