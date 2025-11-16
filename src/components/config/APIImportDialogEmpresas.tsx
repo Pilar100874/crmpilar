@@ -2,18 +2,26 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "@/lib/toast-config";
-import { Loader2, CheckCircle, AlertCircle, Download, ChevronRight, ChevronLeft } from "lucide-react";
-import { useCNPJLookup } from "@/hooks/useCNPJLookup";
+import { Loader2, ChevronRight, ChevronLeft, AlertCircle, CheckCircle, XCircle, Search } from "lucide-react";
 import { maskCNPJ, maskCEP, maskPhone } from "@/lib/masks";
 import { supabase } from "@/integrations/supabase/client";
 import { APIDataSourceSelector } from "../reportbro/APIDataSourceSelector";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface APIImportDialogEmpresasProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onImportComplete?: (estabelecimentoId: string) => void;
+  estabelecimentoId: string;
+}
 
 interface FieldMapping {
   apiField: string;
@@ -21,14 +29,12 @@ interface FieldMapping {
   conversion?: string;
 }
 
-interface EmpresaRecord {
-  id: string;
+interface PreviewRecord {
+  rowIndex: number;
+  cnpj: string;
   data: Record<string, any>;
-  mapped: Record<string, any>;
-  missingFields: string[];
-  isValid: boolean;
-  isDuplicate: boolean;
-  cnpjEnriched?: boolean;
+  status: "valid" | "invalid" | "duplicate";
+  errors: string[];
 }
 
 const SYSTEM_FIELDS = [
@@ -45,45 +51,38 @@ const SYSTEM_FIELDS = [
 ];
 
 const CONVERSION_OPTIONS = [
-  { id: "none", label: "Nenhuma" },
-  { id: "remove_dots", label: "Remover pontuação" },
-  { id: "add_cnpj_mask", label: "Adicionar máscara CNPJ" },
-  { id: "add_phone_mask", label: "Adicionar máscara telefone" },
-  { id: "add_cep_mask", label: "Adicionar máscara CEP" },
-  { id: "uppercase", label: "Maiúsculas" },
-  { id: "lowercase", label: "Minúsculas" },
-  { id: "title_case", label: "Primeira letra maiúscula" },
+  { id: "none", label: "Sem conversão" },
+  { id: "remove_mask", label: "Remover máscara/pontuação" },
+  { id: "cnpj_mask", label: "Aplicar máscara CNPJ" },
+  { id: "phone_mask", label: "Aplicar máscara telefone" },
+  { id: "cep_mask", label: "Aplicar máscara CEP" },
+  { id: "uppercase", label: "MAIÚSCULAS" },
+  { id: "lowercase", label: "minúsculas" },
+  { id: "titlecase", label: "Primeira Letra Maiúscula" },
 ];
 
-function applyConversion(value: any, conversion: string): string {
+function applyConversion(value: any, conversion?: string): string {
   if (!value) return "";
   const str = String(value);
   
   switch (conversion) {
-    case "remove_dots":
+    case "remove_mask":
       return str.replace(/[.\-\/\(\)\s]/g, "");
-    case "add_cnpj_mask":
+    case "cnpj_mask":
       return maskCNPJ(str.replace(/\D/g, ""));
-    case "add_phone_mask":
+    case "phone_mask":
       return maskPhone(str.replace(/\D/g, ""));
-    case "add_cep_mask":
+    case "cep_mask":
       return maskCEP(str.replace(/\D/g, ""));
     case "uppercase":
       return str.toUpperCase();
     case "lowercase":
       return str.toLowerCase();
-    case "title_case":
+    case "titlecase":
       return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
     default:
       return str;
   }
-}
-
-interface APIImportDialogEmpresasProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onImportComplete?: () => void;
-  estabelecimentoId: string;
 }
 
 export function APIImportDialogEmpresas({ 
@@ -92,577 +91,819 @@ export function APIImportDialogEmpresas({
   onImportComplete,
   estabelecimentoId 
 }: APIImportDialogEmpresasProps) {
-  const [step, setStep] = useState<"api" | "fields" | "mapping" | "preview">("api");
+  // Estados para as 6 etapas
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  // Etapa 1: Dados da API
   const [apiData, setApiData] = useState<any[]>([]);
   const [apiFields, setApiFields] = useState<string[]>([]);
-  const [selectedFields, setSelectedFields] = useState<string[]>([]);
-  const [cnpjField, setCnpjField] = useState<string>("");
-  const [fieldMappings, setFieldMappings] = useState<FieldMapping[]>([]);
-  const [empresaRecords, setEmpresaRecords] = useState<EmpresaRecord[]>([]);
-  const [existingCNPJs, setExistingCNPJs] = useState<Set<string>>(new Set());
-  const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
-  const [editingValue, setEditingValue] = useState("");
-  const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
 
-  // Step 1: Load API data
-  const handleAPISelect = async (apiDetails: any) => {
+  // Etapa 2: Seleção de campos
+  const [enabledFields, setEnabledFields] = useState<string[]>([]);
+  const [cnpjField, setCnpjField] = useState<string>("");
+
+  // Etapa 3: Dados filtrados (sem CNPJs duplicados)
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [sortField, setSortField] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Etapa 4: Mapeamento
+  const [fieldMappings, setFieldMappings] = useState<FieldMapping[]>([]);
+
+  // Etapa 5 e 6: Preview
+  const [previewRecords, setPreviewRecords] = useState<PreviewRecord[]>([]);
+  const [existingCNPJs, setExistingCNPJs] = useState<Set<string>>(new Set());
+
+  // Resetar ao abrir
+  useEffect(() => {
+    if (open) {
+      setStep(1);
+      setApiData([]);
+      setApiFields([]);
+      setEnabledFields([]);
+      setCnpjField("");
+      setFilteredData([]);
+      setSortField("");
+      setSortOrder("asc");
+      setFieldMappings([]);
+      setPreviewRecords([]);
+      setExistingCNPJs(new Set());
+    }
+  }, [open]);
+
+  // ============ ETAPA 1: Carregar API ============
+  const handleTestAPI = async (
+    apiUrl: string,
+    params: Record<string, any>,
+    options?: { httpMethod?: string; paramType?: string }
+  ) => {
     setLoading(true);
     try {
-      // apiDetails já contém o resultado da API testada
-      if (apiDetails.testResult && Array.isArray(apiDetails.testResult)) {
-        setApiData(apiDetails.testResult);
-        
-        // Extrair campos disponíveis
-        if (apiDetails.testResult.length > 0) {
-          const fields = Object.keys(apiDetails.testResult[0]);
-          setApiFields(fields);
-          setSelectedFields(fields); // Todos selecionados por padrão
-        }
-        
-        setStep("fields");
-        toast.success("Dados da API carregados com sucesso!");
-      } else {
-        toast.error("Formato de dados inválido da API");
+      const method = options?.httpMethod || "GET";
+      const paramType = options?.paramType || "query";
+      
+      let url = apiUrl;
+      let body = undefined;
+      
+      if (paramType === "query" && Object.keys(params).length > 0) {
+        const queryString = new URLSearchParams(params).toString();
+        url = `${apiUrl}?${queryString}`;
+      } else if (paramType === "body" && Object.keys(params).length > 0) {
+        body = JSON.stringify(params);
       }
-    } catch (error) {
-      console.error("Erro ao processar dados da API:", error);
-      toast.error("Erro ao processar dados da API");
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Processar resposta
+      let processedData: any[] = [];
+      
+      if (Array.isArray(data)) {
+        processedData = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        processedData = data.data;
+      } else if (typeof data === "object") {
+        processedData = [data];
+      }
+      
+      if (processedData.length === 0) {
+        toast.error("Nenhum dado retornado pela API");
+        return;
+      }
+      
+      setApiData(processedData);
+      
+      // Extrair campos únicos
+      const fields = new Set<string>();
+      processedData.forEach((row) => {
+        Object.keys(row).forEach((key) => fields.add(key));
+      });
+      
+      setApiFields(Array.from(fields));
+      toast.success(`${processedData.length} registros carregados com ${fields.size} campos`);
+    } catch (error: any) {
+      console.error("Erro ao testar API:", error);
+      toast.error("Erro ao carregar dados: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 2: Select fields and CNPJ field
-  const handleFieldsNext = () => {
-    if (!cnpjField) {
-      toast.error("Selecione o campo que contém o CNPJ");
+  const handleSelectAPI = (
+    apiUrl: string,
+    apiName: string,
+    variables: any[],
+    options?: { httpMethod?: string; paramType?: string; isCustom?: boolean }
+  ) => {
+    // Apenas armazena a seleção, não faz nada ainda
+    toast.info(`API "${apiName}" selecionada. Clique em "Testar API" para carregar os dados.`);
+  };
+
+  const goToStep2 = () => {
+    if (apiData.length === 0) {
+      toast.error("Carregue os dados da API primeiro");
       return;
     }
-    if (selectedFields.length === 0) {
+    setStep(2);
+  };
+
+  // ============ ETAPA 2: Seleção de campos ============
+  const toggleField = (field: string) => {
+    setEnabledFields((prev) =>
+      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]
+    );
+  };
+
+  const goToStep3 = () => {
+    if (enabledFields.length === 0) {
       toast.error("Selecione pelo menos um campo");
       return;
     }
-    
-    // Remover duplicados pelo CNPJ e filtrar dados
-    const uniqueData = apiData.reduce((acc: any[], item: any) => {
-      const cnpj = String(item[cnpjField] || "").replace(/\D/g, "");
-      if (cnpj && !acc.some(i => String(i[cnpjField] || "").replace(/\D/g, "") === cnpj)) {
-        // Manter apenas campos selecionados
-        const filtered: any = {};
-        selectedFields.forEach(field => {
-          filtered[field] = item[field];
-        });
-        acc.push(filtered);
-      }
-      return acc;
-    }, []);
-    
-    setApiData(uniqueData);
-    
-    // Inicializar mapeamentos
-    const mappings: FieldMapping[] = selectedFields.map(field => ({
-      apiField: field,
-      systemField: "",
-      conversion: "none"
-    }));
-    
-    // Auto-mapear campo CNPJ
-    const cnpjMapping = mappings.find(m => m.apiField === cnpjField);
-    if (cnpjMapping) {
-      cnpjMapping.systemField = "cnpj";
-      cnpjMapping.conversion = "remove_dots";
+    if (!cnpjField) {
+      toast.error("Selecione o campo de CNPJ");
+      return;
+    }
+    if (!enabledFields.includes(cnpjField)) {
+      toast.error("O campo de CNPJ deve estar habilitado");
+      return;
     }
     
-    setFieldMappings(mappings);
-    setStep("mapping");
+    // Filtrar dados: remover CNPJs duplicados
+    const seen = new Set<string>();
+    const filtered: any[] = [];
+    
+    apiData.forEach((row) => {
+      const cnpjValue = String(row[cnpjField] || "").replace(/\D/g, "");
+      if (cnpjValue && !seen.has(cnpjValue)) {
+        seen.add(cnpjValue);
+        // Manter apenas os campos habilitados
+        const filteredRow: any = {};
+        enabledFields.forEach((field) => {
+          filteredRow[field] = row[field];
+        });
+        filtered.push(filteredRow);
+      }
+    });
+    
+    setFilteredData(filtered);
+    toast.success(`${filtered.length} registros únicos (${apiData.length - filtered.length} duplicados removidos)`);
+    setStep(3);
   };
 
-  // Step 3: Map fields
+  // ============ ETAPA 3: Filtros e Ordenação ============
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const getSortedData = () => {
+    if (!sortField) return filteredData;
+    
+    return [...filteredData].sort((a, b) => {
+      const aVal = String(a[sortField] || "");
+      const bVal = String(b[sortField] || "");
+      
+      if (sortOrder === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  };
+
+  const goToStep4 = () => {
+    if (filteredData.length === 0) {
+      toast.error("Nenhum dado disponível para mapear");
+      return;
+    }
+    
+    // Inicializar mapeamentos
+    const initialMappings: FieldMapping[] = enabledFields.map((field) => ({
+      apiField: field,
+      systemField: "",
+      conversion: "none",
+    }));
+    
+    // Auto-mapear CNPJ
+    const cnpjMappingIndex = initialMappings.findIndex((m) => m.apiField === cnpjField);
+    if (cnpjMappingIndex !== -1) {
+      initialMappings[cnpjMappingIndex].systemField = "cnpj";
+      initialMappings[cnpjMappingIndex].conversion = "remove_mask";
+    }
+    
+    setFieldMappings(initialMappings);
+    setStep(4);
+  };
+
+  // ============ ETAPA 4: Mapeamento (De-Para) ============
   const updateMapping = (apiField: string, systemField: string, conversion?: string) => {
-    setFieldMappings(prev => 
-      prev.map(m => 
-        m.apiField === apiField 
+    setFieldMappings((prev) =>
+      prev.map((m) =>
+        m.apiField === apiField
           ? { ...m, systemField, conversion: conversion || m.conversion }
           : m
       )
     );
   };
 
-  const handleMappingNext = async () => {
-    // Verificar se campos obrigatórios foram mapeados
-    const requiredFields = SYSTEM_FIELDS.filter(f => f.required);
-    const mappedSystemFields = fieldMappings.filter(m => m.systemField).map(m => m.systemField);
+  const isRequiredFieldsMapped = () => {
+    const requiredFields = SYSTEM_FIELDS.filter((f) => f.required).map((f) => f.id);
+    const mappedSystemFields = fieldMappings
+      .filter((m) => m.systemField)
+      .map((m) => m.systemField);
     
-    const missingRequired = requiredFields.filter(f => !mappedSystemFields.includes(f.id));
-    if (missingRequired.length > 0) {
-      toast.error(`Campos obrigatórios não mapeados: ${missingRequired.map(f => f.label).join(", ")}`);
+    return requiredFields.every((rf) => mappedSystemFields.includes(rf));
+  };
+
+  const goToStep5 = () => {
+    if (!isRequiredFieldsMapped()) {
+      const missing = SYSTEM_FIELDS.filter((f) => f.required)
+        .map((f) => f.id)
+        .filter((id) => !fieldMappings.find((m) => m.systemField === id));
+      toast.error(`Campos obrigatórios não mapeados: ${missing.join(", ")}`);
       return;
     }
+    setStep(5);
+  };
 
+  // ============ ETAPA 5: Formatação e Preview ============
+  useEffect(() => {
+    if (step === 5 && filteredData.length > 0) {
+      generatePreview();
+    }
+  }, [step, filteredData, fieldMappings]);
+
+  const generatePreview = async () => {
     setLoading(true);
     
     // Buscar CNPJs existentes
-    const { data: existingEmpresas } = await supabase
+    const { data: empresasExistentes } = await supabase
       .from("empresas")
       .select("cnpj")
       .eq("estabelecimento_id", estabelecimentoId);
     
-    const cnpjSet = new Set(
-      (existingEmpresas || [])
-        .map(e => e.cnpj?.replace(/\D/g, "") || "")
-        .filter(Boolean)
+    const existing = new Set(
+      (empresasExistentes || []).map((e) => e.cnpj.replace(/\D/g, ""))
     );
-    setExistingCNPJs(cnpjSet);
-
-    // Processar registros
-    const records: EmpresaRecord[] = apiData.map((item, idx) => {
+    setExistingCNPJs(existing);
+    
+    const records: PreviewRecord[] = [];
+    
+    filteredData.forEach((row, index) => {
       const mapped: Record<string, any> = {};
+      const errors: string[] = [];
       
-      fieldMappings.forEach(mapping => {
+      // Aplicar mapeamentos e conversões
+      fieldMappings.forEach((mapping) => {
         if (mapping.systemField) {
-          const value = item[mapping.apiField];
-          mapped[mapping.systemField] = applyConversion(value, mapping.conversion || "none");
+          const rawValue = row[mapping.apiField];
+          const convertedValue = applyConversion(rawValue, mapping.conversion);
+          mapped[mapping.systemField] = convertedValue;
         }
       });
-
-      const cnpj = mapped.cnpj?.replace(/\D/g, "") || "";
-      const isDuplicate = cnpjSet.has(cnpj);
       
-      const missingFields = requiredFields
-        .filter(f => !mapped[f.id] || mapped[f.id] === "")
-        .map(f => f.label);
-
-      return {
-        id: `record-${idx}`,
-        data: item,
-        mapped,
-        missingFields,
-        isValid: missingFields.length === 0 && cnpj.length === 14,
-        isDuplicate,
-        cnpjEnriched: false
-      };
+      // Validações
+      const cnpj = (mapped.cnpj || "").replace(/\D/g, "");
+      
+      if (!cnpj || cnpj.length !== 14) {
+        errors.push("CNPJ inválido");
+      }
+      if (!mapped.nome) {
+        errors.push("Razão Social obrigatória");
+      }
+      
+      const isDuplicate = existing.has(cnpj);
+      const isValid = errors.length === 0 && !isDuplicate;
+      
+      records.push({
+        rowIndex: index,
+        cnpj,
+        data: mapped,
+        status: isDuplicate ? "duplicate" : isValid ? "valid" : "invalid",
+        errors,
+      });
     });
-
-    setEmpresaRecords(records);
-    setStep("preview");
+    
+    setPreviewRecords(records);
     setLoading(false);
   };
 
-  // Enrich with CNPJ data
-  const enrichCNPJ = async (recordId: string) => {
-    const record = empresaRecords.find(r => r.id === recordId);
-    if (!record) return;
-
-    const cnpj = record.mapped.cnpj?.replace(/\D/g, "");
-    if (!cnpj || cnpj.length !== 14) {
-      toast.error("CNPJ inválido");
-      return;
-    }
-
-    const cnpjData = await lookupCNPJ(cnpj);
-    if (cnpjData) {
-      setEmpresaRecords(prev =>
-        prev.map(r =>
-          r.id === recordId
-            ? {
-                ...r,
-                mapped: {
-                  ...r.mapped,
-                  nome: cnpjData.nome || r.mapped.nome,
-                  nome_fantasia: cnpjData.fantasia || r.mapped.nome_fantasia,
-                  endereco: cnpjData.logradouro || r.mapped.endereco,
-                  bairro: cnpjData.bairro || r.mapped.bairro,
-                  cidade: cnpjData.municipio || r.mapped.cidade,
-                  estado: cnpjData.uf || r.mapped.estado,
-                  cep: cnpjData.cep || r.mapped.cep,
-                  telefone: cnpjData.telefone || r.mapped.telefone,
-                  email: cnpjData.email || r.mapped.email,
-                },
-                cnpjEnriched: true
-              }
-            : r
-        )
-      );
-      toast.success("Dados complementados com sucesso!");
-    }
-  };
-
-  const enrichAllCNPJs = async () => {
-    const validRecords = empresaRecords.filter(r => r.isValid && !r.isDuplicate && !r.cnpjEnriched);
-    
-    for (const record of validRecords) {
-      await enrichCNPJ(record.id);
-    }
-  };
-
-  // Import records
-  const importRecords = async () => {
-    const validRecords = empresaRecords.filter(r => r.isValid && !r.isDuplicate);
+  // ============ ETAPA 6: Importação ============
+  const handleImport = async () => {
+    const validRecords = previewRecords.filter((r) => r.status === "valid");
     
     if (validRecords.length === 0) {
       toast.error("Nenhum registro válido para importar");
       return;
     }
-
+    
     setLoading(true);
+    
     try {
-      const empresasToInsert = validRecords.map(record => ({
+      const toInsert = validRecords.map((record) => ({
+        ...record.data,
         estabelecimento_id: estabelecimentoId,
-        cnpj: record.mapped.cnpj,
-        nome: record.mapped.nome,
-        nome_fantasia: record.mapped.nome_fantasia || null,
-        telefone: record.mapped.telefone || null,
-        email: record.mapped.email || null,
-        endereco: record.mapped.endereco || null,
-        bairro: record.mapped.bairro || null,
-        cidade: record.mapped.cidade || null,
-        estado: record.mapped.estado || null,
-        cep: record.mapped.cep || null,
       }));
-
-      const { error } = await supabase
-        .from("empresas")
-        .insert(empresasToInsert);
-
+      
+      const { error } = await supabase.from("empresas").insert(toInsert);
+      
       if (error) throw error;
-
-      toast.success(`${validRecords.length} empresa(s) importada(s) com sucesso!`);
-      onImportComplete?.();
-      handleClose();
-    } catch (error) {
-      console.error("Erro ao importar empresas:", error);
-      toast.error("Erro ao importar empresas");
+      
+      toast.success(`${validRecords.length} empresas importadas com sucesso!`);
+      onImportComplete?.(estabelecimentoId);
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error("Erro ao importar:", error);
+      toast.error("Erro ao importar empresas: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Edit cell
-  const handleCellEdit = (recordId: string, field: string) => {
-    const record = empresaRecords.find(r => r.id === recordId);
-    if (record) {
-      setEditingCell({ id: recordId, field });
-      setEditingValue(record.mapped[field] || "");
-    }
-  };
-
-  const saveCellEdit = () => {
-    if (!editingCell) return;
-
-    setEmpresaRecords(prev =>
-      prev.map(r =>
-        r.id === editingCell.id
-          ? {
-              ...r,
-              mapped: { ...r.mapped, [editingCell.field]: editingValue }
-            }
-          : r
-      )
-    );
-    setEditingCell(null);
-    setEditingValue("");
-  };
-
-  const handleClose = () => {
-    setStep("api");
-    setApiData([]);
-    setApiFields([]);
-    setSelectedFields([]);
-    setCnpjField("");
-    setFieldMappings([]);
-    setEmpresaRecords([]);
-    onOpenChange(false);
-  };
-
+  // ============ RENDERIZAÇÃO ============
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>
-            Importar Empresas via API
-            {step !== "api" && (
-              <span className="text-sm font-normal text-muted-foreground ml-2">
-                {step === "fields" && "Etapa 2/4: Selecionar Campos"}
-                {step === "mapping" && "Etapa 3/4: Mapear Campos"}
-                {step === "preview" && "Etapa 4/4: Revisar e Importar"}
-              </span>
-            )}
-          </DialogTitle>
+          <DialogTitle>Importar Empresas via API</DialogTitle>
+          <div className="flex items-center gap-2 mt-2">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <div key={s} className="flex items-center">
+                <Badge variant={step === s ? "default" : step > s ? "secondary" : "outline"}>
+                  {s}
+                </Badge>
+                {s < 5 && <ChevronRight className="h-4 w-4 mx-1 text-muted-foreground" />}
+              </div>
+            ))}
+          </div>
         </DialogHeader>
 
-        {/* Step 1: Select API */}
-        {step === "api" && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Selecione uma API configurada para carregar os dados das empresas.
-            </p>
-            <APIDataSourceSelector
-              onSelect={handleAPISelect}
-              onTest={(result) => {
-                // Resultado do teste já é processado no handleAPISelect
-              }}
-            />
-          </div>
-        )}
+        <ScrollArea className="flex-1 pr-4">
+          {/* ETAPA 1: Escolher API e carregar dados */}
+          {step === 1 && (
+            <div className="space-y-4 py-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>1. Selecione uma API</CardTitle>
+                  <CardDescription>
+                    Escolha uma API geradora e carregue os dados
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <APIDataSourceSelector
+                    onSelect={handleSelectAPI}
+                    onTest={handleTestAPI}
+                  />
+                </CardContent>
+              </Card>
 
-        {/* Step 2: Select fields and CNPJ field */}
-        {step === "fields" && (
-          <div className="space-y-4">
-            <Card className="p-4">
-              <Label>Campo que contém o CNPJ *</Label>
-              <Select value={cnpjField} onValueChange={setCnpjField}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o campo CNPJ" />
-                </SelectTrigger>
-                <SelectContent>
-                  {apiFields.map(field => (
-                    <SelectItem key={field} value={field}>{field}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Card>
-
-            <Card className="p-4">
-              <Label className="mb-3 block">Campos a importar</Label>
-              <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-auto">
-                {apiFields.map(field => (
-                  <div key={field} className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={selectedFields.includes(field)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedFields(prev => [...prev, field]);
-                        } else {
-                          setSelectedFields(prev => prev.filter(f => f !== field));
-                        }
-                      }}
-                    />
-                    <Label className="text-sm font-normal">{field}</Label>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <div className="text-sm text-muted-foreground">
-              <p>Total de registros: {apiData.length}</p>
-              <p>Registros únicos por CNPJ: {cnpjField ? new Set(apiData.map(d => String(d[cnpjField] || "").replace(/\D/g, ""))).size : "-"}</p>
-            </div>
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep("api")}>
-                <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
-              </Button>
-              <Button onClick={handleFieldsNext}>
-                Próximo <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Map fields */}
-        {step === "mapping" && (
-          <div className="space-y-4">
-            <div className="text-sm text-muted-foreground mb-4">
-              Mapeie os campos da API para os campos do cadastro de empresa. 
-              <span className="text-destructive"> * Campos obrigatórios</span>
-            </div>
-
-            <div className="space-y-3 max-h-[400px] overflow-auto">
-              {fieldMappings.map(mapping => (
-                <Card key={mapping.apiField} className="p-3">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <Label className="text-xs">Campo da API</Label>
-                      <div className="font-medium text-sm">{mapping.apiField}</div>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Campo do Sistema</Label>
-                      <Select
-                        value={mapping.systemField}
-                        onValueChange={(value) => updateMapping(mapping.apiField, value)}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Não importar</SelectItem>
-                          {SYSTEM_FIELDS.map(field => (
-                            <SelectItem key={field.id} value={field.id}>
-                              {field.label} {field.required && <span className="text-destructive">*</span>}
-                            </SelectItem>
+              {apiData.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Preview dos Dados</CardTitle>
+                    <CardDescription>
+                      {apiData.length} registros carregados com {apiFields.length} campos
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            {apiFields.slice(0, 10).map((field) => (
+                              <TableHead key={field}>{field}</TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {apiData.slice(0, 5).map((row, i) => (
+                            <TableRow key={i}>
+                              {apiFields.slice(0, 10).map((field) => (
+                                <TableCell key={field}>{String(row[field] || "")}</TableCell>
+                              ))}
+                            </TableRow>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Conversão</Label>
-                      <Select
-                        value={mapping.conversion || "none"}
-                        onValueChange={(value) => updateMapping(mapping.apiField, mapping.systemField, value)}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CONVERSION_OPTIONS.map(opt => (
-                            <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
+          )}
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep("fields")}>
-                <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
-              </Button>
-              <Button onClick={handleMappingNext} disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Próximo <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+          {/* ETAPA 2: Habilitar/Desabilitar Campos e Definir CNPJ */}
+          {step === 2 && (
+            <div className="space-y-4 py-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>2. Selecione os Campos</CardTitle>
+                  <CardDescription>
+                    Habilite os campos que deseja importar e defina qual é o campo de CNPJ
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Campo de CNPJ *</Label>
+                    <Select value={cnpjField} onValueChange={setCnpjField}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o campo que contém o CNPJ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {apiFields.map((field) => (
+                          <SelectItem key={field} value={field}>
+                            {field}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-        {/* Step 4: Preview and import */}
-        {step === "preview" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-4 text-sm">
-                  <Badge variant="default" className="bg-success">
-                    <CheckCircle className="mr-1 h-3 w-3" />
-                    {empresaRecords.filter(r => r.isValid && !r.isDuplicate).length} válidos
-                  </Badge>
-                  <Badge variant="destructive">
-                    <AlertCircle className="mr-1 h-3 w-3" />
-                    {empresaRecords.filter(r => !r.isValid).length} inválidos
-                  </Badge>
-                  <Badge variant="secondary">
-                    {empresaRecords.filter(r => r.isDuplicate).length} duplicados
-                  </Badge>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enrichAllCNPJs}
-                disabled={cnpjLoading}
-              >
-                {cnpjLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="mr-2 h-4 w-4" />
-                )}
-                Enriquecer Todos
-              </Button>
-            </div>
+                  <Separator />
 
-            <div className="border rounded-lg max-h-[400px] overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[80px]">Status</TableHead>
-                    <TableHead>CNPJ</TableHead>
-                    <TableHead>Razão Social</TableHead>
-                    <TableHead>Nome Fantasia</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Cidade/UF</TableHead>
-                    <TableHead className="w-[100px]">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {empresaRecords.map(record => (
-                    <TableRow
-                      key={record.id}
-                      className={record.isDuplicate ? "bg-muted/50" : ""}
-                    >
-                      <TableCell>
-                        {record.isDuplicate ? (
-                          <Badge variant="secondary">Duplicado</Badge>
-                        ) : record.isValid ? (
-                          <Badge variant="default" className="bg-success">
-                            <CheckCircle className="h-3 w-3" />
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive">
-                            <AlertCircle className="h-3 w-3" />
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editingCell?.id === record.id && editingCell.field === "cnpj" ? (
-                          <Input
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onBlur={saveCellEdit}
-                            onKeyDown={(e) => e.key === "Enter" && saveCellEdit()}
-                            autoFocus
-                            className="h-7"
+                  <div>
+                    <Label className="text-base">Campos Disponíveis</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Marque os campos que deseja utilizar na importação
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {apiFields.map((field) => (
+                        <div key={field} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={field}
+                            checked={enabledFields.includes(field)}
+                            onCheckedChange={() => toggleField(field)}
                           />
-                        ) : (
-                          <div onClick={() => !record.isDuplicate && handleCellEdit(record.id, "cnpj")} className="cursor-pointer">
-                            {maskCNPJ(record.mapped.cnpj || "")}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editingCell?.id === record.id && editingCell.field === "nome" ? (
-                          <Input
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onBlur={saveCellEdit}
-                            onKeyDown={(e) => e.key === "Enter" && saveCellEdit()}
-                            autoFocus
-                            className="h-7"
-                          />
-                        ) : (
-                          <div onClick={() => !record.isDuplicate && handleCellEdit(record.id, "nome")} className="cursor-pointer">
-                            {record.mapped.nome || "-"}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>{record.mapped.nome_fantasia || "-"}</TableCell>
-                      <TableCell>{record.mapped.telefone || "-"}</TableCell>
-                      <TableCell>
-                        {record.mapped.cidade && record.mapped.estado 
-                          ? `${record.mapped.cidade}/${record.mapped.estado}`
-                          : "-"
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {!record.isDuplicate && !record.cnpjEnriched && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => enrichCNPJ(record.id)}
-                            disabled={cnpjLoading}
+                          <label
+                            htmlFor={field}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                           >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                            {field}
+                            {field === cnpjField && (
+                              <Badge variant="secondary" className="ml-2">
+                                CNPJ
+                              </Badge>
+                            )}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep("mapping")}>
-                <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
-              </Button>
-              <Button onClick={importRecords} disabled={loading || empresaRecords.filter(r => r.isValid && !r.isDuplicate).length === 0}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Importar {empresaRecords.filter(r => r.isValid && !r.isDuplicate).length} Empresa(s)
-              </Button>
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                    <AlertCircle className="h-4 w-4" />
+                    <p className="text-sm">
+                      {enabledFields.length} campos selecionados de {apiFields.length} disponíveis
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+          )}
+
+          {/* ETAPA 3: Filtros e Ordenação */}
+          {step === 3 && (
+            <div className="space-y-4 py-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>3. Filtros e Ordenação</CardTitle>
+                  <CardDescription>
+                    Dados filtrados sem CNPJs duplicados. Clique nos cabeçalhos para ordenar.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4 p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium">
+                      {filteredData.length} registros únicos
+                      {apiData.length - filteredData.length > 0 && (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          ({apiData.length - filteredData.length} duplicados removidos)
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  <ScrollArea className="h-[400px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {enabledFields.map((field) => (
+                            <TableHead
+                              key={field}
+                              className="cursor-pointer hover:bg-muted"
+                              onClick={() => handleSort(field)}
+                            >
+                              <div className="flex items-center gap-1">
+                                {field}
+                                {sortField === field && (
+                                  <span className="text-xs">
+                                    {sortOrder === "asc" ? "↑" : "↓"}
+                                  </span>
+                                )}
+                              </div>
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {getSortedData().slice(0, 50).map((row, i) => (
+                          <TableRow key={i}>
+                            {enabledFields.map((field) => (
+                              <TableCell key={field}>
+                                {String(row[field] || "")}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ETAPA 4: Mapeamento (De-Para) */}
+          {step === 4 && (
+            <div className="space-y-4 py-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>4. Mapeamento de Campos (De-Para)</CardTitle>
+                  <CardDescription>
+                    Configure como os campos da API serão importados para o sistema
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {fieldMappings.map((mapping) => (
+                    <div
+                      key={mapping.apiField}
+                      className="grid grid-cols-3 gap-4 items-center p-3 border rounded-md"
+                    >
+                      <div>
+                        <Label className="text-sm font-medium">{mapping.apiField}</Label>
+                        <p className="text-xs text-muted-foreground">Campo da API</p>
+                      </div>
+
+                      <div>
+                        <Select
+                          value={mapping.systemField}
+                          onValueChange={(value) =>
+                            updateMapping(mapping.apiField, value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o campo do sistema" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Não importar</SelectItem>
+                            {SYSTEM_FIELDS.map((field) => (
+                              <SelectItem key={field.id} value={field.id}>
+                                {field.label}
+                                {field.required && (
+                                  <Badge variant="destructive" className="ml-2 text-xs">
+                                    Obrigatório
+                                  </Badge>
+                                )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Select
+                          value={mapping.conversion || "none"}
+                          onValueChange={(value) =>
+                            updateMapping(mapping.apiField, mapping.systemField, value)
+                          }
+                          disabled={!mapping.systemField}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Conversão" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CONVERSION_OPTIONS.map((option) => (
+                              <SelectItem key={option.id} value={option.id}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  ))}
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Validação de Campos Obrigatórios</Label>
+                    {SYSTEM_FIELDS.filter((f) => f.required).map((field) => {
+                      const isMapped = fieldMappings.find(
+                        (m) => m.systemField === field.id
+                      );
+                      return (
+                        <div
+                          key={field.id}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          {isMapped ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          )}
+                          <span className={isMapped ? "text-green-600" : "text-destructive"}>
+                            {field.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ETAPA 5 e 6: Preview e Importação */}
+          {step === 5 && (
+            <div className="space-y-4 py-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>5 & 6. Preview e Importação</CardTitle>
+                  <CardDescription>
+                    Revise os dados formatados antes de importar
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-3 gap-4">
+                        <Card className="bg-green-50 border-green-200">
+                          <CardContent className="pt-6">
+                            <div className="text-center">
+                              <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                              <p className="text-2xl font-bold text-green-700">
+                                {previewRecords.filter((r) => r.status === "valid").length}
+                              </p>
+                              <p className="text-sm text-green-600">Serão importados</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="bg-yellow-50 border-yellow-200">
+                          <CardContent className="pt-6">
+                            <div className="text-center">
+                              <AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                              <p className="text-2xl font-bold text-yellow-700">
+                                {previewRecords.filter((r) => r.status === "duplicate").length}
+                              </p>
+                              <p className="text-sm text-yellow-600">Já existem (duplicados)</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="bg-red-50 border-red-200">
+                          <CardContent className="pt-6">
+                            <div className="text-center">
+                              <XCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
+                              <p className="text-2xl font-bold text-red-700">
+                                {previewRecords.filter((r) => r.status === "invalid").length}
+                              </p>
+                              <p className="text-sm text-red-600">Inválidos</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      <ScrollArea className="h-[400px]">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Status</TableHead>
+                              <TableHead>CNPJ</TableHead>
+                              <TableHead>Razão Social</TableHead>
+                              <TableHead>Nome Fantasia</TableHead>
+                              <TableHead>Detalhes</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {previewRecords.map((record) => (
+                              <TableRow key={record.rowIndex}>
+                                <TableCell>
+                                  {record.status === "valid" && (
+                                    <Badge variant="default" className="bg-green-500">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Válido
+                                    </Badge>
+                                  )}
+                                  {record.status === "duplicate" && (
+                                    <Badge variant="secondary">
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      Duplicado
+                                    </Badge>
+                                  )}
+                                  {record.status === "invalid" && (
+                                    <Badge variant="destructive">
+                                      <XCircle className="h-3 w-3 mr-1" />
+                                      Inválido
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="font-mono text-sm">
+                                  {maskCNPJ(record.cnpj)}
+                                </TableCell>
+                                <TableCell>{record.data.nome}</TableCell>
+                                <TableCell>{record.data.nome_fantasia}</TableCell>
+                                <TableCell>
+                                  {record.errors.length > 0 && (
+                                    <p className="text-xs text-destructive">
+                                      {record.errors.join(", ")}
+                                    </p>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </ScrollArea>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </ScrollArea>
+
+        {/* Botões de Navegação */}
+        <div className="flex justify-between pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={() => setStep((s) => Math.max(1, s - 1))}
+            disabled={step === 1 || loading}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Voltar
+          </Button>
+
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+
+            {step < 5 && (
+              <Button
+                onClick={() => {
+                  if (step === 1) goToStep2();
+                  else if (step === 2) goToStep3();
+                  else if (step === 3) goToStep4();
+                  else if (step === 4) goToStep5();
+                }}
+                disabled={loading}
+              >
+                Próximo
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            )}
+
+            {step === 5 && (
+              <Button
+                onClick={handleImport}
+                disabled={loading || previewRecords.filter((r) => r.status === "valid").length === 0}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    Importar {previewRecords.filter((r) => r.status === "valid").length} Empresas
+                  </>
+                )}
+              </Button>
+            )}
           </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );
