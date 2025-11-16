@@ -43,9 +43,10 @@ interface APIDataSourceSelectorProps {
   ) => void;
   currentUrl?: string;
   currentVariables?: APIVariable[];
+  localUso?: 'relatorio' | 'importar_empresa' | 'criacao_bot';
 }
 
-export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVariables }: APIDataSourceSelectorProps) {
+export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVariables, localUso = 'relatorio' }: APIDataSourceSelectorProps) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [testingUrl, setTestingUrl] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
         .from("api_endpoints")
         .select("*")
         .eq("active", true)
-        .contains("locais_permitidos", ["relatorio"]);
+        .contains("locais_permitidos", [localUso]);
 
       if (estabId) {
         query = query.eq("estabelecimento_id", estabId);
