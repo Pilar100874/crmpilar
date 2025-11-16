@@ -44,9 +44,10 @@ interface APIDataSourceSelectorProps {
   currentUrl?: string;
   currentVariables?: APIVariable[];
   localUso?: 'relatorio' | 'importar_empresa' | 'criacao_bot';
+  hideSelectedCard?: boolean;
 }
 
-export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVariables, localUso = 'relatorio' }: APIDataSourceSelectorProps) {
+export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVariables, localUso = 'relatorio', hideSelectedCard = false }: APIDataSourceSelectorProps) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [testingUrl, setTestingUrl] = useState<string | null>(null);
@@ -432,7 +433,7 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
       </div>
 
       {/* API Selecionada */}
-      {selectedEndpoint && (
+      {!hideSelectedCard && selectedEndpoint && (
         <Card className="bg-primary/5 border-primary/20">
           <div className="p-4 flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">

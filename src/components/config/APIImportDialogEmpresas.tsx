@@ -476,8 +476,8 @@ export function APIImportDialogEmpresas({
   // ============ RENDERIZAÇÃO ============
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Importar Empresas via API</DialogTitle>
           <div className="flex items-center gap-2 mt-2">
             {[1, 2, 3, 4, 5].map((s) => (
@@ -491,8 +491,7 @@ export function APIImportDialogEmpresas({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          {/* ETAPA 1: Escolher API e carregar dados */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">{/* ETAPA 1: Escolher API e carregar dados */}
           {step === 1 && (
             <div className="space-y-4 py-4">
               <Card>
@@ -533,6 +532,7 @@ export function APIImportDialogEmpresas({
                     localUso="importar_empresa"
                     onSelect={handleSelectAPI}
                     onTest={handleTestAPI}
+                    hideSelectedCard={true}
                   />
                 </CardContent>
               </Card>
@@ -916,10 +916,10 @@ export function APIImportDialogEmpresas({
               </Card>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Botões de Navegação */}
-        <div className="flex justify-between pt-4 border-t">
+        <div className="flex justify-between px-6 py-4 border-t bg-muted/20">
           <Button
             variant="outline"
             onClick={() => setStep((s) => Math.max(1, s - 1))}
