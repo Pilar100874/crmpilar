@@ -86,7 +86,7 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId }: UsuarioSel
         return;
       }
 
-      // Salvar informações no localStorage antes de recarregar
+      // Salvar informações no localStorage
       localStorage.setItem("userType", "user");
       localStorage.setItem("userId", selectedUsuario);
       if (estabelecimentoId) {
@@ -98,8 +98,8 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId }: UsuarioSel
       setSelectedUsuario("");
       onClose();
       
-      // Recarregar a página para atualizar o contexto
-      window.location.reload();
+      // Navegar para o dashboard ao invés de recarregar
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Erro ao trocar usuário:", error);
       toast.error("Erro ao trocar usuário");
