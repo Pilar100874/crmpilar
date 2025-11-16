@@ -230,16 +230,16 @@ export default function Login() {
   };
 
   const renderSelectType = () => (
-    <Card className="shadow-lg bg-slate-800 border-slate-700">
+    <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
       <CardHeader>
-        <CardTitle className="text-white">Bem-vindo</CardTitle>
-        <CardDescription className="text-white/70">
+        <CardTitle className="text-foreground">Bem-vindo</CardTitle>
+        <CardDescription>
           Selecione o tipo de acesso
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <Button 
-          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+          className="w-full"
           onClick={() => setStep("admin-login")}
         >
           <ShieldCheck className="mr-2 h-4 w-4" />
@@ -247,7 +247,7 @@ export default function Login() {
         </Button>
         <Button 
           variant="outline"
-          className="w-full bg-slate-900 border-slate-700 text-white hover:bg-slate-700"
+          className="w-full"
           onClick={() => setStep("select-company")}
         >
           <Building2 className="mr-2 h-4 w-4" />
@@ -258,17 +258,17 @@ export default function Login() {
   );
 
   const renderAdminLogin = () => (
-    <Card className="shadow-lg bg-slate-800 border-slate-700">
+    <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
       <CardHeader>
-        <CardTitle className="text-white">Login Administrativo</CardTitle>
-        <CardDescription className="text-white/70">
+        <CardTitle className="text-foreground">Login Administrativo</CardTitle>
+        <CardDescription>
           Entre com suas credenciais de administrador
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleAdminLogin}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admin-cpf" className="text-white">CPF</Label>
+            <Label htmlFor="admin-cpf">CPF</Label>
             <Input
               id="admin-cpf"
               value={adminCpf}
@@ -276,25 +276,23 @@ export default function Login() {
               placeholder="000.000.000-00"
               maxLength={14}
               required
-              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="admin-password" className="text-white">Senha</Label>
+            <Label htmlFor="admin-password">Senha</Label>
             <Input
               id="admin-password"
               type="password"
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               required
-              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
             />
           </div>
         </CardContent>
         <CardContent className="space-y-2 pt-0">
           <Button 
             type="submit" 
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700" 
+            className="w-full" 
             disabled={isLoading}
           >
             {isLoading ? "Entrando..." : "Entrar"}
@@ -302,7 +300,7 @@ export default function Login() {
           <Button 
             type="button" 
             variant="ghost" 
-            className="w-full text-white hover:bg-slate-700"
+            className="w-full"
             onClick={() => setStep("select-type")}
           >
             Voltar
@@ -313,18 +311,18 @@ export default function Login() {
   );
 
   const renderSelectCompany = () => (
-    <Card className="shadow-lg bg-slate-800 border-slate-700">
+    <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
       <CardHeader>
-        <CardTitle className="text-white">Selecione a Empresa</CardTitle>
-        <CardDescription className="text-white/70">
+        <CardTitle className="text-foreground">Selecione a Empresa</CardTitle>
+        <CardDescription>
           Escolha o estabelecimento para acessar
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label className="text-white">Estabelecimento</Label>
+          <Label>Estabelecimento</Label>
           <Select value={selectedEstabelecimento} onValueChange={setSelectedEstabelecimento}>
-            <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+            <SelectTrigger>
               <SelectValue placeholder="Selecione um estabelecimento" />
             </SelectTrigger>
             <SelectContent>
@@ -338,7 +336,7 @@ export default function Login() {
         </div>
         <div className="space-y-2">
           <Button 
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+            className="w-full"
             onClick={() => setStep("select-user")}
             disabled={!selectedEstabelecimento}
           >
@@ -346,7 +344,7 @@ export default function Login() {
           </Button>
           <Button 
             variant="ghost" 
-            className="w-full text-white hover:bg-slate-700"
+            className="w-full"
             onClick={() => setStep("select-type")}
           >
             Voltar
@@ -357,18 +355,18 @@ export default function Login() {
   );
 
   const renderSelectUser = () => (
-    <Card className="shadow-lg bg-slate-800 border-slate-700">
+    <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
       <CardHeader>
-        <CardTitle className="text-white">Selecione o Usuário</CardTitle>
-        <CardDescription className="text-white/70">
+        <CardTitle className="text-foreground">Selecione o Usuário</CardTitle>
+        <CardDescription>
           Escolha seu usuário para continuar
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label className="text-white">Usuário</Label>
+          <Label>Usuário</Label>
           <Select value={selectedUsuario} onValueChange={setSelectedUsuario}>
-            <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+            <SelectTrigger>
               <SelectValue placeholder="Selecione um usuário" />
             </SelectTrigger>
             <SelectContent>
@@ -382,7 +380,7 @@ export default function Login() {
         </div>
         <div className="space-y-2">
           <Button 
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+            className="w-full"
             onClick={() => setStep("user-password")}
             disabled={!selectedUsuario}
           >
@@ -390,7 +388,7 @@ export default function Login() {
           </Button>
           <Button 
             variant="ghost" 
-            className="w-full text-white hover:bg-slate-700"
+            className="w-full"
             onClick={() => {
               setSelectedUsuario("");
               setStep("select-company");
@@ -404,31 +402,30 @@ export default function Login() {
   );
 
   const renderUserPassword = () => (
-    <Card className="shadow-lg bg-slate-800 border-slate-700">
+    <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
       <CardHeader>
-        <CardTitle className="text-white">Digite sua Senha</CardTitle>
-        <CardDescription className="text-white/70">
+        <CardTitle className="text-foreground">Digite sua Senha</CardTitle>
+        <CardDescription>
           {usuarios.find(u => u.id === selectedUsuario)?.nome}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleUserPasswordSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="user-password" className="text-white">Senha</Label>
+            <Label htmlFor="user-password">Senha</Label>
             <Input
               id="user-password"
               type="password"
               value={userPassword}
               onChange={(e) => setUserPassword(e.target.value)}
               required
-              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
             />
           </div>
         </CardContent>
         <CardContent className="space-y-2 pt-0">
           <Button 
             type="submit" 
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700" 
+            className="w-full" 
             disabled={isLoading}
           >
             {isLoading ? "Entrando..." : "Entrar"}
@@ -436,7 +433,7 @@ export default function Login() {
           <Button 
             type="button" 
             variant="ghost" 
-            className="w-full text-white hover:bg-slate-700"
+            className="w-full"
             onClick={() => {
               setUserPassword("");
               setStep("select-user");
@@ -450,19 +447,17 @@ export default function Login() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600">
-              <MessageSquare className="w-8 h-8 text-white" />
-            </div>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4">
+            <MessageSquare className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-lg font-bold text-white">
-            Pilar BOT
+          <h1 className="text-4xl font-light tracking-tight text-foreground">
+            Sistema de Gestão
           </h1>
-          <p className="text-white/70 mt-2">
-            Atendimento inteligente com IA
+          <p className="text-lg text-muted-foreground font-light mt-2">
+            Plataforma integrada para gestão de negócios
           </p>
         </div>
 
