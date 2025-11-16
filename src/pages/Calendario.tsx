@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   DndContext,
   DragEndEvent,
@@ -336,14 +338,16 @@ function DraggableTaskCard({
 }
 
 // Função centralizada para obter cor de origem
-const getOrigemColor = (origem: Task['origem']) => {
+const getOrigemColor = (origem: Task['origem'] | 'email' | 'pedido') => {
   switch (origem) {
     case "bot": return "hsl(210, 85%, 65%)";
     case "campanha": return "hsl(280, 70%, 60%)";
     case "ligacao": return "hsl(145, 65%, 50%)";
     case "visita": return "hsl(25, 85%, 60%)";
+    case "email":
     case "email_enviado": return "hsl(200, 75%, 55%)";
     case "email_recebido": return "hsl(190, 70%, 50%)";
+    case "pedido":
     case "pedido_orcamento": return "hsl(40, 90%, 55%)";
     case "pedido_negociacao": return "hsl(35, 85%, 58%)";
     case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
@@ -388,7 +392,9 @@ export default function Calendario() {
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string; auth_user_id: string | null }>>([]);
-  const [selectedOrigens, setSelectedOrigens] = useState<Task['origem'][]>([]);
+  const [selectedOrigens, setSelectedOrigens] = useState<string[]>([]);
+  const [filterEmailTipo, setFilterEmailTipo] = useState<"enviado" | "recebido">("enviado");
+  const [filterPedidoTipo, setFilterPedidoTipo] = useState<"orcamento" | "negociacao" | "aprovacao">("orcamento");
   const [showFilterDialog, setShowFilterDialog] = useState(false);
   
   // Mapa de cores para cada usuário
@@ -1729,7 +1735,23 @@ export default function Calendario() {
   const getTasksForDay = (date: Date) => {
     return tasks.filter(task => {
       if (!isSameDay(task.date, date)) return false;
-      if (selectedOrigens.length > 0 && !selectedOrigens.includes(task.origem)) return false;
+      
+      // Aplicar filtro de origem
+      if (selectedOrigens.length > 0) {
+        const origemCompleta: string[] = [];
+        selectedOrigens.forEach(origem => {
+          if (origem === 'email') {
+            origemCompleta.push(`email_${filterEmailTipo}`);
+          } else if (origem === 'pedido') {
+            origemCompleta.push(`pedido_${filterPedidoTipo}`);
+          } else {
+            origemCompleta.push(origem);
+          }
+        });
+        
+        if (!origemCompleta.includes(task.origem)) return false;
+      }
+      
       return true;
     });
   };
@@ -2121,9 +2143,22 @@ export default function Calendario() {
       if (!matchesSearch) return false;
     }
     
-    // Filtro de origem
-    if (selectedOrigens.length > 0 && !selectedOrigens.includes(task.origem)) {
-      return false;
+    // Filtro de origem - converter origens selecionadas para formato completo
+    if (selectedOrigens.length > 0) {
+      const origemCompleta: string[] = [];
+      selectedOrigens.forEach(origem => {
+        if (origem === 'email') {
+          origemCompleta.push(`email_${filterEmailTipo}`);
+        } else if (origem === 'pedido') {
+          origemCompleta.push(`pedido_${filterPedidoTipo}`);
+        } else {
+          origemCompleta.push(origem);
+        }
+      });
+      
+      if (!origemCompleta.includes(task.origem)) {
+        return false;
+      }
     }
     
     return true;
@@ -2404,8 +2439,21 @@ export default function Calendario() {
     const nextWeekEnd = addWeeks(today, 1);
 
     const filterByOrigem = (task: Task) => {
-      if (selectedOrigens.length > 0 && !selectedOrigens.includes(task.origem)) {
-        return false;
+      if (selectedOrigens.length > 0) {
+        const origemCompleta: string[] = [];
+        selectedOrigens.forEach(origem => {
+          if (origem === 'email') {
+            origemCompleta.push(`email_${filterEmailTipo}`);
+          } else if (origem === 'pedido') {
+            origemCompleta.push(`pedido_${filterPedidoTipo}`);
+          } else {
+            origemCompleta.push(origem);
+          }
+        });
+        
+        if (!origemCompleta.includes(task.origem)) {
+          return false;
+        }
       }
       return true;
     };
@@ -2550,69 +2598,127 @@ export default function Calendario() {
                   
                   <div className="space-y-6 py-4">
                     {/* Filtro por Origem */}
-                    <div>
-                      <h3 className="text-sm font-semibold mb-3">Por Origem</h3>
-                      <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
-                        {(['bot', 'campanha', 'ligacao', 'visita', 'email_enviado', 'email_recebido', 'pedido_orcamento', 'pedido_negociacao', 'pedido_aprovacao', 'chat'] as const).map((origem) => {
-                          const color = getOrigemColor(origem);
-                          const iconClass = "w-4 h-4 flex-shrink-0";
-                          const style = { color };
-                          
-                          const icon = (() => {
-                            switch (origem) {
-                              case "bot": return <Bot className={iconClass} style={style} />;
-                              case "campanha": return <Megaphone className={iconClass} style={style} />;
-                              case "ligacao": return <Phone className={iconClass} style={style} />;
-                              case "visita": return <MapPin className={iconClass} style={style} />;
-                              case "email_enviado": return <Mail className={iconClass} style={style} />;
-                              case "email_recebido": return <MailOpen className={iconClass} style={style} />;
-                              case "pedido_orcamento": return <FileText className={iconClass} style={style} />;
-                              case "pedido_negociacao": return <FileText className={iconClass} style={style} />;
-                              case "pedido_aprovacao": return <FileText className={iconClass} style={style} />;
-                              case "chat": return <MessageSquare className={iconClass} style={style} />;
-                              default: return <Calendar className={iconClass} style={style} />;
-                            }
-                          })();
-                          
-                          const origemLabels = {
-                            bot: "Bot",
-                            campanha: "Campanha",
-                            ligacao: "Ligação",
-                            visita: "Visita",
-                            email_enviado: "Email Enviado",
-                            email_recebido: "Email Recebido",
-                            pedido_orcamento: "Pedido - Orçamento",
-                            pedido_negociacao: "Pedido - Negociação",
-                            pedido_aprovacao: "Pedido - Aprovação",
-                            chat: "Chat",
-                          };
-                          
-                          return (
-                            <div key={origem} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`origem-${origem}`}
-                                checked={selectedOrigens.includes(origem)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedOrigens([...selectedOrigens, origem]);
-                                  } else {
-                                    setSelectedOrigens(selectedOrigens.filter(o => o !== origem));
-                                  }
-                                }}
-                                className="w-4 h-4 rounded border-input"
-                              />
-                              <label 
-                                htmlFor={`origem-${origem}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
-                              >
-                                {icon}
-                                {origemLabels[origem]}
-                              </label>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold">Por Origem</h3>
+                      <RadioGroup 
+                        value={selectedOrigens.length > 0 ? selectedOrigens[0] : ""} 
+                        onValueChange={(value) => {
+                          if (value) {
+                            setSelectedOrigens([value]);
+                          } else {
+                            setSelectedOrigens([]);
+                          }
+                        }} 
+                        className="grid grid-cols-2 gap-3"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="bot" id="filter-bot" />
+                          <Label htmlFor="filter-bot" className="text-sm cursor-pointer flex items-center gap-2">
+                            <Bot className="w-4 h-4" style={{ color: getOrigemColor("bot") }} />
+                            BOT
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="campanha" id="filter-campanha" />
+                          <Label htmlFor="filter-campanha" className="text-sm cursor-pointer flex items-center gap-2">
+                            <Megaphone className="w-4 h-4" style={{ color: getOrigemColor("campanha") }} />
+                            Campanha
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="ligacao" id="filter-ligacao" />
+                          <Label htmlFor="filter-ligacao" className="text-sm cursor-pointer flex items-center gap-2">
+                            <Phone className="w-4 h-4" style={{ color: getOrigemColor("ligacao") }} />
+                            Ligação
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="visita" id="filter-visita" />
+                          <Label htmlFor="filter-visita" className="text-sm cursor-pointer flex items-center gap-2">
+                            <MapPin className="w-4 h-4" style={{ color: getOrigemColor("visita") }} />
+                            Visita
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="email" id="filter-email" />
+                          <Label htmlFor="filter-email" className="text-sm cursor-pointer flex items-center gap-2">
+                            <Mail className="w-4 h-4" style={{ color: getOrigemColor("email") }} />
+                            Email
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="pedido" id="filter-pedido" />
+                          <Label htmlFor="filter-pedido" className="text-sm cursor-pointer flex items-center gap-2">
+                            <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido") }} />
+                            Pedido
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="chat" id="filter-chat" />
+                          <Label htmlFor="filter-chat" className="text-sm cursor-pointer flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
+                            Chat
+                          </Label>
+                        </div>
+                      </RadioGroup>
+
+                      {/* Seletor de tipo de Email */}
+                      {selectedOrigens.includes('email') && (
+                        <div className="space-y-2 pl-0 pt-2">
+                          <Label className="text-sm font-medium">Tipo de Email</Label>
+                          <Select value={filterEmailTipo} onValueChange={(value: "enviado" | "recebido") => setFilterEmailTipo(value)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="enviado">
+                                <div className="flex items-center gap-2">
+                                  <Mail className="w-4 h-4" style={{ color: getOrigemColor("email_enviado") }} />
+                                  Email Enviado
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="recebido">
+                                <div className="flex items-center gap-2">
+                                  <MailOpen className="w-4 h-4" style={{ color: getOrigemColor("email_recebido") }} />
+                                  Email Recebido
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Seletor de tipo de Pedido */}
+                      {selectedOrigens.includes('pedido') && (
+                        <div className="space-y-2 pl-0 pt-2">
+                          <Label className="text-sm font-medium">Tipo de Pedido</Label>
+                          <Select value={filterPedidoTipo} onValueChange={(value: "orcamento" | "negociacao" | "aprovacao") => setFilterPedidoTipo(value)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="orcamento">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_orcamento") }} />
+                                  Pedido - Orçamento
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="negociacao">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_negociacao") }} />
+                                  Pedido - Negociação
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="aprovacao">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_aprovacao") }} />
+                                  Pedido - Aprovação
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
 
                     {/* Filtro por Usuários (apenas para admins) */}
