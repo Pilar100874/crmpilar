@@ -117,6 +117,7 @@ export function APIImportDialogEmpresas({
   // Etapa 5 e 6: Preview
   const [previewRecords, setPreviewRecords] = useState<PreviewRecord[]>([]);
   const [existingCNPJs, setExistingCNPJs] = useState<Set<string>>(new Set());
+  const [previewStatusFilter, setPreviewStatusFilter] = useState<"all" | "valid" | "duplicate" | "invalid">("all");
 
   // Resetar ao abrir
   useEffect(() => {
@@ -133,6 +134,7 @@ export function APIImportDialogEmpresas({
       setFieldMappings([]);
       setPreviewRecords([]);
       setExistingCNPJs(new Set());
+      setPreviewStatusFilter("all");
       setLoadingProgress(0);
       setAbortController(null);
     }
@@ -771,7 +773,7 @@ export function APIImportDialogEmpresas({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {getSortedData().slice(0, 100).map((row, i) => (
+                          {getSortedData().map((row, i) => (
                             <TableRow key={i}>
                               {enabledFields.map((field) => (
                                 <TableCell key={field} className="text-sm">
@@ -907,38 +909,56 @@ export function APIImportDialogEmpresas({
                   ) : (
                     <>
                       <div className="grid grid-cols-3 gap-4">
-                        <Card className="bg-green-50 border-green-200">
+                        <Card 
+                          className={`${previewStatusFilter === "valid" ? "ring-2 ring-green-500" : ""} bg-green-50 border-green-200 cursor-pointer hover:shadow-md transition-all`}
+                          onClick={() => setPreviewStatusFilter(previewStatusFilter === "valid" ? "all" : "valid")}
+                        >
                           <CardContent className="pt-6">
                             <div className="text-center">
                               <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
                               <p className="text-2xl font-bold text-green-700">
                                 {previewRecords.filter((r) => r.status === "valid").length}
                               </p>
-                              <p className="text-sm text-green-600">Serão importados</p>
+                              <p className="text-sm text-green-600">
+                                Serão importados
+                                {previewStatusFilter === "valid" && " (filtrado)"}
+                              </p>
                             </div>
                           </CardContent>
                         </Card>
 
-                        <Card className="bg-yellow-50 border-yellow-200">
+                        <Card 
+                          className={`${previewStatusFilter === "duplicate" ? "ring-2 ring-yellow-500" : ""} bg-yellow-50 border-yellow-200 cursor-pointer hover:shadow-md transition-all`}
+                          onClick={() => setPreviewStatusFilter(previewStatusFilter === "duplicate" ? "all" : "duplicate")}
+                        >
                           <CardContent className="pt-6">
                             <div className="text-center">
                               <AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
                               <p className="text-2xl font-bold text-yellow-700">
                                 {previewRecords.filter((r) => r.status === "duplicate").length}
                               </p>
-                              <p className="text-sm text-yellow-600">Já existem (duplicados)</p>
+                              <p className="text-sm text-yellow-600">
+                                Já existem (duplicados)
+                                {previewStatusFilter === "duplicate" && " (filtrado)"}
+                              </p>
                             </div>
                           </CardContent>
                         </Card>
 
-                        <Card className="bg-red-50 border-red-200">
+                        <Card 
+                          className={`${previewStatusFilter === "invalid" ? "ring-2 ring-red-500" : ""} bg-red-50 border-red-200 cursor-pointer hover:shadow-md transition-all`}
+                          onClick={() => setPreviewStatusFilter(previewStatusFilter === "invalid" ? "all" : "invalid")}
+                        >
                           <CardContent className="pt-6">
                             <div className="text-center">
                               <XCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
                               <p className="text-2xl font-bold text-red-700">
                                 {previewRecords.filter((r) => r.status === "invalid").length}
                               </p>
-                              <p className="text-sm text-red-600">Inválidos</p>
+                              <p className="text-sm text-red-600">
+                                Inválidos
+                                {previewStatusFilter === "invalid" && " (filtrado)"}
+                              </p>
                             </div>
                           </CardContent>
                         </Card>
@@ -956,7 +976,9 @@ export function APIImportDialogEmpresas({
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {previewRecords.map((record) => (
+                            {previewRecords
+                              .filter((record) => previewStatusFilter === "all" || record.status === previewStatusFilter)
+                              .map((record) => (
                               <TableRow key={record.rowIndex}>
                                 <TableCell>
                                   {record.status === "valid" && (
