@@ -109,6 +109,7 @@ export function APIImportDialogEmpresas({
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [fieldFilters, setFieldFilters] = useState<Record<string, string>>({});
 
   // Etapa 4: Mapeamento
   const [fieldMappings, setFieldMappings] = useState<FieldMapping[]>([]);
@@ -128,6 +129,7 @@ export function APIImportDialogEmpresas({
       setFilteredData([]);
       setSortField("");
       setSortOrder("asc");
+      setFieldFilters({});
       setFieldMappings([]);
       setPreviewRecords([]);
       setExistingCNPJs(new Set());
@@ -309,10 +311,36 @@ export function APIImportDialogEmpresas({
     }
   };
 
+  const updateFieldFilter = (field: string, value: string) => {
+    setFieldFilters((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setFieldFilters({});
+  };
+
   const getSortedData = () => {
-    if (!sortField) return filteredData;
+    // Primeiro aplica os filtros
+    let data = filteredData;
     
-    return [...filteredData].sort((a, b) => {
+    // Aplicar filtros
+    Object.keys(fieldFilters).forEach((field) => {
+      const filterValue = fieldFilters[field]?.toLowerCase().trim();
+      if (filterValue) {
+        data = data.filter((row) => {
+          const cellValue = String(row[field] || "").toLowerCase();
+          return cellValue.includes(filterValue);
+        });
+      }
+    });
+    
+    // Depois ordena
+    if (!sortField) return data;
+    
+    return [...data].sort((a, b) => {
       const aVal = String(a[sortField] || "");
       const bVal = String(b[sortField] || "");
       
@@ -325,10 +353,16 @@ export function APIImportDialogEmpresas({
   };
 
   const goToStep4 = () => {
-    if (filteredData.length === 0) {
-      toast.error("Nenhum dado disponível para mapear");
+    // Aplicar filtros antes de prosseguir
+    const dataToProcess = getSortedData();
+    
+    if (dataToProcess.length === 0) {
+      toast.error("Nenhum dado disponível após aplicar os filtros");
       return;
     }
+    
+    // Atualizar filteredData com os dados filtrados
+    setFilteredData(dataToProcess);
     
     // Inicializar mapeamentos
     const initialMappings: FieldMapping[] = enabledFields.map((field) => ({
@@ -345,6 +379,7 @@ export function APIImportDialogEmpresas({
     }
     
     setFieldMappings(initialMappings);
+    toast.success(`${dataToProcess.length} registros prontos para mapeamento`);
     setStep(4);
   };
 
@@ -648,57 +683,107 @@ export function APIImportDialogEmpresas({
                 <CardHeader>
                   <CardTitle>3. Filtros e Ordenação</CardTitle>
                   <CardDescription>
-                    Dados filtrados sem CNPJs duplicados. Clique nos cabeçalhos para ordenar.
+                    Filtre e ordene os dados antes de prosseguir
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="mb-4 p-3 bg-muted rounded-md">
-                    <p className="text-sm font-medium">
-                      {filteredData.length} registros únicos
-                      {apiData.length - filteredData.length > 0 && (
-                        <span className="text-muted-foreground">
-                          {" "}
-                          ({apiData.length - filteredData.length} duplicados removidos)
-                        </span>
+                <CardContent className="space-y-4">
+                  {/* Filtros */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold">Filtros por Campo</Label>
+                      {Object.keys(fieldFilters).some(k => fieldFilters[k]) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearAllFilters}
+                          className="h-8"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Limpar Filtros
+                        </Button>
                       )}
-                    </p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {enabledFields.map((field) => (
+                        <div key={field} className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">{field}</Label>
+                          <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                            <Input
+                              placeholder={`Filtrar ${field}...`}
+                              value={fieldFilters[field] || ""}
+                              onChange={(e) => updateFieldFilter(field, e.target.value)}
+                              className="h-8 pl-7 text-sm"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  <ScrollArea className="h-[400px]">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {enabledFields.map((field) => (
-                            <TableHead
-                              key={field}
-                              className="cursor-pointer hover:bg-muted"
-                              onClick={() => handleSort(field)}
-                            >
-                              <div className="flex items-center gap-1">
-                                {field}
-                                {sortField === field && (
-                                  <span className="text-xs">
-                                    {sortOrder === "asc" ? "↑" : "↓"}
-                                  </span>
-                                )}
-                              </div>
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {getSortedData().slice(0, 50).map((row, i) => (
-                          <TableRow key={i}>
+                  <Separator />
+
+                  {/* Estatísticas */}
+                  <div className="flex items-center gap-4 p-3 bg-muted rounded-md text-sm">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="font-medium">
+                        {getSortedData().length} registros
+                      </span>
+                      {getSortedData().length !== filteredData.length && (
+                        <span className="text-muted-foreground">
+                          (de {filteredData.length} totais)
+                        </span>
+                      )}
+                    </div>
+                    {apiData.length - filteredData.length > 0 && (
+                      <div className="text-muted-foreground">
+                        {apiData.length - filteredData.length} duplicados removidos
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tabela com ordenação */}
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">
+                      Clique nos cabeçalhos para ordenar
+                    </Label>
+                    <ScrollArea className="h-[400px] border rounded-md">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
                             {enabledFields.map((field) => (
-                              <TableCell key={field}>
-                                {String(row[field] || "")}
-                              </TableCell>
+                              <TableHead
+                                key={field}
+                                className="cursor-pointer hover:bg-muted transition-colors"
+                                onClick={() => handleSort(field)}
+                              >
+                                <div className="flex items-center gap-1">
+                                  {field}
+                                  {sortField === field && (
+                                    <span className="text-xs">
+                                      {sortOrder === "asc" ? "↑" : "↓"}
+                                    </span>
+                                  )}
+                                </div>
+                              </TableHead>
                             ))}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </ScrollArea>
+                        </TableHeader>
+                        <TableBody>
+                          {getSortedData().slice(0, 100).map((row, i) => (
+                            <TableRow key={i}>
+                              {enabledFields.map((field) => (
+                                <TableCell key={field} className="text-sm">
+                                  {String(row[field] || "")}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </div>
                 </CardContent>
               </Card>
             </div>
