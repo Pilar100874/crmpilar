@@ -66,7 +66,8 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
       let query = supabase
         .from("api_endpoints")
         .select("*")
-        .eq("active", true);
+        .eq("active", true)
+        .contains("locais_permitidos", ["relatorio"]);
 
       if (estabId) {
         query = query.eq("estabelecimento_id", estabId);
