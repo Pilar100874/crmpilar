@@ -947,9 +947,7 @@ export function APIImportDialogEmpresas({
                 <CardHeader>
                   <CardTitle>4. Mapeamento de Campos (De-Para)</CardTitle>
                   <CardDescription>
-                    Configure como cada campo do sistema será preenchido (usando campo da API ou valor fixo).
-                    <br />
-                    <strong>{enabledFields.length} campos disponíveis</strong> da etapa anterior para mapeamento.
+                    Configure como cada campo do sistema será preenchido (usando campo da API ou valor fixo)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
