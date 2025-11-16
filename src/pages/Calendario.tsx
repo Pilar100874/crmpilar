@@ -136,22 +136,7 @@ function DraggableTask({
     });
   }
 
-  const getOrigemIcon = (origem: Task['origem']) => {
-    const iconClass = "w-3 h-3 flex-shrink-0";
-    switch (origem) {
-      case "bot": return <Bot className={iconClass} />;
-      case "campanha": return <Megaphone className={iconClass} />;
-      case "ligacao": return <Phone className={iconClass} />;
-      case "visita": return <MapPin className={iconClass} />;
-      case "email_enviado": return <Mail className={iconClass} />;
-      case "email_recebido": return <MailOpen className={iconClass} />;
-      case "pedido_orcamento": return <FileText className={iconClass} />;
-      case "pedido_negociacao": return <FileText className={iconClass} />;
-      case "pedido_aprovacao": return <FileText className={iconClass} />;
-      case "chat": return <MessageSquare className={iconClass} />;
-      default: return null;
-    }
-  };
+  const getOrigemIcon = (origem: Task['origem']) => getOrigemIconWithColor(origem, "sm");
 
   return (
     <div
@@ -254,40 +239,7 @@ function DraggableTaskCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const getOrigemColor = (origem: Task['origem']) => {
-    switch (origem) {
-      case "bot": return "hsl(210, 85%, 65%)";
-      case "campanha": return "hsl(280, 70%, 60%)";
-      case "ligacao": return "hsl(145, 65%, 50%)";
-      case "visita": return "hsl(25, 85%, 60%)";
-      case "email_enviado": return "hsl(200, 75%, 55%)";
-      case "email_recebido": return "hsl(190, 70%, 50%)";
-      case "pedido_orcamento": return "hsl(40, 90%, 55%)";
-      case "pedido_negociacao": return "hsl(35, 85%, 58%)";
-      case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
-      case "chat": return "hsl(260, 70%, 62%)";
-      default: return "hsl(0, 0%, 50%)";
-    }
-  };
-
-  const getOrigemIcon = (origem: Task['origem']) => {
-    const color = getOrigemColor(origem);
-    const iconClass = "w-3.5 h-3.5 flex-shrink-0";
-    const style = { color };
-    switch (origem) {
-      case "bot": return <Bot className={iconClass} style={style} />;
-      case "campanha": return <Megaphone className={iconClass} style={style} />;
-      case "ligacao": return <Phone className={iconClass} style={style} />;
-      case "visita": return <MapPin className={iconClass} style={style} />;
-      case "email_enviado": return <Mail className={iconClass} style={style} />;
-      case "email_recebido": return <MailOpen className={iconClass} style={style} />;
-      case "pedido_orcamento": return <FileText className={iconClass} style={style} />;
-      case "pedido_negociacao": return <FileText className={iconClass} style={style} />;
-      case "pedido_aprovacao": return <FileText className={iconClass} style={style} />;
-      case "chat": return <MessageSquare className={iconClass} style={style} />;
-      default: return null;
-    }
-  };
+  const getOrigemIcon = (origem: Task['origem']) => getOrigemIconWithColor(origem, "md");
 
   return (
     <Card 
@@ -382,6 +334,44 @@ function DraggableTaskCard({
     </Card>
   );
 }
+
+// Função centralizada para obter cor de origem
+const getOrigemColor = (origem: Task['origem']) => {
+  switch (origem) {
+    case "bot": return "hsl(210, 85%, 65%)";
+    case "campanha": return "hsl(280, 70%, 60%)";
+    case "ligacao": return "hsl(145, 65%, 50%)";
+    case "visita": return "hsl(25, 85%, 60%)";
+    case "email_enviado": return "hsl(200, 75%, 55%)";
+    case "email_recebido": return "hsl(190, 70%, 50%)";
+    case "pedido_orcamento": return "hsl(40, 90%, 55%)";
+    case "pedido_negociacao": return "hsl(35, 85%, 58%)";
+    case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
+    case "chat": return "hsl(260, 70%, 62%)";
+    default: return "hsl(0, 0%, 50%)";
+  }
+};
+
+// Função centralizada para obter ícone de origem com cor
+const getOrigemIconWithColor = (origem: Task['origem'], size: "sm" | "md" = "sm") => {
+  const color = getOrigemColor(origem);
+  const iconClass = size === "sm" ? "w-3 h-3 flex-shrink-0" : "w-3.5 h-3.5 flex-shrink-0";
+  const style = { color };
+  
+  switch (origem) {
+    case "bot": return <Bot className={iconClass} style={style} />;
+    case "campanha": return <Megaphone className={iconClass} style={style} />;
+    case "ligacao": return <Phone className={iconClass} style={style} />;
+    case "visita": return <MapPin className={iconClass} style={style} />;
+    case "email_enviado": return <Mail className={iconClass} style={style} />;
+    case "email_recebido": return <MailOpen className={iconClass} style={style} />;
+    case "pedido_orcamento": return <FileText className={iconClass} style={style} />;
+    case "pedido_negociacao": return <FileText className={iconClass} style={style} />;
+    case "pedido_aprovacao": return <FileText className={iconClass} style={style} />;
+    case "chat": return <MessageSquare className={iconClass} style={style} />;
+    default: return null;
+  }
+};
 
 export default function Calendario() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -2564,24 +2554,11 @@ export default function Calendario() {
                       <h3 className="text-sm font-semibold mb-3">Por Origem</h3>
                       <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
                         {(['bot', 'campanha', 'ligacao', 'visita', 'email_enviado', 'email_recebido', 'pedido_orcamento', 'pedido_negociacao', 'pedido_aprovacao', 'chat'] as const).map((origem) => {
-                          const getOrigemIcon = (origem: Task['origem']) => {
-                            const color = (() => {
-                              switch (origem) {
-                                case "bot": return "hsl(210, 85%, 65%)";
-                                case "campanha": return "hsl(280, 70%, 60%)";
-                                case "ligacao": return "hsl(145, 65%, 50%)";
-                                case "visita": return "hsl(25, 85%, 60%)";
-                                case "email_enviado": return "hsl(200, 75%, 55%)";
-                                case "email_recebido": return "hsl(190, 70%, 50%)";
-                                case "pedido_orcamento": return "hsl(40, 90%, 55%)";
-                                case "pedido_negociacao": return "hsl(35, 85%, 58%)";
-                                case "pedido_aprovacao": return "hsl(155, 65%, 50%)";
-                                case "chat": return "hsl(260, 70%, 62%)";
-                                default: return "hsl(0, 0%, 50%)";
-                              }
-                            })();
-                            const iconClass = "w-4 h-4 flex-shrink-0";
-                            const style = { color };
+                          const color = getOrigemColor(origem);
+                          const iconClass = "w-4 h-4 flex-shrink-0";
+                          const style = { color };
+                          
+                          const icon = (() => {
                             switch (origem) {
                               case "bot": return <Bot className={iconClass} style={style} />;
                               case "campanha": return <Megaphone className={iconClass} style={style} />;
@@ -2595,7 +2572,7 @@ export default function Calendario() {
                               case "chat": return <MessageSquare className={iconClass} style={style} />;
                               default: return <Calendar className={iconClass} style={style} />;
                             }
-                          };
+                          })();
                           
                           const origemLabels = {
                             bot: "Bot",
@@ -2629,7 +2606,7 @@ export default function Calendario() {
                                 htmlFor={`origem-${origem}`}
                                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
                               >
-                                {getOrigemIcon(origem)}
+                                {icon}
                                 {origemLabels[origem]}
                               </label>
                             </div>
