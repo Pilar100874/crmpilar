@@ -633,6 +633,16 @@ export function APIImportDialogEmpresas({
                         </TableBody>
                       </Table>
                     </ScrollArea>
+                    
+                    <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <p className="text-sm text-blue-600 dark:text-blue-400">
+                          Exibindo apenas uma amostra (até 5 registros e 10 campos) para preview. 
+                          Todos os {apiData.length} registros e {apiFields.length} campos foram carregados com sucesso.
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
