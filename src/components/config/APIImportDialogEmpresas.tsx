@@ -427,7 +427,7 @@ export function APIImportDialogEmpresas({
     
     return requiredFields.every((rf) => {
       const mapping = fieldMappings.find((m) => m.systemField === rf);
-      return mapping && (!!mapping.apiField || !!mapping.fixedValue);
+      return mapping && (mapping.fixedValue !== undefined || !!mapping.apiField);
     });
   };
 
@@ -436,7 +436,7 @@ export function APIImportDialogEmpresas({
       const missing = SYSTEM_FIELDS.filter((f) => f.required)
         .filter((field) => {
           const mapping = fieldMappings.find((m) => m.systemField === field.id);
-          return !mapping || (!mapping.apiField && !mapping.fixedValue);
+          return !mapping || (mapping.fixedValue === undefined && !mapping.apiField);
         })
         .map((f) => f.label);
       toast.error(`Campos obrigatórios não mapeados: ${missing.join(", ")}`);
@@ -476,8 +476,18 @@ export function APIImportDialogEmpresas({
       // Aplicar mapeamentos e conversões
       fieldMappings.forEach((mapping) => {
         if (mapping.systemField) {
-          const rawValue = row[mapping.apiField];
-          const convertedValue = applyConversion(rawValue, mapping.conversion);
+          let value: any;
+          
+          // Prioriza valor fixo sobre campo da API
+          if (mapping.fixedValue !== undefined) {
+            value = mapping.fixedValue;
+          } else if (mapping.apiField) {
+            value = row[mapping.apiField];
+          } else {
+            return; // Sem valor fixo e sem campo da API, pula
+          }
+          
+          const convertedValue = applyConversion(value, mapping.conversion);
           mapped[mapping.systemField] = convertedValue;
         }
       });
@@ -844,7 +854,7 @@ export function APIImportDialogEmpresas({
                 <CardContent className="space-y-4">
                   {SYSTEM_FIELDS.map((systemField) => {
                     const mapping = fieldMappings.find(m => m.systemField === systemField.id);
-                    const useFixedValue = mapping?.fixedValue !== undefined && mapping?.fixedValue !== "";
+                    const useFixedValue = mapping?.fixedValue !== undefined;
                     
                     return (
                       <div
@@ -957,7 +967,7 @@ export function APIImportDialogEmpresas({
                     <Label className="text-sm font-medium">Validação de Campos Obrigatórios</Label>
                     {SYSTEM_FIELDS.filter((f) => f.required).map((field) => {
                       const mapping = fieldMappings.find((m) => m.systemField === field.id);
-                      const isMapped = mapping && (!!mapping.apiField || !!mapping.fixedValue);
+                      const isMapped = mapping && (mapping.fixedValue !== undefined || !!mapping.apiField);
                       
                       return (
                         <div
