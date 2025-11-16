@@ -111,6 +111,9 @@ export function APIImportDialogEmpresas({
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [fieldFilters, setFieldFilters] = useState<Record<string, string>>({});
+  
+  // Salvar configuração da API
+  const [savedConfigs, setSavedConfigs] = useState<any[]>([]);
 
   // Etapa 4: Mapeamento (baseado em SYSTEM_FIELDS)
   const [fieldMappings, setFieldMappings] = useState<FieldMapping[]>(
@@ -145,8 +148,18 @@ export function APIImportDialogEmpresas({
       setPreviewStatusFilter("all");
       setLoadingProgress(0);
       setAbortController(null);
+      
+      // Carregar configurações salvas
+      const saved = localStorage.getItem(`api_import_configs_${estabelecimentoId}`);
+      if (saved) {
+        try {
+          setSavedConfigs(JSON.parse(saved));
+        } catch (e) {
+          setSavedConfigs([]);
+        }
+      }
     }
-  }, [open]);
+  }, [open, estabelecimentoId]);
 
   const cancelLoading = () => {
     if (abortController) {
@@ -333,7 +346,7 @@ export function APIImportDialogEmpresas({
   };
 
   const getSortedData = () => {
-    // Primeiro aplica os filtros
+    // Primeiro aplica os filtros (apenas para preview visual)
     let data = filteredData;
     
     // Aplicar filtros
@@ -362,17 +375,48 @@ export function APIImportDialogEmpresas({
     });
   };
 
+  const saveCurrentConfig = () => {
+    const config = {
+      id: Date.now().toString(),
+      name: `Config ${new Date().toLocaleString("pt-BR")}`,
+      timestamp: new Date().toISOString(),
+      enabledFields,
+      cnpjField,
+      sortField,
+      sortOrder,
+      fieldFilters,
+    };
+    
+    const newConfigs = [config, ...savedConfigs.slice(0, 9)]; // Manter apenas 10 últimas
+    setSavedConfigs(newConfigs);
+    localStorage.setItem(`api_import_configs_${estabelecimentoId}`, JSON.stringify(newConfigs));
+    toast.success("Configuração salva com sucesso!");
+  };
+
+  const loadConfig = (config: any) => {
+    setEnabledFields(config.enabledFields || []);
+    setCnpjField(config.cnpjField || "");
+    setSortField(config.sortField || "");
+    setSortOrder(config.sortOrder || "asc");
+    setFieldFilters(config.fieldFilters || {});
+    toast.success("Configuração carregada!");
+  };
+
+  const deleteConfig = (configId: string) => {
+    const newConfigs = savedConfigs.filter(c => c.id !== configId);
+    setSavedConfigs(newConfigs);
+    localStorage.setItem(`api_import_configs_${estabelecimentoId}`, JSON.stringify(newConfigs));
+    toast.success("Configuração removida!");
+  };
+
   const goToStep4 = () => {
-    // Aplicar filtros antes de prosseguir
-    const dataToProcess = getSortedData();
+    // Usar TODOS os dados filtrados (não aplicar filtros de preview)
+    const dataToProcess = filteredData;
     
     if (dataToProcess.length === 0) {
-      toast.error("Nenhum dado disponível após aplicar os filtros");
+      toast.error("Nenhum dado disponível");
       return;
     }
-    
-    // Atualizar filteredData com os dados filtrados
-    setFilteredData(dataToProcess);
     
     // Inicializar mapeamentos baseados em SYSTEM_FIELDS
     const cnpjPatterns = /cnpj|cpf|documento|doc/i;
@@ -733,12 +777,67 @@ export function APIImportDialogEmpresas({
             <div className="space-y-4 py-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>3. Filtros e Ordenação</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>3. Filtros e Ordenação (Preview)</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={saveCurrentConfig}
+                      className="gap-2"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Salvar Configuração
+                    </Button>
+                  </CardTitle>
                   <CardDescription>
-                    Filtre e ordene os dados antes de prosseguir
+                    Visualize os dados com filtros e ordenação. Os filtros são apenas para preview e não afetam a importação.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Configurações Salvas */}
+                  {savedConfigs.length > 0 && (
+                    <>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Configurações Salvas</Label>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {savedConfigs.map((config) => (
+                            <div
+                              key={config.id}
+                              className="flex items-center justify-between p-2 border rounded-md bg-muted/50"
+                            >
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{config.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {config.enabledFields?.length || 0} campos • 
+                                  {Object.keys(config.fieldFilters || {}).filter(k => config.fieldFilters[k]).length} filtros
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => loadConfig(config)}
+                                  className="h-8"
+                                >
+                                  Carregar
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteConfig(config.id)}
+                                  className="h-8 text-destructive"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
+                  
                   {/* Filtros */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
