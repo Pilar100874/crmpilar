@@ -585,14 +585,14 @@ export default function Layout({ children }: LayoutProps) {
 
         <main className={`flex-1 flex flex-col bg-background min-w-0 ${menuLocked ? 'ml-16 md:ml-20 lg:ml-16' : ''}`}>
           {!sidebarVisible && (
-            <div className="fixed left-0 top-0 z-30 p-2">
+            <div className="fixed left-0 top-0 z-30 p-1 sm:p-2">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setSidebarVisible(true)}
-                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar"
+                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar h-7 w-7 sm:h-8 sm:w-8 p-0"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
             </div>
           )}

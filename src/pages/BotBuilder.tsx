@@ -1052,109 +1052,112 @@ function BotBuilderContent() {
 
   return (
     <div className="h-full flex flex-col bg-white">
-        <div className="p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-6">
+        <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-2 sm:gap-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
             <div>
-              <h2 className="text-lg font-bold text-foreground">CRIAR BOT</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-base sm:text-lg font-bold text-foreground">CRIAR BOT</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Arraste blocos para criar seu fluxo
               </p>
             </div>
             
-            <div className="flex gap-1 border-l border-border pl-6">
+            <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={() => setIsBlockLibraryExpanded(true)}
-                className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
                 title="Adicionar blocos"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={handleZoomIn}
-                className="h-9 w-9"
+                className="h-8 w-8 sm:h-9 sm:w-9"
                 title="Aumentar zoom"
               >
-                <ZoomIn className="h-4 w-4" />
+                <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={handleZoomOut}
-                className="h-9 w-9"
+                className="h-8 w-8 sm:h-9 sm:w-9"
                 title="Diminuir zoom"
               >
-                <ZoomOut className="h-4 w-4" />
+                <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={handleFitView}
                 disabled={!!selectedNode}
-                className="h-9 w-9 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-8 w-8 sm:h-9 sm:w-9 disabled:opacity-50 disabled:cursor-not-allowed"
                 title={selectedNode ? "Feche as propriedades para centralizar" : "Centralizar"}
               >
-                <Maximize2 className="h-4 w-4" />
+                <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={handleToggleLock}
-                className={`h-9 w-9 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
+                className={`h-8 w-8 sm:h-9 sm:w-9 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
                 title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
               >
-                {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                {isLocked ? <Lock className="h-3 w-3 sm:h-4 sm:w-4" /> : <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />}
               </Button>
-              <VariableManager
-                variables={flowVariables}
-                onVariablesChange={setFlowVariables}
-                globalVariables={globalVariables}
-              />
-              <VariableMonitor
-                variables={allVariables}
-                context={simulatorContext}
-              />
-              <BlockMonitor
-                selectedNode={selectedNode}
-                nodes={nodes}
-                edges={edges}
-                context={simulatorContext}
-                allVariables={allVariables}
-              />
-              <EmpresaFieldValidator
-                selectedNode={selectedNode}
-                context={simulatorContext}
-              />
+              <div className="hidden lg:flex items-center gap-1">
+                <VariableManager
+                  variables={flowVariables}
+                  onVariablesChange={setFlowVariables}
+                  globalVariables={globalVariables}
+                />
+                <VariableMonitor
+                  variables={allVariables}
+                  context={simulatorContext}
+                />
+                <BlockMonitor
+                  selectedNode={selectedNode}
+                  nodes={nodes}
+                  edges={edges}
+                  context={simulatorContext}
+                  allVariables={allVariables}
+                />
+                <EmpresaFieldValidator
+                  selectedNode={selectedNode}
+                  context={simulatorContext}
+                />
+              </div>
               
-              {/* Nome do Bot (somente leitura) */}
-              <div className="flex items-center gap-2 border-l border-border pl-4">
-                <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+              {/* Nome do Bot (somente leitura) - oculto em mobile */}
+              <div className="hidden md:flex items-center gap-2 border-l border-border pl-3 sm:pl-4">
+                <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
                   Nome do Bot:
                 </label>
                 <Input
                   value={currentBotName}
                   disabled
-                  className="h-9 w-[200px] bg-muted"
+                  className="h-8 sm:h-9 w-[150px] sm:w-[200px] bg-muted text-xs sm:text-sm"
                   placeholder="Nome do bot"
                 />
               </div>
             </div>
           </div>
           
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExit} disabled={isSaving}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {isSaving ? "Salvando..." : "Sair"}
+          <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
+            <Button variant="outline" size="sm" onClick={handleExit} disabled={isSaving} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Sair"}</span>
+              <span className="sm:hidden">Sair</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleImport}>
-              <Upload className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={handleImport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
+              <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Importar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={handleExport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
+              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Exportar
             </Button>
             <Button 
@@ -1162,14 +1165,15 @@ function BotBuilderContent() {
               size="sm" 
               onClick={() => handleSave(false)}
               disabled={isSaving}
-              className={isSaving ? "bg-green-50" : ""}
+              className={`h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? "bg-green-50" : ""}`}
             >
-              <Save className={`w-4 h-4 mr-2 ${isSaving ? "animate-pulse" : ""}`} />
+              <Save className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${isSaving ? "animate-pulse" : ""}`} />
               {isSaving ? "Salvando..." : "Salvar"}
             </Button>
-            <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg">
-              <Play className="w-4 h-4 mr-2" />
-              {showSimulator ? "Fechar Teste" : "Testar Fluxo"}
+            <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
+              <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar Fluxo"}</span>
+              <span className="sm:hidden">Testar</span>
             </Button>
           </div>
         </div>
