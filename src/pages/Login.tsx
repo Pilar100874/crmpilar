@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { MessageSquare, Building2, ShieldCheck } from "lucide-react";
+import { Building2, ShieldCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
+import logo from "@/assets/logo.jpg";
 
 type LoginStep = "select-type" | "admin-login" | "select-company" | "select-user" | "user-password";
 
@@ -447,11 +448,11 @@ export default function Login() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4">
-            <MessageSquare className="w-10 h-10 text-primary" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src={logo} alt="Logo" className="h-24 w-auto" />
           </div>
           <h1 className="text-4xl font-light tracking-tight text-foreground">
             Sistema de Gestão
