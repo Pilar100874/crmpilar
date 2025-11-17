@@ -192,7 +192,17 @@ export const useSipConnection = () => {
     }
 
     try {
-      const target = UserAgent.makeURI(`sip:${phoneNumber}@${userAgent.configuration.uri?.host}`);
+      // Adiciona # ao final para números externos (mais de 4 dígitos)
+      // Ramais internos geralmente têm 3-4 dígitos
+      let dialNumber = phoneNumber.trim();
+      const isExternalNumber = dialNumber.length > 4;
+      
+      if (isExternalNumber && !dialNumber.endsWith('#')) {
+        dialNumber = dialNumber + '#';
+        console.log('Número externo detectado, adicionando #:', dialNumber);
+      }
+      
+      const target = UserAgent.makeURI(`sip:${dialNumber}@${userAgent.configuration.uri?.host}`);
       if (!target) {
         throw new Error('URI inválida');
       }
