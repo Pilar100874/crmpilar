@@ -51,6 +51,57 @@ function getNextBusinessDay(date: Date): Date {
   return nextDay;
 }
 
+// Obter próximo dia disponível (sem tarefa "dia todo")
+async function getNextAvailableDay(
+  startDate: Date, 
+  userId: string, 
+  supabase: any,
+  checkWeekends: boolean
+): Promise<Date> {
+  let candidateDate = new Date(startDate);
+  let attempts = 0;
+  const maxAttempts = 60; // Limitar a 60 dias para evitar loop infinito
+  
+  while (attempts < maxAttempts) {
+    // Se deve verificar fins de semana e a data for fim de semana, avançar
+    if (checkWeekends && isWeekend(candidateDate)) {
+      candidateDate = getNextBusinessDay(candidateDate);
+      attempts++;
+      continue;
+    }
+    
+    // Verificar se já existe uma tarefa "dia todo" neste dia para este usuário
+    const dateStr = candidateDate.toISOString().split('T')[0];
+    const { data: existingAllDayTasks, error } = await supabase
+      .from('calendario_tarefas')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('date', dateStr)
+      .eq('is_all_day', true)
+      .limit(1);
+    
+    if (error) {
+      console.error('⚠️ Erro ao verificar tarefas dia todo:', error);
+      // Em caso de erro, retorna a data candidata (fallback)
+      return candidateDate;
+    }
+    
+    // Se não houver tarefa "dia todo" neste dia, este dia está disponível
+    if (!existingAllDayTasks || existingAllDayTasks.length === 0) {
+      return candidateDate;
+    }
+    
+    // Se houver tarefa "dia todo", avançar para o próximo dia
+    console.log(`⏭️ Dia ${dateStr} já possui tarefa dia todo, avançando...`);
+    candidateDate.setDate(candidateDate.getDate() + 1);
+    attempts++;
+  }
+  
+  // Se atingir o limite de tentativas, retornar a data atual + 1 dia
+  console.warn('⚠️ Limite de tentativas atingido ao buscar dia disponível');
+  return candidateDate;
+}
+
 // Verificar se o horário está dentro do horário comercial
 function isWithinBusinessHours(time: string, horaInicial: string, horaFinal: string): boolean {
   const [hour, minute] = time.split(':').map(Number);
@@ -195,10 +246,16 @@ Deno.serve(async (req) => {
         let novaData = new Date(hojeUtc);
 
         // Aplicar regra de fim de semana se ativa
-        if (regrasMap.bloqueio_finais_semana && isWeekend(novaData)) {
-          novaData = getNextBusinessDay(novaData);
-          console.log(`📆 Data ajustada para próximo dia útil: ${novaData.toISOString().split('T')[0]}`);
-        }
+        const verificarFinsDeSemana = regrasMap.bloqueio_finais_semana === true;
+        
+        // Obter próximo dia disponível (sem tarefa "dia todo" e respeitando fins de semana)
+        novaData = await getNextAvailableDay(
+          novaData, 
+          tarefa.user_id, 
+          supabase,
+          verificarFinsDeSemana
+        );
+        console.log(`📆 Data ajustada para dia disponível: ${novaData.toISOString().split('T')[0]}`);
 
         let novoHorario = tarefa.time;
 
