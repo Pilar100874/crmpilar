@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Conversation {
   id: string;
@@ -62,17 +63,18 @@ const normalizePhone = (phone: string | undefined | null): string => {
 
 export default function Atendimento() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   
-  // Estados independentes de Client Details por aba
-  const [showClientDetailsChat, setShowClientDetailsChat] = useState(true);
-  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(true);
-  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(true);
-  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(true);
+  // Estados independentes de Client Details por aba (fechado por padrão em mobile/tablet)
+  const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
+  const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
+  const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
+  const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -1512,14 +1514,16 @@ ${recentMessages}
   return (
     <div className="h-screen min-h-0 flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
-      <div className="w-80 border-r border-border flex flex-col h-full min-h-0 transition-colors bg-gray-300">
-        <div className="px-4 py-3 border-b bg-primary/5 flex-shrink-0">
-          <h2 className="text-lg font-semibold mb-3">Painel de Atendimento</h2>
+      <div className={`${
+        isMobile ? 'hidden' : 'w-80 md:w-64 lg:w-80'
+      } border-r border-border flex flex-col h-full min-h-0 transition-colors bg-gray-300`}>
+        <div className="px-3 md:px-4 py-2 md:py-3 border-b bg-primary/5 flex-shrink-0">
+          <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Painel de Atendimento</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar conversas..."
-              className="pl-10 h-9 rounded-full"
+              className="pl-10 h-9 rounded-full text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -1528,12 +1532,12 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <TabsList className="grid grid-cols-4 gap-3 mx-2 mt-1 mb-0 flex-shrink-0 bg-transparent p-0 border-b border-border/50">
+          <TabsList className="grid grid-cols-4 gap-2 md:gap-3 mx-2 mt-1 mb-0 flex-shrink-0 bg-transparent p-0 border-b border-border/50">
             <TabsTrigger 
               value="chat" 
-              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <MessageSquare className="w-4.5 h-4.5" />
+              <MessageSquare className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {activeConversationsCount > 0 && (
                 <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {activeConversationsCount}
@@ -1542,9 +1546,9 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <Calendar className="w-4.5 h-4.5" />
+              <Calendar className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {todayTasksCount > 0 && (
                 <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {todayTasksCount}
@@ -1553,9 +1557,9 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <Mail className="w-4.5 h-4.5" />
+              <Mail className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {unreadEmailsCount > 0 && (
                 <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {unreadEmailsCount}
@@ -1564,9 +1568,9 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="orcamento" 
-              className="relative flex items-center justify-center py-2.5 px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
             >
-              <Receipt className="w-4.5 h-4.5" />
+              <Receipt className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {orcamentosEmAndamentoCount > 0 && (
                 <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
                   {orcamentosEmAndamentoCount}
@@ -1575,8 +1579,8 @@ ${recentMessages}
             </TabsTrigger>
           </TabsList>
 
-          {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-4">
+            {/* Chat Tab */}
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 px-2 md:px-0">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -1939,11 +1943,11 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0 pt-4">
+          <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0 pt-3 md:pt-4">
             {/* Main Content */}
             <div className={`flex flex-col transition-all duration-300 ${
-              showClientDetailsEmail && selectedEmailData?.customer ? 'w-[calc(100%-320px)]' : 'w-full'
-            } overflow-y-auto min-h-0 overscroll-contain px-3 pt-3 pb-2 space-y-2`}>
+              showClientDetailsEmail && selectedEmailData?.customer ? 'w-[calc(100%-280px)] md:w-[calc(100%-256px)] lg:w-[calc(100%-320px)]' : 'w-full'
+            } overflow-y-auto min-h-0 overscroll-contain px-2 md:px-3 pt-2 md:pt-3 pb-2 space-y-2`}>
             {/* Header with Toggle */}
             <div className="flex items-center justify-end mb-2">
               <Button
@@ -2119,28 +2123,28 @@ ${recentMessages}
       <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden min-w-0 border-r border-border">
         {selectedConversation && selectedConv ? (
           <>
-            <div className="px-4 py-3 border-b bg-card shadow-sm flex-shrink-0">
+            <div className="px-3 md:px-4 py-2.5 md:py-3 border-b bg-card shadow-sm flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm">
+                    <h3 className="font-semibold text-xs md:text-sm">
                       {selectedConv.customer?.nome || "Cliente"}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] md:text-xs text-muted-foreground">
                       {selectedConv.customer?.telefone || "Sem telefone"}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 md:gap-2">
                   {selectedConv.bot_active === false && (
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={handleReactivateBot}
-                      className="text-xs h-7 rounded-full"
+                      className="text-[10px] md:text-xs h-6 md:h-7 rounded-full px-2 md:px-3"
                     >
                       Reativar Bot
                     </Button>
@@ -2149,16 +2153,16 @@ ${recentMessages}
                     size="sm"
                     variant="ghost"
                     onClick={() => setShowClientDetailsChat(!showClientDetailsChat)}
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 md:h-7 md:w-7 p-0"
                     title={showClientDetailsChat ? "Ocultar detalhes" : "Mostrar detalhes"}
                   >
-                    {showClientDetailsChat ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    {showClientDetailsChat ? <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />}
                   </Button>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-2 bg-gray-200">
+            <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-2 md:p-4 space-y-2 bg-gray-200">
               {messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -2466,12 +2470,12 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
+        <div className="w-80 md:w-64 lg:w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
           {/* Header com nome do cliente */}
-          <div className="p-4 border-b flex-shrink-0">
-            <div className="flex flex-col items-center mb-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
-                <User className="w-10 h-10 text-primary" />
+          <div className="p-3 md:p-4 border-b flex-shrink-0">
+            <div className="flex flex-col items-center mb-3 md:mb-4">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
+                <User className="w-8 h-8 md:w-10 md:h-10 text-primary" />
               </div>
               <h3 className="font-semibold text-lg">{selectedConv.customer?.nome || "Cliente"}</h3>
               {selectedConv.customer?.telefone && (
