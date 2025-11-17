@@ -35,6 +35,7 @@ import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import Relatorios from "./pages/Relatorios";
 import Softphone from "./pages/Softphone";
+import VideoCall from "./pages/VideoCall";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
 import WebChat from "./pages/WebChat";
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/relatorios/viewer" element={<ReportBroViewerPage />} />
             <Route path="/softphone" element={<Softphone />} />
+            <Route path="/videocall" element={<VideoCall />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
             <Route path="/meus-anexos" element={<MeusAnexos />} />
