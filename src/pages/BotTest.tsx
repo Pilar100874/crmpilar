@@ -209,23 +209,23 @@ export default function BotTest() {
 
   return (
     <div className="h-full min-h-0 flex flex-col bg-white">
-        <div className="p-4 border-b border-border bg-white shadow-sm flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-3 sm:p-4 border-b border-border bg-white shadow-sm flex-shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                 <SubMenuHeader 
                   title="Bot"
                   onOpenSubmenu={() => openSubmenu("Bot Test")}
                 />
-                <h2 className="text-lg font-bold text-foreground">TESTE DO BOT</h2>
+                <h2 className="text-base sm:text-lg font-bold text-foreground">TESTE DO BOT</h2>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {selectedBotName ? `Testando: ${selectedBotName}` : "Selecione um bot para testar"}
               </p>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
               <Select value={selectedChannel} onValueChange={(value: any) => setSelectedChannel(value)}>
-                <SelectTrigger className="w-[180px] rounded-full">
+                <SelectTrigger className="w-full sm:w-[160px] md:w-[180px] rounded-full text-xs sm:text-sm h-9 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -237,7 +237,7 @@ export default function BotTest() {
                 </SelectContent>
               </Select>
               <Select value={selectedBotId} onValueChange={handleBotChange}>
-                <SelectTrigger className="w-[200px] rounded-full">
+                <SelectTrigger className="w-full sm:w-[180px] md:w-[200px] rounded-full text-xs sm:text-sm h-9 sm:h-10">
                   <SelectValue placeholder="Selecione um bot" />
                 </SelectTrigger>
                 <SelectContent>
@@ -264,11 +264,12 @@ export default function BotTest() {
               {selectedBotId && selectedBotId !== activeBotId && (
                 <Button 
                   onClick={() => handleActivateBot(selectedBotId)}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4"
                   size="sm"
                 >
-                  <Power className="w-4 h-4 mr-2" />
-                  Ativar Bot
+                  <Power className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Ativar Bot</span>
+                  <span className="sm:hidden">Ativar</span>
                 </Button>
               )}
               <Button 
@@ -276,25 +277,26 @@ export default function BotTest() {
                 size="sm" 
                 onClick={handleReload}
                 disabled={!selectedBotId}
-                className="rounded-full"
+                className="rounded-full text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-4"
               >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Recarregar
+                <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Recarregar</span>
+                <span className="sm:hidden">Reload</span>
               </Button>
             </div>
           </div>
           
           {!activeBotId && savedBots.length > 0 && (
-            <Alert className="bg-orange-50 border-orange-200">
-              <AlertCircle className="h-4 w-4 text-orange-600" />
-              <AlertDescription className="text-orange-900 text-sm">
+            <Alert className="bg-orange-50 border-orange-200 mt-3 sm:mt-0">
+              <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
+              <AlertDescription className="text-orange-900 text-xs sm:text-sm">
                 <strong>⚠️ Nenhum bot ativo!</strong> Selecione um bot acima e clique em "Ativar Bot" para que ele responda nos canais.
               </AlertDescription>
             </Alert>
           )}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden p-4">
+        <div className="flex-1 min-h-0 overflow-hidden p-3 sm:p-4">
           {nodes.length > 0 ? (
             <div className="h-full min-h-0 flex flex-col bg-muted rounded-2xl overflow-hidden shadow-lg">
               <FlowSimulator 
@@ -307,8 +309,8 @@ export default function BotTest() {
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">
-                <p className="text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
-                <p className="text-sm">Selecione um bot acima ou crie um novo no Bot Builder</p>
+                <p className="text-base sm:text-lg mb-2">⚠️ Nenhum fluxo carregado</p>
+                <p className="text-xs sm:text-sm px-4">Selecione um bot acima ou crie um novo no Bot Builder</p>
               </div>
             </div>
           )}
