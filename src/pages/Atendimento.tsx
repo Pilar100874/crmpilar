@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, X } from "lucide-react";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -124,7 +124,6 @@ export default function Atendimento() {
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
-  const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   
   // Agenda states
@@ -212,7 +211,6 @@ export default function Atendimento() {
     
     // Limpar orçamento quando não estiver na aba orçamento
     if (activeTab !== 'orcamento') {
-      setOrcamentoSheetOpen(false);
       setSelectedOrcamentoId(null);
       setSelectedOrcamentoData(null);
     }
@@ -2078,7 +2076,7 @@ ${recentMessages}
                     className="p-3 cursor-pointer hover:bg-muted/50 transition-all"
                     onClick={() => {
                       setSelectedOrcamentoId(orc.id);
-                      setOrcamentoSheetOpen(true);
+                      setSelectedOrcamentoData(orc);
                     }}
                   >
                     <div className="flex items-start gap-3">
@@ -2462,10 +2460,92 @@ ${recentMessages}
             </div>
           </div>
         )}
+
+        {/* Aba Orçamento */}
+        {activeTab === 'orcamento' && selectedOrcamentoId && selectedOrcamentoData && (
+          <>
+            <div className="px-4 py-3 border-b bg-card shadow-sm flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                    <Receipt className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">
+                      {selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || "Cliente"}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      #{selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedOrcamentoData.etapa || selectedOrcamentoData.status}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowClientDetailsOrcamento(!showClientDetailsOrcamento)}
+                    className="h-7 w-7 p-0"
+                    title={showClientDetailsOrcamento ? "Ocultar detalhes" : "Mostrar detalhes"}
+                  >
+                    {showClientDetailsOrcamento ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedOrcamentoId(null);
+                      setSelectedOrcamentoData(null);
+                    }}
+                    className="h-7 w-7 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              <POSView 
+                estabelecimentoId={estabelecimentoId} 
+                orcamentoId={selectedOrcamentoId}
+                onClose={() => {
+                  setSelectedOrcamentoId(null);
+                  setSelectedOrcamentoData(null);
+                }}
+                showClientDetails={false}
+                onToggleClientDetails={() => {}}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Empty state quando nada selecionado */}
+        {!selectedConversation && activeTab !== 'orcamento' && (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
+            <div className="text-center">
+              <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+              <p className="text-lg font-medium mb-2">Selecione uma conversa</p>
+              <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
+            </div>
+          </div>
+        )}
+
+        {!selectedOrcamentoId && activeTab === 'orcamento' && (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
+            <div className="text-center">
+              <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+              <p className="text-lg font-medium mb-2">Selecione um orçamento</p>
+              <p className="text-sm">Escolha um orçamento da lista para visualizar os detalhes</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Right Sidebar - Company Details Panel */}
-      {selectedConversation && selectedConv && showClientDetailsChat && (
+      {/* Right Sidebar - Client Details Panel */}
+      {activeTab === 'chat' && selectedConversation && selectedConv && showClientDetailsChat && (
         <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
           {/* Header com nome do cliente */}
           <div className="p-4 border-b flex-shrink-0">
@@ -2633,60 +2713,50 @@ ${recentMessages}
           </div>
         </div>
       )}
+
+      {/* Right Sidebar - Orçamento Client Details */}
+      {activeTab === 'orcamento' && selectedOrcamentoId && selectedOrcamentoData && showClientDetailsOrcamento && (
+        <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
+          <ClientDetailsPanel
+            customer={{
+              id: selectedOrcamentoData.customers?.id || selectedOrcamentoData.empresas?.id,
+              nome: selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente",
+              telefone: selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone,
+              email: selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email
+            }}
+            additionalInfo={
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Protocolo</p>
+                  <p className="text-sm font-mono font-semibold">{selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Status</p>
+                  <Badge variant="secondary">{selectedOrcamentoData.etapa || selectedOrcamentoData.status}</Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Valor Total</p>
+                  <p className="text-lg font-bold text-primary">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedOrcamentoData.valor_total || 0)}
+                  </p>
+                </div>
+                {selectedOrcamentoData.empresas && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Empresa Vinculada</p>
+                    <p className="text-sm font-medium">{selectedOrcamentoData.empresas.nome_fantasia || selectedOrcamentoData.empresas.nome}</p>
+                  </div>
+                )}
+              </div>
+            }
+          />
+        </div>
+      )}
       
       {/* Novo Contato Dialog */}
       <NovoContatoDialog 
         open={showNovoContatoDialog}
         onOpenChange={setShowNovoContatoDialog}
       />
-
-      {/* Orçamento Panel Lateral - Ao lado do painel */}
-      {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
-        <>
-          <div className={`transition-all duration-300 ${showClientDetailsOrcamento && selectedOrcamentoData ? 'w-[calc(100%-320px-320px)]' : 'w-[calc(100%-320px)]'} h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
-            <POSView 
-              estabelecimentoId={estabelecimentoId} 
-              orcamentoId={selectedOrcamentoId}
-              onClose={() => {
-                setOrcamentoSheetOpen(false);
-                setSelectedOrcamentoId(null);
-              }}
-              showClientDetails={showClientDetailsOrcamento}
-              onToggleClientDetails={() => setShowClientDetailsOrcamento(!showClientDetailsOrcamento)}
-            />
-          </div>
-
-          {/* Client Details Panel - Orçamento */}
-          {showClientDetailsOrcamento && selectedOrcamentoData && (
-            <ClientDetailsPanel
-              customer={{
-                id: selectedOrcamentoData.customers?.id || selectedOrcamentoData.empresas?.id,
-                nome: selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente",
-                telefone: selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone,
-                email: selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email
-              }}
-              additionalInfo={
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Protocolo</p>
-                    <p className="text-sm font-mono">{selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Status</p>
-                    <Badge variant="secondary">{selectedOrcamentoData.etapa || selectedOrcamentoData.status}</Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Valor Total</p>
-                    <p className="text-sm font-semibold text-primary">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedOrcamentoData.valor_total || 0)}
-                    </p>
-                  </div>
-                </div>
-              }
-            />
-          )}
-        </>
-      )}
 
       <SoftphoneDialog 
         open={showSoftphone}
