@@ -34,6 +34,7 @@ import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import Relatorios from "./pages/Relatorios";
+import Softphone from "./pages/Softphone";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
 import WebChat from "./pages/WebChat";
@@ -82,8 +83,9 @@ const App = () => (
             <Route path="/marketing/canvas" element={<MarketingCanvas />} />
             <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
             <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
-          <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/relatorios/viewer" element={<ReportBroViewerPage />} />
+            <Route path="/softphone" element={<Softphone />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
             <Route path="/meus-anexos" element={<MeusAnexos />} />

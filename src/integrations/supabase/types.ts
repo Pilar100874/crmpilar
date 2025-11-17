@@ -273,6 +273,71 @@ export type Database = {
           },
         ]
       }
+      calls: {
+        Row: {
+          call_id: string | null
+          created_at: string
+          direcao: string
+          duracao_segundos: number | null
+          estabelecimento_id: string
+          horario_atendimento: string | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          id: string
+          metadata: Json | null
+          numero_destino: string | null
+          numero_origem: string | null
+          ramal: string | null
+          recording_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          call_id?: string | null
+          created_at?: string
+          direcao: string
+          duracao_segundos?: number | null
+          estabelecimento_id: string
+          horario_atendimento?: string | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string
+          metadata?: Json | null
+          numero_destino?: string | null
+          numero_origem?: string | null
+          ramal?: string | null
+          recording_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          call_id?: string | null
+          created_at?: string
+          direcao?: string
+          duracao_segundos?: number | null
+          estabelecimento_id?: string
+          horario_atendimento?: string | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string
+          metadata?: Json | null
+          numero_destino?: string | null
+          numero_origem?: string | null
+          ramal?: string | null
+          recording_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string | null

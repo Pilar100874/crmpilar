@@ -34,3 +34,15 @@ verify_jwt = false
 [functions.consultar-cnpj]
 verify_jwt = false
 
+[functions.ucm-dial]
+verify_jwt = true
+
+[functions.ucm-hangup]
+verify_jwt = true
+
+[functions.ucm-transfer]
+verify_jwt = true
+
+[functions.ucm-webhook]
+verify_jwt = false
+
