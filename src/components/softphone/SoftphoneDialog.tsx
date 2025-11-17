@@ -76,21 +76,47 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
   const loadUserExtension = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('Nenhum usuário autenticado no dialog');
+        return;
+      }
 
-      const { data: userData } = await supabase
+      console.log('Carregando ramal para usuário no dialog:', user.email);
+
+      const { data: userData, error } = await supabase
         .from('usuarios')
         .select('ramal')
         .eq('email', user.email)
         .maybeSingle();
 
+      if (error) {
+        console.error('Erro ao buscar ramal no dialog:', error);
+        return;
+      }
+
       if (userData?.ramal) {
         setUserExtension(userData.ramal);
         setExtension(userData.ramal);
         console.log('Ramal do usuário carregado no dialog:', userData.ramal);
+        toast({
+          title: "Ramal configurado",
+          description: `Usando ramal ${userData.ramal}`,
+        });
+      } else {
+        console.log('Usuário não tem ramal cadastrado no dialog');
+        toast({
+          title: "Ramal não encontrado",
+          description: "Configure seu ramal no cadastro de usuários",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Error loading user extension:', error);
+      console.error('Error loading user extension no dialog:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar ramal do usuário",
+        variant: "destructive",
+      });
     }
   };
 
@@ -327,10 +353,11 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
                 className="flex-1"
               />
               <Input
-                placeholder="Ramal"
+                placeholder={userExtension ? `Ramal: ${userExtension}` : "Ramal (carregando...)"}
                 value={extension}
                 onChange={(e) => setExtension(e.target.value)}
                 className="w-24"
+                disabled={isLoadingEstabelecimento}
               />
             </div>
             <Button 

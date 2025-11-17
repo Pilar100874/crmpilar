@@ -77,21 +77,47 @@ export default function Softphone() {
   const loadUserExtension = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('Nenhum usuário autenticado');
+        return;
+      }
 
-      const { data: userData } = await supabase
+      console.log('Carregando ramal para usuário:', user.email);
+
+      const { data: userData, error } = await supabase
         .from('usuarios')
         .select('ramal')
         .eq('email', user.email)
         .maybeSingle();
 
+      if (error) {
+        console.error('Erro ao buscar ramal:', error);
+        return;
+      }
+
       if (userData?.ramal) {
         setUserExtension(userData.ramal);
-        setExtension(userData.ramal); // Preenche automaticamente
+        setExtension(userData.ramal);
         console.log('Ramal do usuário carregado:', userData.ramal);
+        toast({
+          title: "Ramal configurado",
+          description: `Usando ramal ${userData.ramal}`,
+        });
+      } else {
+        console.log('Usuário não tem ramal cadastrado');
+        toast({
+          title: "Ramal não encontrado",
+          description: "Configure seu ramal no cadastro de usuários",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error loading user extension:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar ramal do usuário",
+        variant: "destructive",
+      });
     }
   };
 
@@ -346,10 +372,11 @@ export default function Softphone() {
                 className="flex-1"
               />
               <Input
-                placeholder="Ramal (opcional)"
+                placeholder={userExtension ? `Ramal: ${userExtension}` : "Ramal (carregando...)"}
                 value={extension}
                 onChange={(e) => setExtension(e.target.value)}
                 className="w-32"
+                disabled={isLoadingEstabelecimento}
               />
             </div>
             <Button 
