@@ -146,7 +146,8 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoName, setEstabelecimentoName] = useState<string>("");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
-  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 1024);
+  const [sidebarVisible, setSidebarVisible] = useState(window.innerWidth > 1024);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
@@ -300,6 +301,27 @@ export default function Layout({ children }: LayoutProps) {
     
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
+
+  // Detecta mudanças no tamanho da tela
+  useEffect(() => {
+    const handleResize = () => {
+      const smallScreen = window.innerWidth <= 1024;
+      setIsSmallScreen(smallScreen);
+      
+      if (smallScreen) {
+        // Em telas pequenas, inicia com menu encolhido e destravado
+        setSidebarVisible(false);
+        setMenuLocked(false);
+        setMenuOpen(false);
+      } else {
+        // Em telas grandes, volta ao comportamento normal
+        setSidebarVisible(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleMenuMouseEnter = () => {
@@ -534,25 +556,27 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Ícones no rodapé */}
           <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
-            {/* Botão de travar/destravar */}
-            <button
-              onClick={handleToggleLock}
-              className={`${
-                menuLocked 
-                  ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
-                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-              } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
-              title={menuLocked ? "Destravar menu" : "Travar menu"}
-            >
-              {menuLocked ? (
-                <Pin className="w-5 h-5" />
-              ) : (
-                <>
-                  <PinOff className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-medium">Travar Menu</span>
-                </>
-              )}
-            </button>
+            {/* Botão de travar/destravar - só aparece em telas maiores que 1024px */}
+            {!isSmallScreen && (
+              <button
+                onClick={handleToggleLock}
+                className={`${
+                  menuLocked 
+                    ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
+                    : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+                } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
+                title={menuLocked ? "Destravar menu" : "Travar menu"}
+              >
+                {menuLocked ? (
+                  <Pin className="w-5 h-5" />
+                ) : (
+                  <>
+                    <PinOff className="w-5 h-5 flex-shrink-0" />
+                    <span className="text-sm font-medium">Travar Menu</span>
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               onClick={() => setShowUsuarioSelector(true)}
