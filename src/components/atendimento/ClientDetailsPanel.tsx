@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, Receipt, Inbox } from "lucide-react";
+import { User, Phone, Building2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -148,31 +148,6 @@ export function ClientDetailsPanel({
         </div>
       </div>
 
-      {/* Ações Rápidas */}
-      <div className="border-t p-4 flex-shrink-0 space-y-2">
-        {customer.id && (
-          <>
-            <Button
-              className="w-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-              onClick={() => navigate(`/orcamentos?cliente_id=${customer.id}`)}
-            >
-              <Receipt className="w-4 h-4 mr-2" />
-              Abrir Orçamento
-            </Button>
-            
-            {customer.email && (
-              <Button
-                className="w-full rounded-full"
-                variant="outline"
-                onClick={() => navigate(`/email?filter=${encodeURIComponent(customer.email)}`)}
-              >
-                <Inbox className="w-4 h-4 mr-2" />
-                Ver Emails
-              </Button>
-            )}
-          </>
-        )}
-      </div>
 
       <SoftphoneDialog 
         open={showSoftphone}
