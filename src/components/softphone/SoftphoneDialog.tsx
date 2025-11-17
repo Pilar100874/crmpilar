@@ -34,6 +34,7 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState(initialNumber);
   const [extension, setExtension] = useState("");
+  const [userExtension, setUserExtension] = useState<string>("");
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -43,6 +44,7 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
     if (open) {
       setPhoneNumber(initialNumber);
       loadUserEstabelecimento();
+      loadUserExtension();
     }
   }, [open, initialNumber]);
 
@@ -68,6 +70,27 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
       });
     } finally {
       setIsLoadingEstabelecimento(false);
+    }
+  };
+
+  const loadUserExtension = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('ramal')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (userData?.ramal) {
+        setUserExtension(userData.ramal);
+        setExtension(userData.ramal);
+        console.log('Ramal do usuário carregado no dialog:', userData.ramal);
+      }
+    } catch (error) {
+      console.error('Error loading user extension:', error);
     }
   };
 
@@ -168,10 +191,13 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
       // Sempre usar edge function (resolve problemas de mixed content HTTP/HTTPS)
       const { data: { session } } = await supabase.auth.getSession();
       
+      // Usar ramal do usuário se não especificado
+      const effectiveExtension = extension || userExtension;
+      
       const response = await supabase.functions.invoke('ucm-dial', {
         body: {
           number: phoneNumber,
-          extension: extension || undefined,
+          extension: effectiveExtension || undefined,
           estabelecimento_id: estabelecimentoId,
         },
         headers: {

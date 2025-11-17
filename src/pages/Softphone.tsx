@@ -36,6 +36,7 @@ export default function Softphone() {
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [extension, setExtension] = useState("");
+  const [userExtension, setUserExtension] = useState<string>("");
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -45,6 +46,7 @@ export default function Softphone() {
 
   useEffect(() => {
     loadUserEstabelecimento();
+    loadUserExtension();
   }, []);
 
   useEffect(() => {
@@ -69,6 +71,27 @@ export default function Softphone() {
       });
     } finally {
       setIsLoadingEstabelecimento(false);
+    }
+  };
+
+  const loadUserExtension = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('ramal')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (userData?.ramal) {
+        setUserExtension(userData.ramal);
+        setExtension(userData.ramal); // Preenche automaticamente
+        console.log('Ramal do usuário carregado:', userData.ramal);
+      }
+    } catch (error) {
+      console.error('Error loading user extension:', error);
     }
   };
 
@@ -176,10 +199,13 @@ export default function Softphone() {
       // Sempre usar edge function (resolve problemas de mixed content HTTP/HTTPS)
       const { data: { session } } = await supabase.auth.getSession();
       
+      // Usar ramal do usuário se não especificado
+      const effectiveExtension = extension || userExtension;
+      
       const response = await supabase.functions.invoke('ucm-dial', {
         body: {
           number: phoneNumber,
-          extension: extension || undefined,
+          extension: effectiveExtension || undefined,
           estabelecimento_id: estabelecimentoId,
         },
         headers: {
