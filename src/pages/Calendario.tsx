@@ -253,42 +253,31 @@ function DraggableTaskCard({
           backgroundColor: toAlpha(userColor, 0.12)
         } : {})
       }} 
-      className="mb-3 hover:shadow-md transition-shadow"
+      className="mb-2 sm:mb-3 hover:shadow-md transition-shadow"
     >
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div {...attributes} {...listeners} className="mt-1">
+      <CardContent className="p-2 sm:p-3 md:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <div {...attributes} {...listeners} className="mt-1 hidden sm:block">
             <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-grab" />
           </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium">
-                {format(task.date, "dd/MM/yyyy", { locale: ptBR })}
+          <div className="flex-1 space-y-1.5 sm:space-y-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs sm:text-sm">
+              <span className="font-medium whitespace-nowrap">
+                {format(task.date, "dd/MM", { locale: ptBR })}
               </span>
               {task.time && (
-                <span className="text-xs text-muted-foreground">{task.time}</span>
+                <span className="text-muted-foreground whitespace-nowrap">{task.time}</span>
               )}
               {task.isAllDay && (
-                <Badge variant="secondary" className="text-xs gap-1">
-                  <Calendar className="w-3 h-3" style={{ color: "hsl(0, 85%, 60%)" }} />
-                  Dia todo
+                <Badge variant="secondary" className="text-[10px] sm:text-xs gap-0.5 sm:gap-1 px-1 sm:px-2">
+                  <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3" style={{ color: "hsl(0, 85%, 60%)" }} />
+                  <span className="hidden sm:inline">Dia todo</span>
                 </Badge>
               )}
               {getOrigemIcon(task.origem) && (
-                <Badge variant="outline" className="text-xs gap-1">
+                <Badge variant="outline" className="text-[10px] sm:text-xs gap-0.5 sm:gap-1 px-1 sm:px-2">
                   {getOrigemIcon(task.origem)}
-                  {task.origem}
-                </Badge>
-              )}
-              {task.userName && (
-                <Badge variant="outline" className="text-xs gap-1">
-                  <User className="w-3 h-3" />
-                  {task.userName}
-                </Badge>
-              )}
-              {task.assignedTo && (
-                <Badge variant="outline" className="text-xs">
-                  para {task.assignedTo}
+                  <span className="hidden md:inline">{task.origem}</span>
                 </Badge>
               )}
             </div>
@@ -297,37 +286,37 @@ function DraggableTaskCard({
                 type="checkbox"
                 checked={task.status === "completed"}
                 onChange={onToggle}
-                className="cursor-pointer mt-1"
+                className="cursor-pointer mt-0.5 sm:mt-1 flex-shrink-0"
               />
-              <div className="flex-1">
-                <span className={`${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
+              <div className="flex-1 min-w-0">
+                <span className={`text-xs sm:text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : "font-medium"}`}>
                   {task.title}
                 </span>
                 {task.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 line-clamp-2">{task.description}</p>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex sm:flex-row flex-col items-center gap-0.5 sm:gap-1">
             {onEdit && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-7 w-7 sm:h-8 sm:w-8"
                 onClick={onEdit}
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </Button>
             )}
             {onDelete && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive"
+                className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-destructive/20 hover:text-destructive"
                 onClick={onDelete}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </Button>
             )}
           </div>
@@ -1889,14 +1878,14 @@ export default function Calendario() {
           className="flex-1 border-r border-b border-border"
         >
           <div 
-            className={`p-3 border-b border-border flex flex-col items-center ${isTodayDate ? "bg-primary/5" : ""}`}
+            className={`p-2 sm:p-3 border-b border-border flex flex-col items-center ${isTodayDate ? "bg-primary/5" : ""}`}
           >
             <div className="text-xs text-muted-foreground uppercase">
               {format(day, "EEE", { locale: ptBR })}
             </div>
             <div className="flex items-center gap-1">
               <div 
-                className={`text-lg font-medium cursor-pointer hover:bg-primary/20 rounded px-2 py-1 transition-colors ${isTodayDate ? "text-primary" : ""}`}
+                className={`text-base sm:text-lg font-medium cursor-pointer hover:bg-primary/20 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 transition-colors ${isTodayDate ? "text-primary" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setCurrentDate(day);
@@ -1910,7 +1899,7 @@ export default function Calendario() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 hover:bg-primary/20"
+                  className="h-5 w-5 sm:h-6 sm:w-6 hover:bg-primary/20"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleOpenNewTask(day);
@@ -1922,7 +1911,7 @@ export default function Calendario() {
               )}
             </div>
           </div>
-          <div className="p-2 space-y-2 min-h-[400px]">
+          <div className="p-1 sm:p-2 space-y-1 sm:space-y-2 min-h-[200px] sm:min-h-[300px] md:min-h-[400px]">
             {dayTasks.map(task => (
               <DraggableTask
                 key={task.id}
@@ -1940,7 +1929,7 @@ export default function Calendario() {
 
     return (
       <div className="border-l border-t border-border">
-        <div className="flex">{days}</div>
+        <div className="flex overflow-x-auto">{days}</div>
       </div>
     );
   };
@@ -2556,11 +2545,11 @@ export default function Calendario() {
       <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="border-b border-border bg-card">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-foreground">CALENDÁRIO</h1>
+        <div className="px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">CALENDÁRIO</h1>
 
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="hidden md:block">
               <TabsList>
                 <TabsTrigger value="day">DIA</TabsTrigger>
                 <TabsTrigger value="week">SEMANA</TabsTrigger>
@@ -2857,9 +2846,9 @@ export default function Calendario() {
         if (!shouldShowLegend) return null;
         
         return (
-          <div className="border-b border-border bg-muted/30 px-6 py-3">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Legenda de usuários:</span>
+          <div className="border-b border-border bg-muted/30 px-3 sm:px-6 py-2 sm:py-3">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <span className="text-xs font-semibold text-muted-foreground uppercase hidden sm:inline">Legenda:</span>
               {Array.from(uniqueUserIds).map(userId => {
                 const usuario = usuarios.find(u => u.auth_user_id === userId);
                 const isCurrentUser = userId === currentAdminId;
@@ -2868,9 +2857,9 @@ export default function Calendario() {
                 if (!color) return null;
                 
                 return (
-                  <div key={userId} className="flex items-center gap-2">
+                  <div key={userId} className="flex items-center gap-1.5">
                     <div 
-                      className="w-4 h-4 rounded border border-border"
+                      className="w-3 h-3 sm:w-4 sm:h-4 rounded border border-border"
                       style={{ backgroundColor: color }}
                     />
                     <span className="text-xs font-medium">
