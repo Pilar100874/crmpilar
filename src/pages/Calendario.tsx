@@ -482,7 +482,6 @@ export default function Calendario() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
-  const [relocating, setRelocating] = useState(false);
   
   // Estado para regras do calendário
   const [calendarioRegras, setCalendarioRegras] = useState<{
@@ -2561,41 +2560,6 @@ export default function Calendario() {
             }}
             onShowFilter={() => setShowFilterDialog(true)}
           />
-          
-          {/* Botão Realocar para admin (mobile) */}
-          {isAdmin && (
-            <div className="px-4 pb-3">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={relocating}
-                onClick={async () => {
-                  try {
-                    setRelocating(true);
-                    const { data, error } = await supabase.functions.invoke('mover-tarefas-pendentes', {
-                      body: { manual: true }
-                    });
-                    if (error) {
-                      console.error('Erro ao executar realocação manual:', error);
-                      toast.error('Erro ao executar realocação manual');
-                    } else {
-                      toast.success(`Realocação concluída: ${data?.tarefasMovidas ?? 0} movidas de ${data?.tarefasProcessadas ?? 0}`);
-                      await loadTasks();
-                    }
-                  } catch (err) {
-                    console.error('Erro inesperado na realocação manual:', err);
-                    toast.error('Erro inesperado');
-                  } finally {
-                    setRelocating(false);
-                  }
-                }}
-                className="text-xs w-full gap-2"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${relocating ? 'animate-spin' : ''}`} />
-                Realocar pendentes
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Desktop Header (>= lg) */}
@@ -2697,41 +2661,6 @@ export default function Calendario() {
               </Button>
             </div>
           </div>
-
-          {/* Botão Realocar para admin (desktop) */}
-          {isAdmin && (
-            <div className="flex items-center justify-end pt-3 border-t border-border/40 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={relocating}
-                onClick={async () => {
-                  try {
-                    setRelocating(true);
-                    const { data, error } = await supabase.functions.invoke('mover-tarefas-pendentes', {
-                      body: { manual: true }
-                    });
-                    if (error) {
-                      console.error('Erro ao executar realocação manual:', error);
-                      toast.error('Erro ao executar realocação manual');
-                    } else {
-                      toast.success(`Realocação concluída: ${data?.tarefasMovidas ?? 0} movidas de ${data?.tarefasProcessadas ?? 0}`);
-                      await loadTasks();
-                    }
-                  } catch (err) {
-                    console.error('Erro inesperado na realocação manual:', err);
-                    toast.error('Erro inesperado');
-                  } finally {
-                    setRelocating(false);
-                  }
-                }}
-                className="gap-2 text-xs h-8"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${relocating ? 'animate-spin' : ''}`} />
-                Realocar Tarefas Pendentes
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Dialog de filtros (compartilhado) */}
