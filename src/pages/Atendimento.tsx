@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft } from "lucide-react";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -64,11 +64,15 @@ const normalizePhone = (phone: string | undefined | null): string => {
 export default function Atendimento() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const isTablet = !isMobile && window.innerWidth < 1280; // Considera tablet entre 768-1280px
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  
+  // Estado do painel de conversas (expandido por padrão)
+  const [showConversationsList, setShowConversationsList] = useState(true);
   
   // Estados independentes de Client Details por aba (fechado por padrão em mobile/tablet)
   const [showClientDetailsChat, setShowClientDetailsChat] = useState(!isMobile);
@@ -1514,20 +1518,52 @@ ${recentMessages}
   return (
     <div className="h-screen min-h-0 flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
-      <div className={`${
-        isMobile ? 'hidden' : 'w-80 md:w-64 lg:w-80'
-      } border-r border-border flex flex-col h-full min-h-0 transition-colors bg-gray-300`}>
+      <div className={`border-r border-border flex flex-col h-full min-h-0 transition-all duration-300 bg-gray-300 ${
+        isMobile 
+          ? 'hidden' 
+          : showConversationsList 
+            ? 'w-80 md:w-64 lg:w-80' 
+            : 'w-16'
+      }`}>
         <div className="px-3 md:px-4 py-2 md:py-3 border-b bg-primary/5 flex-shrink-0">
-          <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Painel de Atendimento</h2>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar conversas..."
-              className="pl-10 h-9 rounded-full text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex items-center justify-between mb-2 md:mb-3">
+            {showConversationsList && (
+              <h2 className="text-base md:text-lg font-semibold">Painel de Atendimento</h2>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                const newState = !showConversationsList;
+                setShowConversationsList(newState);
+                // Em tablets, coordenar com o painel de detalhes
+                if (isTablet && !newState && (activeTab === 'chat' ? showClientDetailsChat : 
+                    activeTab === 'agenda' ? showClientDetailsAgenda :
+                    activeTab === 'email' ? showClientDetailsEmail : showClientDetailsOrcamento)) {
+                  // Se está encolhendo o painel de conversas e detalhes está aberto, fechar detalhes
+                  if (activeTab === 'chat') setShowClientDetailsChat(false);
+                  else if (activeTab === 'agenda') setShowClientDetailsAgenda(false);
+                  else if (activeTab === 'email') setShowClientDetailsEmail(false);
+                  else if (activeTab === 'orcamento') setShowClientDetailsOrcamento(false);
+                }
+              }}
+              className={`h-7 w-7 p-0 ${showConversationsList ? 'ml-auto' : 'mx-auto'}`}
+              title={showConversationsList ? "Recolher painel" : "Expandir painel"}
+            >
+              {showConversationsList ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+            </Button>
           </div>
+          {showConversationsList && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar conversas..."
+                className="pl-10 h-9 rounded-full text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -1580,8 +1616,23 @@ ${recentMessages}
           </TabsList>
 
             {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 px-2 md:px-0">
-            {filteredConversations.length === 0 ? (
+          <TabsContent value="chat" className={`flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 ${showConversationsList ? 'px-2 md:px-0' : 'px-0'}`}>
+            {!showConversationsList ? (
+              <div className="flex flex-col items-center gap-2 py-4">
+                {filteredConversations.slice(0, 10).map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelectedConversation(conv.id)}
+                    className={`w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-primary transition-all ${
+                      selectedConversation === conv.id ? "ring-2 ring-primary" : ""
+                    }`}
+                    title={conv.customer?.nome || "Cliente"}
+                  >
+                    <User className="w-5 h-5 text-primary" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
                 <p className="text-sm">Nenhuma conversa encontrada</p>
@@ -1685,7 +1736,14 @@ ${recentMessages}
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => setShowClientDetailsAgenda(!showClientDetailsAgenda)}
+                  onClick={() => {
+                    const newState = !showClientDetailsAgenda;
+                    setShowClientDetailsAgenda(newState);
+                    // Em tablets, coordenar com o painel de conversas
+                    if (isTablet && newState && showConversationsList) {
+                      setShowConversationsList(false);
+                    }
+                  }}
                   className="h-8 w-8 p-0"
                   title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
                 >
@@ -1953,7 +2011,14 @@ ${recentMessages}
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setShowClientDetailsEmail(!showClientDetailsEmail)}
+                onClick={() => {
+                  const newState = !showClientDetailsEmail;
+                  setShowClientDetailsEmail(newState);
+                  // Em tablets, coordenar com o painel de conversas
+                  if (isTablet && newState && showConversationsList) {
+                    setShowConversationsList(false);
+                  }
+                }}
                 className="h-8 w-8 p-0"
                 title={showClientDetailsEmail ? "Ocultar detalhes" : "Mostrar detalhes"}
               >
@@ -2152,7 +2217,14 @@ ${recentMessages}
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setShowClientDetailsChat(!showClientDetailsChat)}
+                    onClick={() => {
+                      const newState = !showClientDetailsChat;
+                      setShowClientDetailsChat(newState);
+                      // Em tablets, coordenar com o painel de conversas
+                      if (isTablet && newState && showConversationsList) {
+                        setShowConversationsList(false);
+                      }
+                    }}
                     className="h-6 w-6 md:h-7 md:w-7 p-0"
                     title={showClientDetailsChat ? "Ocultar detalhes" : "Mostrar detalhes"}
                   >
@@ -2656,7 +2728,14 @@ ${recentMessages}
                 setSelectedOrcamentoId(null);
               }}
               showClientDetails={showClientDetailsOrcamento}
-              onToggleClientDetails={() => setShowClientDetailsOrcamento(!showClientDetailsOrcamento)}
+              onToggleClientDetails={() => {
+                const newState = !showClientDetailsOrcamento;
+                setShowClientDetailsOrcamento(newState);
+                // Em tablets, coordenar com o painel de conversas
+                if (isTablet && newState && showConversationsList) {
+                  setShowConversationsList(false);
+                }
+              }}
             />
           </div>
 
