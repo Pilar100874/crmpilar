@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { UserAgent, Registerer, Inviter, Session, SessionState } from 'sip.js';
+import { UserAgent, Registerer, RegistererState, Inviter, Session, SessionState } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
 
 interface SipConfig {
@@ -95,15 +95,15 @@ export const useSipConnection = () => {
       
       reg.stateChange.addListener((state) => {
         console.log('📊 Estado do registro mudou:', state);
-        setIsRegistered(state === 'Registered');
+        setIsRegistered(state === RegistererState.Registered);
         
-        if (state === 'Registered') {
+        if (state === RegistererState.Registered) {
           console.log('✅ RAMAL REGISTRADO COM SUCESSO!');
           toast({
             title: "Conectado",
             description: `Ramal ${config.extension} registrado no UCM`,
           });
-        } else if (state === 'Unregistered') {
+        } else if (state === RegistererState.Unregistered) {
           console.log('⚠️ Ramal não registrado');
         }
       });
