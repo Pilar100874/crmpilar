@@ -10,6 +10,7 @@ import { Building2, ShieldCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import logo from "@/assets/logo.jpg";
+import logoFallback from "@/assets/logo_preto.png";
 
 type LoginStep = "select-type" | "admin-login" | "select-company" | "select-user" | "user-password";
 
@@ -452,7 +453,7 @@ export default function Login() {
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src={logo} alt="Logo" className="h-24 w-auto" />
+            <img src={logoFallback} alt="Logo da Empresa - Sistema de Gestão" className="h-24 w-auto" />
           </div>
           <h1 className="text-4xl font-light tracking-tight text-foreground">
             Sistema de Gestão

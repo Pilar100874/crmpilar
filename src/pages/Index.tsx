@@ -5,6 +5,7 @@ import { LayoutDashboard, Users, Calendar, FileText, Settings, MessageSquare } f
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import logo from "@/assets/logo.jpg";
+import logoFallback from "@/assets/logo_preto.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const Index = () => {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src={logo} alt="Logo" className="h-24 w-auto" />
+            <img src={logo} alt="Logo" className="h-24 w-auto" onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoFallback; }} />
           </div>
           <h1 className="text-4xl font-light tracking-tight text-foreground">
             Sistema de Gestão
