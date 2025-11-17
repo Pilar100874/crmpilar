@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
 import { maskCPF, maskCNPJ, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
@@ -26,6 +26,7 @@ import { TableColumnsConfig, type TableColumn } from "@/components/config/TableC
 import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpresas";
+import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 
 
 interface CustomField {
@@ -87,6 +88,10 @@ export default function Empresas() {
   
   // Estado para dialog de importação via API
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  
+  // Estado para softphone
+  const [softphoneOpen, setSoftphoneOpen] = useState(false);
+  const [softphoneNumber, setSoftphoneNumber] = useState("");
 
   // Gerenciamento de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -1180,7 +1185,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               onBlur={handleFieldBlur}
               required={field.required}
               disabled={isDisabled}
-              className={`${fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""} ${isDisabled ? "bg-muted/50 cursor-not-allowed" : ""}`}
+              className={`${fieldErrors[field.id] ? "border-red-500 focus-visible:ring-red-500" : ""} ${isDisabled ? "bg-muted/50 cursor-not-allowed" : ""} ${field.type === "phone" || field.id === "telefone" ? "pr-10" : ""}`}
             />
             {fieldErrors[field.id] && (
               <p className="text-sm text-red-500 mt-1">{fieldErrors[field.id]}</p>
@@ -1188,6 +1193,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             {(field.id === "cpf_cnpj" && cnpjLoading) || (field.id === "cep" && cepLoading) ? (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
             ) : null}
+            {(field.type === "phone" || field.id === "telefone") && displayValue && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-primary/10"
+                onClick={() => {
+                  setSoftphoneNumber(displayValue);
+                  setSoftphoneOpen(true);
+                }}
+                disabled={isDisabled}
+              >
+                <Phone className="w-4 h-4 text-primary" />
+              </Button>
+            )}
           </div>
         );
     }
@@ -1446,7 +1465,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           );
                         }
                         
-                        let cellValue = "";
+                        let cellValue: string | React.ReactNode = "";
                         switch (column.id) {
                           case 'nome_fantasia':
                             cellValue = empresa.nome_fantasia || "-";
@@ -1458,7 +1477,23 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             cellValue = empresa.cnpj || "-";
                             break;
                           case 'telefone':
-                            cellValue = empresa.telefone || "-";
+                            cellValue = empresa.telefone ? (
+                              <div className="flex items-center gap-2">
+                                <span>{empresa.telefone}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 hover:bg-primary/10"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSoftphoneNumber(empresa.telefone || "");
+                                    setSoftphoneOpen(true);
+                                  }}
+                                >
+                                  <Phone className="w-4 h-4 text-primary" />
+                                </Button>
+                              </div>
+                            ) : "-";
                             break;
                           case 'email':
                             cellValue = empresa.email || "-";
@@ -1495,7 +1530,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             className={`p-4 ${column.id === 'nome_fantasia' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
                             style={{ width: column.width, maxWidth: column.width }}
                           >
-                            <span className="truncate block text-sm">{cellValue}</span>
+                            {column.id === 'telefone' ? (
+                              cellValue
+                            ) : (
+                              <span className="truncate block text-sm">{cellValue}</span>
+                            )}
                           </td>
                         );
                       })}
@@ -2061,6 +2100,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           estabelecimentoId={estabelecimentoId}
         />
       )}
+      
+      {/* Softphone Dialog */}
+      <SoftphoneDialog 
+        open={softphoneOpen}
+        onOpenChange={setSoftphoneOpen}
+        initialNumber={softphoneNumber}
+      />
     </>
   );
 }
