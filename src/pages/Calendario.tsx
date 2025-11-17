@@ -2749,84 +2749,211 @@ export default function Calendario() {
               {/* Filtro por Origem */}
               {filterBy === "all" && (
                 <div>
-                  <h3 className="text-sm font-semibold mb-3">Por Origem</h3>
-                  <Select
-                    value={selectedOrigens.length === 1 ? selectedOrigens[0] : ""}
-                    onValueChange={(value) => {
-                      if (value === "todos") {
-                        setSelectedOrigens([]);
-                      } else {
-                        setSelectedOrigens([value as Task['origem']]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione uma origem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todas as origens</SelectItem>
-                      <SelectItem value="bot">
-                        <div className="flex items-center gap-2">
-                          <Bot className="w-4 h-4" style={{ color: getOrigemColor("bot") }} />
-                          Bot
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="campanha">
-                        <div className="flex items-center gap-2">
-                          <Megaphone className="w-4 h-4" style={{ color: getOrigemColor("campanha") }} />
-                          Campanha
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="ligacao">
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4" style={{ color: getOrigemColor("ligacao") }} />
-                          Ligação
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="visita">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" style={{ color: getOrigemColor("visita") }} />
-                          Visita
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="email_enviado">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4" style={{ color: getOrigemColor("email_enviado") }} />
-                          Email Enviado
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="email_recebido">
-                        <div className="flex items-center gap-2">
-                          <MailOpen className="w-4 h-4" style={{ color: getOrigemColor("email_recebido") }} />
-                          Email Recebido
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="chat">
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
-                          Chat
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="pedido_orcamento">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_orcamento") }} />
-                          Pedido - Orçamento
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="pedido_negociacao">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_negociacao") }} />
-                          Pedido - Negociação
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="pedido_aprovacao">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_aprovacao") }} />
-                          Pedido - Aprovação
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <h3 className="text-sm font-semibold mb-3 flex items-center justify-between">
+                    <span>Por Origem</span>
+                    {selectedOrigens.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => setSelectedOrigens([])}
+                      >
+                        Limpar
+                      </Button>
+                    )}
+                  </h3>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-bot"
+                        checked={selectedOrigens.includes("bot")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "bot"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "bot"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-bot" className="text-sm cursor-pointer flex items-center gap-2">
+                        <Bot className="w-4 h-4" style={{ color: getOrigemColor("bot") }} />
+                        Bot
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-campanha"
+                        checked={selectedOrigens.includes("campanha")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "campanha"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "campanha"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-campanha" className="text-sm cursor-pointer flex items-center gap-2">
+                        <Megaphone className="w-4 h-4" style={{ color: getOrigemColor("campanha") }} />
+                        Campanha
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-ligacao"
+                        checked={selectedOrigens.includes("ligacao")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "ligacao"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "ligacao"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-ligacao" className="text-sm cursor-pointer flex items-center gap-2">
+                        <Phone className="w-4 h-4" style={{ color: getOrigemColor("ligacao") }} />
+                        Ligação
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-visita"
+                        checked={selectedOrigens.includes("visita")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "visita"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "visita"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-visita" className="text-sm cursor-pointer flex items-center gap-2">
+                        <MapPin className="w-4 h-4" style={{ color: getOrigemColor("visita") }} />
+                        Visita
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-email_enviado"
+                        checked={selectedOrigens.includes("email_enviado")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "email_enviado"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "email_enviado"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-email_enviado" className="text-sm cursor-pointer flex items-center gap-2">
+                        <Mail className="w-4 h-4" style={{ color: getOrigemColor("email_enviado") }} />
+                        Email Enviado
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-email_recebido"
+                        checked={selectedOrigens.includes("email_recebido")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "email_recebido"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "email_recebido"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-email_recebido" className="text-sm cursor-pointer flex items-center gap-2">
+                        <MailOpen className="w-4 h-4" style={{ color: getOrigemColor("email_recebido") }} />
+                        Email Recebido
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-chat"
+                        checked={selectedOrigens.includes("chat")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "chat"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "chat"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-chat" className="text-sm cursor-pointer flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
+                        Chat
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-pedido_orcamento"
+                        checked={selectedOrigens.includes("pedido_orcamento")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "pedido_orcamento"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "pedido_orcamento"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-pedido_orcamento" className="text-sm cursor-pointer flex items-center gap-2">
+                        <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_orcamento") }} />
+                        Pedido - Orçamento
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-pedido_negociacao"
+                        checked={selectedOrigens.includes("pedido_negociacao")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "pedido_negociacao"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "pedido_negociacao"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-pedido_negociacao" className="text-sm cursor-pointer flex items-center gap-2">
+                        <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_negociacao") }} />
+                        Pedido - Negociação
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="origem-pedido_aprovacao"
+                        checked={selectedOrigens.includes("pedido_aprovacao")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrigens([...selectedOrigens, "pedido_aprovacao"]);
+                          } else {
+                            setSelectedOrigens(selectedOrigens.filter(o => o !== "pedido_aprovacao"));
+                          }
+                        }}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="origem-pedido_aprovacao" className="text-sm cursor-pointer flex items-center gap-2">
+                        <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_aprovacao") }} />
+                        Pedido - Aprovação
+                      </label>
+                    </div>
+                  </div>
                 </div>
               )}
 
