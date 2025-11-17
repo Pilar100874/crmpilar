@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, PhoneOff, PhoneForwarded, PhoneIncoming, PhoneMissed } from "lucide-react";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
   Dialog,
   DialogContent,
@@ -56,12 +57,9 @@ export default function Softphone() {
   const loadUserEstabelecimento = async () => {
     try {
       setIsLoadingEstabelecimento(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.rpc('get_user_estabelecimento_id', { _user_id: user.id });
-        console.log('Estabelecimento ID carregado:', data);
-        setEstabelecimentoId(data);
-      }
+      const id = await getEstabelecimentoId();
+      console.log('Estabelecimento ID carregado:', id);
+      setEstabelecimentoId(id);
     } catch (error) {
       console.error('Error loading user establishment:', error);
       toast({
