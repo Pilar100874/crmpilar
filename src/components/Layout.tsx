@@ -147,7 +147,7 @@ export default function Layout({ children }: LayoutProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 1024);
-  const [sidebarVisible, setSidebarVisible] = useState(window.innerWidth > 1024);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
@@ -310,13 +310,9 @@ export default function Layout({ children }: LayoutProps) {
       setIsSmallScreen(smallScreen);
       
       if (smallScreen) {
-        // Em telas pequenas, inicia com menu encolhido e destravado
-        setSidebarVisible(false);
+        // Em telas pequenas, mantém menu visível mas encolhido e destravado
         setMenuLocked(false);
         setMenuOpen(false);
-      } else {
-        // Em telas grandes, volta ao comportamento normal
-        setSidebarVisible(true);
       }
     };
 
