@@ -2501,6 +2501,7 @@ export type Database = {
       }
       ucm_config: {
         Row: {
+          conference_room_number: string | null
           created_at: string
           enabled: boolean | null
           estabelecimento_id: string
@@ -2513,6 +2514,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          conference_room_number?: string | null
           created_at?: string
           enabled?: boolean | null
           estabelecimento_id: string
@@ -2525,6 +2527,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          conference_room_number?: string | null
           created_at?: string
           enabled?: boolean | null
           estabelecimento_id?: string

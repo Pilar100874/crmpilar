@@ -20,6 +20,7 @@ interface UCMConfig {
   ucm_password: string;
   enabled: boolean;
   is_local: boolean;
+  conference_room_number?: string;
 }
 
 export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
@@ -31,6 +32,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     ucm_password: "",
     enabled: true,
     is_local: true,
+    conference_room_number: "",
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -80,6 +82,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           ucm_password: config.ucm_password,
           enabled: config.enabled,
           is_local: config.is_local,
+          conference_room_number: config.conference_room_number || null,
         }, {
           onConflict: 'estabelecimento_id'
         });
@@ -174,12 +177,25 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
                 <EyeOff className="h-4 w-4" />
               ) : (
                 <Eye className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+            )}
+          </Button>
         </div>
+      </div>
 
-        <div className="flex items-center space-x-2">
+      <div className="space-y-2">
+        <Label htmlFor="conference_room_number">Número da Sala de Conferência (Opcional)</Label>
+        <Input
+          id="conference_room_number"
+          placeholder="Ex: 8000"
+          value={config.conference_room_number || ""}
+          onChange={(e) => setConfig({ ...config, conference_room_number: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">
+          Número para discar no UCM para iniciar conferências multiponto
+        </p>
+      </div>
+
+      <div className="flex items-center space-x-2">
           <Switch
             id="is_local"
             checked={config.is_local}

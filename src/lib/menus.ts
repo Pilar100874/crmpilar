@@ -27,6 +27,7 @@ export const MENU_CONFIG = [
   { id: "Campanhas Marketing", label: "Campanhas" },
   { id: "Relatórios", label: "Relatórios" },
   { id: "Softphone", label: "Softphone" },
+  { id: "Videochamada", label: "Videochamada" },
   { id: "Configurações", label: "Configurações" },
   { id: "Config Geral", label: "Configurações Gerais" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },
