@@ -7,121 +7,156 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, PhoneOff, PhoneForwarded, PhoneIncoming, PhoneMissed } from "lucide-react";
+import { Phone, PhoneOff, PhoneForwarded } from "lucide-react";
+import { useSipConnection } from "@/hooks/useSipConnection";
+import { SessionState } from "sip.js";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { format } from "date-fns";
-
-interface Call {
-  id: string;
-  call_id: string | null;
-  numero_origem: string | null;
-  numero_destino: string | null;
-  ramal: string | null;
-  status: string;
-  direcao: string;
-  horario_inicio: string | null;
-  horario_atendimento: string | null;
-  horario_fim: string | null;
-  duracao_segundos: number | null;
-}
 
 export default function Softphone() {
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [extension, setExtension] = useState("");
   const [userExtension, setUserExtension] = useState<string>("");
-  const [calls, setCalls] = useState<Call[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
-  const [incomingCall, setIncomingCall] = useState<Call | null>(null);
-  const [showIncomingDialog, setShowIncomingDialog] = useState(false);
-  const [isLoadingEstabelecimento, setIsLoadingEstabelecimento] = useState(true);
+  const [ramalSenha, setRamalSenha] = useState<string>("");
+  const [ucmServer, setUcmServer] = useState<string>("");
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  
+  const { connect, disconnect, dial, hangup, answer, isRegistered, isConnecting, activeCalls } = useSipConnection();
 
   useEffect(() => {
-    loadUserEstabelecimento();
-    loadUserExtension();
+    loadSoftphoneConfig();
   }, []);
 
-  useEffect(() => {
-    if (estabelecimentoId) {
-      loadCalls();
-      setupRealtimeSubscription();
-    }
-  }, [estabelecimentoId]);
-
-  const loadUserEstabelecimento = async () => {
+  const loadSoftphoneConfig = async () => {
     try {
-      setIsLoadingEstabelecimento(true);
-      const id = await getEstabelecimentoId();
-      console.log('Estabelecimento ID carregado:', id);
-      setEstabelecimentoId(id);
+      setIsLoadingConfig(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Carregar ramal e senha do usuário
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('ramal, ramal_senha')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Erro ao buscar dados do usuário:', userError);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar configuração do usuário",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!userData?.ramal || !userData?.ramal_senha) {
+        toast({
+          title: "Configuração incompleta",
+          description: "Configure seu ramal e senha nas configurações de usuário",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUserExtension(userData.ramal);
+      setRamalSenha(userData.ramal_senha);
+
+      // Carregar configuração UCM
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast({
+          title: "Erro",
+          description: "Estabelecimento não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: ucmData, error: ucmError } = await supabase
+        .from('ucm_config')
+        .select('ucm_server')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .maybeSingle();
+
+      if (ucmError || !ucmData?.ucm_server) {
+        toast({
+          title: "Erro",
+          description: "Configure o servidor UCM nas configurações",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUcmServer(ucmData.ucm_server);
+
     } catch (error) {
-      console.error('Error loading user establishment:', error);
+      console.error('Erro ao carregar configuração:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar configuração do sistema",
+        description: "Erro ao carregar configuração do softphone",
         variant: "destructive",
       });
     } finally {
-      setIsLoadingEstabelecimento(false);
+      setIsLoadingConfig(false);
     }
   };
 
-  const loadUserExtension = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('Nenhum usuário autenticado');
-        return;
-      }
-
-      console.log('Carregando ramal para usuário:', user.email);
-
-      const { data: userData, error } = await supabase
-        .from('usuarios')
-        .select('ramal')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Erro ao buscar ramal:', error);
-        return;
-      }
-
-      if (userData?.ramal) {
-        setUserExtension(userData.ramal);
-        setExtension(userData.ramal);
-        console.log('Ramal do usuário carregado:', userData.ramal);
-        toast({
-          title: "Ramal configurado",
-          description: `Usando ramal ${userData.ramal}`,
-        });
-      } else {
-        console.log('Usuário não tem ramal cadastrado');
-        toast({
-          title: "Ramal não encontrado",
-          description: "Configure seu ramal no cadastro de usuários",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error loading user extension:', error);
+  const handleConnect = async () => {
+    if (!userExtension || !ramalSenha || !ucmServer) {
       toast({
-        title: "Erro",
-        description: "Erro ao carregar ramal do usuário",
+        title: "Configuração incompleta",
+        description: "Verifique as configurações do softphone",
         variant: "destructive",
       });
+      return;
+    }
+
+    await connect({
+      server: ucmServer,
+      extension: userExtension,
+      password: ramalSenha,
+      displayName: userExtension,
+    });
+  };
+
+  const handleDial = async () => {
+    if (!phoneNumber.trim()) {
+      toast({
+        title: "Erro",
+        description: "Digite um número de telefone",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await dial(phoneNumber);
+  };
+
+  const getStatusBadge = (state: SessionState) => {
+    switch (state) {
+      case SessionState.Initial:
+        return <Badge variant="secondary">Iniciando</Badge>;
+      case SessionState.Establishing:
+        return <Badge className="bg-yellow-500">Discando</Badge>;
+      case SessionState.Established:
+        return <Badge className="bg-green-500">Em Chamada</Badge>;
+      case SessionState.Terminating:
+      case SessionState.Terminated:
+        return <Badge variant="destructive">Encerrada</Badge>;
+      default:
+        return <Badge variant="outline">{state}</Badge>;
     }
   };
 
-  const loadCalls = async () => {
+  const loadCallsPlaceholder = async () => {
     if (!estabelecimentoId) return;
 
     try {
