@@ -202,7 +202,9 @@ export const useSipConnection = () => {
         console.log('Número externo detectado, adicionando #:', dialNumber);
       }
       
-      const target = UserAgent.makeURI(`sip:${dialNumber}@${userAgent.configuration.uri?.host}`);
+      // Codifica # como %23 para o URI SIP ser válido
+      const sipUserPart = dialNumber.replace(/#/g, '%23');
+      const target = UserAgent.makeURI(`sip:${sipUserPart}@${userAgent.configuration.uri?.host}`);
       if (!target) {
         throw new Error('URI inválida');
       }
