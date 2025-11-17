@@ -149,9 +149,28 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Detecta telas pequenas (1024px ou menos)
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const isSmall = window.innerWidth <= 1024;
+      setIsSmallScreen(isSmall);
+      
+      // Em telas pequenas, força o menu a não ficar travado
+      if (isSmall && menuLocked) {
+        setMenuLocked(false);
+        setMenuOpen(false);
+      }
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, [menuLocked]);
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -303,7 +322,7 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   const handleMenuMouseEnter = () => {
-    if (menuLocked) return; // Não abre automaticamente se travado
+    if (isSmallScreen || menuLocked) return; // Não abre automaticamente em telas pequenas ou se travado
     if (menuTimeoutRef.current) {
       clearTimeout(menuTimeoutRef.current);
       menuTimeoutRef.current = null;
@@ -312,7 +331,7 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const handleMenuMouseLeave = () => {
-    if (menuLocked) return; // Não fecha automaticamente se travado
+    if (isSmallScreen || menuLocked) return; // Não fecha automaticamente em telas pequenas ou se travado
     menuTimeoutRef.current = setTimeout(() => {
       setMenuOpen(false);
       setOpenSubmenuId(null);
@@ -360,7 +379,15 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
-        <div className="min-h-screen flex w-full bg-background relative">
+      <div className="min-h-screen flex w-full bg-background relative">
+        {/* Overlay escuro para telas pequenas quando menu está aberto */}
+        {isSmallScreen && menuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-20 transition-opacity"
+            onClick={() => setMenuOpen(false)}
+          />
+        )}
+        
         {sidebarVisible && (
         <div 
           ref={sidebarRef} 
@@ -372,8 +399,8 @@ export default function Layout({ children }: LayoutProps) {
           onMouseEnter={handleMenuMouseEnter}
           onMouseLeave={handleMenuMouseLeave}
         >
-          {/* Aba lateral - só aparece quando não está travado */}
-          {!menuLocked && (
+          {/* Aba lateral - só aparece quando não está travado e não é tela pequena */}
+          {!menuLocked && !isSmallScreen && (
             <div className="slide-out-menu-tab">
               <ChevronRight className="w-3 h-3" />
             </div>
@@ -534,25 +561,27 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Ícones no rodapé */}
           <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
-            {/* Botão de travar/destravar */}
-            <button
-              onClick={handleToggleLock}
-              className={`${
-                menuLocked 
-                  ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
-                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-              } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
-              title={menuLocked ? "Destravar menu" : "Travar menu"}
-            >
-              {menuLocked ? (
-                <Pin className="w-5 h-5" />
-              ) : (
-                <>
-                  <PinOff className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-medium">Travar Menu</span>
-                </>
-              )}
-            </button>
+            {/* Botão de travar/destravar - só aparece em telas grandes */}
+            {!isSmallScreen && (
+              <button
+                onClick={handleToggleLock}
+                className={`${
+                  menuLocked 
+                    ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
+                    : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+                } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
+                title={menuLocked ? "Destravar menu" : "Travar menu"}
+              >
+                {menuLocked ? (
+                  <Pin className="w-5 h-5" />
+                ) : (
+                  <>
+                    <PinOff className="w-5 h-5 flex-shrink-0" />
+                    <span className="text-sm font-medium">Travar Menu</span>
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               onClick={() => setShowUsuarioSelector(true)}
@@ -584,6 +613,34 @@ export default function Layout({ children }: LayoutProps) {
         )}
 
         <main className={`flex-1 flex flex-col bg-background min-w-0 ${menuLocked ? 'ml-16 md:ml-20 lg:ml-16' : ''}`}>
+          {/* Toggle para abrir o menu em telas pequenas */}
+          {isSmallScreen && sidebarVisible && !menuOpen && (
+            <div className="fixed left-0 top-0 z-30 p-1 sm:p-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setMenuOpen(true)}
+                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar h-8 w-8 p-0"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+          
+          {/* Toggle para fechar o menu em telas pequenas */}
+          {isSmallScreen && menuOpen && (
+            <div className="fixed left-64 top-0 z-30 p-1 sm:p-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar h-8 w-8 p-0"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+          
           {!sidebarVisible && (
             <div className="fixed left-0 top-0 z-30 p-1 sm:p-2">
               <Button
