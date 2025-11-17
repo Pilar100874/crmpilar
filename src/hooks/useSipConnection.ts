@@ -165,6 +165,11 @@ export const useSipConnection = () => {
 
       if (state === SessionState.Established) {
         setupRemoteMedia(session);
+      } else if (state === SessionState.Terminated) {
+        // Remove chamada encerrada após delay
+        setTimeout(() => {
+          setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+        }, 500);
       }
     });
 
@@ -223,7 +228,10 @@ export const useSipConnection = () => {
             description: `Conectado com ${phoneNumber}`,
           });
         } else if (state === SessionState.Terminated) {
-          setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+          // Remove da lista após um pequeno delay para garantir que a UI atualize
+          setTimeout(() => {
+            setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+          }, 500);
           toast({
             title: "Chamada encerrada",
             description: `Chamada com ${phoneNumber} finalizada`,
@@ -258,10 +266,12 @@ export const useSipConnection = () => {
             
             toast({
               title: "Falha na chamada",
-              description: errorMsg,
+              description: `${errorMsg}. Para números externos, verifique permissões de rota no UCM.`,
               variant: "destructive",
             });
-            setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+            setTimeout(() => {
+              setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+            }, 500);
           },
           onAccept: () => {
             console.log('Chamada aceita pelo outro lado');
