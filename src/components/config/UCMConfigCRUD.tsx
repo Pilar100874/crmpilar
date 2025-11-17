@@ -15,6 +15,7 @@ interface UCMConfigCRUDProps {
 interface UCMConfig {
   id?: string;
   ucm_host: string;
+  remote_ip?: string;
   ucm_user: string;
   ucm_password: string;
   enabled: boolean;
@@ -25,6 +26,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
   const { toast } = useToast();
   const [config, setConfig] = useState<UCMConfig>({
     ucm_host: "",
+    remote_ip: "",
     ucm_user: "",
     ucm_password: "",
     enabled: true,
@@ -73,6 +75,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         .upsert({
           estabelecimento_id: estabelecimentoId,
           ucm_host: config.ucm_host,
+          remote_ip: config.remote_ip || null,
           ucm_user: config.ucm_user,
           ucm_password: config.ucm_password,
           enabled: config.enabled,
@@ -111,15 +114,28 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="ucm_host">Host do UCM (IP ou domínio)</Label>
+          <Label htmlFor="ucm_host">Host Local do UCM</Label>
           <Input
             id="ucm_host"
-            placeholder="192.168.1.100 ou ucm.empresa.com"
+            placeholder="192.168.1.100"
             value={config.ucm_host}
             onChange={(e) => setConfig({ ...config, ucm_host: e.target.value })}
           />
           <p className="text-xs text-muted-foreground">
-            Endereço IP ou domínio do seu UCM6510 (sem https://)
+            Endereço IP local quando estiver na rede interna (sem https://)
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="remote_ip">Host Remoto do UCM (Opcional)</Label>
+          <Input
+            id="remote_ip"
+            placeholder="ucm.empresa.com ou IP público"
+            value={config.remote_ip || ""}
+            onChange={(e) => setConfig({ ...config, remote_ip: e.target.value })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Endereço IP público ou domínio para acesso externo (sem https://)
           </p>
         </div>
 

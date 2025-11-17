@@ -80,7 +80,7 @@ export default function Softphone() {
 
       const { data: ucmData, error: ucmError } = await supabase
         .from('ucm_config')
-        .select('ucm_host')
+        .select('ucm_host, remote_ip')
         .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
 
@@ -97,6 +97,7 @@ export default function Softphone() {
 
       await connect({
         server: ucmData.ucm_host,
+        remoteServer: ucmData.remote_ip || undefined,
         extension: userData.ramal,
         password: userData.senha_sip,
         displayName: userData.ramal,

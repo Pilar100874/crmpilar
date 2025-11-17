@@ -2506,6 +2506,7 @@ export type Database = {
           estabelecimento_id: string
           id: string
           is_local: boolean | null
+          remote_ip: string | null
           ucm_host: string
           ucm_password: string
           ucm_user: string
@@ -2517,6 +2518,7 @@ export type Database = {
           estabelecimento_id: string
           id?: string
           is_local?: boolean | null
+          remote_ip?: string | null
           ucm_host: string
           ucm_password: string
           ucm_user: string
@@ -2528,6 +2530,7 @@ export type Database = {
           estabelecimento_id?: string
           id?: string
           is_local?: boolean | null
+          remote_ip?: string | null
           ucm_host?: string
           ucm_password?: string
           ucm_user?: string
