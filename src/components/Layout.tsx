@@ -366,7 +366,7 @@ export default function Layout({ children }: LayoutProps) {
           ref={sidebarRef} 
           className={`${
             menuLocked 
-              ? 'fixed left-0 top-0 bottom-0 w-16 z-30' 
+              ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-30' 
               : `slide-out-menu ${menuOpen ? 'open' : ''}`
           } border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col`}
           onMouseEnter={handleMenuMouseEnter}
@@ -380,13 +380,13 @@ export default function Layout({ children }: LayoutProps) {
           )}
 
           {/* Logo no topo */}
-          <div className="flex items-center justify-center py-4 border-b border-sidebar-border/50">
+          <div className="flex items-center justify-center py-3 md:py-4 border-b border-sidebar-border/50">
             <button
               onClick={() => isAdmin && setShowEstabelecimentoSelector(true)}
-              className="w-10 h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors"
+              className="w-10 h-10 md:w-12 md:h-12 lg:w-10 lg:h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors"
               title={estabelecimentoName || "Logo"}
             >
-              <Building2 className="w-5 h-5 text-sidebar-foreground/90" />
+              <Building2 className="w-5 h-5 md:w-6 md:h-6 lg:w-5 lg:h-5 text-sidebar-foreground/90" />
             </button>
           </div>
 
@@ -583,7 +583,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
         )}
 
-        <main className={`flex-1 flex flex-col bg-background min-w-0 ${menuLocked ? 'ml-16' : ''}`}>
+        <main className={`flex-1 flex flex-col bg-background min-w-0 ${menuLocked ? 'ml-16 md:ml-20 lg:ml-16' : ''}`}>
           {!sidebarVisible && (
             <div className="fixed left-0 top-0 z-30 p-2">
               <Button
