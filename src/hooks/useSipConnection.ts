@@ -310,21 +310,66 @@ export const useSipConnection = () => {
   }, [userAgent, isRegistered, toast]);
 
   // Setup remote media stream
-  const setupRemoteMedia = (session: Session) => {
-    const sessionDescriptionHandler = session.sessionDescriptionHandler;
-    if (!sessionDescriptionHandler) return;
-
-    const peerConnection = (sessionDescriptionHandler as any).peerConnection;
-    if (!peerConnection) return;
-
-    const remoteStream = new MediaStream();
-    peerConnection.getReceivers().forEach((receiver: RTCRtpReceiver) => {
-      if (receiver.track) {
-        remoteStream.addTrack(receiver.track);
+  const setupRemoteMedia = async (session: Session) => {
+    try {
+      const sessionDescriptionHandler = session.sessionDescriptionHandler;
+      if (!sessionDescriptionHandler) {
+        console.warn('No session description handler');
+        return;
       }
-    });
 
-    remoteAudio.srcObject = remoteStream;
+      const peerConnection = (sessionDescriptionHandler as any).peerConnection;
+      if (!peerConnection) {
+        console.warn('No peer connection');
+        return;
+      }
+
+      // Solicita acesso ao microfone
+      try {
+        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        console.log('✅ Microfone obtido');
+        
+        // Adiciona o track de áudio local à conexão
+        localStream.getTracks().forEach(track => {
+          peerConnection.getSenders().forEach((sender: RTCRtpSender) => {
+            if (sender.track?.kind === track.kind) {
+              sender.replaceTrack(track);
+              console.log('✅ Track local substituído');
+            }
+          });
+        });
+      } catch (error) {
+        console.error('❌ Erro ao obter microfone:', error);
+        toast({
+          title: "Erro de microfone",
+          description: "Permita o acesso ao microfone para realizar chamadas",
+          variant: "destructive",
+        });
+      }
+
+      // Configura o stream remoto
+      const remoteStream = new MediaStream();
+      peerConnection.getReceivers().forEach((receiver: RTCRtpReceiver) => {
+        if (receiver.track) {
+          remoteStream.addTrack(receiver.track);
+          console.log('✅ Track remoto adicionado:', receiver.track.kind);
+        }
+      });
+
+      if (remoteStream.getTracks().length > 0) {
+        remoteAudio.srcObject = remoteStream;
+        console.log('✅ Stream remoto configurado');
+        
+        // Garante que o áudio seja reproduzido
+        remoteAudio.play().catch(err => {
+          console.warn('Erro ao reproduzir áudio:', err);
+        });
+      } else {
+        console.warn('⚠️ Nenhum track remoto encontrado');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao configurar mídia:', error);
+    }
   };
 
   // Hangup call
