@@ -157,22 +157,67 @@ export default function Softphone() {
       return;
     }
 
+    // Buscar configuração UCM
+    const { data: ucmConfig } = await supabase
+      .from('ucm_config')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .maybeSingle();
+
+    if (!ucmConfig) {
+      toast({
+        title: "Erro",
+        description: "Configuração UCM não encontrada",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await supabase.functions.invoke('ucm-dial', {
-        body: {
-          number: phoneNumber,
-          extension: extension || undefined,
-          estabelecimento_id: estabelecimentoId,
-        },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-      });
+      if (ucmConfig.is_local) {
+        // Chamada direta para UCM local
+        const ucmUrl = `https://${ucmConfig.ucm_host}/api`;
+        const credentials = btoa(`${ucmConfig.ucm_user}:${ucmConfig.ucm_password}`);
+        
+        const response = await fetch(`${ucmUrl}?action=dial&number=${phoneNumber}${extension ? `&extension=${extension}` : ''}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-      if (response.error) throw response.error;
+        if (!response.ok) {
+          throw new Error('Falha ao conectar com UCM local');
+        }
+
+        // Registrar chamada no banco
+        await supabase.from('calls').insert({
+          estabelecimento_id: estabelecimentoId,
+          numero_destino: phoneNumber,
+          ramal: extension || null,
+          status: 'dialing',
+          direcao: 'outbound',
+          horario_inicio: new Date().toISOString(),
+        });
+      } else {
+        // Chamada via edge function para UCM remoto
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await supabase.functions.invoke('ucm-dial', {
+          body: {
+            number: phoneNumber,
+            extension: extension || undefined,
+            estabelecimento_id: estabelecimentoId,
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+
+        if (response.error) throw response.error;
+      }
 
       toast({
         title: "Ligação iniciada",
