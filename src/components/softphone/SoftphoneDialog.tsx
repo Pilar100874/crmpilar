@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, PhoneOff, PhoneForwarded, X, Loader2 } from "lucide-react";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
   Dialog,
   DialogContent,
@@ -55,12 +56,9 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
   const loadUserEstabelecimento = async () => {
     try {
       setIsLoadingEstabelecimento(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.rpc('get_user_estabelecimento_id', { _user_id: user.id });
-        console.log('Estabelecimento ID carregado no dialog:', data);
-        setEstabelecimentoId(data);
-      }
+      const id = await getEstabelecimentoId();
+      console.log('Estabelecimento ID carregado no dialog:', id);
+      setEstabelecimentoId(id);
     } catch (error) {
       console.error('Error loading user establishment:', error);
       toast({
