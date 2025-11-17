@@ -81,6 +81,8 @@ export const useSipConnection = () => {
               description: "Conexão com UCM perdida",
               variant: "destructive",
             });
+            // Garante que a UI bloqueie novas chamadas até reconectar
+            setIsRegistered(false);
           },
         },
       });
