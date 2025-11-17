@@ -39,6 +39,7 @@ import { toast } from "@/lib/toast-config";
 import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
+import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { LayoutContext } from "@/contexts/LayoutContext";
 
@@ -615,6 +616,8 @@ export default function Layout({ children }: LayoutProps) {
         onClose={() => setShowUsuarioSelector(false)}
         estabelecimentoId={estabelecimentoId}
       />
+
+      <IncomingCallNotification />
     </LayoutContext.Provider>
   );
 }
