@@ -2544,8 +2544,8 @@ export default function Calendario() {
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col h-full bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-card">
+      {/* Header Moderno e Minimalista */}
+      <div className="bg-background/95 backdrop-blur-sm border-b border-border/40 sticky top-0 z-20">
         {/* Mobile Header (< lg) */}
         <div className="lg:hidden">
           <CalendarioMobileHeader
@@ -2564,9 +2564,9 @@ export default function Calendario() {
           
           {/* Botão Realocar para admin (mobile) */}
           {isAdmin && (
-            <div className="px-3 pb-3">
+            <div className="px-4 pb-3">
               <Button
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 disabled={relocating}
                 onClick={async () => {
@@ -2589,9 +2589,9 @@ export default function Calendario() {
                     setRelocating(false);
                   }
                 }}
-                className="text-xs w-full"
+                className="text-xs w-full gap-2"
               >
-                <RefreshCw className={`w-3.5 h-3.5 mr-2 ${relocating ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${relocating ? 'animate-spin' : ''}`} />
                 Realocar pendentes
               </Button>
             </div>
@@ -2599,84 +2599,100 @@ export default function Calendario() {
         </div>
 
         {/* Desktop Header (>= lg) */}
-        <div className="hidden lg:block px-6 py-4">
-          <div className="flex items-center justify-between gap-4 mb-3">
+        <div className="hidden lg:block px-6 py-3">
+          <div className="flex items-center justify-between gap-6">
+            {/* Esquerda: Navegação e Visualização */}
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-foreground">CALENDÁRIO</h1>
-
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-                <TabsList>
-                  <TabsTrigger value="day">DIA</TabsTrigger>
-                  <TabsTrigger value="week">SEMANA</TabsTrigger>
-                  <TabsTrigger value="month">MÊS</TabsTrigger>
-                  <TabsTrigger value="list">LISTA</TabsTrigger>
-                  <TabsTrigger value="table">TABELA</TabsTrigger>
-                </TabsList>
-              </Tabs>
-
               <div className="flex items-center gap-2">
-                <Button
-                  variant={filterBy === "my" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterBy("my")}
-                >
-                  Minhas tarefas
-                </Button>
                 <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowFilterDialog(true)}
-                  className="gap-2"
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handlePrevious}
+                  className="h-9 w-9 hover:bg-primary/10"
                 >
-                  <Filter className="w-4 h-4" />
-                  Filtros {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && `(${selectedOrigens.length + selectedUserIds.length})`}
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <h2 className="text-base font-medium min-w-[180px] text-center">
+                  {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM", { locale: ptBR })}
+                </h2>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleNext}
+                  className="h-9 w-9 hover:bg-primary/10"
+                >
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-            </div>
 
-            <div className="flex items-center gap-3">
               <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handlePrevious}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm" 
                 onClick={handleToday}
+                className="h-9 px-4 font-medium"
               >
                 Hoje
               </Button>
-              <h2 className="text-lg font-semibold min-w-[200px] text-center">
-                {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </h2>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleNext}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <div className="relative w-64">
+
+              <div className="h-6 w-px bg-border/40" />
+
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-auto">
+                <TabsList className="bg-muted/50 h-9">
+                  <TabsTrigger value="day" className="text-xs px-3">Dia</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs px-3">Semana</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs px-3">Mês</TabsTrigger>
+                  <TabsTrigger value="list" className="text-xs px-3">Lista</TabsTrigger>
+                  <TabsTrigger value="table" className="text-xs px-3">Tabela</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Direita: Filtros e Ações */}
+            <div className="flex items-center gap-3">
+              <div className="relative w-56">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar tarefas..."
-                  className="pl-10"
+                  placeholder="Buscar..."
+                  className="pl-10 h-9 text-sm border-border/40"
                 />
               </div>
+
+              <Button
+                variant={filterBy === "my" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setFilterBy("my")}
+                className="h-9 px-4 text-xs font-medium"
+              >
+                Minhas
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowFilterDialog(true)}
+                className="h-9 px-4 gap-2 text-xs"
+              >
+                <Filter className="w-3.5 h-3.5" />
+                Filtros {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && (
+                  <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-[10px]">
+                    {selectedOrigens.length + selectedUserIds.length}
+                  </Badge>
+                )}
+              </Button>
+
+              <div className="h-6 w-px bg-border/40" />
+
               <Button
                 onClick={() => {
                   setSelectedDate(null);
                   setShowTaskDialog(true);
                 }}
                 size="sm"
-                className="gap-2"
+                className="h-9 px-4 gap-2 text-xs shadow-sm"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 Nova Tarefa
               </Button>
             </div>
@@ -2684,9 +2700,9 @@ export default function Calendario() {
 
           {/* Botão Realocar para admin (desktop) */}
           {isAdmin && (
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end pt-3 border-t border-border/40 mt-3">
               <Button
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 disabled={relocating}
                 onClick={async () => {
@@ -2709,9 +2725,10 @@ export default function Calendario() {
                     setRelocating(false);
                   }
                 }}
+                className="gap-2 text-xs h-8"
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${relocating ? 'animate-spin' : ''}`} />
-                Realocar pendentes agora
+                <RefreshCw className={`w-3.5 h-3.5 ${relocating ? 'animate-spin' : ''}`} />
+                Realocar Tarefas Pendentes
               </Button>
             </div>
           )}

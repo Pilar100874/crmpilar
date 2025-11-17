@@ -28,76 +28,75 @@ export function CalendarioMobileHeader({
   onShowFilter
 }: CalendarioMobileHeaderProps) {
   return (
-    <div className="space-y-2 p-3 border-b border-border bg-card">
-      {/* Linha 1: Título + View Selector */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">CALENDÁRIO</h1>
-        <Select value={viewMode} onValueChange={(v) => onViewModeChange(v as ViewMode)}>
-          <SelectTrigger className="w-[100px] h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="day">Dia</SelectItem>
-            <SelectItem value="list">Lista</SelectItem>
-            <SelectItem value="week">Semana</SelectItem>
-            <SelectItem value="month">Mês</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="bg-background/95 backdrop-blur-sm border-b border-border/40 sticky top-0 z-20">
+      <div className="px-4 py-3 space-y-3">
+        {/* Linha 1: Navegação e Data */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onPrevious}
+              className="h-8 w-8 hover:bg-primary/10"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <h2 className="text-sm font-medium min-w-[120px] text-center">
+              {format(currentDate, viewMode === "month" ? "MMM/yy" : "d MMM", { locale: ptBR })}
+            </h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onNext}
+              className="h-8 w-8 hover:bg-primary/10"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
 
-      {/* Linha 2: Navegação */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={onPrevious}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onToday}
-            className="text-xs h-8 px-2"
-          >
-            Hoje
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={onNext}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onToday}
+              className="h-8 px-3 text-xs font-medium"
+            >
+              Hoje
+            </Button>
+            <Select value={viewMode} onValueChange={(v) => onViewModeChange(v as ViewMode)}>
+              <SelectTrigger className="w-[90px] h-8 text-xs border-border/40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="day">Dia</SelectItem>
+                <SelectItem value="list">Lista</SelectItem>
+                <SelectItem value="week">Semana</SelectItem>
+                <SelectItem value="month">Mês</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        {/* Linha 2: Ações */}
+        <div className="flex items-center justify-between gap-2">
           <Button
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            size="sm"
             onClick={onShowFilter}
-            className="h-8 w-8"
+            className="h-8 px-3 gap-2 text-xs"
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="w-3.5 h-3.5" />
+            Filtros
           </Button>
           <Button
             onClick={onNewTask}
-            size="icon"
-            className="h-8 w-8"
+            size="sm"
+            className="h-8 px-4 gap-2 text-xs shadow-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
+            Nova Tarefa
           </Button>
         </div>
-      </div>
-
-      {/* Linha 3: Data */}
-      <div className="text-center">
-        <h2 className="text-sm font-semibold">
-          {format(currentDate, viewMode === "month" ? "MMMM/yy" : "d MMM yyyy", { locale: ptBR })}
-        </h2>
       </div>
     </div>
   );
