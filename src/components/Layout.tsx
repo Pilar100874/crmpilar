@@ -375,7 +375,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* Aba lateral - só aparece quando não está travado */}
           {!menuLocked && (
             <div className="slide-out-menu-tab">
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-3 h-3" />
             </div>
           )}
 
@@ -590,9 +590,9 @@ export default function Layout({ children }: LayoutProps) {
                 size="sm"
                 variant="outline"
                 onClick={() => setSidebarVisible(true)}
-                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar h-7 w-7 sm:h-8 sm:w-8 p-0"
+                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar h-5 w-5 sm:h-6 sm:w-6 p-0"
               >
-                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                <ChevronRight className="w-2 h-2 sm:w-3 sm:h-3" />
               </Button>
             </div>
           )}
