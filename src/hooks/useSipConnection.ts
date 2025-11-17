@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserAgent, Registerer, Inviter, Session, SessionState } from 'sip.js';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,16 +25,32 @@ export const useSipConnection = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeCalls, setActiveCalls] = useState<CallSession[]>([]);
+  const [connectionConfig, setConnectionConfig] = useState<SipConfig | null>(null);
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [remoteAudio] = useState(() => {
     const audio = new Audio();
     audio.autoplay = true;
     return audio;
   });
 
+  // Função de reconexão automática
+  const scheduleReconnect = useCallback((config: SipConfig) => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+    }
+    
+    console.log('⏰ Agendando reconexão em 30 segundos...');
+    reconnectTimerRef.current = setTimeout(() => {
+      console.log('🔄 Tentando reconectar...');
+      connect(config);
+    }, 30000); // Tenta reconectar após 30 segundos
+  }, []);
+
   // Connect and register to UCM
   const connect = useCallback(async (config: SipConfig) => {
     try {
       setIsConnecting(true);
+      setConnectionConfig(config); // Salva config para reconexão
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
       console.log('Servidor UCM:', config.server);
       console.log('Ramal:', config.extension);
@@ -78,11 +94,15 @@ export const useSipConnection = () => {
             console.error('❌ WebSocket desconectado:', error);
             toast({
               title: "Desconectado",
-              description: "Conexão com UCM perdida",
+              description: "Reconectando automaticamente...",
               variant: "destructive",
             });
             // Garante que a UI bloqueie novas chamadas até reconectar
             setIsRegistered(false);
+            // Tenta reconectar automaticamente
+            if (connectionConfig) {
+              scheduleReconnect(connectionConfig);
+            }
           },
         },
       });
@@ -99,17 +119,39 @@ export const useSipConnection = () => {
         
         if (state === 'Registered') {
           console.log('✅ RAMAL REGISTRADO COM SUCESSO!');
+          // Limpa timer de reconexão se houver
+          if (reconnectTimerRef.current) {
+            clearTimeout(reconnectTimerRef.current);
+            reconnectTimerRef.current = null;
+          }
           toast({
             title: "Conectado",
             description: `Ramal ${config.extension} registrado no UCM`,
           });
         } else if (state === 'Unregistered') {
           console.log('⚠️ Ramal não registrado');
+          // Se desregistrou inesperadamente, tenta reconectar
+          if (connectionConfig) {
+            scheduleReconnect(connectionConfig);
+          }
         }
       });
 
       console.log('Enviando REGISTER...');
-      await reg.register();
+      await reg.register({
+        requestDelegate: {
+          onAccept: () => {
+            console.log('✅ REGISTER aceito pelo UCM');
+          },
+          onReject: (response) => {
+            console.error('❌ REGISTER rejeitado:', response.message.statusCode);
+            // Tenta reconectar após falha
+            if (connectionConfig) {
+              scheduleReconnect(connectionConfig);
+            }
+          }
+        }
+      });
       console.log('Registro iniciado, aguardando resposta do UCM...');
 
       setUserAgent(ua);
@@ -382,6 +424,15 @@ export const useSipConnection = () => {
   // Disconnect
   const disconnect = useCallback(async () => {
     try {
+      // Limpa timer de reconexão
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      
+      // Limpa config de conexão para não reconectar
+      setConnectionConfig(null);
+      
       // Hangup all active calls
       for (const call of activeCalls) {
         try {
@@ -416,9 +467,12 @@ export const useSipConnection = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
       disconnect();
     };
-  }, []);
+  }, [disconnect]);
 
   return {
     connect,
