@@ -363,6 +363,14 @@ export default function Softphone() {
             <CardTitle>Fazer Ligação</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Status do Ramal */}
+            {userExtension && (
+              <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-sm font-medium">Ramal {userExtension} conectado</span>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Input
                 placeholder="Número de telefone"
