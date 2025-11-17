@@ -222,10 +222,19 @@ export const useSipConnection = () => {
     if (!call) return;
 
     try {
-      if (call.session.state === SessionState.Initial || 
-          call.session.state === SessionState.Establishing) {
-        await call.session.cancel();
-      } else {
+      // Para chamadas de saída em progresso, use reject
+      if (call.direction === 'outbound' && 
+          (call.session.state === SessionState.Initial || 
+           call.session.state === SessionState.Establishing)) {
+        await (call.session as Inviter).cancel();
+      } 
+      // Para chamadas de entrada não atendidas, use reject
+      else if (call.direction === 'inbound' && 
+               call.session.state !== SessionState.Established) {
+        await (call.session as any).reject();
+      }
+      // Para chamadas estabelecidas, use bye
+      else {
         await call.session.bye();
       }
 

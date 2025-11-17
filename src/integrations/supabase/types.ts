@@ -2652,6 +2652,7 @@ export type Database = {
           porta_pop: number | null
           porta_smtp: number | null
           ramal: string | null
+          ramal_senha: string | null
           senha_email: string | null
           senha_hash: string
           senha_sip: string | null
@@ -2676,6 +2677,7 @@ export type Database = {
           porta_pop?: number | null
           porta_smtp?: number | null
           ramal?: string | null
+          ramal_senha?: string | null
           senha_email?: string | null
           senha_hash: string
           senha_sip?: string | null
@@ -2700,6 +2702,7 @@ export type Database = {
           porta_pop?: number | null
           porta_smtp?: number | null
           ramal?: string | null
+          ramal_senha?: string | null
           senha_email?: string | null
           senha_hash?: string
           senha_sip?: string | null
