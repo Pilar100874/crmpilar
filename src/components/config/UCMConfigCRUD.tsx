@@ -65,45 +65,32 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
 
     setLoading(true);
     try {
-      if (config.id) {
-        // Update
-        const { error } = await supabase
-          .from("ucm_config")
-          .update({
-            ucm_host: config.ucm_host,
-            ucm_user: config.ucm_user,
-            ucm_password: config.ucm_password,
-            enabled: config.enabled,
-          })
-          .eq("id", config.id);
+      // Use upsert para inserir ou atualizar automaticamente
+      const { error } = await supabase
+        .from("ucm_config")
+        .upsert({
+          estabelecimento_id: estabelecimentoId,
+          ucm_host: config.ucm_host,
+          ucm_user: config.ucm_user,
+          ucm_password: config.ucm_password,
+          enabled: config.enabled,
+        }, {
+          onConflict: 'estabelecimento_id'
+        });
 
-        if (error) throw error;
-      } else {
-        // Insert
-        const { error } = await supabase
-          .from("ucm_config")
-          .insert({
-            estabelecimento_id: estabelecimentoId,
-            ucm_host: config.ucm_host,
-            ucm_user: config.ucm_user,
-            ucm_password: config.ucm_password,
-            enabled: config.enabled,
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Sucesso",
         description: "Configuração UCM salva com sucesso",
       });
 
-      fetchConfig();
+      await fetchConfig();
     } catch (error: any) {
       console.error("Erro ao salvar configuração UCM:", error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar configuração UCM",
+        description: error.message || "Erro ao salvar configuração UCM",
         variant: "destructive",
       });
     } finally {
