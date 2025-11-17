@@ -223,7 +223,7 @@ export const useSipConnection = () => {
       setActiveCalls(prev => [...prev, callSession]);
 
       // Setup session state change handler
-      inviter.stateChange.addListener((state) => {
+      inviter.stateChange.addListener(async (state) => {
         console.log('Estado da chamada mudou:', state);
         setActiveCalls(prev => 
           prev.map(call => 
@@ -234,7 +234,8 @@ export const useSipConnection = () => {
         );
 
         if (state === SessionState.Established) {
-          setupRemoteMedia(inviter);
+          console.log('🎤 Configurando mídia para chamada estabelecida...');
+          await setupRemoteMedia(inviter);
           toast({
             title: "Chamada conectada",
             description: `Conectado com ${phoneNumber}`,
@@ -252,6 +253,12 @@ export const useSipConnection = () => {
       });
 
       await inviter.invite({
+        sessionDescriptionHandlerOptions: {
+          constraints: {
+            audio: true,
+            video: false,
+          },
+        },
         requestDelegate: {
           onReject: (response) => {
             console.error('Erro ao conectar chamada:', response.message.statusCode, response.message.reasonPhrase);
@@ -312,63 +319,83 @@ export const useSipConnection = () => {
   // Setup remote media stream
   const setupRemoteMedia = async (session: Session) => {
     try {
+      console.log('🎤 Iniciando configuração de mídia...');
+      
       const sessionDescriptionHandler = session.sessionDescriptionHandler;
       if (!sessionDescriptionHandler) {
-        console.warn('No session description handler');
+        console.error('❌ Nenhum session description handler');
         return;
       }
 
       const peerConnection = (sessionDescriptionHandler as any).peerConnection;
       if (!peerConnection) {
-        console.warn('No peer connection');
+        console.error('❌ Nenhuma peer connection');
         return;
       }
 
-      // Solicita acesso ao microfone
-      try {
-        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        console.log('✅ Microfone obtido');
-        
-        // Adiciona o track de áudio local à conexão
-        localStream.getTracks().forEach(track => {
-          peerConnection.getSenders().forEach((sender: RTCRtpSender) => {
-            if (sender.track?.kind === track.kind) {
-              sender.replaceTrack(track);
-              console.log('✅ Track local substituído');
+      console.log('📊 Estado da conexão:', peerConnection.connectionState);
+      console.log('📊 Estado ICE:', peerConnection.iceConnectionState);
+
+      // Aguarda a conexão ICE se necessário
+      if (peerConnection.iceConnectionState === 'checking' || peerConnection.iceConnectionState === 'new') {
+        console.log('⏳ Aguardando conexão ICE...');
+        await new Promise<void>((resolve) => {
+          const checkConnection = () => {
+            console.log('🔍 Estado ICE atual:', peerConnection.iceConnectionState);
+            if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
+              peerConnection.removeEventListener('iceconnectionstatechange', checkConnection);
+              resolve();
             }
-          });
-        });
-      } catch (error) {
-        console.error('❌ Erro ao obter microfone:', error);
-        toast({
-          title: "Erro de microfone",
-          description: "Permita o acesso ao microfone para realizar chamadas",
-          variant: "destructive",
+          };
+          peerConnection.addEventListener('iceconnectionstatechange', checkConnection);
+          // Timeout de segurança
+          setTimeout(() => {
+            peerConnection.removeEventListener('iceconnectionstatechange', checkConnection);
+            resolve();
+          }, 5000);
         });
       }
 
+      console.log('✅ Conexão ICE estabelecida');
+
       // Configura o stream remoto
       const remoteStream = new MediaStream();
-      peerConnection.getReceivers().forEach((receiver: RTCRtpReceiver) => {
+      const receivers = peerConnection.getReceivers();
+      console.log(`📡 Encontrados ${receivers.length} receivers`);
+      
+      receivers.forEach((receiver: RTCRtpReceiver) => {
         if (receiver.track) {
+          console.log(`✅ Adicionando track remoto: ${receiver.track.kind}, enabled: ${receiver.track.enabled}, muted: ${receiver.track.muted}`);
           remoteStream.addTrack(receiver.track);
-          console.log('✅ Track remoto adicionado:', receiver.track.kind);
         }
       });
 
       if (remoteStream.getTracks().length > 0) {
         remoteAudio.srcObject = remoteStream;
-        console.log('✅ Stream remoto configurado');
+        remoteAudio.volume = 1.0;
+        console.log('✅ Stream remoto configurado, iniciando reprodução...');
         
-        // Garante que o áudio seja reproduzido
-        remoteAudio.play().catch(err => {
-          console.warn('Erro ao reproduzir áudio:', err);
-        });
+        try {
+          await remoteAudio.play();
+          console.log('✅ Áudio remoto reproduzindo');
+        } catch (playError) {
+          console.error('❌ Erro ao reproduzir áudio:', playError);
+          toast({
+            title: "Erro de áudio",
+            description: "Clique na tela para permitir reprodução de áudio",
+            variant: "destructive",
+          });
+        }
       } else {
-        console.warn('⚠️ Nenhum track remoto encontrado');
+        console.error('❌ Nenhum track remoto disponível');
       }
     } catch (error) {
       console.error('❌ Erro ao configurar mídia:', error);
+      toast({
+        title: "Erro de mídia",
+        description: "Falha ao configurar áudio da chamada",
+        variant: "destructive",
+      });
     }
   };
 
