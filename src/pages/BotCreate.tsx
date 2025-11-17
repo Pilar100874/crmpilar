@@ -484,49 +484,49 @@ export default function BotCreate() {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
+    <div className="p-4 sm:p-6 md:p-8 space-y-4 md:space-y-8 animate-fade-in bg-white min-h-full">
         <div>
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             <SubMenuHeader 
               title="Bot"
               onOpenSubmenu={() => openSubmenu("Bot Test")}
             />
-            <h1 className="text-lg font-bold text-foreground">Criar Bot</h1>
+            <h1 className="text-base sm:text-lg font-bold text-foreground">Criar Bot</h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Crie e configure novos bots para automação de atendimento
           </p>
         </div>
 
         {/* Card de criar novo bot */}
         <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30" onClick={() => setNewBotDialogOpen(true)}>
-          <CardHeader className="p-4">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-              <Workflow className="w-6 h-6 text-primary" />
+          <CardHeader className="p-3 sm:p-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+              <Workflow className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
-            <CardTitle>Novo Bot de Fluxo</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-base sm:text-lg">Novo Bot de Fluxo</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Crie um bot usando o editor visual de fluxos. Ideal para automações complexas com múltiplas ramificações.
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <Button className="w-full">
-              <Plus className="w-4 h-4 mr-2" />
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <Button className="w-full text-sm sm:text-base h-9 sm:h-10">
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Criar Novo Bot
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
             </Button>
           </CardContent>
         </Card>
 
         {/* Loading state */}
         {loading && (
-          <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <Card key={i} className="animate-pulse h-full">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
-                  <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-full"></div>
+                <CardHeader className="p-3 sm:p-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-muted mb-3 sm:mb-4"></div>
+                  <div className="h-5 sm:h-6 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-3 sm:h-4 bg-muted rounded w-full"></div>
                 </CardHeader>
               </Card>
             ))}
@@ -541,23 +541,23 @@ export default function BotCreate() {
               if (canalBots.length === 0) return null;
 
               return (
-                <div key={canal} className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <div key={canal} className="space-y-3 sm:space-y-4">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
                     {canalLabels[canal]}
-                    <Badge variant="outline">{canalBots.length}</Badge>
+                    <Badge variant="outline" className="text-xs">{canalBots.length}</Badge>
                   </h2>
-                  <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+                  <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {canalBots.map((bot) => (
                       <Card 
                         key={bot.id} 
                         className="hover:shadow-lg transition-all cursor-pointer relative group h-full flex flex-col"
                         onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
                       >
-                        <div className="absolute top-4 right-4 z-10">
+                        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
                           <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="w-4 h-4" />
+                              <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
+                                <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -615,22 +615,22 @@ export default function BotCreate() {
                           </DropdownMenu>
                         </div>
                         
-                        <CardHeader className="flex-1 p-4">
-                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                            <Workflow className="w-6 h-6 text-primary" />
+                        <CardHeader className="flex-1 p-3 sm:p-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+                            <Workflow className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                           </div>
                           <div className="flex items-center gap-2 mb-2">
-                            <CardTitle className="flex-1">{bot.name}</CardTitle>
+                            <CardTitle className="flex-1 text-base sm:text-lg">{bot.name}</CardTitle>
                             {bot.active && (
-                              <Badge variant="default" className="bg-green-500">
+                              <Badge variant="default" className="bg-green-500 text-xs">
                                 Ativo
                               </Badge>
                             )}
                           </div>
                           {bot.description && (
-                            <p className="text-sm text-muted-foreground mb-2">{bot.description}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-2">{bot.description}</p>
                           )}
-                          <div className="mb-2 flex items-center gap-2">
+                          <div className="mb-2 flex items-center gap-2 flex-wrap">
                             {bot.canais && bot.canais.length > 0 && (
                               <Badge variant="secondary" className="text-xs">
                                 {canalLabels[bot.canais[0]] || bot.canais[0]}
@@ -649,7 +649,7 @@ export default function BotCreate() {
                               </Badge>
                             )}
                           </div>
-                          <CardDescription>
+                          <CardDescription className="text-xs sm:text-sm">
                             {bot.flow_data?.nodes?.length || 0} blocos • 
                             Atualizado {formatDistanceToNow(new Date(bot.updated_at), { 
                               addSuffix: true, 
@@ -657,9 +657,9 @@ export default function BotCreate() {
                             })}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="mt-auto p-4 pt-0 space-y-3">
+                        <CardContent className="mt-auto p-3 sm:p-4 pt-0 space-y-2 sm:space-y-3">
                           {canal === 'whatsapp' && (
-                            <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="space-y-1.5 sm:space-y-2" onClick={(e) => e.stopPropagation()}>
                               <Label className="text-xs flex items-center gap-1">
                                 <Smartphone className="h-3 w-3" />
                                 Número WhatsApp
@@ -686,8 +686,15 @@ export default function BotCreate() {
                               </div>
                             </div>
                           )}
-                          <Button variant="outline" className="w-full">
-                            <Edit className="w-4 h-4 mr-2" />
+                          <Button 
+                            variant="outline" 
+                            className="w-full text-xs sm:text-sm h-8 sm:h-9"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/bot-builder?id=${bot.id}`);
+                            }}
+                          >
+                            <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                             Abrir Editor
                           </Button>
                         </CardContent>
@@ -701,11 +708,11 @@ export default function BotCreate() {
         )}
 
         {!loading && bots.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 rounded-2xl bg-muted mx-auto mb-4 flex items-center justify-center">
-              <Workflow className="w-10 h-10 text-muted-foreground" />
+          <div className="text-center py-8 sm:py-12">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-muted mx-auto mb-3 sm:mb-4 flex items-center justify-center">
+              <Workflow className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground px-4">
               Você ainda não tem bots criados. Clique no card acima para criar seu primeiro bot!
             </p>
           </div>
