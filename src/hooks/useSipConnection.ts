@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface SipConfig {
   server: string;
+  remoteServer?: string;
   extension: string;
   password: string;
   displayName?: string;
@@ -31,65 +32,110 @@ export const useSipConnection = () => {
     return audio;
   });
 
+  // Helper to try connecting to a server
+  const tryConnect = useCallback(async (server: string, extension: string, password: string, displayName: string, isRemote: boolean = false) => {
+    console.log(`${isRemote ? '🌐' : '🏠'} Tentando servidor ${isRemote ? 'REMOTO' : 'LOCAL'}:`, server);
+    
+    const wsServers = [
+      `wss://${server}:8089/ws`,
+      `ws://${server}:8089/ws`
+    ];
+
+    const sipUri = `sip:${extension}@${server}`;
+    console.log('SIP URI:', sipUri);
+
+    const ua = new UserAgent({
+      uri: UserAgent.makeURI(sipUri),
+      transportOptions: {
+        server: wsServers[0],
+        connectionTimeout: 5,
+      },
+      authorizationUsername: extension,
+      authorizationPassword: password,
+      displayName: displayName || extension,
+      sessionDescriptionHandlerFactoryOptions: {
+        constraints: {
+          audio: true,
+          video: false,
+        },
+      },
+      delegate: {
+        onInvite: (invitation) => {
+          console.log('📞 Chamada recebida:', invitation.remoteIdentity.uri.user);
+          handleIncomingCall(invitation);
+        },
+        onConnect: () => {
+          console.log('✅ WebSocket conectado');
+        },
+        onDisconnect: (error) => {
+          console.error('❌ WebSocket desconectado:', error);
+          toast({
+            title: "Desconectado",
+            description: "Conexão com UCM perdida",
+            variant: "destructive",
+          });
+          setIsRegistered(false);
+        },
+      },
+    });
+
+    await ua.start();
+    return { ua, server };
+  }, [toast]);
+
   // Connect and register to UCM
   const connect = useCallback(async (config: SipConfig) => {
     try {
       setIsConnecting(true);
       console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
-      console.log('Servidor UCM:', config.server);
+      console.log('Servidor LOCAL:', config.server);
+      console.log('Servidor REMOTO:', config.remoteServer || 'Não configurado');
       console.log('Ramal:', config.extension);
-      console.log('Senha fornecida:', config.password ? 'Sim (oculta)' : 'Não');
 
-      // Tenta WSS (seguro) primeiro, depois WS (não seguro)
-      const wsServers = [
-        `wss://${config.server}:8089/ws`,
-        `ws://${config.server}:8089/ws`
-      ];
+      let ua: UserAgent | null = null;
+      let connectedServer = '';
 
-      console.log('Tentando conectar via:', wsServers[0]);
+      // Tentar local primeiro
+      try {
+        const result = await tryConnect(
+          config.server, 
+          config.extension, 
+          config.password, 
+          config.displayName || config.extension,
+          false
+        );
+        ua = result.ua;
+        connectedServer = result.server;
+        console.log('✅ Conectado ao servidor LOCAL');
+      } catch (localError) {
+        console.warn('⚠️ Falha ao conectar no servidor local:', localError);
+        
+        // Se houver servidor remoto, tentar
+        if (config.remoteServer) {
+          console.log('🔄 Tentando servidor REMOTO...');
+          try {
+            const result = await tryConnect(
+              config.remoteServer, 
+              config.extension, 
+              config.password, 
+              config.displayName || config.extension,
+              true
+            );
+            ua = result.ua;
+            connectedServer = result.server;
+            console.log('✅ Conectado ao servidor REMOTO');
+          } catch (remoteError) {
+            console.error('❌ Falha ao conectar no servidor remoto:', remoteError);
+            throw new Error('Não foi possível conectar nem ao servidor local nem ao remoto');
+          }
+        } else {
+          throw localError;
+        }
+      }
 
-      const sipUri = `sip:${config.extension}@${config.server}`;
-      console.log('SIP URI:', sipUri);
-
-      const ua = new UserAgent({
-        uri: UserAgent.makeURI(sipUri),
-        transportOptions: {
-          server: wsServers[0], // Tenta WSS primeiro
-          connectionTimeout: 5,
-        },
-        authorizationUsername: config.extension,
-        authorizationPassword: config.password,
-        displayName: config.displayName || config.extension,
-        sessionDescriptionHandlerFactoryOptions: {
-          constraints: {
-            audio: true,
-            video: false,
-          },
-        },
-        delegate: {
-          onInvite: (invitation) => {
-            console.log('📞 Chamada recebida:', invitation.remoteIdentity.uri.user);
-            handleIncomingCall(invitation);
-          },
-          onConnect: () => {
-            console.log('✅ WebSocket conectado');
-          },
-          onDisconnect: (error) => {
-            console.error('❌ WebSocket desconectado:', error);
-            toast({
-              title: "Desconectado",
-              description: "Conexão com UCM perdida",
-              variant: "destructive",
-            });
-            // Garante que a UI bloqueie novas chamadas até reconectar
-            setIsRegistered(false);
-          },
-        },
-      });
-
-      console.log('Iniciando UserAgent...');
-      await ua.start();
-      console.log('✅ UserAgent iniciado');
+      if (!ua) {
+        throw new Error('Falha ao criar UserAgent');
+      }
 
       const reg = new Registerer(ua);
       
@@ -101,7 +147,7 @@ export const useSipConnection = () => {
           console.log('✅ RAMAL REGISTRADO COM SUCESSO!');
           toast({
             title: "Conectado",
-            description: `Ramal ${config.extension} registrado no UCM`,
+            description: `Ramal ${config.extension} registrado (${connectedServer})`,
           });
         } else if (state === RegistererState.Unregistered) {
           console.log('⚠️ Ramal não registrado');
@@ -137,7 +183,7 @@ export const useSipConnection = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, [toast]);
+  }, [toast, tryConnect]);
 
   // Handle incoming call
   const handleIncomingCall = useCallback((session: Session) => {
