@@ -150,14 +150,14 @@ All colors MUST be HSL.
 
   .slide-out-menu-tab {
     position: absolute;
-    right: -40px;
+    right: -20px;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px;
-    height: 120px;
+    width: 20px;
+    height: 60px;
     background: hsl(var(--sidebar-background));
-    border-top-right-radius: 12px;
-    border-bottom-right-radius: 12px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -167,7 +167,7 @@ All colors MUST be HSL.
   }
 
   .slide-out-menu-tab:hover {
-    width: 45px;
+    width: 25px;
     background: hsl(var(--sidebar-accent));
   }
 
