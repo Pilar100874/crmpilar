@@ -36,6 +36,7 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [isLoadingEstabelecimento, setIsLoadingEstabelecimento] = useState(true);
 
   useEffect(() => {
     if (open) {
@@ -53,13 +54,22 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
 
   const loadUserEstabelecimento = async () => {
     try {
+      setIsLoadingEstabelecimento(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data } = await supabase.rpc('get_user_estabelecimento_id', { _user_id: user.id });
+        console.log('Estabelecimento ID carregado no dialog:', data);
         setEstabelecimentoId(data);
       }
     } catch (error) {
       console.error('Error loading user establishment:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar configuração do sistema",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingEstabelecimento(false);
     }
   };
 
@@ -112,10 +122,19 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
   };
 
   const handleDial = async () => {
+    if (isLoadingEstabelecimento) {
+      toast({
+        title: "Aguarde",
+        description: "Carregando configuração do sistema...",
+        variant: "default",
+      });
+      return;
+    }
+
     if (!estabelecimentoId) {
       toast({
         title: "Erro",
-        description: "Aguarde o carregamento do sistema",
+        description: "Configuração UCM não encontrada. Verifique as configurações do estabelecimento.",
         variant: "destructive",
       });
       return;
