@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LayoutDashboard, Users, Calendar, FileText, Settings, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import logo from "@/assets/logo.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -28,12 +29,12 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
       <div className="max-w-5xl w-full space-y-12">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4">
-            <MessageSquare className="w-10 h-10 text-primary" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src={logo} alt="Logo" className="h-24 w-auto" />
           </div>
           <h1 className="text-4xl font-light tracking-tight text-foreground">
             Sistema de Gestão
