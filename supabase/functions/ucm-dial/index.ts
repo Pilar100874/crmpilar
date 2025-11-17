@@ -50,32 +50,40 @@ serve(async (req) => {
     console.log('Dialing number:', number, 'from extension:', extension);
     console.log('UCM Host:', ucmConfig.ucm_host);
 
-    // TODO: Implement actual UCM API call here
-    // Example endpoint: https://${ucmConfig.ucm_host}/api/v1/dial
-    // You need to replace this with the actual UCM API endpoint from the UCM6XXX HTTPS API Guide
+    // Determinar protocolo baseado no IP (HTTP para IPs locais, HTTPS para outros)
+    const isLocalIp = ucmConfig.ucm_host.startsWith('192.168.') || 
+                      ucmConfig.ucm_host.startsWith('10.') || 
+                      ucmConfig.ucm_host.startsWith('172.');
+    const protocol = isLocalIp ? 'http' : 'https';
     
-    const ucmApiUrl = `https://${ucmConfig.ucm_host}/api/v1/dial`;
+    // Usar o formato correto da API do UCM
+    const ucmApiUrl = `${protocol}://${ucmConfig.ucm_host}/api?action=dial&number=${number}${extension ? `&extension=${extension}` : ''}`;
+    
+    console.log('Calling UCM API:', ucmApiUrl);
     
     const ucmResponse = await fetch(ucmApiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        // Add UCM authentication headers here based on UCM API documentation
         'Authorization': `Basic ${btoa(`${ucmConfig.ucm_user}:${ucmConfig.ucm_password}`)}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        destination: number,
-        extension: extension || '1000', // Default extension if not provided
-        // Add other UCM-specific parameters according to the API documentation
-      }),
     });
 
     if (!ucmResponse.ok) {
-      throw new Error(`UCM API error: ${ucmResponse.status} ${ucmResponse.statusText}`);
+      const errorText = await ucmResponse.text();
+      console.error('UCM API error:', errorText);
+      throw new Error(`UCM API error: ${ucmResponse.status} - ${errorText}`);
     }
 
-    const ucmData = await ucmResponse.json();
-    console.log('UCM Response:', ucmData);
+    let ucmData;
+    try {
+      ucmData = await ucmResponse.json();
+      console.log('UCM Response:', ucmData);
+    } catch (e) {
+      // Se não retornar JSON, considerar sucesso
+      console.log('UCM call initiated (no JSON response)');
+      ucmData = { success: true };
+    }
 
     // Create call record
     const { data: call, error: callError } = await supabase
