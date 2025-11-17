@@ -1523,48 +1523,24 @@ ${recentMessages}
           ? 'hidden' 
           : showConversationsList 
             ? 'w-80 md:w-64 lg:w-80' 
-            : 'w-16'
+            : 'w-0 border-r-0'
       }`}>
-        <div className="px-3 md:px-4 py-2 md:py-3 border-b bg-primary/5 flex-shrink-0">
-          <div className="flex items-center justify-between mb-2 md:mb-3">
-            {showConversationsList && (
-              <h2 className="text-base md:text-lg font-semibold">Painel de Atendimento</h2>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                const newState = !showConversationsList;
-                setShowConversationsList(newState);
-                // Em tablets, coordenar com o painel de detalhes
-                if (isTablet && !newState && (activeTab === 'chat' ? showClientDetailsChat : 
-                    activeTab === 'agenda' ? showClientDetailsAgenda :
-                    activeTab === 'email' ? showClientDetailsEmail : showClientDetailsOrcamento)) {
-                  // Se está encolhendo o painel de conversas e detalhes está aberto, fechar detalhes
-                  if (activeTab === 'chat') setShowClientDetailsChat(false);
-                  else if (activeTab === 'agenda') setShowClientDetailsAgenda(false);
-                  else if (activeTab === 'email') setShowClientDetailsEmail(false);
-                  else if (activeTab === 'orcamento') setShowClientDetailsOrcamento(false);
-                }
-              }}
-              className={`h-7 w-7 p-0 ${showConversationsList ? 'ml-auto' : 'mx-auto'}`}
-              title={showConversationsList ? "Recolher painel" : "Expandir painel"}
-            >
-              {showConversationsList ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
-            </Button>
-          </div>
-          {showConversationsList && (
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar conversas..."
-                className="pl-10 h-9 rounded-full text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        {showConversationsList && (
+          <>
+            <div className="px-3 md:px-4 py-2 md:py-3 border-b bg-primary/5 flex-shrink-0">
+              <div className="flex items-center justify-between mb-2 md:mb-3">
+                <h2 className="text-base md:text-lg font-semibold">Painel de Atendimento</h2>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar conversas..."
+                  className="pl-10 h-9 rounded-full text-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-          )}
-        </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -1616,23 +1592,8 @@ ${recentMessages}
           </TabsList>
 
             {/* Chat Tab */}
-          <TabsContent value="chat" className={`flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 ${showConversationsList ? 'px-2 md:px-0' : 'px-0'}`}>
-            {!showConversationsList ? (
-              <div className="flex flex-col items-center gap-2 py-4">
-                {filteredConversations.slice(0, 10).map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv.id)}
-                    className={`w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-primary transition-all ${
-                      selectedConversation === conv.id ? "ring-2 ring-primary" : ""
-                    }`}
-                    title={conv.customer?.nome || "Cliente"}
-                  >
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                ))}
-              </div>
-            ) : filteredConversations.length === 0 ? (
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 px-2 md:px-0">
+            {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
                 <p className="text-sm">Nenhuma conversa encontrada</p>
@@ -2181,7 +2142,9 @@ ${recentMessages}
             )}
             </div>
           </TabsContent>
-        </Tabs>
+         </Tabs>
+          </>
+        )}
       </div>
 
       {/* Chat Area */}
@@ -2191,6 +2154,24 @@ ${recentMessages}
             <div className="px-3 md:px-4 py-2.5 md:py-3 border-b bg-card shadow-sm flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                  {!isMobile && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const newState = !showConversationsList;
+                        setShowConversationsList(newState);
+                        // Em tablets, coordenar com o painel de detalhes
+                        if (isTablet && newState && showClientDetailsChat) {
+                          setShowClientDetailsChat(false);
+                        }
+                      }}
+                      className="h-6 w-6 md:h-7 md:w-7 p-0"
+                      title={showConversationsList ? "Ocultar conversas" : "Mostrar conversas"}
+                    >
+                      {showConversationsList ? <PanelLeftClose className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <PanelLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />}
+                    </Button>
+                  )}
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
                   </div>
