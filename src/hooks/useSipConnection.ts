@@ -216,12 +216,59 @@ export const useSipConnection = () => {
 
         if (state === SessionState.Established) {
           setupRemoteMedia(inviter);
+          toast({
+            title: "Chamada conectada",
+            description: `Conectado com ${phoneNumber}`,
+          });
         } else if (state === SessionState.Terminated) {
           setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+          toast({
+            title: "Chamada encerrada",
+            description: `Chamada com ${phoneNumber} finalizada`,
+          });
         }
       });
 
-      await inviter.invite();
+      await inviter.invite({
+        requestDelegate: {
+          onReject: (response) => {
+            console.error('Erro ao conectar chamada:', response.message.statusCode, response.message.reasonPhrase);
+            let errorMsg = response.message.reasonPhrase;
+            
+            // Mensagens mais amigáveis para códigos comuns
+            switch (response.message.statusCode) {
+              case 404:
+                errorMsg = "Número não encontrado";
+                break;
+              case 480:
+                errorMsg = "Número temporariamente indisponível";
+                break;
+              case 486:
+                errorMsg = "Ocupado";
+                break;
+              case 487:
+                errorMsg = "Chamada cancelada";
+                break;
+              case 603:
+                errorMsg = "Chamada recusada";
+                break;
+            }
+            
+            toast({
+              title: "Falha na chamada",
+              description: errorMsg,
+              variant: "destructive",
+            });
+            setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
+          },
+          onAccept: () => {
+            console.log('Chamada aceita pelo outro lado');
+          },
+          onProgress: (response) => {
+            console.log('Progresso da chamada:', response.message.statusCode);
+          },
+        },
+      });
       
       toast({
         title: "Discando",
