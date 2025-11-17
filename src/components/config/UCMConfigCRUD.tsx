@@ -18,6 +18,7 @@ interface UCMConfig {
   ucm_user: string;
   ucm_password: string;
   enabled: boolean;
+  is_local: boolean;
 }
 
 export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
@@ -27,6 +28,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     ucm_user: "",
     ucm_password: "",
     enabled: true,
+    is_local: true,
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -74,6 +76,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           ucm_user: config.ucm_user,
           ucm_password: config.ucm_password,
           enabled: config.enabled,
+          is_local: config.is_local,
         }, {
           onConflict: 'estabelecimento_id'
         });
@@ -159,6 +162,18 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
             </Button>
           </div>
         </div>
+
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="is_local"
+            checked={config.is_local}
+            onCheckedChange={(checked) => setConfig({ ...config, is_local: checked })}
+          />
+          <Label htmlFor="is_local">UCM na rede local</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Ative esta opção se o UCM estiver na sua rede local. Desative se o UCM estiver acessível via internet.
+        </p>
 
         <div className="flex items-center space-x-2">
           <Switch

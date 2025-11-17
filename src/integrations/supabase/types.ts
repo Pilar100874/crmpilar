@@ -2505,6 +2505,7 @@ export type Database = {
           enabled: boolean | null
           estabelecimento_id: string
           id: string
+          is_local: boolean | null
           ucm_host: string
           ucm_password: string
           ucm_user: string
@@ -2515,6 +2516,7 @@ export type Database = {
           enabled?: boolean | null
           estabelecimento_id: string
           id?: string
+          is_local?: boolean | null
           ucm_host: string
           ucm_password: string
           ucm_user: string
@@ -2525,6 +2527,7 @@ export type Database = {
           enabled?: boolean | null
           estabelecimento_id?: string
           id?: string
+          is_local?: boolean | null
           ucm_host?: string
           ucm_password?: string
           ucm_user?: string
