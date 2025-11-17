@@ -2434,6 +2434,47 @@ export type Database = {
         }
         Relationships: []
       }
+      ucm_config: {
+        Row: {
+          created_at: string
+          enabled: boolean | null
+          estabelecimento_id: string
+          id: string
+          ucm_host: string
+          ucm_password: string
+          ucm_user: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          ucm_host: string
+          ucm_password: string
+          ucm_user: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          ucm_host?: string
+          ucm_password?: string
+          ucm_user?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ucm_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unidades: {
         Row: {
           created_at: string | null
