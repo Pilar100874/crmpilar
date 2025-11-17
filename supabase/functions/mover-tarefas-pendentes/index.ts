@@ -258,9 +258,15 @@ Deno.serve(async (req) => {
         console.log(`📆 Data ajustada para dia disponível: ${novaData.toISOString().split('T')[0]}`);
 
         let novoHorario = tarefa.time;
+        let novoIsAllDay = tarefa.is_all_day;
 
-        // Aplicar regra de horário comercial se ativa e não for tarefa de dia todo
-        if (!tarefa.is_all_day && tarefa.time && regrasMap.horario_comercial) {
+        // Se a tarefa era "dia todo" e está sendo movida, converter para sem horário definido
+        if (tarefa.is_all_day) {
+          novoIsAllDay = false;
+          novoHorario = null;
+          console.log(`📅 Tarefa "dia todo" convertida para sem horário definido`);
+        } else if (tarefa.time && regrasMap.horario_comercial) {
+          // Aplicar regra de horário comercial se ativa e não for tarefa de dia todo
           const horaInicial = usuario.hora_inicial || '08:00:00';
           const horaFinal = usuario.hora_final || '18:00:00';
 
@@ -280,6 +286,7 @@ Deno.serve(async (req) => {
           .update({
             date: novaDataStr,
             time: novoHorario,
+            is_all_day: novoIsAllDay,
             updated_at: new Date().toISOString()
           })
           .eq('id', tarefa.id);
