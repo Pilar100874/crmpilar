@@ -33,6 +33,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { CalendarioMobileHeader } from "./CalendarioMobileHeader";
 
 // Utilitário para aplicar alpha em cores HSL, gerando hsla()
 const toAlpha = (hslColor: string, alpha: number) => {
@@ -2545,29 +2546,82 @@ export default function Calendario() {
       <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="border-b border-border bg-card">
-        <div className="px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">CALENDÁRIO</h1>
-
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="hidden md:block">
-              <TabsList>
-                <TabsTrigger value="day">DIA</TabsTrigger>
-                <TabsTrigger value="week">SEMANA</TabsTrigger>
-                <TabsTrigger value="month">MÊS</TabsTrigger>
-                <TabsTrigger value="list">LISTA</TabsTrigger>
-                <TabsTrigger value="table">TABELA</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <div className="flex items-center gap-2">
+        {/* Mobile Header (< lg) */}
+        <div className="lg:hidden">
+          <CalendarioMobileHeader
+            currentDate={currentDate}
+            viewMode={viewMode}
+            onViewModeChange={(mode) => setViewMode(mode)}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            onToday={handleToday}
+            onNewTask={() => {
+              setSelectedDate(null);
+              setShowTaskDialog(true);
+            }}
+            onShowFilter={() => setShowFilterDialog(true)}
+          />
+          
+          {/* Botão Realocar para admin (mobile) */}
+          {isAdmin && (
+            <div className="px-3 pb-3">
               <Button
-                variant={filterBy === "my" ? "default" : "outline"}
+                variant="secondary"
                 size="sm"
-                onClick={() => setFilterBy("my")}
+                disabled={relocating}
+                onClick={async () => {
+                  try {
+                    setRelocating(true);
+                    const { data, error } = await supabase.functions.invoke('mover-tarefas-pendentes', {
+                      body: { manual: true }
+                    });
+                    if (error) {
+                      console.error('Erro ao executar realocação manual:', error);
+                      toast.error('Erro ao executar realocação manual');
+                    } else {
+                      toast.success(`Realocação concluída: ${data?.tarefasMovidas ?? 0} movidas de ${data?.tarefasProcessadas ?? 0}`);
+                      await loadTasks();
+                    }
+                  } catch (err) {
+                    console.error('Erro inesperado na realocação manual:', err);
+                    toast.error('Erro inesperado');
+                  } finally {
+                    setRelocating(false);
+                  }
+                }}
+                className="text-xs w-full"
               >
-                Minhas tarefas
+                <RefreshCw className={`w-3.5 h-3.5 mr-2 ${relocating ? 'animate-spin' : ''}`} />
+                Realocar pendentes
               </Button>
-              <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Header (>= lg) */}
+        <div className="hidden lg:block px-6 py-4">
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-foreground">CALENDÁRIO</h1>
+
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+                <TabsList>
+                  <TabsTrigger value="day">DIA</TabsTrigger>
+                  <TabsTrigger value="week">SEMANA</TabsTrigger>
+                  <TabsTrigger value="month">MÊS</TabsTrigger>
+                  <TabsTrigger value="list">LISTA</TabsTrigger>
+                  <TabsTrigger value="table">TABELA</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={filterBy === "my" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilterBy("my")}
+                >
+                  Minhas tarefas
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -2577,223 +2631,60 @@ export default function Calendario() {
                   <Filter className="w-4 h-4" />
                   Filtros {(selectedOrigens.length > 0 || selectedUserIds.length > 0) && `(${selectedOrigens.length + selectedUserIds.length})`}
                 </Button>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Filtrar Tarefas</DialogTitle>
-                    <DialogDescription>
-                      Selecione por origem e/ou usuários para visualizar
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-6 py-4">
-                    {/* Filtro por Origem */}
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-semibold">Por Origem</h3>
-                      <RadioGroup 
-                        value={selectedOrigens.length > 0 ? selectedOrigens[0] : ""} 
-                        onValueChange={(value) => {
-                          if (value) {
-                            setSelectedOrigens([value]);
-                          } else {
-                            setSelectedOrigens([]);
-                          }
-                        }} 
-                        className="grid grid-cols-2 gap-3"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="bot" id="filter-bot" />
-                          <Label htmlFor="filter-bot" className="text-sm cursor-pointer flex items-center gap-2">
-                            <Bot className="w-4 h-4" style={{ color: getOrigemColor("bot") }} />
-                            BOT
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="campanha" id="filter-campanha" />
-                          <Label htmlFor="filter-campanha" className="text-sm cursor-pointer flex items-center gap-2">
-                            <Megaphone className="w-4 h-4" style={{ color: getOrigemColor("campanha") }} />
-                            Campanha
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="ligacao" id="filter-ligacao" />
-                          <Label htmlFor="filter-ligacao" className="text-sm cursor-pointer flex items-center gap-2">
-                            <Phone className="w-4 h-4" style={{ color: getOrigemColor("ligacao") }} />
-                            Ligação
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="visita" id="filter-visita" />
-                          <Label htmlFor="filter-visita" className="text-sm cursor-pointer flex items-center gap-2">
-                            <MapPin className="w-4 h-4" style={{ color: getOrigemColor("visita") }} />
-                            Visita
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="email" id="filter-email" />
-                          <Label htmlFor="filter-email" className="text-sm cursor-pointer flex items-center gap-2">
-                            <Mail className="w-4 h-4" style={{ color: getOrigemColor("email") }} />
-                            Email
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="pedido" id="filter-pedido" />
-                          <Label htmlFor="filter-pedido" className="text-sm cursor-pointer flex items-center gap-2">
-                            <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido") }} />
-                            Pedido
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="chat" id="filter-chat" />
-                          <Label htmlFor="filter-chat" className="text-sm cursor-pointer flex items-center gap-2">
-                            <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
-                            Chat
-                          </Label>
-                        </div>
-                      </RadioGroup>
-
-                      {/* Seletor de tipo de Email */}
-                      {selectedOrigens.includes('email') && (
-                        <div className="space-y-2 pl-0 pt-2">
-                          <Label className="text-sm font-medium">Tipo de Email</Label>
-                          <Select value={filterEmailTipo} onValueChange={(value: "enviado" | "recebido") => setFilterEmailTipo(value)}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="enviado">
-                                <div className="flex items-center gap-2">
-                                  <Mail className="w-4 h-4" style={{ color: getOrigemColor("email_enviado") }} />
-                                  Email Enviado
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="recebido">
-                                <div className="flex items-center gap-2">
-                                  <MailOpen className="w-4 h-4" style={{ color: getOrigemColor("email_recebido") }} />
-                                  Email Recebido
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      {/* Seletor de tipo de Pedido */}
-                      {selectedOrigens.includes('pedido') && (
-                        <div className="space-y-2 pl-0 pt-2">
-                          <Label className="text-sm font-medium">Tipo de Pedido</Label>
-                          <Select value={filterPedidoTipo} onValueChange={(value: "orcamento" | "negociacao" | "aprovacao") => setFilterPedidoTipo(value)}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="orcamento">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_orcamento") }} />
-                                  Pedido - Orçamento
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="negociacao">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_negociacao") }} />
-                                  Pedido - Negociação
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="aprovacao">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_aprovacao") }} />
-                                  Pedido - Aprovação
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Filtro por Usuários (apenas para admins) */}
-                    {isAdmin && (
-                      <div>
-                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          Por Usuários
-                        </h3>
-                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                          {usuarios.filter(u => u.auth_user_id).map((usuario) => (
-                            <div key={usuario.id} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`user-${usuario.id}`}
-                                checked={selectedUserIds.includes(usuario.auth_user_id!)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedUserIds([...selectedUserIds, usuario.auth_user_id!]);
-                                  } else {
-                                    setSelectedUserIds(selectedUserIds.filter(id => id !== usuario.auth_user_id));
-                                  }
-                                }}
-                                className="w-4 h-4 rounded border-input"
-                              />
-                              <label 
-                                htmlFor={`user-${usuario.id}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                {usuario.nome}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setSelectedOrigens([]);
-                        setSelectedUserIds([]);
-                      }}
-                    >
-                      Limpar Tudo
-                    </Button>
-                    <Button onClick={() => setShowFilterDialog(false)}>
-                      Aplicar
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              {getTotalTasks()} tarefa{getTotalTasks() !== 1 ? 's' : ''}
-            </span>
-            <Button onClick={() => handleOpenNewTask()} className="gap-2">
-              <Plus className="w-4 h-4" />
-              NOVA TAREFA
-            </Button>
-          </div>
-        </div>
-
-        {/* Navegação de data */}
-        {viewMode !== "list" && viewMode !== "table" && (
-          <div className="px-6 pb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={handlePrevious}>
-                <ChevronLeft className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handlePrevious}
+              >
+                <ChevronLeft className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleNext}>
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleToday}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleToday}
+              >
                 Hoje
               </Button>
-              <h2 className="text-lg font-semibold ml-4">
+              <h2 className="text-lg font-semibold min-w-[200px] text-center">
                 {format(currentDate, viewMode === "month" ? "MMMM 'de' yyyy" : "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </h2>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleNext}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar tarefas..."
+                  className="pl-10"
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  setSelectedDate(null);
+                  setShowTaskDialog(true);
+                }}
+                size="sm"
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Nova Tarefa
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
+          </div>
+
+          {/* Botão Realocar para admin (desktop) */}
+          {isAdmin && (
+            <div className="flex items-center justify-end">
               <Button
                 variant="secondary"
                 size="sm"
@@ -2823,18 +2714,174 @@ export default function Calendario() {
                 Realocar pendentes agora
               </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {viewMode === "list" && (
-          <div className="px-6 pb-4 flex items-center justify-end">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <TabsList>
-                <TabsTrigger value="month">Ver calendário</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        )}
+        {/* Dialog de filtros (compartilhado) */}
+        <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Filtros</DialogTitle>
+              <DialogDescription>
+                Filtre as tarefas por origem e usuários
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {/* Filtros básicos */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Exibir tarefas</h3>
+                <RadioGroup
+                  value={filterBy}
+                  onValueChange={(v) => setFilterBy(v as "all" | "my")}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="my" id="my" />
+                    <Label htmlFor="my" className="cursor-pointer">Minhas tarefas</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="all" />
+                    <Label htmlFor="all" className="cursor-pointer">Todas as tarefas</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Filtro por Origem */}
+              {filterBy === "all" && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-3">Por Origem</h3>
+                  <Select
+                    value={selectedOrigens.length === 1 ? selectedOrigens[0] : ""}
+                    onValueChange={(value) => {
+                      if (value === "todos") {
+                        setSelectedOrigens([]);
+                      } else {
+                        setSelectedOrigens([value as Task['origem']]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione uma origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todas as origens</SelectItem>
+                      <SelectItem value="bot">
+                        <div className="flex items-center gap-2">
+                          <Bot className="w-4 h-4" style={{ color: getOrigemColor("bot") }} />
+                          Bot
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="campanha">
+                        <div className="flex items-center gap-2">
+                          <Megaphone className="w-4 h-4" style={{ color: getOrigemColor("campanha") }} />
+                          Campanha
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="ligacao">
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4" style={{ color: getOrigemColor("ligacao") }} />
+                          Ligação
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="visita">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4" style={{ color: getOrigemColor("visita") }} />
+                          Visita
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="email_enviado">
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-4 h-4" style={{ color: getOrigemColor("email_enviado") }} />
+                          Email Enviado
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="email_recebido">
+                        <div className="flex items-center gap-2">
+                          <MailOpen className="w-4 h-4" style={{ color: getOrigemColor("email_recebido") }} />
+                          Email Recebido
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="chat">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4" style={{ color: getOrigemColor("chat") }} />
+                          Chat
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="pedido_orcamento">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_orcamento") }} />
+                          Pedido - Orçamento
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="pedido_negociacao">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_negociacao") }} />
+                          Pedido - Negociação
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="pedido_aprovacao">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" style={{ color: getOrigemColor("pedido_aprovacao") }} />
+                          Pedido - Aprovação
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Filtro por Usuários (apenas para admins) */}
+              {isAdmin && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Por Usuários
+                  </h3>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {usuarios.filter(u => u.auth_user_id).map((usuario) => (
+                      <div key={usuario.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`user-${usuario.id}`}
+                          checked={selectedUserIds.includes(usuario.auth_user_id!)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUserIds([...selectedUserIds, usuario.auth_user_id!]);
+                            } else {
+                              setSelectedUserIds(selectedUserIds.filter(id => id !== usuario.auth_user_id));
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-input"
+                        />
+                        <label 
+                          htmlFor={`user-${usuario.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {usuario.nome}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSelectedOrigens([]);
+                  setSelectedUserIds([]);
+                }}
+              >
+                Limpar Tudo
+              </Button>
+              <Button onClick={() => setShowFilterDialog(false)}>
+                Aplicar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Legenda de usuários - sempre visível quando há múltiplos usuários */}
