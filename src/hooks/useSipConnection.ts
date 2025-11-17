@@ -141,6 +141,8 @@ export const useSipConnection = () => {
 
   // Handle incoming call
   const handleIncomingCall = useCallback((session: Session) => {
+    console.log('📞 Chamada recebida de:', session.remoteIdentity.uri.user);
+    
     const callSession: CallSession = {
       id: crypto.randomUUID(),
       session,
@@ -153,8 +155,8 @@ export const useSipConnection = () => {
     setActiveCalls(prev => [...prev, callSession]);
 
     // Setup session state change handler
-    session.stateChange.addListener((state) => {
-      console.log('Estado da chamada mudou:', state);
+    session.stateChange.addListener(async (state) => {
+      console.log('📊 Estado da chamada recebida mudou:', state);
       setActiveCalls(prev => 
         prev.map(call => 
           call.id === callSession.id 
@@ -164,8 +166,10 @@ export const useSipConnection = () => {
       );
 
       if (state === SessionState.Established) {
-        setupRemoteMedia(session);
+        console.log('✅ Chamada recebida estabelecida');
+        await setupRemoteMedia(session);
       } else if (state === SessionState.Terminated) {
+        console.log('❌ Chamada recebida encerrada');
         // Remove chamada encerrada após delay
         setTimeout(() => {
           setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
@@ -173,7 +177,6 @@ export const useSipConnection = () => {
       }
     });
 
-    // Auto-answer for testing (você pode remover isso e adicionar um dialog de confirmação)
     toast({
       title: "Chamada recebida",
       description: `De: ${callSession.phoneNumber}`,
@@ -199,12 +202,18 @@ export const useSipConnection = () => {
       
       if (isExternalNumber && !dialNumber.endsWith('#')) {
         dialNumber = dialNumber + '#';
-        console.log('Número externo detectado, adicionando #:', dialNumber);
+        console.log('📞 Número externo detectado, adicionando #:', dialNumber);
       }
       
-      // Codifica # como %23 para o URI SIP ser válido
+      // Codifica # como %23 para o URI SIP ser válida
       const sipUserPart = dialNumber.replace(/#/g, '%23');
-      const target = UserAgent.makeURI(`sip:${sipUserPart}@${userAgent.configuration.uri?.host}`);
+      const sipUri = `sip:${sipUserPart}@${userAgent.configuration.uri?.host}`;
+      console.log('📞 URI SIP sendo usada:', sipUri);
+      console.log('📞 Número original:', phoneNumber);
+      console.log('📞 Número com #:', dialNumber);
+      console.log('📞 Ramal origem:', userAgent.configuration.uri?.user);
+      
+      const target = UserAgent.makeURI(sipUri);
       if (!target) {
         throw new Error('URI inválida');
       }
@@ -261,7 +270,8 @@ export const useSipConnection = () => {
         },
         requestDelegate: {
           onReject: (response) => {
-            console.error('Erro ao conectar chamada:', response.message.statusCode, response.message.reasonPhrase);
+            console.error('❌ Chamada rejeitada:', response.message.statusCode, response.message.reasonPhrase);
+            console.error('❌ Headers da resposta:', response.message.headers);
             let errorMsg = response.message.reasonPhrase;
             
             // Mensagens mais amigáveis para códigos comuns
@@ -285,18 +295,23 @@ export const useSipConnection = () => {
             
             toast({
               title: "Falha na chamada",
-              description: `${errorMsg}. Para números externos, verifique permissões de rota no UCM.`,
+              description: `${errorMsg}. Verifique: 1) Permissões do ramal para chamadas externas, 2) Configuração de rotas no UCM, 3) Trunk SIP configurado`,
               variant: "destructive",
             });
             setTimeout(() => {
               setActiveCalls(prev => prev.filter(call => call.id !== callSession.id));
             }, 500);
           },
-          onAccept: () => {
-            console.log('Chamada aceita pelo outro lado');
+          onAccept: (response) => {
+            console.log('✅ Chamada aceita pelo outro lado');
+            console.log('📊 Headers da resposta:', response.message.headers);
+            console.log('📊 SDP remoto:', response.message.body);
           },
           onProgress: (response) => {
-            console.log('Progresso da chamada:', response.message.statusCode);
+            console.log('📊 Progresso da chamada:', response.message.statusCode, response.message.reasonPhrase);
+            if (response.message.body) {
+              console.log('📊 SDP early media:', response.message.body);
+            }
           },
         },
       });
