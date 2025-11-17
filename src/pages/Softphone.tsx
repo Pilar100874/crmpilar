@@ -42,7 +42,7 @@ export default function Softphone() {
 
       const { data: userData, error: userError } = await supabase
         .from('usuarios')
-        .select('ramal, ramal_senha')
+        .select('ramal, senha_sip')
         .eq('auth_user_id', user.id)
         .maybeSingle();
 
@@ -56,17 +56,17 @@ export default function Softphone() {
         return;
       }
 
-      if (!userData?.ramal || !userData?.ramal_senha) {
+      if (!userData?.ramal || !userData?.senha_sip) {
         toast({
           title: "Configuração incompleta",
-          description: "Configure seu ramal e senha nas configurações de usuário",
+          description: "Configure seu ramal e senha SIP nas configurações de usuário",
           variant: "destructive",
         });
         return;
       }
 
       setUserExtension(userData.ramal);
-      setRamalSenha(userData.ramal_senha);
+      setRamalSenha(userData.senha_sip);
 
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
@@ -98,7 +98,7 @@ export default function Softphone() {
       await connect({
         server: ucmData.ucm_host,
         extension: userData.ramal,
-        password: userData.ramal_senha,
+        password: userData.senha_sip,
         displayName: userData.ramal,
       });
 
