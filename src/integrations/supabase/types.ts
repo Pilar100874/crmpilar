@@ -2648,13 +2648,16 @@ export type Database = {
           pop: string | null
           porta_pop: number | null
           porta_smtp: number | null
+          ramal: string | null
           senha_email: string | null
           senha_hash: string
+          senha_sip: string | null
           smtp: string | null
           telefone: string | null
           unidade_id: string | null
           updated_at: string | null
           usar_autenticacao: boolean | null
+          usuario_sip: string | null
         }
         Insert: {
           auth_user_id?: string | null
@@ -2669,13 +2672,16 @@ export type Database = {
           pop?: string | null
           porta_pop?: number | null
           porta_smtp?: number | null
+          ramal?: string | null
           senha_email?: string | null
           senha_hash: string
+          senha_sip?: string | null
           smtp?: string | null
           telefone?: string | null
           unidade_id?: string | null
           updated_at?: string | null
           usar_autenticacao?: boolean | null
+          usuario_sip?: string | null
         }
         Update: {
           auth_user_id?: string | null
@@ -2690,13 +2696,16 @@ export type Database = {
           pop?: string | null
           porta_pop?: number | null
           porta_smtp?: number | null
+          ramal?: string | null
           senha_email?: string | null
           senha_hash?: string
+          senha_sip?: string | null
           smtp?: string | null
           telefone?: string | null
           unidade_id?: string | null
           updated_at?: string | null
           usar_autenticacao?: boolean | null
+          usuario_sip?: string | null
         }
         Relationships: [
           {

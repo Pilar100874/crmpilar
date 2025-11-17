@@ -34,6 +34,9 @@ interface Usuario {
   usar_autenticacao: boolean | null;
   hora_inicial: string;
   hora_final: string;
+  ramal: string | null;
+  senha_sip: string | null;
+  usuario_sip: string | null;
   is_admin?: boolean;
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
@@ -89,6 +92,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [horaInicial, setHoraInicial] = useState("08:00");
   const [horaFinal, setHoraFinal] = useState("18:00");
+  const [ramal, setRamal] = useState("");
+  const [senhaSip, setSenhaSip] = useState("");
+  const [usuarioSip, setUsuarioSip] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
@@ -243,6 +249,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       usar_autenticacao: usarAutenticacao,
       hora_inicial: horaInicial,
       hora_final: horaFinal,
+      ramal: ramal || null,
+      senha_sip: senhaSip || null,
+      usuario_sip: usuarioSip || null,
     };
 
     if (editingId) {
@@ -426,6 +435,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setIsAdmin(false);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
+    setRamal("");
+    setSenhaSip("");
+    setUsuarioSip("");
     setEditingId(null);
   };
 
@@ -444,6 +456,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSelectedEstabelecimentoId(usuario.estabelecimento_id || "");
     setHoraInicial(usuario.hora_inicial || "08:00");
     setHoraFinal(usuario.hora_final || "18:00");
+    setRamal(usuario.ramal || "");
+    setSenhaSip(usuario.senha_sip || "");
+    setUsuarioSip(usuario.usuario_sip || "");
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
@@ -616,6 +631,47 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               onChange={(e) => setHoraFinal(e.target.value)}
               required
             />
+          </div>
+
+          {/* Seção de Telefonia */}
+          <div className="col-span-3 pt-4 border-t">
+            <h3 className="font-semibold text-base mb-4">📞 Configurações de Telefonia (Central UCM)</h3>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="usuario-ramal">Ramal</Label>
+                <Input
+                  id="usuario-ramal"
+                  placeholder="Ex: 1001"
+                  value={ramal}
+                  onChange={(e) => setRamal(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="usuario-senha-sip">Senha SIP</Label>
+                <Input
+                  id="usuario-senha-sip"
+                  type="password"
+                  placeholder="Senha do ramal"
+                  value={senhaSip}
+                  onChange={(e) => setSenhaSip(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="usuario-sip">Usuário SIP (opcional)</Label>
+                <Input
+                  id="usuario-sip"
+                  placeholder="Se diferente do ramal"
+                  value={usuarioSip}
+                  onChange={(e) => setUsuarioSip(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Deixe vazio se for igual ao ramal
+                </p>
+              </div>
+            </div>
           </div>
 
           <div>
