@@ -2543,11 +2543,6 @@ export default function Calendario() {
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col h-full bg-background">
-        {/* Título da Página */}
-        <div className="px-4 py-4 lg:px-6 lg:py-6 border-b border-border/40">
-          <h1 className="text-3xl font-bold text-foreground">Calendário</h1>
-        </div>
-        
       {/* Header Moderno e Minimalista */}
       <div className="bg-background/95 backdrop-blur-sm border-b border-border/40 sticky top-0 z-20">
         {/* Mobile Header (< lg) */}
