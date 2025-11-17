@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
+import { useState } from "react";
 
 interface ClientDetailsPanelProps {
   customer?: {
@@ -24,6 +26,8 @@ export function ClientDetailsPanel({
   onAddCompany
 }: ClientDetailsPanelProps) {
   const navigate = useNavigate();
+  const [showSoftphone, setShowSoftphone] = useState(false);
+  const [dialNumber, setDialNumber] = useState("");
 
   if (!customer) {
     return (
@@ -46,11 +50,19 @@ export function ClientDetailsPanel({
           </div>
           <h3 className="font-semibold text-lg">{customer.nome}</h3>
           {customer.telefone && (
-            <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Phone className="w-3 h-3" />
+            <div className="flex gap-2 mt-2 text-xs">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-primary"
+                onClick={() => {
+                  setDialNumber(customer.telefone || "");
+                  setShowSoftphone(true);
+                }}
+              >
+                <Phone className="w-3 h-3 mr-1" />
                 {customer.telefone}
-              </span>
+              </Button>
             </div>
           )}
         </div>
@@ -161,6 +173,12 @@ export function ClientDetailsPanel({
           </>
         )}
       </div>
+
+      <SoftphoneDialog 
+        open={showSoftphone}
+        onOpenChange={setShowSoftphone}
+        initialNumber={dialNumber}
+      />
     </div>
   );
 }
