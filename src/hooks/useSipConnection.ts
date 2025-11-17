@@ -35,15 +35,27 @@ export const useSipConnection = () => {
   const connect = useCallback(async (config: SipConfig) => {
     try {
       setIsConnecting(true);
-      console.log('Conectando ao UCM...', { server: config.server, extension: config.extension });
+      console.log('=== INICIANDO CONEXÃO SOFTPHONE ===');
+      console.log('Servidor UCM:', config.server);
+      console.log('Ramal:', config.extension);
+      console.log('Senha fornecida:', config.password ? 'Sim (oculta)' : 'Não');
 
-      const wsServer = `ws://${config.server}:8089/ws`;
+      // Tenta WSS (seguro) primeiro, depois WS (não seguro)
+      const wsServers = [
+        `wss://${config.server}:8089/ws`,
+        `ws://${config.server}:8089/ws`
+      ];
+
+      console.log('Tentando conectar via:', wsServers[0]);
+
       const sipUri = `sip:${config.extension}@${config.server}`;
+      console.log('SIP URI:', sipUri);
 
       const ua = new UserAgent({
         uri: UserAgent.makeURI(sipUri),
         transportOptions: {
-          server: wsServer,
+          server: wsServers[0], // Tenta WSS primeiro
+          connectionTimeout: 5,
         },
         authorizationUsername: config.extension,
         authorizationPassword: config.password,
@@ -56,40 +68,68 @@ export const useSipConnection = () => {
         },
         delegate: {
           onInvite: (invitation) => {
-            console.log('Chamada recebida:', invitation);
+            console.log('📞 Chamada recebida:', invitation.remoteIdentity.uri.user);
             handleIncomingCall(invitation);
+          },
+          onConnect: () => {
+            console.log('✅ WebSocket conectado');
+          },
+          onDisconnect: (error) => {
+            console.error('❌ WebSocket desconectado:', error);
+            toast({
+              title: "Desconectado",
+              description: "Conexão com UCM perdida",
+              variant: "destructive",
+            });
           },
         },
       });
 
+      console.log('Iniciando UserAgent...');
       await ua.start();
-      console.log('UserAgent iniciado');
+      console.log('✅ UserAgent iniciado');
 
       const reg = new Registerer(ua);
       
       reg.stateChange.addListener((state) => {
-        console.log('Estado do registro:', state);
+        console.log('📊 Estado do registro mudou:', state);
         setIsRegistered(state === 'Registered');
         
         if (state === 'Registered') {
+          console.log('✅ RAMAL REGISTRADO COM SUCESSO!');
           toast({
             title: "Conectado",
-            description: `Ramal ${config.extension} registrado com sucesso`,
+            description: `Ramal ${config.extension} registrado no UCM`,
           });
+        } else if (state === 'Unregistered') {
+          console.log('⚠️ Ramal não registrado');
         }
       });
 
+      console.log('Enviando REGISTER...');
       await reg.register();
-      console.log('Registro iniciado');
+      console.log('Registro iniciado, aguardando resposta do UCM...');
 
       setUserAgent(ua);
       setRegisterer(reg);
 
     } catch (error) {
-      console.error('Erro ao conectar:', error);
+      console.error('❌ ERRO NA CONEXÃO:', error);
+      
+      let errorMsg = "Erro ao conectar ao UCM";
+      if (error instanceof Error) {
+        errorMsg = error.message;
+        
+        if (error.message.includes('WebSocket')) {
+          errorMsg = "Não foi possível conectar ao UCM via WebSocket. Verifique se a porta 8089 (WSS/WS) está acessível.";
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+          errorMsg = "Credenciais inválidas. Verifique o ramal e senha.";
+        }
+      }
+      
       toast({
         title: "Erro de conexão",
-        description: error instanceof Error ? error.message : "Erro ao conectar ao UCM",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
