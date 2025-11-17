@@ -1862,19 +1862,19 @@ export default function Contatos() {
   if (!showForm) {
     return (
       <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
-        <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-3xl font-light tracking-tight text-foreground">Contatos</h1>
-              <p className="text-sm text-muted-foreground mt-1">Gerencie seus contatos e clientes</p>
+              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">Contatos</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie seus contatos e clientes</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 onClick={() => setShowImportPanel(true)} 
-                className="gap-2 shadow-sm"
+                className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
               >
-                <Upload className="w-4 h-4" />
+                <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                 Importação
               </Button>
               <Button onClick={() => {
@@ -1890,14 +1890,14 @@ export default function Contatos() {
                 setBuscaEmpresa("");
                 setEmpresasFiltradas([]);
                 setEmpresasVinculadas([]);
-              }} className="gap-2 shadow-sm">
-                <Plus className="w-4 h-4" />
+              }} className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10">
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                 Novo Contato
               </Button>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <TableColumnsConfig
               columns={tableColumns} 
               onColumnsChange={handleColumnsChange}
@@ -1923,14 +1923,14 @@ export default function Contatos() {
               }
             />
             
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 w-full sm:max-w-md">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar contatos..."
                   value={searchFilters.unifiedSearch}
                   onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
-                  className="pl-10 h-10 border-border/40 focus-visible:ring-1 bg-background/50"
+                  className="pl-8 sm:pl-10 h-9 sm:h-10 border-border/40 focus-visible:ring-1 bg-background/50 text-xs sm:text-sm"
                 />
               </div>
             </div>
@@ -1940,39 +1940,39 @@ export default function Contatos() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSearchFilters({ ...searchFilters, unifiedSearch: "" })}
-                className="gap-2 text-muted-foreground hover:text-foreground"
+                className="gap-1 sm:gap-2 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
               >
-                <X className="w-4 h-4" />
-                Limpar
+                <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Limpar</span>
               </Button>
             )}
             
-            <div className="ml-auto text-sm font-light text-muted-foreground">
+            <div className="ml-auto text-xs sm:text-sm font-light text-muted-foreground whitespace-nowrap">
               {sortedContacts.length} {sortedContacts.length === 1 ? 'contato' : 'contatos'}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
           {sortedContacts.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-muted-foreground/50" />
+              <div className="text-center px-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground/50" />
                 </div>
-                <p className="text-lg font-light text-foreground mb-2">Nenhum contato encontrado</p>
-                <p className="text-sm text-muted-foreground">Adicione seu primeiro contato para começar</p>
+                <p className="text-base sm:text-lg font-light text-foreground mb-2">Nenhum contato encontrado</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Adicione seu primeiro contato para começar</p>
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-hidden">
-              <table className="w-full">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
+              <table className="w-full min-w-[800px]">
                 <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
                        <th
                         key={column.id}
-                         className={`text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
+                         className={`text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
                           index === 0 && column.id === 'actions' ? 'sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20 text-center text-foreground' : index === 0 ? 'sticky left-0 bg-gradient-to-r from-muted/40 to-muted/20 border-r border-border/40 z-20' : ''
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
@@ -2230,8 +2230,8 @@ export default function Contatos() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
-      <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
-        <div className="flex items-center gap-4">
+      <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -2249,56 +2249,56 @@ export default function Contatos() {
                 setShouldCheckDuplicate(true);
               }, 150);
             }}
-            className="hover:bg-accent/50"
+            className="hover:bg-accent/50 h-8 w-8 sm:h-9 sm:w-9"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-light tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-2xl font-light tracking-tight text-foreground">
               {editingContact ? "Editar Contato" : "Novo Contato"}
             </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {editingContact ? "Atualize as informações do contato" : "Preencha os dados do novo contato"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-            <Plus className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3">
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
             Tags
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-8">
+      <div className="flex-1 overflow-auto p-3 sm:p-6 md:p-8">
         <Tabs defaultValue="contato" className="w-full max-w-6xl mx-auto">
-          <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-6">
+          <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-4 sm:mb-6 w-full sm:w-auto flex-wrap sm:flex-nowrap">
             <TabsTrigger 
               value="contato"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
             >
               Dados do Contato
             </TabsTrigger>
             <TabsTrigger 
               value="empresa" 
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
               onClick={() => setCriarNovaEmpresa(false)}
             >
               Empresa
             </TabsTrigger>
             <TabsTrigger 
               value="vinculos"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
             >
               Vínculos
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="contato" className="space-y-6">
+          <TabsContent value="contato" className="space-y-4 sm:space-y-6">
             <Card className="border-border/40 shadow-sm">
-              <div className="p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-wide">
+              <div className="p-3 sm:p-4 md:p-6">
+                <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-4 sm:mb-6 uppercase tracking-wide">
                   Informações do Contato
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {contactFields.map((field) => (
                     <div key={field.id} className="space-y-2">
                       <Label 

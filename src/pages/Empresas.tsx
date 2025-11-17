@@ -1255,35 +1255,35 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     <>
       {!showForm ? (
         <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
-        <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-3xl font-light tracking-tight text-foreground">Empresas</h1>
-              <p className="text-sm text-muted-foreground mt-1">Gerencie sua carteira de clientes</p>
+              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">Empresas</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie sua carteira de clientes</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <Button onClick={() => {
                 setShowForm(true);
                 setEditingEmpresa(null);
                 setFormData({});
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
-              }} className="gap-2 shadow-sm">
-                <Plus className="w-4 h-4" />
+              }} className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10">
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                 Nova Empresa
               </Button>
               <Button 
                 onClick={() => setImportDialogOpen(true)} 
                 variant="outline" 
-                className="gap-2 shadow-sm"
+                className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
               >
-                <Upload className="w-4 h-4" />
+                <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                 Importar via API
               </Button>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <TableColumnsConfig 
               columns={tableColumns} 
               onColumnsChange={handleColumnsChange}
@@ -1306,14 +1306,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               }
             />
             
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 w-full sm:max-w-md">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar empresas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10 border-border/40 focus-visible:ring-1 bg-background/50"
+                  className="pl-8 sm:pl-10 h-9 sm:h-10 border-border/40 focus-visible:ring-1 bg-background/50 text-xs sm:text-sm"
                 />
               </div>
             </div>
@@ -1323,39 +1323,39 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 variant="ghost"
                 size="sm"
                 onClick={() => setSearchTerm("")}
-                className="gap-2 text-muted-foreground hover:text-foreground"
+                className="gap-1 sm:gap-2 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
               >
-                <X className="w-4 h-4" />
-                Limpar
+                <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Limpar</span>
               </Button>
             )}
             
-            <div className="ml-auto text-sm font-light text-muted-foreground">
+            <div className="ml-auto text-xs sm:text-sm font-light text-muted-foreground whitespace-nowrap">
               {sortedEmpresas.length} {sortedEmpresas.length === 1 ? 'empresa' : 'empresas'}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
           {sortedEmpresas.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-muted-foreground/50" />
+              <div className="text-center px-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground/50" />
                 </div>
-                <p className="text-lg font-light text-foreground mb-2">Nenhuma empresa encontrada</p>
-                <p className="text-sm text-muted-foreground">Adicione sua primeira empresa para começar</p>
+                <p className="text-base sm:text-lg font-light text-foreground mb-2">Nenhuma empresa encontrada</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Adicione sua primeira empresa para começar</p>
               </div>
             </div>
           ) : (
-            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-hidden">
-              <table className="w-full">
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
+              <table className="w-full min-w-[800px]">
                 <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
                       <th
                         key={column.id}
-                         className={`text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
+                         className={`text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
                           index === 0 && column.id === 'actions' ? 'sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20 text-center text-foreground' : index === 0 ? 'sticky left-0 bg-gradient-to-r from-muted/40 to-muted/20 border-r border-border/40 z-20' : ''
                         }`}
                         style={{ width: column.width, minWidth: column.width }}
