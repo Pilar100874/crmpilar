@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
+import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 
 interface Conversation {
   id: string;
@@ -91,6 +92,10 @@ export default function Atendimento() {
   const aiScrollRef = useRef<HTMLDivElement>(null);
   const [currentAISessionId, setCurrentAISessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Softphone states
+  const [showSoftphone, setShowSoftphone] = useState(false);
+  const [softphoneNumber, setSoftphoneNumber] = useState("");
   
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
@@ -2469,12 +2474,22 @@ ${recentMessages}
                 <User className="w-10 h-10 text-primary" />
               </div>
               <h3 className="font-semibold text-lg">{selectedConv.customer?.nome || "Cliente"}</h3>
-              <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Phone className="w-3 h-3" />
-                  {selectedConv.customer?.telefone}
-                </span>
-              </div>
+              {selectedConv.customer?.telefone && (
+                <div className="flex gap-2 mt-2 text-xs">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-primary"
+                    onClick={() => {
+                      setSoftphoneNumber(selectedConv.customer?.telefone || "");
+                      setShowSoftphone(true);
+                    }}
+                  >
+                    <Phone className="w-3 h-3 mr-1" />
+                    {selectedConv.customer?.telefone}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -2672,6 +2687,12 @@ ${recentMessages}
           )}
         </>
       )}
+
+      <SoftphoneDialog 
+        open={showSoftphone}
+        onOpenChange={setShowSoftphone}
+        initialNumber={softphoneNumber}
+      />
     </div>
   );
 }
