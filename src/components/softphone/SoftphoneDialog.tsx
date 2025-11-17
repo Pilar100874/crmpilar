@@ -112,7 +112,16 @@ export function SoftphoneDialog({ open, onOpenChange, initialNumber = "" }: Soft
   };
 
   const handleDial = async () => {
-    if (!phoneNumber || !estabelecimentoId) {
+    if (!estabelecimentoId) {
+      toast({
+        title: "Erro",
+        description: "Aguarde o carregamento do sistema",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!phoneNumber || phoneNumber.trim() === "") {
       toast({
         title: "Erro",
         description: "Digite um número de telefone",
