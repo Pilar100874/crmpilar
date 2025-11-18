@@ -59,16 +59,25 @@ export function ImportWizardStep4({ selectedFields, fieldMapping, onMappingChang
 
   const updateMappingValue = (fixedField: string, value: string) => {
     const current = fieldMapping[fixedField];
-    if (current) {
-      updateMapping(fixedField, { ...current, value });
+    if (value === "none") {
+      delete fieldMapping[fixedField];
+      onMappingChange({ ...fieldMapping });
+    } else {
+      updateMapping(fixedField, {
+        type: current?.type || "field",
+        value,
+        format: current?.format || "none",
+      });
     }
   };
 
   const updateMappingFormat = (fixedField: string, format: string) => {
     const current = fieldMapping[fixedField];
-    if (current) {
-      updateMapping(fixedField, { ...current, format });
-    }
+    updateMapping(fixedField, {
+      type: current?.type || "field",
+      value: current?.value || "none",
+      format,
+    });
   };
 
   const getMappedCount = () => {
