@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { toZonedTime, formatInTimeZone } from 'https://esm.sh/date-fns-tz@3.0.0';
 
 const corsHeaders = {
