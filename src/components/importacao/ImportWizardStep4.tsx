@@ -3,11 +3,19 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+interface FieldMappingConfig {
+  type: "field" | "fixed";
+  value: string;
+  format?: string;
+}
 
 interface Props {
   selectedFields: string[];
-  fieldMapping: Record<string, string>;
-  onMappingChange: (mapping: Record<string, string>) => void;
+  fieldMapping: Record<string, FieldMappingConfig>;
+  onMappingChange: (mapping: Record<string, FieldMappingConfig>) => void;
 }
 
 const FIXED_FIELDS = [
@@ -20,15 +28,47 @@ const FIXED_FIELDS = [
   { value: "obs", label: "Observações", required: false },
 ];
 
+const FORMAT_OPTIONS = [
+  { value: "none", label: "Sem formatação" },
+  { value: "uppercase", label: "MAIÚSCULAS" },
+  { value: "lowercase", label: "minúsculas" },
+  { value: "capitalize", label: "Primeira Maiúscula" },
+  { value: "number", label: "Número" },
+  { value: "decimal", label: "Decimal (0.00)" },
+];
+
 export function ImportWizardStep4({ selectedFields, fieldMapping, onMappingChange }: Props) {
-  const updateMapping = (fixedField: string, excelField: string) => {
+  const updateMapping = (fixedField: string, config: FieldMappingConfig | null) => {
     const newMapping = { ...fieldMapping };
-    if (excelField === "none") {
+    if (!config) {
       delete newMapping[fixedField];
     } else {
-      newMapping[fixedField] = excelField;
+      newMapping[fixedField] = config;
     }
     onMappingChange(newMapping);
+  };
+
+  const updateMappingType = (fixedField: string, type: "field" | "fixed") => {
+    const current = fieldMapping[fixedField];
+    updateMapping(fixedField, {
+      type,
+      value: type === "field" ? "none" : "",
+      format: current?.format || "none",
+    });
+  };
+
+  const updateMappingValue = (fixedField: string, value: string) => {
+    const current = fieldMapping[fixedField];
+    if (current) {
+      updateMapping(fixedField, { ...current, value });
+    }
+  };
+
+  const updateMappingFormat = (fixedField: string, format: string) => {
+    const current = fieldMapping[fixedField];
+    if (current) {
+      updateMapping(fixedField, { ...current, format });
+    }
   };
 
   const getMappedCount = () => {
@@ -60,48 +100,101 @@ export function ImportWizardStep4({ selectedFields, fieldMapping, onMappingChang
       </div>
 
       <div className="space-y-3">
-        {FIXED_FIELDS.map((fixedField) => (
-          <Card key={fixedField.value} className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Label className="flex items-center gap-2">
-                  {fixedField.label}
-                  {fixedField.required && (
-                    <Badge variant="destructive" className="text-xs">
-                      Obrigatório
-                    </Badge>
+        {FIXED_FIELDS.map((fixedField) => {
+          const config = fieldMapping[fixedField.value];
+          const mappingType = config?.type || "field";
+
+          return (
+            <Card key={fixedField.value} className="p-4">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label className="flex items-center gap-2">
+                      {fixedField.label}
+                      {fixedField.required && (
+                        <Badge variant="destructive" className="text-xs">
+                          Obrigatório
+                        </Badge>
+                      )}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Campo fixo do sistema
+                    </p>
+                  </div>
+
+                  <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+
+                  <div className="flex-1">
+                    <RadioGroup
+                      value={mappingType}
+                      onValueChange={(value) => updateMappingType(fixedField.value, value as "field" | "fixed")}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="field" id={`${fixedField.value}-field`} />
+                        <Label htmlFor={`${fixedField.value}-field`} className="font-normal cursor-pointer">
+                          Mapear campo
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="fixed" id={`${fixedField.value}-fixed`} />
+                        <Label htmlFor={`${fixedField.value}-fixed`} className="font-normal cursor-pointer">
+                          Valor fixo
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  {mappingType === "field" ? (
+                    <Select
+                      value={config?.value || "none"}
+                      onValueChange={(value) => updateMappingValue(fixedField.value, value)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione um campo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">
+                          <span className="text-muted-foreground">(Não mapear)</span>
+                        </SelectItem>
+                        {selectedFields.map(field => (
+                          <SelectItem key={field} value={field}>
+                            {field}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      placeholder="Digite o valor fixo..."
+                      value={config?.value || ""}
+                      onChange={(e) => updateMappingValue(fixedField.value, e.target.value)}
+                      className="flex-1"
+                    />
                   )}
-                </Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Campo fixo do sistema
-                </p>
-              </div>
 
-              <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-
-              <div className="flex-1">
-                <Select
-                  value={fieldMapping[fixedField.value] || "none"}
-                  onValueChange={(value) => updateMapping(fixedField.value, value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um campo..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">
-                      <span className="text-muted-foreground">(Não mapear)</span>
-                    </SelectItem>
-                    {selectedFields.map(field => (
-                      <SelectItem key={field} value={field}>
-                        {field}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Select
+                    value={config?.format || "none"}
+                    onValueChange={(value) => updateMappingFormat(fixedField.value, value)}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Formatação..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FORMAT_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {getMappedCount() === 0 && (
