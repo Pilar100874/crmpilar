@@ -46,3 +46,6 @@ verify_jwt = true
 [functions.ucm-webhook]
 verify_jwt = false
 
+[functions.api-produtos-importados]
+verify_jwt = false
+
