@@ -1836,6 +1836,59 @@ export type Database = {
           },
         ]
       }
+      produtos_importados: {
+        Row: {
+          comprimento: string | null
+          created_at: string | null
+          dados_originais: Json | null
+          estabelecimento_id: string
+          gramatura: string | null
+          id: string
+          largura: string | null
+          nome: string
+          obs: string | null
+          quantidade: number | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          comprimento?: string | null
+          created_at?: string | null
+          dados_originais?: Json | null
+          estabelecimento_id: string
+          gramatura?: string | null
+          id?: string
+          largura?: string | null
+          nome: string
+          obs?: string | null
+          quantidade?: number | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          comprimento?: string | null
+          created_at?: string | null
+          dados_originais?: Json | null
+          estabelecimento_id?: string
+          gramatura?: string | null
+          id?: string
+          largura?: string | null
+          nome?: string
+          obs?: string | null
+          quantidade?: number | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtos_importados_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos_sugeridos: {
         Row: {
           aceito: boolean | null
