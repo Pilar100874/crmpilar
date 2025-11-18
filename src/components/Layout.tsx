@@ -33,6 +33,7 @@ import {
   PinOff,
   Phone,
   Video,
+  Upload,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
+  { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: Upload },
   { id: "Softphone", title: "Softphone", url: "/softphone", icon: Phone },
   { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: Video },
   { 
