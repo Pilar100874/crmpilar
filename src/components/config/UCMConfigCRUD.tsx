@@ -21,6 +21,7 @@ interface UCMConfig {
   enabled: boolean;
   is_local: boolean;
   conference_room_number?: string;
+  conference_room_password?: string;
 }
 
 export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
@@ -33,6 +34,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
     enabled: true,
     is_local: true,
     conference_room_number: "",
+    conference_room_password: "",
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -83,6 +85,7 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
           enabled: config.enabled,
           is_local: config.is_local,
           conference_room_number: config.conference_room_number || null,
+          conference_room_password: config.conference_room_password || null,
         }, {
           onConflict: 'estabelecimento_id'
         });
@@ -192,6 +195,20 @@ export function UCMConfigCRUD({ estabelecimentoId }: UCMConfigCRUDProps) {
         />
         <p className="text-xs text-muted-foreground">
           Número para discar no UCM para iniciar conferências multiponto
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="conference_room_password">Senha da Sala de Conferência (Opcional)</Label>
+        <Input
+          id="conference_room_password"
+          type="password"
+          placeholder="Senha da sala de conferência"
+          value={config.conference_room_password || ""}
+          onChange={(e) => setConfig({ ...config, conference_room_password: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">
+          Senha configurada na sala de conferência do UCM
         </p>
       </div>
 
