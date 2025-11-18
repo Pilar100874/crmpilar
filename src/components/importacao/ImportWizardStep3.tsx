@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Filter {
   id: string;
@@ -36,7 +38,52 @@ const OPERATORS = [
   { value: "not_empty", label: "Não vazio" },
 ];
 
-export function ImportWizardStep3({ selectedFields, filters, onFiltersChange }: Props) {
+export function ImportWizardStep3({ data, selectedFields, filters, onFiltersChange }: Props) {
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+
+  // Aplicar filtros em tempo real
+  useEffect(() => {
+    let result = [...data];
+    
+    filters.forEach(filter => {
+      result = result.filter(row => {
+        const value = row[filter.field];
+        const filterValue = filter.value;
+
+        switch (filter.operator) {
+          case "contains":
+            return String(value).toLowerCase().includes(filterValue.toLowerCase());
+          case "not_contains":
+            return !String(value).toLowerCase().includes(filterValue.toLowerCase());
+          case "equals":
+            return String(value) === filterValue;
+          case "not_equals":
+            return String(value) !== filterValue;
+          case "greater_than":
+            return Number(value) > Number(filterValue);
+          case "less_than":
+            return Number(value) < Number(filterValue);
+          case "greater_equal":
+            return Number(value) >= Number(filterValue);
+          case "less_equal":
+            return Number(value) <= Number(filterValue);
+          case "starts_with":
+            return String(value).toLowerCase().startsWith(filterValue.toLowerCase());
+          case "ends_with":
+            return String(value).toLowerCase().endsWith(filterValue.toLowerCase());
+          case "empty":
+            return !value || String(value).trim() === "";
+          case "not_empty":
+            return value && String(value).trim() !== "";
+          default:
+            return true;
+        }
+      });
+    });
+
+    setFilteredData(result);
+  }, [data, filters]);
+
   const addFilter = () => {
     const newFilter: Filter = {
       id: Date.now().toString(),
@@ -158,6 +205,60 @@ export function ImportWizardStep3({ selectedFields, filters, onFiltersChange }: 
         <p className="text-sm text-muted-foreground">
           💡 <strong>Dica:</strong> Os filtros serão aplicados em sequência. Você pode adicionar múltiplos filtros para refinar ainda mais os dados.
         </p>
+      </div>
+
+      {/* Preview dos dados filtrados */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Preview dos Dados Filtrados</h4>
+          <Badge variant={filteredData.length > 0 ? "default" : "secondary"}>
+            {filteredData.length} registro(s)
+          </Badge>
+        </div>
+
+        {filteredData.length > 0 ? (
+          <Card>
+            <ScrollArea className="h-[300px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {selectedFields.map(field => (
+                      <TableHead key={field} className="font-semibold">
+                        {field}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.slice(0, 50).map((row, index) => (
+                    <TableRow key={index}>
+                      {selectedFields.map(field => (
+                        <TableCell key={field}>
+                          {row[field] !== null && row[field] !== undefined ? String(row[field]) : (
+                            <span className="text-muted-foreground italic">-</span>
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+            {filteredData.length > 50 && (
+              <div className="p-3 border-t bg-muted/50 text-center text-sm text-muted-foreground">
+                Mostrando primeiros 50 de {filteredData.length} registros
+              </div>
+            )}
+          </Card>
+        ) : (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">
+              {filters.length > 0 
+                ? "Nenhum registro encontrado com os filtros aplicados" 
+                : "Adicione filtros para visualizar os dados"}
+            </p>
+          </Card>
+        )}
       </div>
     </div>
   );
