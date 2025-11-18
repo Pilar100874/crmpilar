@@ -10,13 +10,19 @@ import { ImportWizardStep4 } from "@/components/importacao/ImportWizardStep4";
 import { ImportWizardStep5 } from "@/components/importacao/ImportWizardStep5";
 import { ImportWizardStep6 } from "@/components/importacao/ImportWizardStep6";
 
+export interface FieldMappingConfig {
+  type: "field" | "fixed";
+  value: string;
+  format?: string;
+}
+
 export default function ImportacaoProdutos() {
   const [currentStep, setCurrentStep] = useState(1);
   const [excelData, setExcelData] = useState<any[]>([]);
   const [excelHeaders, setExcelHeaders] = useState<string[]>([]);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [filters, setFilters] = useState<any[]>([]);
-  const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({});
+  const [fieldMapping, setFieldMapping] = useState<Record<string, FieldMappingConfig>>({});
   const [finalData, setFinalData] = useState<any[]>([]);
   const [apiEndpoint, setApiEndpoint] = useState<string>("");
 

@@ -12,16 +12,44 @@ interface Filter {
   value: string;
 }
 
+interface FieldMappingConfig {
+  type: "field" | "fixed";
+  value: string;
+  format?: string;
+}
+
 interface Props {
   data: any[];
   selectedFields: string[];
   filters: Filter[];
-  fieldMapping: Record<string, string>;
+  fieldMapping: Record<string, FieldMappingConfig>;
   onFinalDataChange: (data: any[]) => void;
 }
 
 export function ImportWizardStep5({ data, selectedFields, filters, fieldMapping, onFinalDataChange }: Props) {
   const [processedData, setProcessedData] = useState<any[]>([]);
+
+  const applyFormat = (value: any, format?: string): any => {
+    if (!format || format === "none" || !value) return value;
+    
+    const strValue = String(value);
+    
+    switch (format) {
+      case "uppercase":
+        return strValue.toUpperCase();
+      case "lowercase":
+        return strValue.toLowerCase();
+      case "capitalize":
+        return strValue.charAt(0).toUpperCase() + strValue.slice(1).toLowerCase();
+      case "number":
+        return Number(strValue.replace(/[^0-9.-]/g, "")) || 0;
+      case "decimal":
+        const num = Number(strValue.replace(/[^0-9.-]/g, "")) || 0;
+        return num.toFixed(2);
+      default:
+        return value;
+    }
+  };
 
   useEffect(() => {
     // Aplicar filtros
@@ -63,11 +91,19 @@ export function ImportWizardStep5({ data, selectedFields, filters, fieldMapping,
       });
     });
 
-    // Mapear para campos fixos
+    // Mapear para campos fixos e aplicar formatação
     const mappedData = filteredData.map(row => {
       const mapped: any = {};
-      Object.entries(fieldMapping).forEach(([fixedField, excelField]) => {
-        mapped[fixedField] = row[excelField] || null;
+      Object.entries(fieldMapping).forEach(([fixedField, config]) => {
+        let fieldValue;
+        
+        if (config.type === "fixed") {
+          fieldValue = config.value;
+        } else {
+          fieldValue = row[config.value] || null;
+        }
+        
+        mapped[fixedField] = applyFormat(fieldValue, config.format);
       });
       return mapped;
     });
