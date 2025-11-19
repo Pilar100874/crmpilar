@@ -24,6 +24,9 @@ const FIXED_FIELDS = [
   { value: "gramatura", label: "Gramatura", required: false },
   { value: "largura", label: "Largura", required: false },
   { value: "comprimento", label: "Comprimento", required: false },
+  { value: "embalagem", label: "Embalagem", required: false, options: ["Skid", "Pacote", "Bobina"] },
+  { value: "numero_folhas", label: "Número de Folhas", required: false },
+  { value: "diametro", label: "Diâmetro", required: false },
   { value: "tipo", label: "Tipo", required: false },
   { value: "obs", label: "Observações", required: false },
 ];
@@ -171,6 +174,22 @@ export function ImportWizardStep4({ selectedFields, fieldMapping, onMappingChang
                         {selectedFields.map(field => (
                           <SelectItem key={field} value={field}>
                             {field}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : fixedField.value === "embalagem" && fixedField.options ? (
+                    <Select
+                      value={config?.value || ""}
+                      onValueChange={(value) => updateMappingValue(fixedField.value, value)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione a embalagem..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fixedField.options.map(option => (
+                          <SelectItem key={option} value={option}>
+                            {option}
                           </SelectItem>
                         ))}
                       </SelectContent>
