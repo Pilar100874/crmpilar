@@ -289,6 +289,49 @@ export default function Relatorios() {
               </CardContent>
             </Card>
 
+            {/* Card de Modelo para Produtos Importados */}
+            <Card 
+              className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-accent/30 h-full flex flex-col"
+              onClick={async () => {
+                // Verificar se já existe um modelo para produtos importados
+                const estabelecimentoId = await getEstabelecimentoId();
+                const { data: existing } = await supabase
+                  .from("relatorios")
+                  .select("id")
+                  .eq("estabelecimento_id", estabelecimentoId)
+                  .eq("nome", "Modelo para Produtos Importados")
+                  .maybeSingle();
+                
+                if (existing) {
+                  toast.info("Editando modelo para produtos importados");
+                  setCurrentReportId(existing.id);
+                  setShowDesigner(true);
+                } else {
+                  setFormData({ 
+                    nome: "Modelo para Produtos Importados", 
+                    descricao: "Modelo único para visualização de produtos importados" 
+                  });
+                  await handleCreate();
+                }
+              }}
+            >
+              <CardHeader className="flex-1 p-4">
+                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
+                  <FileText className="w-6 h-6 text-accent" />
+                </div>
+                <CardTitle>Modelo para Produtos Importados</CardTitle>
+                <CardDescription>
+                  Modelo único para visualizar qualquer API de importação de produtos
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="mt-auto p-4 pt-0">
+                <Button variant="secondary" className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar/Editar Modelo
+                </Button>
+              </CardContent>
+            </Card>
+
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <Card key={i} className="animate-pulse h-full">
