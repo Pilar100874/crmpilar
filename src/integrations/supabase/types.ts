@@ -2234,6 +2234,50 @@ export type Database = {
           },
         ]
       }
+      relatorios_importacao: {
+        Row: {
+          api_endpoint: string | null
+          ativo: boolean
+          configuracao: Json
+          created_at: string
+          data_criacao: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          ativo?: boolean
+          configuracao?: Json
+          created_at?: string
+          data_criacao: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          ativo?: boolean
+          configuracao?: Json
+          created_at?: string
+          data_criacao?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_importacao_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_preview_jobs: {
         Row: {
           created_at: string

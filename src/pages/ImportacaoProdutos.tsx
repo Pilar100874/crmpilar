@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,6 +11,9 @@ import { ImportWizardStep3 } from "@/components/importacao/ImportWizardStep3";
 import { ImportWizardStep4 } from "@/components/importacao/ImportWizardStep4";
 import { ImportWizardStep5 } from "@/components/importacao/ImportWizardStep5";
 import { ImportWizardStep6 } from "@/components/importacao/ImportWizardStep6";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { toast } from "sonner";
 
 export interface FieldMappingConfig {
   type: "field" | "fixed";
@@ -18,6 +22,8 @@ export interface FieldMappingConfig {
 }
 
 export default function ImportacaoProdutos() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [reportName, setReportName] = useState("");
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
@@ -28,9 +34,114 @@ export default function ImportacaoProdutos() {
   const [fieldMapping, setFieldMapping] = useState<Record<string, FieldMappingConfig>>({});
   const [finalData, setFinalData] = useState<any[]>([]);
   const [apiEndpoint, setApiEndpoint] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [relatorioId, setRelatorioId] = useState<string | null>(id || null);
 
   const totalSteps = 7;
   const progress = ((currentStep + 1) / totalSteps) * 100;
+
+  useEffect(() => {
+    if (id) {
+      loadRelatorio(id);
+    }
+  }, [id]);
+
+  const loadRelatorio = async (relatorioId: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("relatorios_importacao")
+        .select("*")
+        .eq("id", relatorioId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setReportName(data.nome);
+        setReportDate(data.data_criacao);
+        setApiEndpoint(data.api_endpoint || "");
+        
+        const config = data.configuracao as any;
+        if (config) {
+          setExcelData(config.excelData || []);
+          setExcelHeaders(config.excelHeaders || []);
+          setSelectedFields(config.selectedFields || []);
+          setFilters(config.filters || []);
+          setFieldMapping(config.fieldMapping || {});
+          setFinalData(config.finalData || []);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar relatório:", error);
+      toast.error("Erro ao carregar relatório");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    try {
+      setLoading(true);
+      const estabelecimentoId = await getEstabelecimentoId();
+      
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      const configuracao = JSON.parse(JSON.stringify({
+        excelData,
+        excelHeaders,
+        selectedFields,
+        filters,
+        fieldMapping,
+        finalData
+      }));
+
+      if (relatorioId) {
+        // Atualizar relatório existente
+        const { error } = await supabase
+          .from("relatorios_importacao")
+          .update({
+            nome: reportName,
+            data_criacao: reportDate,
+            api_endpoint: apiEndpoint || null,
+            configuracao
+          })
+          .eq("id", relatorioId);
+
+        if (error) throw error;
+        toast.success("Relatório atualizado com sucesso!");
+      } else {
+        // Criar novo relatório
+        const { data, error } = await supabase
+          .from("relatorios_importacao")
+          .insert([{
+            estabelecimento_id: estabelecimentoId,
+            nome: reportName,
+            data_criacao: reportDate,
+            api_endpoint: apiEndpoint || null,
+            configuracao
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          setRelatorioId(data.id);
+        }
+        toast.success("Relatório criado com sucesso!");
+      }
+
+      navigate("/importacao-produtos");
+    } catch (error) {
+      console.error("Erro ao salvar relatório:", error);
+      toast.error("Erro ao salvar relatório");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const canProceed = () => {
     switch (currentStep) {
@@ -173,21 +284,18 @@ export default function ImportacaoProdutos() {
             {currentStep < totalSteps ? (
               <Button
                 onClick={handleNext}
-                disabled={!canProceed()}
+                disabled={!canProceed() || loading}
               >
                 Próxima
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
               <Button
-                onClick={() => {
-                  // Finalizar processo
-                  console.log("Processo concluído!");
-                }}
-                disabled={!canProceed()}
+                onClick={handleFinish}
+                disabled={!canProceed() || loading}
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                Concluir
+                {loading ? "Salvando..." : "Concluir"}
               </Button>
             )}
           </div>
