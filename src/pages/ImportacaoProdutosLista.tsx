@@ -95,6 +95,42 @@ export default function ImportacaoProdutosLista() {
     toast.success("URL da API copiada!");
   };
 
+  const handleDuplicate = async (relatorioId: string) => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      const { data: original, error: fetchError } = await supabase
+        .from("relatorios_importacao")
+        .select("*")
+        .eq("id", relatorioId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { id, created_at, api_endpoint, ...duplicateData } = original;
+      
+      const { error: insertError } = await supabase
+        .from("relatorios_importacao")
+        .insert({
+          ...duplicateData,
+          nome: `${duplicateData.nome} (Cópia)`,
+          estabelecimento_id: estabelecimentoId,
+        });
+
+      if (insertError) throw insertError;
+
+      toast.success("Relatório duplicado com sucesso");
+      loadRelatorios();
+    } catch (error) {
+      console.error("Erro ao duplicar relatório:", error);
+      toast.error("Erro ao duplicar relatório");
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
@@ -177,28 +213,37 @@ export default function ImportacaoProdutosLista() {
                   </div>
                 )}
                 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => navigate(`/importacao-produtos/editar/${relatorio.id}`)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Editar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => {
-                      setRelatorioToDelete(relatorio.id);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate(`/importacao-produtos/editar/${relatorio.id}`)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDuplicate(relatorio.id)}>
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Duplicar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCopyApiUrl(relatorio.api_endpoint)}>
+                      <Globe className="h-4 w-4 mr-2" />
+                      Copiar URL da API
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onClick={() => {
+                        setRelatorioToDelete(relatorio.id);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardContent>
             </Card>
           ))}
