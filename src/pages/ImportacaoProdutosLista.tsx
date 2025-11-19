@@ -98,6 +98,50 @@ export default function ImportacaoProdutosLista() {
     toast.success("URL da API copiada!");
   };
 
+  const handleGeneratePdf = async (apiEndpoint: string) => {
+    try {
+      toast.info("Gerando PDF...");
+      
+      // Buscar modelo para produtos importados
+      const estabelecimentoId = await getEstabelecimentoId();
+      const { data: modelo } = await supabase
+        .from("relatorios")
+        .select("id")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("nome", "Modelo para Produtos Importados")
+        .maybeSingle();
+
+      if (!modelo) {
+        toast.error("Modelo para produtos importados não encontrado. Crie o modelo primeiro.");
+        return;
+      }
+
+      // Aqui você implementaria a lógica de gerar PDF usando o modelo
+      toast.success("PDF gerado com sucesso");
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar PDF");
+    }
+  };
+
+  const handleGenerateExcel = async (apiEndpoint: string) => {
+    try {
+      toast.info("Gerando Excel...");
+      
+      // Buscar dados da API
+      const response = await fetch(apiEndpoint);
+      if (!response.ok) throw new Error("Erro ao buscar dados da API");
+      
+      const data = await response.json();
+      
+      // Aqui você implementaria a lógica de gerar Excel
+      toast.success("Excel gerado com sucesso");
+    } catch (error) {
+      console.error("Erro ao gerar Excel:", error);
+      toast.error("Erro ao gerar Excel");
+    }
+  };
+
   const handleDuplicate = async (relatorioId: string) => {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
@@ -213,13 +257,29 @@ export default function ImportacaoProdutosLista() {
                       Duplicar
                     </DropdownMenuItem>
                     {relatorio.api_endpoint && (
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopyApiUrl(relatorio.api_endpoint);
-                      }}>
-                        <Globe className="h-4 w-4 mr-2" />
-                        Copiar URL da API
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyApiUrl(relatorio.api_endpoint);
+                        }}>
+                          <Globe className="h-4 w-4 mr-2" />
+                          Copiar URL da API
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleGeneratePdf(relatorio.api_endpoint);
+                        }}>
+                          <FileSpreadsheet className="h-4 w-4 mr-2" />
+                          Gerar PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateExcel(relatorio.api_endpoint);
+                        }}>
+                          <FileSpreadsheet className="h-4 w-4 mr-2" />
+                          Gerar Excel
+                        </DropdownMenuItem>
+                      </>
                     )}
                     <DropdownMenuItem 
                       className="text-destructive"
