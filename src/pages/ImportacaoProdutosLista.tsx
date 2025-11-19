@@ -96,20 +96,11 @@ export default function ImportacaoProdutosLista() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Importação de Produtos de Terceiro</h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie seus relatórios de importação e APIs
-          </p>
-        </div>
-        <Button
-          onClick={() => navigate("/importacao-produtos/novo")}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Relatório
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold">Importação de Produtos</h1>
+        <p className="text-muted-foreground mt-1">
+          Gerencie suas rotinas de importação de produtos
+        </p>
       </div>
 
       {loading ? (
@@ -131,8 +122,24 @@ export default function ImportacaoProdutosLista() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {relatorios.map((relatorio) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Card de Criação */}
+        <Card 
+          className="cursor-pointer hover:shadow-lg transition-shadow border-dashed border-2 flex items-center justify-center min-h-[200px]"
+          onClick={() => navigate("/importacao-produtos/novo")}
+        >
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Plus className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold">Criar Nova Rotina</h3>
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              Importe produtos de arquivos Excel
+            </p>
+          </CardContent>
+        </Card>
+
+        {relatorios.map((relatorio) => (
             <Card key={relatorio.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">

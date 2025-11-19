@@ -278,14 +278,22 @@ export default function ImportacaoProdutos() {
           </div>
 
           <div className="flex justify-between pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 0}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStep === 0}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/importacao-produtos")}
+              >
+                Cancelar
+              </Button>
+            </div>
 
             {currentStep < totalSteps - 1 ? (
               <Button
