@@ -2,14 +2,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Props {
   headers: string[];
   selectedFields: string[];
   onSelectFields: (fields: string[]) => void;
+  data?: any[];
 }
 
-export function ImportWizardStep2({ headers, selectedFields, onSelectFields }: Props) {
+export function ImportWizardStep2({ headers, selectedFields, onSelectFields, data = [] }: Props) {
   const handleToggleField = (field: string) => {
     if (selectedFields.includes(field)) {
       onSelectFields(selectedFields.filter(f => f !== field));
@@ -80,6 +82,41 @@ export function ImportWizardStep2({ headers, selectedFields, onSelectFields }: P
             ⚠️ Selecione pelo menos um campo para continuar
           </p>
         </div>
+      )}
+
+      {selectedFields.length > 0 && data.length > 0 && (
+        <Card className="p-4">
+          <div className="space-y-2 mb-4">
+            <h4 className="font-semibold">Prévia dos Dados</h4>
+            <p className="text-sm text-muted-foreground">
+              Mostrando até 5 linhas dos campos selecionados
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {selectedFields.map((field) => (
+                    <TableHead key={field}>{field}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.slice(0, 5).map((row, index) => (
+                  <TableRow key={index}>
+                    {selectedFields.map((field) => (
+                      <TableCell key={field}>
+                        {row[field] !== undefined && row[field] !== null
+                          ? String(row[field])
+                          : "-"}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
     </div>
   );
