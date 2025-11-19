@@ -90,14 +90,14 @@ export default function ImportacaoProdutos() {
         return;
       }
 
-      const configuracao = JSON.parse(JSON.stringify({
+      const configuracao = {
         excelData,
         excelHeaders,
         selectedFields,
         filters,
         fieldMapping,
         finalData
-      }));
+      } as any;
 
       if (relatorioId) {
         // Atualizar relatório existente
@@ -111,7 +111,10 @@ export default function ImportacaoProdutos() {
           })
           .eq("id", relatorioId);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar:", error);
+          throw error;
+        }
         toast.success("Relatório atualizado com sucesso!");
       } else {
         // Criar novo relatório
@@ -127,7 +130,10 @@ export default function ImportacaoProdutos() {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao inserir:", error);
+          throw error;
+        }
         if (data) {
           setRelatorioId(data.id);
         }
@@ -135,9 +141,9 @@ export default function ImportacaoProdutos() {
       }
 
       navigate("/importacao-produtos");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar relatório:", error);
-      toast.error("Erro ao salvar relatório");
+      toast.error(`Erro ao salvar relatório: ${error.message || "Erro desconhecido"}`);
     } finally {
       setLoading(false);
     }
