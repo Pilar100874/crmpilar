@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Calendar, Globe, Trash2, Edit, MoreVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -159,82 +159,69 @@ export default function ImportacaoProdutosLista() {
           </CardContent>
         </Card>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Card de Criação */}
-        <Card 
-          className="cursor-pointer hover:shadow-lg transition-shadow border-dashed border-2 flex items-center justify-center min-h-[200px]"
-          onClick={() => navigate("/importacao-produtos/novo")}
-        >
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <Plus className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="text-lg font-semibold">Criar Nova Importação</h3>
-            <p className="text-sm text-muted-foreground text-center mt-2">
-              Importe produtos de arquivos Excel
-            </p>
-          </CardContent>
-        </Card>
+        <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+          {/* Card de Criação */}
+          <Card 
+            className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
+            onClick={() => navigate("/importacao-produtos/novo")}
+          >
+            <CardHeader className="flex-1 p-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <FileSpreadsheet className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle>Criar Nova Importação</CardTitle>
+              <CardDescription>
+                Configure uma nova rotina de importação de produtos a partir de arquivos Excel
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-auto p-4 pt-0">
+              <Button className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Importação
+              </Button>
+            </CardContent>
+          </Card>
 
-        {relatorios.map((relatorio) => (
-            <Card key={relatorio.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1 flex-1">
-                    <CardTitle className="text-lg">{relatorio.nome}</CardTitle>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(relatorio.data_criacao).toLocaleDateString('pt-BR')}
-                    </div>
-                  </div>
-                  <Badge variant={relatorio.ativo ? "default" : "secondary"}>
-                    {relatorio.ativo ? "Ativo" : "Inativo"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {relatorio.api_endpoint && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">URL da API</span>
-                    </div>
-                    <p className="text-xs font-mono break-all text-muted-foreground">
-                      {relatorio.api_endpoint}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={() => handleCopyApiUrl(relatorio.api_endpoint)}
-                    >
-                      Copiar URL
-                    </Button>
-                  </div>
-                )}
-                
+          {relatorios.map((relatorio) => (
+            <Card
+              key={relatorio.id}
+              className="hover:shadow-lg transition-all relative group h-full flex flex-col"
+            >
+              <div className="absolute top-4 right-4 z-10">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="h-4 w-4" />
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreVertical className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => navigate(`/importacao-produtos/editar/${relatorio.id}`)}>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/importacao-produtos/editar/${relatorio.id}`);
+                    }}>
                       <Edit className="h-4 w-4 mr-2" />
                       Editar
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDuplicate(relatorio.id)}>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      handleDuplicate(relatorio.id);
+                    }}>
                       <FileSpreadsheet className="h-4 w-4 mr-2" />
                       Duplicar
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleCopyApiUrl(relatorio.api_endpoint)}>
-                      <Globe className="h-4 w-4 mr-2" />
-                      Copiar URL da API
-                    </DropdownMenuItem>
+                    {relatorio.api_endpoint && (
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyApiUrl(relatorio.api_endpoint);
+                      }}>
+                        <Globe className="h-4 w-4 mr-2" />
+                        Copiar URL da API
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem 
                       className="text-destructive"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setRelatorioToDelete(relatorio.id);
                         setDeleteDialogOpen(true);
                       }}
@@ -244,12 +231,44 @@ export default function ImportacaoProdutosLista() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+
+              <CardHeader className="flex-1 p-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <FileSpreadsheet className="w-6 h-6 text-primary" />
+                </div>
+                <CardTitle className="pr-8">{relatorio.nome}</CardTitle>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant={relatorio.ativo ? "default" : "secondary"} className="text-xs">
+                    {relatorio.ativo ? "Ativo" : "Inativo"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(relatorio.data_criacao).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+                {relatorio.api_endpoint && (
+                  <CardDescription className="break-all text-xs">
+                    API: {relatorio.api_endpoint}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="mt-auto p-4 pt-0">
+                <Button 
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/importacao-produtos/editar/${relatorio.id}`);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar Importação
+                </Button>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
-
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
