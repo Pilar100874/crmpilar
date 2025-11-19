@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ImportWizardStep0 } from "@/components/importacao/ImportWizardStep0";
 import { ImportWizardStep1 } from "@/components/importacao/ImportWizardStep1";
 import { ImportWizardStep2 } from "@/components/importacao/ImportWizardStep2";
 import { ImportWizardStep3 } from "@/components/importacao/ImportWizardStep3";
@@ -17,7 +18,9 @@ export interface FieldMappingConfig {
 }
 
 export default function ImportacaoProdutos() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [reportName, setReportName] = useState("");
+  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [excelData, setExcelData] = useState<any[]>([]);
   const [excelHeaders, setExcelHeaders] = useState<string[]>([]);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -26,11 +29,13 @@ export default function ImportacaoProdutos() {
   const [finalData, setFinalData] = useState<any[]>([]);
   const [apiEndpoint, setApiEndpoint] = useState<string>("");
 
-  const totalSteps = 6;
-  const progress = (currentStep / totalSteps) * 100;
+  const totalSteps = 7;
+  const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const canProceed = () => {
     switch (currentStep) {
+      case 0:
+        return reportName.trim() !== "" && reportDate !== "";
       case 1:
         return excelData.length > 0;
       case 2:
@@ -55,13 +60,22 @@ export default function ImportacaoProdutos() {
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
 
   const renderStep = () => {
     switch (currentStep) {
+      case 0:
+        return (
+          <ImportWizardStep0
+            reportName={reportName}
+            reportDate={reportDate}
+            onReportNameChange={setReportName}
+            onReportDateChange={setReportDate}
+          />
+        );
       case 1:
         return (
           <ImportWizardStep1
@@ -136,7 +150,7 @@ export default function ImportacaoProdutos() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Etapa {currentStep} de {totalSteps}</CardTitle>
+            <CardTitle>Etapa {currentStep + 1} de {totalSteps}</CardTitle>
             <span className="text-sm text-muted-foreground">{Math.round(progress)}% concluído</span>
           </div>
           <Progress value={progress} className="mt-2" />
@@ -150,7 +164,7 @@ export default function ImportacaoProdutos() {
             <Button
               variant="outline"
               onClick={handleBack}
-              disabled={currentStep === 1}
+              disabled={currentStep === 0}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar
