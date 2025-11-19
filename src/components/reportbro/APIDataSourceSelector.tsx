@@ -43,11 +43,12 @@ interface APIDataSourceSelectorProps {
   ) => void;
   currentUrl?: string;
   currentVariables?: APIVariable[];
-  localUso?: 'relatorio' | 'importar_empresa' | 'criacao_bot';
+  localUso?: 'relatorio' | 'importar_empresa' | 'criacao_bot' | 'importar_produto';
   hideSelectedCard?: boolean;
+  customEndpoints?: APIEndpoint[];
 }
 
-export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVariables, localUso = 'relatorio', hideSelectedCard = false }: APIDataSourceSelectorProps) {
+export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVariables, localUso = 'relatorio', hideSelectedCard = false, customEndpoints }: APIDataSourceSelectorProps) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [testingUrl, setTestingUrl] = useState<string | null>(null);
@@ -58,8 +59,13 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
   const [savingDefaults, setSavingDefaults] = useState(false);
 
   useEffect(() => {
-    loadEndpoints();
-  }, []);
+    if (customEndpoints) {
+      setEndpoints(customEndpoints);
+      setLoading(false);
+    } else {
+      loadEndpoints();
+    }
+  }, [customEndpoints]);
 
   const loadEndpoints = async () => {
     try {
@@ -461,10 +467,18 @@ export function APIDataSourceSelector({ onSelect, onTest, currentUrl, currentVar
               <div className="text-center py-12 text-muted-foreground">
                 <Database className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p className="font-medium">
-                  {searchTerm ? "Nenhuma API encontrada" : "Nenhuma API cadastrada"}
+                  {searchTerm 
+                    ? "Nenhuma API encontrada" 
+                    : customEndpoints 
+                      ? "Nenhuma rotina de importação criada ainda" 
+                      : "Nenhuma API cadastrada"}
                 </p>
                 <p className="text-sm mt-1">
-                  {searchTerm ? "Tente outro termo de busca" : "Configure APIs no Gerador de API"}
+                  {searchTerm 
+                    ? "Tente outro termo de busca" 
+                    : customEndpoints
+                      ? "Crie rotinas de importação em Importação de Produtos"
+                      : "Configure APIs no Gerador de API"}
                 </p>
               </div>
             ) : (

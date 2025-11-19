@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { APIDataSourceSelector } from "./APIDataSourceSelector";
 import { TestVariablesDialog } from "./TestVariablesDialog";
 import { Globe, X, Save, FileText } from "lucide-react";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface ReportBroDesignerProps {
   reportId: string | null;
@@ -31,6 +32,8 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
   const [apiVariables, setApiVariables] = useState<Array<{ name: string; type: string }>>([]);
   const [savedApiVariables, setSavedApiVariables] = useState<Array<{ name: string; type: string; value: string }>>([]);
   const [lastApiParams, setLastApiParams] = useState<Record<string, any> | null>(null);
+  const [isImportProductModel, setIsImportProductModel] = useState(false);
+  const [importProductApis, setImportProductApis] = useState<any[]>([]);
 
   // Traduz interface do ReportBro para pt-BR dinamicamente
   const translateInterfacePtBR = () => {
@@ -553,6 +556,40 @@ export function ReportBroDesigner({ reportId, onClose }: ReportBroDesignerProps)
 
       // Carrega o nome do relatório
       setReportName(data.nome || "Relatório sem nome");
+
+      // Verifica se é o modelo de produtos importados
+      const isImportModel = data.nome === "Modelo para Produtos Importados";
+      setIsImportProductModel(isImportModel);
+
+      // Se for o modelo de produtos importados, carrega as APIs de importação
+      if (isImportModel) {
+        const estabelecimentoId = await getEstabelecimentoId();
+        if (estabelecimentoId) {
+          const { data: importApis, error: importError } = await supabase
+            .from("relatorios_importacao")
+            .select("*")
+            .eq("estabelecimento_id", estabelecimentoId)
+            .order("created_at", { ascending: false });
+
+          if (!importError && importApis) {
+            // Formata as APIs no formato esperado pelo APIDataSourceSelector
+            const formattedApis = importApis
+              .filter(api => api.api_endpoint) // Apenas APIs que já foram geradas
+              .map(api => ({
+                id: api.id,
+                name: api.nome,
+                description: `Rotina de importação criada em ${new Date(api.created_at).toLocaleDateString()}`,
+                endpoint_path: api.api_endpoint || "",
+                http_method: "GET",
+                active: api.ativo,
+                parameters: [],
+                is_custom: true,
+                custom_url: api.api_endpoint || ""
+              }));
+            setImportProductApis(formattedApis);
+          }
+        }
+      }
 
       if (reportBroRef.current) {
         let layoutData: any = null;
@@ -1239,6 +1276,7 @@ const loadApiData = async (
               onTest={handleApiTest}
               currentUrl={currentApiUrl}
               currentVariables={savedApiVariables}
+              customEndpoints={isImportProductModel ? importProductApis : undefined}
             />
           </div>
         </DialogContent>
