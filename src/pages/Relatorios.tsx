@@ -267,83 +267,99 @@ export default function Relatorios() {
             </p>
           </div>
 
-          <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
-            <Card 
-              className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
-              onClick={() => setShowNewDialog(true)}
-            >
-              <CardHeader className="flex-1 p-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-primary" />
-                </div>
-                <CardTitle>Criar Novo Modelo</CardTitle>
-                <CardDescription>
-                  Configure um novo modelo de relatório profissional com o designer ReportBro
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto p-4 pt-0">
-                <Button className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Criar Modelo
-                </Button>
-              </CardContent>
-            </Card>
+          {/* Seção: Criar Novos Modelos */}
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground mb-1">Criar Novos Modelos</h2>
+              <p className="text-sm text-muted-foreground">Crie novos modelos de relatório personalizados</p>
+            </div>
+            <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
+                onClick={() => setShowNewDialog(true)}
+              >
+                <CardHeader className="flex-1 p-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6 text-primary" />
+                  </div>
+                  <CardTitle>Criar Novo Modelo</CardTitle>
+                  <CardDescription>
+                    Configure um novo modelo de relatório profissional com o designer ReportBro
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto p-4 pt-0">
+                  <Button className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar Modelo
+                  </Button>
+                </CardContent>
+              </Card>
 
-            {/* Card de Modelo para Produtos Importados */}
-            <Card 
-              className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-accent/30 h-full flex flex-col"
-              onClick={async () => {
-                // Verificar se já existe um modelo para produtos importados
-                const estabelecimentoId = await getEstabelecimentoId();
-                const { data: existing } = await supabase
-                  .from("relatorios")
-                  .select("id")
-                  .eq("estabelecimento_id", estabelecimentoId)
-                  .eq("nome", "Modelo para Produtos Importados")
-                  .maybeSingle();
-                
-                if (existing) {
-                  toast.info("Editando modelo para produtos importados");
-                  setCurrentReportId(existing.id);
-                  setShowDesigner(true);
-                } else {
-                  setFormData({ 
-                    nome: "Modelo para Produtos Importados", 
-                    descricao: "Modelo único para visualização de produtos importados" 
-                  });
-                  await handleCreate();
-                }
-              }}
-            >
-              <CardHeader className="flex-1 p-4">
-                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-accent" />
-                </div>
-                <CardTitle>Modelo para Produtos Importados</CardTitle>
-                <CardDescription>
-                  Modelo único para visualizar qualquer API de importação de produtos
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto p-4 pt-0">
-                <Button variant="secondary" className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Criar/Editar Modelo
-                </Button>
-              </CardContent>
-            </Card>
+              {/* Card de Modelo para Produtos Importados */}
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-accent/30 h-full flex flex-col"
+                onClick={async () => {
+                  // Verificar se já existe um modelo para produtos importados
+                  const estabelecimentoId = await getEstabelecimentoId();
+                  const { data: existing } = await supabase
+                    .from("relatorios")
+                    .select("id")
+                    .eq("estabelecimento_id", estabelecimentoId)
+                    .eq("nome", "Modelo para Produtos Importados")
+                    .maybeSingle();
+                  
+                  if (existing) {
+                    toast.info("Editando modelo para produtos importados");
+                    setCurrentReportId(existing.id);
+                    setShowDesigner(true);
+                  } else {
+                    setFormData({ 
+                      nome: "Modelo para Produtos Importados", 
+                      descricao: "Modelo único para visualização de produtos importados" 
+                    });
+                    await handleCreate();
+                  }
+                }}
+              >
+                <CardHeader className="flex-1 p-4">
+                  <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6 text-accent" />
+                  </div>
+                  <CardTitle>Modelo para Produtos Importados</CardTitle>
+                  <CardDescription>
+                    Modelo único para visualizar qualquer API de importação de produtos
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto p-4 pt-0">
+                  <Button variant="secondary" className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar/Editar Modelo
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="animate-pulse h-full">
-                  <CardHeader>
-                    <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
-                    <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-muted rounded w-full"></div>
-                  </CardHeader>
-                </Card>
-              ))
-            ) : (
-              reports.map((report) => (
+          {/* Seção: Modelos Personalizados */}
+          {reports.length > 0 && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-1">Modelos Personalizados</h2>
+                <p className="text-sm text-muted-foreground">Seus modelos de relatório criados</p>
+              </div>
+              <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i} className="animate-pulse h-full">
+                      <CardHeader>
+                        <div className="w-12 h-12 rounded-lg bg-muted mb-4"></div>
+                        <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+                        <div className="h-4 bg-muted rounded w-full"></div>
+                      </CardHeader>
+                    </Card>
+                  ))
+                ) : (
+                  reports.map((report) => (
                 <Card
                   key={report.id}
                   className="hover:shadow-lg transition-all relative group h-full flex flex-col"
@@ -431,17 +447,19 @@ export default function Relatorios() {
                     </Button>
                   </CardContent>
                 </Card>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
+          )}
 
           {!loading && reports.length === 0 && (
-            <div className="text-center py-12">
+            <div className="text-center py-8 mt-8 border-t border-border">
               <div className="w-20 h-20 rounded-2xl bg-muted mx-auto mb-4 flex items-center justify-center">
                 <FileText className="w-10 h-10 text-muted-foreground" />
               </div>
               <p className="text-muted-foreground">
-                Você ainda não tem modelos de relatório criados. Clique no card acima para criar seu primeiro modelo!
+                Você ainda não tem modelos personalizados criados.
               </p>
             </div>
           )}
