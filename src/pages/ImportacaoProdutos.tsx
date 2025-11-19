@@ -281,7 +281,7 @@ export default function ImportacaoProdutos() {
               Voltar
             </Button>
 
-            {currentStep < totalSteps ? (
+            {currentStep < totalSteps - 1 ? (
               <Button
                 onClick={handleNext}
                 disabled={!canProceed() || loading}
