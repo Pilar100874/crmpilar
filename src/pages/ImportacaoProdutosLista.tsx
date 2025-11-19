@@ -132,7 +132,7 @@ export default function ImportacaoProdutosLista() {
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Plus className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold">Criar Nova Rotina</h3>
+            <h3 className="text-lg font-semibold">Criar Nova Importação</h3>
             <p className="text-sm text-muted-foreground text-center mt-2">
               Importe produtos de arquivos Excel
             </p>
