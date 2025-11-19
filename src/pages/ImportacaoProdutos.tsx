@@ -79,6 +79,7 @@ export default function ImportacaoProdutos() {
             headers={excelHeaders}
             selectedFields={selectedFields}
             onSelectFields={setSelectedFields}
+            data={excelData}
           />
         );
       case 3:
