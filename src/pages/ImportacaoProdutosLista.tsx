@@ -106,7 +106,7 @@ export default function ImportacaoProdutosLista() {
       const estabelecimentoId = await getEstabelecimentoId();
       const { data: modelo } = await supabase
         .from("relatorios")
-        .select("id, layout_json")
+        .select("id, nome")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("nome", "Modelo para Produtos Importados")
         .maybeSingle();
@@ -116,58 +116,27 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      if (!modelo.layout_json) {
-        toast.error("Modelo sem layout definido. Configure o modelo primeiro.");
-        return;
-      }
-
-      // Gerar PDF usando a edge function
-      const layoutJsonObj = typeof modelo.layout_json === 'string' 
-        ? JSON.parse(modelo.layout_json)
-        : modelo.layout_json;
-
-      const { data: result, error: fnError } = await supabase.functions.invoke('reportbro-preview', {
+      // Gerar PDF usando a edge function correta
+      const { data: result, error: fnError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
         body: { 
-          reportId: modelo.id, 
-          page: 1, 
-          pageSize: 10000,
-          testVariables: {
-            api_data: apiEndpoint
-          }
+          relatorioId: modelo.id,
+          apiVariables: {},
+          reportVariables: {},
+          outputType: 'pdf'
         }
       });
 
-      if (fnError || !result?.success) {
-        throw new Error(result?.error || fnError?.message || 'Falha ao gerar PDF');
+      if (fnError) {
+        throw new Error(fnError.message || 'Falha ao gerar PDF');
       }
 
-      // Aguardar o job ficar pronto
-      const jobId = result.jobId;
-      let attempts = 0;
-      const maxAttempts = 30;
-      
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const { data: job } = await supabase
-          .from('report_preview_jobs')
-          .select('*')
-          .eq('id', jobId)
-          .maybeSingle();
-
-        if (job?.status === 'ready' && job.pdf_url) {
-          // Abrir PDF em nova aba para download
-          window.open(job.pdf_url, '_blank');
-          toast.success("PDF gerado com sucesso!");
-          return;
-        } else if (job?.status === 'error') {
-          throw new Error(job.error || 'Erro ao gerar PDF');
-        }
-        
-        attempts++;
+      if (!result?.success || !result?.url) {
+        throw new Error(result?.error || 'Falha ao gerar PDF');
       }
-      
-      throw new Error('Tempo limite excedido ao gerar PDF');
+
+      // Abrir PDF em nova aba para download
+      window.open(result.url, '_blank');
+      toast.success("PDF gerado com sucesso!");
     } catch (error: any) {
       console.error("Erro ao gerar PDF:", error);
       toast.error("Erro ao gerar PDF: " + (error.message || "desconhecido"));
@@ -178,27 +147,39 @@ export default function ImportacaoProdutosLista() {
     try {
       toast.info("Gerando Excel...");
       
+      console.log("Buscando dados da API:", apiEndpoint);
+      
       // Buscar dados da API
       const response = await fetch(apiEndpoint);
+      
+      console.log("Status da resposta:", response.status, response.statusText);
+      
       if (!response.ok) {
         throw new Error(`Erro ao buscar dados: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log("Dados recebidos:", data);
+      console.log("Tipo de dados:", Array.isArray(data) ? 'Array' : typeof data);
+      console.log("Quantidade de registros:", Array.isArray(data) ? data.length : 'N/A');
       
       if (!data) {
         toast.error("API retornou dados vazios");
         return;
       }
 
-      // Se a resposta for um array vazio
-      if (Array.isArray(data) && data.length === 0) {
-        toast.error("Nenhum dado encontrado na API");
-        return;
+      // Tratar diferentes formatos de resposta
+      let records = [];
+      if (Array.isArray(data)) {
+        records = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        records = data.data;
+      } else if (typeof data === 'object') {
+        // Se for um objeto único, converter para array
+        records = [data];
       }
-
-      // Se for um objeto com propriedade data
-      const records = Array.isArray(data) ? data : (data.data || []);
+      
+      console.log("Registros processados:", records.length);
       
       if (records.length === 0) {
         toast.error("Nenhum dado encontrado na API");
