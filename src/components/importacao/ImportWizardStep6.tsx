@@ -42,6 +42,9 @@ export function ImportWizardStep6({ finalData, onApiCreated, apiEndpoint }: Prop
         comprimento: item.comprimento || null,
         tipo: item.tipo || null,
         obs: item.obs || null,
+        embalagem: item.embalagem || null,
+        numero_folhas: item.numero_folhas ? Number(item.numero_folhas) : null,
+        diametro: item.diametro || null,
         dados_originais: item,
       }));
 
