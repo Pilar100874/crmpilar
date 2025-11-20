@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,8 @@ interface Usuario {
   unidades?: { nome: string };
   grupos_acesso?: { nome: string };
   estabelecimentos?: { nome: string };
+  is_atendente?: boolean;
+  atendente_id?: string;
 }
 
 interface Unidade {
@@ -99,6 +102,9 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAtendente, setIsAtendente] = useState(false);
+  const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
+  const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
   
   const { toast } = useToast();
 
@@ -142,7 +148,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       return;
     }
 
-    // Buscar roles de admin para cada usuário
+    // Buscar roles de admin e atendentes para cada usuário
     const usuariosComRoles = await Promise.all(
       (data || []).map(async (usuario) => {
         const { data: roleData } = await supabase
@@ -152,9 +158,17 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           .eq("role", "admin")
           .maybeSingle();
         
+        const { data: atendenteData } = await supabase
+          .from("atendentes")
+          .select("id")
+          .eq("usuario_id", usuario.id)
+          .maybeSingle();
+        
         return {
           ...usuario,
           is_admin: !!roleData,
+          is_atendente: !!atendenteData,
+          atendente_id: atendenteData?.id,
         };
       })
     );
@@ -302,6 +316,32 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           });
       }
 
+      // Gerenciar registro de atendente
+      const { data: atendenteExistente } = await supabase
+        .from("atendentes")
+        .select("id")
+        .eq("usuario_id", editingId)
+        .maybeSingle();
+
+      if (isAtendente && !atendenteExistente) {
+        // Criar atendente se marcado e não existe
+        await supabase
+          .from("atendentes")
+          .insert({
+            usuario_id: editingId,
+            estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
+            status: "offline",
+            max_chats_simultaneos: 3,
+            aceita_novos_chats: true,
+          });
+      } else if (!isAtendente && atendenteExistente) {
+        // Remover atendente se desmarcado e existe
+        await supabase
+          .from("atendentes")
+          .delete()
+          .eq("usuario_id", editingId);
+      }
+
       toast({ title: "Usuário atualizado com sucesso!" });
       resetForm();
       fetchUsuarios();
@@ -340,6 +380,19 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           .insert({
             user_id: data.id,
             role: "admin",
+          });
+      }
+
+      // Criar atendente se marcado
+      if (data && isAtendente) {
+        await supabase
+          .from("atendentes")
+          .insert({
+            usuario_id: data.id,
+            estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
+            status: "offline",
+            max_chats_simultaneos: 3,
+            aceita_novos_chats: true,
           });
       }
 
@@ -433,6 +486,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSelectedEstabelecimentoId("");
     setSegmentosSelecionados([]);
     setIsAdmin(false);
+    setIsAtendente(false);
     setHoraInicial("08:00");
     setHoraFinal("18:00");
     setRamal("");
@@ -478,6 +532,15 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       .single();
 
     setIsAdmin(!!roleData);
+
+    // Buscar se o usuário é atendente
+    const { data: atendenteData } = await supabase
+      .from("atendentes")
+      .select("id")
+      .eq("usuario_id", usuario.id)
+      .maybeSingle();
+
+    setIsAtendente(!!atendenteData);
   };
 
   const handleDeleteClick = (usuario: Usuario) => {
@@ -933,7 +996,18 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               onCheckedChange={setIsAdmin}
             />
             <Label htmlFor="is-admin" className="cursor-pointer">
-              Agente
+              Admin
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is-atendente"
+              checked={isAtendente}
+              onCheckedChange={setIsAtendente}
+            />
+            <Label htmlFor="is-atendente" className="cursor-pointer">
+              Atendente
             </Label>
           </div>
         </div>
@@ -982,10 +1056,11 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           >
             <div>
               <div className="font-semibold">{usuario.nome}</div>
-              <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+               <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                 <span>{usuario.email}</span>
                 {usuario.telefone && <span>• {usuario.telefone}</span>}
-                {usuario.is_admin && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Agente</span>}
+                {usuario.is_admin && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>}
+                {usuario.is_atendente && <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded">Atendente</span>}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {usuario.estabelecimentos?.nome && `Estabelecimento: ${usuario.estabelecimentos.nome}`}
@@ -994,6 +1069,20 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               </div>
             </div>
             <div className="flex gap-2">
+              {usuario.is_atendente && usuario.atendente_id && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedUsuarioForSkills(usuario);
+                    setSkillsDialogOpen(true);
+                  }}
+                  title="Gerenciar habilidades do atendente"
+                >
+                  <Award className="w-4 h-4 mr-1" />
+                  Skills
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -1020,6 +1109,23 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         itemName={usuarioToDelete?.nome}
         isLoading={isDeleting}
       />
+
+      <Dialog open={skillsDialogOpen} onOpenChange={setSkillsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Habilidades do Atendente: {selectedUsuarioForSkills?.nome}</DialogTitle>
+            <DialogDescription>
+              Configure as habilidades deste atendente para melhorar o roteamento de chats
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUsuarioForSkills?.atendente_id && selectedUsuarioForSkills?.estabelecimento_id && (
+            <AtendenteSkillsManager
+              atendenteId={selectedUsuarioForSkills.atendente_id}
+              estabelecimentoId={selectedUsuarioForSkills.estabelecimento_id}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
