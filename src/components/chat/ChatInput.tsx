@@ -570,7 +570,7 @@ export default function ChatInput({
               <Button
                 variant="outline"
                 size="icon"
-                title="Anexar Relatório de Importação"
+                title="Anexar Estoque de Terceiros"
                 disabled={disabled}
                 className="rounded-full"
               >
@@ -580,7 +580,7 @@ export default function ChatInput({
             <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium leading-none">Relatórios de Importação</h4>
+                  <h4 className="font-medium leading-none">Estoque de Terceiros</h4>
                   <p className="text-sm text-muted-foreground">
                     Selecione um relatório e formato
                   </p>
