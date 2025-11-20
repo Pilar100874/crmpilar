@@ -634,80 +634,67 @@ export default function ChatInput({
                               const report = importReports.find(r => r.id === selectedImportReport);
                               if (!report) return;
 
-                              toast.success(`Gerando ${reportFileType.toUpperCase()}...`);
+                              toast.info(`Gerando ${reportFileType.toUpperCase()}...`);
 
-                              if (reportFileType === 'pdf') {
-                                // Gerar PDF
-                                const apiUrl = report.api_endpoint;
-                                const urlParts = apiUrl.split('/');
-                                const estabelecimentoId = urlParts[urlParts.length - 2];
-                                const relatorioId = urlParts[urlParts.length - 1];
-
-                                const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
-                                  body: { 
-                                    estabelecimento_id: estabelecimentoId,
-                                    relatorio_id: relatorioId
-                                  }
-                                });
-
-                                if (error) throw error;
-
-                                const resultData = data?.data || data;
-                                const pdfUrl = resultData.pdfUrl || resultData.fileUrl;
-
-                                // Enviar como mensagem
-                                onSendMessage(
-                                  `Relatório: ${report.nome}`,
-                                  'file',
-                                  pdfUrl,
-                                  `${report.nome}.pdf`
-                                );
-                              } else {
-                                // Gerar Excel
-                                const response = await fetch(report.api_endpoint);
-                                const apiData = await response.json();
-
-                                // Buscar modelo de relatório
-                                const { data: modeloData } = await supabase
-                                  .from("relatorios")
-                                  .select("layout_json")
-                                  .eq("nome", "Modelo para Produtos Importados")
-                                  .single();
-
-                                if (!modeloData) {
-                                  toast.error("Modelo de relatório não encontrado");
-                                  return;
-                                }
-
-                                // Gerar Excel via edge function
-                                const { data: excelData, error: excelError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
-                                  body: {
-                                    tipo: 'excel',
-                                    dados: apiData,
-                                    layout: modeloData.layout_json
-                                  }
-                                });
-
-                                if (excelError) throw excelError;
-
-                                const excelUrl = excelData?.fileUrl || excelData?.data?.fileUrl;
-
-                                // Enviar como mensagem
-                                onSendMessage(
-                                  `Relatório: ${report.nome}`,
-                                  'file',
-                                  excelUrl,
-                                  `${report.nome}.xlsx`
-                                );
+                              // Buscar o modelo de relatório para produtos importados
+                              const estabelecimentoId = await getEstabelecimentoId();
+                              if (!estabelecimentoId) {
+                                toast.error("Estabelecimento não encontrado");
+                                return;
                               }
+
+                              const { data: modelo, error: modeloError } = await supabase
+                                .from("relatorios")
+                                .select("id")
+                                .eq("estabelecimento_id", estabelecimentoId)
+                                .eq("nome", "Modelo para Produtos Importados")
+                                .maybeSingle();
+
+                              if (modeloError || !modelo) {
+                                toast.error("Modelo de relatório não encontrado. Crie o modelo primeiro.");
+                                return;
+                              }
+
+                              // Extrair estabelecimento_id e relatorio_id da URL da API
+                              const apiUrl = report.api_endpoint;
+                              const urlParts = apiUrl.split('/');
+                              const estabId = urlParts[urlParts.length - 2];
+                              const relId = urlParts[urlParts.length - 1];
+
+                              // Chamar a edge function com os parâmetros corretos
+                              const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+                                body: {
+                                  relatorioId: modelo.id,
+                                  apiVariables: {
+                                    estabelecimento_id: { type: 'string', value: estabId },
+                                    relatorio_id: { type: 'string', value: relId }
+                                  },
+                                  reportVariables: {},
+                                  outputType: reportFileType
+                                }
+                              });
+
+                              if (error) throw error;
+
+                              const resultData = data?.data || data;
+                              const fileUrl = resultData.pdfUrl || resultData.fileUrl;
+                              const fileName = `${report.nome}.${reportFileType === 'pdf' ? 'pdf' : 'xlsx'}`;
+
+                              // Enviar como mensagem
+                              onSendMessage(
+                                `Relatório: ${report.nome}`,
+                                'file',
+                                fileUrl,
+                                fileName
+                              );
 
                               toast.success("Relatório anexado com sucesso!");
                               setShowImportReportsPopover(false);
                               setSelectedImportReport(null);
                               setReportFileType(null);
-                            } catch (error) {
+                            } catch (error: any) {
                               console.error("Erro ao anexar relatório:", error);
-                              toast.error("Erro ao anexar relatório");
+                              toast.error(error.message || "Erro ao anexar relatório");
                             }
                           }}
                         >
