@@ -41,6 +41,10 @@ import VideoCall from "./pages/VideoCall";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
 import WebChat from "./pages/WebChat";
+import ConfigFilas from "./pages/ConfigFilas";
+import ConfigSkills from "./pages/ConfigSkills";
+import DashboardAtendentePage from "./pages/DashboardAtendente";
+import DashboardSupervisorPage from "./pages/DashboardSupervisor";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +101,10 @@ const App = () => (
             <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
             <Route path="/meus-anexos" element={<MeusAnexos />} />
             <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
+            <Route path="/config/filas" element={<ConfigFilas />} />
+            <Route path="/config/skills" element={<ConfigSkills />} />
+            <Route path="/dashboard-atendente" element={<DashboardAtendentePage />} />
+            <Route path="/dashboard-supervisor" element={<DashboardSupervisorPage />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
