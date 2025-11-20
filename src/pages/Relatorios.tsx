@@ -289,7 +289,38 @@ export default function Relatorios() {
     }
   };
 
-  const handleCloseDesigner = () => {
+  const handleCloseDesigner = async () => {
+    // Verificar se o relatório está vazio antes de fechar
+    if (currentReportId) {
+      try {
+        const { data: report } = await supabase
+          .from("relatorios")
+          .select("layout_json, nome")
+          .eq("id", currentReportId)
+          .single();
+
+        if (report) {
+          const layoutJson = report.layout_json as any;
+          const isEmpty = !report.layout_json || 
+                         Object.keys(report.layout_json).length === 0 ||
+                         (layoutJson?.content === "" && 
+                          (!layoutJson?.elements || layoutJson.elements.length === 0));
+
+          // Se estiver vazio, deletar o registro
+          if (isEmpty) {
+            await supabase
+              .from("relatorios")
+              .delete()
+              .eq("id", currentReportId);
+            
+            toast.info("Relatório vazio não foi salvo");
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar relatório vazio:", error);
+      }
+    }
+
     setShowDesigner(false);
     setCurrentReportId(null);
     loadReports();
@@ -450,26 +481,28 @@ export default function Relatorios() {
             </div>
             <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
               {/* Card: Criar Modelo para Produtos Importados */}
-              <Card 
-                className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-secondary/40 bg-secondary/5 h-full flex flex-col"
-                onClick={handleCreateImportProductsModel}
-              >
-                <CardHeader className="flex-1 p-4">
-                  <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center mb-4">
-                    <FileText className="w-6 h-6 text-secondary-foreground" />
-                  </div>
-                  <CardTitle>Modelo para Produtos Importados</CardTitle>
-                  <CardDescription>
-                    Modelo único para visualizar qualquer API de importação de produtos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="mt-auto p-4 pt-0">
-                  <Button variant="secondary" className="w-full">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Criar/Editar Modelo
-                  </Button>
-                </CardContent>
-              </Card>
+              {reports.filter(r => r.nome === "Modelo para Produtos Importados").length === 0 ? (
+                <Card 
+                  className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-secondary/40 bg-secondary/5 h-full flex flex-col"
+                  onClick={handleCreateImportProductsModel}
+                >
+                  <CardHeader className="flex-1 p-4">
+                    <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center mb-4">
+                      <FileText className="w-6 h-6 text-secondary-foreground" />
+                    </div>
+                    <CardTitle>Modelo para Produtos Importados</CardTitle>
+                    <CardDescription>
+                      Modelo único para visualizar qualquer API de importação de produtos
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="mt-auto p-4 pt-0">
+                    <Button variant="secondary" className="w-full">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Criar Modelo
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : null}
 
               {/* Cards dos Modelos de Importação Criados */}
               {reports.filter(r => r.nome === "Modelo para Produtos Importados").map((report) => (
