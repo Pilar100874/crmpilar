@@ -149,7 +149,7 @@ export default function ImportacaoProdutosLista() {
     }
   };
 
-  const handleGenerateExcel = async (apiEndpoint: string) => {
+  const handleGenerateExcel = async (apiEndpoint: string, relatorioId: string) => {
     try {
       toast.info("Gerando Excel...");
       
@@ -167,8 +167,12 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
+      // Adicionar relatorio_id à URL da API
+      const apiUrl = `${apiEndpoint}&relatorio_id=${relatorioId}`;
+      console.log("📡 Chamando API com relatorio_id:", apiUrl);
+
       // Buscar dados da API
-      const response = await fetch(apiEndpoint);
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         throw new Error(`Erro ao buscar dados: ${response.status} ${response.statusText}`);
@@ -393,7 +397,7 @@ export default function ImportacaoProdutosLista() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
-                          handleGenerateExcel(relatorio.api_endpoint);
+                          handleGenerateExcel(relatorio.api_endpoint, relatorio.id);
                         }}>
                           <FileSpreadsheet className="h-4 w-4 mr-2" />
                           Gerar Excel
