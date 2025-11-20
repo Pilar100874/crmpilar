@@ -274,53 +274,463 @@ function ResendConfigSection({ estabelecimentoId }: { estabelecimentoId: string 
 // Wrapper components para gerenciar o estado local das filas e skills
 function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [filas, setFilas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingFila, setEditingFila] = useState<any | null>(null);
+  const [formData, setFormData] = useState<{
+    nome: string;
+    descricao: string;
+    tipo_roteamento: "round_robin" | "por_skill" | "por_prioridade" | "por_disponibilidade" | "por_carteira";
+    max_chats_por_atendente: number;
+    prioridade: number;
+    tempo_resposta_esperado: number;
+    mensagem_fila: string;
+    ativa: boolean;
+  }>({
+    nome: "",
+    descricao: "",
+    tipo_roteamento: "round_robin",
+    max_chats_por_atendente: 5,
+    prioridade: 1,
+    tempo_resposta_esperado: 300,
+    mensagem_fila: "",
+    ativa: true
+  });
 
   useEffect(() => {
     loadFilas();
   }, [estabelecimentoId]);
 
   const loadFilas = async () => {
-    const { data } = await supabase
-      .from('filas_atendimento')
-      .select('*')
-      .eq('estabelecimento_id', estabelecimentoId)
-      .order('nome');
-    if (data) setFilas(data);
+    try {
+      setLoading(true);
+      const { data } = await supabase
+        .from('filas_atendimento')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('prioridade');
+      if (data) setFilas(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleCreateFila = () => {
+    setEditingFila(null);
+    setFormData({
+      nome: "",
+      descricao: "",
+      tipo_roteamento: "round_robin",
+      max_chats_por_atendente: 5,
+      prioridade: 1,
+      tempo_resposta_esperado: 300,
+      mensagem_fila: "",
+      ativa: true
+    });
+    setDialogOpen(true);
+  };
+
+  const handleEditFila = (fila: any) => {
+    setEditingFila(fila);
+    setFormData({
+      nome: fila.nome,
+      descricao: fila.descricao || "",
+      tipo_roteamento: fila.tipo_roteamento || "round_robin",
+      max_chats_por_atendente: fila.max_chats_por_atendente || 5,
+      prioridade: fila.prioridade || 1,
+      tempo_resposta_esperado: fila.tempo_resposta_esperado || 300,
+      mensagem_fila: fila.mensagem_fila || "",
+      ativa: fila.ativa !== false
+    });
+    setDialogOpen(true);
+  };
+
+  const handleToggleAtiva = async (filaId: string, ativa: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('filas_atendimento')
+        .update({ ativa })
+        .eq('id', filaId);
+
+      if (error) throw error;
+      sonnerToast.success(ativa ? "Fila ativada" : "Fila desativada");
+      loadFilas();
+    } catch (error) {
+      console.error("Erro ao atualizar fila:", error);
+      sonnerToast.error("Erro ao atualizar fila");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!formData.nome.trim()) {
+      sonnerToast.error("Nome da fila é obrigatório");
+      return;
+    }
+
+    try {
+      if (editingFila) {
+        const { error } = await supabase
+          .from('filas_atendimento')
+          .update(formData)
+          .eq('id', editingFila.id);
+
+        if (error) throw error;
+        sonnerToast.success("Fila atualizada com sucesso");
+      } else {
+        const { error } = await supabase
+          .from('filas_atendimento')
+          .insert([{
+            ...formData,
+            estabelecimento_id: estabelecimentoId
+          }]);
+
+        if (error) throw error;
+        sonnerToast.success("Fila criada com sucesso");
+      }
+
+      setDialogOpen(false);
+      loadFilas();
+    } catch (error) {
+      console.error("Erro ao salvar fila:", error);
+      sonnerToast.error("Erro ao salvar fila");
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-8">Carregando...</div>;
+  }
+
   return (
-    <FilasManager
-      filas={filas}
-      onCreateFila={loadFilas}
-      onEditFila={loadFilas}
-      onToggleAtiva={loadFilas}
-    />
+    <>
+      <FilasManager
+        filas={filas}
+        onCreateFila={handleCreateFila}
+        onEditFila={handleEditFila}
+        onToggleAtiva={handleToggleAtiva}
+      />
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingFila ? "Editar Fila" : "Nova Fila"}</DialogTitle>
+            <DialogDescription>
+              Configure uma fila de atendimento
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="nome">Nome da Fila *</Label>
+                <Input
+                  id="nome"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  placeholder="Ex: Suporte Técnico"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="prioridade">Prioridade</Label>
+                <Input
+                  id="prioridade"
+                  type="number"
+                  value={formData.prioridade}
+                  onChange={(e) => setFormData({ ...formData, prioridade: parseInt(e.target.value) || 1 })}
+                  min={1}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="descricao">Descrição</Label>
+              <Input
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                placeholder="Descrição da fila"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tipo_roteamento">Tipo de Roteamento</Label>
+                <select
+                  id="tipo_roteamento"
+                  value={formData.tipo_roteamento}
+                  onChange={(e) => setFormData({ ...formData, tipo_roteamento: e.target.value as any })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="round_robin">Round Robin</option>
+                  <option value="por_disponibilidade">Por Disponibilidade</option>
+                  <option value="por_skill">Por Skill</option>
+                  <option value="por_prioridade">Por Prioridade</option>
+                  <option value="por_carteira">Por Carteira</option>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="max_chats">Max Chats por Atendente</Label>
+                <Input
+                  id="max_chats"
+                  type="number"
+                  value={formData.max_chats_por_atendente}
+                  onChange={(e) => setFormData({ ...formData, max_chats_por_atendente: parseInt(e.target.value) || 5 })}
+                  min={1}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="tempo_resposta">Tempo de Resposta Esperado (segundos)</Label>
+              <Input
+                id="tempo_resposta"
+                type="number"
+                value={formData.tempo_resposta_esperado}
+                onChange={(e) => setFormData({ ...formData, tempo_resposta_esperado: parseInt(e.target.value) || 300 })}
+                min={0}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="mensagem_fila">Mensagem da Fila</Label>
+              <Input
+                id="mensagem_fila"
+                value={formData.mensagem_fila}
+                onChange={(e) => setFormData({ ...formData, mensagem_fila: e.target.value })}
+                placeholder="Mensagem exibida ao entrar na fila"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="ativa"
+                checked={formData.ativa}
+                onChange={(e) => setFormData({ ...formData, ativa: e.target.checked })}
+                className="rounded border-input"
+              />
+              <Label htmlFor="ativa">Fila ativa</Label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>
+              {editingFila ? "Atualizar" : "Criar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
 function SkillsManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [skills, setSkills] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [skillToDelete, setSkillToDelete] = useState<string | null>(null);
+  const [editingSkill, setEditingSkill] = useState<any | null>(null);
+  const [formData, setFormData] = useState({
+    nome: "",
+    descricao: "",
+    cor: "#3b82f6"
+  });
 
   useEffect(() => {
     loadSkills();
   }, [estabelecimentoId]);
 
   const loadSkills = async () => {
-    const { data } = await supabase
-      .from('skills')
-      .select('*')
-      .eq('estabelecimento_id', estabelecimentoId)
-      .order('nome');
-    if (data) setSkills(data);
+    try {
+      setLoading(true);
+      const { data } = await supabase
+        .from('skills')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+      if (data) setSkills(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleCreateSkill = () => {
+    setEditingSkill(null);
+    setFormData({
+      nome: "",
+      descricao: "",
+      cor: "#3b82f6"
+    });
+    setDialogOpen(true);
+  };
+
+  const handleEditSkill = (skill: any) => {
+    setEditingSkill(skill);
+    setFormData({
+      nome: skill.nome,
+      descricao: skill.descricao || "",
+      cor: skill.cor || "#3b82f6"
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDeleteSkill = (skillId: string) => {
+    setSkillToDelete(skillId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!skillToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('skills')
+        .delete()
+        .eq('id', skillToDelete);
+
+      if (error) throw error;
+      
+      sonnerToast.success("Habilidade excluída com sucesso");
+      loadSkills();
+    } catch (error) {
+      console.error("Erro ao excluir skill:", error);
+      sonnerToast.error("Erro ao excluir habilidade");
+    } finally {
+      setDeleteDialogOpen(false);
+      setSkillToDelete(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!formData.nome.trim()) {
+      sonnerToast.error("Nome da habilidade é obrigatório");
+      return;
+    }
+
+    try {
+      if (editingSkill) {
+        const { error } = await supabase
+          .from('skills')
+          .update(formData)
+          .eq('id', editingSkill.id);
+
+        if (error) throw error;
+        sonnerToast.success("Habilidade atualizada com sucesso");
+      } else {
+        const { error } = await supabase
+          .from('skills')
+          .insert([{
+            ...formData,
+            estabelecimento_id: estabelecimentoId
+          }]);
+
+        if (error) throw error;
+        sonnerToast.success("Habilidade criada com sucesso");
+      }
+
+      setDialogOpen(false);
+      loadSkills();
+    } catch (error) {
+      console.error("Erro ao salvar skill:", error);
+      sonnerToast.error("Erro ao salvar habilidade");
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-8">Carregando...</div>;
+  }
+
   return (
-    <SkillsManager
-      skills={skills}
-      onCreateSkill={loadSkills}
-      onEditSkill={loadSkills}
-      onDeleteSkill={loadSkills}
-    />
+    <>
+      <SkillsManager
+        skills={skills}
+        onCreateSkill={handleCreateSkill}
+        onEditSkill={handleEditSkill}
+        onDeleteSkill={handleDeleteSkill}
+      />
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingSkill ? "Editar Habilidade" : "Nova Habilidade"}</DialogTitle>
+            <DialogDescription>
+              Configure uma habilidade para roteamento avançado
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="nome">Nome da Habilidade *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder="Ex: Inglês Fluente"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="descricao">Descrição</Label>
+              <Input
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                placeholder="Descrição opcional da habilidade"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="cor">Cor</Label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  id="cor"
+                  type="color"
+                  value={formData.cor}
+                  onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
+                  className="w-20 h-10"
+                />
+                <Input
+                  type="text"
+                  value={formData.cor}
+                  onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
+                  placeholder="#3b82f6"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>
+              {editingSkill ? "Atualizar" : "Criar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta habilidade? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
