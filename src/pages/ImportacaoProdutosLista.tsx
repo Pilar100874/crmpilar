@@ -198,42 +198,84 @@ export default function ImportacaoProdutosLista() {
         ? JSON.parse(modelo.layout_json)
         : modelo.layout_json;
 
-      // Buscar tabelas no layout (ReportBro usa docElements)
+      // ReportBro usa docElements com sections e tables
       const docElements = layoutJsonObj?.docElements || [];
       const columnNames: string[] = [];
       
-      // Procurar por elementos de tabela
+      // Procurar por elementos de tabela em sections
       docElements.forEach((element: any) => {
-        if (element.elementType === 'table' && element.contentData) {
-          const rows = element.contentData.rows || [];
-          rows.forEach((row: any) => {
-            const columns = row.columns || [];
-            columns.forEach((col: any) => {
-              if (col.content && col.content.includes('${')) {
-                // Extrair nome da variável (ex: ${nome} -> nome)
-                const matches = col.content.match(/\$\{([^}]+)\}/g);
-                if (matches) {
-                  matches.forEach((match: string) => {
-                    const varName = match.replace(/\$\{/g, '').replace(/\}/g, '');
-                    if (!columnNames.includes(varName)) {
-                      columnNames.push(varName);
+        // Verificar se é uma section com contentData que tem tabelas
+        if (element.elementType === 'section' && element.contentData) {
+          const contentId = element.contentData.linkedContainerId;
+          
+          // Procurar pela tabela dentro do contentData
+          docElements.forEach((innerElement: any) => {
+            if (innerElement.id === contentId && innerElement.elementType === 'table') {
+              // Extrair colunas do contentData da tabela
+              const contentData = innerElement.contentData;
+              if (contentData?.columnData) {
+                contentData.columnData.forEach((col: any) => {
+                  if (col.content && col.content.includes('${')) {
+                    const matches = col.content.match(/\$\{([^}]+)\}/g);
+                    if (matches) {
+                      matches.forEach((match: string) => {
+                        const varName = match.replace(/\$\{/g, '').replace(/\}/g, '').trim();
+                        // Remover prefixo api_data. se houver
+                        const cleanVarName = varName.replace(/^api_data\./, '');
+                        if (!columnNames.includes(cleanVarName)) {
+                          columnNames.push(cleanVarName);
+                        }
+                      });
                     }
-                  });
-                }
+                  }
+                });
               }
-            });
+            }
+          });
+        }
+        
+        // Verificar se é uma tabela direta
+        if (element.elementType === 'table' && element.contentData?.columnData) {
+          element.contentData.columnData.forEach((col: any) => {
+            if (col.content && col.content.includes('${')) {
+              const matches = col.content.match(/\$\{([^}]+)\}/g);
+              if (matches) {
+                matches.forEach((match: string) => {
+                  const varName = match.replace(/\$\{/g, '').replace(/\}/g, '').trim();
+                  const cleanVarName = varName.replace(/^api_data\./, '');
+                  if (!columnNames.includes(cleanVarName)) {
+                    columnNames.push(cleanVarName);
+                  }
+                });
+              }
+            }
           });
         }
       });
 
       console.log("📋 Colunas extraídas do relatório:", columnNames);
 
+      // Se não encontrou colunas no layout, usar todas as colunas dos dados
+      if (columnNames.length === 0) {
+        console.warn("⚠️ Nenhuma coluna definida no relatório, usando todas as colunas dos dados");
+        const firstRecord = records[0];
+        if (firstRecord) {
+          columnNames.push(...Object.keys(firstRecord));
+        }
+      }
+
       // Filtrar apenas as colunas do relatório
       const filteredRecords = records.map(record => {
         const filtered: any = {};
         columnNames.forEach((col: string) => {
           if (col in record) {
-            filtered[col] = record[col];
+            const value = record[col];
+            // Se o valor é um objeto, converter para string JSON
+            if (value !== null && typeof value === 'object') {
+              filtered[col] = JSON.stringify(value);
+            } else {
+              filtered[col] = value;
+            }
           }
         });
         return filtered;
