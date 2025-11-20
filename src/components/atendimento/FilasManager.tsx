@@ -10,9 +10,11 @@ interface FilasManagerProps {
   onCreateFila?: () => void;
   onEditFila?: (fila: FilaAtendimento) => void;
   onToggleAtiva?: (filaId: string, ativa: boolean) => void;
+  onViewAtendentes?: (fila: FilaAtendimento) => void;
+  onConfigureSkills?: (fila: FilaAtendimento) => void;
 }
 
-export const FilasManager = ({ filas, onCreateFila, onEditFila, onToggleAtiva }: FilasManagerProps) => {
+export const FilasManager = ({ filas, onCreateFila, onEditFila, onToggleAtiva, onViewAtendentes, onConfigureSkills }: FilasManagerProps) => {
   const getTipoRoteamentoLabel = (tipo: string) => {
     const labels = {
       round_robin: "Round Robin",
@@ -102,10 +104,20 @@ export const FilasManager = ({ filas, onCreateFila, onEditFila, onToggleAtiva }:
                   >
                     {fila.ativa ? "Desativar" : "Ativar"}
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => onViewAtendentes?.(fila)}
+                  >
+                    <Users className="h-4 w-4 mr-1" />
                     Ver Atendentes
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => onConfigureSkills?.(fila)}
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
                     Configurar Skills
                   </Button>
                 </div>
