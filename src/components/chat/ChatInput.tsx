@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles } from "lucide-react";
+import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -83,6 +83,10 @@ export default function ChatInput({
   const [showBotPopover, setShowBotPopover] = useState(false);
   const [showWebhookPopover, setShowWebhookPopover] = useState(false);
   const [showTransferPopover, setShowTransferPopover] = useState(false);
+  const [showImportReportsPopover, setShowImportReportsPopover] = useState(false);
+  const [importReports, setImportReports] = useState<any[]>([]);
+  const [selectedImportReport, setSelectedImportReport] = useState<string | null>(null);
+  const [reportFileType, setReportFileType] = useState<'pdf' | 'excel' | null>(null);
   
   // Auto-resize textarea to avoid inner scrollbars
   useEffect(() => {
@@ -102,7 +106,31 @@ export default function ChatInput({
   useEffect(() => {
     loadQuickReplies();
     loadAutoResponseWebhooks();
+    loadImportReports();
   }, []);
+
+  const loadImportReports = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const hoje = new Date().toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from("relatorios_importacao")
+        .select("*")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("ativo", true)
+        .or(`data_validade.is.null,data_validade.gte.${hoje}`)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setImportReports(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar relatórios de importação:", error);
+    }
+  };
 
   const loadQuickReplies = async () => {
     const estabId = await getEstabelecimentoId();
@@ -535,6 +563,163 @@ export default function ChatInput({
               <Sparkles className="h-4 w-4" />
             </Button>
           )}
+
+          {/* Import Reports Button */}
+          <Popover open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                title="Anexar Relatório de Importação"
+                disabled={disabled}
+                className="rounded-full"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">Relatórios de Importação</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Selecione um relatório para anexar à conversa
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <Select
+                    value={selectedImportReport || undefined}
+                    onValueChange={setSelectedImportReport}
+                  >
+                    <SelectTrigger className="w-full rounded-full">
+                      <SelectValue placeholder="Selecione um relatório" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 rounded-2xl">
+                      {importReports.map((report) => (
+                        <SelectItem key={report.id} value={report.id}>
+                          {report.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {selectedImportReport && (
+                    <>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1 rounded-full"
+                          onClick={() => setReportFileType('pdf')}
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          PDF
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1 rounded-full"
+                          onClick={() => setReportFileType('excel')}
+                        >
+                          <FileSpreadsheet className="mr-2 h-4 w-4" />
+                          Excel
+                        </Button>
+                      </div>
+
+                      {reportFileType && (
+                        <Button
+                          type="button"
+                          className="w-full rounded-full"
+                          onClick={async () => {
+                            try {
+                              const report = importReports.find(r => r.id === selectedImportReport);
+                              if (!report) return;
+
+                              toast.success(`Gerando ${reportFileType.toUpperCase()}...`);
+
+                              if (reportFileType === 'pdf') {
+                                // Gerar PDF
+                                const apiUrl = report.api_endpoint;
+                                const urlParts = apiUrl.split('/');
+                                const estabelecimentoId = urlParts[urlParts.length - 2];
+                                const relatorioId = urlParts[urlParts.length - 1];
+
+                                const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+                                  body: { 
+                                    estabelecimento_id: estabelecimentoId,
+                                    relatorio_id: relatorioId
+                                  }
+                                });
+
+                                if (error) throw error;
+
+                                const resultData = data?.data || data;
+                                const pdfUrl = resultData.pdfUrl || resultData.fileUrl;
+
+                                // Enviar como mensagem
+                                onSendMessage(
+                                  `Relatório: ${report.nome}`,
+                                  'file',
+                                  pdfUrl,
+                                  `${report.nome}.pdf`
+                                );
+                              } else {
+                                // Gerar Excel
+                                const response = await fetch(report.api_endpoint);
+                                const apiData = await response.json();
+
+                                // Buscar modelo de relatório
+                                const { data: modeloData } = await supabase
+                                  .from("relatorios")
+                                  .select("layout_json")
+                                  .eq("nome", "Modelo para Produtos Importados")
+                                  .single();
+
+                                if (!modeloData) {
+                                  toast.error("Modelo de relatório não encontrado");
+                                  return;
+                                }
+
+                                // Gerar Excel via edge function
+                                const { data: excelData, error: excelError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+                                  body: {
+                                    tipo: 'excel',
+                                    dados: apiData,
+                                    layout: modeloData.layout_json
+                                  }
+                                });
+
+                                if (excelError) throw excelError;
+
+                                const excelUrl = excelData?.fileUrl || excelData?.data?.fileUrl;
+
+                                // Enviar como mensagem
+                                onSendMessage(
+                                  `Relatório: ${report.nome}`,
+                                  'file',
+                                  excelUrl,
+                                  `${report.nome}.xlsx`
+                                );
+                              }
+
+                              toast.success("Relatório anexado com sucesso!");
+                              setShowImportReportsPopover(false);
+                              setSelectedImportReport(null);
+                              setReportFileType(null);
+                            } catch (error) {
+                              console.error("Erro ao anexar relatório:", error);
+                              toast.error("Erro ao anexar relatório");
+                            }
+                          }}
+                        >
+                          Anexar {reportFileType.toUpperCase()}
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Auto-suggestion toggle */}
           {autoResponseWebhooks.length > 0 && (

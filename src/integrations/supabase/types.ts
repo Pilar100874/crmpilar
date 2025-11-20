@@ -2260,6 +2260,7 @@ export type Database = {
           configuracao: Json
           created_at: string
           data_criacao: string
+          data_validade: string | null
           estabelecimento_id: string
           id: string
           nome: string
@@ -2271,6 +2272,7 @@ export type Database = {
           configuracao?: Json
           created_at?: string
           data_criacao: string
+          data_validade?: string | null
           estabelecimento_id: string
           id?: string
           nome: string
@@ -2282,6 +2284,7 @@ export type Database = {
           configuracao?: Json
           created_at?: string
           data_criacao?: string
+          data_validade?: string | null
           estabelecimento_id?: string
           id?: string
           nome?: string

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Calendar, Globe, Trash2, Edit, MoreVertical } from "lucide-react";
+import { Plus, FileSpreadsheet, Calendar, Globe, Trash2, Edit, MoreVertical, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ interface Relatorio {
   api_endpoint: string | null;
   ativo: boolean;
   created_at: string;
+  data_validade: string | null;
 }
 
 export default function ImportacaoProdutosLista() {
@@ -88,6 +89,61 @@ export default function ImportacaoProdutosLista() {
       setRelatorioToDelete(null);
     }
   };
+
+  const handleToggleAtivo = async (id: string, currentAtivo: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("relatorios_importacao")
+        .update({ ativo: !currentAtivo })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success(`Relatório ${!currentAtivo ? 'ativado' : 'desativado'} com sucesso!`);
+      loadRelatorios();
+    } catch (error: any) {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao atualizar status do relatório");
+    }
+  };
+
+  const handleUpdateValidade = async (id: string, dataValidade: string | null) => {
+    try {
+      const { error } = await supabase
+        .from("relatorios_importacao")
+        .update({ data_validade: dataValidade })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Data de validade atualizada com sucesso!");
+      loadRelatorios();
+    } catch (error: any) {
+      console.error("Erro ao atualizar data de validade:", error);
+      toast.error("Erro ao atualizar data de validade");
+    }
+  };
+
+  // Verificar e desativar relatórios vencidos
+  useEffect(() => {
+    const checkExpiredReports = async () => {
+      const hoje = new Date().toISOString().split('T')[0];
+      
+      const relatoriosVencidos = relatorios.filter(r => 
+        r.ativo && 
+        r.data_validade && 
+        r.data_validade < hoje
+      );
+
+      for (const relatorio of relatoriosVencidos) {
+        await handleToggleAtivo(relatorio.id, true);
+      }
+    };
+
+    if (relatorios.length > 0) {
+      checkExpiredReports();
+    }
+  }, [relatorios]);
 
   const handleCopyApiUrl = (apiEndpoint: string | null) => {
     if (!apiEndpoint) {
@@ -413,6 +469,33 @@ export default function ImportacaoProdutosLista() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
+                      handleToggleAtivo(relatorio.id, relatorio.ativo);
+                    }}>
+                      {relatorio.ativo ? (
+                        <>
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Desativar
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Ativar
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      const dataAtual = relatorio.data_validade || new Date().toISOString().split('T')[0];
+                      const novaData = prompt("Digite a data de validade (AAAA-MM-DD):", dataAtual);
+                      if (novaData) {
+                        handleUpdateValidade(relatorio.id, novaData);
+                      }
+                    }}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Data de Validade
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
                       handleDuplicate(relatorio.id);
                     }}>
                       <FileSpreadsheet className="h-4 w-4 mr-2" />
@@ -467,6 +550,11 @@ export default function ImportacaoProdutosLista() {
                   <Badge variant={relatorio.ativo ? "default" : "secondary"} className="text-xs">
                     {relatorio.ativo ? "Ativo" : "Inativo"}
                   </Badge>
+                  {relatorio.data_validade && (
+                    <Badge variant={new Date(relatorio.data_validade) < new Date() ? "destructive" : "outline"} className="text-xs">
+                      Validade: {new Date(relatorio.data_validade).toLocaleDateString('pt-BR')}
+                    </Badge>
+                  )}
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {new Date(relatorio.data_criacao).toLocaleDateString('pt-BR')}
