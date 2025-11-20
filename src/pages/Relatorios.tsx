@@ -267,92 +267,84 @@ export default function Relatorios() {
             </p>
           </div>
 
-          {/* Seção: Criar Novos Modelos */}
-          <div className="space-y-6">
+          {/* Grupo 1: Modelos Personalizados */}
+          <div className="space-y-4">
             <div>
-              <h2 className="text-xl font-semibold text-foreground mb-1">Criar Novos Modelos</h2>
-              <p className="text-sm text-muted-foreground">Escolha o tipo de modelo que deseja criar</p>
+              <h2 className="text-xl font-semibold text-foreground mb-1">Modelos Personalizados</h2>
+              <p className="text-sm text-muted-foreground">Configure modelos de relatório do zero</p>
             </div>
-            
-            {/* Subgrupo: Modelos Personalizados */}
-            <div className="space-y-3">
-              <div>
-                <h3 className="text-base font-medium text-foreground/90">Modelos Personalizados</h3>
-                <p className="text-xs text-muted-foreground">Configure modelos de relatório do zero</p>
-              </div>
-              <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
-                <Card 
-                  className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
-                  onClick={() => setShowNewDialog(true)}
-                >
-                  <CardHeader className="flex-1 p-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                      <FileText className="w-6 h-6 text-primary" />
-                    </div>
-                    <CardTitle>Criar Novo Modelo</CardTitle>
-                    <CardDescription>
-                      Configure um novo modelo de relatório profissional com o designer ReportBro
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="mt-auto p-4 pt-0">
-                    <Button className="w-full">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Criar Modelo
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
+                onClick={() => setShowNewDialog(true)}
+              >
+                <CardHeader className="flex-1 p-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6 text-primary" />
+                  </div>
+                  <CardTitle>Criar Novo Modelo</CardTitle>
+                  <CardDescription>
+                    Configure um novo modelo de relatório profissional com o designer ReportBro
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto p-4 pt-0">
+                  <Button className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar Modelo
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
+          </div>
 
-            {/* Subgrupo: Modelos de Importação */}
-            <div className="space-y-3">
-              <div>
-                <h3 className="text-base font-medium text-foreground/90">Modelos de Importação</h3>
-                <p className="text-xs text-muted-foreground">Modelos especiais para APIs de importação</p>
-              </div>
-              <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
-                <Card 
-                  className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-secondary/40 bg-secondary/5 h-full flex flex-col"
-                  onClick={async () => {
-                    // Verificar se já existe um modelo para produtos importados
-                    const estabelecimentoId = await getEstabelecimentoId();
-                    const { data: existing } = await supabase
-                      .from("relatorios")
-                      .select("id")
-                      .eq("estabelecimento_id", estabelecimentoId)
-                      .eq("nome", "Modelo para Produtos Importados")
-                      .maybeSingle();
-                    
-                    if (existing) {
-                      toast.info("Editando modelo para produtos importados");
-                      setCurrentReportId(existing.id);
-                      setShowDesigner(true);
-                    } else {
-                      setFormData({ 
-                        nome: "Modelo para Produtos Importados", 
-                        descricao: "Modelo único para visualização de produtos importados" 
-                      });
-                      await handleCreate();
-                    }
-                  }}
-                >
-                  <CardHeader className="flex-1 p-4">
-                    <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center mb-4">
-                      <FileText className="w-6 h-6 text-secondary-foreground" />
-                    </div>
-                    <CardTitle>Modelo para Produtos Importados</CardTitle>
-                    <CardDescription>
-                      Modelo único para visualizar qualquer API de importação de produtos
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="mt-auto p-4 pt-0">
-                    <Button variant="secondary" className="w-full">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Criar/Editar Modelo
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+          {/* Grupo 2: Modelos de Importação */}
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground mb-1">Modelos de Importação</h2>
+              <p className="text-sm text-muted-foreground">Modelos especiais para APIs de importação</p>
+            </div>
+            <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-secondary/40 bg-secondary/5 h-full flex flex-col"
+                onClick={async () => {
+                  // Verificar se já existe um modelo para produtos importados
+                  const estabelecimentoId = await getEstabelecimentoId();
+                  const { data: existing } = await supabase
+                    .from("relatorios")
+                    .select("id")
+                    .eq("estabelecimento_id", estabelecimentoId)
+                    .eq("nome", "Modelo para Produtos Importados")
+                    .maybeSingle();
+                  
+                  if (existing) {
+                    toast.info("Editando modelo para produtos importados");
+                    setCurrentReportId(existing.id);
+                    setShowDesigner(true);
+                  } else {
+                    setFormData({ 
+                      nome: "Modelo para Produtos Importados", 
+                      descricao: "Modelo único para visualização de produtos importados" 
+                    });
+                    await handleCreate();
+                  }
+                }}
+              >
+                <CardHeader className="flex-1 p-4">
+                  <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6 text-secondary-foreground" />
+                  </div>
+                  <CardTitle>Modelo para Produtos Importados</CardTitle>
+                  <CardDescription>
+                    Modelo único para visualizar qualquer API de importação de produtos
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto p-4 pt-0">
+                  <Button variant="secondary" className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar/Editar Modelo
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
