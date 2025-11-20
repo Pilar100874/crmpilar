@@ -23,6 +23,8 @@ import { CalendarioRegrasCRUD } from "./CalendarioRegrasCRUD";
 import { UCMConfigCRUD } from "./UCMConfigCRUD";
 import { FilasManager } from "@/components/atendimento/FilasManager";
 import { SkillsManager } from "@/components/atendimento/SkillsManager";
+import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaManager";
+import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
 import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -541,34 +543,36 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
       </Dialog>
 
       <Dialog open={atendentesDialogOpen} onOpenChange={setAtendentesDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Atendentes da Fila: {selectedFila?.nome}</DialogTitle>
             <DialogDescription>
               Gerencie os atendentes vinculados a esta fila
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Funcionalidade de gerenciamento de atendentes em desenvolvimento.
-            </p>
-          </div>
+          {selectedFila && estabelecimentoId && (
+            <AtendentesFilaManager 
+              filaId={selectedFila.id} 
+              estabelecimentoId={estabelecimentoId}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
       <Dialog open={skillsDialogOpen} onOpenChange={setSkillsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Skills da Fila: {selectedFila?.nome}</DialogTitle>
             <DialogDescription>
               Configure as habilidades necessárias para esta fila
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Funcionalidade de configuração de skills em desenvolvimento.
-            </p>
-          </div>
+          {selectedFila && estabelecimentoId && (
+            <SkillsFilaManager 
+              filaId={selectedFila.id} 
+              estabelecimentoId={estabelecimentoId}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
