@@ -914,27 +914,63 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="textos-prontos" className="border rounded-md">
+        <AccordionItem value="atendimento" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-primary" />
-              <span className="font-medium">Textos Prontos Globais</span>
+              <MessageSquareQuote className="w-4 h-4 text-primary" />
+              <span className="font-medium">Atendimento</span>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <QuickRepliesCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
+            <Accordion type="single" collapsible className="space-y-2 pl-4">
+              <AccordionItem value="filas-atendimento" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <MessageSquareQuote className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Filas de Atendimento</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <FilasManagerWrapper estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
 
-        <AccordionItem value="anexos-rapidos" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <LinkIcon className="w-4 h-4 text-primary" />
-              <span className="font-medium">Anexos Rápidos Globais</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <QuickAttachmentsCRUD estabelecimentoId={estabelecimentoId} />
+              <AccordionItem value="skills-atendimento" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Skills de Atendimento</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <SkillsManagerWrapper estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="anexos-rapidos" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <LinkIcon className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Anexos Rápidos Globais</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <QuickAttachmentsCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="textos-prontos" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Textos Prontos Globais</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <QuickRepliesCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </AccordionContent>
         </AccordionItem>
 
@@ -1118,29 +1154,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="filas-atendimento" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <MessageSquareQuote className="w-4 h-4 text-primary" />
-              <span className="font-medium">Filas de Atendimento</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <FilasManagerWrapper estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="skills-atendimento" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              <span className="font-medium">Skills de Atendimento</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <SkillsManagerWrapper estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
       </Accordion>
     </div>
   );
