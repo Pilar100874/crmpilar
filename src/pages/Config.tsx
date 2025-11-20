@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell } from "lucide-react";
+import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell, MessageSquareQuote, Award } from "lucide-react";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
@@ -12,12 +12,54 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { FilasManager } from "@/components/atendimento/FilasManager";
+import { SkillsManager } from "@/components/atendimento/SkillsManager";
+import { supabase } from "@/integrations/supabase/client";
+import type { FilaAtendimento, Skill } from "@/types/atendimento";
 
 export default function Config() {
   const { openSubmenu } = useLayout();
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
+  const [filas, setFilas] = useState<FilaAtendimento[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadEstabelecimentoId = () => {
+      const id = localStorage.getItem('estabelecimentoId');
+      setEstabelecimentoId(id);
+    };
+    loadEstabelecimentoId();
+  }, []);
+
+  useEffect(() => {
+    if (estabelecimentoId) {
+      loadFilas();
+      loadSkills();
+    }
+  }, [estabelecimentoId]);
+
+  const loadFilas = async () => {
+    if (!estabelecimentoId) return;
+    const { data } = await supabase
+      .from('filas_atendimento')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .order('nome');
+    if (data) setFilas(data);
+  };
+
+  const loadSkills = async () => {
+    if (!estabelecimentoId) return;
+    const { data } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .order('nome');
+    if (data) setSkills(data);
+  };
 
   const handleToggleConfirmationMessages = (checked: boolean) => {
     setShowConfirmationMessages(checked);
@@ -94,8 +136,54 @@ export default function Config() {
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
+            <AccordionContent className="px-6 pb-6 space-y-6">
               <EstabelecimentosCRUD />
+              
+              <Accordion type="single" collapsible className="space-y-4">
+                <AccordionItem value="filas" className="border rounded-lg bg-muted/20">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <MessageSquareQuote className="w-4 h-4 text-primary" />
+                      <div className="text-left">
+                        <div className="font-medium text-sm">Filas de Atendimento</div>
+                        <div className="text-xs text-muted-foreground font-normal">
+                          Configure as filas e roteamento
+                        </div>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <FilasManager 
+                      filas={filas}
+                      onCreateFila={loadFilas}
+                      onEditFila={loadFilas}
+                      onToggleAtiva={loadFilas}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="skills" className="border rounded-lg bg-muted/20">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-4 h-4 text-primary" />
+                      <div className="text-left">
+                        <div className="font-medium text-sm">Skills de Atendimento</div>
+                        <div className="text-xs text-muted-foreground font-normal">
+                          Gerencie as competências dos atendentes
+                        </div>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <SkillsManager 
+                      skills={skills}
+                      onCreateSkill={loadSkills}
+                      onEditSkill={loadSkills}
+                      onDeleteSkill={loadSkills}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </AccordionContent>
           </AccordionItem>
 
