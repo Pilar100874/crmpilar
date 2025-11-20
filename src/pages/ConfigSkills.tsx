@@ -51,21 +51,13 @@ export default function ConfigSkills() {
   const loadSkills = async (estabId: string) => {
     try {
       setLoading(true);
-      console.log("🔍 Carregando skills para estabelecimento:", estabId);
-      
       const { data, error } = await supabase
         .from("skills")
         .select("*")
         .eq("estabelecimento_id", estabId)
         .order("nome");
 
-      console.log("📊 Skills retornadas:", data?.length || 0, data);
-      
-      if (error) {
-        console.error("❌ Erro na query:", error);
-        throw error;
-      }
-      
+      if (error) throw error;
       setSkills(data || []);
     } catch (error) {
       console.error("Erro ao carregar skills:", error);
@@ -165,13 +157,6 @@ export default function ConfigSkills() {
 
   return (
     <div className="container mx-auto py-6">
-      {/* Debug temporário */}
-      <div className="mb-4 p-4 bg-muted rounded-lg text-sm">
-        <p><strong>Debug:</strong></p>
-        <p>Estabelecimento ID: {estabelecimentoId || "não carregado"}</p>
-        <p>Skills carregadas: {skills.length}</p>
-      </div>
-      
       <SkillsManager
         skills={skills}
         onCreateSkill={handleCreateSkill}
