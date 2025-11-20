@@ -32,19 +32,19 @@ export function ImportWizardStep6({ finalData, onApiCreated, apiEndpoint }: Prop
         return;
       }
 
-      // Salvar dados no banco
+      // Salvar dados no banco - converter valores explicitamente
       const dataToInsert = finalData.map(item => ({
         estabelecimento_id: estabelecimentoId,
-        nome: item.nome || null,
+        nome: String(item.nome || ''),
         quantidade: item.quantidade ? Number(item.quantidade) : null,
-        gramatura: item.gramatura || null,
-        largura: item.largura || null,
-        comprimento: item.comprimento || null,
-        tipo: item.tipo || null,
-        obs: item.obs || null,
-        embalagem: item.embalagem || null,
+        gramatura: item.gramatura ? String(item.gramatura) : null,
+        largura: item.largura ? String(item.largura) : null,
+        comprimento: item.comprimento ? String(item.comprimento) : null,
+        tipo: item.tipo ? String(item.tipo) : null,
+        obs: item.obs ? String(item.obs) : null,
+        embalagem: item.embalagem ? String(item.embalagem) : null,
         numero_folhas: item.numero_folhas ? Number(item.numero_folhas) : null,
-        diametro: item.diametro || null,
+        diametro: item.diametro ? String(item.diametro) : null,
         dados_originais: item,
       }));
 
