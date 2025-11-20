@@ -87,7 +87,9 @@ serve(async (req) => {
       sendUrl = `${wahaUrl}/api/sendFile`;
       body.file = {
         url: fileUrl,
-        filename: fileName || "arquivo"
+        filename: fileName || "arquivo",
+        // Passar mimetype ajuda o WAHA Plus a tratar corretamente o arquivo
+        mimetype: contentType || "application/octet-stream",
       };
       if (text) body.caption = text;
     } else {
