@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Progress } from "@/components/ui/progress";
 import AudioRecorder from "./AudioRecorder";
 import FileUploader from "./FileUploader";
 import VariableSequence from "./VariableSequence";
@@ -87,6 +88,8 @@ export default function ChatInput({
   const [importReports, setImportReports] = useState<any[]>([]);
   const [selectedImportReport, setSelectedImportReport] = useState<string | null>(null);
   const [reportFileType, setReportFileType] = useState<'pdf' | 'excel' | null>(null);
+  const [reportProgress, setReportProgress] = useState<number>(0);
+  const [isProcessingReport, setIsProcessingReport] = useState(false);
   
   // Auto-resize textarea to avoid inner scrollbars
   useEffect(() => {
@@ -632,20 +635,24 @@ export default function ChatInput({
                   <Button
                     type="button"
                     className="w-full rounded-full"
-                    disabled={!selectedImportReport || !reportFileType}
+                    disabled={!selectedImportReport || !reportFileType || isProcessingReport}
                     onClick={async () => {
                       try {
                         const report = importReports.find(r => r.id === selectedImportReport);
                         if (!report || !reportFileType) return;
 
-                        toast.info(`Gerando ${reportFileType.toUpperCase()}...`);
+                        setIsProcessingReport(true);
+                        setReportProgress(10);
 
                         // Buscar o modelo de relatório para produtos importados
                         const estabelecimentoId = await getEstabelecimentoId();
                         if (!estabelecimentoId) {
                           toast.error("Estabelecimento não encontrado");
+                          setIsProcessingReport(false);
                           return;
                         }
+
+                        setReportProgress(20);
 
                         const { data: modelo, error: modeloError } = await supabase
                           .from("relatorios")
@@ -656,8 +663,11 @@ export default function ChatInput({
 
                         if (modeloError || !modelo) {
                           toast.error("Modelo de relatório não encontrado. Crie o modelo primeiro.");
+                          setIsProcessingReport(false);
                           return;
                         }
+
+                        setReportProgress(40);
 
                         // Extrair estabelecimento_id e relatorio_id da URL da API (mesma lógica da tela de importação)
                         const apiUrl = report.api_endpoint;
@@ -668,6 +678,8 @@ export default function ChatInput({
                         if (!estabId || !relId) {
                           throw new Error("Parâmetros de relatório inválidos na URL da API");
                         }
+
+                        setReportProgress(50);
 
                         // Chamar a edge function com os parâmetros corretos
                         const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
@@ -684,6 +696,8 @@ export default function ChatInput({
 
                         if (error) throw error;
 
+                        setReportProgress(80);
+
                         const resultData = data?.data || data;
                         const fileUrl = resultData.pdfUrl || resultData.fileUrl;
                         const fileName = resultData.fileName as string | undefined;
@@ -692,11 +706,8 @@ export default function ChatInput({
                           throw new Error("URL ou nome do arquivo não retornados");
                         }
 
-                        // Fechar janela imediatamente
-                        setShowImportReportsPopover(false);
-                        setSelectedImportReport(null);
-                        setReportFileType(null);
-                        
+                        setReportProgress(90);
+
                         // Enviar como mensagem usando a URL gerada pela função (bot-media)
                         onSendMessage(
                           `Relatório: ${report.nome}`,
@@ -705,15 +716,38 @@ export default function ChatInput({
                           fileName
                         );
 
-                        toast.success("Relatório anexado com sucesso!");
+                        setReportProgress(100);
+                        
+                        setTimeout(() => {
+                          // Fechar janela e resetar estados
+                          setShowImportReportsPopover(false);
+                          setSelectedImportReport(null);
+                          setReportFileType(null);
+                          setIsProcessingReport(false);
+                          setReportProgress(0);
+                          toast.success("Relatório anexado com sucesso!");
+                        }, 500);
+
                       } catch (error: any) {
                         console.error("Erro ao anexar relatório:", error);
                         toast.error(error.message || "Erro ao anexar relatório");
+                        setIsProcessingReport(false);
+                        setReportProgress(0);
                       }
                     }}
                   >
-                    Anexar {reportFileType === 'pdf' ? 'PDF' : 'Excel'}
+                    {isProcessingReport ? 'Processando...' : `Anexar ${reportFileType === 'pdf' ? 'PDF' : 'Excel'}`}
                   </Button>
+
+                  {isProcessingReport && (
+                    <div className="space-y-2 pt-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Processando estoque de terceiros</span>
+                        <span className="font-medium">{reportProgress}%</span>
+                      </div>
+                      <Progress value={reportProgress} className="h-2" />
+                    </div>
+                  )}
                 </div>
               </div>
             </PopoverContent>
