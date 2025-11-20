@@ -471,9 +471,10 @@ serve(async (req) => {
       try {
         const pdfDoc = await PDFDocument.load(fileBytes);
         const pages = pdfDoc.getPages();
+        const { rgb } = await import('https://esm.sh/pdf-lib@1.17.1');
 
         for (const page of pages) {
-          const { width, height } = page.getSize();
+          const { width } = page.getSize();
           
           // Retângulo branco no rodapé (altura 80)
           page.drawRectangle({
@@ -481,7 +482,7 @@ serve(async (req) => {
             y: 0,
             width: width,
             height: 80,
-            color: { red: 1, green: 1, blue: 1 } as any,
+            color: rgb(1, 1, 1),
           });
         }
 
