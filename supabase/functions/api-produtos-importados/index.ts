@@ -33,20 +33,26 @@ serve(async (req) => {
       );
     }
 
+    if (!relatorioId) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'relatorio_id é obrigatório',
+          message: 'Por favor, adicione o parâmetro &relatorio_id=SEU_ID na URL',
+          example: `${url.origin}${url.pathname}?estabelecimento_id=${estabelecimentoId}&relatorio_id=UUID_DO_RELATORIO`
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Buscando produtos para estabelecimento:', estabelecimentoId, 'relatório:', relatorioId);
 
-    // Buscar produtos importados - retornar apenas as colunas de negócio (etapa 6)
-    let query = supabase
+    // Buscar produtos importados - retornar apenas as colunas de negócio (etapa 6) do relatório específico
+    const { data, error } = await supabase
       .from('produtos_importados')
       .select('nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
-      .eq('estabelecimento_id', estabelecimentoId);
-    
-    // Filtrar por relatório específico se fornecido
-    if (relatorioId) {
-      query = query.eq('relatorio_importacao_id', relatorioId);
-    }
-    
-    const { data, error } = await query.order('created_at', { ascending: false });
+      .eq('estabelecimento_id', estabelecimentoId)
+      .eq('relatorio_importacao_id', relatorioId)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Erro ao buscar produtos:', error);
