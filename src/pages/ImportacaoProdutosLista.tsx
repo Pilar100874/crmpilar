@@ -99,12 +99,17 @@ export default function ImportacaoProdutosLista() {
     toast.success("URL da API copiada!");
   };
 
-  const handleGeneratePdf = async (apiEndpoint: string) => {
+  const handleGeneratePdf = async (apiEndpoint: string, relatorioId: string) => {
     try {
       toast.info("Gerando PDF...");
       
       // Buscar modelo para produtos importados
       const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
       const { data: modelo } = await supabase
         .from("relatorios")
         .select("id, nome")
@@ -117,11 +122,24 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Gerar PDF usando a edge function (mesma forma que o bloco do bot)
+      // Extrair parâmetros da URL da API
+      const urlParams = new URL(apiEndpoint).searchParams;
+      const apiEstabelecimentoId = urlParams.get('estabelecimento_id');
+      const apiRelatorioId = urlParams.get('relatorio_id');
+
+      console.log("📋 Gerando PDF com parâmetros:", {
+        estabelecimentoId: apiEstabelecimentoId,
+        relatorioId: apiRelatorioId
+      });
+
+      // Gerar PDF usando a edge function com os parâmetros corretos
       const { data: resultData, error: fnError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
         body: { 
           relatorioId: modelo.id,
-          apiVariables: {},
+          apiVariables: {
+            estabelecimento_id: { value: apiEstabelecimentoId, type: "string" },
+            relatorio_id: { value: apiRelatorioId, type: "string" }
+          },
           reportVariables: {},
           outputType: 'pdf'
         }
@@ -134,12 +152,20 @@ export default function ImportacaoProdutosLista() {
         throw new Error(fnError.message || 'Falha ao gerar PDF');
       }
 
-      // Verificar se foi gerado com sucesso (mesmo formato que a função retorna)
+      // Verificar se foi gerado com sucesso e fazer download
       if (resultData?.pdfUrl || resultData?.fileUrl) {
         const pdfUrl = resultData.pdfUrl || resultData.fileUrl;
         console.log("✅ PDF gerado com sucesso:", pdfUrl);
-        window.open(pdfUrl, '_blank');
-        toast.success("PDF gerado com sucesso!");
+        
+        // Fazer download direto ao invés de abrir em nova aba
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = `produtos-importados-${new Date().getTime()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success("PDF gerado e baixado com sucesso!");
       } else {
         console.error("❌ Resposta sem URL de arquivo:", resultData);
         throw new Error(resultData?.error || 'Falha ao gerar PDF - URL não retornada');
@@ -396,7 +422,7 @@ export default function ImportacaoProdutosLista() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
-                          handleGeneratePdf(relatorio.api_endpoint);
+                          handleGeneratePdf(relatorio.api_endpoint, relatorio.id);
                         }}>
                           <FileSpreadsheet className="h-4 w-4 mr-2" />
                           Gerar PDF
