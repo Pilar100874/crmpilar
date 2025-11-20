@@ -115,6 +115,50 @@ export default function Relatorios() {
     }
   };
 
+  const handleCreateImportProductsModel = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      
+      // Verificar se já existe
+      const { data: existing } = await supabase
+        .from("relatorios")
+        .select("id")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("nome", "Modelo para Produtos Importados")
+        .maybeSingle();
+      
+      if (existing) {
+        toast.info("Editando modelo para produtos importados");
+        setCurrentReportId(existing.id);
+        setShowDesigner(true);
+        return;
+      }
+
+      // Criar novo modelo
+      const { data, error } = await supabase
+        .from("relatorios")
+        .insert([{
+          estabelecimento_id: estabelecimentoId,
+          nome: "Modelo para Produtos Importados",
+          descricao: "Modelo único para visualização de produtos importados",
+          conexao_id: null,
+          layout_json: {},
+          query_sql: "",
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Modelo criado com sucesso");
+      setCurrentReportId(data.id);
+      setShowDesigner(true);
+      await loadReports();
+    } catch (error: any) {
+      toast.error("Erro ao criar modelo: " + error.message);
+    }
+  };
+
   const handleEdit = (report: Report) => {
     // Abrir designer ReportBro
     setCurrentReportId(report.id);
@@ -399,28 +443,7 @@ export default function Relatorios() {
               {/* Card: Criar Modelo para Produtos Importados */}
               <Card 
                 className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-secondary/40 bg-secondary/5 h-full flex flex-col"
-                onClick={async () => {
-                  // Verificar se já existe um modelo para produtos importados
-                  const estabelecimentoId = await getEstabelecimentoId();
-                  const { data: existing } = await supabase
-                    .from("relatorios")
-                    .select("id")
-                    .eq("estabelecimento_id", estabelecimentoId)
-                    .eq("nome", "Modelo para Produtos Importados")
-                    .maybeSingle();
-                  
-                  if (existing) {
-                    toast.info("Editando modelo para produtos importados");
-                    setCurrentReportId(existing.id);
-                    setShowDesigner(true);
-                  } else {
-                    setFormData({ 
-                      nome: "Modelo para Produtos Importados", 
-                      descricao: "Modelo único para visualização de produtos importados" 
-                    });
-                    await handleCreate();
-                  }
-                }}
+                onClick={handleCreateImportProductsModel}
               >
                 <CardHeader className="flex-1 p-4">
                   <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center mb-4">
