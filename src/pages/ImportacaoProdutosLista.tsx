@@ -78,13 +78,14 @@ export default function ImportacaoProdutosLista() {
 
       toast.success("Relatório excluído com sucesso");
       await loadRelatorios();
-      setDeleteDialogOpen(false);
-      setRelatorioToDelete(null);
     } catch (error) {
       console.error("Erro ao excluir relatório:", error);
       toast.error("Erro ao excluir relatório");
     } finally {
+      // Sempre resetar os estados e fechar o dialog, mesmo em caso de erro
       setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setRelatorioToDelete(null);
     }
   };
 
