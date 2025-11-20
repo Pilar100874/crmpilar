@@ -11,9 +11,10 @@ interface Props {
   finalData: any[];
   onApiCreated: (endpoint: string) => void;
   apiEndpoint: string;
+  relatorioId: string | null;
 }
 
-export function ImportWizardStep6({ finalData, onApiCreated, apiEndpoint }: Props) {
+export function ImportWizardStep6({ finalData, onApiCreated, apiEndpoint, relatorioId }: Props) {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -32,9 +33,10 @@ export function ImportWizardStep6({ finalData, onApiCreated, apiEndpoint }: Prop
         return;
       }
 
-      // Salvar dados no banco - converter valores explicitamente
+      // Salvar dados no banco - converter valores explicitamente e vincular ao relatório
       const dataToInsert = finalData.map(item => ({
         estabelecimento_id: estabelecimentoId,
+        relatorio_importacao_id: relatorioId,
         nome: String(item.nome || ''),
         quantidade: item.quantidade ? Number(item.quantidade) : null,
         gramatura: item.gramatura ? String(item.gramatura) : null,
@@ -54,9 +56,9 @@ export function ImportWizardStep6({ finalData, onApiCreated, apiEndpoint }: Prop
 
       if (error) throw error;
 
-      // Gerar endpoint da API
+      // Gerar endpoint da API com relatorio_id
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const apiUrl = `${supabaseUrl}/functions/v1/api-produtos-importados?estabelecimento_id=${estabelecimentoId}`;
+      const apiUrl = `${supabaseUrl}/functions/v1/api-produtos-importados?estabelecimento_id=${estabelecimentoId}&relatorio_id=${relatorioId}`;
       onApiCreated(apiUrl);
       setSaved(true);
       toast.success(`${finalData.length} produtos salvos com sucesso!`);

@@ -1851,6 +1851,7 @@ export type Database = {
           numero_folhas: number | null
           obs: string | null
           quantidade: number | null
+          relatorio_importacao_id: string | null
           tipo: string | null
           updated_at: string | null
         }
@@ -1868,6 +1869,7 @@ export type Database = {
           numero_folhas?: number | null
           obs?: string | null
           quantidade?: number | null
+          relatorio_importacao_id?: string | null
           tipo?: string | null
           updated_at?: string | null
         }
@@ -1885,6 +1887,7 @@ export type Database = {
           numero_folhas?: number | null
           obs?: string | null
           quantidade?: number | null
+          relatorio_importacao_id?: string | null
           tipo?: string | null
           updated_at?: string | null
         }
@@ -1894,6 +1897,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtos_importados_relatorio_importacao_id_fkey"
+            columns: ["relatorio_importacao_id"]
+            isOneToOne: false
+            referencedRelation: "relatorios_importacao"
             referencedColumns: ["id"]
           },
         ]
