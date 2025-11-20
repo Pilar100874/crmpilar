@@ -156,6 +156,23 @@ serve(async (req) => {
         }
         
         console.log(`✅ ${apiData.length} registros carregados da API`);
+        
+        // Converter campos JSON/object para string (ReportBro requer tipos primitivos)
+        apiData = apiData.map(record => {
+          const cleanRecord: Record<string, any> = {};
+          Object.entries(record).forEach(([key, value]) => {
+            if (value === null || value === undefined) {
+              cleanRecord[key] = value;
+            } else if (typeof value === 'object') {
+              // Converter objetos/arrays para string JSON
+              cleanRecord[key] = JSON.stringify(value);
+            } else {
+              cleanRecord[key] = value;
+            }
+          });
+          return cleanRecord;
+        });
+        console.log(`✅ Campos JSON convertidos para string`);
       } catch (apiError) {
         console.error("❌ Erro ao buscar dados da API:", apiError);
         // Continua sem dados da API
