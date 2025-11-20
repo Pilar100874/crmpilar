@@ -115,29 +115,7 @@ export default function ImportacaoProdutos() {
           console.error("Erro ao atualizar:", error);
           throw error;
         }
-        toast.success("Relatório atualizado com sucesso!");
-      } else {
-        // Criar novo relatório
-        const { data, error } = await supabase
-          .from("relatorios_importacao")
-          .insert([{
-            estabelecimento_id: estabelecimentoId,
-            nome: reportName,
-            data_criacao: reportDate,
-            api_endpoint: apiEndpoint || null,
-            configuracao
-          }])
-          .select()
-          .single();
-
-        if (error) {
-          console.error("Erro ao inserir:", error);
-          throw error;
-        }
-        if (data) {
-          setRelatorioId(data.id);
-        }
-        toast.success("Relatório criado com sucesso!");
+        toast.success("Relatório salvo com sucesso!");
       }
 
       navigate("/importacao-produtos");
@@ -170,7 +148,57 @@ export default function ImportacaoProdutos() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Se está indo para a etapa 6 e ainda não tem relatório criado, criar agora
+    if (currentStep === 5 && !relatorioId) {
+      try {
+        setLoading(true);
+        const estabelecimentoId = await getEstabelecimentoId();
+        
+        if (!estabelecimentoId) {
+          toast.error("Estabelecimento não encontrado");
+          return;
+        }
+
+        const configuracao = {
+          excelData,
+          excelHeaders,
+          selectedFields,
+          filters,
+          fieldMapping,
+          finalData
+        } as any;
+
+        // Criar novo relatório
+        const { data, error } = await supabase
+          .from("relatorios_importacao")
+          .insert([{
+            estabelecimento_id: estabelecimentoId,
+            nome: reportName,
+            data_criacao: reportDate,
+            configuracao
+          }])
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Erro ao criar relatório:", error);
+          throw error;
+        }
+        
+        if (data) {
+          setRelatorioId(data.id);
+          console.log("✅ Relatório criado com ID:", data.id);
+        }
+      } catch (error: any) {
+        console.error("Erro ao criar relatório:", error);
+        toast.error(`Erro ao criar relatório: ${error.message || "Erro desconhecido"}`);
+        return; // Não avançar se falhar
+      } finally {
+        setLoading(false);
+      }
+    }
+    
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
