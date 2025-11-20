@@ -116,7 +116,7 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Gerar PDF usando a edge function (mesma forma que o bot)
+      // Gerar PDF usando a edge function (mesma forma que o bloco do bot)
       const { data: resultData, error: fnError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
         body: { 
           relatorioId: modelo.id,
@@ -126,18 +126,21 @@ export default function ImportacaoProdutosLista() {
         }
       });
 
+      console.log("🔎 Resposta da função gerar-relatorio-pdf:", resultData, fnError);
+
       if (fnError) {
         console.error("❌ Erro ao gerar PDF:", fnError);
         throw new Error(fnError.message || 'Falha ao gerar PDF');
       }
 
-      // Verificar se foi gerado com sucesso (mesmo formato que o bot espera)
+      // Verificar se foi gerado com sucesso (mesmo formato que a função retorna)
       if (resultData?.pdfUrl || resultData?.fileUrl) {
         const pdfUrl = resultData.pdfUrl || resultData.fileUrl;
         console.log("✅ PDF gerado com sucesso:", pdfUrl);
         window.open(pdfUrl, '_blank');
         toast.success("PDF gerado com sucesso!");
       } else {
+        console.error("❌ Resposta sem URL de arquivo:", resultData);
         throw new Error(resultData?.error || 'Falha ao gerar PDF - URL não retornada');
       }
     } catch (error: any) {
@@ -193,67 +196,24 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Extrair colunas do relatório do ReportBro
+      // Extrair colunas do relatório a partir do parâmetro api_data do ReportBro
       const layoutJsonObj = typeof modelo.layout_json === 'string' 
         ? JSON.parse(modelo.layout_json)
         : modelo.layout_json;
 
-      // ReportBro usa docElements com sections e tables
-      const docElements = layoutJsonObj?.docElements || [];
+      const parameters = layoutJsonObj?.parameters || [];
+      const apiParam = parameters.find((p: any) => p.name === 'api_data');
       const columnNames: string[] = [];
-      
-      // Procurar por elementos de tabela em sections
-      docElements.forEach((element: any) => {
-        // Verificar se é uma section com contentData que tem tabelas
-        if (element.elementType === 'section' && element.contentData) {
-          const contentId = element.contentData.linkedContainerId;
-          
-          // Procurar pela tabela dentro do contentData
-          docElements.forEach((innerElement: any) => {
-            if (innerElement.id === contentId && innerElement.elementType === 'table') {
-              // Extrair colunas do contentData da tabela
-              const contentData = innerElement.contentData;
-              if (contentData?.columnData) {
-                contentData.columnData.forEach((col: any) => {
-                  if (col.content && col.content.includes('${')) {
-                    const matches = col.content.match(/\$\{([^}]+)\}/g);
-                    if (matches) {
-                      matches.forEach((match: string) => {
-                        const varName = match.replace(/\$\{/g, '').replace(/\}/g, '').trim();
-                        // Remover prefixo api_data. se houver
-                        const cleanVarName = varName.replace(/^api_data\./, '');
-                        if (!columnNames.includes(cleanVarName)) {
-                          columnNames.push(cleanVarName);
-                        }
-                      });
-                    }
-                  }
-                });
-              }
-            }
-          });
-        }
-        
-        // Verificar se é uma tabela direta
-        if (element.elementType === 'table' && element.contentData?.columnData) {
-          element.contentData.columnData.forEach((col: any) => {
-            if (col.content && col.content.includes('${')) {
-              const matches = col.content.match(/\$\{([^}]+)\}/g);
-              if (matches) {
-                matches.forEach((match: string) => {
-                  const varName = match.replace(/\$\{/g, '').replace(/\}/g, '').trim();
-                  const cleanVarName = varName.replace(/^api_data\./, '');
-                  if (!columnNames.includes(cleanVarName)) {
-                    columnNames.push(cleanVarName);
-                  }
-                });
-              }
-            }
-          });
-        }
-      });
 
-      console.log("📋 Colunas extraídas do relatório:", columnNames);
+      if (apiParam && Array.isArray(apiParam.children)) {
+        apiParam.children.forEach((child: any) => {
+          if (child.name) {
+            columnNames.push(child.name);
+          }
+        });
+      }
+
+      console.log("📋 Colunas extraídas do parâmetro api_data:", columnNames);
 
       // Se não encontrou colunas no layout, usar todas as colunas dos dados
       if (columnNames.length === 0) {
