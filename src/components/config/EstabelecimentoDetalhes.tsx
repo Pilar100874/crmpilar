@@ -276,6 +276,9 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
   const [filas, setFilas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [atendentesDialogOpen, setAtendentesDialogOpen] = useState(false);
+  const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
+  const [selectedFila, setSelectedFila] = useState<any | null>(null);
   const [editingFila, setEditingFila] = useState<any | null>(null);
   const [formData, setFormData] = useState<{
     nome: string;
@@ -361,6 +364,16 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
     }
   };
 
+  const handleViewAtendentes = (fila: any) => {
+    setSelectedFila(fila);
+    setAtendentesDialogOpen(true);
+  };
+
+  const handleConfigureSkills = (fila: any) => {
+    setSelectedFila(fila);
+    setSkillsDialogOpen(true);
+  };
+
   const handleSave = async () => {
     if (!formData.nome.trim()) {
       sonnerToast.error("Nome da fila é obrigatório");
@@ -407,6 +420,8 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
         onCreateFila={handleCreateFila}
         onEditFila={handleEditFila}
         onToggleAtiva={handleToggleAtiva}
+        onViewAtendentes={handleViewAtendentes}
+        onConfigureSkills={handleConfigureSkills}
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -521,6 +536,38 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
             <Button onClick={handleSave}>
               {editingFila ? "Atualizar" : "Criar"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={atendentesDialogOpen} onOpenChange={setAtendentesDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Atendentes da Fila: {selectedFila?.nome}</DialogTitle>
+            <DialogDescription>
+              Gerencie os atendentes vinculados a esta fila
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Funcionalidade de gerenciamento de atendentes em desenvolvimento.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={skillsDialogOpen} onOpenChange={setSkillsDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Skills da Fila: {selectedFila?.nome}</DialogTitle>
+            <DialogDescription>
+              Configure as habilidades necessárias para esta fila
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Funcionalidade de configuração de skills em desenvolvimento.
+            </p>
           </div>
         </DialogContent>
       </Dialog>
