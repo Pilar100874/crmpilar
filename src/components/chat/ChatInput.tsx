@@ -682,59 +682,22 @@ export default function ChatInput({
 
                         const resultData = data?.data || data;
                         const fileUrl = resultData.pdfUrl || resultData.fileUrl;
+                        const fileName = resultData.fileName as string | undefined;
                         
-                        if (!fileUrl) {
-                          throw new Error("URL do arquivo não retornada");
+                        if (!fileUrl || !fileName) {
+                          throw new Error("URL ou nome do arquivo não retornados");
                         }
-
-                        // Baixar o arquivo e criar um blob
-                        const response = await fetch(fileUrl);
-                        if (!response.ok) throw new Error("Erro ao baixar arquivo");
-                        
-                        const blob = await response.blob();
-                        const fileName = `${report.nome}.${reportFileType === 'pdf' ? 'pdf' : 'xlsx'}`;
-                        
-                        // Criar um File object do blob
-                        const file = new File([blob], fileName, { 
-                          type: reportFileType === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-                        });
-
-                        // Upload para o storage
-                        const fileExt = reportFileType === 'pdf' ? 'pdf' : 'xlsx';
-                        
-                        // Sanitizar nome do arquivo para storage (remover caracteres especiais)
-                        const sanitizedFileName = fileName
-                          .normalize('NFD')
-                          .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-                          .replace(/[^a-zA-Z0-9._-]/g, '_') // Substitui caracteres especiais por underscore
-                          .replace(/_+/g, '_') // Remove underscores duplicados
-                          .replace(/^_|_$/g, ''); // Remove underscores do início e fim
-                        
-                        const filePath = `${Date.now()}_${sanitizedFileName}`;
-                        
-                        const { data: uploadData, error: uploadError } = await supabase.storage
-                          .from('chat-attachments')
-                          .upload(filePath, file, {
-                            contentType: file.type,
-                            upsert: false
-                          });
-
-                        if (uploadError) throw uploadError;
-
-                        const { data: { publicUrl } } = supabase.storage
-                          .from('chat-attachments')
-                          .getPublicUrl(filePath);
 
                         // Fechar janela imediatamente
                         setShowImportReportsPopover(false);
                         setSelectedImportReport(null);
                         setReportFileType(null);
                         
-                        // Enviar como mensagem
+                        // Enviar como mensagem usando a URL gerada pela função (bot-media)
                         onSendMessage(
                           `Relatório: ${report.nome}`,
                           'file',
-                          publicUrl,
+                          fileUrl,
                           fileName
                         );
 
