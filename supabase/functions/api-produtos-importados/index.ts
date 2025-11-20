@@ -34,10 +34,10 @@ serve(async (req) => {
 
     console.log('Buscando produtos para estabelecimento:', estabelecimentoId);
 
-    // Buscar produtos importados
+    // Buscar produtos importados - retornar apenas as colunas de negócio (etapa 6)
     const { data, error } = await supabase
       .from('produtos_importados')
-      .select('*')
+      .select('nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
       .eq('estabelecimento_id', estabelecimentoId)
       .order('created_at', { ascending: false });
 
