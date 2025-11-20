@@ -659,11 +659,15 @@ export default function ChatInput({
                           return;
                         }
 
-                        // Extrair estabelecimento_id e relatorio_id da URL da API
+                        // Extrair estabelecimento_id e relatorio_id da URL da API (mesma lógica da tela de importação)
                         const apiUrl = report.api_endpoint;
-                        const urlParts = apiUrl.split('/');
-                        const estabId = urlParts[urlParts.length - 2];
-                        const relId = urlParts[urlParts.length - 1];
+                        const urlParams = new URL(apiUrl).searchParams;
+                        const estabId = urlParams.get('estabelecimento_id');
+                        const relId = urlParams.get('relatorio_id');
+
+                        if (!estabId || !relId) {
+                          throw new Error("Parâmetros de relatório inválidos na URL da API");
+                        }
 
                         // Chamar a edge function com os parâmetros corretos
                         const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
