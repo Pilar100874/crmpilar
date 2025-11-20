@@ -106,7 +106,7 @@ export default function ImportacaoProdutosLista() {
       const estabelecimentoId = await getEstabelecimentoId();
       const { data: modelo } = await supabase
         .from("relatorios")
-        .select("id, nome")
+        .select("id, nome, layout_json")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("nome", "Modelo para Produtos Importados")
         .maybeSingle();
@@ -116,7 +116,25 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Gerar PDF usando a edge function correta
+      // Atualizar temporariamente o relatório com a API correta
+      const layoutJsonObj = typeof modelo.layout_json === 'string' 
+        ? JSON.parse(modelo.layout_json)
+        : modelo.layout_json;
+
+      const updatedLayout = {
+        ...layoutJsonObj,
+        configuracoes: {
+          ...layoutJsonObj.configuracoes,
+          api_url: apiEndpoint
+        }
+      };
+
+      await supabase
+        .from('relatorios')
+        .update({ layout_json: updatedLayout })
+        .eq('id', modelo.id);
+
+      // Gerar PDF usando a edge function
       const { data: result, error: fnError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
         body: { 
           relatorioId: modelo.id,
@@ -147,21 +165,28 @@ export default function ImportacaoProdutosLista() {
     try {
       toast.info("Gerando Excel...");
       
-      console.log("Buscando dados da API:", apiEndpoint);
-      
+      // Buscar modelo para produtos importados
+      const estabelecimentoId = await getEstabelecimentoId();
+      const { data: modelo } = await supabase
+        .from("relatorios")
+        .select("id, layout_json")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("nome", "Modelo para Produtos Importados")
+        .maybeSingle();
+
+      if (!modelo) {
+        toast.error("Modelo para produtos importados não encontrado. Crie o modelo primeiro.");
+        return;
+      }
+
       // Buscar dados da API
       const response = await fetch(apiEndpoint);
-      
-      console.log("Status da resposta:", response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`Erro ao buscar dados: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log("Dados recebidos:", data);
-      console.log("Tipo de dados:", Array.isArray(data) ? 'Array' : typeof data);
-      console.log("Quantidade de registros:", Array.isArray(data) ? data.length : 'N/A');
       
       if (!data) {
         toast.error("API retornou dados vazios");
@@ -175,22 +200,40 @@ export default function ImportacaoProdutosLista() {
       } else if (data.data && Array.isArray(data.data)) {
         records = data.data;
       } else if (typeof data === 'object') {
-        // Se for um objeto único, converter para array
         records = [data];
       }
-      
-      console.log("Registros processados:", records.length);
       
       if (records.length === 0) {
         toast.error("Nenhum dado encontrado na API");
         return;
       }
 
+      // Extrair colunas do relatório
+      const layoutJsonObj = typeof modelo.layout_json === 'string' 
+        ? JSON.parse(modelo.layout_json)
+        : modelo.layout_json;
+
+      const reportColumns = layoutJsonObj?.report?.content?.[0]?.content || [];
+      const columnNames = reportColumns
+        .filter((col: any) => col.elementType === 'table_text_element' && col.content)
+        .map((col: any) => col.content.replace(/\${/g, '').replace(/}/g, ''));
+
+      // Filtrar apenas as colunas do relatório
+      const filteredRecords = records.map(record => {
+        const filtered: any = {};
+        columnNames.forEach((col: string) => {
+          if (col in record) {
+            filtered[col] = record[col];
+          }
+        });
+        return filtered;
+      });
+
       // Importar biblioteca XLSX dinamicamente
       const XLSX = await import('xlsx');
       
-      // Criar worksheet a partir dos dados
-      const worksheet = XLSX.utils.json_to_sheet(records);
+      // Criar worksheet a partir dos dados filtrados
+      const worksheet = XLSX.utils.json_to_sheet(filteredRecords);
       
       // Criar workbook
       const workbook = XLSX.utils.book_new();
@@ -199,7 +242,7 @@ export default function ImportacaoProdutosLista() {
       // Gerar arquivo Excel e fazer download
       XLSX.writeFile(workbook, `produtos-importados-${new Date().toISOString().split('T')[0]}.xlsx`);
       
-      toast.success(`Excel gerado com ${records.length} registro(s)!`);
+      toast.success(`Excel gerado com ${filteredRecords.length} registro(s)!`);
     } catch (error: any) {
       console.error("Erro ao gerar Excel:", error);
       toast.error("Erro ao gerar Excel: " + (error.message || "desconhecido"));
