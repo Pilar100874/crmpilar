@@ -23,6 +23,8 @@ import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
+import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
 
 interface Conversation {
   id: string;
@@ -155,11 +157,28 @@ export default function Atendimento() {
   const [todayTasksCount, setTodayTasksCount] = useState(0);
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [orcamentosEmAndamentoCount, setOrcamentosEmAndamentoCount] = useState(0);
+  const [usuarioId, setUsuarioId] = useState<string>("");
+
+  // Omnichannel routing
+  const { setupMessageListener } = useOmnichannelRouting();
+
+  useEffect(() => {
+    const initUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUsuarioId(user.id);
+    };
+    initUser();
+  }, []);
 
   useEffect(() => {
     const initEstabelecimento = async () => {
       const id = await getEstabelecimentoId();
-      if (id) setEstabelecimentoId(id);
+      if (id) {
+        setEstabelecimentoId(id);
+        // Configurar listener de mensagens para roteamento automático
+        const cleanup = setupMessageListener(id);
+        return cleanup;
+      }
     };
     initEstabelecimento();
     loadConversations();
@@ -2534,6 +2553,16 @@ ${recentMessages}
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetailsChat && (
         <div className="w-80 md:w-64 lg:w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
+          {/* Omnichannel Manager */}
+          <div className="p-4 border-b bg-muted/20">
+            <OmnichannelManager
+              conversationId={selectedConversation}
+              estabelecimentoId={estabelecimentoId}
+              usuarioId={usuarioId}
+              onUpdate={loadConversations}
+            />
+          </div>
+
           {/* Header com nome do cliente */}
           <div className="p-3 md:p-4 border-b flex-shrink-0">
             <div className="flex flex-col items-center mb-3 md:mb-4">

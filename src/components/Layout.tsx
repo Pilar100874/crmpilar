@@ -70,7 +70,16 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
   { id: "Clientes", title: "Funil", url: "/funil", icon: Users },
-  { id: "Atendimento", title: "Chats", url: "/atendimento", icon: MessageSquare },
+  { 
+    id: "Atendimento",
+    title: "Chats", 
+    icon: MessageSquare,
+    subItems: [
+      { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: MessageSquare },
+      { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: Users },
+      { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LayoutDashboard },
+    ]
+  },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },
   { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: FileBarChart },
   { 

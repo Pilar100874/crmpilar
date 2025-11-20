@@ -49,3 +49,12 @@ verify_jwt = false
 [functions.api-produtos-importados]
 verify_jwt = false
 
+[functions.rotear-chat-automatico]
+verify_jwt = true
+
+[functions.reabrir-chat-automatico]
+verify_jwt = true
+
+[functions.processar-fila-atendimento]
+verify_jwt = false
+
