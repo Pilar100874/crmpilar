@@ -31,6 +31,8 @@ export const MENU_CONFIG = [
   { id: "Videochamada", label: "Videochamada" },
   { id: "Configurações", label: "Configurações" },
   { id: "Config Geral", label: "Configurações Gerais" },
+  { id: "Config Filas", label: "Filas de Atendimento" },
+  { id: "Config Skills", label: "Skills de Atendimento" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },
   { id: "Variáveis Globais", label: "Variáveis Globais" },
   { id: "Teste Campanhas", label: "Teste Campanhas" },
