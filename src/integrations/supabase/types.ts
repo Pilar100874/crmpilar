@@ -122,6 +122,193 @@ export type Database = {
           },
         ]
       }
+      atendente_carteiras: {
+        Row: {
+          atendente_id: string
+          ativa: boolean | null
+          created_at: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          atendente_id: string
+          ativa?: boolean | null
+          created_at?: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          atendente_id?: string
+          ativa?: boolean | null
+          created_at?: string | null
+          customer_id?: string
+          estabelecimento_id?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendente_carteiras_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendente_carteiras_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendente_carteiras_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atendente_filas: {
+        Row: {
+          atendente_id: string
+          created_at: string | null
+          fila_id: string
+          id: string
+          prioridade: number | null
+        }
+        Insert: {
+          atendente_id: string
+          created_at?: string | null
+          fila_id: string
+          id?: string
+          prioridade?: number | null
+        }
+        Update: {
+          atendente_id?: string
+          created_at?: string | null
+          fila_id?: string
+          id?: string
+          prioridade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendente_filas_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendente_filas_fila_id_fkey"
+            columns: ["fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atendente_skills: {
+        Row: {
+          atendente_id: string
+          created_at: string | null
+          id: string
+          nivel: number | null
+          skill_id: string
+        }
+        Insert: {
+          atendente_id: string
+          created_at?: string | null
+          id?: string
+          nivel?: number | null
+          skill_id: string
+        }
+        Update: {
+          atendente_id?: string
+          created_at?: string | null
+          id?: string
+          nivel?: number | null
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendente_skills_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendente_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atendentes: {
+        Row: {
+          aceita_novos_chats: boolean | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          max_chats_simultaneos: number | null
+          motivo_pausa: string | null
+          status: Database["public"]["Enums"]["atendente_status"] | null
+          tempo_pausa_inicio: string | null
+          ultimo_status_mudanca: string | null
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          aceita_novos_chats?: boolean | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          max_chats_simultaneos?: number | null
+          motivo_pausa?: string | null
+          status?: Database["public"]["Enums"]["atendente_status"] | null
+          tempo_pausa_inicio?: string | null
+          ultimo_status_mudanca?: string | null
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          aceita_novos_chats?: boolean | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          max_chats_simultaneos?: number | null
+          motivo_pausa?: string | null
+          status?: Database["public"]["Enums"]["atendente_status"] | null
+          tempo_pausa_inicio?: string | null
+          ultimo_status_mudanca?: string | null
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendentes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendentes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: true
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_flows: {
         Row: {
           active: boolean | null
@@ -450,6 +637,169 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_tags: {
+        Row: {
+          categoria: string | null
+          cor: string | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          categoria?: string | null
+          cor?: string | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          categoria?: string | null
+          cor?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_tags_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_tags_aplicadas: {
+        Row: {
+          aplicada_por: string | null
+          chat_id: string
+          created_at: string | null
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          aplicada_por?: string | null
+          chat_id: string
+          created_at?: string | null
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          aplicada_por?: string | null
+          chat_id?: string
+          created_at?: string | null
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_tags_aplicadas_aplicada_por_fkey"
+            columns: ["aplicada_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_tags_aplicadas_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_tags_aplicadas_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "chat_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_transferencias: {
+        Row: {
+          atendente_destino_id: string | null
+          atendente_origem_id: string | null
+          chat_id: string
+          created_at: string | null
+          fila_destino_id: string | null
+          fila_origem_id: string | null
+          id: string
+          motivo: string | null
+          realizada_por: string | null
+          tipo: string | null
+        }
+        Insert: {
+          atendente_destino_id?: string | null
+          atendente_origem_id?: string | null
+          chat_id: string
+          created_at?: string | null
+          fila_destino_id?: string | null
+          fila_origem_id?: string | null
+          id?: string
+          motivo?: string | null
+          realizada_por?: string | null
+          tipo?: string | null
+        }
+        Update: {
+          atendente_destino_id?: string | null
+          atendente_origem_id?: string | null
+          chat_id?: string
+          created_at?: string | null
+          fila_destino_id?: string | null
+          fila_origem_id?: string | null
+          id?: string
+          motivo?: string | null
+          realizada_por?: string | null
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_transferencias_atendente_destino_id_fkey"
+            columns: ["atendente_destino_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_transferencias_atendente_origem_id_fkey"
+            columns: ["atendente_origem_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_transferencias_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_transferencias_fila_destino_id_fkey"
+            columns: ["fila_destino_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_transferencias_fila_origem_id_fkey"
+            columns: ["fila_origem_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_transferencias_realizada_por_fkey"
+            columns: ["realizada_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       condicoes_pagamento: {
         Row: {
           ativo: boolean | null
@@ -551,44 +901,90 @@ export type Database = {
       conversations: {
         Row: {
           assignee_id: string | null
+          atendente_atual_id: string | null
+          avaliacao: number | null
           bot_active: boolean
           bot_id: string | null
           canal: string
+          chat_status: Database["public"]["Enums"]["chat_status"] | null
+          comentario_avaliacao: string | null
           created_at: string | null
           customer_id: string
           estabelecimento_id: string | null
+          fila_id: string | null
           id: string
           metadata: Json | null
+          motivo_encerramento: string | null
+          numero_reaberturas: number | null
+          origem_abertura: string | null
+          prioridade: Database["public"]["Enums"]["chat_prioridade"] | null
+          reaberto_automaticamente: boolean | null
           status: string | null
+          tempo_atendimento_inicio: string | null
+          tempo_encerramento: string | null
+          tempo_espera_inicio: string | null
           updated_at: string | null
         }
         Insert: {
           assignee_id?: string | null
+          atendente_atual_id?: string | null
+          avaliacao?: number | null
           bot_active?: boolean
           bot_id?: string | null
           canal: string
+          chat_status?: Database["public"]["Enums"]["chat_status"] | null
+          comentario_avaliacao?: string | null
           created_at?: string | null
           customer_id: string
           estabelecimento_id?: string | null
+          fila_id?: string | null
           id?: string
           metadata?: Json | null
+          motivo_encerramento?: string | null
+          numero_reaberturas?: number | null
+          origem_abertura?: string | null
+          prioridade?: Database["public"]["Enums"]["chat_prioridade"] | null
+          reaberto_automaticamente?: boolean | null
           status?: string | null
+          tempo_atendimento_inicio?: string | null
+          tempo_encerramento?: string | null
+          tempo_espera_inicio?: string | null
           updated_at?: string | null
         }
         Update: {
           assignee_id?: string | null
+          atendente_atual_id?: string | null
+          avaliacao?: number | null
           bot_active?: boolean
           bot_id?: string | null
           canal?: string
+          chat_status?: Database["public"]["Enums"]["chat_status"] | null
+          comentario_avaliacao?: string | null
           created_at?: string | null
           customer_id?: string
           estabelecimento_id?: string | null
+          fila_id?: string | null
           id?: string
           metadata?: Json | null
+          motivo_encerramento?: string | null
+          numero_reaberturas?: number | null
+          origem_abertura?: string | null
+          prioridade?: Database["public"]["Enums"]["chat_prioridade"] | null
+          reaberto_automaticamente?: boolean | null
           status?: string | null
+          tempo_atendimento_inicio?: string | null
+          tempo_encerramento?: string | null
+          tempo_espera_inicio?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_atendente_atual_id_fkey"
+            columns: ["atendente_atual_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_customer_id_fkey"
             columns: ["customer_id"]
@@ -601,6 +997,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_fila_id_fkey"
+            columns: ["fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
             referencedColumns: ["id"]
           },
         ]
@@ -1011,6 +1414,105 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      fila_skills: {
+        Row: {
+          created_at: string | null
+          fila_id: string
+          id: string
+          nivel_minimo: number | null
+          skill_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          fila_id: string
+          id?: string
+          nivel_minimo?: number | null
+          skill_id: string
+        }
+        Update: {
+          created_at?: string | null
+          fila_id?: string
+          id?: string
+          nivel_minimo?: number | null
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fila_skills_fila_id_fkey"
+            columns: ["fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fila_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filas_atendimento: {
+        Row: {
+          ativa: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          horario_funcionamento: Json | null
+          id: string
+          max_chats_por_atendente: number | null
+          mensagem_fila: string | null
+          nome: string
+          prioridade: number | null
+          tempo_resposta_esperado: number | null
+          tipo_roteamento: Database["public"]["Enums"]["tipo_roteamento"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativa?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          horario_funcionamento?: Json | null
+          id?: string
+          max_chats_por_atendente?: number | null
+          mensagem_fila?: string | null
+          nome: string
+          prioridade?: number | null
+          tempo_resposta_esperado?: number | null
+          tipo_roteamento?:
+            | Database["public"]["Enums"]["tipo_roteamento"]
+            | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativa?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          horario_funcionamento?: Json | null
+          id?: string
+          max_chats_por_atendente?: number | null
+          mensagem_fila?: string | null
+          nome?: string
+          prioridade?: number | null
+          tempo_resposta_esperado?: number | null
+          tipo_roteamento?:
+            | Database["public"]["Enums"]["tipo_roteamento"]
+            | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filas_atendimento_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       flows: {
         Row: {
@@ -1437,6 +1939,59 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metricas_atendente: {
+        Row: {
+          atendente_id: string
+          avaliacao_media: number | null
+          chats_encerrados: number | null
+          chats_transferidos: number | null
+          created_at: string | null
+          data: string
+          id: string
+          tempo_medio_atendimento: number | null
+          tempo_medio_primeira_resposta: number | null
+          tempo_online: number | null
+          tempo_pausa: number | null
+          total_chats: number | null
+        }
+        Insert: {
+          atendente_id: string
+          avaliacao_media?: number | null
+          chats_encerrados?: number | null
+          chats_transferidos?: number | null
+          created_at?: string | null
+          data: string
+          id?: string
+          tempo_medio_atendimento?: number | null
+          tempo_medio_primeira_resposta?: number | null
+          tempo_online?: number | null
+          tempo_pausa?: number | null
+          total_chats?: number | null
+        }
+        Update: {
+          atendente_id?: string
+          avaliacao_media?: number | null
+          chats_encerrados?: number | null
+          chats_transferidos?: number | null
+          created_at?: string | null
+          data?: string
+          id?: string
+          tempo_medio_atendimento?: number | null
+          tempo_medio_primeira_resposta?: number | null
+          tempo_online?: number | null
+          tempo_pausa?: number | null
+          total_chats?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metricas_atendente_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
             referencedColumns: ["id"]
           },
         ]
@@ -2495,6 +3050,93 @@ export type Database = {
           },
         ]
       }
+      skills: {
+        Row: {
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skills_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supervisor_acoes: {
+        Row: {
+          acao: string
+          atendente_afetado_id: string | null
+          chat_id: string | null
+          created_at: string | null
+          detalhes: Json | null
+          id: string
+          supervisor_id: string
+        }
+        Insert: {
+          acao: string
+          atendente_afetado_id?: string | null
+          chat_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+          supervisor_id: string
+        }
+        Update: {
+          acao?: string
+          atendente_afetado_id?: string | null
+          chat_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+          supervisor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supervisor_acoes_atendente_afetado_id_fkey"
+            columns: ["atendente_afetado_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supervisor_acoes_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supervisor_acoes_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tabelas_preco: {
         Row: {
           ativo: boolean | null
@@ -3289,6 +3931,27 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "gestor" | "agente"
+      atendente_status:
+        | "disponivel"
+        | "ocupado"
+        | "ausente"
+        | "offline"
+        | "pausa"
+      chat_prioridade: "baixa" | "normal" | "alta" | "urgente"
+      chat_status:
+        | "novo"
+        | "em_fila"
+        | "em_atendimento"
+        | "transferido"
+        | "aguardando_cliente"
+        | "encerrado"
+        | "reaberto"
+      tipo_roteamento:
+        | "round_robin"
+        | "por_skill"
+        | "por_disponibilidade"
+        | "por_carteira"
+        | "por_prioridade"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3417,6 +4080,30 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "gestor", "agente"],
+      atendente_status: [
+        "disponivel",
+        "ocupado",
+        "ausente",
+        "offline",
+        "pausa",
+      ],
+      chat_prioridade: ["baixa", "normal", "alta", "urgente"],
+      chat_status: [
+        "novo",
+        "em_fila",
+        "em_atendimento",
+        "transferido",
+        "aguardando_cliente",
+        "encerrado",
+        "reaberto",
+      ],
+      tipo_roteamento: [
+        "round_robin",
+        "por_skill",
+        "por_disponibilidade",
+        "por_carteira",
+        "por_prioridade",
+      ],
     },
   },
 } as const
