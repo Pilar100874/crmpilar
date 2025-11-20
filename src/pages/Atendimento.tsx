@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File } from "lucide-react";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -2266,9 +2266,19 @@ ${recentMessages}
                                     href={attachment}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs underline opacity-80 hover:opacity-100"
+                                    className="block"
                                   >
-                                    {msg.payload?.fileName || "Baixar arquivo"}
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-background/80 border border-border/60 hover:bg-background transition-colors text-xs">
+                                      <File className="h-4 w-4 text-primary" />
+                                      <div className="flex flex-col min-w-0">
+                                        <span className="font-medium truncate">
+                                          {msg.payload?.fileName || "Arquivo"}
+                                        </span>
+                                        <span className="text-[11px] text-muted-foreground">
+                                          Clique para baixar
+                                        </span>
+                                      </div>
+                                    </div>
                                   </a>
                                 ))}
                               </div>
