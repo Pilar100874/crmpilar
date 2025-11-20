@@ -878,27 +878,39 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="grupos-acesso" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-primary" />
-              <span className="font-medium">Grupos de Acesso</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <GruposAcessoCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="cadastro-usuarios" className="border rounded-md">
+        <AccordionItem value="usuarios-acessos" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">
               <UserCog className="w-4 h-4 text-primary" />
-              <span className="font-medium">Cadastro de Usuários</span>
+              <span className="font-medium">Usuários e Acessos</span>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <UsuariosCRUD estabelecimentoId={estabelecimentoId} />
+            <Accordion type="single" collapsible className="space-y-2 pl-4">
+              <AccordionItem value="grupos-acesso" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <FolderTree className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Grupos de Acesso</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <GruposAcessoCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="cadastro-usuarios" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <UserCog className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Cadastro de Usuários</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <UsuariosCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </AccordionContent>
         </AccordionItem>
 
