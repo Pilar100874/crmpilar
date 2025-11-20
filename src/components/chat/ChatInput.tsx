@@ -716,6 +716,11 @@ export default function ChatInput({
                           .from('chat-attachments')
                           .getPublicUrl(filePath);
 
+                        // Fechar janela imediatamente
+                        setShowImportReportsPopover(false);
+                        setSelectedImportReport(null);
+                        setReportFileType(null);
+                        
                         // Enviar como mensagem
                         onSendMessage(
                           `Relatório: ${report.nome}`,
@@ -725,9 +730,6 @@ export default function ChatInput({
                         );
 
                         toast.success("Relatório anexado com sucesso!");
-                        setShowImportReportsPopover(false);
-                        setSelectedImportReport(null);
-                        setReportFileType(null);
                       } catch (error: any) {
                         console.error("Erro ao anexar relatório:", error);
                         toast.error(error.message || "Erro ao anexar relatório");
