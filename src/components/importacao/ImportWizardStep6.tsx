@@ -75,7 +75,8 @@ export function ImportWizardStep6({ finalData, onApiCreated, apiEndpoint, relato
     toast.success("Copiado para área de transferência!");
   };
 
-  const fullApiUrl = apiEndpoint ? `${window.location.origin}${apiEndpoint}` : "";
+  // A URL da API já vem completa do handleSave
+  const fullApiUrl = apiEndpoint || "";
 
   return (
     <div className="space-y-4">
