@@ -157,13 +157,20 @@ export default function ImportacaoProdutosLista() {
         const pdfUrl = resultData.pdfUrl || resultData.fileUrl;
         console.log("✅ PDF gerado com sucesso:", pdfUrl);
         
-        // Fazer download direto ao invés de abrir em nova aba
+        // Fazer download via fetch para garantir que funcione com CORS
+        const response = await fetch(pdfUrl);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
         const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = `produtos-importados-${new Date().getTime()}.pdf`;
+        link.href = blobUrl;
+        link.download = `produtos-importados-${new Date().toISOString().split('T')[0]}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        // Limpar o blob URL após o download
+        window.URL.revokeObjectURL(blobUrl);
         
         toast.success("PDF gerado e baixado com sucesso!");
       } else {
