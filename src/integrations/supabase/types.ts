@@ -1841,11 +1841,14 @@ export type Database = {
           comprimento: string | null
           created_at: string | null
           dados_originais: Json | null
+          diametro: string | null
+          embalagem: string | null
           estabelecimento_id: string
           gramatura: string | null
           id: string
           largura: string | null
           nome: string
+          numero_folhas: number | null
           obs: string | null
           quantidade: number | null
           tipo: string | null
@@ -1855,11 +1858,14 @@ export type Database = {
           comprimento?: string | null
           created_at?: string | null
           dados_originais?: Json | null
+          diametro?: string | null
+          embalagem?: string | null
           estabelecimento_id: string
           gramatura?: string | null
           id?: string
           largura?: string | null
           nome: string
+          numero_folhas?: number | null
           obs?: string | null
           quantidade?: number | null
           tipo?: string | null
@@ -1869,11 +1875,14 @@ export type Database = {
           comprimento?: string | null
           created_at?: string | null
           dados_originais?: Json | null
+          diametro?: string | null
+          embalagem?: string | null
           estabelecimento_id?: string
           gramatura?: string | null
           id?: string
           largura?: string | null
           nome?: string
+          numero_folhas?: number | null
           obs?: string | null
           quantidade?: number | null
           tipo?: string | null
