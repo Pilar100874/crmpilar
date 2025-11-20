@@ -50,8 +50,10 @@ export default function Relatorios() {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [currentReportId, setCurrentReportId] = useState<string | null>(null);
   const [reportToEdit, setReportToEdit] = useState<Report | null>(null);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
@@ -198,18 +200,25 @@ export default function Relatorios() {
   };
 
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este modelo de relatório?")) return;
+  const handleDelete = (id: string) => {
+    setReportToDelete(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!reportToDelete) return;
 
     try {
       const { error } = await supabase
         .from("relatorios")
         .delete()
-        .eq("id", id);
+        .eq("id", reportToDelete);
 
       if (error) throw error;
 
       toast.success("Modelo excluído com sucesso");
+      setShowDeleteDialog(false);
+      setReportToDelete(null);
       loadReports();
     } catch (error: any) {
       toast.error("Erro ao excluir: " + error.message);
@@ -634,6 +643,32 @@ export default function Relatorios() {
                   Cancelar
                 </Button>
                 <Button onClick={handleUpdateReport}>Salvar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog de Confirmação de Exclusão */}
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Confirmar Exclusão</DialogTitle>
+                <DialogDescription>
+                  Tem certeza que deseja excluir este modelo de relatório? Esta ação não pode ser desfeita.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowDeleteDialog(false);
+                    setReportToDelete(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button variant="destructive" onClick={confirmDelete}>
+                  Excluir
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
