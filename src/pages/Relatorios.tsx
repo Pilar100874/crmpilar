@@ -296,8 +296,8 @@ export default function Relatorios() {
                 </CardContent>
               </Card>
 
-              {/* Cards dos Reports Existentes */}
-              {reports.map((report) => (
+              {/* Cards dos Reports Existentes (exceto Modelo para Produtos Importados) */}
+              {reports.filter(r => r.nome !== "Modelo para Produtos Importados").map((report) => (
                 <Card
                   key={report.id}
                   className="hover:shadow-lg transition-all relative group h-full flex flex-col"
@@ -396,6 +396,7 @@ export default function Relatorios() {
               <p className="text-sm text-muted-foreground">Modelos especiais para APIs de importação</p>
             </div>
             <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
+              {/* Card: Criar Modelo para Produtos Importados */}
               <Card 
                 className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-secondary/40 bg-secondary/5 h-full flex flex-col"
                 onClick={async () => {
@@ -437,6 +438,98 @@ export default function Relatorios() {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Cards dos Modelos de Importação Criados */}
+              {reports.filter(r => r.nome === "Modelo para Produtos Importados").map((report) => (
+                <Card
+                  key={report.id}
+                  className="hover:shadow-lg transition-all relative group h-full flex flex-col bg-secondary/5"
+                >
+                  <div className="absolute top-4 right-4 z-10">
+                    <DropdownMenu open={openMenuId === report.id} onOpenChange={(open) => setOpenMenuId(open ? report.id : null)}>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleEdit(report);
+                        }}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar Designer
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleOpenEdit(report);
+                        }}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Renomear
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handlePreview(report);
+                        }}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Visualizar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleDuplicate(report);
+                        }}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Duplicar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(null);
+                            handleDelete(report.id);
+                          }}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <CardHeader className="flex-1 p-4">
+                    <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center mb-4">
+                      <FileText className="w-6 h-6 text-secondary-foreground" />
+                    </div>
+                    <CardTitle className="pr-8">{report.nome}</CardTitle>
+                    {report.descricao && (
+                      <p className="text-sm text-muted-foreground mb-2">{report.descricao}</p>
+                    )}
+                    <CardDescription>
+                      Criado {formatDistanceToNow(new Date(report.created_at), { 
+                        addSuffix: true, 
+                        locale: ptBR 
+                      })}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="mt-auto p-4 pt-0">
+                    <Button 
+                      variant="secondary"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(report);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar Modelo
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
 
