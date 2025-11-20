@@ -21,7 +21,9 @@ import { TabelasPrecoCRUD } from "./TabelasPrecoCRUD";
 import { TiposPagamentoCRUD } from "./TiposPagamentoCRUD";
 import { CalendarioRegrasCRUD } from "./CalendarioRegrasCRUD";
 import { UCMConfigCRUD } from "./UCMConfigCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone } from "lucide-react";
+import { FilasManager } from "@/components/atendimento/FilasManager";
+import { SkillsManager } from "@/components/atendimento/SkillsManager";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -266,6 +268,59 @@ function ResendConfigSection({ estabelecimentoId }: { estabelecimentoId: string 
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+// Wrapper components para gerenciar o estado local das filas e skills
+function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string }) {
+  const [filas, setFilas] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadFilas();
+  }, [estabelecimentoId]);
+
+  const loadFilas = async () => {
+    const { data } = await supabase
+      .from('filas_atendimento')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .order('nome');
+    if (data) setFilas(data);
+  };
+
+  return (
+    <FilasManager
+      filas={filas}
+      onCreateFila={loadFilas}
+      onEditFila={loadFilas}
+      onToggleAtiva={loadFilas}
+    />
+  );
+}
+
+function SkillsManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string }) {
+  const [skills, setSkills] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadSkills();
+  }, [estabelecimentoId]);
+
+  const loadSkills = async () => {
+    const { data } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .order('nome');
+    if (data) setSkills(data);
+  };
+
+  return (
+    <SkillsManager
+      skills={skills}
+      onCreateSkill={loadSkills}
+      onEditSkill={loadSkills}
+      onDeleteSkill={loadSkills}
+    />
   );
 }
 
@@ -575,6 +630,30 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <CalendarioRegrasCRUD estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="filas-atendimento" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <MessageSquareQuote className="w-4 h-4 text-primary" />
+              <span className="font-medium">Filas de Atendimento</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <FilasManagerWrapper estabelecimentoId={estabelecimentoId} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="skills-atendimento" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-primary" />
+              <span className="font-medium">Skills de Atendimento</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <SkillsManagerWrapper estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
