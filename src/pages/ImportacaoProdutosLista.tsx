@@ -154,8 +154,13 @@ export default function ImportacaoProdutosLista() {
     try {
       toast.info("Gerando Excel...");
       
-      // Buscar modelo para produtos importados
       const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      // Buscar modelo para produtos importados
       const { data: modelo } = await supabase
         .from("relatorios")
         .select("id, layout_json")
@@ -168,10 +173,9 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Reconstruir a URL da API com o relatorio_id correto
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const apiUrl = `${supabaseUrl}/functions/v1/api-produtos-importados?estabelecimento_id=${estabelecimentoId}&relatorio_id=${relatorioId}`;
-      console.log("📡 Chamando API com relatorio_id:", apiUrl);
+      // Construir a URL da API corretamente usando apenas o domínio do Supabase
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-produtos-importados?estabelecimento_id=${estabelecimentoId}&relatorio_id=${relatorioId}`;
+      console.log("📡 Chamando API:", apiUrl);
 
       // Buscar dados da API
       const response = await fetch(apiUrl);
