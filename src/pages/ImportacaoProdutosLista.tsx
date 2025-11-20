@@ -7,6 +7,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +40,7 @@ export default function ImportacaoProdutosLista() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [relatorioToDelete, setRelatorioToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [datePopoverOpen, setDatePopoverOpen] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -107,16 +113,19 @@ export default function ImportacaoProdutosLista() {
     }
   };
 
-  const handleUpdateValidade = async (id: string, dataValidade: string | null) => {
+  const handleUpdateValidade = async (id: string, dataValidade: Date | null) => {
     try {
+      const dataFormatada = dataValidade ? format(dataValidade, 'yyyy-MM-dd') : null;
+      
       const { error } = await supabase
         .from("relatorios_importacao")
-        .update({ data_validade: dataValidade })
+        .update({ data_validade: dataFormatada })
         .eq("id", id);
 
       if (error) throw error;
 
       toast.success("Data de validade atualizada com sucesso!");
+      setDatePopoverOpen(null);
       loadRelatorios();
     } catch (error: any) {
       console.error("Erro ao atualizar data de validade:", error);
@@ -485,17 +494,6 @@ export default function ImportacaoProdutosLista() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
-                      const dataAtual = relatorio.data_validade || new Date().toISOString().split('T')[0];
-                      const novaData = prompt("Digite a data de validade (AAAA-MM-DD):", dataAtual);
-                      if (novaData) {
-                        handleUpdateValidade(relatorio.id, novaData);
-                      }
-                    }}>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Data de Validade
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => {
-                      e.stopPropagation();
                       handleDuplicate(relatorio.id);
                     }}>
                       <FileSpreadsheet className="h-4 w-4 mr-2" />
@@ -566,17 +564,67 @@ export default function ImportacaoProdutosLista() {
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="mt-auto p-4 pt-0">
-                <Button 
-                  className="w-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/importacao-produtos/editar/${relatorio.id}`);
-                  }}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Editar Importação
-                </Button>
+              <CardContent className="mt-auto p-4 pt-0 space-y-2">
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/importacao-produtos/editar/${relatorio.id}`);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar
+                  </Button>
+                  
+                  <Popover 
+                    open={datePopoverOpen === relatorio.id} 
+                    onOpenChange={(open) => setDatePopoverOpen(open ? relatorio.id : null)}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "flex-1",
+                          relatorio.data_validade && new Date(relatorio.data_validade) < new Date() && "border-destructive"
+                        )}
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {relatorio.data_validade 
+                          ? format(new Date(relatorio.data_validade), "dd/MM/yy", { locale: ptBR })
+                          : "Validade"
+                        }
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+                      <div className="p-3 space-y-2">
+                        <p className="text-sm font-medium">Definir data de validade</p>
+                        <CalendarComponent
+                          mode="single"
+                          selected={relatorio.data_validade ? new Date(relatorio.data_validade) : undefined}
+                          onSelect={(date) => handleUpdateValidade(relatorio.id, date || null)}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        />
+                        {relatorio.data_validade && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateValidade(relatorio.id, null);
+                            }}
+                          >
+                            Remover Validade
+                          </Button>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </CardContent>
             </Card>
           ))}
