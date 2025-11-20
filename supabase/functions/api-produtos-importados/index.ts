@@ -33,10 +33,11 @@ serve(async (req) => {
       );
     }
 
-    if (!relatorioId) {
+    // Validar relatorioId - não pode ser null, "null", undefined ou string vazia
+    if (!relatorioId || relatorioId === 'null' || relatorioId.trim() === '') {
       return new Response(
         JSON.stringify({ 
-          error: 'relatorio_id é obrigatório',
+          error: 'relatorio_id é obrigatório e deve ser um UUID válido',
           message: 'Por favor, adicione o parâmetro &relatorio_id=SEU_ID na URL',
           example: `${url.origin}${url.pathname}?estabelecimento_id=${estabelecimentoId}&relatorio_id=UUID_DO_RELATORIO`
         }),
