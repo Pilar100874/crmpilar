@@ -90,6 +90,7 @@ export const AtendentesFilaManager = ({ filaId, estabelecimentoId }: AtendenteFi
   };
 
   const loadAtendentesDisponiveis = async () => {
+    // Buscar atendentes do estabelecimento
     const { data, error } = await supabase
       .from("atendentes")
       .select(`
@@ -104,6 +105,7 @@ export const AtendentesFilaManager = ({ filaId, estabelecimentoId }: AtendenteFi
 
     if (error) {
       console.error("Erro ao carregar atendentes disponíveis:", error);
+      sonnerToast.error("Erro ao carregar atendentes disponíveis");
       return;
     }
 
