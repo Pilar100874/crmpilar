@@ -106,7 +106,7 @@ export default function ImportacaoProdutosLista() {
       const estabelecimentoId = await getEstabelecimentoId();
       const { data: modelo } = await supabase
         .from("relatorios")
-        .select("id, nome, layout_json")
+        .select("id, nome")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("nome", "Modelo para Produtos Importados")
         .maybeSingle();
@@ -116,26 +116,8 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Atualizar temporariamente o relatório com a API correta
-      const layoutJsonObj = typeof modelo.layout_json === 'string' 
-        ? JSON.parse(modelo.layout_json)
-        : modelo.layout_json;
-
-      const updatedLayout = {
-        ...layoutJsonObj,
-        configuracoes: {
-          ...layoutJsonObj.configuracoes,
-          api_url: apiEndpoint
-        }
-      };
-
-      await supabase
-        .from('relatorios')
-        .update({ layout_json: updatedLayout })
-        .eq('id', modelo.id);
-
-      // Gerar PDF usando a edge function
-      const { data: result, error: fnError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+      // Gerar PDF usando a edge function (mesma forma que o bot)
+      const { data: resultData, error: fnError } = await supabase.functions.invoke('gerar-relatorio-pdf', {
         body: { 
           relatorioId: modelo.id,
           apiVariables: {},
@@ -145,16 +127,19 @@ export default function ImportacaoProdutosLista() {
       });
 
       if (fnError) {
+        console.error("❌ Erro ao gerar PDF:", fnError);
         throw new Error(fnError.message || 'Falha ao gerar PDF');
       }
 
-      if (!result?.success || !result?.url) {
-        throw new Error(result?.error || 'Falha ao gerar PDF');
+      // Verificar se foi gerado com sucesso (mesmo formato que o bot espera)
+      if (resultData?.pdfUrl || resultData?.fileUrl) {
+        const pdfUrl = resultData.pdfUrl || resultData.fileUrl;
+        console.log("✅ PDF gerado com sucesso:", pdfUrl);
+        window.open(pdfUrl, '_blank');
+        toast.success("PDF gerado com sucesso!");
+      } else {
+        throw new Error(resultData?.error || 'Falha ao gerar PDF - URL não retornada');
       }
-
-      // Abrir PDF em nova aba para download
-      window.open(result.url, '_blank');
-      toast.success("PDF gerado com sucesso!");
     } catch (error: any) {
       console.error("Erro ao gerar PDF:", error);
       toast.error("Erro ao gerar PDF: " + (error.message || "desconhecido"));
@@ -208,15 +193,40 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Extrair colunas do relatório
+      // Extrair colunas do relatório do ReportBro
       const layoutJsonObj = typeof modelo.layout_json === 'string' 
         ? JSON.parse(modelo.layout_json)
         : modelo.layout_json;
 
-      const reportColumns = layoutJsonObj?.report?.content?.[0]?.content || [];
-      const columnNames = reportColumns
-        .filter((col: any) => col.elementType === 'table_text_element' && col.content)
-        .map((col: any) => col.content.replace(/\${/g, '').replace(/}/g, ''));
+      // Buscar tabelas no layout (ReportBro usa docElements)
+      const docElements = layoutJsonObj?.docElements || [];
+      const columnNames: string[] = [];
+      
+      // Procurar por elementos de tabela
+      docElements.forEach((element: any) => {
+        if (element.elementType === 'table' && element.contentData) {
+          const rows = element.contentData.rows || [];
+          rows.forEach((row: any) => {
+            const columns = row.columns || [];
+            columns.forEach((col: any) => {
+              if (col.content && col.content.includes('${')) {
+                // Extrair nome da variável (ex: ${nome} -> nome)
+                const matches = col.content.match(/\$\{([^}]+)\}/g);
+                if (matches) {
+                  matches.forEach((match: string) => {
+                    const varName = match.replace(/\$\{/g, '').replace(/\}/g, '');
+                    if (!columnNames.includes(varName)) {
+                      columnNames.push(varName);
+                    }
+                  });
+                }
+              }
+            });
+          });
+        }
+      });
+
+      console.log("📋 Colunas extraídas do relatório:", columnNames);
 
       // Filtrar apenas as colunas do relatório
       const filteredRecords = records.map(record => {
