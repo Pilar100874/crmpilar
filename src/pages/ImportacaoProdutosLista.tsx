@@ -106,7 +106,7 @@ export default function ImportacaoProdutosLista() {
       const estabelecimentoId = await getEstabelecimentoId();
       const { data: modelo } = await supabase
         .from("relatorios")
-        .select("id")
+        .select("id, layout_json")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("nome", "Modelo para Produtos Importados")
         .maybeSingle();
@@ -116,8 +116,41 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Aqui você implementaria a lógica de gerar PDF usando o modelo
-      toast.success("PDF gerado com sucesso");
+      if (!modelo.layout_json) {
+        toast.error("Modelo sem layout definido. Configure o modelo primeiro.");
+        return;
+      }
+
+      // Preparar dados para preview
+      const layoutJsonObj = typeof modelo.layout_json === 'string' 
+        ? JSON.parse(modelo.layout_json)
+        : modelo.layout_json;
+
+      const previewData = {
+        report: layoutJsonObj.report || layoutJsonObj,
+        reportId: modelo.id,
+        apiUrl: apiEndpoint,
+        testVariables: layoutJsonObj.testVariables || {}
+      };
+
+      const layoutStr = JSON.stringify(previewData);
+      
+      // Salvar no localStorage
+      try {
+        localStorage.setItem("reportbro_preview", layoutStr);
+      } catch (e) {
+        sessionStorage.setItem("reportbro_preview", layoutStr);
+      }
+
+      // Abrir visualização em nova aba
+      const newWindow = window.open('/relatorios/viewer', '_blank');
+      
+      if (!newWindow) {
+        toast.error('Permita pop-ups para visualizar o relatório');
+        return;
+      }
+      
+      toast.success("Abrindo visualização PDF...");
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       toast.error("Erro ao gerar PDF");
@@ -134,8 +167,25 @@ export default function ImportacaoProdutosLista() {
       
       const data = await response.json();
       
-      // Aqui você implementaria a lógica de gerar Excel
-      toast.success("Excel gerado com sucesso");
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        toast.error("Nenhum dado encontrado na API");
+        return;
+      }
+
+      // Importar biblioteca XLSX dinamicamente
+      const XLSX = await import('xlsx');
+      
+      // Criar worksheet a partir dos dados
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      
+      // Criar workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Produtos Importados");
+      
+      // Gerar arquivo Excel e fazer download
+      XLSX.writeFile(workbook, `produtos-importados-${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      toast.success("Excel gerado com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar Excel:", error);
       toast.error("Erro ao gerar Excel");
