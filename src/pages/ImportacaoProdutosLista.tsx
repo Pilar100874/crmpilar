@@ -167,8 +167,9 @@ export default function ImportacaoProdutosLista() {
         return;
       }
 
-      // Adicionar relatorio_id à URL da API
-      const apiUrl = `${apiEndpoint}&relatorio_id=${relatorioId}`;
+      // Reconstruir a URL da API com o relatorio_id correto
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const apiUrl = `${supabaseUrl}/functions/v1/api-produtos-importados?estabelecimento_id=${estabelecimentoId}&relatorio_id=${relatorioId}`;
       console.log("📡 Chamando API com relatorio_id:", apiUrl);
 
       // Buscar dados da API
