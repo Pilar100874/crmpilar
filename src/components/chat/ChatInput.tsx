@@ -701,7 +701,16 @@ export default function ChatInput({
 
                         // Upload para o storage
                         const fileExt = reportFileType === 'pdf' ? 'pdf' : 'xlsx';
-                        const filePath = `${Date.now()}_${fileName}`;
+                        
+                        // Sanitizar nome do arquivo para storage (remover caracteres especiais)
+                        const sanitizedFileName = fileName
+                          .normalize('NFD')
+                          .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+                          .replace(/[^a-zA-Z0-9._-]/g, '_') // Substitui caracteres especiais por underscore
+                          .replace(/_+/g, '_') // Remove underscores duplicados
+                          .replace(/^_|_$/g, ''); // Remove underscores do início e fim
+                        
+                        const filePath = `${Date.now()}_${sanitizedFileName}`;
                         
                         const { data: uploadData, error: uploadError } = await supabase.storage
                           .from('chat-attachments')
