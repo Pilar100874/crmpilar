@@ -678,7 +678,7 @@ export default function ChatInput({
                               relatorio_id: { type: 'string', value: relId }
                             },
                             reportVariables: {},
-                            outputType: reportFileType
+                            outputType: reportFileType === 'excel' ? 'xlsx' : 'pdf'
                           }
                         });
 
