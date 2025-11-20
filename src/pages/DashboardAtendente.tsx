@@ -29,10 +29,25 @@ export default function DashboardAtendentePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Primeiro busca o usuario_id na tabela usuarios usando auth_user_id
+      const { data: usuarioData, error: usuarioError } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (usuarioError || !usuarioData) {
+        console.error("Usuário não encontrado na tabela usuarios:", usuarioError);
+        toast.error("Usuário não encontrado");
+        setLoading(false);
+        return;
+      }
+
+      // Agora busca o atendente usando o usuario_id correto
       const { data: atendenteData, error } = await supabase
         .from("atendentes")
         .select("id")
-        .eq("usuario_id", user.id)
+        .eq("usuario_id", usuarioData.id)
         .single();
 
       if (error) {
