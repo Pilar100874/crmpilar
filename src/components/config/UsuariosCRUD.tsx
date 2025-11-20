@@ -317,15 +317,23 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       }
 
       // Gerenciar registro de atendente
-      const { data: atendenteExistente } = await supabase
+      const { data: atendenteExistente, error: atendenteCheckError } = await supabase
         .from("atendentes")
         .select("id")
         .eq("usuario_id", editingId)
         .maybeSingle();
 
+      if (atendenteCheckError) {
+        toast({
+          title: "Erro ao verificar atendente",
+          description: atendenteCheckError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (isAtendente && !atendenteExistente) {
-        // Criar atendente se marcado e não existe
-        await supabase
+        const { error: atendenteInsertError } = await supabase
           .from("atendentes")
           .insert({
             usuario_id: editingId,
@@ -334,12 +342,29 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             max_chats_simultaneos: 3,
             aceita_novos_chats: true,
           });
+
+        if (atendenteInsertError) {
+          toast({
+            title: "Erro ao criar atendente",
+            description: atendenteInsertError.message,
+            variant: "destructive",
+          });
+          return;
+        }
       } else if (!isAtendente && atendenteExistente) {
-        // Remover atendente se desmarcado e existe
-        await supabase
+        const { error: atendenteDeleteError } = await supabase
           .from("atendentes")
           .delete()
           .eq("usuario_id", editingId);
+
+        if (atendenteDeleteError) {
+          toast({
+            title: "Erro ao remover atendente",
+            description: atendenteDeleteError.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       toast({ title: "Usuário atualizado com sucesso!" });
@@ -385,7 +410,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
       // Criar atendente se marcado
       if (data && isAtendente) {
-        await supabase
+        const { error: atendenteInsertError } = await supabase
           .from("atendentes")
           .insert({
             usuario_id: data.id,
@@ -394,6 +419,15 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             max_chats_simultaneos: 3,
             aceita_novos_chats: true,
           });
+
+        if (atendenteInsertError) {
+          toast({
+            title: "Erro ao criar atendente",
+            description: atendenteInsertError.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       toast({ title: "Usuário criado com sucesso!" });
