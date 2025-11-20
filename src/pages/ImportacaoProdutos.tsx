@@ -246,6 +246,7 @@ export default function ImportacaoProdutos() {
             finalData={finalData}
             onApiCreated={setApiEndpoint}
             apiEndpoint={apiEndpoint}
+            relatorioId={relatorioId}
           />
         );
       default:

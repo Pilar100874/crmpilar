@@ -20,6 +20,7 @@ serve(async (req) => {
     // Parse query parameters
     const url = new URL(req.url);
     const estabelecimentoId = url.searchParams.get('estabelecimento_id');
+    const relatorioId = url.searchParams.get('relatorio_id');
 
     if (!estabelecimentoId) {
       return new Response(
@@ -32,14 +33,20 @@ serve(async (req) => {
       );
     }
 
-    console.log('Buscando produtos para estabelecimento:', estabelecimentoId);
+    console.log('Buscando produtos para estabelecimento:', estabelecimentoId, 'relatório:', relatorioId);
 
     // Buscar produtos importados - retornar apenas as colunas de negócio (etapa 6)
-    const { data, error } = await supabase
+    let query = supabase
       .from('produtos_importados')
       .select('nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
-      .eq('estabelecimento_id', estabelecimentoId)
-      .order('created_at', { ascending: false });
+      .eq('estabelecimento_id', estabelecimentoId);
+    
+    // Filtrar por relatório específico se fornecido
+    if (relatorioId) {
+      query = query.eq('relatorio_importacao_id', relatorioId);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Erro ao buscar produtos:', error);
