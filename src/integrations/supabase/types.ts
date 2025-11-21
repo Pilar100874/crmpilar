@@ -2152,6 +2152,63 @@ export type Database = {
           },
         ]
       }
+      omnichannel_execution_logs: {
+        Row: {
+          block_id: string
+          block_label: string
+          block_type: string
+          conversation_id: string
+          created_at: string
+          customer_name: string | null
+          details: string | null
+          flow_id: string
+          id: string
+          processing_time_ms: number | null
+          status: string
+        }
+        Insert: {
+          block_id: string
+          block_label: string
+          block_type: string
+          conversation_id: string
+          created_at?: string
+          customer_name?: string | null
+          details?: string | null
+          flow_id: string
+          id?: string
+          processing_time_ms?: number | null
+          status: string
+        }
+        Update: {
+          block_id?: string
+          block_label?: string
+          block_type?: string
+          conversation_id?: string
+          created_at?: string
+          customer_name?: string | null
+          details?: string | null
+          flow_id?: string
+          id?: string
+          processing_time_ms?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "omnichannel_execution_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "omnichannel_execution_logs_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "omnichannel_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       omnichannel_flow_versions: {
         Row: {
           change_description: string | null
