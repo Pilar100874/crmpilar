@@ -24,9 +24,11 @@ import { FlowExportImport } from "@/components/omnichannel-builder/FlowExportImp
 import { BlockContextMenu } from "@/components/omnichannel-builder/BlockContextMenu";
 import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
 import { BotTriggerSelector } from "@/components/omnichannel-builder/BotTriggerSelector";
+import { FlowExecutionLogs } from "@/components/omnichannel-builder/FlowExecutionLogs";
+import { FlowAnalytics } from "@/components/omnichannel-builder/FlowAnalytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft } from "lucide-react";
+import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -66,6 +68,7 @@ export default function OmnichannelBuilder() {
   const [showValidator, setShowValidator] = useState(false);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Carregar fluxo existente
   useEffect(() => {
@@ -385,9 +388,7 @@ export default function OmnichannelBuilder() {
             <FlowSearch nodes={nodes} onNodeSelect={handleNodeSelect} />
           </div>
 
-          <div className="flex items-center gap-2">
-            <FlowSearch nodes={nodes} onNodeSelect={handleNodeSelect} />
-            
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -395,6 +396,15 @@ export default function OmnichannelBuilder() {
             >
               <AlertCircle className="h-4 w-4 mr-2" />
               Validar
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAnalytics(!showAnalytics)}
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
             </Button>
 
             <Button
@@ -487,13 +497,29 @@ export default function OmnichannelBuilder() {
           </div>
 
           {/* Painel de Propriedades */}
-          <div className="w-80 border-l p-4">
+          <div className="w-80 border-l p-4 space-y-4 overflow-y-auto">
             <PropertiesPanel
               selectedNode={selectedNode}
               onUpdateNode={onUpdateNode}
             />
+
+            {showAnalytics && id && (
+              <FlowAnalytics flowId={id} nodes={nodes} />
+            )}
           </div>
         </div>
+
+        {/* Logs de Execução */}
+        {id && (
+          <FlowExecutionLogs
+            flowId={id}
+            nodes={nodes}
+            onHighlightNode={(nodeId) => {
+              const node = nodes.find(n => n.id === nodeId);
+              if (node) setSelectedNode(node);
+            }}
+          />
+        )}
 
         {/* Dialogs */}
         <TemplateSelector

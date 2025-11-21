@@ -2199,6 +2199,7 @@ export type Database = {
           flow_data: Json
           id: string
           nome: string
+          trigger_bot_id: string | null
           updated_at: string
         }
         Insert: {
@@ -2209,6 +2210,7 @@ export type Database = {
           flow_data?: Json
           id?: string
           nome: string
+          trigger_bot_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -2219,6 +2221,7 @@ export type Database = {
           flow_data?: Json
           id?: string
           nome?: string
+          trigger_bot_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2227,6 +2230,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "omnichannel_flows_trigger_bot_id_fkey"
+            columns: ["trigger_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bot_flows"
             referencedColumns: ["id"]
           },
         ]

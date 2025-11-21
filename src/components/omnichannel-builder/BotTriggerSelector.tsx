@@ -43,9 +43,13 @@ export const BotTriggerSelector = ({ flowId, currentBotId }: BotTriggerSelectorP
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Por enquanto apenas mostra o aviso - implementação completa requer
-      // adicionar campo trigger_bot_id na tabela omnichannel_flows
-      toast.success(`Bot "${bots.find(b => b.id === selectedBotId)?.name}" configurado como trigger`);
+      const { error } = await supabase
+        .from("omnichannel_flows")
+        .update({ trigger_bot_id: selectedBotId || null })
+        .eq("id", flowId);
+
+      if (error) throw error;
+      toast.success("Trigger configurado com sucesso");
       setOpen(false);
     } catch (error) {
       console.error("Erro ao salvar trigger:", error);
