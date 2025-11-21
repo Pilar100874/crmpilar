@@ -25,6 +25,8 @@ import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
 import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
+import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatusSelector";
+import type { Atendente } from "@/types/atendimento";
 
 interface Conversation {
   id: string;
@@ -158,14 +160,45 @@ export default function Atendimento() {
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [orcamentosEmAndamentoCount, setOrcamentosEmAndamentoCount] = useState(0);
   const [usuarioId, setUsuarioId] = useState<string>("");
+  
+  // Atendente data
+  const [atendente, setAtendente] = useState<Atendente | null>(null);
 
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
+  
+  const loadAtendente = async (userId: string) => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+      
+      const { data, error } = await supabase
+        .from("atendentes")
+        .select("*")
+        .eq("usuario_id", userId)
+        .eq("estabelecimento_id", estabId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error("Erro ao carregar atendente:", error);
+        return;
+      }
+      
+      if (data) {
+        setAtendente(data as Atendente);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar atendente:", err);
+    }
+  };
 
   useEffect(() => {
     const initUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setUsuarioId(user.id);
+      if (user) {
+        setUsuarioId(user.id);
+        loadAtendente(user.id);
+      }
     };
     initUser();
   }, []);
@@ -2161,7 +2194,18 @@ ${recentMessages}
             )}
             </div>
           </TabsContent>
-         </Tabs>
+        </Tabs>
+        
+        {/* Status do Atendente - Footer */}
+        {atendente && (
+          <div className="border-t bg-card p-3 flex-shrink-0">
+            <AtendenteStatusSelector
+              atendenteId={atendente.id}
+              currentStatus={atendente.status}
+              onStatusChange={() => loadAtendente(usuarioId)}
+            />
+          </div>
+        )}
           </>
         )}
       </div>
