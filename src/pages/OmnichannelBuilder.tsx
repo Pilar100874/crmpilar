@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Save, Play, ArrowLeft } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { OmnichannelBlockType, OmnichannelNode, OmnichannelFlowData } from "@/types/omnichannelFlow";
 
 const nodeTypes: NodeTypes = {
@@ -174,17 +175,8 @@ export default function OmnichannelBuilder() {
     setIsSaving(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
-
-      // Buscar estabelecimento do usuário
-      const { data: usuarioData } = await supabase
-        .from("usuarios")
-        .select("estabelecimento_id")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (!usuarioData?.estabelecimento_id) {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
         throw new Error("Estabelecimento não encontrado");
       }
 
@@ -212,7 +204,7 @@ export default function OmnichannelBuilder() {
         const { error } = await supabase
           .from("omnichannel_flows")
           .insert({
-            estabelecimento_id: usuarioData.estabelecimento_id,
+            estabelecimento_id: estabId,
             nome: flowName,
             flow_data: flowData as any,
             ativo: true,
@@ -220,7 +212,7 @@ export default function OmnichannelBuilder() {
 
         if (error) throw error;
         toast.success("Fluxo criado com sucesso!");
-        navigate("/config");
+        navigate("/config?section=omnichannel-flows");
       }
     } catch (error) {
       console.error("Erro ao salvar fluxo:", error);
@@ -239,7 +231,7 @@ export default function OmnichannelBuilder() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/config")}
+              onClick={() => navigate("/config?section=omnichannel-flows")}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>

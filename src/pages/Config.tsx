@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,9 +17,18 @@ import { toast } from "@/hooks/use-toast";
 
 export default function Config() {
   const { openSubmenu } = useLayout();
+  const [searchParams] = useSearchParams();
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
+  const [accordionValue, setAccordionValue] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section === 'omnichannel-flows') {
+      setAccordionValue('omnichannel-workflows');
+    }
+  }, [searchParams]);
 
   const handleToggleConfirmationMessages = (checked: boolean) => {
     setShowConfirmationMessages(checked);
@@ -46,7 +56,13 @@ export default function Config() {
           Gerencie as configurações da plataforma
         </p>
 
-        <Accordion type="single" collapsible className="space-y-4 max-w-4xl">
+        <Accordion 
+          type="single" 
+          collapsible 
+          className="space-y-4 max-w-4xl"
+          value={accordionValue}
+          onValueChange={setAccordionValue}
+        >
           <AccordionItem value="notificacoes-sistema" className="border rounded-lg bg-white shadow-sm">
             <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
