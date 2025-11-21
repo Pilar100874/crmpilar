@@ -25,9 +25,10 @@ import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialo
 import { BotTriggerSelector } from "@/components/omnichannel-builder/BotTriggerSelector";
 import { FlowExecutionLogs } from "@/components/omnichannel-builder/FlowExecutionLogs";
 import { FlowAnalytics } from "@/components/omnichannel-builder/FlowAnalytics";
+import { FlowSimulator } from "@/components/omnichannel-builder/FlowSimulator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus } from "lucide-react";
+import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus, PlayCircle } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -68,6 +69,7 @@ export default function OmnichannelBuilder() {
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
   const [currentBotId, setCurrentBotId] = useState<string>();
 
@@ -402,6 +404,15 @@ export default function OmnichannelBuilder() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setShowSimulator(!showSimulator)}
+            >
+              <PlayCircle className="h-4 w-4 mr-2" />
+              Simular
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowValidator(!showValidator)}
             >
               <AlertCircle className="h-4 w-4 mr-2" />
@@ -514,12 +525,29 @@ export default function OmnichannelBuilder() {
             </ReactFlow>
           </div>
 
-          {/* Painel de Propriedades */}
+          {/* Painel de Propriedades e Simulador */}
           <div className="w-80 border-l p-4 space-y-4 overflow-y-auto">
-            <PropertiesPanel
-              selectedNode={selectedNode}
-              onUpdateNode={onUpdateNode}
-            />
+            {showSimulator ? (
+              <FlowSimulator
+                nodes={nodes}
+                edges={edges}
+                onHighlightPath={(nodeIds) => {
+                  // Destacar visualmente o caminho percorrido
+                  setNodes(nds => nds.map(node => ({
+                    ...node,
+                    data: {
+                      ...node.data,
+                      isHighlighted: nodeIds.includes(node.id)
+                    }
+                  })));
+                }}
+              />
+            ) : (
+              <PropertiesPanel
+                selectedNode={selectedNode}
+                onUpdateNode={onUpdateNode}
+              />
+            )}
 
             {showAnalytics && id && (
               <FlowAnalytics flowId={id} nodes={nodes} />
