@@ -900,18 +900,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <Accordion type="single" collapsible className="space-y-2 pl-4">
-              <AccordionItem value="filas-atendimento" className="border rounded-md">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <MessageSquareQuote className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Filas de Atendimento</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  <FilasManagerWrapper estabelecimentoId={estabelecimentoId} />
-                </AccordionContent>
-              </AccordionItem>
-
               <AccordionItem value="skills-atendimento" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
                   <div className="flex items-center gap-2">
