@@ -3,7 +3,6 @@ import { UnidadesCRUD } from "./UnidadesCRUD";
 import { SegmentosCRUD } from "./SegmentosCRUD";
 import { GruposAcessoCRUD } from "./GruposAcessoCRUD";
 import { UsuariosCRUD } from "./UsuariosCRUD";
-import { ClientesCRUD } from "./ClientesCRUD";
 import { RedesSociaisCRUD } from "./RedesSociaisCRUD";
 import QuickRepliesCRUD from "./QuickRepliesCRUD";
 import QuickAttachmentsCRUD from "./QuickAttachmentsCRUD";
@@ -839,18 +838,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <RedesSociaisCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="cadastro-clientes" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              <span className="font-medium">Campos do Cadastro de Cliente</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <ClientesCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
