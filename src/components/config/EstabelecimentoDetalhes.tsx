@@ -829,18 +829,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="redes-sociais" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-primary" />
-              <span className="font-medium">Redes Sociais</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <RedesSociaisCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
         <AccordionItem value="cadastro-unidades" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">
@@ -958,6 +946,30 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                   <QuickRepliesCRUD estabelecimentoId={estabelecimentoId} />
                 </AccordionContent>
               </AccordionItem>
+
+              <AccordionItem value="redes-sociais" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Share2 className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Redes Sociais</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <RedesSociaisCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="canais" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Canais de Atendimento</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <CanaisAtendimentoCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
             </Accordion>
           </AccordionContent>
         </AccordionItem>
@@ -1007,18 +1019,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="canais" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Key className="w-4 h-4 text-primary" />
-              <span className="font-medium">Canais de Atendimento</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <CanaisAtendimentoCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
