@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  BarChart,
-  LineChart,
+  BarChart as BarChartIcon,
+  LineChart as LineChartIcon,
   Users,
   Clock,
   MessageSquare,
@@ -12,6 +12,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface MetricasViewProps {
   periodo?: "hoje" | "semana" | "mes";
@@ -32,6 +33,16 @@ interface MetricasState {
   atendentes_total: number;
 }
 
+interface AtendimentoPorHora {
+  hora: string;
+  total: number;
+}
+
+interface TempoMedioPorPeriodo {
+  periodo: string;
+  tempo: number;
+}
+
 export const MetricasView = ({ periodo = "hoje", onChangePeriodo, estabelecimentoId }: MetricasViewProps) => {
   const [periodoSelecionado, setPeriodoSelecionado] = useState<Periodo>(periodo);
   const [metricas, setMetricas] = useState<MetricasState>({
@@ -45,6 +56,8 @@ export const MetricasView = ({ periodo = "hoje", onChangePeriodo, estabeleciment
     atendentes_total: 0,
   });
   const [loading, setLoading] = useState(false);
+  const [atendimentosPorHora, setAtendimentosPorHora] = useState<AtendimentoPorHora[]>([]);
+  const [tempoMedioPorPeriodo, setTempoMedioPorPeriodo] = useState<TempoMedioPorPeriodo[]>([]);
 
   const handlePeriodoChange = (value: string) => {
     const p = value as Periodo;
@@ -148,6 +161,63 @@ export const MetricasView = ({ periodo = "hoje", onChangePeriodo, estabeleciment
 
         const atendentes_total = atendentes?.length || 0;
         const atendentes_online = (atendentes || []).filter((a) => a.status !== "offline").length;
+
+        // Calcular atendimentos por hora
+        const porHora: { [key: string]: number } = {};
+        if (conversas && conversas.length > 0) {
+          conversas.forEach((c) => {
+            const hora = new Date(c.created_at).getHours();
+            const horaStr = `${hora.toString().padStart(2, "0")}:00`;
+            porHora[horaStr] = (porHora[horaStr] || 0) + 1;
+          });
+        }
+        
+        const atendimentosHora = Object.keys(porHora)
+          .sort()
+          .map((hora) => ({
+            hora,
+            total: porHora[hora],
+          }));
+
+        // Calcular tempo médio por período (agrupado por dia/semana/mês)
+        const tempoPorPeriodo: { [key: string]: { soma: number; count: number } } = {};
+        if (conversas && conversas.length > 0) {
+          conversas
+            .filter((c) => c.tempo_atendimento_inicio && c.tempo_encerramento)
+            .forEach((c) => {
+              const data = new Date(c.created_at);
+              let periodoKey = "";
+
+              if (periodoSelecionado === "hoje") {
+                periodoKey = `${data.getHours().toString().padStart(2, "0")}:00`;
+              } else if (periodoSelecionado === "semana") {
+                const dias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+                periodoKey = dias[data.getDay()];
+              } else {
+                periodoKey = `${data.getDate()}/${data.getMonth() + 1}`;
+              }
+
+              const inicioAt = new Date(c.tempo_atendimento_inicio as string);
+              const fimAt = new Date(c.tempo_encerramento as string);
+              const tempoMin = (fimAt.getTime() - inicioAt.getTime()) / 1000 / 60;
+
+              if (!tempoPorPeriodo[periodoKey]) {
+                tempoPorPeriodo[periodoKey] = { soma: 0, count: 0 };
+              }
+              tempoPorPeriodo[periodoKey].soma += tempoMin;
+              tempoPorPeriodo[periodoKey].count += 1;
+            });
+        }
+
+        const tempoMedio = Object.keys(tempoPorPeriodo)
+          .sort()
+          .map((periodo) => ({
+            periodo,
+            tempo: Math.round((tempoPorPeriodo[periodo].soma / tempoPorPeriodo[periodo].count) * 10) / 10,
+          }));
+
+        setAtendimentosPorHora(atendimentosHora);
+        setTempoMedioPorPeriodo(tempoMedio);
 
         setMetricas({
           total_atendimentos,
@@ -297,31 +367,64 @@ export const MetricasView = ({ periodo = "hoje", onChangePeriodo, estabeleciment
             </CardContent>
           </Card>
 
-          {/* Gráficos - Placeholder */}
+          {/* Gráficos */}
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Atendimentos por Hora</CardTitle>
-                <CardDescription>Distribuição de atendimentos ao longo do dia</CardDescription>
+                <CardDescription>Distribuição de atendimentos ao longo do período</CardDescription>
               </CardHeader>
-              <CardContent className="h-64 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <BarChart className="h-12 w-12 mx-auto mb-2" />
-                  <p>Gráfico será implementado</p>
-                </div>
+              <CardContent className="h-64">
+                {atendimentosPorHora.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={atendimentosPorHora}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hora" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="total" fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <BarChartIcon className="h-12 w-12 mx-auto mb-2" />
+                      <p>Sem dados para o período selecionado</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle>Tempo Médio de Atendimento</CardTitle>
-                <CardDescription>Evolução do tempo médio de atendimento</CardDescription>
+                <CardDescription>Evolução do tempo médio de atendimento (minutos)</CardDescription>
               </CardHeader>
-              <CardContent className="h-64 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <LineChart className="h-12 w-12 mx-auto mb-2" />
-                  <p>Gráfico será implementado</p>
-                </div>
+              <CardContent className="h-64">
+                {tempoMedioPorPeriodo.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={tempoMedioPorPeriodo}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="periodo" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line 
+                        type="monotone" 
+                        dataKey="tempo" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <LineChartIcon className="h-12 w-12 mx-auto mb-2" />
+                      <p>Sem dados para o período selecionado</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
