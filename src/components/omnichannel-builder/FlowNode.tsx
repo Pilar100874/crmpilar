@@ -9,7 +9,8 @@ import {
   Clock,
   Webhook,
   Timer,
-  BarChart3
+  BarChart3,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OmnichannelBlockType } from "@/types/omnichannelFlow";
@@ -53,6 +54,7 @@ const nodeColors: Record<OmnichannelBlockType, string> = {
 
 export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
   const { type, label, isSkipped } = data;
+  const hasNote = !!data.config.nota;
 
   return (
     <div
@@ -83,6 +85,11 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
             {type.replace('_', ' ')}
           </div>
         </div>
+        {hasNote && (
+          <div className="flex-shrink-0 text-amber-500" title="Este bloco tem uma nota">
+            <MessageSquare className="h-4 w-4" />
+          </div>
+        )}
       </div>
 
       {type !== "inicio" && (
