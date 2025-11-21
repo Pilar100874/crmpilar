@@ -2034,6 +2034,124 @@ export type Database = {
           },
         ]
       }
+      notificacoes_log: {
+        Row: {
+          chat_id: string | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          lida: boolean | null
+          mensagem: string
+          tipo: string
+          titulo: string
+          usuario_id: string
+        }
+        Insert: {
+          chat_id?: string | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          lida?: boolean | null
+          mensagem: string
+          tipo: string
+          titulo: string
+          usuario_id: string
+        }
+        Update: {
+          chat_id?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          lida?: boolean | null
+          mensagem?: string
+          tipo?: string
+          titulo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_log_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacoes_log_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacoes_log_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificacoes_usuario_config: {
+        Row: {
+          cliente_respondeu_enabled: boolean | null
+          created_at: string | null
+          desktop_notification_enabled: boolean | null
+          estabelecimento_id: string
+          id: string
+          novo_chat_enabled: boolean | null
+          sla_alerta_enabled: boolean | null
+          som_enabled: boolean | null
+          transferencia_recebida_enabled: boolean | null
+          updated_at: string | null
+          usuario_id: string
+          volume: number | null
+        }
+        Insert: {
+          cliente_respondeu_enabled?: boolean | null
+          created_at?: string | null
+          desktop_notification_enabled?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          novo_chat_enabled?: boolean | null
+          sla_alerta_enabled?: boolean | null
+          som_enabled?: boolean | null
+          transferencia_recebida_enabled?: boolean | null
+          updated_at?: string | null
+          usuario_id: string
+          volume?: number | null
+        }
+        Update: {
+          cliente_respondeu_enabled?: boolean | null
+          created_at?: string | null
+          desktop_notification_enabled?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          novo_chat_enabled?: boolean | null
+          sla_alerta_enabled?: boolean | null
+          som_enabled?: boolean | null
+          transferencia_recebida_enabled?: boolean | null
+          updated_at?: string | null
+          usuario_id?: string
+          volume?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_usuario_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacoes_usuario_config_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_historico: {
         Row: {
           acao: string
