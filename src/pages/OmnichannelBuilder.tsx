@@ -69,6 +69,7 @@ export default function OmnichannelBuilder() {
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
+  const [currentBotId, setCurrentBotId] = useState<string>();
 
   // Carregar fluxo existente
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function OmnichannelBuilder() {
 
       if (data) {
         setFlowName(data.nome);
+        setCurrentBotId(data.trigger_bot_id || undefined);
         const flowData = data.flow_data as unknown as OmnichannelFlowData;
         setNodes(flowData.nodes || initialNodes);
         setEdges(flowData.edges || []);
@@ -435,7 +437,11 @@ export default function OmnichannelBuilder() {
                   Versões
                 </Button>
 
-                <BotTriggerSelector flowId={id} />
+                <BotTriggerSelector 
+                  flowId={id} 
+                  currentBotId={currentBotId}
+                  onUpdate={(botId) => setCurrentBotId(botId)}
+                />
               </>
             )}
 

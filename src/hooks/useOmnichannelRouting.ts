@@ -81,12 +81,60 @@ export const useOmnichannelRouting = () => {
   /**
    * Roteia um chat para um atendente disponível
    */
+  const executarFluxoOmnichannel = async (
+    flowId: string,
+    conversationId: string,
+    customerId: string,
+    estabelecimentoId: string,
+    canal: string
+  ): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("executar-fluxo-omnichannel", {
+        body: {
+          flowId,
+          conversationId,
+          customerId,
+          estabelecimentoId,
+          canal,
+        },
+      });
+
+      if (error) throw error;
+      return data?.success || false;
+    } catch (error) {
+      console.error("Erro ao executar fluxo omnichannel:", error);
+      toast.error("Erro ao executar fluxo omnichannel");
+      return false;
+    }
+  };
+
   const rotearChat = async (
     conversationId: string,
     customerId: string,
     estabelecimentoId: string,
     canal: string
   ): Promise<boolean> => {
+    // Verificar se há um fluxo omnichannel ativo
+    const { data: flows } = await supabase
+      .from("omnichannel_flows")
+      .select("id")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("ativo", true)
+      .limit(1);
+
+    // Se houver fluxo, executar o fluxo omnichannel
+    if (flows && flows.length > 0) {
+      console.log("Executando fluxo omnichannel:", flows[0].id);
+      return await executarFluxoOmnichannel(
+        flows[0].id,
+        conversationId,
+        customerId,
+        estabelecimentoId,
+        canal
+      );
+    }
+
+    // Caso contrário, usar o roteamento padrão
     try {
       console.log('[Omnichannel] Roteando chat:', conversationId);
 
@@ -169,6 +217,7 @@ export const useOmnichannelRouting = () => {
   return {
     handleIncomingMessage,
     rotearChat,
-    setupMessageListener
+    executarFluxoOmnichannel,
+    setupMessageListener,
   };
 };

@@ -1,52 +1,91 @@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/toast-config";
+import { useState, useEffect } from "react";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
 }
 
+interface OmnichannelFlow {
+  id: string;
+  nome: string;
+  descricao?: string;
+}
+
 export const BotJumpConfig = ({ config, handleConfigChange }: ConfigProps) => {
+  const [omnichannelFlows, setOmnichannelFlows] = useState<OmnichannelFlow[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadOmnichannelFlows();
+  }, []);
+
+  const loadOmnichannelFlows = async () => {
+    setLoading(true);
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      const { data, error } = await supabase
+        .from("omnichannel_flows")
+        .select("id, nome, descricao")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("ativo", true)
+        .order("nome");
+
+      if (error) throw error;
+      setOmnichannelFlows(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar fluxos omnichannel:", error);
+      toast.error("Erro ao carregar fluxos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-700">
-        Select a bot you want to Jump To. You can point to a specific block, otherwise, it will jump to the starting point.
+      <p className="text-sm text-muted-foreground">
+        Transfira o chat para um fluxo omnichannel de roteamento automático.
       </p>
 
       <div className="space-y-4">
-        <Button 
-          variant="secondary" 
-          className="w-full h-auto py-4 text-base bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-200"
-          onClick={() => {
-            // Open bot selector
-            console.log('Open bot selector');
-          }}
-        >
-          SELECT THE BOT
-        </Button>
-
-        <div className="space-y-3">
-          <Label className="text-slate-900">Point to a specific block</Label>
-          <RadioGroup
-            value={config.pointToBlock ? "YES" : "NO"}
-            onValueChange={(value) => handleConfigChange("pointToBlock", value === "YES")}
+        <div className="space-y-2">
+          <Label>Fluxo Omnichannel</Label>
+          <Select
+            value={config.omnichannelFlowId || ""}
+            onValueChange={(value) => handleConfigChange("omnichannelFlowId", value)}
+            disabled={loading}
           >
-            <div className="flex items-center gap-4">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="NO" id="no" />
-                <Label htmlFor="no" className="font-normal cursor-pointer text-slate-900">
-                  NO
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="YES" id="yes" />
-                <Label htmlFor="yes" className="font-normal cursor-pointer text-slate-900">
-                  YES
-                </Label>
-              </div>
-            </div>
-          </RadioGroup>
+            <SelectTrigger>
+              <SelectValue placeholder={loading ? "Carregando..." : "Selecione um fluxo"} />
+            </SelectTrigger>
+            <SelectContent>
+              {omnichannelFlows.map((flow) => (
+                <SelectItem key={flow.id} value={flow.id}>
+                  {flow.nome}
+                  {flow.descricao && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      - {flow.descricao}
+                    </span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="text-sm bg-muted p-3 rounded-lg space-y-2">
+          <p className="font-medium">Como funciona:</p>
+          <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+            <li>O chat será transferido do bot para o sistema omnichannel</li>
+            <li>O fluxo selecionado decidirá a fila e o atendente</li>
+            <li>O cliente será notificado sobre a transferência</li>
+          </ul>
         </div>
       </div>
     </div>

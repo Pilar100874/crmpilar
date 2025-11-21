@@ -10,9 +10,10 @@ import { Zap } from "lucide-react";
 interface BotTriggerSelectorProps {
   flowId: string;
   currentBotId?: string;
+  onUpdate?: (botId: string | undefined) => void;
 }
 
-export const BotTriggerSelector = ({ flowId, currentBotId }: BotTriggerSelectorProps) => {
+export const BotTriggerSelector = ({ flowId, currentBotId, onUpdate }: BotTriggerSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [bots, setBots] = useState<any[]>([]);
   const [selectedBotId, setSelectedBotId] = useState(currentBotId);
@@ -49,6 +50,12 @@ export const BotTriggerSelector = ({ flowId, currentBotId }: BotTriggerSelectorP
         .eq("id", flowId);
 
       if (error) throw error;
+      
+      // Notificar o componente pai sobre a mudança
+      if (onUpdate) {
+        onUpdate(selectedBotId || undefined);
+      }
+      
       toast.success("Trigger configurado com sucesso");
       setOpen(false);
     } catch (error) {
