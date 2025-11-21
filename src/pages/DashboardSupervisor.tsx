@@ -121,7 +121,7 @@ export default function DashboardSupervisorPage() {
         </TabsContent>
 
         <TabsContent value="metricas" className="mt-6">
-          <MetricasView />
+          <MetricasView estabelecimentoId={estabelecimentoId} />
         </TabsContent>
       </Tabs>
     </div>
