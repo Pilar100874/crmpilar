@@ -46,7 +46,7 @@ export const FlowVersionHistory = ({ flowId, open, onOpenChange, onRestore }: Fl
         .order("version_number", { ascending: false });
 
       if (error) throw error;
-      setVersions(data || []);
+      setVersions((data as any) || []);
     } catch (error) {
       console.error("Erro ao carregar versões:", error);
       toast.error("Erro ao carregar histórico");
