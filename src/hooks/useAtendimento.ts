@@ -56,17 +56,40 @@ export const useAtendimento = () => {
           // Buscar skills
           const { data: skillsData, error: skillsError } = await supabase
             .from("atendente_skills")
-            .select("*, skill:skills(*)")
+            .select(`
+              id,
+              nivel,
+              skill_id,
+              atendente_id,
+              created_at,
+              skills (
+                id,
+                nome,
+                descricao,
+                cor
+              )
+            `)
             .eq("atendente_id", atendenteId);
 
-          if (skillsError) throw skillsError;
+          if (skillsError) {
+            console.error("Erro ao buscar skills do atendente:", skillsError);
+            throw skillsError;
+          }
+          
+          console.log("Skills carregadas:", skillsData);
+          
+          // Mapear para o formato esperado
+          const skillsMapeadas = skillsData?.map((item: any) => ({
+            ...item,
+            skill: item.skills
+          })) || [];
 
           setDashboard({
             atendente: atendenteData as Atendente,
             chats_ativos: (chatsAtivos || []) as Chat[],
             chats_em_espera: (chatsEspera || []) as Chat[],
             metricas_hoje: metricasData || null,
-            skills: skillsData || []
+            skills: skillsMapeadas
           });
 
         } catch (err) {
