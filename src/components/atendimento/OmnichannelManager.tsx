@@ -152,4 +152,3 @@ export const OmnichannelManager = ({
     </div>
   );
 };
-
