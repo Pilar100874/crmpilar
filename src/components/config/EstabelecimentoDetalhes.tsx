@@ -974,39 +974,51 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="gerador-api" className="border rounded-md">
+        <AccordionItem value="api-webhooks" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-primary" />
-              <span className="font-medium">Gerador de APIs</span>
+              <span className="font-medium">API E Webhooks</span>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <APIGeneratorCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
+            <Accordion type="single" collapsible className="space-y-2 pl-4">
+              <AccordionItem value="gerador-api" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Gerador de APIs</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <APIGeneratorCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
 
-        <AccordionItem value="cadastro-webhooks" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Webhook className="w-4 h-4 text-primary" />
-              <span className="font-medium">Cadastro de Webhooks</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <WebhooksCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
+              <AccordionItem value="cadastro-webhooks" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Webhook className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Cadastro de Webhooks</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <WebhooksCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
 
-        <AccordionItem value="cadastro-webhooks-entrada" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Webhook className="w-4 h-4 text-primary" />
-              <span className="font-medium">Cadastro de Webhooks de Entrada</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <WebhooksEntradaCRUD />
+              <AccordionItem value="cadastro-webhooks-entrada" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Webhook className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Cadastro de Webhooks de Entrada</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <WebhooksEntradaCRUD />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </AccordionContent>
         </AccordionItem>
 
