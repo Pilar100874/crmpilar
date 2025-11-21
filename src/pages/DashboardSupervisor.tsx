@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { DashboardSupervisorComponent } from "@/components/atendimento/DashboardSupervisor";
 import { useAtendimento } from "@/hooks/useAtendimento";
 import { MetricasView } from "@/components/atendimento/MetricasView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { processarFila } from "@/services/roteamentoService";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { NotificationCenter } from "@/components/atendimento/NotificationCenter";
 
 export default function DashboardSupervisorPage() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [processandoFila, setProcessandoFila] = useState(false);
   
@@ -39,6 +41,21 @@ export default function DashboardSupervisorPage() {
     if (estabId) {
       setEstabelecimentoId(estabId);
     }
+
+    // Carregar user_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: usuarioData } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (usuarioData) {
+        setUserId(usuarioData.id);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -96,14 +113,19 @@ export default function DashboardSupervisorPage() {
           <h1 className="text-3xl font-bold">Dashboard do Supervisor</h1>
           <p className="text-muted-foreground">Monitore e gerencie toda a operação de atendimento</p>
         </div>
-        <Button
-          onClick={handleProcessarFila}
-          disabled={processandoFila}
-          variant="outline"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${processandoFila ? 'animate-spin' : ''}`} />
-          Processar Fila
-        </Button>
+        <div className="flex items-center gap-2">
+          {userId && estabelecimentoId && (
+            <NotificationCenter userId={userId} estabelecimentoId={estabelecimentoId} />
+          )}
+          <Button
+            onClick={handleProcessarFila}
+            disabled={processandoFila}
+            variant="outline"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${processandoFila ? 'animate-spin' : ''}`} />
+            Processar Fila
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="visao-geral" className="w-full">
