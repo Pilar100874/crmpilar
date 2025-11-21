@@ -167,7 +167,7 @@ export default function Atendimento() {
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
   
-  const loadAtendente = async (userId: string) => {
+  const loadAtendente = async (authUserId: string) => {
     try {
       const estabId = await getEstabelecimentoId();
       if (!estabId) {
@@ -175,30 +175,52 @@ export default function Atendimento() {
         return;
       }
       
-      console.log("🔍 Buscando atendente para userId:", userId, "estabId:", estabId);
+      console.log("🔍 Buscando usuário com auth_user_id:", authUserId);
       
-      const { data, error } = await supabase
-        .from("atendentes")
-        .select("*")
-        .eq("usuario_id", userId)
+      // Primeiro buscar o registro em usuarios para pegar o ID correto
+      const { data: usuarioData, error: usuarioError } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("auth_user_id", authUserId)
         .eq("estabelecimento_id", estabId)
         .maybeSingle();
         
-      if (error) {
-        console.error("❌ Erro ao carregar atendente:", error);
+      if (usuarioError) {
+        console.error("❌ Erro ao buscar usuário:", usuarioError);
         return;
       }
       
-      if (data) {
-        console.log("✅ Atendente encontrado:", data);
-        setAtendente(data as Atendente);
+      if (!usuarioData) {
+        console.log("⚠️ Usuário não encontrado na tabela usuarios");
+        return;
+      }
+      
+      const usuarioId = usuarioData.id;
+      console.log("✅ Usuário encontrado, ID:", usuarioId);
+      
+      // Agora buscar o atendente com o usuario_id correto
+      const { data: atendenteData, error: atendenteError } = await supabase
+        .from("atendentes")
+        .select("*")
+        .eq("usuario_id", usuarioId)
+        .eq("estabelecimento_id", estabId)
+        .maybeSingle();
+        
+      if (atendenteError) {
+        console.error("❌ Erro ao carregar atendente:", atendenteError);
+        return;
+      }
+      
+      if (atendenteData) {
+        console.log("✅ Atendente encontrado:", atendenteData);
+        setAtendente(atendenteData as Atendente);
       } else {
         console.log("⚠️ Atendente não encontrado - criando registro...");
         // Criar registro de atendente se não existir
         const { data: newAtendente, error: createError } = await supabase
           .from("atendentes")
           .insert({
-            usuario_id: userId,
+            usuario_id: usuarioId,
             estabelecimento_id: estabId,
             status: "offline",
             max_chats_simultaneos: 3,
