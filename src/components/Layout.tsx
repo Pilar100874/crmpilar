@@ -78,6 +78,7 @@ const menuItems: MenuItem[] = [
       { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: MessageSquare },
       { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: Users },
       { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LayoutDashboard },
+      { id: "Omnichannel Builder", title: "Workflow Builder", url: "/omnichannel-builder", icon: Workflow },
     ]
   },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },

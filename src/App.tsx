@@ -45,6 +45,7 @@ import ConfigFilas from "./pages/ConfigFilas";
 import ConfigSkills from "./pages/ConfigSkills";
 import DashboardAtendentePage from "./pages/DashboardAtendente";
 import DashboardSupervisorPage from "./pages/DashboardSupervisor";
+import OmnichannelBuilder from "./pages/OmnichannelBuilder";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,8 @@ const App = () => (
             <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
             <Route path="/config/filas" element={<ConfigFilas />} />
             <Route path="/config/skills" element={<ConfigSkills />} />
+            <Route path="/omnichannel-builder" element={<OmnichannelBuilder />} />
+            <Route path="/omnichannel-builder/:id" element={<OmnichannelBuilder />} />
             <Route path="/dashboard-atendente" element={<DashboardAtendentePage />} />
             <Route path="/dashboard-supervisor" element={<DashboardSupervisorPage />} />
           </Route>
