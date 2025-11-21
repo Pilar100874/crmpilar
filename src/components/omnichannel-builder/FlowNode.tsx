@@ -92,13 +92,11 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
         )}
       </div>
 
-      {type !== "inicio" && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className="!bg-primary !w-3 !h-3"
-        />
-      )}
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!bg-primary !w-3 !h-3"
+      />
     </div>
   );
 });
