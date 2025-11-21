@@ -6,9 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Database } from "lucide-react";
 import type { OmnichannelNode } from "@/types/omnichannelFlow";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { toast } from "@/lib/toast-config";
 
 interface PropertiesPanelProps {
   selectedNode: OmnichannelNode | null;
@@ -27,6 +30,61 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
     operador: "igual",
     valor: ""
   });
+
+  // Estados para dados do sistema
+  const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [filas, setFilas] = useState<any[]>([]);
+  const [atendentes, setAtendentes] = useState<any[]>([]);
+  const [skills, setSkills] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
+
+  // Carregar dados do sistema
+  useEffect(() => {
+    loadSystemData();
+  }, []);
+
+  const loadSystemData = async () => {
+    setLoadingData(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      // Carregar webhooks
+      const { data: webhooksData } = await supabase
+        .from("webhooks")
+        .select("*")
+        .eq("estabelecimento_id", estabId)
+        .eq("active", true);
+      setWebhooks(webhooksData || []);
+
+      // Carregar filas
+      const { data: filasData } = await supabase
+        .from("filas_atendimento")
+        .select("*")
+        .eq("estabelecimento_id", estabId)
+        .eq("ativa", true);
+      setFilas(filasData || []);
+
+      // Carregar atendentes
+      const { data: atendentesData } = await supabase
+        .from("atendentes")
+        .select("id, usuario_id, usuarios(nome)")
+        .eq("estabelecimento_id", estabId);
+      setAtendentes(atendentesData || []);
+
+      // Carregar skills
+      const { data: skillsData } = await supabase
+        .from("skills")
+        .select("*")
+        .eq("estabelecimento_id", estabId);
+      setSkills(skillsData || []);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      toast.error("Erro ao carregar dados do sistema");
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   if (!selectedNode) {
     return (
@@ -109,6 +167,49 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
           {data.type === "fila" && (
             <>
               <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Usar Fila do Sistema</Label>
+                  <Switch
+                    checked={data.config.usarSistema === true}
+                    onCheckedChange={(checked) => updateConfig('usarSistema', checked)}
+                  />
+                </div>
+              </div>
+
+              {data.config.usarSistema && (
+                <div className="space-y-2">
+                  <Label>Fila *</Label>
+                  <Select
+                    value={data.config.filaId || ''}
+                    onValueChange={(value) => {
+                      const fila = filas.find(f => f.id === value);
+                      if (fila) {
+                        updateConfig('filaId', value);
+                        updateConfig('filaNome', fila.nome);
+                        updateConfig('tipoRoteamento', fila.tipo_roteamento);
+                        updateConfig('maxChats', fila.max_chats_por_atendente);
+                        updateConfig('prioridade', fila.prioridade);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma fila" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filas.map((fila) => (
+                        <SelectItem key={fila.id} value={fila.id}>
+                          <div className="flex items-center gap-2">
+                            <Database className="h-3 w-3" />
+                            {fila.nome}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="space-y-2">
                 <Label>Tipo de Roteamento *</Label>
                 <Select
                   value={data.config.tipoRoteamento || "round_robin"}
@@ -173,16 +274,56 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
           {data.type === "atendente" && (
             <>
               <div className="space-y-2">
-                <Label>ID do Atendente *</Label>
-                <Input
-                  value={data.config.atendenteId || ""}
-                  onChange={(e) => updateConfig("atendenteId", e.target.value)}
-                  placeholder="Selecionar atendente"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Use variável ou ID fixo
-                </p>
+                <div className="flex items-center justify-between">
+                  <Label>Usar Atendente do Sistema</Label>
+                  <Switch
+                    checked={data.config.usarSistema === true}
+                    onCheckedChange={(checked) => updateConfig('usarSistema', checked)}
+                  />
+                </div>
               </div>
+
+              {data.config.usarSistema ? (
+                <div className="space-y-2">
+                  <Label>Atendente *</Label>
+                  <Select
+                    value={data.config.atendenteId || ''}
+                    onValueChange={(value) => {
+                      const atendente = atendentes.find(a => a.id === value);
+                      if (atendente) {
+                        updateConfig('atendenteId', value);
+                        updateConfig('atendenteNome', atendente.usuarios?.nome);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um atendente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {atendentes.map((atendente) => (
+                        <SelectItem key={atendente.id} value={atendente.id}>
+                          <div className="flex items-center gap-2">
+                            <Database className="h-3 w-3" />
+                            {atendente.usuarios?.nome || atendente.usuario_id}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>ID do Atendente *</Label>
+                  <Input
+                    value={data.config.atendenteId || ""}
+                    onChange={(e) => updateConfig("atendenteId", e.target.value)}
+                    placeholder="ID ou variável"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use variável ou ID fixo
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Max Chats Simultâneos *</Label>
@@ -216,13 +357,53 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
           {data.type === "skill" && (
             <>
               <div className="space-y-2">
-                <Label>Skill Requerida *</Label>
-                <Input
-                  value={data.config.skillNome || ""}
-                  onChange={(e) => updateConfig("skillNome", e.target.value)}
-                  placeholder="Nome da skill"
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Usar Skill do Sistema</Label>
+                  <Switch
+                    checked={data.config.usarSistema === true}
+                    onCheckedChange={(checked) => updateConfig('usarSistema', checked)}
+                  />
+                </div>
               </div>
+
+              {data.config.usarSistema ? (
+                <div className="space-y-2">
+                  <Label>Skill *</Label>
+                  <Select
+                    value={data.config.skillId || ''}
+                    onValueChange={(value) => {
+                      const skill = skills.find(s => s.id === value);
+                      if (skill) {
+                        updateConfig('skillId', value);
+                        updateConfig('skillNome', skill.nome);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma skill" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {skills.map((skill) => (
+                        <SelectItem key={skill.id} value={skill.id}>
+                          <div className="flex items-center gap-2">
+                            <Database className="h-3 w-3" />
+                            {skill.nome}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Skill Requerida *</Label>
+                  <Input
+                    value={data.config.skillNome || ""}
+                    onChange={(e) => updateConfig("skillNome", e.target.value)}
+                    placeholder="Nome da skill"
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Nível Mínimo Requerido *</Label>
@@ -432,13 +613,60 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
           {data.type === 'webhook' && (
             <>
               <div className="space-y-2">
-                <Label>URL do Webhook *</Label>
-                <Input
-                  placeholder="https://..."
-                  value={data.config.webhookUrl || ''}
-                  onChange={(e) => updateConfig('webhookUrl', e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Usar Webhook Cadastrado</Label>
+                  <Switch
+                    checked={data.config.usarSistema === true}
+                    onCheckedChange={(checked) => updateConfig('usarSistema', checked)}
+                  />
+                </div>
               </div>
+
+              {data.config.usarSistema ? (
+                <div className="space-y-2">
+                  <Label>Webhook do Sistema *</Label>
+                  <Select
+                    value={data.config.webhookId || ''}
+                    onValueChange={(value) => {
+                      const webhook = webhooks.find(w => w.id === value);
+                      if (webhook) {
+                        updateConfig('webhookId', value);
+                        updateConfig('webhookNome', webhook.nome);
+                        updateConfig('webhookUrl', webhook.url);
+                        updateConfig('metodo', webhook.metodo);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um webhook" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {webhooks.map((webhook) => (
+                        <SelectItem key={webhook.id} value={webhook.id}>
+                          <div className="flex items-center gap-2">
+                            <Database className="h-3 w-3" />
+                            {webhook.nome}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {data.config.webhookId && (
+                    <p className="text-xs text-muted-foreground">
+                      {data.config.webhookUrl}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>URL do Webhook *</Label>
+                  <Input
+                    placeholder="https://..."
+                    value={data.config.webhookUrl || ''}
+                    onChange={(e) => updateConfig('webhookUrl', e.target.value)}
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Método HTTP *</Label>
