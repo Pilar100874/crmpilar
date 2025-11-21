@@ -8,10 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast-config";
+import { NotificationCenter } from "@/components/atendimento/NotificationCenter";
 import type { AtendenteStatus } from "@/types/atendimento";
 
 export default function DashboardAtendentePage() {
   const [atendenteId, setAtendenteId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<AtendenteStatus>("disponivel");
@@ -32,7 +35,7 @@ export default function DashboardAtendentePage() {
       // Primeiro busca o usuario_id na tabela usuarios usando auth_user_id
       const { data: usuarioData, error: usuarioError } = await supabase
         .from("usuarios")
-        .select("id")
+        .select("id, estabelecimento_id")
         .eq("auth_user_id", user.id)
         .single();
 
@@ -42,6 +45,9 @@ export default function DashboardAtendentePage() {
         setLoading(false);
         return;
       }
+
+      setUserId(usuarioData.id);
+      setEstabelecimentoId(usuarioData.estabelecimento_id);
 
       // Agora busca o atendente usando o usuario_id correto
       const { data: atendenteData, error } = await supabase
@@ -124,6 +130,13 @@ export default function DashboardAtendentePage() {
 
   return (
     <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Dashboard do Atendente</h1>
+        {userId && estabelecimentoId && (
+          <NotificationCenter userId={userId} estabelecimentoId={estabelecimentoId} />
+        )}
+      </div>
+
       <DashboardAtendenteComponent
         dashboard={dashboard}
         onChangeStatus={handleChangeStatus}
