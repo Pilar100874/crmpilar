@@ -19,7 +19,6 @@ import { PropertiesPanel } from "@/components/omnichannel-builder/PropertiesPane
 import { FlowValidator } from "@/components/omnichannel-builder/FlowValidator";
 import { TemplateSelector } from "@/components/omnichannel-builder/TemplateSelector";
 import { FlowVersionHistory } from "@/components/omnichannel-builder/FlowVersionHistory";
-import { FlowSearch } from "@/components/omnichannel-builder/FlowSearch";
 import { FlowExportImport } from "@/components/omnichannel-builder/FlowExportImport";
 import { BlockContextMenu } from "@/components/omnichannel-builder/BlockContextMenu";
 import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
@@ -28,7 +27,7 @@ import { FlowExecutionLogs } from "@/components/omnichannel-builder/FlowExecutio
 import { FlowAnalytics } from "@/components/omnichannel-builder/FlowAnalytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3 } from "lucide-react";
+import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -69,6 +68,7 @@ export default function OmnichannelBuilder() {
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
 
   // Carregar fluxo existente
   useEffect(() => {
@@ -384,11 +384,19 @@ export default function OmnichannelBuilder() {
               className="max-w-md"
               placeholder="Nome do fluxo"
             />
-
-            <FlowSearch nodes={nodes} onNodeSelect={handleNodeSelect} />
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsBlockLibraryExpanded(true)}
+              className="rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+              title="Adicionar blocos"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -466,9 +474,13 @@ export default function OmnichannelBuilder() {
           )}
 
           {/* Biblioteca de Blocos */}
-          <div className="w-80 border-r p-4">
-            <BlockLibrary onDragStart={onDragStart} />
-          </div>
+          <BlockLibrary 
+            onDragStart={onDragStart}
+            isExpanded={isBlockLibraryExpanded}
+            onToggleExpanded={setIsBlockLibraryExpanded}
+            nodes={nodes}
+            onNodeSelect={handleNodeSelect}
+          />
 
           {/* Canvas */}
           <div className="flex-1" ref={reactFlowWrapper}>
