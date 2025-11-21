@@ -170,7 +170,12 @@ export default function Atendimento() {
   const loadAtendente = async (userId: string) => {
     try {
       const estabId = await getEstabelecimentoId();
-      if (!estabId) return;
+      if (!estabId) {
+        console.log("❌ Estabelecimento ID não encontrado");
+        return;
+      }
+      
+      console.log("🔍 Buscando atendente para userId:", userId, "estabId:", estabId);
       
       const { data, error } = await supabase
         .from("atendentes")
@@ -180,15 +185,40 @@ export default function Atendimento() {
         .maybeSingle();
         
       if (error) {
-        console.error("Erro ao carregar atendente:", error);
+        console.error("❌ Erro ao carregar atendente:", error);
         return;
       }
       
       if (data) {
+        console.log("✅ Atendente encontrado:", data);
         setAtendente(data as Atendente);
+      } else {
+        console.log("⚠️ Atendente não encontrado - criando registro...");
+        // Criar registro de atendente se não existir
+        const { data: newAtendente, error: createError } = await supabase
+          .from("atendentes")
+          .insert({
+            usuario_id: userId,
+            estabelecimento_id: estabId,
+            status: "offline",
+            max_chats_simultaneos: 3,
+            aceita_novos_chats: true
+          })
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error("❌ Erro ao criar atendente:", createError);
+          return;
+        }
+        
+        if (newAtendente) {
+          console.log("✅ Atendente criado:", newAtendente);
+          setAtendente(newAtendente as Atendente);
+        }
       }
     } catch (err) {
-      console.error("Erro ao buscar atendente:", err);
+      console.error("❌ Erro ao buscar atendente:", err);
     }
   };
 
