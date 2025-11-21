@@ -1,13 +1,375 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Chat, Atendente, FilaAtendimento } from "@/types/atendimento";
 
 /**
- * Serviço de Roteamento Automático de Chats
- * Responsável por atribuir chats a atendentes baseado em diferentes estratégias
+ * Serviço de Roteamento Omnichannel
+ * 
+ * Funções de alto nível para integração com o sistema de roteamento.
+ * Utiliza edge functions para lógica complexa de roteamento.
  */
 
-// Verificar se atendente tem carteira fixa para o cliente
-export const verificarCarteiraFixa = async (customerId: string, estabelecimentoId: string): Promise<string | null> => {
+// ============================================
+// TIPOS
+// ============================================
+
+export type TipoRoteamento = 'round_robin' | 'por_disponibilidade' | 'por_skill' | 'por_prioridade' | 'por_carteira';
+export type PrioridadeChat = 'baixa' | 'normal' | 'alta' | 'urgente';
+export type TipoTransferencia = 'atendente' | 'fila' | 'automatica';
+
+export interface OpcoesRoteamento {
+  conversationId: string;
+  customerId: string;
+  estabelecimentoId: string;
+  canal: string;
+  filaId?: string;
+  palavrasChave?: string[];
+  opcaoBot?: string;
+  prioridade?: PrioridadeChat;
+}
+
+export interface ResultadoRoteamento {
+  success: boolean;
+  atendenteId?: string;
+  filaId?: string;
+  fila?: string;
+  tipo?: string;
+  message?: string;
+  error?: string;
+}
+
+export interface OpcoesTransferencia {
+  chatId: string;
+  tipo: TipoTransferencia;
+  atendenteDestinoId?: string;
+  filaDestinoId?: string;
+  motivo?: string;
+  realizadoPor: string;
+}
+
+export interface ResultadoRealocacao {
+  success: boolean;
+  totalChats: number;
+  totalRealocados: number;
+  totalEmFila: number;
+  erros?: Array<{ chatId: string; erro: string }>;
+}
+
+// ============================================
+// ROTEAMENTO AUTOMÁTICO
+// ============================================
+
+/**
+ * Roteia um chat automaticamente para o atendente mais adequado
+ * 
+ * @param opcoes - Opções de roteamento
+ * @returns Resultado do roteamento
+ * 
+ * @example
+ * ```typescript
+ * const resultado = await rotearChatAutomatico({
+ *   conversationId: 'uuid-do-chat',
+ *   customerId: 'uuid-do-cliente',
+ *   estabelecimentoId: 'uuid-do-estab',
+ *   canal: 'whatsapp',
+ *   palavrasChave: ['suporte', 'problema'],
+ *   prioridade: 'alta'
+ * });
+ * 
+ * if (resultado.atendenteId) {
+ *   console.log(`Atribuído ao atendente ${resultado.atendenteId}`);
+ * }
+ * ```
+ */
+export const rotearChatAutomatico = async (
+  opcoes: OpcoesRoteamento
+): Promise<ResultadoRoteamento> => {
+  try {
+    console.log('[Roteamento] Iniciando roteamento automático:', opcoes);
+
+    const { data, error } = await supabase.functions.invoke('rotear-chat-automatico', {
+      body: opcoes
+    });
+
+    if (error) {
+      console.error('[Roteamento] Erro na edge function:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro ao rotear chat'
+      };
+    }
+
+    console.log('[Roteamento] Resultado:', data);
+    return data;
+
+  } catch (error: any) {
+    console.error('[Roteamento] Erro:', error);
+    return {
+      success: false,
+      error: error.message || 'Erro inesperado ao rotear chat'
+    };
+  }
+};
+
+/**
+ * Roteia chat com opções simplificadas (usando padrões)
+ */
+export const rotearChatSimples = async (
+  conversationId: string,
+  customerId: string,
+  estabelecimentoId: string,
+  canal: string = 'whatsapp'
+): Promise<ResultadoRoteamento> => {
+  return rotearChatAutomatico({
+    conversationId,
+    customerId,
+    estabelecimentoId,
+    canal
+  });
+};
+
+/**
+ * Roteia chat para fila específica
+ */
+export const rotearParaFila = async (
+  conversationId: string,
+  customerId: string,
+  estabelecimentoId: string,
+  filaId: string,
+  canal: string = 'whatsapp'
+): Promise<ResultadoRoteamento> => {
+  return rotearChatAutomatico({
+    conversationId,
+    customerId,
+    estabelecimentoId,
+    canal,
+    filaId
+  });
+};
+
+// ============================================
+// TRANSFERÊNCIAS
+// ============================================
+
+/**
+ * Transfere chat para outro atendente
+ * 
+ * @example
+ * ```typescript
+ * const resultado = await transferirParaAtendente({
+ *   chatId: 'uuid-do-chat',
+ *   atendenteDestinoId: 'uuid-do-atendente',
+ *   motivo: 'Cliente solicitou especialista',
+ *   realizadoPor: usuarioId
+ * });
+ * ```
+ */
+export const transferirParaAtendente = async (
+  opcoes: Omit<OpcoesTransferencia, 'tipo'>
+): Promise<ResultadoRoteamento> => {
+  try {
+    console.log('[Transferência] Para atendente:', opcoes);
+
+    const { data, error } = await supabase.functions.invoke('transferir-chat', {
+      body: {
+        ...opcoes,
+        tipo: 'atendente'
+      }
+    });
+
+    if (error) {
+      console.error('[Transferência] Erro:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro ao transferir chat'
+      };
+    }
+
+    return data;
+
+  } catch (error: any) {
+    console.error('[Transferência] Erro:', error);
+    return {
+      success: false,
+      error: error.message || 'Erro inesperado'
+    };
+  }
+};
+
+/**
+ * Transfere chat para fila (roteamento automático na fila)
+ * 
+ * @example
+ * ```typescript
+ * const resultado = await transferirParaFilaComRoteamento({
+ *   chatId: 'uuid-do-chat',
+ *   filaDestinoId: 'uuid-da-fila',
+ *   motivo: 'Escalando para suporte nível 2',
+ *   realizadoPor: usuarioId
+ * });
+ * ```
+ */
+export const transferirParaFilaComRoteamento = async (
+  opcoes: Omit<OpcoesTransferencia, 'tipo'>
+): Promise<ResultadoRoteamento> => {
+  try {
+    console.log('[Transferência] Para fila:', opcoes);
+
+    const { data, error } = await supabase.functions.invoke('transferir-chat', {
+      body: {
+        ...opcoes,
+        tipo: 'fila'
+      }
+    });
+
+    if (error) {
+      console.error('[Transferência] Erro:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro ao transferir chat'
+      };
+    }
+
+    return data;
+
+  } catch (error: any) {
+    console.error('[Transferência] Erro:', error);
+    return {
+      success: false,
+      error: error.message || 'Erro inesperado'
+    };
+  }
+};
+
+// ============================================
+// REALOCAÇÃO
+// ============================================
+
+/**
+ * Realoca automaticamente todos os chats de um atendente
+ * 
+ * Útil quando atendente sai, fica offline ou precisa pausar atendimentos.
+ * 
+ * @example
+ * ```typescript
+ * // Ao mudar status do atendente
+ * await atualizarStatusAtendente(atendenteId, 'offline');
+ * 
+ * const resultado = await realocarChatsAtendente(
+ *   atendenteId,
+ *   estabelecimentoId,
+ *   'Atendente encerrou expediente'
+ * );
+ * 
+ * console.log(`${resultado.totalRealocados} chats realocados`);
+ * ```
+ */
+export const realocarChatsAtendente = async (
+  atendenteId: string,
+  estabelecimentoId: string,
+  motivoRealocacao?: string
+): Promise<ResultadoRealocacao> => {
+  try {
+    console.log('[Realocação] Iniciando para atendente:', atendenteId);
+
+    const { data, error } = await supabase.functions.invoke('realocar-chats-atendente', {
+      body: {
+        atendenteId,
+        estabelecimentoId,
+        motivoRealocacao
+      }
+    });
+
+    if (error) {
+      console.error('[Realocação] Erro:', error);
+      return {
+        success: false,
+        totalChats: 0,
+        totalRealocados: 0,
+        totalEmFila: 0,
+        erros: [{ chatId: 'unknown', erro: error.message }]
+      };
+    }
+
+    console.log('[Realocação] Resultado:', data);
+    return data;
+
+  } catch (error: any) {
+    console.error('[Realocação] Erro:', error);
+    return {
+      success: false,
+      totalChats: 0,
+      totalRealocados: 0,
+      totalEmFila: 0,
+      erros: [{ chatId: 'unknown', erro: error.message }]
+    };
+  }
+};
+
+/**
+ * Realoca automaticamente ao mudar status do atendente
+ */
+export const realocarAoMudarStatus = async (
+  atendenteId: string,
+  estabelecimentoId: string,
+  novoStatus: string
+): Promise<void> => {
+  // Só realocar se sair de "disponivel"
+  if (novoStatus !== 'disponivel') {
+    console.log('[Realocação] Status mudou para:', novoStatus);
+    
+    const motivo = novoStatus === 'offline' 
+      ? 'Atendente ficou offline' 
+      : `Atendente mudou para ${novoStatus}`;
+
+    await realocarChatsAtendente(atendenteId, estabelecimentoId, motivo);
+  }
+};
+
+// ============================================
+// PROCESSAMENTO DE FILA
+// ============================================
+
+/**
+ * Processa fila de espera tentando atribuir chats
+ * 
+ * Deve ser executado periodicamente (ex: a cada 30 segundos)
+ * 
+ * @example
+ * ```typescript
+ * // Executar periodicamente
+ * setInterval(async () => {
+ *   await processarFilaEspera();
+ * }, 30000); // 30 segundos
+ * ```
+ */
+export const processarFilaEspera = async (): Promise<void> => {
+  try {
+    console.log('[Fila] Processando fila de espera...');
+
+    const { data, error } = await supabase.functions.invoke('processar-fila-atendimento');
+
+    if (error) {
+      console.error('[Fila] Erro ao processar:', error);
+      return;
+    }
+
+    console.log('[Fila] Processamento concluído:', data);
+
+  } catch (error) {
+    console.error('[Fila] Erro:', error);
+  }
+};
+
+// ============================================
+// CONSULTAS AUXILIARES
+// ============================================
+
+/**
+ * Verifica se cliente tem atendente fixo
+ */
+export const verificarCarteiraFixa = async (
+  customerId: string,
+  estabelecimentoId: string
+): Promise<string | null> => {
   try {
     const { data } = await supabase
       .from("atendente_carteiras")
@@ -15,22 +377,12 @@ export const verificarCarteiraFixa = async (customerId: string, estabelecimentoI
       .eq("customer_id", customerId)
       .eq("estabelecimento_id", estabelecimentoId)
       .eq("ativa", true)
-      .single();
+      .maybeSingle();
 
-    if (data && data.atendente) {
+    if (data?.atendente) {
       const atendente = data.atendente as any;
-      // Verificar se atendente está disponível e aceita novos chats
       if (atendente.status === 'disponivel' && atendente.aceita_novos_chats) {
-        // Verificar se não atingiu limite de chats
-        const { data: chatsAtivos } = await supabase
-          .from("conversations")
-          .select("id")
-          .eq("atendente_atual_id", atendente.id)
-          .in("chat_status", ["em_atendimento", "aguardando_cliente"]);
-
-        if ((chatsAtivos?.length || 0) < atendente.max_chats_simultaneos) {
-          return atendente.id;
-        }
+        return atendente.id;
       }
     }
     return null;
@@ -40,334 +392,96 @@ export const verificarCarteiraFixa = async (customerId: string, estabelecimentoI
   }
 };
 
-// Buscar atendentes disponíveis da fila
-const buscarAtendentesDisponiveis = async (filaId: string): Promise<Atendente[]> => {
+/**
+ * Busca histórico de transferências de um chat
+ */
+export const buscarHistoricoTransferencias = async (
+  chatId: string
+) => {
   try {
-    const { data: filaAtendentes } = await supabase
-      .from("atendente_filas")
-      .select("atendente_id")
-      .eq("fila_id", filaId);
+    const { data, error } = await supabase
+      .from('chat_transferencias')
+      .select(`
+        *,
+        atendente_origem:atendentes!chat_transferencias_atendente_origem_id_fkey(id, usuario:usuarios(nome)),
+        atendente_destino:atendentes!chat_transferencias_atendente_destino_id_fkey(id, usuario:usuarios(nome)),
+        fila_origem:filas_atendimento!chat_transferencias_fila_origem_id_fkey(nome),
+        fila_destino:filas_atendimento!chat_transferencias_fila_destino_id_fkey(nome),
+        realizado_por_usuario:usuarios!chat_transferencias_realizada_por_fkey(nome)
+      `)
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: false });
 
-    if (!filaAtendentes || filaAtendentes.length === 0) return [];
+    if (error) throw error;
+    return data;
 
-    const atendenteIds = filaAtendentes.map(fa => fa.atendente_id);
-
-    const { data: atendentes } = await supabase
-      .from("atendentes")
-      .select("*")
-      .in("id", atendenteIds)
-      .eq("status", "disponivel")
-      .eq("aceita_novos_chats", true);
-
-    if (!atendentes) return [];
-
-    // Filtrar atendentes que não atingiram limite de chats
-    const atendentesDisponiveis = [];
-    for (const atendente of atendentes) {
-      const { data: chatsAtivos } = await supabase
-        .from("conversations")
-        .select("id")
-        .eq("atendente_atual_id", atendente.id)
-        .in("chat_status", ["em_atendimento", "aguardando_cliente"]);
-
-      if ((chatsAtivos?.length || 0) < atendente.max_chats_simultaneos) {
-        atendentesDisponiveis.push(atendente);
-      }
-    }
-
-    return atendentesDisponiveis as Atendente[];
   } catch (error) {
-    console.error("Erro ao buscar atendentes disponíveis:", error);
+    console.error('Erro ao buscar histórico:', error);
     return [];
   }
 };
 
-// Roteamento Round Robin
-const roteamentoRoundRobin = async (filaId: string): Promise<string | null> => {
-  const atendentes = await buscarAtendentesDisponiveis(filaId);
-  if (atendentes.length === 0) return null;
-
-  // Buscar último atendente que recebeu chat nesta fila
-  const { data: ultimoChat } = await supabase
-    .from("conversations")
-    .select("atendente_atual_id")
-    .eq("fila_id", filaId)
-    .not("atendente_atual_id", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!ultimoChat?.atendente_atual_id) {
-    return atendentes[0].id; // Primeiro atendente
-  }
-
-  // Encontrar próximo atendente na lista
-  const currentIndex = atendentes.findIndex(a => a.id === ultimoChat.atendente_atual_id);
-  const nextIndex = (currentIndex + 1) % atendentes.length;
-  return atendentes[nextIndex].id;
-};
-
-// Roteamento por Disponibilidade (menor carga)
-const roteamentoPorDisponibilidade = async (filaId: string): Promise<string | null> => {
-  const atendentes = await buscarAtendentesDisponiveis(filaId);
-  if (atendentes.length === 0) return null;
-
-  // Buscar carga de cada atendente
-  const atendentesComCarga = await Promise.all(
-    atendentes.map(async (atendente) => {
-      const { data: chatsAtivos } = await supabase
-        .from("conversations")
-        .select("id")
-        .eq("atendente_atual_id", atendente.id)
-        .in("chat_status", ["em_atendimento", "aguardando_cliente"]);
-
-      return {
-        atendente,
-        carga: chatsAtivos?.length || 0
-      };
-    })
-  );
-
-  // Ordenar por menor carga
-  atendentesComCarga.sort((a, b) => a.carga - b.carga);
-  return atendentesComCarga[0].atendente.id;
-};
-
-// Roteamento por Skill
-const roteamentoPorSkill = async (filaId: string): Promise<string | null> => {
+/**
+ * Verifica tamanho atual da fila
+ */
+export const obterTamanhoFila = async (
+  filaId?: string,
+  estabelecimentoId?: string
+): Promise<number> => {
   try {
-    // Buscar skills requeridas pela fila
-    const { data: filaSkills } = await supabase
-      .from("fila_skills")
-      .select("skill_id, nivel_minimo")
-      .eq("fila_id", filaId);
+    let query = supabase
+      .from('conversations')
+      .select('id', { count: 'exact', head: true })
+      .eq('chat_status', 'em_fila');
 
-    if (!filaSkills || filaSkills.length === 0) {
-      // Se fila não tem skills, usa round robin
-      return roteamentoRoundRobin(filaId);
+    if (filaId) {
+      query = query.eq('fila_id', filaId);
     }
 
-    const atendentes = await buscarAtendentesDisponiveis(filaId);
-    if (atendentes.length === 0) return null;
-
-    // Buscar skills de cada atendente
-    const atendentesComSkills = await Promise.all(
-      atendentes.map(async (atendente) => {
-        const { data: atendenteSkills } = await supabase
-          .from("atendente_skills")
-          .select("skill_id, nivel")
-          .eq("atendente_id", atendente.id);
-
-        return {
-          atendente,
-          skills: atendenteSkills || []
-        };
-      })
-    );
-
-    // Filtrar atendentes que possuem as skills necessárias
-    const atendentesQualificados = atendentesComSkills.filter(({ skills }) => {
-      return filaSkills.every(filaSkill => {
-        const atendenteSkill = skills.find(s => s.skill_id === filaSkill.skill_id);
-        return atendenteSkill && atendenteSkill.nivel >= filaSkill.nivel_minimo;
-      });
-    });
-
-    if (atendentesQualificados.length === 0) {
-      // Nenhum atendente qualificado, retorna null
-      return null;
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
     }
 
-    // Entre os qualificados, escolhe o com maior nível médio
-    const atendentesComNivelMedio = atendentesQualificados.map(({ atendente, skills }) => {
-      const nivelMedio = skills.reduce((sum, s) => sum + s.nivel, 0) / skills.length;
-      return { atendente, nivelMedio };
-    });
+    const { count } = await query;
+    return count || 0;
 
-    atendentesComNivelMedio.sort((a, b) => b.nivelMedio - a.nivelMedio);
-    return atendentesComNivelMedio[0].atendente.id;
   } catch (error) {
-    console.error("Erro no roteamento por skill:", error);
-    return roteamentoRoundRobin(filaId);
+    console.error('Erro ao obter tamanho da fila:', error);
+    return 0;
   }
 };
 
-// Roteamento por Prioridade
-const roteamentoPorPrioridade = async (filaId: string): Promise<string | null> => {
-  try {
-    // Buscar atendentes com suas prioridades na fila
-    const { data: filaAtendentes } = await supabase
-      .from("atendente_filas")
-      .select("atendente_id, prioridade, atendente:atendentes(*)")
-      .eq("fila_id", filaId)
-      .order("prioridade", { ascending: false });
-
-    if (!filaAtendentes || filaAtendentes.length === 0) return null;
-
-    // Filtrar atendentes disponíveis
-    const atendentesDisponiveis = [];
-    for (const fa of filaAtendentes) {
-      const atendente = fa.atendente as any;
-      if (atendente.status === 'disponivel' && atendente.aceita_novos_chats) {
-        const { data: chatsAtivos } = await supabase
-          .from("conversations")
-          .select("id")
-          .eq("atendente_atual_id", atendente.id)
-          .in("chat_status", ["em_atendimento", "aguardando_cliente"]);
-
-        if ((chatsAtivos?.length || 0) < atendente.max_chats_simultaneos) {
-          atendentesDisponiveis.push(atendente);
-        }
-      }
-    }
-
-    if (atendentesDisponiveis.length === 0) return null;
-    return atendentesDisponiveis[0].id; // Já está ordenado por prioridade
-  } catch (error) {
-    console.error("Erro no roteamento por prioridade:", error);
-    return roteamentoRoundRobin(filaId);
-  }
-};
-
-// Função principal de roteamento
-export const rotearChat = async (
-  chatId: string,
-  customerId: string,
+/**
+ * Busca métricas de roteamento
+ */
+export const obterMetricasRoteamento = async (
   estabelecimentoId: string,
-  filaId?: string
-): Promise<boolean> => {
+  dataInicio?: string,
+  dataFim?: string
+) => {
   try {
-    // 1. Verificar carteira fixa
-    const atendenteCarteira = await verificarCarteiraFixa(customerId, estabelecimentoId);
-    if (atendenteCarteira) {
-      await atribuirChat(chatId, atendenteCarteira, filaId || null);
-      return true;
+    let query = supabase
+      .from('metricas_atendente')
+      .select('*');
+
+    if (dataInicio) {
+      query = query.gte('data', dataInicio);
     }
 
-    // 2. Determinar fila
-    let filaParaRotear = filaId;
-    if (!filaParaRotear) {
-      // Buscar fila padrão ou fila com maior prioridade
-      const { data: filas } = await supabase
-        .from("filas_atendimento")
-        .select("id")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .eq("ativa", true)
-        .order("prioridade", { ascending: false })
-        .limit(1);
-
-      if (!filas || filas.length === 0) {
-        console.log("Nenhuma fila ativa encontrada");
-        return false;
-      }
-      filaParaRotear = filas[0].id;
+    if (dataFim) {
+      query = query.lte('data', dataFim);
     }
 
-    // 3. Buscar tipo de roteamento da fila
-    const { data: fila } = await supabase
-      .from("filas_atendimento")
-      .select("tipo_roteamento, mensagem_fila")
-      .eq("id", filaParaRotear)
-      .single();
+    const { data, error } = await query;
 
-    if (!fila) {
-      console.log("Fila não encontrada");
-      return false;
-    }
+    if (error) throw error;
+    return data;
 
-    // 4. Aplicar estratégia de roteamento
-    let atendenteId: string | null = null;
-
-    switch (fila.tipo_roteamento) {
-      case "round_robin":
-        atendenteId = await roteamentoRoundRobin(filaParaRotear);
-        break;
-      case "por_disponibilidade":
-        atendenteId = await roteamentoPorDisponibilidade(filaParaRotear);
-        break;
-      case "por_skill":
-        atendenteId = await roteamentoPorSkill(filaParaRotear);
-        break;
-      case "por_prioridade":
-        atendenteId = await roteamentoPorPrioridade(filaParaRotear);
-        break;
-      case "por_carteira":
-        // Já verificado acima
-        atendenteId = null;
-        break;
-      default:
-        atendenteId = await roteamentoRoundRobin(filaParaRotear);
-    }
-
-    if (atendenteId) {
-      await atribuirChat(chatId, atendenteId, filaParaRotear);
-      return true;
-    } else {
-      // Colocar em fila de espera
-      await colocarEmFila(chatId, filaParaRotear, fila.mensagem_fila);
-      return false;
-    }
   } catch (error) {
-    console.error("Erro ao rotear chat:", error);
-    return false;
+    console.error('Erro ao buscar métricas:', error);
+    return [];
   }
 };
 
-// Atribuir chat a atendente
-const atribuirChat = async (chatId: string, atendenteId: string, filaId: string | null) => {
-  await supabase
-    .from("conversations")
-    .update({
-      atendente_atual_id: atendenteId,
-      fila_id: filaId,
-      chat_status: "em_atendimento",
-      tempo_atendimento_inicio: new Date().toISOString(),
-      bot_active: false
-    })
-    .eq("id", chatId);
-};
-
-// Colocar chat em fila de espera
-const colocarEmFila = async (chatId: string, filaId: string, mensagemFila?: string) => {
-  await supabase
-    .from("conversations")
-    .update({
-      fila_id: filaId,
-      chat_status: "em_fila",
-      tempo_espera_inicio: new Date().toISOString()
-    })
-    .eq("id", chatId);
-
-  // Enviar mensagem de fila se configurada
-  if (mensagemFila) {
-    await supabase
-      .from("messages")
-      .insert({
-        conversation_id: chatId,
-        sender: "system",
-        text: mensagemFila
-      });
-  }
-};
-
-// Processar fila automaticamente (chamar periodicamente)
-export const processarFila = async (estabelecimentoId: string) => {
-  try {
-    // Buscar chats em fila
-    const { data: chatsEmFila } = await supabase
-      .from("conversations")
-      .select("id, customer_id, fila_id")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .eq("chat_status", "em_fila")
-      .order("tempo_espera_inicio", { ascending: true });
-
-    if (!chatsEmFila || chatsEmFila.length === 0) return;
-
-    // Tentar rotear cada chat
-    for (const chat of chatsEmFila) {
-      await rotearChat(chat.id, chat.customer_id, estabelecimentoId, chat.fila_id || undefined);
-    }
-  } catch (error) {
-    console.error("Erro ao processar fila:", error);
-  }
-};
+// Alias para compatibilidade
+export const processarFila = processarFilaEspera;
