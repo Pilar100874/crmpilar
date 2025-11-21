@@ -154,9 +154,17 @@ export const DashboardAtendenteComponent = ({ dashboard, onChangeStatus }: Dashb
             {dashboard.skills.length === 0 ? (
               <p className="text-muted-foreground">Nenhuma skill configurada</p>
             ) : (
-              dashboard.skills.map((skillData) => (
+              dashboard.skills.map((skillData: any) => (
                 <div key={skillData.id} className="flex items-center justify-between p-2 border rounded">
-                  <span className="font-medium">{skillData.skill.nome}</span>
+                  <div className="flex items-center gap-2">
+                    {skillData.skill?.cor && (
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: skillData.skill.cor }}
+                      />
+                    )}
+                    <span className="font-medium">{skillData.skill?.nome || 'Skill sem nome'}</span>
+                  </div>
                   <Badge variant="outline">Nível {skillData.nivel}</Badge>
                 </div>
               ))
