@@ -63,7 +63,7 @@ export const DashboardSupervisorComponent = ({ dashboard, onForcarTransferencia,
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Math.round(dashboard.metricas_gerais.tempo_medio_espera / 60)}min
+              {dashboard.metricas_gerais.tempo_medio_espera}min
             </div>
           </CardContent>
         </Card>
