@@ -850,36 +850,6 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
             </>
           )}
 
-          {/* Configurações específicas para Simulador */}
-          {data.type === 'simulador' && (
-            <>
-              <div className="space-y-2">
-                <Label>Simulação de Cenário</Label>
-                <p className="text-sm text-muted-foreground">
-                  Teste o fluxo com dados simulados
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Dados de Teste (JSON)</Label>
-                <Textarea
-                  placeholder='{"cliente": "João", "canal": "whatsapp"}'
-                  value={data.config.dadosTeste || ''}
-                  onChange={(e) => updateConfig('dadosTeste', e.target.value)}
-                  rows={6}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label>Log Detalhado</Label>
-                <Switch
-                  checked={data.config.logDetalhado || false}
-                  onCheckedChange={(checked) => updateConfig('logDetalhado', checked)}
-                />
-              </div>
-            </>
-          )}
-
           {/* Configurações específicas para Analytics */}
           {data.type === 'analytics' && (
             <>

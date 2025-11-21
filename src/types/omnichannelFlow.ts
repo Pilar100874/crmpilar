@@ -6,7 +6,6 @@ export type OmnichannelBlockType =
   | 'horario'
   | 'webhook'
   | 'aguardar'
-  | 'simulador'
   | 'analytics'
   | 'inicio';
 
