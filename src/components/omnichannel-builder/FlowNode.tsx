@@ -5,7 +5,11 @@ import {
   User, 
   Award, 
   GitBranch,
-  Play
+  PlayCircle,
+  Clock,
+  Webhook,
+  Timer,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OmnichannelBlockType } from "@/types/omnichannelFlow";
@@ -22,11 +26,16 @@ interface FlowNodeProps {
 }
 
 const nodeIcons: Record<OmnichannelBlockType, React.ReactNode> = {
-  inicio: <Play className="h-5 w-5" />,
+  inicio: <PlayCircle className="h-5 w-5" />,
   fila: <Users className="h-5 w-5" />,
   atendente: <User className="h-5 w-5" />,
   skill: <Award className="h-5 w-5" />,
   regra_roteamento: <GitBranch className="h-5 w-5" />,
+  horario: <Clock className="h-5 w-5" />,
+  webhook: <Webhook className="h-5 w-5" />,
+  aguardar: <Timer className="h-5 w-5" />,
+  simulador: <PlayCircle className="h-5 w-5" />,
+  analytics: <BarChart3 className="h-5 w-5" />,
 };
 
 const nodeColors: Record<OmnichannelBlockType, string> = {
@@ -35,6 +44,11 @@ const nodeColors: Record<OmnichannelBlockType, string> = {
   atendente: "bg-purple-100 dark:bg-purple-900/20 border-purple-500",
   skill: "bg-orange-100 dark:bg-orange-900/20 border-orange-500",
   regra_roteamento: "bg-cyan-100 dark:bg-cyan-900/20 border-cyan-500",
+  horario: "bg-amber-100 dark:bg-amber-900/20 border-amber-500",
+  webhook: "bg-teal-100 dark:bg-teal-900/20 border-teal-500",
+  aguardar: "bg-pink-100 dark:bg-pink-900/20 border-pink-500",
+  simulador: "bg-indigo-100 dark:bg-indigo-900/20 border-indigo-500",
+  analytics: "bg-emerald-100 dark:bg-emerald-900/20 border-emerald-500",
 };
 
 export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {

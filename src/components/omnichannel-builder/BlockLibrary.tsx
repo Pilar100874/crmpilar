@@ -1,4 +1,4 @@
-import { Users, User, Award, GitBranch } from "lucide-react";
+import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { OmnichannelBlockType } from "@/types/omnichannelFlow";
@@ -43,6 +43,41 @@ const blocks: BlockItem[] = [
     icon: <GitBranch className="h-5 w-5" />,
     description: "Define condições de distribuição",
     color: "text-purple-500"
+  },
+  {
+    type: "horario",
+    label: "Horário de Funcionamento",
+    icon: <Clock className="h-5 w-5" />,
+    description: "Define horários de atendimento",
+    color: "text-orange-500"
+  },
+  {
+    type: "webhook",
+    label: "Webhook",
+    icon: <Webhook className="h-5 w-5" />,
+    description: "Integra com sistemas externos",
+    color: "text-cyan-500"
+  },
+  {
+    type: "aguardar",
+    label: "Aguardar",
+    icon: <Timer className="h-5 w-5" />,
+    description: "Adiciona delay no fluxo",
+    color: "text-pink-500"
+  },
+  {
+    type: "simulador",
+    label: "Simulador de Teste",
+    icon: <PlayCircle className="h-5 w-5" />,
+    description: "Testa o fluxo de roteamento",
+    color: "text-indigo-500"
+  },
+  {
+    type: "analytics",
+    label: "Analytics",
+    icon: <BarChart3 className="h-5 w-5" />,
+    description: "Visualiza métricas do fluxo",
+    color: "text-emerald-500"
   },
 ];
 
