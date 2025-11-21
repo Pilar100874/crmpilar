@@ -3,6 +3,11 @@ export type OmnichannelBlockType =
   | 'atendente' 
   | 'skill' 
   | 'regra_roteamento'
+  | 'horario'
+  | 'webhook'
+  | 'aguardar'
+  | 'simulador'
+  | 'analytics'
   | 'inicio';
 
 export interface OmnichannelNode {

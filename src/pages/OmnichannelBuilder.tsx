@@ -122,6 +122,11 @@ export default function OmnichannelBuilder() {
         atendente: "Atendente",
         skill: "Skill Requerida",
         regra_roteamento: "Regra de Roteamento",
+        horario: "Horário de Funcionamento",
+        webhook: "Webhook",
+        aguardar: "Aguardar",
+        simulador: "Simulador de Teste",
+        analytics: "Analytics",
         inicio: "Início"
       };
 

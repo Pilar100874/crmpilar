@@ -336,6 +336,296 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
               </div>
             </>
           )}
+
+          {/* Configurações específicas para Horário */}
+          {data.type === 'horario' && (
+            <>
+              <div className="space-y-2">
+                <Label>Dias da Semana *</Label>
+                <div className="grid grid-cols-7 gap-1">
+                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((dia, index) => (
+                    <Button
+                      key={dia}
+                      type="button"
+                      variant={(data.config.diasSemana || []).includes(index) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const dias = data.config.diasSemana || [];
+                        const novosDias = dias.includes(index)
+                          ? dias.filter((d: number) => d !== index)
+                          : [...dias, index];
+                        updateConfig('diasSemana', novosDias);
+                      }}
+                      className="text-xs p-1"
+                    >
+                      {dia}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Início *</Label>
+                  <Input
+                    type="time"
+                    value={data.config.horarioInicio || ''}
+                    onChange={(e) => updateConfig('horarioInicio', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fim *</Label>
+                  <Input
+                    type="time"
+                    value={data.config.horarioFim || ''}
+                    onChange={(e) => updateConfig('horarioFim', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Ação Fora do Horário *</Label>
+                <Select
+                  value={data.config.acaoForaHorario || ''}
+                  onValueChange={(value) => updateConfig('acaoForaHorario', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bloquear">Bloquear</SelectItem>
+                    <SelectItem value="fila">Enviar para Fila</SelectItem>
+                    <SelectItem value="mensagem">Mensagem Automática</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {data.config.acaoForaHorario === 'mensagem' && (
+                <div className="space-y-2">
+                  <Label>Mensagem</Label>
+                  <Textarea
+                    placeholder="Digite a mensagem..."
+                    value={data.config.mensagemForaHorario || ''}
+                    onChange={(e) => updateConfig('mensagemForaHorario', e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Configurações específicas para Webhook */}
+          {data.type === 'webhook' && (
+            <>
+              <div className="space-y-2">
+                <Label>URL do Webhook *</Label>
+                <Input
+                  placeholder="https://..."
+                  value={data.config.webhookUrl || ''}
+                  onChange={(e) => updateConfig('webhookUrl', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Método HTTP *</Label>
+                <Select
+                  value={data.config.metodo || 'POST'}
+                  onValueChange={(value) => updateConfig('metodo', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="PATCH">PATCH</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Headers (JSON)</Label>
+                <Textarea
+                  placeholder='{"Authorization": "Bearer token"}'
+                  value={data.config.headers || ''}
+                  onChange={(e) => updateConfig('headers', e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Body (JSON)</Label>
+                <Textarea
+                  placeholder='{"campo": "valor"}'
+                  value={data.config.body || ''}
+                  onChange={(e) => updateConfig('body', e.target.value)}
+                  rows={4}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Aguardar Resposta</Label>
+                <Switch
+                  checked={data.config.aguardarResposta || false}
+                  onCheckedChange={(checked) => updateConfig('aguardarResposta', checked)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Timeout (segundos)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={data.config.timeout || 10}
+                  onChange={(e) => updateConfig('timeout', parseInt(e.target.value))}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Configurações específicas para Aguardar */}
+          {data.type === 'aguardar' && (
+            <>
+              <div className="space-y-2">
+                <Label>Tempo de Espera (segundos) *</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="3600"
+                  placeholder="60"
+                  value={data.config.tempoEspera || ''}
+                  onChange={(e) => updateConfig('tempoEspera', parseInt(e.target.value))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tipo de Espera *</Label>
+                <Select
+                  value={data.config.tipoEspera || ''}
+                  onValueChange={(value) => updateConfig('tipoEspera', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixo">Tempo Fixo</SelectItem>
+                    <SelectItem value="dinamico">Dinâmico</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Notificar Cliente</Label>
+                <Switch
+                  checked={data.config.notificarCliente || false}
+                  onCheckedChange={(checked) => updateConfig('notificarCliente', checked)}
+                />
+              </div>
+
+              {data.config.notificarCliente && (
+                <div className="space-y-2">
+                  <Label>Mensagem de Espera</Label>
+                  <Textarea
+                    placeholder="Aguarde um momento..."
+                    value={data.config.mensagemEspera || ''}
+                    onChange={(e) => updateConfig('mensagemEspera', e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Configurações específicas para Simulador */}
+          {data.type === 'simulador' && (
+            <>
+              <div className="space-y-2">
+                <Label>Simulação de Cenário</Label>
+                <p className="text-sm text-muted-foreground">
+                  Teste o fluxo com dados simulados
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Dados de Teste (JSON)</Label>
+                <Textarea
+                  placeholder='{"cliente": "João", "canal": "whatsapp"}'
+                  value={data.config.dadosTeste || ''}
+                  onChange={(e) => updateConfig('dadosTeste', e.target.value)}
+                  rows={6}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Log Detalhado</Label>
+                <Switch
+                  checked={data.config.logDetalhado || false}
+                  onCheckedChange={(checked) => updateConfig('logDetalhado', checked)}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Configurações específicas para Analytics */}
+          {data.type === 'analytics' && (
+            <>
+              <div className="space-y-2">
+                <Label>Métricas a Monitorar</Label>
+                <div className="space-y-2">
+                  {[
+                    { id: 'tempo_medio', label: 'Tempo Médio' },
+                    { id: 'taxa_transferencia', label: 'Taxa de Transferência' },
+                    { id: 'satisfacao', label: 'Satisfação' },
+                    { id: 'abandonos', label: 'Taxa de Abandono' },
+                    { id: 'resolucao_primeiro', label: 'Resolução 1º Contato' }
+                  ].map((metrica) => (
+                    <div key={metrica.id} className="flex items-center space-x-2">
+                      <Switch
+                        id={metrica.id}
+                        checked={(data.config.metricas || []).includes(metrica.id)}
+                        onCheckedChange={(checked) => {
+                          const metricas = data.config.metricas || [];
+                          const novasMetricas = checked
+                            ? [...metricas, metrica.id]
+                            : metricas.filter((m: string) => m !== metrica.id);
+                          updateConfig('metricas', novasMetricas);
+                        }}
+                      />
+                      <Label htmlFor={metrica.id} className="text-sm">{metrica.label}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Período de Análise</Label>
+                <Select
+                  value={data.config.periodoAnalise || 'dia'}
+                  onValueChange={(value) => updateConfig('periodoAnalise', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hora">Última Hora</SelectItem>
+                    <SelectItem value="dia">Último Dia</SelectItem>
+                    <SelectItem value="semana">Última Semana</SelectItem>
+                    <SelectItem value="mes">Último Mês</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Alertas Ativos</Label>
+                <Switch
+                  checked={data.config.alertasAtivos || false}
+                  onCheckedChange={(checked) => updateConfig('alertasAtivos', checked)}
+                />
+              </div>
+            </>
+          )}
         </div>
       </ScrollArea>
     </Card>
