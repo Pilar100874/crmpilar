@@ -22,8 +22,20 @@ export default function DashboardSupervisorPage() {
     init();
   }, []);
 
+  useEffect(() => {
+    if (dashboard) {
+      console.log('[DashboardSupervisorPage] Dashboard atualizado:', {
+        filas: dashboard.filas?.length || 0,
+        atendentes: dashboard.atendentes?.length || 0,
+        metricas: dashboard.metricas_gerais
+      });
+    }
+  }, [dashboard]);
+
   const init = async () => {
+    console.log('[DashboardSupervisorPage] Iniciando...');
     const estabId = await getEstabelecimentoId();
+    console.log('[DashboardSupervisorPage] Estabelecimento ID:', estabId);
     if (estabId) {
       setEstabelecimentoId(estabId);
     }
