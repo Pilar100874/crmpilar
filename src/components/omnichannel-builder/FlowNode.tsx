@@ -52,9 +52,18 @@ const nodeColors: Record<OmnichannelBlockType, string> = {
   analytics: "bg-emerald-100 dark:bg-emerald-900/20 border-emerald-500",
 };
 
+// Blocos que têm múltiplas saídas
+const multipleOutputNodes: OmnichannelBlockType[] = [
+  "regra_roteamento",
+  "horario",
+  "skill",
+  "webhook"
+];
+
 export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
   const { type, label, isSkipped } = data;
   const hasNote = !!data.config.nota;
+  const hasMultipleOutputs = multipleOutputNodes.includes(type);
 
   return (
     <div
@@ -92,11 +101,48 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
         )}
       </div>
 
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!bg-primary !w-3 !h-3"
-      />
+      {/* Handles de saída */}
+      {hasMultipleOutputs ? (
+        <>
+          {/* Saída "Sim/Sucesso/Dentro" - esquerda */}
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="yes"
+            className="!bg-green-500 !w-3 !h-3"
+            style={{ left: '35%' }}
+          />
+          <div 
+            className="absolute bottom-0 left-[35%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-green-600 dark:text-green-400"
+          >
+            {type === "webhook" ? "Sucesso" : 
+             type === "horario" ? "Dentro" :
+             type === "skill" ? "Tem" : "Sim"}
+          </div>
+
+          {/* Saída "Não/Erro/Fora" - direita */}
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="no"
+            className="!bg-red-500 !w-3 !h-3"
+            style={{ left: '65%' }}
+          />
+          <div 
+            className="absolute bottom-0 left-[65%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-red-600 dark:text-red-400"
+          >
+            {type === "webhook" ? "Erro" : 
+             type === "horario" ? "Fora" :
+             type === "skill" ? "Não tem" : "Não"}
+          </div>
+        </>
+      ) : (
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          className="!bg-primary !w-3 !h-3"
+        />
+      )}
     </div>
   );
 });
