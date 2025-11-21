@@ -22,6 +22,7 @@ interface FlowNodeProps {
     label: string;
     config: any;
     isSkipped?: boolean;
+    isHighlighted?: boolean;
   };
   selected?: boolean;
 }
@@ -61,7 +62,7 @@ const multipleOutputNodes: OmnichannelBlockType[] = [
 ];
 
 export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
-  const { type, label, isSkipped } = data;
+  const { type, label, isSkipped, isHighlighted } = data;
   const hasNote = !!data.config.nota;
   const hasMultipleOutputs = multipleOutputNodes.includes(type);
 
@@ -71,7 +72,8 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
         "relative rounded-lg border-2 p-4 shadow-lg min-w-[260px] transition-all",
         nodeColors[type],
         selected && "ring-2 ring-primary ring-offset-2",
-        isSkipped && "opacity-50"
+        isSkipped && "opacity-50",
+        isHighlighted && "ring-4 ring-green-500 ring-offset-2 shadow-xl scale-105 animate-pulse"
       )}
     >
       {type !== "inicio" && (
