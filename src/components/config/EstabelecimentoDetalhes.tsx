@@ -971,6 +971,18 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                   <CanaisAtendimentoCRUD estabelecimentoId={estabelecimentoId} />
                 </AccordionContent>
               </AccordionItem>
+
+              <AccordionItem value="omnichannel-workflows" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Workflow className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Workflow Builder Omnichannel</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <OmnichannelFlowsCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
             </Accordion>
           </AccordionContent>
         </AccordionItem>
@@ -1152,18 +1164,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <CalendarioRegrasCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="omnichannel-workflows" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Workflow className="w-4 h-4 text-primary" />
-              <span className="font-medium">Workflow Builder Omnichannel</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <OmnichannelFlowsCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
