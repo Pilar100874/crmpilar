@@ -35,7 +35,6 @@ export const MENU_CONFIG = [
   { id: "Videochamada", label: "Videochamada" },
   { id: "Configurações", label: "Configurações" },
   { id: "Config Geral", label: "Configurações Gerais" },
-  { id: "Config Filas", label: "Filas de Atendimento" },
   { id: "Config Skills", label: "Skills de Atendimento" },
   { id: "Omnichannel Builder", label: "Workflow Builder Omnichannel" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },
