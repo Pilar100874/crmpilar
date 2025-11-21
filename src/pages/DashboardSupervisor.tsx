@@ -59,7 +59,7 @@ export default function DashboardSupervisorPage() {
     
     try {
       setProcessandoFila(true);
-      await processarFila(estabelecimentoId);
+      await processarFila();
       toast.success("Fila processada com sucesso");
     } catch (error) {
       console.error("Erro ao processar fila:", error);
