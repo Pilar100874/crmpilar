@@ -36,7 +36,6 @@ const nodeIcons: Record<OmnichannelBlockType, React.ReactNode> = {
   horario: <Clock className="h-5 w-5" />,
   webhook: <Webhook className="h-5 w-5" />,
   aguardar: <Timer className="h-5 w-5" />,
-  simulador: <PlayCircle className="h-5 w-5" />,
   analytics: <BarChart3 className="h-5 w-5" />,
 };
 
@@ -49,7 +48,6 @@ const nodeColors: Record<OmnichannelBlockType, string> = {
   horario: "bg-amber-100 dark:bg-amber-900/20 border-amber-500",
   webhook: "bg-teal-100 dark:bg-teal-900/20 border-teal-500",
   aguardar: "bg-pink-100 dark:bg-pink-900/20 border-pink-500",
-  simulador: "bg-indigo-100 dark:bg-indigo-900/20 border-indigo-500",
   analytics: "bg-emerald-100 dark:bg-emerald-900/20 border-emerald-500",
 };
 

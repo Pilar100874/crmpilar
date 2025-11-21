@@ -147,7 +147,6 @@ export default function OmnichannelBuilder() {
         horario: "Horário de Funcionamento",
         webhook: "Webhook",
         aguardar: "Aguardar",
-        simulador: "Simulador de Teste",
         analytics: "Analytics",
         inicio: "Início"
       };

@@ -73,13 +73,6 @@ const blocks: BlockItem[] = [
     color: "text-pink-500"
   },
   {
-    type: "simulador",
-    label: "Simulador de Teste",
-    icon: <PlayCircle className="h-5 w-5" />,
-    description: "Testa o fluxo de roteamento",
-    color: "text-indigo-500"
-  },
-  {
     type: "analytics",
     label: "Analytics",
     icon: <BarChart3 className="h-5 w-5" />,
