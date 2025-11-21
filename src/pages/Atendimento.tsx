@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, BarChart3 } from "lucide-react";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -25,6 +25,8 @@ import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
 import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
+import { useAtendimento } from "@/hooks/useAtendimento";
+import { DashboardAtendenteComponent } from "@/components/atendimento/DashboardAtendente";
 
 interface Conversation {
   id: string;
@@ -158,6 +160,11 @@ export default function Atendimento() {
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [orcamentosEmAndamentoCount, setOrcamentosEmAndamentoCount] = useState(0);
   const [usuarioId, setUsuarioId] = useState<string>("");
+  
+  // Dashboard atendente states
+  const [atendenteId, setAtendenteId] = useState<string>("");
+  const { useDashboardAtendente } = useAtendimento();
+  const { dashboard: dashboardAtendente, loading: dashboardLoading } = useDashboardAtendente(atendenteId);
 
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
@@ -165,7 +172,29 @@ export default function Atendimento() {
   useEffect(() => {
     const initUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setUsuarioId(user.id);
+      if (user) {
+        setUsuarioId(user.id);
+        
+        // Buscar o usuario_id na tabela usuarios
+        const { data: usuarioData } = await supabase
+          .from("usuarios")
+          .select("id, estabelecimento_id")
+          .eq("auth_user_id", user.id)
+          .single();
+        
+        if (usuarioData) {
+          // Buscar se o usuário é atendente
+          const { data: atendenteData } = await supabase
+            .from("atendentes")
+            .select("id")
+            .eq("usuario_id", usuarioData.id)
+            .single();
+          
+          if (atendenteData) {
+            setAtendenteId(atendenteData.id);
+          }
+        }
+      }
     };
     initUser();
   }, []);
@@ -1563,10 +1592,18 @@ ${recentMessages}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <TabsList className="grid grid-cols-4 gap-2 md:gap-3 mx-2 mt-1 mb-0 flex-shrink-0 bg-transparent p-0 border-b border-border/50">
+          <TabsList className="grid grid-cols-5 gap-1 md:gap-2 mx-2 mt-1 mb-0 flex-shrink-0 bg-transparent p-0 border-b border-border/50">
+            <TabsTrigger 
+              value="dashboard" 
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-0.5 md:px-1 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              title="Dashboard"
+            >
+              <BarChart3 className="w-4 h-4 md:w-4.5 md:h-4.5" />
+            </TabsTrigger>
             <TabsTrigger 
               value="chat" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-0.5 md:px-1 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              title="Chat"
             >
               <MessageSquare className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {activeConversationsCount > 0 && (
@@ -1577,7 +1614,8 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="agenda" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-0.5 md:px-1 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              title="Agenda"
             >
               <Calendar className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {todayTasksCount > 0 && (
@@ -1588,7 +1626,8 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="email" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-0.5 md:px-1 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              title="Email"
             >
               <Mail className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {unreadEmailsCount > 0 && (
@@ -1599,7 +1638,8 @@ ${recentMessages}
             </TabsTrigger>
             <TabsTrigger 
               value="orcamento" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              className="relative flex items-center justify-center py-2 md:py-2.5 px-0.5 md:px-1 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
+              title="Orçamento"
             >
               <Receipt className="w-4 h-4 md:w-4.5 md:h-4.5" />
               {orcamentosEmAndamentoCount > 0 && (
@@ -1609,6 +1649,28 @@ ${recentMessages}
               )}
             </TabsTrigger>
           </TabsList>
+          
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 px-2 md:px-3">
+            {!atendenteId ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">Você não está cadastrado como atendente</p>
+              </div>
+            ) : dashboardLoading ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <p className="text-sm">Carregando dashboard...</p>
+              </div>
+            ) : (
+              <DashboardAtendenteComponent 
+                dashboard={dashboardAtendente} 
+                onChangeStatus={(status) => {
+                  // Implementar mudança de status aqui se necessário
+                  console.log("Mudança de status:", status);
+                }}
+              />
+            )}
+          </TabsContent>
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 px-2 md:px-0">
