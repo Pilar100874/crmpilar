@@ -453,16 +453,6 @@ export default function OmnichannelBuilder() {
           <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
-              size="icon"
-              onClick={() => setIsBlockLibraryExpanded(true)}
-              className="rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-              title="Adicionar blocos"
-            >
-              <Plus className="h-5 w-5" />
-            </Button>
-
-            <Button
-              variant="outline"
               size="sm"
               onClick={() => setShowSimulator(!showSimulator)}
             >
@@ -535,20 +525,46 @@ export default function OmnichannelBuilder() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Validator (se ativo) */}
-          {showValidator && (
-            <div className="w-96 border-r p-4">
-              <FlowValidator
-                nodes={nodes}
-                edges={edges}
-                onNodeClick={(nodeId) => {
-                  const node = nodes.find(n => n.id === nodeId);
-                  if (node) setSelectedNode(node);
-                }}
-              />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header do Canvas */}
+          <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-2 sm:gap-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-foreground">WORKFLOW OMNICHANNEL</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Arraste blocos para criar seu fluxo de atendimento
+                </p>
+              </div>
+              
+              <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setIsBlockLibraryExpanded(true)}
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                  title="Adicionar blocos"
+                >
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Área de trabalho */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Validator (se ativo) */}
+            {showValidator && (
+              <div className="w-96 border-r p-4">
+                <FlowValidator
+                  nodes={nodes}
+                  edges={edges}
+                  onNodeClick={(nodeId) => {
+                    const node = nodes.find(n => n.id === nodeId);
+                    if (node) setSelectedNode(node);
+                  }}
+                />
+              </div>
+            )}
 
           {/* Biblioteca de Blocos */}
           <BlockLibrary 
@@ -628,6 +644,7 @@ export default function OmnichannelBuilder() {
             )}
           </div>
         </div>
+      </div>
 
         {/* Logs de Execução */}
         {id && (
