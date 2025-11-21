@@ -1,18 +1,49 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { 
   Users, 
   User, 
   Award, 
   GitBranch,
-  PlayCircle,
   Clock,
   Webhook,
   Timer,
   BarChart3,
-  MessageSquare
+  MessageSquare,
+  MoreVertical,
+  Pause,
+  SkipForward,
+  Copy,
+  Trash2,
+  X,
+  ArrowRight
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { OmnichannelBlockType } from "@/types/omnichannelFlow";
 
 interface FlowNodeProps {
@@ -23,32 +54,27 @@ interface FlowNodeProps {
     config: any;
     isSkipped?: boolean;
     isHighlighted?: boolean;
+    isBreakpoint?: boolean;
+    onSetBreakpoint?: (nodeId: string) => void;
+    onSetSkip?: (nodeId: string) => void;
+    onDuplicate?: (nodeId: string) => void;
+    onDelete?: (nodeId: string) => void;
+    onClearDebug?: (nodeId: string) => void;
+    onAddNote?: (nodeId: string) => void;
   };
   selected?: boolean;
 }
 
-const nodeIcons: Record<OmnichannelBlockType, React.ReactNode> = {
-  inicio: <PlayCircle className="h-5 w-5" />,
-  fila: <Users className="h-5 w-5" />,
-  atendente: <User className="h-5 w-5" />,
-  skill: <Award className="h-5 w-5" />,
-  regra_roteamento: <GitBranch className="h-5 w-5" />,
-  horario: <Clock className="h-5 w-5" />,
-  webhook: <Webhook className="h-5 w-5" />,
-  aguardar: <Timer className="h-5 w-5" />,
-  analytics: <BarChart3 className="h-5 w-5" />,
-};
-
-const nodeColors: Record<OmnichannelBlockType, string> = {
-  inicio: "bg-green-100 dark:bg-green-900/20 border-green-500",
-  fila: "bg-blue-100 dark:bg-blue-900/20 border-blue-500",
-  atendente: "bg-purple-100 dark:bg-purple-900/20 border-purple-500",
-  skill: "bg-orange-100 dark:bg-orange-900/20 border-orange-500",
-  regra_roteamento: "bg-cyan-100 dark:bg-cyan-900/20 border-cyan-500",
-  horario: "bg-amber-100 dark:bg-amber-900/20 border-amber-500",
-  webhook: "bg-teal-100 dark:bg-teal-900/20 border-teal-500",
-  aguardar: "bg-pink-100 dark:bg-pink-900/20 border-pink-500",
-  analytics: "bg-emerald-100 dark:bg-emerald-900/20 border-emerald-500",
+const nodeIcons: Record<OmnichannelBlockType, any> = {
+  inicio: GitBranch,
+  fila: Users,
+  atendente: User,
+  skill: Award,
+  regra_roteamento: GitBranch,
+  horario: Clock,
+  webhook: Webhook,
+  aguardar: Timer,
+  analytics: BarChart3,
 };
 
 // Blocos que têm múltiplas saídas
@@ -60,90 +86,289 @@ const multipleOutputNodes: OmnichannelBlockType[] = [
 ];
 
 export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
-  const { type, label, isSkipped, isHighlighted } = data;
+  const { type, label, isSkipped, isHighlighted, isBreakpoint } = data;
   const hasNote = !!data.config.nota;
   const hasMultipleOutputs = multipleOutputNodes.includes(type);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
+  const IconComponent = nodeIcons[type];
+
+  const getCardClassName = () => {
+    const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
+    
+    if (isBreakpoint) {
+      return `${baseClass} bg-white border-2 border-orange-500 ${
+        selected ? "ring-2 ring-primary" : ""
+      }`;
+    }
+    
+    if (isSkipped) {
+      return `${baseClass} bg-white/60 border-2 border-slate-400 opacity-60 ${
+        selected ? "ring-2 ring-primary" : ""
+      }`;
+    }
+
+    if (isHighlighted) {
+      return `${baseClass} bg-white border-2 border-green-500 ring-4 ring-green-500 ring-offset-2 shadow-xl scale-105 animate-pulse`;
+    }
+    
+    return `${baseClass} bg-white border border-slate-300 ${
+      selected 
+        ? "ring-2 ring-primary border-primary" 
+        : "hover:border-slate-400"
+    }`;
+  };
 
   return (
-    <div
-      className={cn(
-        "relative rounded-lg border-2 p-4 shadow-lg min-w-[260px] transition-all",
-        nodeColors[type],
-        selected && "ring-2 ring-primary ring-offset-2",
-        isSkipped && "opacity-50",
-        isHighlighted && "ring-4 ring-green-500 ring-offset-2 shadow-xl scale-105 animate-pulse"
-      )}
-    >
-      {type !== "inicio" && (
-        <Handle
-          type="target"
-          position={Position.Top}
-          className="!bg-primary !w-3 !h-3"
-        />
-      )}
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <Card className={getCardClassName()}>
+            {type !== "inicio" && (
+              <Handle
+                type="target"
+                position={Position.Top}
+                className="!bg-primary !w-3 !h-3 !border-2 !border-white"
+              />
+            )}
 
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 text-foreground">
-          {nodeIcons[type]}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-foreground truncate">
-            {label}
-          </div>
-          <div className="text-xs text-muted-foreground capitalize">
-            {type.replace('_', ' ')}
-          </div>
-        </div>
-        {hasNote && (
-          <div className="flex-shrink-0 text-amber-500" title="Este bloco tem uma nota">
-            <MessageSquare className="h-4 w-4" />
-          </div>
-        )}
-      </div>
+            <div className="p-3">
+              {/* Cabeçalho com checkbox, ícone, título e menu */}
+              <div className="flex items-start gap-2 mb-3">
+                <Checkbox className="mt-0.5 h-4 w-4 border-slate-300" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {IconComponent && (
+                      <div className="p-1 rounded bg-primary/5 border border-primary/20">
+                        <IconComponent className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                    )}
+                    <span className="font-semibold text-sm text-slate-900 truncate">
+                      {label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 line-clamp-2">
+                    {type.replace(/_/g, ' ')}
+                  </p>
+                </div>
+                <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1 hover:bg-slate-100 rounded transition-colors">
+                      <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-lg">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        data.onSetBreakpoint?.(id);
+                        setDropdownOpen(false);
+                      }}
+                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                    >
+                      <Pause className="w-4 h-4 mr-2 text-orange-500" />
+                      {isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem
+                      onClick={() => {
+                        data.onSetSkip?.(id);
+                        setDropdownOpen(false);
+                      }}
+                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                    >
+                      <SkipForward className="w-4 h-4 mr-2 text-slate-500" />
+                      {isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem
+                      onClick={() => {
+                        data.onDuplicate?.(id);
+                        setDropdownOpen(false);
+                      }}
+                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                    >
+                      <Copy className="w-4 h-4 mr-2 text-primary" />
+                      Duplicar Bloco
+                    </DropdownMenuItem>
 
-      {/* Handles de saída */}
-      {hasMultipleOutputs ? (
-        <>
-          {/* Saída "Sim/Sucesso/Dentro" - esquerda */}
-          <Handle
-            type="source"
-            position={Position.Bottom}
-            id="yes"
-            className="!bg-green-500 !w-3 !h-3"
-            style={{ left: '35%' }}
-          />
-          <div 
-            className="absolute bottom-0 left-[35%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-green-600 dark:text-green-400"
+                    <DropdownMenuItem
+                      onClick={() => {
+                        data.onAddNote?.(id);
+                        setDropdownOpen(false);
+                      }}
+                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2 text-amber-500" />
+                      {hasNote ? "Editar Nota" : "Adicionar Nota"}
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator className="bg-slate-200" />
+                    
+                    <DropdownMenuItem
+                      onClick={() => {
+                        data.onClearDebug?.(id);
+                        setDropdownOpen(false);
+                      }}
+                      disabled={!isBreakpoint && !isSkipped}
+                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <X className="w-4 h-4 mr-2 text-red-500" />
+                      Liberar Bloco
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator className="bg-slate-200" />
+                    
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setDeleteDialogOpen(true);
+                        setDropdownOpen(false);
+                      }}
+                      className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Excluir Bloco
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {hasNote && (
+                <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                  <div className="flex items-start gap-2">
+                    <MessageSquare className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span className="line-clamp-2">{data.config.nota}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Handles de saída */}
+            {hasMultipleOutputs ? (
+              <>
+                {/* Saída "Sim/Sucesso/Dentro" - esquerda */}
+                <Handle
+                  type="source"
+                  position={Position.Bottom}
+                  id="yes"
+                  className="!bg-green-500 !w-3 !h-3"
+                  style={{ left: '35%' }}
+                />
+                <div 
+                  className="absolute bottom-0 left-[35%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-green-600 dark:text-green-400"
+                >
+                  {type === "webhook" ? "Sucesso" : 
+                   type === "horario" ? "Dentro" :
+                   type === "skill" ? "Tem" : "Sim"}
+                </div>
+
+                {/* Saída "Não/Erro/Fora" - direita */}
+                <Handle
+                  type="source"
+                  position={Position.Bottom}
+                  id="no"
+                  className="!bg-red-500 !w-3 !h-3"
+                  style={{ left: '65%' }}
+                />
+                <div 
+                  className="absolute bottom-0 left-[65%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-red-600 dark:text-red-400"
+                >
+                  {type === "webhook" ? "Erro" : 
+                   type === "horario" ? "Fora" :
+                   type === "skill" ? "Não tem" : "Não"}
+                </div>
+              </>
+            ) : (
+              <Handle
+                type="source"
+                position={Position.Bottom}
+                className="!bg-primary !w-3 !h-3"
+              />
+            )}
+          </Card>
+        </ContextMenuTrigger>
+
+        {/* Menu de contexto (botão direito) */}
+        <ContextMenuContent className="w-56 bg-white border-slate-200 shadow-lg">
+          <ContextMenuItem
+            onClick={() => data.onSetBreakpoint?.(id)}
+            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
           >
-            {type === "webhook" ? "Sucesso" : 
-             type === "horario" ? "Dentro" :
-             type === "skill" ? "Tem" : "Sim"}
-          </div>
-
-          {/* Saída "Não/Erro/Fora" - direita */}
-          <Handle
-            type="source"
-            position={Position.Bottom}
-            id="no"
-            className="!bg-red-500 !w-3 !h-3"
-            style={{ left: '65%' }}
-          />
-          <div 
-            className="absolute bottom-0 left-[65%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-red-600 dark:text-red-400"
+            <Pause className="w-4 h-4 mr-2 text-orange-500" />
+            {isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
+          </ContextMenuItem>
+          
+          <ContextMenuItem
+            onClick={() => data.onSetSkip?.(id)}
+            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
           >
-            {type === "webhook" ? "Erro" : 
-             type === "horario" ? "Fora" :
-             type === "skill" ? "Não tem" : "Não"}
-          </div>
-        </>
-      ) : (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className="!bg-primary !w-3 !h-3"
-        />
-      )}
-    </div>
+            <SkipForward className="w-4 h-4 mr-2 text-slate-500" />
+            {isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
+          </ContextMenuItem>
+          
+          <ContextMenuItem
+            onClick={() => data.onDuplicate?.(id)}
+            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+          >
+            <Copy className="w-4 h-4 mr-2 text-primary" />
+            Duplicar Bloco
+          </ContextMenuItem>
+
+          <ContextMenuItem
+            onClick={() => data.onAddNote?.(id)}
+            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4 mr-2 text-amber-500" />
+            {hasNote ? "Editar Nota" : "Adicionar Nota"}
+          </ContextMenuItem>
+          
+          <ContextMenuSeparator className="bg-slate-200" />
+          
+          <ContextMenuItem
+            onClick={() => data.onClearDebug?.(id)}
+            disabled={!isBreakpoint && !isSkipped}
+            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <X className="w-4 h-4 mr-2 text-red-500" />
+            Liberar Bloco
+          </ContextMenuItem>
+          
+          <ContextMenuSeparator className="bg-slate-200" />
+          
+          <ContextMenuItem
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Excluir Bloco
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este bloco? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                data.onDelete?.(id);
+                setDeleteDialogOpen(false);
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 });
 

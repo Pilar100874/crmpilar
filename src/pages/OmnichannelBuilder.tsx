@@ -20,7 +20,6 @@ import { FlowValidator } from "@/components/omnichannel-builder/FlowValidator";
 import { TemplateSelector } from "@/components/omnichannel-builder/TemplateSelector";
 import { FlowVersionHistory } from "@/components/omnichannel-builder/FlowVersionHistory";
 import { FlowExportImport } from "@/components/omnichannel-builder/FlowExportImport";
-import { BlockContextMenu } from "@/components/omnichannel-builder/BlockContextMenu";
 import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
 import { BotTriggerSelector } from "@/components/omnichannel-builder/BotTriggerSelector";
 import { FlowExecutionLogs } from "@/components/omnichannel-builder/FlowExecutionLogs";
@@ -202,23 +201,85 @@ export default function OmnichannelBuilder() {
     [setNodes, selectedNode]
   );
 
-  // Novos handlers
-  const handleDuplicateNode = useCallback((node: OmnichannelNode) => {
+  // Handlers para debug e controle dos blocos
+  const handleSetBreakpoint = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isBreakpoint: !node.data.isBreakpoint,
+              isSkipped: false, // Remove skip ao adicionar breakpoint
+            },
+          };
+        }
+        return node;
+      })
+    );
+    toast.success("Breakpoint atualizado");
+  }, [setNodes]);
+
+  const handleSetSkip = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isSkipped: !node.data.isSkipped,
+              isBreakpoint: false, // Remove breakpoint ao pular
+            },
+          };
+        }
+        return node;
+      })
+    );
+    toast.success("Estado de pulo atualizado");
+  }, [setNodes]);
+
+  const handleClearDebug = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isBreakpoint: false,
+              isSkipped: false,
+            },
+          };
+        }
+        return node;
+      })
+    );
+    toast.success("Bloco liberado");
+  }, [setNodes]);
+
+  const handleDuplicateNode = useCallback((nodeId: string) => {
+    const nodeToDuplicate = nodes.find(n => n.id === nodeId);
+    if (!nodeToDuplicate) return;
+
     const newNode: OmnichannelNode = {
-      ...node,
+      ...nodeToDuplicate,
       id: `node_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
       position: {
-        x: node.position.x + 50,
-        y: node.position.y + 50
+        x: nodeToDuplicate.position.x + 50,
+        y: nodeToDuplicate.position.y + 50
       },
       data: {
-        ...node.data,
-        label: `${node.data.label} (cópia)`
+        ...nodeToDuplicate.data,
+        label: `${nodeToDuplicate.data.label} (cópia)`,
+        isBreakpoint: false,
+        isSkipped: false,
       }
     };
     setNodes(nds => [...nds, newNode]);
     toast.success("Bloco duplicado");
-  }, [setNodes]);
+  }, [nodes, setNodes]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
     setNodes(nds => nds.filter(n => n.id !== nodeId));
@@ -501,7 +562,21 @@ export default function OmnichannelBuilder() {
           {/* Canvas */}
           <div className="flex-1" ref={reactFlowWrapper}>
             <ReactFlow
-              nodes={nodes}
+              nodes={nodes.map(node => ({
+                ...node,
+                data: {
+                  ...node.data,
+                  onSetBreakpoint: handleSetBreakpoint,
+                  onSetSkip: handleSetSkip,
+                  onDuplicate: handleDuplicateNode,
+                  onDelete: handleDeleteNode,
+                  onClearDebug: handleClearDebug,
+                  onAddNote: (nodeId: string) => {
+                    setCurrentNoteNodeId(nodeId);
+                    setShowNoteDialog(true);
+                  },
+                }
+              }))}
               edges={edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}

@@ -18,6 +18,14 @@ export interface OmnichannelNode {
     label: string;
     config: any;
     isSkipped?: boolean;
+    isBreakpoint?: boolean;
+    isHighlighted?: boolean;
+    onSetBreakpoint?: (nodeId: string) => void;
+    onSetSkip?: (nodeId: string) => void;
+    onDuplicate?: (nodeId: string) => void;
+    onDelete?: (nodeId: string) => void;
+    onClearDebug?: (nodeId: string) => void;
+    onAddNote?: (nodeId: string) => void;
   };
 }
 
