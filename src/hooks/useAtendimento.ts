@@ -101,9 +101,15 @@ export const useAtendimento = () => {
     const [dashboard, setDashboard] = useState<DashboardSupervisor | null>(null);
 
     useEffect(() => {
+      if (!estabelecimentoId) {
+        console.log('[Dashboard Supervisor] Aguardando estabelecimentoId...');
+        return;
+      }
+
       const loadDashboard = async () => {
         try {
           setLoading(true);
+          console.log('[Dashboard Supervisor] Carregando dados para estabelecimento:', estabelecimentoId);
 
           // Buscar filas
           const { data: filasData, error: filasError } = await supabase
@@ -111,7 +117,11 @@ export const useAtendimento = () => {
             .select("*")
             .eq("estabelecimento_id", estabelecimentoId);
 
-          if (filasError) throw filasError;
+          if (filasError) {
+            console.error('[Dashboard Supervisor] Erro ao buscar filas:', filasError);
+            throw filasError;
+          }
+          console.log('[Dashboard Supervisor] Filas encontradas:', filasData?.length || 0);
 
           // Buscar atendentes
           const { data: atendentesData, error: atendentesError } = await supabase
@@ -119,20 +129,65 @@ export const useAtendimento = () => {
             .select("*, usuario:usuarios(nome, email)")
             .eq("estabelecimento_id", estabelecimentoId);
 
-          if (atendentesError) throw atendentesError;
+          if (atendentesError) {
+            console.error('[Dashboard Supervisor] Erro ao buscar atendentes:', atendentesError);
+            throw atendentesError;
+          }
+          console.log('[Dashboard Supervisor] Atendentes encontrados:', atendentesData?.length || 0);
 
-          // Buscar métricas gerais
+          // Buscar métricas gerais - chats ativos
           const { data: chatsAtivos } = await supabase
             .from("conversations")
-            .select("id")
+            .select("id, tempo_atendimento_inicio")
             .eq("estabelecimento_id", estabelecimentoId)
             .in("chat_status", ["em_atendimento", "aguardando_cliente"]);
 
+          console.log('[Dashboard Supervisor] Chats ativos:', chatsAtivos?.length || 0);
+
+          // Buscar chats em fila com tempo de espera
           const { data: chatsEmFila } = await supabase
             .from("conversations")
-            .select("id")
+            .select("id, tempo_espera_inicio")
             .eq("estabelecimento_id", estabelecimentoId)
             .eq("chat_status", "em_fila");
+
+          console.log('[Dashboard Supervisor] Chats em fila:', chatsEmFila?.length || 0);
+
+          // Calcular tempo médio de espera
+          let tempoMedioEspera = 0;
+          if (chatsEmFila && chatsEmFila.length > 0) {
+            const agora = new Date();
+            const temposEspera = chatsEmFila
+              .filter(chat => chat.tempo_espera_inicio)
+              .map(chat => {
+                const inicio = new Date(chat.tempo_espera_inicio!);
+                return (agora.getTime() - inicio.getTime()) / 1000 / 60; // minutos
+              });
+            
+            if (temposEspera.length > 0) {
+              tempoMedioEspera = temposEspera.reduce((a, b) => a + b, 0) / temposEspera.length;
+            }
+          }
+
+          // Calcular taxa de abandono (últimas 24 horas)
+          const umDiaAtras = new Date();
+          umDiaAtras.setHours(umDiaAtras.getHours() - 24);
+
+          const { data: chatsRecentes } = await supabase
+            .from("conversations")
+            .select("id, chat_status, motivo_encerramento")
+            .eq("estabelecimento_id", estabelecimentoId)
+            .gte("created_at", umDiaAtras.toISOString());
+
+          let taxaAbandono = 0;
+          if (chatsRecentes && chatsRecentes.length > 0) {
+            const chatsAbandonados = chatsRecentes.filter(
+              chat => chat.chat_status === "encerrado" && 
+                     (chat.motivo_encerramento?.toLowerCase().includes('abandono') ||
+                      chat.motivo_encerramento?.toLowerCase().includes('timeout'))
+            ).length;
+            taxaAbandono = (chatsAbandonados / chatsRecentes.length) * 100;
+          }
 
           // Processar dados para o dashboard
           const filasProcessadas = await Promise.all((filasData || []).map(async (fila) => {
@@ -173,19 +228,27 @@ export const useAtendimento = () => {
             };
           }));
 
-          setDashboard({
+          const dashboardData = {
             filas: filasProcessadas,
             atendentes: atendentesProcessados,
             metricas_gerais: {
               total_chats_ativos: chatsAtivos?.length || 0,
               total_chats_em_fila: chatsEmFila?.length || 0,
-              tempo_medio_espera: 0, // TODO: calcular
-              taxa_abandono: 0 // TODO: calcular
+              tempo_medio_espera: Math.round(tempoMedioEspera),
+              taxa_abandono: Math.round(taxaAbandono * 10) / 10 // 1 casa decimal
             }
+          };
+
+          console.log('[Dashboard Supervisor] Dashboard montado:', {
+            filas: dashboardData.filas.length,
+            atendentes: dashboardData.atendentes.length,
+            metricas: dashboardData.metricas_gerais
           });
 
+          setDashboard(dashboardData);
+
         } catch (err) {
-          console.error("Erro ao carregar dashboard do supervisor:", err);
+          console.error("[Dashboard Supervisor] Erro ao carregar dashboard:", err);
           setError(err instanceof Error ? err.message : "Erro desconhecido");
         } finally {
           setLoading(false);
