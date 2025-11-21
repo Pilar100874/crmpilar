@@ -17,7 +17,22 @@ export const useOmnichannelRouting = () => {
     try {
       console.log('[Omnichannel] Processando mensagem recebida:', { customerId, estabelecimentoId, canal });
 
-      // 1. Primeiro, tentar reabrir chat existente
+      // 1. Verificar se existe chat ativo ou em fila
+      const { data: chatAtivo } = await supabase
+        .from('conversations')
+        .select('id, chat_status')
+        .eq('customer_id', customerId)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('canal', canal)
+        .in('chat_status', ['novo', 'em_fila', 'em_atendimento', 'transferido', 'aguardando_cliente', 'reaberto'])
+        .maybeSingle();
+
+      if (chatAtivo) {
+        console.log('[Omnichannel] Chat já existe e está ativo:', chatAtivo.id);
+        return chatAtivo.id;
+      }
+
+      // 2. Tentar reabrir chat encerrado recente
       const reabrirResponse = await supabase.functions.invoke('reabrir-chat-automatico', {
         body: { customerId, estabelecimentoId, canal }
       });
@@ -28,28 +43,27 @@ export const useOmnichannelRouting = () => {
         return reabrirResponse.data.conversationId;
       }
 
-          // 2. Se não pode reabrir, criar nova conversa
-          if (reabrirResponse.data?.shouldCreateNew) {
-            console.log('[Omnichannel] Criando nova conversa');
-            
-            const { data: newConv, error: createError } = await supabase
-              .from('conversations')
-              .insert([{
-                customer_id: customerId,
-                estabelecimento_id: estabelecimentoId,
-                canal: canal,
-                chat_status: 'em_fila' as const,
-                tempo_espera_inicio: new Date().toISOString(),
-                origem_abertura: 'mensagem_cliente'
-              }])
-              .select()
-              .single();
+      // 3. Se não pode reabrir, criar nova conversa
+      if (reabrirResponse.data?.shouldCreateNew) {
+        console.log('[Omnichannel] Criando nova conversa');
+        
+        const { data: newConv, error: createError } = await supabase
+          .from('conversations')
+          .insert([{
+            customer_id: customerId,
+            estabelecimento_id: estabelecimentoId,
+            canal: canal,
+            chat_status: 'novo' as const,
+            origem_abertura: 'mensagem_cliente'
+          }])
+          .select()
+          .single();
 
-            if (createError) throw createError;
+        if (createError) throw createError;
 
         console.log('[Omnichannel] Nova conversa criada:', newConv.id);
         
-        // 3. Rotear o chat
+        // 4. Rotear o chat automaticamente
         await rotearChat(newConv.id, customerId, estabelecimentoId, canal);
         
         return newConv.id;
