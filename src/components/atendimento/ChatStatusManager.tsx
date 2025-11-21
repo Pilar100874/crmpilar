@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -13,29 +14,40 @@ import {
   XCircle, 
   RotateCcw, 
   Users,
-  AlertCircle
+  AlertCircle,
+  ArrowRightLeft,
+  Tag,
+  PauseCircle
 } from "lucide-react";
 import type { ChatStatus, ChatPrioridade } from "@/types/atendimento";
+import { TransferenciaDialog } from "./TransferenciaDialog";
+import { EncerrarChatDialog } from "./EncerrarChatDialog";
+import { ChatTagsManager } from "./ChatTagsManager";
+import { useChatStatus } from "@/hooks/useChatStatus";
 
 interface ChatStatusManagerProps {
   chatId: string;
   currentStatus: ChatStatus;
   currentPrioridade: ChatPrioridade | null;
-  onChangeStatus: (status: ChatStatus) => void;
-  onChangePrioridade: (prioridade: ChatPrioridade) => void;
-  onEncerrarChat: () => void;
-  onReabrirChat: () => void;
+  estabelecimentoId: string;
+  filaId?: string | null;
+  atendenteId?: string | null;
+  onRefresh?: () => void;
 }
 
 export const ChatStatusManager = ({
   chatId,
   currentStatus,
   currentPrioridade,
-  onChangeStatus,
-  onChangePrioridade,
-  onEncerrarChat,
-  onReabrirChat
+  estabelecimentoId,
+  filaId,
+  atendenteId,
+  onRefresh
 }: ChatStatusManagerProps) => {
+  const [showTransferenciaDialog, setShowTransferenciaDialog] = useState(false);
+  const [showEncerrarDialog, setShowEncerrarDialog] = useState(false);
+  const [showTagsManager, setShowTagsManager] = useState(false);
+  const { mudarPrioridade, colocarEmEspera, reabrirChat, loading } = useChatStatus();
   const getStatusIcon = (status: ChatStatus) => {
     const icons = {
       novo: AlertCircle,
@@ -73,41 +85,130 @@ export const ChatStatusManager = ({
     return variants[prioridade || "normal"];
   };
 
+  const handleChangePrioridade = async (prioridade: ChatPrioridade) => {
+    await mudarPrioridade(chatId, prioridade);
+    onRefresh?.();
+  };
+
+  const handleColocarEmEspera = async () => {
+    await colocarEmEspera(chatId);
+    onRefresh?.();
+  };
+
+  const handleReabrirChat = async () => {
+    await reabrirChat(chatId);
+    onRefresh?.();
+  };
+
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <div className="flex items-center gap-2">
-        <Badge variant="outline" className="flex items-center gap-1">
-          {getStatusIcon(currentStatus)}
-          {getStatusLabel(currentStatus)}
-        </Badge>
+    <>
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="flex items-center gap-1">
+            {getStatusIcon(currentStatus)}
+            {getStatusLabel(currentStatus)}
+          </Badge>
+        </div>
+
+        <Select
+          value={currentPrioridade || "normal"}
+          onValueChange={(value) => handleChangePrioridade(value as ChatPrioridade)}
+          disabled={loading}
+        >
+          <SelectTrigger className="w-[140px] h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="baixa">🟢 Baixa</SelectItem>
+            <SelectItem value="normal">🟡 Normal</SelectItem>
+            <SelectItem value="alta">🟠 Alta</SelectItem>
+            <SelectItem value="urgente">🔴 Urgente</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {currentStatus !== "encerrado" && (
+          <>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setShowTransferenciaDialog(true)}
+              disabled={loading}
+            >
+              <ArrowRightLeft className="h-3 w-3 mr-1" />
+              Transferir
+            </Button>
+
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setShowTagsManager(true)}
+              disabled={loading}
+            >
+              <Tag className="h-3 w-3 mr-1" />
+              Tags
+            </Button>
+
+            {currentStatus === "em_atendimento" && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleColocarEmEspera}
+                disabled={loading}
+              >
+                <PauseCircle className="h-3 w-3 mr-1" />
+                Em Espera
+              </Button>
+            )}
+
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setShowEncerrarDialog(true)}
+              disabled={loading}
+            >
+              <XCircle className="h-3 w-3 mr-1" />
+              Encerrar
+            </Button>
+          </>
+        )}
+
+        {currentStatus === "encerrado" && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={handleReabrirChat}
+            disabled={loading}
+          >
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Reabrir
+          </Button>
+        )}
       </div>
 
-      <Select
-        value={currentPrioridade || "normal"}
-        onValueChange={(value) => onChangePrioridade(value as ChatPrioridade)}
-      >
-        <SelectTrigger className="w-[140px] h-8">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="baixa">🟢 Baixa</SelectItem>
-          <SelectItem value="normal">🟡 Normal</SelectItem>
-          <SelectItem value="alta">🟠 Alta</SelectItem>
-          <SelectItem value="urgente">🔴 Urgente</SelectItem>
-        </SelectContent>
-      </Select>
+      <TransferenciaDialog
+        open={showTransferenciaDialog}
+        onOpenChange={setShowTransferenciaDialog}
+        chatId={chatId}
+        estabelecimentoId={estabelecimentoId}
+        currentFilaId={filaId}
+        currentAtendenteId={atendenteId}
+      />
 
-      {currentStatus === "encerrado" ? (
-        <Button size="sm" variant="outline" onClick={onReabrirChat}>
-          <RotateCcw className="h-3 w-3 mr-1" />
-          Reabrir
-        </Button>
-      ) : (
-        <Button size="sm" variant="outline" onClick={onEncerrarChat}>
-          <XCircle className="h-3 w-3 mr-1" />
-          Encerrar
-        </Button>
+      <EncerrarChatDialog
+        open={showEncerrarDialog}
+        onOpenChange={setShowEncerrarDialog}
+        chatId={chatId}
+        onSuccess={onRefresh}
+      />
+
+      {showTagsManager && (
+        <div className="mt-2">
+          <ChatTagsManager
+            chatId={chatId}
+            estabelecimentoId={estabelecimentoId}
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 };
