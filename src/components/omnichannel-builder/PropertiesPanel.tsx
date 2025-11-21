@@ -91,6 +91,20 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
             />
           </div>
 
+          {/* Nota/Comentário */}
+          {data.type !== "inicio" && (
+            <div className="space-y-2">
+              <Label>Nota/Comentário</Label>
+              <Textarea
+                value={data.config.nota || ""}
+                onChange={(e) => updateConfig("nota", e.target.value)}
+                placeholder="Adicione contexto para a equipe..."
+                rows={3}
+                className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800"
+              />
+            </div>
+          )}
+
           {/* Configurações específicas por tipo */}
           {data.type === "fila" && (
             <>

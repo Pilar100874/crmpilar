@@ -16,13 +16,21 @@ import Layout from "@/components/Layout";
 import { FlowNode } from "@/components/omnichannel-builder/FlowNode";
 import { BlockLibrary } from "@/components/omnichannel-builder/BlockLibrary";
 import { PropertiesPanel } from "@/components/omnichannel-builder/PropertiesPanel";
+import { FlowValidator } from "@/components/omnichannel-builder/FlowValidator";
+import { TemplateSelector } from "@/components/omnichannel-builder/TemplateSelector";
+import { FlowVersionHistory } from "@/components/omnichannel-builder/FlowVersionHistory";
+import { FlowSearch } from "@/components/omnichannel-builder/FlowSearch";
+import { FlowExportImport } from "@/components/omnichannel-builder/FlowExportImport";
+import { BlockContextMenu } from "@/components/omnichannel-builder/BlockContextMenu";
+import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
+import { BotTriggerSelector } from "@/components/omnichannel-builder/BotTriggerSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Play, ArrowLeft } from "lucide-react";
+import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import type { OmnichannelBlockType, OmnichannelNode, OmnichannelFlowData } from "@/types/omnichannelFlow";
+import type { OmnichannelBlockType, OmnichannelNode, OmnichannelEdge, OmnichannelFlowData } from "@/types/omnichannelFlow";
 
 const nodeTypes: NodeTypes = {
   custom: FlowNode,
@@ -51,6 +59,13 @@ export default function OmnichannelBuilder() {
   const [isSaving, setIsSaving] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [draggedType, setDraggedType] = useState<OmnichannelBlockType | null>(null);
+  
+  // Novos estados para as funcionalidades
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
+  const [showValidator, setShowValidator] = useState(false);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
 
   // Carregar fluxo existente
   useEffect(() => {
@@ -181,6 +196,100 @@ export default function OmnichannelBuilder() {
     [setNodes, selectedNode]
   );
 
+  // Novos handlers
+  const handleDuplicateNode = useCallback((node: OmnichannelNode) => {
+    const newNode: OmnichannelNode = {
+      ...node,
+      id: `node_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+      position: {
+        x: node.position.x + 50,
+        y: node.position.y + 50
+      },
+      data: {
+        ...node.data,
+        label: `${node.data.label} (cópia)`
+      }
+    };
+    setNodes(nds => [...nds, newNode]);
+    toast.success("Bloco duplicado");
+  }, [setNodes]);
+
+  const handleDeleteNode = useCallback((nodeId: string) => {
+    setNodes(nds => nds.filter(n => n.id !== nodeId));
+    setEdges(eds => eds.filter(e => e.source !== nodeId && e.target !== nodeId));
+    if (selectedNode?.id === nodeId) {
+      setSelectedNode(null);
+    }
+    toast.success("Bloco removido");
+  }, [setNodes, setEdges, selectedNode]);
+
+  const handleAddNote = useCallback((nodeId: string) => {
+    setCurrentNoteNodeId(nodeId);
+    setShowNoteDialog(true);
+  }, []);
+
+  const handleSaveNote = useCallback((note: string) => {
+    if (currentNoteNodeId) {
+      onUpdateNode(currentNoteNodeId, {
+        config: {
+          ...nodes.find(n => n.id === currentNoteNodeId)?.data.config,
+          nota: note
+        }
+      });
+      toast.success("Nota salva");
+    }
+  }, [currentNoteNodeId, nodes, onUpdateNode]);
+
+  const handleLoadTemplate = useCallback((templateNodes: OmnichannelNode[], templateEdges: OmnichannelEdge[]) => {
+    setNodes(templateNodes);
+    setEdges(templateEdges);
+    toast.success("Template carregado");
+  }, [setNodes, setEdges]);
+
+  const handleRestoreVersion = useCallback((flowData: OmnichannelFlowData) => {
+    setNodes(flowData.nodes);
+    setEdges(flowData.edges);
+  }, [setNodes, setEdges]);
+
+  const handleImportFlow = useCallback((flowData: OmnichannelFlowData, name: string) => {
+    setNodes(flowData.nodes);
+    setEdges(flowData.edges);
+    setFlowName(name);
+  }, [setNodes, setEdges]);
+
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node) {
+      setSelectedNode(node);
+      // Centro o nó selecionado (opcional - requer instância do ReactFlow)
+    }
+  }, [nodes]);
+
+  const saveVersion = async (flowId: string) => {
+    try {
+      // Buscar próximo número de versão
+      const { data: versions } = await supabase
+        .from("omnichannel_flow_versions")
+        .select("version_number")
+        .eq("flow_id", flowId)
+        .order("version_number", { ascending: false })
+        .limit(1);
+
+      const nextVersion = (versions?.[0]?.version_number || 0) + 1;
+
+      await supabase
+        .from("omnichannel_flow_versions")
+        .insert({
+          flow_id: flowId,
+          version_number: nextVersion,
+          flow_data: { nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } } as any,
+          change_description: `Versão ${nextVersion}`
+        });
+    } catch (error) {
+      console.error("Erro ao salvar versão:", error);
+    }
+  };
+
   const handleSave = async () => {
     if (!flowName.trim()) {
       toast.error("Informe um nome para o fluxo");
@@ -214,6 +323,9 @@ export default function OmnichannelBuilder() {
 
         if (error) throw error;
         toast.success("Fluxo atualizado com sucesso!");
+        
+        // Salvar versão
+        if (id) await saveVersion(id);
       } else {
         // Criar novo fluxo
         const { error } = await supabase
@@ -227,6 +339,18 @@ export default function OmnichannelBuilder() {
 
         if (error) throw error;
         toast.success("Fluxo criado com sucesso!");
+        
+        // Criar versão inicial
+        const { data: newFlow } = await supabase
+          .from("omnichannel_flows")
+          .select("id")
+          .eq("estabelecimento_id", estabId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (newFlow) await saveVersion(newFlow.id);
+        
         navigate("/config?section=omnichannel-flows");
       }
     } catch (error) {
@@ -242,7 +366,7 @@ export default function OmnichannelBuilder() {
       <div className="h-screen flex flex-col">
         {/* Header */}
         <div className="bg-background border-b px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1">
+          <div className="flex items-center gap-3 flex-1 flex-wrap">
             <Button
               variant="ghost"
               size="icon"
@@ -250,17 +374,61 @@ export default function OmnichannelBuilder() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
+            
             <Input
               value={flowName}
               onChange={(e) => setFlowName(e.target.value)}
               className="max-w-md"
               placeholder="Nome do fluxo"
             />
+
+            <FlowSearch nodes={nodes} onNodeSelect={handleNodeSelect} />
           </div>
 
           <div className="flex items-center gap-2">
+            <FlowSearch nodes={nodes} onNodeSelect={handleNodeSelect} />
+            
             <Button
               variant="outline"
+              size="sm"
+              onClick={() => setShowValidator(!showValidator)}
+            >
+              <AlertCircle className="h-4 w-4 mr-2" />
+              Validar
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTemplates(true)}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Templates
+            </Button>
+
+            {id && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowVersions(true)}
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  Versões
+                </Button>
+
+                <BotTriggerSelector flowId={id} />
+              </>
+            )}
+
+            <FlowExportImport
+              flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
+              flowName={flowName}
+              onImport={handleImportFlow}
+            />
+
+            <Button
+              variant="default"
               size="sm"
               onClick={handleSave}
               disabled={isSaving}
@@ -273,6 +441,20 @@ export default function OmnichannelBuilder() {
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
+          {/* Validator (se ativo) */}
+          {showValidator && (
+            <div className="w-96 border-r p-4">
+              <FlowValidator
+                nodes={nodes}
+                edges={edges}
+                onNodeClick={(nodeId) => {
+                  const node = nodes.find(n => n.id === nodeId);
+                  if (node) setSelectedNode(node);
+                }}
+              />
+            </div>
+          )}
+
           {/* Biblioteca de Blocos */}
           <div className="w-80 border-r p-4">
             <BlockLibrary onDragStart={onDragStart} />
@@ -312,6 +494,29 @@ export default function OmnichannelBuilder() {
             />
           </div>
         </div>
+
+        {/* Dialogs */}
+        <TemplateSelector
+          open={showTemplates}
+          onOpenChange={setShowTemplates}
+          onSelectTemplate={handleLoadTemplate}
+        />
+
+        {id && (
+          <FlowVersionHistory
+            flowId={id}
+            open={showVersions}
+            onOpenChange={setShowVersions}
+            onRestore={handleRestoreVersion}
+          />
+        )}
+
+        <BlockNoteDialog
+          open={showNoteDialog}
+          onOpenChange={setShowNoteDialog}
+          currentNote={currentNoteNodeId ? nodes.find(n => n.id === currentNoteNodeId)?.data.config.nota : ""}
+          onSave={handleSaveNote}
+        />
       </div>
     </Layout>
   );

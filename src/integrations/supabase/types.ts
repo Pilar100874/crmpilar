@@ -2152,6 +2152,44 @@ export type Database = {
           },
         ]
       }
+      omnichannel_flow_versions: {
+        Row: {
+          change_description: string | null
+          created_at: string
+          created_by: string | null
+          flow_data: Json
+          flow_id: string
+          id: string
+          version_number: number
+        }
+        Insert: {
+          change_description?: string | null
+          created_at?: string
+          created_by?: string | null
+          flow_data: Json
+          flow_id: string
+          id?: string
+          version_number: number
+        }
+        Update: {
+          change_description?: string | null
+          created_at?: string
+          created_by?: string | null
+          flow_data?: Json
+          flow_id?: string
+          id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "omnichannel_flow_versions_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "omnichannel_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       omnichannel_flows: {
         Row: {
           ativo: boolean
