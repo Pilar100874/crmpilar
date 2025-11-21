@@ -12,6 +12,7 @@ interface BlockItem {
   label: string;
   icon: React.ReactNode;
   description: string;
+  color: string;
 }
 
 const blocks: BlockItem[] = [
@@ -19,29 +20,39 @@ const blocks: BlockItem[] = [
     type: "fila",
     label: "Fila de Atendimento",
     icon: <Users className="h-5 w-5" />,
-    description: "Cria uma fila de distribuição de chats"
+    description: "Cria uma fila de distribuição de chats",
+    color: "text-blue-500"
   },
   {
     type: "atendente",
     label: "Atendente",
     icon: <User className="h-5 w-5" />,
-    description: "Define um atendente no fluxo"
+    description: "Define um atendente no fluxo",
+    color: "text-green-500"
   },
   {
     type: "skill",
     label: "Skill Requerida",
     icon: <Award className="h-5 w-5" />,
-    description: "Adiciona requisito de habilidade"
+    description: "Adiciona requisito de habilidade",
+    color: "text-yellow-500"
   },
   {
     type: "regra_roteamento",
     label: "Regra de Roteamento",
     icon: <GitBranch className="h-5 w-5" />,
-    description: "Define condições de distribuição"
+    description: "Define condições de distribuição",
+    color: "text-purple-500"
   },
 ];
 
 export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
+  const handleDragStart = (e: React.DragEvent, type: OmnichannelBlockType) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("application/reactflow", type);
+    onDragStart(type);
+  };
+
   return (
     <Card className="h-full">
       <div className="p-4 border-b">
@@ -57,10 +68,10 @@ export const BlockLibrary = ({ onDragStart }: BlockLibraryProps) => {
             <div
               key={block.type}
               draggable
-              onDragStart={() => onDragStart(block.type)}
+              onDragStart={(e) => handleDragStart(e, block.type)}
               className="flex items-start gap-3 p-3 border rounded-lg cursor-grab active:cursor-grabbing hover:bg-accent hover:border-primary transition-colors"
             >
-              <div className="flex-shrink-0 mt-0.5">
+              <div className={`flex-shrink-0 mt-0.5 ${block.color}`}>
                 {block.icon}
               </div>
               <div className="flex-1 min-w-0">

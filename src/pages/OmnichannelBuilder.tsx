@@ -107,12 +107,22 @@ export default function OmnichannelBuilder() {
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      if (!draggedType || !reactFlowWrapper.current) return;
+      if (!draggedType) return;
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+      const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
+      if (!reactFlowBounds) return;
+
       const position = {
-        x: event.clientX - reactFlowBounds.left - 130,
-        y: event.clientY - reactFlowBounds.top - 40,
+        x: event.clientX - reactFlowBounds.left - 100,
+        y: event.clientY - reactFlowBounds.top - 50,
+      };
+
+      const blockLabels: Record<OmnichannelBlockType, string> = {
+        fila: "Fila de Atendimento",
+        atendente: "Atendente",
+        skill: "Skill Requerida",
+        regra_roteamento: "Regra de Roteamento",
+        inicio: "Início"
       };
 
       const newNode: OmnichannelNode = {
@@ -121,15 +131,15 @@ export default function OmnichannelBuilder() {
         position,
         data: {
           type: draggedType,
-          label: `${draggedType.replace('_', ' ')} ${nodes.length}`,
+          label: blockLabels[draggedType] || draggedType,
           config: {},
         },
       };
 
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) => [...nds, newNode]);
       setDraggedType(null);
     },
-    [draggedType, nodes.length, setNodes]
+    [draggedType, setNodes]
   );
 
   const onNodeClick = useCallback(
