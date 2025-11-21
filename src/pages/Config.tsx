@@ -8,7 +8,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell } from "lucide-react";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
-import { OmnichannelFlowsCRUD } from "@/components/config/OmnichannelFlowsCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
@@ -331,23 +330,6 @@ export default function Config() {
                   })}
                 </div>
               </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="omnichannel-workflows" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Workflow Builder Omnichannel</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Configure o fluxo visual de roteamento de atendimento
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <OmnichannelFlowsCRUD />
             </AccordionContent>
           </AccordionItem>
         </Accordion>
