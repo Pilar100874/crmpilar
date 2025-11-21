@@ -141,7 +141,6 @@ const menuItems: MenuItem[] = [
     icon: Settings,
     subItems: [
       { id: "Config Geral", title: "Configurações", url: "/config", icon: Settings },
-      { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/config?section=omnichannel-flows", icon: Workflow },
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: Globe },
       { id: "Variáveis Globais", title: "Variáveis Globais", url: "/config/variaveis", icon: FileText },
       { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: Megaphone },

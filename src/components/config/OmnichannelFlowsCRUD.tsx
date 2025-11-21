@@ -15,28 +15,32 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { OmnichannelFlow } from "@/types/omnichannelFlow";
 
-export const OmnichannelFlowsCRUD = () => {
+interface OmnichannelFlowsCRUDProps {
+  estabelecimentoId?: string;
+}
+
+export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUDProps) => {
   const navigate = useNavigate();
   const [flows, setFlows] = useState<OmnichannelFlow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadFlows();
-  }, []);
+    if (estabelecimentoId) {
+      loadFlows();
+    }
+  }, [estabelecimentoId]);
 
   const loadFlows = async () => {
+    if (!estabelecimentoId) return;
+    
     try {
-      const estabId = await getEstabelecimentoId();
-      if (!estabId) return;
-
       const { data, error } = await supabase
         .from("omnichannel_flows")
         .select("*")
-        .eq("estabelecimento_id", estabId)
+        .eq("estabelecimento_id", estabelecimentoId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
