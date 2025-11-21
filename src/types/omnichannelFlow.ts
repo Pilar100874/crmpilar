@@ -27,6 +27,7 @@ export interface OmnichannelEdge {
   source: string;
   target: string;
   type?: string;
+  label?: string;
   style?: any;
   markerEnd?: any;
 }
