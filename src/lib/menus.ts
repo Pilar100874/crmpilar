@@ -30,6 +30,7 @@ export const MENU_CONFIG = [
   { id: "Campanhas Marketing", label: "Campanhas" },
   { id: "Relatórios", label: "Relatórios" },
   { id: "Importação Produtos", label: "Importação de Produtos de Terceiro" },
+  { id: "Telefonia", label: "Telefonia" },
   { id: "Softphone", label: "Softphone" },
   { id: "Videochamada", label: "Videochamada" },
   { id: "Configurações", label: "Configurações" },

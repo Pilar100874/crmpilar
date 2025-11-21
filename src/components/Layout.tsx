@@ -126,8 +126,15 @@ const menuItems: MenuItem[] = [
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
   { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: Upload },
-  { id: "Softphone", title: "Softphone", url: "/softphone", icon: Phone },
-  { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: Video },
+  { 
+    id: "Telefonia",
+    title: "Telefonia", 
+    icon: Phone,
+    subItems: [
+      { id: "Softphone", title: "Softphone", url: "/softphone", icon: Phone },
+      { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: Video },
+    ]
+  },
   { 
     id: "Configurações",
     title: "Configurações", 
