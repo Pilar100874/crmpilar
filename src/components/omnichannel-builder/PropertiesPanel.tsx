@@ -168,7 +168,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
             <>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Usar Fila do Sistema</Label>
+                  <Label>Usar Fila Existente</Label>
                   <Switch
                     checked={data.config.usarSistema === true}
                     onCheckedChange={(checked) => updateConfig('usarSistema', checked)}
@@ -176,98 +176,168 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                 </div>
               </div>
 
-              {data.config.usarSistema && (
-                <div className="space-y-2">
-                  <Label>Fila *</Label>
-                  <Select
-                    value={data.config.filaId || ''}
-                    onValueChange={(value) => {
-                      const fila = filas.find(f => f.id === value);
-                      if (fila) {
-                        updateConfig('filaId', value);
-                        updateConfig('filaNome', fila.nome);
-                        updateConfig('tipoRoteamento', fila.tipo_roteamento);
-                        updateConfig('maxChats', fila.max_chats_por_atendente);
-                        updateConfig('prioridade', fila.prioridade);
+              {data.config.usarSistema ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Fila *</Label>
+                    <Select
+                      value={data.config.filaId || ''}
+                      onValueChange={(value) => {
+                        const fila = filas.find(f => f.id === value);
+                        if (fila) {
+                          updateConfig('filaId', value);
+                          updateConfig('filaNome', fila.nome);
+                          updateConfig('tipoRoteamento', fila.tipo_roteamento);
+                          updateConfig('maxChats', fila.max_chats_por_atendente);
+                          updateConfig('prioridade', fila.prioridade);
+                          updateConfig('tempoResposta', fila.tempo_resposta_esperado);
+                          updateConfig('mensagemFila', fila.mensagem_fila);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma fila" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filas.map((fila) => (
+                          <SelectItem key={fila.id} value={fila.id}>
+                            <div className="flex items-center gap-2">
+                              <Database className="h-3 w-3" />
+                              {fila.nome}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {data.config.filaId && (
+                    <div className="p-3 bg-muted rounded-lg space-y-1.5 text-sm">
+                      <p><span className="font-medium">Tipo:</span> {data.config.tipoRoteamento}</p>
+                      <p><span className="font-medium">Max Chats:</span> {data.config.maxChats}</p>
+                      <p><span className="font-medium">Prioridade:</span> {data.config.prioridade}</p>
+                      <p><span className="font-medium">Tempo Resposta:</span> {data.config.tempoResposta}s</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label>Nome da Fila *</Label>
+                    <Input
+                      value={data.config.filaNome || ""}
+                      onChange={(e) => updateConfig("filaNome", e.target.value)}
+                      placeholder="Ex: Suporte Técnico"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tipo de Roteamento *</Label>
+                    <Select
+                      value={data.config.tipoRoteamento || "round_robin"}
+                      onValueChange={(value) => updateConfig("tipoRoteamento", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="round_robin">Round Robin</SelectItem>
+                        <SelectItem value="por_skill">Por Habilidade</SelectItem>
+                        <SelectItem value="por_disponibilidade">Por Disponibilidade</SelectItem>
+                        <SelectItem value="por_prioridade">Por Prioridade</SelectItem>
+                        <SelectItem value="por_carteira">Por Carteira Fixa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Max Chats/Atendente *</Label>
+                      <Input
+                        type="number"
+                        value={data.config.maxChats || 5}
+                        onChange={(e) => updateConfig("maxChats", parseInt(e.target.value) || 5)}
+                        min={1}
+                        max={20}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Prioridade *</Label>
+                      <Input
+                        type="number"
+                        value={data.config.prioridade || 0}
+                        onChange={(e) => updateConfig("prioridade", parseInt(e.target.value) || 0)}
+                        min={0}
+                        max={10}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tempo Resposta (segundos) *</Label>
+                    <Input
+                      type="number"
+                      value={data.config.tempoResposta || 300}
+                      onChange={(e) => updateConfig("tempoResposta", parseInt(e.target.value) || 300)}
+                      min={60}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Mensagem para Fila de Espera</Label>
+                    <Textarea
+                      value={data.config.mensagemFila || ""}
+                      onChange={(e) => updateConfig("mensagemFila", e.target.value)}
+                      placeholder="Aguarde, você será atendido em breve..."
+                      rows={2}
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={async () => {
+                      if (!data.config.filaNome) {
+                        toast.error("Nome da fila é obrigatório");
+                        return;
+                      }
+
+                      try {
+                        const estabId = await getEstabelecimentoId();
+                        const { data: newFila, error } = await supabase
+                          .from("filas_atendimento")
+                          .insert({
+                            estabelecimento_id: estabId,
+                            nome: data.config.filaNome,
+                            descricao: data.config.descricao || null,
+                            tipo_roteamento: data.config.tipoRoteamento || "round_robin",
+                            max_chats_por_atendente: data.config.maxChats || 5,
+                            prioridade: data.config.prioridade || 0,
+                            tempo_resposta_esperado: data.config.tempoResposta || 300,
+                            mensagem_fila: data.config.mensagemFila || null,
+                            ativa: true,
+                          })
+                          .select()
+                          .single();
+
+                        if (error) throw error;
+
+                        updateConfig("filaId", newFila.id);
+                        updateConfig("usarSistema", true);
+                        
+                        toast.success("Fila criada com sucesso!");
+                        loadSystemData();
+                      } catch (error) {
+                        console.error("Erro ao criar fila:", error);
+                        toast.error("Erro ao criar fila");
                       }
                     }}
+                    className="w-full"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma fila" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filas.map((fila) => (
-                        <SelectItem key={fila.id} value={fila.id}>
-                          <div className="flex items-center gap-2">
-                            <Database className="h-3 w-3" />
-                            {fila.nome}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Fila no Sistema
+                  </Button>
+                </>
               )}
-
-              <div className="space-y-2">
-                <Label>Tipo de Roteamento *</Label>
-                <Select
-                  value={data.config.tipoRoteamento || "round_robin"}
-                  onValueChange={(value) => updateConfig("tipoRoteamento", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="round_robin">Round Robin</SelectItem>
-                    <SelectItem value="por_skill">Por Skill</SelectItem>
-                    <SelectItem value="por_disponibilidade">Por Disponibilidade</SelectItem>
-                    <SelectItem value="por_prioridade">Por Prioridade</SelectItem>
-                    <SelectItem value="por_carteira">Por Carteira</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Max Chats por Atendente *</Label>
-                <Input
-                  type="number"
-                  value={data.config.maxChats || 5}
-                  onChange={(e) => updateConfig("maxChats", parseInt(e.target.value) || 5)}
-                  min={1}
-                  max={20}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Prioridade *</Label>
-                <Input
-                  type="number"
-                  value={data.config.prioridade || 0}
-                  onChange={(e) => updateConfig("prioridade", parseInt(e.target.value) || 0)}
-                  min={0}
-                  max={10}
-                />
-                <p className="text-xs text-muted-foreground">0 = baixa, 10 = alta</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tempo Resposta Esperado (segundos)</Label>
-                <Input
-                  type="number"
-                  value={data.config.tempoResposta || 300}
-                  onChange={(e) => updateConfig("tempoResposta", parseInt(e.target.value) || 300)}
-                  min={60}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label>Fila Ativa</Label>
-                <Switch
-                  checked={data.config.ativa !== false}
-                  onCheckedChange={(checked) => updateConfig("ativa", checked)}
-                />
-              </div>
             </>
           )}
 
