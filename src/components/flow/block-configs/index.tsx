@@ -84,3 +84,11 @@ export { GoodbyeConfigNew } from './GoodbyeConfigNew';
 export { KeywordJumpConfigNew } from './KeywordJumpConfigNew';
 export { LeadScoringConfigNew } from './LeadScoringConfigNew';
 export { MessageTemplateConfigNew } from './MessageTemplateConfigNew';
+
+// Routing Blocks
+export {
+  TransferirOmnichannelConfig,
+  EnviarFilaConfig,
+  AtribuirAtendenteConfig,
+  DefinirPrioridadeConfig,
+} from './RoutingBlocks';

@@ -364,6 +364,16 @@ export const PropertiesPanel = ({
           }}
         />;
 
+      // Routing Blocks
+      case "transferir_omnichannel":
+        return <BlockConfigs.TransferirOmnichannelConfig {...configProps} />;
+      case "enviar_fila":
+        return <BlockConfigs.EnviarFilaConfig {...configProps} />;
+      case "atribuir_atendente":
+        return <BlockConfigs.AtribuirAtendenteConfig {...configProps} />;
+      case "definir_prioridade":
+        return <BlockConfigs.DefinirPrioridadeConfig {...configProps} />;
+
       case "start":
         return (
           <div className="space-y-4">
