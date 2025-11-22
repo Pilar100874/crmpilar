@@ -505,6 +505,36 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                 </Select>
               </div>
 
+              {data.config.acaoForaHorario === 'fila' && (
+                <div className="space-y-2">
+                  <Label>Fila de Destino *</Label>
+                  <Select
+                    value={data.config.filaDestinoId || ''}
+                    onValueChange={(value) => {
+                      const fila = filas.find(f => f.id === value);
+                      if (fila) {
+                        updateConfig('filaDestinoId', value);
+                        updateConfig('filaDestinoNome', fila.nome);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma fila" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filas.map((fila) => (
+                        <SelectItem key={fila.id} value={fila.id}>
+                          <div className="flex items-center gap-2">
+                            <Database className="h-3 w-3" />
+                            {fila.nome}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {data.config.acaoForaHorario === 'mensagem' && (
                 <div className="space-y-2">
                   <Label>Mensagem</Label>
