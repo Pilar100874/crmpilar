@@ -35,7 +35,11 @@ export type NodeType =
   | "dynamic_data"
   | "crm_cadastro_empresa"
   | "crm_agenda_rapida"
-  | "crm_gerar_relatorio";
+  | "crm_gerar_relatorio"
+  | "transferir_omnichannel"
+  | "enviar_fila"
+  | "atribuir_atendente"
+  | "definir_prioridade";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -370,6 +374,54 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       relatorioId: "",
       apiVariables: {},
       outputVariable: "relatorio_gerado"
+    },
+  },
+  // Roteamento Omnichannel
+  {
+    type: "transferir_omnichannel",
+    label: "Transferir para Omnichannel",
+    description: "Aciona workflow omnichannel específico",
+    icon: "ArrowRightLeft",
+    color: "text-cyan-600",
+    defaultData: { 
+      workflowId: "",
+      workflowNome: "",
+      contextoChat: true
+    },
+  },
+  {
+    type: "enviar_fila",
+    label: "Enviar para Fila",
+    description: "Envia chat para fila de atendimento",
+    icon: "Users",
+    color: "text-cyan-600",
+    defaultData: { 
+      filaId: "",
+      filaNome: "",
+      prioridade: 0
+    },
+  },
+  {
+    type: "atribuir_atendente",
+    label: "Atribuir Atendente",
+    description: "Atribui chat a atendente específico",
+    icon: "UserCheck",
+    color: "text-cyan-600",
+    defaultData: { 
+      atendenteId: "",
+      atendenteNome: "",
+      forcarAtribuicao: false
+    },
+  },
+  {
+    type: "definir_prioridade",
+    label: "Definir Prioridade",
+    description: "Define prioridade do atendimento",
+    icon: "Flag",
+    color: "text-cyan-600",
+    defaultData: { 
+      prioridade: "normal",
+      motivo: ""
     },
   },
 ];

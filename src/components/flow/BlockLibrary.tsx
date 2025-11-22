@@ -100,6 +100,18 @@ const blockCategories = [
     textHover: "group-hover:text-indigo-700",
     blocks: ["crm_cadastro_empresa", "crm_agenda_rapida", "crm_gerar_relatorio"] as NodeType[],
   },
+  {
+    name: "Roteamento",
+    icon: "ArrowRightLeft",
+    color: "cyan",
+    gradient: "from-cyan-500/10 to-blue-500/10",
+    border: "border-cyan-500/20",
+    borderHover: "hover:border-cyan-500/40",
+    iconColor: "text-cyan-600",
+    iconHover: "group-hover:text-cyan-700",
+    textHover: "group-hover:text-cyan-700",
+    blocks: ["transferir_omnichannel", "enviar_fila", "atribuir_atendente", "definir_prioridade"] as NodeType[],
+  },
 ];
 
 export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: BlockLibraryProps) => {
