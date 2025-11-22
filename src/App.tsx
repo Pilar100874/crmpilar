@@ -42,6 +42,7 @@ import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
 import WebChat from "./pages/WebChat";
 import ConfigSkills from "./pages/ConfigSkills";
+import ConfigFilas from "./pages/ConfigFilas";
 import MonitorarFilas from "./pages/MonitorarFilas";
 import DashboardAtendentePage from "./pages/DashboardAtendente";
 import DashboardSupervisorPage from "./pages/DashboardSupervisor";
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/meus-anexos" element={<MeusAnexos />} />
             <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
             <Route path="/config/skills" element={<ConfigSkills />} />
+            <Route path="/config/filas" element={<ConfigFilas />} />
             <Route path="/monitor-filas" element={<MonitorarFilas />} />
             <Route path="/omnichannel-builder" element={<OmnichannelBuilder />} />
             <Route path="/omnichannel-builder/:id" element={<OmnichannelBuilder />} />
