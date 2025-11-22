@@ -182,22 +182,45 @@ export default function OmnichannelBuilder() {
 
   const onUpdateNode = useCallback(
     (nodeId: string, updates: Partial<OmnichannelNode["data"]>) => {
+      console.log('onUpdateNode chamado:', { nodeId, updates });
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            return {
+            const updatedNode = {
               ...node,
-              data: { ...node.data, ...updates },
+              data: { 
+                ...node.data, 
+                ...updates,
+                config: {
+                  ...(node.data.config || {}),
+                  ...(updates.config || {})
+                }
+              },
             };
+            console.log('Node atualizado:', updatedNode);
+            return updatedNode;
           }
           return node;
         })
       );
       // Atualizar também o nó selecionado
       if (selectedNode?.id === nodeId) {
-        setSelectedNode((prev) =>
-          prev ? { ...prev, data: { ...prev.data, ...updates } } : null
-        );
+        setSelectedNode((prev) => {
+          if (!prev) return null;
+          const updatedSelected = { 
+            ...prev, 
+            data: { 
+              ...prev.data, 
+              ...updates,
+              config: {
+                ...(prev.data.config || {}),
+                ...(updates.config || {})
+              }
+            } 
+          };
+          console.log('Selected node atualizado:', updatedSelected);
+          return updatedSelected;
+        });
       }
     },
     [setNodes, selectedNode]
