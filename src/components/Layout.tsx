@@ -34,6 +34,7 @@ import {
   Phone,
   Video,
   Upload,
+  Activity,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -141,6 +142,9 @@ const menuItems: MenuItem[] = [
     icon: Settings,
     subItems: [
       { id: "Config Geral", title: "Configurações", url: "/config", icon: Settings },
+      { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: Users },
+      { id: "Monitor Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
+      { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: Workflow },
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: Globe },
       { id: "Variáveis Globais", title: "Variáveis Globais", url: "/config/variaveis", icon: FileText },
       { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: Megaphone },
