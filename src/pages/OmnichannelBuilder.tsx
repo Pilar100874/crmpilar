@@ -27,7 +27,7 @@ import { FlowAnalytics } from "@/components/omnichannel-builder/FlowAnalytics";
 import { FlowSimulator } from "@/components/omnichannel-builder/FlowSimulator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus, PlayCircle } from "lucide-react";
+import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -71,6 +71,8 @@ export default function OmnichannelBuilder() {
   const [showSimulator, setShowSimulator] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
   const [currentBotId, setCurrentBotId] = useState<string>();
+  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [isLocked, setIsLocked] = useState(false);
 
   // Carregar fluxo existente
   useEffect(() => {
@@ -332,6 +334,28 @@ export default function OmnichannelBuilder() {
     }
   }, [nodes]);
 
+  const handleZoomIn = useCallback(() => {
+    reactFlowInstance?.zoomIn({ duration: 300 });
+  }, [reactFlowInstance]);
+
+  const handleZoomOut = useCallback(() => {
+    reactFlowInstance?.zoomOut({ duration: 300 });
+  }, [reactFlowInstance]);
+
+  const handleFitView = useCallback(() => {
+    if (!reactFlowInstance) return;
+    reactFlowInstance.fitView({ 
+      padding: 0.15,
+      duration: 300,
+      maxZoom: 1.2
+    });
+  }, [reactFlowInstance]);
+
+  const handleToggleLock = useCallback(() => {
+    setIsLocked(prev => !prev);
+    toast.info(isLocked ? "Canvas desbloqueado" : "Canvas bloqueado");
+  }, [isLocked]);
+
   const saveVersion = async (flowId: string) => {
     try {
       // Buscar próximo número de versão
@@ -546,7 +570,83 @@ export default function OmnichannelBuilder() {
                 >
                   <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleZoomIn}
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full"
+                  title="Aumentar zoom"
+                >
+                  <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleZoomOut}
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full"
+                  title="Diminuir zoom"
+                >
+                  <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleFitView}
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full"
+                  title="Centralizar"
+                >
+                  <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleToggleLock}
+                  className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
+                  title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
+                >
+                  {isLocked ? <Lock className="h-3 w-3 sm:h-4 sm:w-4" /> : <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />}
+                </Button>
               </div>
+            </div>
+            
+            <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowSimulator(!showSimulator)}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+              >
+                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                {showSimulator ? "Fechar Teste" : "Testar"}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAnalytics(!showAnalytics)}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex"
+              >
+                <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                Analytics
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowValidator(!showValidator)}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex"
+              >
+                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                Validar
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? "bg-green-50" : ""}`}
+              >
+                <Save className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${isSaving ? "animate-pulse" : ""}`} />
+                {isSaving ? "Salvando..." : "Salvar"}
+              </Button>
             </div>
           </div>
 
@@ -601,7 +701,12 @@ export default function OmnichannelBuilder() {
               onPaneClick={onPaneClick}
               onDrop={onDrop}
               onDragOver={onDragOver}
+              onInit={setReactFlowInstance}
               nodeTypes={nodeTypes}
+              nodesDraggable={!isLocked}
+              nodesConnectable={!isLocked}
+              nodesFocusable={!isLocked}
+              edgesFocusable={!isLocked}
               fitView
               defaultEdgeOptions={{
                 type: "smoothstep",
