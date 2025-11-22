@@ -344,56 +344,32 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
           {data.type === "atendente" && (
             <>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Usar Atendente do Sistema</Label>
-                  <Switch
-                    checked={data.config.usarSistema === true}
-                    onCheckedChange={(checked) => updateConfig('usarSistema', checked)}
-                  />
-                </div>
+                <Label>Atendente *</Label>
+                <Select
+                  value={data.config.atendenteId || ''}
+                  onValueChange={(value) => {
+                    const atendente = atendentes.find(a => a.id === value);
+                    if (atendente) {
+                      updateConfig('atendenteId', value);
+                      updateConfig('atendenteNome', atendente.usuarios?.nome);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um atendente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {atendentes.map((atendente) => (
+                      <SelectItem key={atendente.id} value={atendente.id}>
+                        <div className="flex items-center gap-2">
+                          <Database className="h-3 w-3" />
+                          {atendente.usuarios?.nome || atendente.usuario_id}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-
-              {data.config.usarSistema ? (
-                <div className="space-y-2">
-                  <Label>Atendente *</Label>
-                  <Select
-                    value={data.config.atendenteId || ''}
-                    onValueChange={(value) => {
-                      const atendente = atendentes.find(a => a.id === value);
-                      if (atendente) {
-                        updateConfig('atendenteId', value);
-                        updateConfig('atendenteNome', atendente.usuarios?.nome);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um atendente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {atendentes.map((atendente) => (
-                        <SelectItem key={atendente.id} value={atendente.id}>
-                          <div className="flex items-center gap-2">
-                            <Database className="h-3 w-3" />
-                            {atendente.usuarios?.nome || atendente.usuario_id}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>ID do Atendente *</Label>
-                  <Input
-                    value={data.config.atendenteId || ""}
-                    onChange={(e) => updateConfig("atendenteId", e.target.value)}
-                    placeholder="ID ou variável"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use variável ou ID fixo
-                  </p>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label>Max Chats Simultâneos *</Label>
