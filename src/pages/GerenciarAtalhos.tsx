@@ -43,12 +43,33 @@ export default function GerenciarAtalhos() {
         .ilike("email", user.email || "")
         .maybeSingle();
 
-      if (!userData?.grupo_acesso_id) {
+      if (!userData) {
+        toast({
+          title: "Aviso",
+          description: "Usuário não encontrado no sistema",
+          variant: "destructive",
+        });
+        setMenusPermitidos([]);
+        return;
+      }
+
+      if (!userData.estabelecimento_id) {
+        toast({
+          title: "Aviso",
+          description: "Usuário sem estabelecimento definido",
+          variant: "destructive",
+        });
+        setMenusPermitidos([]);
+        return;
+      }
+
+      if (!userData.grupo_acesso_id) {
         toast({
           title: "Aviso",
           description: "Usuário sem grupo de acesso definido",
           variant: "destructive",
         });
+        setMenusPermitidos([]);
         return;
       }
 
