@@ -53,14 +53,15 @@ export function EstabelecimentosCRUD() {
         return;
       }
 
-      // Verifica se é usuário com flag admin
-      const { data: userData } = await supabase
-        .from("usuarios")
-        .select("admin")
-        .ilike("email", user.email || "")
+      // Verifica se o usuário tem role admin na tabela user_roles
+      const { data: userRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
         .maybeSingle();
 
-      if (userData?.admin === true) {
+      if (userRole) {
         setIsUserAdmin(true);
       }
     } catch (error) {

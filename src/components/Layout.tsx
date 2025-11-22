@@ -228,7 +228,7 @@ export default function Layout({ children }: LayoutProps) {
         // Busca o usuário na tabela usuarios
         const { data: usuario } = await supabase
           .from("usuarios")
-          .select("grupo_acesso_id, admin")
+          .select("id, grupo_acesso_id")
           .ilike("email", user.email || "")
           .maybeSingle();
 
@@ -239,8 +239,16 @@ export default function Layout({ children }: LayoutProps) {
           return;
         }
 
-        // Se usuário tem flag admin=true, dá acesso total sem precisar de grupo
-        if (usuario.admin === true) {
+        // Verifica se o usuário tem role admin na tabela user_roles
+        const { data: userRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        // Se usuário tem role admin, dá acesso total sem precisar de grupo
+        if (userRole) {
           const allMenus: Record<string, MenuPermissions> = {};
           menuItems.forEach(item => {
             allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
