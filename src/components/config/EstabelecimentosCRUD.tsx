@@ -23,6 +23,8 @@ export function EstabelecimentosCRUD() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [estabelecimentoToDelete, setEstabelecimentoToDelete] = useState<Estabelecimento | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [formData, setFormData] = useState({
     cnpj: "",
     nome: "",
@@ -30,8 +32,41 @@ export function EstabelecimentosCRUD() {
   });
 
   useEffect(() => {
+    checkUserType();
     fetchEstabelecimentos();
   }, []);
+
+  const checkUserType = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Verifica se é administrador do sistema (tabela administradores)
+      const { data: adminData } = await supabase
+        .from("administradores")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (adminData) {
+        setIsSystemAdmin(true);
+        return;
+      }
+
+      // Verifica se é usuário com flag admin
+      const { data: userData } = await supabase
+        .from("usuarios")
+        .select("admin")
+        .ilike("email", user.email || "")
+        .maybeSingle();
+
+      if (userData?.admin === true) {
+        setIsUserAdmin(true);
+      }
+    } catch (error) {
+      console.error("Erro ao verificar tipo de usuário:", error);
+    }
+  };
 
   const fetchEstabelecimentos = async () => {
     const { data, error } = await supabase
@@ -68,9 +103,21 @@ export function EstabelecimentosCRUD() {
       return;
     }
 
+    // Usuários admin não podem criar estabelecimentos
+    if (isUserAdmin && !editingId) {
+      toast.error("Apenas administradores do sistema podem criar estabelecimentos");
+      return;
+    }
+
     const cleanCNPJ = formData.cnpj.replace(/\D/g, "");
 
     if (editingId) {
+      // Usuários admin não podem editar campos restritos
+      if (isUserAdmin) {
+        toast.error("Usuários admin não podem modificar CNPJ, nome ou número de usuários do estabelecimento");
+        return;
+      }
+
       const { error } = await supabase
         .from("estabelecimentos")
         .update({
@@ -199,6 +246,8 @@ export function EstabelecimentosCRUD() {
               placeholder="00.000.000/0000-00"
               maxLength={18}
               required
+              disabled={isUserAdmin && editingId !== null}
+              title={isUserAdmin && editingId ? "Usuários admin não podem modificar o CNPJ" : ""}
             />
           </div>
 
@@ -212,6 +261,8 @@ export function EstabelecimentosCRUD() {
               }
               placeholder="Nome do Estabelecimento"
               required
+              disabled={isUserAdmin && editingId !== null}
+              title={isUserAdmin && editingId ? "Usuários admin não podem modificar o nome" : ""}
             />
           </div>
 
@@ -229,12 +280,20 @@ export function EstabelecimentosCRUD() {
                 })
               }
               required
+              disabled={isUserAdmin && editingId !== null}
+              title={isUserAdmin && editingId ? "Usuários admin não podem modificar o número de usuários" : ""}
             />
           </div>
         </div>
 
         <div className="flex gap-2">
-          <Button type="submit">{editingId ? "Atualizar" : "Criar"}</Button>
+          <Button 
+            type="submit"
+            disabled={isUserAdmin && editingId !== null}
+            title={isUserAdmin && editingId ? "Usuários admin não podem editar campos restritos do estabelecimento" : ""}
+          >
+            {editingId ? "Atualizar" : "Criar"}
+          </Button>
           {editingId && (
             <Button type="button" variant="outline" onClick={resetForm}>
               Cancelar

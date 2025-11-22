@@ -209,31 +209,43 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       try {
-        // Verifica se é administrador pelo padrão de email (admin_*@sistema.local)
-        const adminCheck = user.email?.startsWith("admin_") && user.email?.endsWith("@sistema.local");
-        setIsAdmin(adminCheck);
+        // Verifica se é administrador da tabela administradores
+        const { data: adminData } = await supabase
+          .from("administradores")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
 
-        // Se for administrador, dá acesso total a todos os menus
-        if (adminCheck) {
-          const allMenus: Record<string, MenuPermissions> = {};
-          menuItems.forEach(item => {
-            allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
-          });
-          setAllowedMenus(allMenus);
+        // Se for administrador da tabela, marca como admin mas NÃO dá acesso total
+        if (adminData) {
+          setIsAdmin(true);
+          // Administradores não têm acesso aos menus, apenas criam estabelecimentos
+          setAllowedMenus({});
           setIsLoading(false);
           return;
         }
 
-        // Se não é admin, busca o usuário e seu grupo de acesso
-        const { data: usuario, error: userError } = await supabase
+        // Busca o usuário na tabela usuarios
+        const { data: usuario } = await supabase
           .from("usuarios")
-          .select("grupo_acesso_id")
+          .select("grupo_acesso_id, admin")
           .ilike("email", user.email || "")
           .maybeSingle();
 
         // Se não encontrou usuário, bloqueia tudo
         if (!usuario) {
           setAllowedMenus({});
+          setIsLoading(false);
+          return;
+        }
+
+        // Se usuário tem flag admin=true, dá acesso total sem precisar de grupo
+        if (usuario.admin === true) {
+          const allMenus: Record<string, MenuPermissions> = {};
+          menuItems.forEach(item => {
+            allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
+          });
+          setAllowedMenus(allMenus);
           setIsLoading(false);
           return;
         }
