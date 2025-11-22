@@ -242,7 +242,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="round_robin">Round Robin</SelectItem>
+                        <SelectItem value="round_robin">Circular</SelectItem>
                         <SelectItem value="por_skill">Por Habilidade</SelectItem>
                         <SelectItem value="por_disponibilidade">Por Disponibilidade</SelectItem>
                         <SelectItem value="por_prioridade">Por Prioridade</SelectItem>

@@ -18,7 +18,7 @@ interface FilasManagerProps {
 export const FilasManager = ({ filas, onCreateFila, onEditFila, onDeleteFila, onToggleAtiva, onViewAtendentes, onConfigureSkills }: FilasManagerProps) => {
   const getTipoRoteamentoLabel = (tipo: string) => {
     const labels = {
-      round_robin: "Round Robin",
+      round_robin: "Circular",
       por_skill: "Por Habilidade",
       por_disponibilidade: "Por Disponibilidade",
       por_prioridade: "Por Prioridade",
