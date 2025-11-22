@@ -301,32 +301,19 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       }
 
       // Atualizar role de admin
-      const { error: deleteRoleError } = await supabase
+      await supabase
         .from("user_roles")
         .delete()
         .eq("user_id", editingId)
         .eq("role", "admin");
 
-      if (deleteRoleError) {
-        console.error("Erro ao deletar role:", deleteRoleError);
-      }
-
       if (isAdmin) {
-        const { error: insertRoleError } = await supabase
+        await supabase
           .from("user_roles")
           .insert({
             user_id: editingId,
             role: "admin",
           });
-
-        if (insertRoleError) {
-          toast({
-            title: "Erro ao salvar role de admin",
-            description: insertRoleError.message,
-            variant: "destructive",
-          });
-          return;
-        }
       }
 
       // Gerenciar registro de atendente
@@ -413,21 +400,12 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
       // Adicionar role de admin
       if (data && isAdmin) {
-        const { error: insertRoleError } = await supabase
+        await supabase
           .from("user_roles")
           .insert({
             user_id: data.id,
             role: "admin",
           });
-
-        if (insertRoleError) {
-          toast({
-            title: "Erro ao salvar role de admin",
-            description: insertRoleError.message,
-            variant: "destructive",
-          });
-          return;
-        }
       }
 
       // Criar atendente se marcado
