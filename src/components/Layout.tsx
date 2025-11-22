@@ -583,17 +583,15 @@ export default function Layout({ children }: LayoutProps) {
                     )}
                   </div>
                 )}
-                
-                {!menuLocked && (
-                  <div className="h-px bg-sidebar-border/50 my-2" />
-                )}
               </>
                
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   const isMenuOpen = openSubmenuId === item.id;
-                  const shouldHighlight = isSubItemActive;
+                  // Verifica se algum atalho está ativo para o mesmo path
+                  const isPathInAtalhos = atalhos.some(a => item.subItems?.some(sub => sub.url === a.path && location.pathname === a.path));
+                  const shouldHighlight = isSubItemActive && !isPathInAtalhos;
                   
                   // Estilo travado (ícones apenas)
                   if (menuLocked) {
@@ -620,23 +618,26 @@ export default function Layout({ children }: LayoutProps) {
                               </h3>
                               
                               <div className="space-y-1">
-                                {item.subItems.map((subItem) => (
-                                  <NavLink
-                                    key={subItem.id}
-                                    to={subItem.url}
-                                    onClick={() => setOpenSubmenuId(null)}
-                                    className={({ isActive }) =>
-                                      `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                                        isActive
-                                          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                                      }`
-                                    }
-                                  >
-                                    <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm">{subItem.title}</span>
-                                  </NavLink>
-                                ))}
+                                 {item.subItems.map((subItem) => {
+                                   const isInAtalhos = atalhos.some(a => a.path === subItem.url);
+                                   return (
+                                     <NavLink
+                                       key={subItem.id}
+                                       to={subItem.url}
+                                       onClick={() => setOpenSubmenuId(null)}
+                                       className={({ isActive }) =>
+                                         `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                                           isActive && !isInAtalhos
+                                             ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                         }`
+                                       }
+                                     >
+                                       <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                       <span className="text-sm">{subItem.title}</span>
+                                     </NavLink>
+                                   );
+                                 })}
                               </div>
                             </div>
                           </div>
@@ -663,32 +664,36 @@ export default function Layout({ children }: LayoutProps) {
                         <ChevronDown className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
                       
-                      {isMenuOpen && (
-                        <div className="mt-1 ml-8 space-y-1">
-                          {item.subItems.map((subItem) => (
-                            <NavLink
-                              key={subItem.id}
-                              to={subItem.url}
-                              onClick={() => setOpenSubmenuId(null)}
-                              className={({ isActive }) =>
-                                `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                                  isActive
-                                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-                                }`
-                              }
-                            >
-                              <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm">{subItem.title}</span>
-                            </NavLink>
-                          ))}
-                        </div>
-                      )}
+                       {isMenuOpen && (
+                         <div className="mt-1 ml-8 space-y-1">
+                           {item.subItems.map((subItem) => {
+                             const isInAtalhos = atalhos.some(a => a.path === subItem.url);
+                             return (
+                               <NavLink
+                                 key={subItem.id}
+                                 to={subItem.url}
+                                 onClick={() => setOpenSubmenuId(null)}
+                                 className={({ isActive }) =>
+                                   `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                     isActive && !isInAtalhos
+                                       ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                       : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                   }`
+                                 }
+                               >
+                                 <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                 <span className="text-sm">{subItem.title}</span>
+                               </NavLink>
+                             );
+                           })}
+                         </div>
+                       )}
                     </div>
                   );
                 }
                 
                 // Menu normal sem submenu
+                const isInAtalhos = item.url && atalhos.some(a => a.path === item.url);
                 if (menuLocked) {
                   return (
                     <NavLink
@@ -696,7 +701,7 @@ export default function Layout({ children }: LayoutProps) {
                       to={item.url!}
                       className={({ isActive }) =>
                         `w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
-                          isActive
+                          isActive && !isInAtalhos
                             ? "bg-sidebar-primary text-sidebar-primary-foreground"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                         }`
@@ -714,7 +719,7 @@ export default function Layout({ children }: LayoutProps) {
                     to={item.url!}
                     className={({ isActive }) =>
                       `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                        isActive
+                        isActive && !isInAtalhos
                           ? "bg-sidebar-primary text-sidebar-primary-foreground"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                       }`
