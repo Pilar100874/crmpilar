@@ -23,10 +23,19 @@ export const useAtalhos = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Buscar ID do usuário na tabela usuarios
+      const { data: userData } = await supabase
+        .from("usuarios")
+        .select("id")
+        .ilike("email", user.email || "")
+        .maybeSingle();
+
+      if (!userData?.id) return;
+
       const { data, error } = await supabase
         .from("user_atalhos")
         .select("*")
-        .eq("usuario_id", user.id)
+        .eq("usuario_id", userData.id)
         .order("ordem", { ascending: true });
 
       if (error) throw error;
@@ -47,17 +56,17 @@ export const useAtalhos = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar estabelecimento_id do usuário
+      // Buscar id e estabelecimento_id do usuário
       const { data: userData } = await supabase
         .from("usuarios")
-        .select("estabelecimento_id")
+        .select("id, estabelecimento_id")
         .ilike("email", user.email || "")
         .maybeSingle();
 
-      if (!userData?.estabelecimento_id) {
+      if (!userData?.id || !userData?.estabelecimento_id) {
         toast({
           title: "Erro",
-          description: "Estabelecimento não encontrado",
+          description: "Usuário ou estabelecimento não encontrado",
           variant: "destructive",
         });
         return;
@@ -68,7 +77,7 @@ export const useAtalhos = () => {
       const { error } = await supabase
         .from("user_atalhos")
         .insert({
-          usuario_id: user.id,
+          usuario_id: userData.id,
           estabelecimento_id: userData.estabelecimento_id,
           titulo,
           icone,
@@ -110,10 +119,19 @@ export const useAtalhos = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Buscar ID do usuário na tabela usuarios
+      const { data: userData } = await supabase
+        .from("usuarios")
+        .select("id")
+        .ilike("email", user.email || "")
+        .maybeSingle();
+
+      if (!userData?.id) return;
+
       const { error } = await supabase
         .from("user_atalhos")
         .delete()
-        .eq("usuario_id", user.id)
+        .eq("usuario_id", userData.id)
         .eq("path", path);
 
       if (error) throw error;
