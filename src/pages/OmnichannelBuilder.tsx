@@ -551,16 +551,16 @@ export default function OmnichannelBuilder() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header do Canvas */}
-          <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-2 sm:gap-0">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-foreground">WORKFLOW OMNICHANNEL</h2>
-                <p className="text-xs sm:text-sm text-muted-foreground">
+          <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm gap-2">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden md:block">
+                <h2 className="text-base sm:text-lg font-bold text-foreground leading-tight">WORKFLOW OMNICHANNEL</h2>
+                <p className="text-xs text-muted-foreground leading-tight">
                   Arraste blocos para criar seu fluxo de atendimento
                 </p>
               </div>
               
-              <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
+              <div className="flex gap-1 sm:border-l sm:border-border sm:pl-4">
                 <Button 
                   variant="outline" 
                   size="icon" 
@@ -609,7 +609,7 @@ export default function OmnichannelBuilder() {
               </div>
             </div>
             
-            <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex gap-1 sm:gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -617,13 +617,14 @@ export default function OmnichannelBuilder() {
                 className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
               >
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                {showSimulator ? "Fechar Teste" : "Testar"}
+                <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar"}</span>
+                <span className="sm:hidden">Teste</span>
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setShowAnalytics(!showAnalytics)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex"
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden lg:flex"
               >
                 <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Analytics
@@ -632,7 +633,7 @@ export default function OmnichannelBuilder() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setShowValidator(!showValidator)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex"
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden lg:flex"
               >
                 <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Validar
