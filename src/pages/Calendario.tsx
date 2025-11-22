@@ -2450,11 +2450,11 @@ export default function Calendario() {
     const todayTasks = tasks.filter(task => isSameDay(task.date, today) && task.status === "pending" && filterByOrigem(task));
     const tomorrowTasks = tasks.filter(task => isSameDay(task.date, tomorrow) && task.status === "pending" && filterByOrigem(task));
     const nextWeekTasks = tasks.filter(task => {
-      const diff = differenceInDays(task.date, today);
+      const diff = differenceInDays(task.date, format(today, 'yyyy-MM-dd'));
       return diff > 1 && diff <= 7 && task.status === "pending" && filterByOrigem(task);
     });
     const futureTasks = tasks.filter(task => {
-      const diff = differenceInDays(task.date, today);
+      const diff = differenceInDays(task.date, format(today, 'yyyy-MM-dd'));
       return diff > 7 && task.status === "pending" && filterByOrigem(task);
     });
 
