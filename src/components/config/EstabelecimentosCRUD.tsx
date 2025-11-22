@@ -70,10 +70,6 @@ export function EstabelecimentosCRUD() {
   };
 
   const fetchEstabelecimentos = async () => {
-    // Debug: verificar usuário atual
-    const { data: { user } } = await supabase.auth.getUser();
-    console.log("Usuário logado:", user?.id, user?.email);
-
     const { data, error } = await supabase
       .from("estabelecimentos")
       .select("*")
@@ -85,7 +81,6 @@ export function EstabelecimentosCRUD() {
       return;
     }
 
-    console.log("Estabelecimentos retornados pela RLS:", data);
     setEstabelecimentos(data || []);
   };
 
