@@ -181,20 +181,30 @@ export default function BotCreate() {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
       
+      console.log("🏢 Estabelecimento ID:", estabelecimentoId);
+      
       if (!estabelecimentoId) {
-        toast.error("Não foi possível identificar o estabelecimento");
-        return;
+        console.warn("⚠️ Estabelecimento não identificado, buscando todos os bots");
+        // Se não há estabelecimento (admin sem seleção), buscar todos
+        const { data, error } = await supabase
+          .from("bot_flows")
+          .select("*")
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        console.log("📋 Bots encontrados:", data?.length || 0);
+        setBots(data || []);
+      } else {
+        const { data, error } = await supabase
+          .from("bot_flows")
+          .select("*")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        console.log("📋 Bots encontrados para estabelecimento:", data?.length || 0);
+        setBots(data || []);
       }
-
-      const { data, error } = await supabase
-        .from("bot_flows")
-        .select("*")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .order("updated_at", { ascending: false });
-
-      if (error) throw error;
-
-      setBots(data || []);
     } catch (error) {
       console.error("Error loading bots:", error);
       toast.error("Erro ao carregar bots");

@@ -34,16 +34,18 @@ export default function BotTest() {
   const loadSavedBots = async () => {
     const estabelecimentoId = await getEstabelecimentoId();
     
-    if (!estabelecimentoId) {
-      toast.error("Não foi possível identificar o estabelecimento");
-      return;
-    }
-
-    const { data, error } = await supabase
+    console.log("🏢 Estabelecimento ID (BotTest):", estabelecimentoId);
+    
+    let query = supabase
       .from("bot_flows")
       .select("*")
-      .eq("estabelecimento_id", estabelecimentoId)
       .order("updated_at", { ascending: false });
+    
+    if (estabelecimentoId) {
+      query = query.eq("estabelecimento_id", estabelecimentoId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error loading bots:", error);

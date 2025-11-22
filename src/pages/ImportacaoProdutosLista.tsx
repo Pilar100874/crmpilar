@@ -50,16 +50,18 @@ export default function ImportacaoProdutosLista() {
   const loadRelatorios = async () => {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
-      if (!estabelecimentoId) {
-        toast.error("Estabelecimento não encontrado");
-        return;
-      }
-
-      const { data, error } = await supabase
+      console.log("🏢 Estabelecimento ID (ImportacaoProdutos):", estabelecimentoId);
+      
+      let query = supabase
         .from("relatorios_importacao")
         .select("*")
-        .eq("estabelecimento_id", estabelecimentoId)
         .order("created_at", { ascending: false });
+      
+      if (estabelecimentoId) {
+        query = query.eq("estabelecimento_id", estabelecimentoId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setRelatorios(data || []);
