@@ -100,8 +100,9 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
   const { data } = selectedNode;
 
   const updateConfig = (key: string, value: any) => {
+    const currentConfig = data.config || {};
     onUpdateNode(selectedNode.id, {
-      config: { ...data.config, [key]: value }
+      config: { ...currentConfig, [key]: value }
     });
   };
 
@@ -346,12 +347,14 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
               <div className="space-y-2">
                 <Label>Atendente *</Label>
                 <Select
-                  value={data.config.atendenteId || ''}
+                  value={data.config?.atendenteId || ''}
                   onValueChange={(value) => {
                     const atendente = atendentes.find(a => a.id === value);
                     if (atendente) {
                       updateConfig('atendenteId', value);
-                      updateConfig('atendenteNome', atendente.usuarios?.nome);
+                      updateConfig('atendenteNome', atendente.usuarios?.nome || '');
+                      updateConfig('usarSistema', true);
+                      console.log('Atendente selecionado:', value, atendente.usuarios?.nome);
                     }
                   }}
                 >
@@ -369,6 +372,11 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                     ))}
                   </SelectContent>
                 </Select>
+                {data.config?.atendenteId && (
+                  <p className="text-xs text-muted-foreground">
+                    Atendente: {data.config?.atendenteNome || data.config?.atendenteId}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
