@@ -36,12 +36,12 @@ export default function GerenciarAtalhos() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar grupos de acesso do usuário
+      // Buscar grupos de acesso do usuário pelo email
       const { data: userData } = await supabase
         .from("usuarios")
         .select("grupo_acesso_id, estabelecimento_id")
-        .eq("id", user.id)
-        .single();
+        .ilike("email", user.email || "")
+        .maybeSingle();
 
       if (!userData?.grupo_acesso_id) {
         toast({
