@@ -97,6 +97,14 @@ const menuStructure: MenuCategory[] = [
     ]
   },
   { 
+    id: "Atalhos",
+    title: "Atalhos", 
+    icon: LucideIcons.Star,
+    subItems: [
+      { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: LucideIcons.Star },
+    ]
+  },
+  { 
     id: "Configurações",
     title: "Configurações", 
     icon: LucideIcons.Settings,
