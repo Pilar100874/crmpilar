@@ -455,112 +455,35 @@ export default function OmnichannelBuilder() {
   return (
     <Layout>
       <div className="h-screen flex flex-col">
-        {/* Header */}
-        <div className="bg-background border-b px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 flex-wrap">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/config?section=omnichannel-flows")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            
-            <Input
-              value={flowName}
-              onChange={(e) => setFlowName(e.target.value)}
-              className="max-w-md"
-              placeholder="Nome do fluxo"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSimulator(!showSimulator)}
-            >
-              <PlayCircle className="h-4 w-4 mr-2" />
-              Simular
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowValidator(!showValidator)}
-            >
-              <AlertCircle className="h-4 w-4 mr-2" />
-              Validar
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAnalytics(!showAnalytics)}
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Analytics
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTemplates(true)}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Templates
-            </Button>
-
-            {id && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowVersions(true)}
-                >
-                  <History className="h-4 w-4 mr-2" />
-                  Versões
-                </Button>
-
-                <BotTriggerSelector 
-                  flowId={id} 
-                  currentBotId={currentBotId}
-                  onUpdate={(botId) => setCurrentBotId(botId)}
-                />
-              </>
-            )}
-
-            <FlowExportImport
-              flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
-              flowName={flowName}
-              onImport={handleImportFlow}
-            />
-
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Salvar
-            </Button>
-          </div>
-        </div>
-
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header do Canvas */}
+          {/* Header Unificado */}
           <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm gap-2">
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/config?section=omnichannel-flows")}
+                className="h-8 w-8 sm:h-9 sm:w-9"
+              >
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+
               <div className="hidden md:block">
                 <h2 className="text-base sm:text-lg font-bold text-foreground leading-tight">WORKFLOW OMNICHANNEL</h2>
                 <p className="text-xs text-muted-foreground leading-tight">
-                  Arraste blocos para criar seu fluxo de atendimento
+                  Arraste blocos para criar seu fluxo
                 </p>
               </div>
+
+              <Input
+                value={flowName}
+                onChange={(e) => setFlowName(e.target.value)}
+                className="w-[150px] sm:w-[200px] h-8 sm:h-9 text-xs sm:text-sm"
+                placeholder="Nome do fluxo"
+              />
               
-              <div className="flex gap-1 sm:border-l sm:border-border sm:pl-4">
+              <div className="flex gap-1 border-l border-border pl-2 sm:pl-4">
                 <Button 
                   variant="outline" 
                   size="icon" 
@@ -617,27 +540,66 @@ export default function OmnichannelBuilder() {
                 className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
               >
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar"}</span>
-                <span className="sm:hidden">Teste</span>
+                <span className="hidden sm:inline">{showSimulator ? "Fechar" : "Testar"}</span>
+                <span className="sm:hidden">Test</span>
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowAnalytics(!showAnalytics)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden lg:flex"
-              >
-                <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Analytics
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowValidator(!showValidator)}
                 className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden lg:flex"
               >
                 <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Validar
               </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAnalytics(!showAnalytics)}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden lg:flex"
+              >
+                <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                Analytics
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTemplates(true)}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden xl:flex"
+              >
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                Templates
+              </Button>
+
+              {id && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowVersions(true)}
+                    className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden xl:flex"
+                  >
+                    <History className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Versões
+                  </Button>
+
+                  <BotTriggerSelector 
+                    flowId={id} 
+                    currentBotId={currentBotId}
+                    onUpdate={(botId) => setCurrentBotId(botId)}
+                  />
+                </>
+              )}
+
+              <FlowExportImport
+                flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
+                flowName={flowName}
+                onImport={handleImportFlow}
+              />
+
               <Button 
                 variant="outline" 
                 size="sm" 
