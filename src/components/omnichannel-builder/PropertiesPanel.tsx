@@ -375,18 +375,19 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                 <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
                   <Select
                     value={novaCondicao.campo}
-                    onValueChange={(value) => setNovaCondicao({ ...novaCondicao, campo: value })}
+                    onValueChange={(value) => setNovaCondicao({ ...novaCondicao, campo: value, valor: '' })}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione o campo" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="skill">Skill</SelectItem>
+                      <SelectItem value="canal">Canal</SelectItem>
+                      <SelectItem value="fila">Fila</SelectItem>
+                      <SelectItem value="prioridade_cliente">Prioridade do Cliente</SelectItem>
+                      <SelectItem value="horario">Horário</SelectItem>
                       <SelectItem value="disponibilidade">Disponibilidade</SelectItem>
                       <SelectItem value="carga_trabalho">Carga de Trabalho</SelectItem>
-                      <SelectItem value="skill">Skill</SelectItem>
-                      <SelectItem value="horario">Horário</SelectItem>
-                      <SelectItem value="canal">Canal</SelectItem>
-                      <SelectItem value="prioridade_cliente">Prioridade do Cliente</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -395,22 +396,130 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                     onValueChange={(value) => setNovaCondicao({ ...novaCondicao, operador: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione o operador" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="igual">Igual a</SelectItem>
                       <SelectItem value="diferente">Diferente de</SelectItem>
-                      <SelectItem value="maior">Maior que</SelectItem>
-                      <SelectItem value="menor">Menor que</SelectItem>
-                      <SelectItem value="contem">Contém</SelectItem>
+                      {(novaCondicao.campo === 'carga_trabalho' || novaCondicao.campo === 'horario') && (
+                        <>
+                          <SelectItem value="maior">Maior que</SelectItem>
+                          <SelectItem value="menor">Menor que</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
 
-                  <Input
-                    value={novaCondicao.valor}
-                    onChange={(e) => setNovaCondicao({ ...novaCondicao, valor: e.target.value })}
-                    placeholder="Valor"
-                  />
+                  {/* Campo de valor dinâmico baseado no tipo de campo */}
+                  {novaCondicao.campo === 'skill' && (
+                    <Select
+                      value={novaCondicao.valor}
+                      onValueChange={(value) => {
+                        const skill = skills.find(s => s.id === value);
+                        setNovaCondicao({ ...novaCondicao, valor: skill?.nome || value });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma skill" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {skills.map((skill) => (
+                          <SelectItem key={skill.id} value={skill.id}>
+                            <div className="flex items-center gap-2">
+                              <Database className="h-3 w-3" />
+                              {skill.nome}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {novaCondicao.campo === 'fila' && (
+                    <Select
+                      value={novaCondicao.valor}
+                      onValueChange={(value) => {
+                        const fila = filas.find(f => f.id === value);
+                        setNovaCondicao({ ...novaCondicao, valor: fila?.nome || value });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma fila" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filas.map((fila) => (
+                          <SelectItem key={fila.id} value={fila.id}>
+                            <div className="flex items-center gap-2">
+                              <Database className="h-3 w-3" />
+                              {fila.nome}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {novaCondicao.campo === 'canal' && (
+                    <Select
+                      value={novaCondicao.valor}
+                      onValueChange={(value) => setNovaCondicao({ ...novaCondicao, valor: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um canal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                        <SelectItem value="telegram">Telegram</SelectItem>
+                        <SelectItem value="webchat">WebChat</SelectItem>
+                        <SelectItem value="instagram">Instagram</SelectItem>
+                        <SelectItem value="facebook">Facebook</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {novaCondicao.campo === 'prioridade_cliente' && (
+                    <Select
+                      value={novaCondicao.valor}
+                      onValueChange={(value) => setNovaCondicao({ ...novaCondicao, valor: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a prioridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="baixa">🟢 Baixa</SelectItem>
+                        <SelectItem value="normal">🟡 Normal</SelectItem>
+                        <SelectItem value="alta">🟠 Alta</SelectItem>
+                        <SelectItem value="urgente">🔴 Urgente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {novaCondicao.campo === 'disponibilidade' && (
+                    <Select
+                      value={novaCondicao.valor}
+                      onValueChange={(value) => setNovaCondicao({ ...novaCondicao, valor: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a disponibilidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="disponivel">Disponível</SelectItem>
+                        <SelectItem value="ocupado">Ocupado</SelectItem>
+                        <SelectItem value="ausente">Ausente</SelectItem>
+                        <SelectItem value="pausa">Pausa</SelectItem>
+                        <SelectItem value="offline">Offline</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {(novaCondicao.campo === 'carga_trabalho' || novaCondicao.campo === 'horario') && (
+                    <Input
+                      value={novaCondicao.valor}
+                      onChange={(e) => setNovaCondicao({ ...novaCondicao, valor: e.target.value })}
+                      placeholder={novaCondicao.campo === 'horario' ? 'Ex: 08:00' : 'Ex: 5'}
+                      type={novaCondicao.campo === 'carga_trabalho' ? 'number' : 'text'}
+                    />
+                  )}
                 </div>
 
                 {/* Lista de condições */}
