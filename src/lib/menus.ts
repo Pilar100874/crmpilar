@@ -41,7 +41,6 @@ export const MENU_CONFIG = [
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },
   { id: "Variáveis Globais", label: "Variáveis Globais" },
   { id: "Teste Campanhas", label: "Teste Campanhas" },
-  { id: "Atalhos", label: "Atalhos" },
   { id: "Gerenciar Atalhos", label: "Gerenciar Atalhos" },
 ] as const;
 

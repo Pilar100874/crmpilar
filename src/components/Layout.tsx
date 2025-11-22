@@ -141,14 +141,6 @@ const menuItems: MenuItem[] = [
     ]
   },
   { 
-    id: "Atalhos",
-    title: "Atalhos", 
-    icon: Star,
-    subItems: [
-      { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: Star },
-    ]
-  },
-  { 
     id: "Configurações",
     title: "Configurações", 
     icon: Settings,
