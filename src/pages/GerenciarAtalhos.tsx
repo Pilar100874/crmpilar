@@ -6,25 +6,119 @@ import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Loader2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Star, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { MENU_CONFIG } from "@/lib/menus";
 
-interface MenuItem {
+interface SubMenuItem {
   id: string;
-  label: string;
-  icon: string;
-  path: string;
+  title: string;
+  url: string;
+  icon: any;
 }
+
+interface MenuCategory {
+  id: string;
+  title: string;
+  icon: any;
+  url?: string;
+  subItems?: SubMenuItem[];
+}
+
+// Estrutura de menus igual ao Layout.tsx
+const menuStructure: MenuCategory[] = [
+  { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LucideIcons.LayoutDashboard },
+  { id: "Clientes", title: "Funil", url: "/funil", icon: LucideIcons.Users },
+  { 
+    id: "Atendimento",
+    title: "Chats", 
+    icon: LucideIcons.MessageSquare,
+    subItems: [
+      { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: LucideIcons.MessageSquare },
+      { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: LucideIcons.Users },
+      { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LucideIcons.LayoutDashboard },
+      { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: LucideIcons.Activity },
+    ]
+  },
+  { id: "Campanhas", title: "Calendário", url: "/calendario", icon: LucideIcons.Megaphone },
+  { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: LucideIcons.FileBarChart },
+  { 
+    id: "Conteúdos",
+    title: "Listas", 
+    icon: LucideIcons.FileText,
+    subItems: [
+      { id: "Contatos", title: "Contatos", url: "/contatos", icon: LucideIcons.User },
+      { id: "Empresas", title: "Empresas", url: "/empresas", icon: LucideIcons.Building2 },
+      { id: "Todos", title: "Todos", url: "/todos", icon: LucideIcons.Users },
+      { id: "Vínculos Empresas", title: "Vínculo Empresas X Usuário / Segmento", url: "/vinculos-empresas", icon: LucideIcons.Building2 },
+      { id: "Vínculos Contatos", title: "Vínculo Contatos X Usuário / Segmento", url: "/vinculos-contatos", icon: LucideIcons.User },
+    ]
+  },
+  { 
+    id: "Email",
+    title: "E-mail", 
+    icon: LucideIcons.Mail,
+    subItems: [
+      { id: "Caixa de Entrada", title: "Caixa de Entrada", url: "/email/inbox", icon: LucideIcons.MessageSquare },
+      { id: "Enviados", title: "Enviados", url: "/email/sent", icon: LucideIcons.MessageSquare },
+      { id: "Arquivados", title: "Arquivados", url: "/email/archive", icon: LucideIcons.MessageSquare },
+      { id: "Lixeira", title: "Lixeira", url: "/email/trash", icon: LucideIcons.MessageSquare },
+    ]
+  },
+  { 
+    id: "Bot Test", 
+    title: "Bot", 
+    icon: LucideIcons.Workflow,
+    subItems: [
+      { id: "Criar Bot", title: "Criar / Editar", url: "/bot-create", icon: LucideIcons.Plus },
+      { id: "Testar", title: "Testar", url: "/bot-test", icon: LucideIcons.TestTube2 },
+    ]
+  },
+  { 
+    id: "Desenho", 
+    title: "Marketing", 
+    icon: LucideIcons.Target,
+    subItems: [
+      { id: "Canvas", title: "Canvas", url: "/marketing/canvas", icon: LucideIcons.Palette },
+      { id: "Automações", title: "Automações", url: "/marketing/automacoes", icon: LucideIcons.Zap },
+      { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: LucideIcons.Megaphone },
+    ]
+  },
+  { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
+  { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: LucideIcons.Upload },
+  { 
+    id: "Telefonia",
+    title: "Telefonia", 
+    icon: LucideIcons.Phone,
+    subItems: [
+      { id: "Softphone", title: "Softphone", url: "/softphone", icon: LucideIcons.Phone },
+      { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: LucideIcons.Video },
+    ]
+  },
+  { 
+    id: "Configurações",
+    title: "Configurações", 
+    icon: LucideIcons.Settings,
+    subItems: [
+      { id: "Config Geral", title: "Configurações", url: "/config", icon: LucideIcons.Settings },
+      { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: LucideIcons.Users },
+      { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: LucideIcons.Workflow },
+      { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
+      { id: "Variáveis Globais", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
+      { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: LucideIcons.Megaphone },
+    ]
+  },
+];
 
 export default function GerenciarAtalhos() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { openSubmenu } = useContext(LayoutContext);
   const { atalhos, adicionarAtalho, removerAtalho, isAtalho, loading: atalhosLoading } = useAtalhos();
-  const [menusPermitidos, setMenusPermitidos] = useState<MenuItem[]>([]);
+  const [menusPermitidos, setMenusPermitidos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadMenusPermitidos();
@@ -49,7 +143,7 @@ export default function GerenciarAtalhos() {
           description: "Usuário não encontrado no sistema",
           variant: "destructive",
         });
-        setMenusPermitidos([]);
+        setMenusPermitidos(new Set());
         return;
       }
 
@@ -59,7 +153,7 @@ export default function GerenciarAtalhos() {
           description: "Usuário sem estabelecimento definido",
           variant: "destructive",
         });
-        setMenusPermitidos([]);
+        setMenusPermitidos(new Set());
         return;
       }
 
@@ -69,7 +163,7 @@ export default function GerenciarAtalhos() {
           description: "Usuário sem grupo de acesso definido",
           variant: "destructive",
         });
-        setMenusPermitidos([]);
+        setMenusPermitidos(new Set());
         return;
       }
 
@@ -81,27 +175,13 @@ export default function GerenciarAtalhos() {
         .single();
 
       if (!grupoData?.menus_permitidos) {
-        setMenusPermitidos([]);
+        setMenusPermitidos(new Set());
         return;
       }
 
-      // Mapear menus permitidos com seus dados do MENU_CONFIG
+      // Extrair IDs dos menus permitidos
       const menusPermitidosIds = Object.keys(grupoData.menus_permitidos);
-      const menusDisponiveis: MenuItem[] = [];
-
-      menusPermitidosIds.forEach((menuId) => {
-        const menuConfig = MENU_CONFIG.find(m => m.id === menuId);
-        if (menuConfig) {
-          menusDisponiveis.push({
-            id: menuId,
-            label: menuConfig.label,
-            icon: getIconForMenu(menuId),
-            path: getPathForMenu(menuId),
-          });
-        }
-      });
-
-      setMenusPermitidos(menusDisponiveis);
+      setMenusPermitidos(new Set(menusPermitidosIds));
     } catch (error) {
       console.error("Erro ao carregar menus permitidos:", error);
       toast({
@@ -114,73 +194,35 @@ export default function GerenciarAtalhos() {
     }
   };
 
-  const getIconForMenu = (menuId: string): string => {
-    const iconMap: Record<string, string> = {
-      dashboard: "LayoutDashboard",
-      contatos: "Users",
-      empresas: "Building2",
-      campanhas: "Megaphone",
-      conteudos: "FileText",
-      calendario: "Calendar",
-      funil: "TrendingUp",
-      orcamentos: "FileSpreadsheet",
-      bot_builder: "Bot",
-      bot_test: "TestTube",
-      marketing_canvas: "Palette",
-      marketing_automacoes: "Workflow",
-      relatorios: "BarChart3",
-      email: "Mail",
-      telefonia_softphone: "Phone",
-      telefonia_videochamada: "Video",
-      atendimento: "MessageSquare",
-      atendimento_dashboard: "BarChart",
-      atendimento_supervisor: "Shield",
-      atendimento_filas: "Users",
-      omnichannel_builder: "Network",
-      global_variables: "Settings",
-    };
-    return iconMap[menuId] || "Circle";
-  };
-
-  const getPathForMenu = (menuId: string): string => {
-    const pathMap: Record<string, string> = {
-      dashboard: "/",
-      contatos: "/contatos",
-      empresas: "/empresas",
-      campanhas: "/campanhas",
-      conteudos: "/conteudos",
-      calendario: "/calendario",
-      funil: "/funil",
-      orcamentos: "/orcamentos",
-      bot_builder: "/bot-builder",
-      bot_test: "/bot-test",
-      marketing_canvas: "/marketing/canvas",
-      marketing_automacoes: "/marketing/automacoes",
-      relatorios: "/relatorios",
-      email: "/email",
-      telefonia_softphone: "/softphone",
-      telefonia_videochamada: "/videocall",
-      atendimento: "/atendimento",
-      atendimento_dashboard: "/dashboard-atendente",
-      atendimento_supervisor: "/dashboard-supervisor",
-      atendimento_filas: "/monitorar-filas",
-      omnichannel_builder: "/omnichannel-builder",
-      global_variables: "/global-variables",
-    };
-    return pathMap[menuId] || "/";
-  };
-
-  const handleToggleAtalho = async (menu: MenuItem) => {
-    if (isAtalho(menu.path)) {
-      await removerAtalho(menu.path);
+  const toggleCategory = (categoryId: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
     } else {
-      await adicionarAtalho(menu.label, menu.icon, menu.path);
+      newExpanded.add(categoryId);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  const handleToggleAtalho = async (title: string, iconName: string, path: string) => {
+    if (isAtalho(path)) {
+      await removerAtalho(path);
+    } else {
+      await adicionarAtalho(title, iconName, path);
     }
   };
 
-  const renderIcon = (iconName: string) => {
-    const Icon = (LucideIcons as any)[iconName];
-    return Icon ? <Icon className="h-5 w-5" /> : <LucideIcons.Circle className="h-5 w-5" />;
+  const renderIcon = (IconComponent: any) => {
+    return <IconComponent className="h-5 w-5" />;
+  };
+
+  const isMenuPermitted = (menuId: string) => {
+    return menusPermitidos.has(menuId);
+  };
+
+  const hasPermittedSubItems = (category: MenuCategory) => {
+    if (!category.subItems) return false;
+    return category.subItems.some(subItem => isMenuPermitted(subItem.id));
   };
 
   if (loading || atalhosLoading) {
@@ -200,51 +242,128 @@ export default function GerenciarAtalhos() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Meus Atalhos</CardTitle>
+          <CardTitle>Menus Disponíveis</CardTitle>
           <CardDescription>
             Adicione ou remova atalhos para acessar rapidamente suas telas favoritas.
             Apenas os menus que você tem permissão são exibidos aqui.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {menusPermitidos.length === 0 ? (
+          {menusPermitidos.size === 0 ? (
             <p className="text-sm text-muted-foreground">
               Nenhum menu disponível para adicionar aos atalhos.
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {menusPermitidos.map((menu) => {
-                const isAdicionado = isAtalho(menu.path);
-                return (
-                  <Card 
-                    key={menu.id}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
-                      isAdicionado ? "border-primary bg-primary/5" : ""
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {renderIcon(menu.icon)}
-                          <div>
-                            <p className="font-medium">{menu.label}</p>
-                            <p className="text-xs text-muted-foreground">{menu.path}</p>
+            <div className="space-y-2">
+              {menuStructure.map((category) => {
+                // Menu sem subitens
+                if (!category.subItems) {
+                  if (!isMenuPermitted(category.id)) return null;
+                  
+                  const isAdicionado = category.url && isAtalho(category.url);
+                  const IconComponent = category.icon;
+                  
+                  return (
+                    <Card 
+                      key={category.id}
+                      className={`transition-all ${
+                        isAdicionado ? "border-primary bg-primary/5" : ""
+                      }`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {renderIcon(IconComponent)}
+                            <div>
+                              <p className="font-medium">{category.title}</p>
+                              <p className="text-xs text-muted-foreground">{category.url}</p>
+                            </div>
                           </div>
+                          <Button
+                            variant={isAdicionado ? "default" : "outline"}
+                            size="icon"
+                            onClick={() => handleToggleAtalho(category.title, IconComponent.name || "Star", category.url!)}
+                          >
+                            <Star
+                              className={`h-4 w-4 ${
+                                isAdicionado ? "fill-current" : ""
+                              }`}
+                            />
+                          </Button>
                         </div>
-                        <Button
-                          variant={isAdicionado ? "default" : "outline"}
-                          size="icon"
-                          onClick={() => handleToggleAtalho(menu)}
-                        >
-                          <Star
-                            className={`h-4 w-4 ${
-                              isAdicionado ? "fill-current" : ""
-                            }`}
-                          />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                
+                // Menu com subitens (categoria)
+                if (!hasPermittedSubItems(category)) return null;
+                
+                const isExpanded = expandedCategories.has(category.id);
+                const IconComponent = category.icon;
+                
+                return (
+                  <Collapsible
+                    key={category.id}
+                    open={isExpanded}
+                    onOpenChange={() => toggleCategory(category.id)}
+                  >
+                    <Card>
+                      <CollapsibleTrigger asChild>
+                        <CardContent className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {renderIcon(IconComponent)}
+                              <p className="font-medium">{category.title}</p>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </CardContent>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="px-4 pb-4 space-y-2">
+                          {category.subItems?.map((subItem) => {
+                            if (!isMenuPermitted(subItem.id)) return null;
+                            
+                            const isAdicionado = isAtalho(subItem.url);
+                            const SubIconComponent = subItem.icon;
+                            
+                            return (
+                              <div
+                                key={subItem.id}
+                                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                                  isAdicionado ? "border-primary bg-primary/5" : "bg-card"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 ml-4">
+                                  {renderIcon(SubIconComponent)}
+                                  <div>
+                                    <p className="font-medium text-sm">{subItem.title}</p>
+                                    <p className="text-xs text-muted-foreground">{subItem.url}</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant={isAdicionado ? "default" : "outline"}
+                                  size="icon"
+                                  onClick={() => handleToggleAtalho(subItem.title, SubIconComponent.name || "Star", subItem.url)}
+                                >
+                                  <Star
+                                    className={`h-4 w-4 ${
+                                      isAdicionado ? "fill-current" : ""
+                                    }`}
+                                  />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
                 );
               })}
             </div>
@@ -262,13 +381,16 @@ export default function GerenciarAtalhos() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {atalhos.map((atalho) => (
+              {atalhos.map((atalho) => {
+                const IconComponent = (LucideIcons as any)[atalho.icone] || LucideIcons.Star;
+                
+                return (
                 <div
                   key={atalho.id}
                   className="flex items-center justify-between p-3 rounded-lg border bg-card"
                 >
                   <div className="flex items-center gap-3">
-                    {renderIcon(atalho.icone)}
+                    {renderIcon(IconComponent)}
                     <div>
                       <p className="font-medium">{atalho.titulo}</p>
                       <p className="text-xs text-muted-foreground">{atalho.path}</p>
@@ -282,7 +404,8 @@ export default function GerenciarAtalhos() {
                     Remover
                   </Button>
                 </div>
-              ))}
+              );
+              })}
             </div>
           </CardContent>
         </Card>
