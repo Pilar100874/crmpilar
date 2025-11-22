@@ -36,7 +36,7 @@ export const MENU_CONFIG = [
   { id: "Configurações", label: "Configurações" },
   { id: "Config Geral", label: "Configurações Gerais" },
   { id: "Config Skills", label: "Skills de Atendimento" },
-  { id: "Monitor Filas", label: "Monitor de Filas" },
+  { id: "Monitor de Filas", label: "Monitor de Filas" },
   { id: "Omnichannel Builder", label: "Workflow Builder Omnichannel" },
   { id: "Teste de Webhooks", label: "Teste de Webhooks" },
   { id: "Variáveis Globais", label: "Variáveis Globais" },
