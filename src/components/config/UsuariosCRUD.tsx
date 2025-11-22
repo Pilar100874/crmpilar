@@ -208,6 +208,24 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setEstabelecimentos(data || []);
   };
 
+  const checkExistingAdmin = async (userEstabelecimentoId: string, currentUserId?: string) => {
+    // Buscar se já existe um admin no estabelecimento
+    const { data: existingAdmins } = await supabase
+      .from("user_roles")
+      .select("user_id, usuarios!inner(estabelecimento_id)")
+      .eq("role", "admin")
+      .eq("usuarios.estabelecimento_id", userEstabelecimentoId);
+
+    if (existingAdmins && existingAdmins.length > 0) {
+      // Se estiver editando, verificar se o admin existente é o próprio usuário
+      if (currentUserId && existingAdmins.some(admin => admin.user_id === currentUserId)) {
+        return false; // Não há outro admin
+      }
+      return true; // Já existe outro admin
+    }
+    return false; // Não há admin
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -227,6 +245,21 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Validar se já existe um admin no estabelecimento
+    if (isAdmin) {
+      const userEstabelecimentoId = selectedEstabelecimentoId || estabelecimentoId;
+      const hasAnotherAdmin = await checkExistingAdmin(userEstabelecimentoId, editingId);
+      
+      if (hasAnotherAdmin) {
+        toast({
+          title: "Limite atingido",
+          description: "Já existe um usuário com permissão de admin neste estabelecimento",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     if (!editingId && !senha) {
@@ -308,12 +341,21 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         .eq("role", "admin");
 
       if (isAdmin) {
-        await supabase
+        const { error: roleError } = await supabase
           .from("user_roles")
           .insert({
             user_id: editingId,
             role: "admin",
           });
+
+        if (roleError) {
+          toast({
+            title: "Erro ao atribuir permissão",
+            description: roleError.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       // Gerenciar registro de atendente
@@ -400,12 +442,21 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
       // Adicionar role de admin
       if (data && isAdmin) {
-        await supabase
+        const { error: roleError } = await supabase
           .from("user_roles")
           .insert({
             user_id: data.id,
             role: "admin",
           });
+
+        if (roleError) {
+          toast({
+            title: "Erro ao atribuir permissão",
+            description: roleError.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       // Criar atendente se marcado
