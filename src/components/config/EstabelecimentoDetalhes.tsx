@@ -25,7 +25,7 @@ import { FilasManager } from "@/components/atendimento/FilasManager";
 import { SkillsManager } from "@/components/atendimento/SkillsManager";
 import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaManager";
 import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, Activity } from "lucide-react";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -909,29 +909,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <SkillsManagerWrapper estabelecimentoId={estabelecimentoId} />
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="monitor-filas" className="border rounded-md">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Monitor de Filas</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      Monitore o status e métricas das filas de atendimento em tempo real
-                    </p>
-                    <Button 
-                      onClick={() => window.location.href = '/monitor-filas'}
-                      className="w-full"
-                    >
-                      <Activity className="mr-2 h-4 w-4" />
-                      Abrir Monitor de Filas
-                    </Button>
-                  </div>
                 </AccordionContent>
               </AccordionItem>
 
