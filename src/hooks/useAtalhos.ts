@@ -51,8 +51,8 @@ export const useAtalhos = () => {
       const { data: userData } = await supabase
         .from("usuarios")
         .select("estabelecimento_id")
-        .eq("id", user.id)
-        .single();
+        .ilike("email", user.email || "")
+        .maybeSingle();
 
       if (!userData?.estabelecimento_id) {
         toast({
