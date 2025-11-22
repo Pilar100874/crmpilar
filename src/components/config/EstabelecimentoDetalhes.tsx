@@ -572,7 +572,7 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
                   onChange={(e) => setFormData({ ...formData, tipo_roteamento: e.target.value as any })}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="round_robin">Round Robin</option>
+                  <option value="round_robin">Circular</option>
                   <option value="por_disponibilidade">Por Disponibilidade</option>
                   <option value="por_skill">Por Skill</option>
                   <option value="por_prioridade">Por Prioridade</option>
