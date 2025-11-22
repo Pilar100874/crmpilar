@@ -283,53 +283,37 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
           {data.type === "skill" && (
             <>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Usar Skill do Sistema</Label>
-                  <Switch
-                    checked={data.config.usarSistema === true}
-                    onCheckedChange={(checked) => updateConfig('usarSistema', checked)}
-                  />
-                </div>
+                <Label>Skill *</Label>
+                <Select
+                  value={data.config.skillId || ''}
+                  onValueChange={(value) => {
+                    const skill = skills.find(s => s.id === value);
+                    if (skill) {
+                      updateConfig('skillId', value);
+                      updateConfig('skillNome', skill.nome);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {skills.map((skill) => (
+                      <SelectItem key={skill.id} value={skill.id}>
+                        <div className="flex items-center gap-2">
+                          <Database className="h-3 w-3" />
+                          {skill.nome}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {data.config.skillNome && (
+                  <p className="text-xs text-muted-foreground">
+                    Skill selecionada: {data.config.skillNome}
+                  </p>
+                )}
               </div>
-
-              {data.config.usarSistema ? (
-                <div className="space-y-2">
-                  <Label>Skill *</Label>
-                  <Select
-                    value={data.config.skillId || ''}
-                    onValueChange={(value) => {
-                      const skill = skills.find(s => s.id === value);
-                      if (skill) {
-                        updateConfig('skillId', value);
-                        updateConfig('skillNome', skill.nome);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma skill" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {skills.map((skill) => (
-                        <SelectItem key={skill.id} value={skill.id}>
-                          <div className="flex items-center gap-2">
-                            <Database className="h-3 w-3" />
-                            {skill.nome}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>Skill Requerida *</Label>
-                  <Input
-                    value={data.config.skillNome || ""}
-                    onChange={(e) => updateConfig("skillNome", e.target.value)}
-                    placeholder="Nome da skill"
-                  />
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label>Nível Mínimo Requerido *</Label>
