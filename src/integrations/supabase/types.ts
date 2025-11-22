@@ -3609,6 +3609,54 @@ export type Database = {
           },
         ]
       }
+      user_atalhos: {
+        Row: {
+          created_at: string | null
+          estabelecimento_id: string
+          icone: string
+          id: string
+          ordem: number | null
+          path: string
+          titulo: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          estabelecimento_id: string
+          icone: string
+          id?: string
+          ordem?: number | null
+          path: string
+          titulo: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          estabelecimento_id?: string
+          icone?: string
+          id?: string
+          ordem?: number | null
+          path?: string
+          titulo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_atalhos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_atalhos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

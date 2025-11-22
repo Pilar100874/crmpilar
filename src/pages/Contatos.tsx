@@ -29,6 +29,7 @@ import { APIImportDialog } from "@/components/config/APIImportDialog";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { ContatoFieldsCRUD } from "@/components/config/ContatoFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AtalhoButton } from "@/components/AtalhoButton";
 
 import {
   DndContext,
@@ -1869,6 +1870,7 @@ export default function Contatos() {
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie seus contatos e clientes</p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <AtalhoButton titulo="Contatos" icone="Users" />
               <Button 
                 variant="outline" 
                 onClick={() => setShowImportPanel(true)} 
