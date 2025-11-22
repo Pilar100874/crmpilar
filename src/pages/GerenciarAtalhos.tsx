@@ -124,6 +124,19 @@ export default function GerenciarAtalhos() {
     loadMenusPermitidos();
   }, []);
 
+  useEffect(() => {
+    // Expandir automaticamente categorias com subitens permitidos
+    if (menusPermitidos.size > 0) {
+      const categoriasComPermissao = new Set<string>();
+      menuStructure.forEach(category => {
+        if (category.subItems && hasPermittedSubItems(category)) {
+          categoriasComPermissao.add(category.id);
+        }
+      });
+      setExpandedCategories(categoriasComPermissao);
+    }
+  }, [menusPermitidos]);
+
   const loadMenusPermitidos = async () => {
     try {
       setLoading(true);
@@ -274,10 +287,7 @@ export default function GerenciarAtalhos() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             {renderIcon(IconComponent)}
-                            <div>
-                              <p className="font-medium">{category.title}</p>
-                              <p className="text-xs text-muted-foreground">{category.url}</p>
-                            </div>
+                            <p className="font-medium">{category.title}</p>
                           </div>
                           <Button
                             variant={isAdicionado ? "default" : "outline"}
@@ -341,10 +351,7 @@ export default function GerenciarAtalhos() {
                               >
                                 <div className="flex items-center gap-3 ml-4">
                                   {renderIcon(SubIconComponent)}
-                                  <div>
-                                    <p className="font-medium text-sm">{subItem.title}</p>
-                                    <p className="text-xs text-muted-foreground">{subItem.url}</p>
-                                  </div>
+                                  <p className="font-medium text-sm">{subItem.title}</p>
                                 </div>
                                 <Button
                                   variant={isAdicionado ? "default" : "outline"}
@@ -391,10 +398,7 @@ export default function GerenciarAtalhos() {
                 >
                   <div className="flex items-center gap-3">
                     {renderIcon(IconComponent)}
-                    <div>
-                      <p className="font-medium">{atalho.titulo}</p>
-                      <p className="text-xs text-muted-foreground">{atalho.path}</p>
-                    </div>
+                    <p className="font-medium">{atalho.titulo}</p>
                   </div>
                   <Button
                     variant="ghost"
