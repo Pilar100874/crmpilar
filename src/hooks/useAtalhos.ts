@@ -103,7 +103,8 @@ export const useAtalhos = () => {
         description: `"${titulo}" foi adicionado aos seus atalhos`,
       });
 
-      loadAtalhos();
+      // Força recarregamento imediato
+      await loadAtalhos();
     } catch (error) {
       console.error("Erro ao adicionar atalho:", error);
       toast({
@@ -141,7 +142,8 @@ export const useAtalhos = () => {
         description: "O atalho foi removido da sua lista",
       });
 
-      loadAtalhos();
+      // Força recarregamento imediato
+      await loadAtalhos();
     } catch (error) {
       console.error("Erro ao remover atalho:", error);
       toast({
