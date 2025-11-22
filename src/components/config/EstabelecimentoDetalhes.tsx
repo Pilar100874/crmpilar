@@ -278,6 +278,8 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
   const [filas, setFilas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [filaToDelete, setFilaToDelete] = useState<any | null>(null);
   const [atendentesDialogOpen, setAtendentesDialogOpen] = useState(false);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedFila, setSelectedFila] = useState<any | null>(null);
@@ -411,6 +413,97 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
     }
   };
 
+  const checkFilaInUse = async (filaId: string) => {
+    try {
+      // Verifica se há conversas usando esta fila
+      const { count: conversationsCount } = await supabase
+        .from('conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('fila_id', filaId);
+
+      // Verifica se há atendentes vinculados
+      const { count: atendentesCount } = await supabase
+        .from('atendente_filas')
+        .select('*', { count: 'exact', head: true })
+        .eq('fila_id', filaId);
+
+      // Verifica se há skills vinculadas
+      const { count: skillsCount } = await supabase
+        .from('fila_skills')
+        .select('*', { count: 'exact', head: true })
+        .eq('fila_id', filaId);
+
+      // Verifica se está sendo usada em workflows omnichannel
+      const { data: flows } = await supabase
+        .from('omnichannel_flows')
+        .select('flow_data')
+        .eq('estabelecimento_id', estabelecimentoId);
+
+      let flowsCount = 0;
+      if (flows) {
+        flowsCount = flows.filter((flow: any) => {
+          const flowData = flow.flow_data;
+          if (flowData && flowData.nodes) {
+            return flowData.nodes.some((node: any) => 
+              node.data?.config?.filaId === filaId
+            );
+          }
+          return false;
+        }).length;
+      }
+
+      return {
+        inUse: (conversationsCount || 0) > 0 || (atendentesCount || 0) > 0 || (skillsCount || 0) > 0 || flowsCount > 0,
+        conversationsCount: conversationsCount || 0,
+        atendentesCount: atendentesCount || 0,
+        skillsCount: skillsCount || 0,
+        flowsCount
+      };
+    } catch (error) {
+      console.error("Erro ao verificar uso da fila:", error);
+      return { inUse: true, conversationsCount: 0, atendentesCount: 0, skillsCount: 0, flowsCount: 0 };
+    }
+  };
+
+  const handleDeleteFila = async (fila: any) => {
+    const usage = await checkFilaInUse(fila.id);
+    
+    if (usage.inUse) {
+      let message = "Esta fila não pode ser excluída pois está em uso:\n\n";
+      if (usage.conversationsCount > 0) message += `• ${usage.conversationsCount} conversas\n`;
+      if (usage.atendentesCount > 0) message += `• ${usage.atendentesCount} atendentes vinculados\n`;
+      if (usage.skillsCount > 0) message += `• ${usage.skillsCount} skills configuradas\n`;
+      if (usage.flowsCount > 0) message += `• ${usage.flowsCount} workflows omnichannel\n`;
+      
+      sonnerToast.error(message);
+      return;
+    }
+
+    setFilaToDelete(fila);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!filaToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('filas_atendimento')
+        .delete()
+        .eq('id', filaToDelete.id);
+
+      if (error) throw error;
+      
+      sonnerToast.success("Fila excluída com sucesso");
+      setDeleteDialogOpen(false);
+      setFilaToDelete(null);
+      loadFilas();
+    } catch (error) {
+      console.error("Erro ao excluir fila:", error);
+      sonnerToast.error("Erro ao excluir fila");
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center py-8">Carregando...</div>;
   }
@@ -421,6 +514,7 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
         filas={filas}
         onCreateFila={handleCreateFila}
         onEditFila={handleEditFila}
+        onDeleteFila={handleDeleteFila}
         onToggleAtiva={handleToggleAtiva}
         onViewAtendentes={handleViewAtendentes}
         onConfigureSkills={handleConfigureSkills}
@@ -575,6 +669,27 @@ function FilasManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string 
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a fila "{filaToDelete?.nome}"?
+              <br /><br />
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFilaToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -2,19 +2,20 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Settings, Users } from "lucide-react";
+import { Plus, Settings, Users, Trash2 } from "lucide-react";
 import type { FilaAtendimento } from "@/types/atendimento";
 
 interface FilasManagerProps {
   filas: FilaAtendimento[];
   onCreateFila?: () => void;
   onEditFila?: (fila: FilaAtendimento) => void;
+  onDeleteFila?: (fila: FilaAtendimento) => void;
   onToggleAtiva?: (filaId: string, ativa: boolean) => void;
   onViewAtendentes?: (fila: FilaAtendimento) => void;
   onConfigureSkills?: (fila: FilaAtendimento) => void;
 }
 
-export const FilasManager = ({ filas, onCreateFila, onEditFila, onToggleAtiva, onViewAtendentes, onConfigureSkills }: FilasManagerProps) => {
+export const FilasManager = ({ filas, onCreateFila, onEditFila, onDeleteFila, onToggleAtiva, onViewAtendentes, onConfigureSkills }: FilasManagerProps) => {
   const getTipoRoteamentoLabel = (tipo: string) => {
     const labels = {
       round_robin: "Round Robin",
@@ -119,6 +120,14 @@ export const FilasManager = ({ filas, onCreateFila, onEditFila, onToggleAtiva, o
                   >
                     <Settings className="h-4 w-4 mr-1" />
                     Configurar Skills
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => onDeleteFila?.(fila)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Excluir
                   </Button>
                 </div>
               </CardContent>
