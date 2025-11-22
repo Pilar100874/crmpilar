@@ -83,6 +83,8 @@ export default function OmnichannelBuilder() {
 
   const loadFlow = async (flowId: string) => {
     try {
+      console.log("🏢 Carregando fluxo (OmnichannelBuilder):", flowId);
+      
       const { data, error } = await supabase
         .from("omnichannel_flows")
         .select("*")
@@ -92,6 +94,7 @@ export default function OmnichannelBuilder() {
       if (error) throw error;
 
       if (data) {
+        console.log("✅ Fluxo carregado:", data.nome);
         setFlowName(data.nome);
         setCurrentBotId(data.trigger_bot_id || undefined);
         const flowData = data.flow_data as unknown as OmnichannelFlowData;

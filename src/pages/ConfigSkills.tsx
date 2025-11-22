@@ -51,11 +51,18 @@ export default function ConfigSkills() {
   const loadSkills = async (estabId: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      console.log("🏢 Estabelecimento ID (ConfigSkills):", estabId);
+      
+      let query = supabase
         .from("skills")
         .select("*")
-        .eq("estabelecimento_id", estabId)
         .order("nome");
+      
+      if (estabId) {
+        query = query.eq("estabelecimento_id", estabId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setSkills(data || []);
