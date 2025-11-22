@@ -230,78 +230,70 @@ export function EstabelecimentosCRUD() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4 border p-4 rounded-lg">
-        <h3 className="font-semibold text-lg">
-          {editingId ? "Editar Estabelecimento" : "Novo Estabelecimento"}
-        </h3>
+      {isSystemAdmin && (
+        <form onSubmit={handleSubmit} className="space-y-4 border p-4 rounded-lg">
+          <h3 className="font-semibold text-lg">
+            {editingId ? "Editar Estabelecimento" : "Novo Estabelecimento"}
+          </h3>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="cnpj">CNPJ *</Label>
-            <Input
-              id="cnpj"
-              value={formData.cnpj}
-              onChange={(e) =>
-                setFormData({ ...formData, cnpj: formatCNPJ(e.target.value) })
-              }
-              placeholder="00.000.000/0000-00"
-              maxLength={18}
-              required
-              disabled={isUserAdmin && editingId !== null}
-              title={isUserAdmin && editingId ? "Usuários admin não podem modificar o CNPJ" : ""}
-            />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="cnpj">CNPJ *</Label>
+              <Input
+                id="cnpj"
+                value={formData.cnpj}
+                onChange={(e) =>
+                  setFormData({ ...formData, cnpj: formatCNPJ(e.target.value) })
+                }
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) =>
+                  setFormData({ ...formData, nome: e.target.value })
+                }
+                placeholder="Nome do Estabelecimento"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="numero_usuarios">Número de Usuários Permitidos *</Label>
+              <Input
+                id="numero_usuarios"
+                type="number"
+                min="1"
+                value={formData.numero_usuarios_permitidos}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    numero_usuarios_permitidos: parseInt(e.target.value) || 1,
+                  })
+                }
+                required
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome *</Label>
-            <Input
-              id="nome"
-              value={formData.nome}
-              onChange={(e) =>
-                setFormData({ ...formData, nome: e.target.value })
-              }
-              placeholder="Nome do Estabelecimento"
-              required
-              disabled={isUserAdmin && editingId !== null}
-              title={isUserAdmin && editingId ? "Usuários admin não podem modificar o nome" : ""}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="numero_usuarios">Número de Usuários Permitidos *</Label>
-            <Input
-              id="numero_usuarios"
-              type="number"
-              min="1"
-              value={formData.numero_usuarios_permitidos}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  numero_usuarios_permitidos: parseInt(e.target.value) || 1,
-                })
-              }
-              required
-              disabled={isUserAdmin && editingId !== null}
-              title={isUserAdmin && editingId ? "Usuários admin não podem modificar o número de usuários" : ""}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button 
-            type="submit"
-            disabled={isUserAdmin && editingId !== null}
-            title={isUserAdmin && editingId ? "Usuários admin não podem editar campos restritos do estabelecimento" : ""}
-          >
-            {editingId ? "Atualizar" : "Criar"}
-          </Button>
-          {editingId && (
-            <Button type="button" variant="outline" onClick={resetForm}>
-              Cancelar
+          <div className="flex gap-2">
+            <Button type="submit">
+              {editingId ? "Atualizar" : "Criar"}
             </Button>
-          )}
-        </div>
-      </form>
+            {editingId && (
+              <Button type="button" variant="outline" onClick={resetForm}>
+                Cancelar
+              </Button>
+            )}
+          </div>
+        </form>
+      )}
 
       <div className="space-y-2">
         <h3 className="font-semibold text-lg">Estabelecimentos Cadastrados</h3>
@@ -332,22 +324,26 @@ export function EstabelecimentosCRUD() {
                       <ChevronDown className="h-4 w-4" />
                     )}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(estabelecimento)}
-                    title="Editar"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(estabelecimento)}
-                    title="Excluir"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {isSystemAdmin && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(estabelecimento)}
+                        title="Editar"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(estabelecimento)}
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
               
