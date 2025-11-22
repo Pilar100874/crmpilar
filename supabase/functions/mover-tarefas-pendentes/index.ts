@@ -248,6 +248,18 @@ Deno.serve(async (req) => {
         // Aplicar regra de fim de semana se ativa
         const verificarFinsDeSemana = regrasMap.bloqueio_finais_semana === true;
         
+        // Se a regra de fins de semana estiver ativa e hoje for sexta,
+        // mover para segunda ao invés de hoje
+        if (verificarFinsDeSemana && novaData.getDay() === 5) {
+          // Sexta-feira - avançar para segunda
+          novaData.setDate(novaData.getDate() + 3);
+          console.log(`📅 Sexta-feira detectada com regra de bloqueio ativa - avançando para segunda`);
+        } else if (verificarFinsDeSemana && isWeekend(novaData)) {
+          // Se hoje for fim de semana, avançar para próximo dia útil
+          novaData = getNextBusinessDay(novaData);
+          console.log(`📅 Fim de semana detectado - avançando para próximo dia útil`);
+        }
+        
         // Obter próximo dia disponível (sem tarefa "dia todo" e respeitando fins de semana)
         novaData = await getNextAvailableDay(
           novaData, 
