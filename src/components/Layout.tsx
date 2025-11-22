@@ -35,6 +35,7 @@ import {
   Video,
   Upload,
   Activity,
+  Star,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,8 @@ import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { LayoutContext } from "@/contexts/LayoutContext";
+import { useAtalhos } from "@/hooks/useAtalhos";
+import * as LucideIcons from "lucide-react";
 
 interface MenuPermissions {
   view: boolean;
@@ -177,6 +180,7 @@ export default function Layout({ children }: LayoutProps) {
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { atalhos } = useAtalhos();
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -434,6 +438,65 @@ export default function Layout({ children }: LayoutProps) {
 
           <ScrollArea className="flex-1 bg-sidebar">
             <div className={`py-2 flex flex-col gap-1 ${menuLocked ? 'items-center' : 'px-4'}`}>
+              {/* Seção de Atalhos */}
+              {atalhos.length > 0 && (
+                <>
+                  {!menuLocked && (
+                    <div className="px-3 py-2 mb-1">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+                        <Star className="w-3 h-3" />
+                        <span>Atalhos</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {atalhos.map((atalho) => {
+                    const IconComponent = (LucideIcons as any)[atalho.icone] || Star;
+                    
+                    if (menuLocked) {
+                      return (
+                        <NavLink
+                          key={atalho.id}
+                          to={atalho.path}
+                          className={({ isActive }) =>
+                            `w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                              isActive
+                                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                            }`
+                          }
+                          title={atalho.titulo}
+                        >
+                          <IconComponent className="w-6 h-6" />
+                        </NavLink>
+                      );
+                    }
+                    
+                    return (
+                      <NavLink
+                        key={atalho.id}
+                        to={atalho.path}
+                        className={({ isActive }) =>
+                          `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                            isActive
+                              ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          }`
+                        }
+                        title={atalho.titulo}
+                      >
+                        <IconComponent className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-sm font-medium">{atalho.titulo}</span>
+                      </NavLink>
+                    );
+                  })}
+                  
+                  {!menuLocked && (
+                    <div className="h-px bg-sidebar-border/50 my-2" />
+                  )}
+                </>
+              )}
+              
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
                   const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
