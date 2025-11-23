@@ -855,81 +855,6 @@ export default function TestRoteamento() {
                           />
                         </div>
 
-                        {/* Resultado do Roteamento (abaixo do Canvas, se houver workflow) */}
-                        {activeSimulation.config.fluxoId && (
-                          <Card className="p-6 shadow-lg">
-                            <div className="flex items-center gap-2 mb-4">
-                              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="font-semibold">Resultado do Roteamento</h3>
-                                <p className="text-xs text-muted-foreground">
-                                  Informações sobre o direcionamento
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Fila */}
-                              <div className="p-4 rounded-lg border bg-muted/30">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Users className="w-4 h-4 text-primary" />
-                                  <span className="text-sm font-medium">Fila de Atendimento</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  Fila Geral
-                                </p>
-                                <Badge variant="secondary" className="mt-2">
-                                  Prioridade: Normal
-                                </Badge>
-                              </div>
-
-                              {/* Atendente */}
-                              <div className="p-4 rounded-lg border bg-muted/30">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <UserCog className="w-4 h-4 text-primary" />
-                                  <span className="text-sm font-medium">Atendente Designado</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  João Silva
-                                </p>
-                                <Badge variant="default" className="mt-2">
-                                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                                  Disponível
-                                </Badge>
-                              </div>
-
-                              {/* Status */}
-                              <div className="p-4 rounded-lg border bg-muted/30">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Activity className="w-4 h-4 text-primary" />
-                                  <span className="text-sm font-medium">Status do Chat</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  Em Atendimento
-                                </p>
-                                <Badge variant="default" className="mt-2 bg-green-600">
-                                  Ativo
-                                </Badge>
-                              </div>
-
-                              {/* Tempo */}
-                              <div className="p-4 rounded-lg border bg-muted/30">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Clock className="w-4 h-4 text-primary" />
-                                  <span className="text-sm font-medium">Tempo de Resposta</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  2 minutos
-                                </p>
-                                <Badge variant="secondary" className="mt-2">
-                                  SLA: OK
-                                </Badge>
-                              </div>
-                            </div>
-                          </Card>
-                        )}
                       </div>
 
                       {/* Coluna Direita - Chat Interativo */}
@@ -1056,6 +981,72 @@ export default function TestRoteamento() {
                           </div>
                         )}
                       </div>
+                    </Card>
+
+                    {/* Terceira Linha: Filas Disponíveis */}
+                    <Card className="p-0 shadow-lg overflow-hidden mt-6">
+                      <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+                        <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">Filas Disponíveis</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {filas?.length || 0} fila(s) configurada(s)
+                          </p>
+                        </div>
+                      </div>
+                      <ScrollArea className="h-[400px] p-4">
+                        {filas && filas.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filas.map((fila) => (
+                              <div
+                                key={fila.id}
+                                className="flex flex-col gap-3 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm mb-1">{fila.nome}</p>
+                                    <Badge 
+                                      variant={fila.ativa ? "default" : "secondary"}
+                                      className="text-xs"
+                                    >
+                                      {fila.ativa ? "Ativa" : "Inativa"}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex flex-col items-center gap-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {conversasAtivas?.filter(c => c.fila_id === fila.id).length || 0}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">na fila</span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Activity className="w-3 h-3" />
+                                    Prioridade: {fila.prioridade || 0}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Users className="w-3 h-3" />
+                                    Máx por atendente: {fila.max_chats_por_atendente || 0}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Zap className="w-3 h-3" />
+                                    Tipo: {fila.tipo_roteamento || "round_robin"}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-30" />
+                            <p className="text-sm text-muted-foreground">
+                              Nenhuma fila configurada
+                            </p>
+                          </div>
+                        )}
+                      </ScrollArea>
                     </Card>
 
                   </>
