@@ -260,7 +260,6 @@ export default function TestRoteamento() {
                   <SelectValue placeholder="Selecione um bot" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem bot</SelectItem>
                   {bots?.map((bot) => (
                     <SelectItem key={bot.id} value={bot.id}>
                       {bot.name}
@@ -277,7 +276,6 @@ export default function TestRoteamento() {
                   <SelectValue placeholder="Selecione um fluxo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem workflow</SelectItem>
                   {fluxos?.map((fluxo) => (
                     <SelectItem key={fluxo.id} value={fluxo.id}>
                       {fluxo.nome}
