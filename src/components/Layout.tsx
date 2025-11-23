@@ -45,6 +45,7 @@ import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import * as LucideIcons from "lucide-react";
@@ -250,8 +251,9 @@ export default function Layout({ children }: LayoutProps) {
         // Se usuário tem role admin, dá acesso total sem precisar de grupo
         if (userRole) {
           const allMenus: Record<string, MenuPermissions> = {};
-          menuItems.forEach(item => {
-            allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
+          // Usar MENUS_DISPONIVEIS para garantir 100% dos menus
+          MENUS_DISPONIVEIS.forEach(menuId => {
+            allMenus[menuId] = { view: true, create: true, edit: true, delete: true };
           });
           setAllowedMenus(allMenus);
           setIsLoading(false);
@@ -261,8 +263,9 @@ export default function Layout({ children }: LayoutProps) {
         // Se não tem grupo de acesso, permite todos os menus
         if (!usuario.grupo_acesso_id) {
           const allMenus: Record<string, MenuPermissions> = {};
-          menuItems.forEach(item => {
-            allMenus[item.id] = { view: true, create: true, edit: true, delete: true };
+          // Usar MENUS_DISPONIVEIS para garantir 100% dos menus
+          MENUS_DISPONIVEIS.forEach(menuId => {
+            allMenus[menuId] = { view: true, create: true, edit: true, delete: true };
           });
           setAllowedMenus(allMenus);
           setIsLoading(false);
