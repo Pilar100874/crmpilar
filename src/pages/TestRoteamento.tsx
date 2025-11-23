@@ -467,6 +467,9 @@ export default function TestRoteamento() {
                           <SelectItem value="instagram">
                             Instagram ({bots?.filter(b => b.canais?.includes("instagram")).length || 0} bots)
                           </SelectItem>
+                          <SelectItem value="facebook">
+                            Facebook ({bots?.filter(b => b.canais?.includes("facebook")).length || 0} bots)
+                          </SelectItem>
                           <SelectItem value="telegram">
                             Telegram ({bots?.filter(b => b.canais?.includes("telegram")).length || 0} bots)
                           </SelectItem>
