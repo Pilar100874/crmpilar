@@ -51,14 +51,6 @@ import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import * as LucideIcons from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface MenuPermissions {
   view: boolean;
@@ -149,6 +141,15 @@ const menuItems: MenuItem[] = [
     subItems: [
       { id: "Softphone", title: "Softphone", url: "/softphone", icon: Phone },
       { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: Video },
+    ]
+  },
+  { 
+    id: "Minha Conta",
+    title: "Minha Conta", 
+    icon: UserIcon,
+    subItems: [
+      { id: "Perfil", title: "Perfil", url: "/perfil", icon: UserIcon },
+      { id: "Alterar Senha", title: "Alterar Senha", url: "#alterar-senha", icon: KeyRound },
     ]
   },
   { 
@@ -706,28 +707,46 @@ export default function Layout({ children }: LayoutProps) {
                                 {item.title}
                               </h3>
                               
-                              <div className="space-y-1">
-                                 {item.subItems.map((subItem) => {
-                                   const isInAtalhos = atalhos.some(a => a.path === subItem.url);
-                                   return (
-                                     <NavLink
-                                       key={subItem.id}
-                                       to={subItem.url}
-                                       onClick={() => setOpenSubmenuId(null)}
-                                       className={({ isActive }) =>
-                                         `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                                           isActive && !isInAtalhos
-                                             ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                                         }`
-                                       }
-                                     >
-                                       <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                       <span className="text-sm">{subItem.title}</span>
-                                     </NavLink>
-                                   );
-                                 })}
-                              </div>
+                               <div className="space-y-1">
+                                  {item.subItems.map((subItem) => {
+                                    const isInAtalhos = atalhos.some(a => a.path === subItem.url);
+                                    
+                                    // Tratamento especial para Alterar Senha
+                                    if (subItem.url === "#alterar-senha") {
+                                      return (
+                                        <button
+                                          key={subItem.id}
+                                          onClick={() => {
+                                            setOpenSubmenuId(null);
+                                            setShowChangePasswordDialog(true);
+                                          }}
+                                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                                        >
+                                          <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                          <span className="text-sm">{subItem.title}</span>
+                                        </button>
+                                      );
+                                    }
+                                    
+                                    return (
+                                      <NavLink
+                                        key={subItem.id}
+                                        to={subItem.url}
+                                        onClick={() => setOpenSubmenuId(null)}
+                                        className={({ isActive }) =>
+                                          `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                                            isActive && !isInAtalhos
+                                              ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                          }`
+                                        }
+                                      >
+                                        <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                        <span className="text-sm">{subItem.title}</span>
+                                      </NavLink>
+                                    );
+                                  })}
+                               </div>
                             </div>
                           </div>
                         )}
@@ -753,30 +772,48 @@ export default function Layout({ children }: LayoutProps) {
                         <ChevronDown className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
                       
-                       {isMenuOpen && (
-                         <div className="mt-1 ml-8 space-y-1">
-                           {item.subItems.map((subItem) => {
-                             const isInAtalhos = atalhos.some(a => a.path === subItem.url);
-                             return (
-                               <NavLink
-                                 key={subItem.id}
-                                 to={subItem.url}
-                                 onClick={() => setOpenSubmenuId(null)}
-                                 className={({ isActive }) =>
-                                   `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                                     isActive && !isInAtalhos
-                                       ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                       : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-                                   }`
-                                 }
-                               >
-                                 <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                 <span className="text-sm">{subItem.title}</span>
-                               </NavLink>
-                             );
-                           })}
-                         </div>
-                       )}
+                        {isMenuOpen && (
+                          <div className="mt-1 ml-8 space-y-1">
+                            {item.subItems.map((subItem) => {
+                              const isInAtalhos = atalhos.some(a => a.path === subItem.url);
+                              
+                              // Tratamento especial para Alterar Senha
+                              if (subItem.url === "#alterar-senha") {
+                                return (
+                                  <button
+                                    key={subItem.id}
+                                    onClick={() => {
+                                      setOpenSubmenuId(null);
+                                      setShowChangePasswordDialog(true);
+                                    }}
+                                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                                  >
+                                    <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-sm">{subItem.title}</span>
+                                  </button>
+                                );
+                              }
+                              
+                              return (
+                                <NavLink
+                                  key={subItem.id}
+                                  to={subItem.url}
+                                  onClick={() => setOpenSubmenuId(null)}
+                                  className={({ isActive }) =>
+                                    `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                      isActive && !isInAtalhos
+                                        ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                    }`
+                                  }
+                                >
+                                  <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                  <span className="text-sm">{subItem.title}</span>
+                                </NavLink>
+                              );
+                            })}
+                          </div>
+                        )}
                     </div>
                   );
                 }
@@ -847,38 +884,18 @@ export default function Layout({ children }: LayoutProps) {
               </button>
             )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`${
-                    menuLocked 
-                      ? 'w-10 h-10 rounded-full flex items-center justify-center' 
-                      : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-                  } bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors`}
-                  title={userName || "Usuário"}
-                >
-                  <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
-                  {!menuLocked && <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuLabel>{userName || "Minha Conta"}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowUsuarioSelector(true)}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Perfil</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowChangePasswordDialog(true)}>
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  <span>Alterar Senha</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sair</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <button
+              onClick={() => setShowUsuarioSelector(true)}
+              className={`${
+                menuLocked 
+                  ? 'w-10 h-10 rounded-full flex items-center justify-center' 
+                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+              } bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors`}
+              title={userName || "Usuário"}
+            >
+              <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
+              {!menuLocked && <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>}
+            </button>
             
             <button 
               onClick={handleLogout}
