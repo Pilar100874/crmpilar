@@ -26,18 +26,32 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Buscar configuração do WhatsApp
+    // Buscar configuração do WhatsApp para o estabelecimento
+    // Como não temos estabelecimento_id neste contexto, pegamos a primeira config disponível
     const { data: whatsappConfig, error: configError } = await supabase
       .from("whatsapp_config")
       .select("*")
       .limit(1)
       .maybeSingle();
 
-    if (configError || !whatsappConfig) {
-      console.error("Erro ao buscar config WhatsApp:", configError);
+    if (configError) {
+      console.error("Erro ao buscar configuração:", configError);
       return new Response(
-        JSON.stringify({ error: "Configuração do WhatsApp não encontrada" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Erro ao buscar configuração do WhatsApp", details: configError.message }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    if (!whatsappConfig) {
+      return new Response(
+        JSON.stringify({ error: "Configuração do WhatsApp não encontrada. Configure em Configurações > Recuperar Senha" }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
       );
     }
 
@@ -49,11 +63,10 @@ serve(async (req) => {
 
     // Enviar mensagem via WAHA
     const wahaUrl = whatsappConfig.waha_url || "http://localhost:3000";
-    const wahaSession = whatsappConfig.waha_session || "default";
+    const wahaSession = whatsappConfig.session_name || "default";
     const wahaApiKey = whatsappConfig.waha_api_key;
 
-    const jidSuffix = whatsappConfig.jid_suffix || "@c.us";
-    const chatId = `${phoneNumber}${jidSuffix}`;
+    const chatId = `${phoneNumber}@c.us`;
 
     const wahaPayload = {
       session: wahaSession,
