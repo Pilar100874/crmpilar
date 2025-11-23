@@ -308,40 +308,14 @@ export default function TestRoteamento() {
               </p>
             </div>
             
-            {/* Stepper */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all",
-                  currentStep === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                )}>
-                  1
-                </div>
-                <span className={cn(
-                  "text-sm font-medium",
-                  currentStep === 1 ? "text-foreground" : "text-muted-foreground"
-                )}>
-                  Configuração
-                </span>
-              </div>
-              
-              <ArrowRight className="w-5 h-5 text-muted-foreground" />
-              
-              <div className="flex items-center gap-2">
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all",
-                  currentStep === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                )}>
-                  2
-                </div>
-                <span className={cn(
-                  "text-sm font-medium",
-                  currentStep === 2 ? "text-foreground" : "text-muted-foreground"
-                )}>
-                  Simulação
-                </span>
-              </div>
-            </div>
+            <Button
+              onClick={resetAllSimulations}
+              variant="outline"
+              size="sm"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Limpar Todas Simulações
+            </Button>
           </div>
         </div>
       </div>
@@ -576,16 +550,6 @@ export default function TestRoteamento() {
                 {/* Controles e Seletor de Simulações */}
                 <Card className="p-4">
                   <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <Button
-                        onClick={resetAllSimulations}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Limpar Todas
-                      </Button>
-                    </div>
 
                     {/* Tabs de Simulações */}
                     <div className="border-t pt-3">
