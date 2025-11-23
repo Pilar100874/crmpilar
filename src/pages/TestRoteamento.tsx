@@ -46,8 +46,11 @@ export default function TestRoteamento() {
   const [selectedBot, setSelectedBot] = useState<string | undefined>();
   const [selectedFluxo, setSelectedFluxo] = useState<string | undefined>();
   const [selectedCliente, setSelectedCliente] = useState<string | undefined>();
-  const [activeSimulation, setActiveSimulation] = useState<Simulation | null>(null);
+  const [simulations, setSimulations] = useState<Simulation[]>([]);
+  const [selectedSimulationId, setSelectedSimulationId] = useState<string | null>(null);
   const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
+  
+  const activeSimulation = simulations.find(s => s.id === selectedSimulationId) || null;
 
   // Buscar dados
   const { data: bots } = useQuery({
@@ -148,14 +151,13 @@ export default function TestRoteamento() {
 
   const startSimulation = () => {
     if (!selectedCanal) {
-      toast.error("Selecione um canal para iniciar");
+      toast.error("Selecione um canal para continuar");
       return;
     }
 
-    const simId = `sim-${Date.now()}`;
     const newSimulation: Simulation = {
-      id: simId,
-      name: "Simulação Ativa",
+      id: `sim-${Date.now()}`,
+      name: `${selectedCanal} - ${new Date().toLocaleTimeString()}`,
       status: "running",
       startTime: new Date(),
       config: {
@@ -164,33 +166,41 @@ export default function TestRoteamento() {
         fluxoId: selectedFluxo || undefined,
         cliente: selectedCliente || undefined,
       },
-      chatMessages: [
-        {
-          id: `msg-${Date.now()}`,
-          sender: "system",
-          text: `Simulação iniciada no canal ${selectedCanal}`,
-          timestamp: new Date(),
-        },
-      ],
+      chatMessages: [],
       executionTrace: [],
     };
 
-    setActiveSimulation(newSimulation);
+    setSimulations(prev => [...prev, newSimulation]);
+    setSelectedSimulationId(newSimulation.id);
     setCurrentStep(2);
     toast.success("Simulação iniciada!");
   };
 
-  const resetSimulation = () => {
-    setActiveSimulation(null);
+  const removeSimulation = (simId: string) => {
+    setSimulations(prev => prev.filter(s => s.id !== simId));
+    if (selectedSimulationId === simId) {
+      const remaining = simulations.filter(s => s.id !== simId);
+      setSelectedSimulationId(remaining.length > 0 ? remaining[0].id : null);
+      if (remaining.length === 0) {
+        setCurrentStep(1);
+      }
+    }
+    toast.success("Simulação removida");
+  };
+
+  const resetAllSimulations = () => {
+    setSimulations([]);
+    setSelectedSimulationId(null);
     setCurrentStep(1);
     setSelectedCanal(undefined);
     setSelectedBot(undefined);
     setSelectedFluxo(undefined);
     setSelectedCliente(undefined);
+    toast.success("Todas simulações foram limpas");
   };
 
   const addMessageToChat = (text: string) => {
-    if (!activeSimulation) return;
+    if (!selectedSimulationId) return;
 
     const newMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -199,10 +209,11 @@ export default function TestRoteamento() {
       timestamp: new Date(),
     };
 
-    setActiveSimulation(prev => prev ? {
-      ...prev,
-      chatMessages: [...prev.chatMessages, newMessage],
-    } : null);
+    setSimulations(prev => prev.map(sim => 
+      sim.id === selectedSimulationId 
+        ? { ...sim, chatMessages: [...sim.chatMessages, newMessage] }
+        : sim
+    ));
   };
 
   return (
@@ -469,14 +480,23 @@ export default function TestRoteamento() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-6">
+                  <div className="flex justify-between items-center pt-6">
+                    {simulations.length > 0 && (
+                      <Button
+                        onClick={() => setCurrentStep(2)}
+                        variant="outline"
+                        size="lg"
+                      >
+                        Ver Simulações Ativas ({simulations.length})
+                      </Button>
+                    )}
                     <Button
                       onClick={startSimulation}
                       disabled={!selectedCanal}
                       size="lg"
-                      className="min-w-[200px]"
+                      className="min-w-[200px] ml-auto"
                     >
-                      Iniciar Simulação
+                      {simulations.length > 0 ? "Adicionar" : "Iniciar"} Simulação
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </div>
@@ -485,33 +505,62 @@ export default function TestRoteamento() {
             ) : (
               /* PASSO 2: Simulação */
               <div className="space-y-6">
-                {/* Controles */}
+                {/* Controles e Seletor de Simulações */}
                 <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Button
-                        onClick={resetSimulation}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Nova Simulação
-                      </Button>
-                      <Badge variant="default" className="text-sm">
-                        <Play className="w-3 h-3 mr-1" />
-                        Simulação Ativa
-                      </Badge>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Button
+                          onClick={resetAllSimulations}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-2" />
+                          Nova Configuração
+                        </Button>
+                        <Badge variant="default" className="text-sm">
+                          <Play className="w-3 h-3 mr-1" />
+                          {simulations.length} Simulação(ões) Ativa(s)
+                        </Badge>
+                      </div>
                     </div>
-                    
-                    <div className="text-sm text-muted-foreground">
-                      Canal: <span className="font-medium text-foreground">{selectedCanal}</span>
-                      {selectedBot && <> • Bot: <span className="font-medium text-foreground">
-                        {bots?.find(b => b.id === selectedBot)?.name}
-                      </span></>}
-                      {selectedFluxo && <> • Workflow: <span className="font-medium text-foreground">
-                        {fluxos?.find(f => f.id === selectedFluxo)?.nome}
-                      </span></>}
+
+                    {/* Tabs de Simulações */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                      {simulations.map((sim) => (
+                        <div key={sim.id} className="flex items-center gap-1">
+                          <Button
+                            variant={selectedSimulationId === sim.id ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setSelectedSimulationId(sim.id)}
+                            className="whitespace-nowrap"
+                          >
+                            {sim.name}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => removeSimulation(sim.id)}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
                     </div>
+
+                    {/* Info da Simulação Selecionada */}
+                    {activeSimulation && (
+                      <div className="text-sm text-muted-foreground border-t pt-3">
+                        Canal: <span className="font-medium text-foreground">{activeSimulation.config.canal}</span>
+                        {activeSimulation.config.botId && <> • Bot: <span className="font-medium text-foreground">
+                          {bots?.find(b => b.id === activeSimulation.config.botId)?.name}
+                        </span></>}
+                        {activeSimulation.config.fluxoId && <> • Workflow: <span className="font-medium text-foreground">
+                          {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome}
+                        </span></>}
+                      </div>
+                    )}
                   </div>
                 </Card>
 
