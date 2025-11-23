@@ -451,8 +451,8 @@ export default function Layout({ children }: LayoutProps) {
           {/* Logo no topo */}
           <div className="flex items-center justify-center py-3 md:py-4 border-b border-sidebar-border/50">
             <button
-              onClick={() => isAdmin && setShowEstabelecimentoSelector(true)}
-              className="w-10 h-10 md:w-12 md:h-12 lg:w-10 lg:h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors"
+              onClick={() => setShowEstabelecimentoSelector(true)}
+              className="w-10 h-10 md:w-12 md:h-12 lg:w-10 lg:h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors cursor-pointer"
               title={estabelecimentoName || "Logo"}
             >
               <Building2 className="w-5 h-5 md:w-6 md:h-6 lg:w-5 lg:h-5 text-sidebar-foreground/90" />
