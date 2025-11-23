@@ -203,8 +203,17 @@ export default function Layout({ children }: LayoutProps) {
   }, [navigate, location.pathname]);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchUserPermissions = async () => {
-      if (!user) {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Evita múltiplas chamadas para o mesmo usuário
+      const cachedUserId = sessionStorage.getItem("cached_user_id");
+      if (cachedUserId === user.id && Object.keys(allowedMenus).length > 0) {
         setIsLoading(false);
         return;
       }
@@ -220,6 +229,8 @@ export default function Layout({ children }: LayoutProps) {
           .eq("id", storedAdminId || user.id)
           .maybeSingle();
 
+        if (!isMounted) return;
+
         // Se for administrador da tabela, dá acesso total a todos os menus
         if (adminData && storedUserType === "admin") {
           setIsAdmin(true);
@@ -228,6 +239,7 @@ export default function Layout({ children }: LayoutProps) {
             allMenus[menuId] = { view: true, create: true, edit: true, delete: true };
           });
           setAllowedMenus(allMenus);
+          sessionStorage.setItem("cached_user_id", user.id);
           setIsLoading(false);
           return;
         }
@@ -242,6 +254,8 @@ export default function Layout({ children }: LayoutProps) {
           .eq("auth_user_id", user.id)
           .maybeSingle();
 
+        if (!isMounted) return;
+
         if (usuarioByAuthId) {
           usuario = usuarioByAuthId;
         } else {
@@ -252,15 +266,14 @@ export default function Layout({ children }: LayoutProps) {
             .eq("email", user.email || "")
             .maybeSingle();
           
+          if (!isMounted) return;
           usuario = usuarioByEmail;
         }
 
-        console.log("Usuario encontrado:", usuario);
-
         // Se não encontrou usuário, bloqueia tudo
         if (!usuario) {
-          console.log("Nenhum usuário encontrado, bloqueando menus");
           setAllowedMenus({});
+          sessionStorage.setItem("cached_user_id", user.id);
           setIsLoading(false);
           return;
         }
@@ -273,14 +286,16 @@ export default function Layout({ children }: LayoutProps) {
           .eq("role", "admin")
           .maybeSingle();
 
+        if (!isMounted) return;
+
         // Se usuário tem role admin, dá acesso total sem precisar de grupo
         if (userRole) {
           const allMenus: Record<string, MenuPermissions> = {};
-          // Usar MENUS_DISPONIVEIS para garantir 100% dos menus
           MENUS_DISPONIVEIS.forEach(menuId => {
             allMenus[menuId] = { view: true, create: true, edit: true, delete: true };
           });
           setAllowedMenus(allMenus);
+          sessionStorage.setItem("cached_user_id", user.id);
           setIsLoading(false);
           return;
         }
@@ -288,11 +303,11 @@ export default function Layout({ children }: LayoutProps) {
         // Se não tem grupo de acesso, permite todos os menus
         if (!usuario.grupo_acesso_id) {
           const allMenus: Record<string, MenuPermissions> = {};
-          // Usar MENUS_DISPONIVEIS para garantir 100% dos menus
           MENUS_DISPONIVEIS.forEach(menuId => {
             allMenus[menuId] = { view: true, create: true, edit: true, delete: true };
           });
           setAllowedMenus(allMenus);
+          sessionStorage.setItem("cached_user_id", user.id);
           setIsLoading(false);
           return;
         }
@@ -304,8 +319,7 @@ export default function Layout({ children }: LayoutProps) {
           .eq("id", usuario.grupo_acesso_id)
           .single();
 
-        console.log("Grupo de acesso encontrado:", grupo);
-        console.log("Menus permitidos do grupo:", grupo?.menus_permitidos);
+        if (!isMounted) return;
 
         if (groupError) {
           console.error("Erro ao buscar grupo:", groupError);
@@ -313,18 +327,25 @@ export default function Layout({ children }: LayoutProps) {
         }
 
         const menusPermitidos = (grupo?.menus_permitidos as unknown as Record<string, MenuPermissions>) || {};
-        console.log("Definindo allowedMenus com:", menusPermitidos);
         setAllowedMenus(menusPermitidos);
+        sessionStorage.setItem("cached_user_id", user.id);
       } catch (error) {
+        if (!isMounted) return;
         console.error("Erro ao buscar permissões:", error);
         toast.error("Erro ao carregar permissões do usuário");
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchUserPermissions();
-  }, [user]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchUserAndEstabelecimento = async () => {
