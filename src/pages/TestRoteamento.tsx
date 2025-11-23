@@ -826,31 +826,110 @@ export default function TestRoteamento() {
                 {/* Canvas + Chat */}
                 {activeSimulation ? (
                   <>
-                    {/* Primeira Linha: Canvas Visual + Chat */}
+                    {/* Primeira Linha: Canvas Visual + Resultado do Roteamento (lado esquerdo) + Chat (lado direito) */}
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                      {/* Canvas Visual - Bot Flow */}
-                      <div className="xl:col-span-2 border rounded-lg overflow-hidden bg-background shadow-lg h-[700px]">
-                        <FlowSimulationCanvas
-                          simulation={activeSimulation}
-                          bots={bots || []}
-                          fluxos={fluxos || []}
-                          onBotMessage={(message) => {
-                            addMessageToChat(activeSimulation.id, {
-                              id: `bot-${Date.now()}`,
-                              sender: 'bot',
-                              text: message,
-                              timestamp: new Date(),
-                            });
-                          }}
-                          onReset={() => {
-                            // Limpar mensagens do chat ao resetar
-                            setSimulations(prev => prev.map(sim => 
-                              sim.id === activeSimulation.id 
-                                ? { ...sim, chatMessages: [] }
-                                : sim
-                            ));
-                          }}
-                        />
+                      {/* Coluna Esquerda: Canvas + Resultado do Roteamento */}
+                      <div className="xl:col-span-2 space-y-6">
+                        {/* Canvas Visual - Bot Flow */}
+                        <div className="border rounded-lg overflow-hidden bg-background shadow-lg h-[700px]">
+                          <FlowSimulationCanvas
+                            simulation={activeSimulation}
+                            bots={bots || []}
+                            fluxos={fluxos || []}
+                            onBotMessage={(message) => {
+                              addMessageToChat(activeSimulation.id, {
+                                id: `bot-${Date.now()}`,
+                                sender: 'bot',
+                                text: message,
+                                timestamp: new Date(),
+                              });
+                            }}
+                            onReset={() => {
+                              // Limpar mensagens do chat ao resetar
+                              setSimulations(prev => prev.map(sim => 
+                                sim.id === activeSimulation.id 
+                                  ? { ...sim, chatMessages: [] }
+                                  : sim
+                              ));
+                            }}
+                          />
+                        </div>
+
+                        {/* Resultado do Roteamento (abaixo do Canvas, se houver workflow) */}
+                        {activeSimulation.config.fluxoId && (
+                          <Card className="p-6 shadow-lg">
+                            <div className="flex items-center gap-2 mb-4">
+                              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-semibold">Resultado do Roteamento</h3>
+                                <p className="text-xs text-muted-foreground">
+                                  Informações sobre o direcionamento
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Fila */}
+                              <div className="p-4 rounded-lg border bg-muted/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Users className="w-4 h-4 text-primary" />
+                                  <span className="text-sm font-medium">Fila de Atendimento</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Fila Geral
+                                </p>
+                                <Badge variant="secondary" className="mt-2">
+                                  Prioridade: Normal
+                                </Badge>
+                              </div>
+
+                              {/* Atendente */}
+                              <div className="p-4 rounded-lg border bg-muted/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <UserCog className="w-4 h-4 text-primary" />
+                                  <span className="text-sm font-medium">Atendente Designado</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  João Silva
+                                </p>
+                                <Badge variant="default" className="mt-2">
+                                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                                  Disponível
+                                </Badge>
+                              </div>
+
+                              {/* Status */}
+                              <div className="p-4 rounded-lg border bg-muted/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Activity className="w-4 h-4 text-primary" />
+                                  <span className="text-sm font-medium">Status do Chat</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Em Atendimento
+                                </p>
+                                <Badge variant="default" className="mt-2 bg-green-600">
+                                  Ativo
+                                </Badge>
+                              </div>
+
+                              {/* Tempo */}
+                              <div className="p-4 rounded-lg border bg-muted/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Clock className="w-4 h-4 text-primary" />
+                                  <span className="text-sm font-medium">Tempo de Resposta</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  2 minutos
+                                </p>
+                                <Badge variant="secondary" className="mt-2">
+                                  SLA: OK
+                                </Badge>
+                              </div>
+                            </div>
+                          </Card>
+                        )}
                       </div>
 
                       {/* Coluna Direita - Chat Interativo */}
@@ -942,7 +1021,7 @@ export default function TestRoteamento() {
                       </Card>
                     </div>
 
-                    {/* Segunda Linha: Workflow Omnichannel (se houver) */}
+                    {/* Segunda Linha: Workflow Omnichannel (se houver, em largura completa) */}
                     {activeSimulation.config.fluxoId && (
                       <Card className="p-0 h-[700px] shadow-lg overflow-hidden mt-6">
                         <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
@@ -961,82 +1040,6 @@ export default function TestRoteamento() {
                             fluxoId={activeSimulation.config.fluxoId}
                             fluxos={fluxos || []}
                           />
-                        </div>
-                      </Card>
-                    )}
-
-                    {/* Terceira Linha: Resultado do Roteamento (se houver workflow) */}
-                    {activeSimulation.config.fluxoId && (
-                      <Card className="p-6 shadow-lg mt-6">
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                            <CheckCircle2 className="w-5 h-5 text-green-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">Resultado do Roteamento</h3>
-                            <p className="text-xs text-muted-foreground">
-                              Informações sobre o direcionamento
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Fila */}
-                          <div className="p-4 rounded-lg border bg-muted/30">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Users className="w-4 h-4 text-primary" />
-                              <span className="text-sm font-medium">Fila de Atendimento</span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Fila Geral
-                            </p>
-                            <Badge variant="secondary" className="mt-2">
-                              Prioridade: Normal
-                            </Badge>
-                          </div>
-
-                          {/* Atendente */}
-                          <div className="p-4 rounded-lg border bg-muted/30">
-                            <div className="flex items-center gap-2 mb-2">
-                              <UserCog className="w-4 h-4 text-primary" />
-                              <span className="text-sm font-medium">Atendente Designado</span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              João Silva
-                            </p>
-                            <Badge variant="default" className="mt-2">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Disponível
-                            </Badge>
-                          </div>
-
-                          {/* Status */}
-                          <div className="p-4 rounded-lg border bg-muted/30">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Activity className="w-4 h-4 text-primary" />
-                              <span className="text-sm font-medium">Status do Chat</span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Em Atendimento
-                            </p>
-                            <Badge variant="default" className="mt-2 bg-green-600">
-                              Ativo
-                            </Badge>
-                          </div>
-
-                          {/* Tempo */}
-                          <div className="p-4 rounded-lg border bg-muted/30">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Clock className="w-4 h-4 text-primary" />
-                              <span className="text-sm font-medium">Tempo de Resposta</span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              2 minutos
-                            </p>
-                            <Badge variant="secondary" className="mt-2">
-                              SLA: OK
-                            </Badge>
-                          </div>
                         </div>
                       </Card>
                     )}
