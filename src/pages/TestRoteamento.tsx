@@ -8,7 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, AlertCircle, Play, Send, Bot, User, Zap, Building2, UserCheck, UserX, Plus, X, Trash2, Copy, Clock, Users, Layers } from "lucide-react";
@@ -87,13 +86,10 @@ export default function TestRoteamento() {
   const [selectedFluxo, setSelectedFluxo] = useState<string>("");
   const [selectedCliente, setSelectedCliente] = useState<string>("");
   const [simulations, setSimulations] = useState<Simulation[]>([]);
-  const [selectedSimulationId, setSelectedSimulationId] = useState<string | null>(null);
   const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
   const [availableEmpresas, setAvailableEmpresas] = useState<any[]>([]);
   const [showVinculoDialog, setShowVinculoDialog] = useState(false);
   const [selectedAtendenteForVinculo, setSelectedAtendenteForVinculo] = useState<string | null>(null);
-  const [selectedExecution, setSelectedExecution] = useState<BlockExecution | null>(null);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Buscar bots disponíveis
   const { data: bots } = useQuery({
@@ -310,7 +306,6 @@ export default function TestRoteamento() {
     };
 
     setSimulations(prev => [...prev, newSimulation]);
-    setSelectedSimulationId(simId);
     
     // Iniciar simulação em background
     simulateRoutingForSimulation(simId);
@@ -318,10 +313,6 @@ export default function TestRoteamento() {
 
   const deleteSimulation = (id: string) => {
     setSimulations(prev => prev.filter(sim => sim.id !== id));
-    if (selectedSimulationId === id) {
-      const remaining = simulations.filter(s => s.id !== id);
-      setSelectedSimulationId(remaining[0]?.id || null);
-    }
   };
 
   const duplicateSimulation = (id: string) => {
@@ -343,7 +334,6 @@ export default function TestRoteamento() {
     };
 
     setSimulations(prev => [...prev, newSimulation]);
-    setSelectedSimulationId(simId);
     simulateRoutingForSimulation(simId);
   };
 
@@ -745,15 +735,6 @@ export default function TestRoteamento() {
     ));
   };
 
-  const selectedSimulation = simulations.find(s => s.id === selectedSimulationId);
-
-  // Auto-scroll do chat quando novas mensagens chegam
-  useEffect(() => {
-    if (chatScrollRef.current) {
-      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-    }
-  }, [selectedSimulation?.chatMessages]);
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -909,23 +890,19 @@ export default function TestRoteamento() {
               </div>
             ) : (
               <ScrollArea className="h-[500px]">
-                <div className="space-y-3 pr-4">
+                <div className="space-y-4 pr-4">
                   {simulations.map((sim) => (
                     <Card 
                       key={sim.id}
-                      className={cn(
-                        "p-4 cursor-pointer transition-all hover:shadow-lg",
-                        selectedSimulationId === sim.id && "ring-2 ring-primary"
-                      )}
-                      onClick={() => setSelectedSimulationId(sim.id)}
+                      className="p-4 transition-all hover:shadow-lg"
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      {/* Header da Simulação */}
+                      <div className="flex items-start justify-between mb-3 pb-3 border-b">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{sim.name}</h3>
                             <Badge 
                               variant={sim.status === "running" ? "default" : sim.status === "completed" ? "secondary" : "destructive"}
-                              className="animate-pulse"
                             >
                               {sim.status === "running" && "Em execução"}
                               {sim.status === "completed" && "Concluída"}
@@ -945,10 +922,7 @@ export default function TestRoteamento() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              duplicateSimulation(sim.id);
-                            }}
+                            onClick={() => duplicateSimulation(sim.id)}
                             className="h-8 w-8 p-0"
                           >
                             <Copy className="w-3 h-3" />
@@ -956,10 +930,7 @@ export default function TestRoteamento() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteSimulation(sim.id);
-                            }}
+                            onClick={() => deleteSimulation(sim.id)}
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -967,12 +938,13 @@ export default function TestRoteamento() {
                         </div>
                       </div>
 
+                      {/* Resultado da Simulação */}
                       {sim.result && (
                         <div className={cn(
-                          "mt-3 p-3 rounded-lg text-sm",
-                          sim.result.status === "success" && "bg-green-50 dark:bg-green-950/20",
-                          sim.result.status === "waiting" && "bg-yellow-50 dark:bg-yellow-950/20",
-                          sim.result.status === "error" && "bg-red-50 dark:bg-red-950/20"
+                          "mb-4 p-3 rounded-lg text-sm",
+                          sim.result.status === "success" && "bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900",
+                          sim.result.status === "waiting" && "bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900",
+                          sim.result.status === "error" && "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900"
                         )}>
                           <div className="flex justify-between items-center">
                             <span className="font-medium">
@@ -985,6 +957,183 @@ export default function TestRoteamento() {
                           <div className="text-xs mt-2 space-y-1">
                             <div>Fila: <span className="font-medium">{sim.result.filaNome}</span></div>
                             <div>Atendente: <span className="font-medium">{sim.result.atendenteNome}</span></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Chat da Simulação */}
+                      {sim.chatMessages.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Send className="w-4 h-4 text-primary" />
+                            <h4 className="font-medium text-sm">Chat</h4>
+                          </div>
+                          <div className="border rounded-lg bg-muted/30 p-3 max-h-[200px] overflow-y-auto space-y-2">
+                            {sim.chatMessages.map((msg) => (
+                              <div
+                                key={msg.id}
+                                className={cn(
+                                  "p-2 rounded text-xs",
+                                  msg.sender === "system" && "bg-orange-100 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900",
+                                  msg.sender === "bot" && "bg-blue-100 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900",
+                                  msg.sender === "user" && "bg-primary text-primary-foreground ml-auto max-w-[80%]"
+                                )}
+                              >
+                                <div className="flex items-start gap-1.5">
+                                  {msg.sender === "system" && <Zap className="w-3 h-3 shrink-0 mt-0.5" />}
+                                  {msg.sender === "bot" && <Bot className="w-3 h-3 shrink-0 mt-0.5" />}
+                                  {msg.sender === "user" && <User className="w-3 h-3 shrink-0 mt-0.5" />}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="break-words">{msg.text}</div>
+                                    <div className="text-[10px] opacity-70 mt-0.5">
+                                      {msg.timestamp.toLocaleTimeString()}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fluxo Bot Detalhado */}
+                      {sim.executionTrace.filter(t => t.blockType.startsWith('bot-')).length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Bot className="w-4 h-4 text-blue-500" />
+                            <h4 className="font-medium text-sm">Fluxo do Bot</h4>
+                            <Badge variant="secondary" className="text-xs">
+                              {sim.executionTrace.filter(t => t.blockType.startsWith('bot-')).length} blocos
+                            </Badge>
+                          </div>
+                          <div className="space-y-2">
+                            {sim.executionTrace
+                              .filter(t => t.blockType.startsWith('bot-'))
+                              .map((trace, idx) => (
+                                <div key={`bot-${idx}`} className="border rounded-lg p-3 bg-blue-50/50 dark:bg-blue-950/20">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium text-sm">{trace.blockLabel}</span>
+                                    <Badge variant="outline" className="text-xs">{trace.duration}ms</Badge>
+                                  </div>
+                                  
+                                  {Object.keys(trace.variables).length > 0 && (
+                                    <div className="mb-2">
+                                      <div className="text-xs font-medium mb-1 text-muted-foreground">Variáveis:</div>
+                                      <div className="space-y-1">
+                                        {Object.entries(trace.variables)
+                                          .filter(([key]) => key.startsWith('node_') || key === 'message_sent' || key === 'awaiting_response')
+                                          .map(([key, value]) => (
+                                            <div key={key} className="text-xs bg-background/50 rounded px-2 py-1">
+                                              <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">{key}:</span>{" "}
+                                              <span className="break-all">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {trace.conditions.length > 0 && (
+                                    <div className="mb-2">
+                                      <div className="text-xs font-medium mb-1 text-muted-foreground">Condições:</div>
+                                      <div className="space-y-1">
+                                        {trace.conditions.map((cond, i) => (
+                                          <div 
+                                            key={i}
+                                            className={cn(
+                                              "text-xs rounded px-2 py-1 border-l-2",
+                                              cond.result 
+                                                ? "bg-green-50 dark:bg-green-950/20 border-green-500" 
+                                                : "bg-red-50 dark:bg-red-950/20 border-red-500"
+                                            )}
+                                          >
+                                            <div className="font-medium">{cond.result ? "✓" : "✗"} {cond.condition}</div>
+                                            <div className="text-muted-foreground italic">{cond.reason}</div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="text-xs bg-blue-100/50 dark:bg-blue-900/20 rounded px-2 py-1.5">
+                                    <div className="font-semibold mb-0.5">{trace.decision.action}</div>
+                                    <div className="text-muted-foreground">{trace.decision.reason}</div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fluxo Workflow Detalhado */}
+                      {sim.executionTrace.filter(t => t.blockType.startsWith('workflow-')).length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Layers className="w-4 h-4 text-purple-500" />
+                            <h4 className="font-medium text-sm">Fluxo Workflow Omnichannel</h4>
+                            <Badge variant="secondary" className="text-xs">
+                              {sim.executionTrace.filter(t => t.blockType.startsWith('workflow-')).length} blocos
+                            </Badge>
+                          </div>
+                          <div className="space-y-2">
+                            {sim.executionTrace
+                              .filter(t => t.blockType.startsWith('workflow-'))
+                              .map((trace, idx) => (
+                                <div key={`workflow-${idx}`} className="border rounded-lg p-3 bg-purple-50/50 dark:bg-purple-950/20">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium text-sm">{trace.blockLabel}</span>
+                                    <Badge variant="outline" className="text-xs">{trace.duration}ms</Badge>
+                                  </div>
+                                  
+                                  {Object.keys(trace.variables).length > 0 && (
+                                    <div className="mb-2">
+                                      <div className="text-xs font-medium mb-1 text-muted-foreground">Verificações:</div>
+                                      <div className="space-y-1">
+                                        {Object.entries(trace.variables)
+                                          .filter(([key]) => 
+                                            key.startsWith('workflow_') || 
+                                            key === 'horario_atual' || 
+                                            key === 'dentro_horario' ||
+                                            key === 'fila_selecionada' ||
+                                            key === 'skill_necessaria'
+                                          )
+                                          .map(([key, value]) => (
+                                            <div key={key} className="text-xs bg-background/50 rounded px-2 py-1">
+                                              <span className="font-mono font-semibold text-purple-600 dark:text-purple-400">{key}:</span>{" "}
+                                              <span className="break-all">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {trace.conditions.length > 0 && (
+                                    <div className="mb-2">
+                                      <div className="text-xs font-medium mb-1 text-muted-foreground">Validações:</div>
+                                      <div className="space-y-1">
+                                        {trace.conditions.map((cond, i) => (
+                                          <div 
+                                            key={i}
+                                            className={cn(
+                                              "text-xs rounded px-2 py-1 border-l-2",
+                                              cond.result 
+                                                ? "bg-green-50 dark:bg-green-950/20 border-green-500" 
+                                                : "bg-red-50 dark:bg-red-950/20 border-red-500"
+                                            )}
+                                          >
+                                            <div className="font-medium">{cond.result ? "✓" : "✗"} {cond.condition}</div>
+                                            <div className="text-muted-foreground italic">{cond.reason}</div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="text-xs bg-purple-100/50 dark:bg-purple-900/20 rounded px-2 py-1.5">
+                                    <div className="font-semibold mb-0.5">{trace.decision.action}</div>
+                                    <div className="text-muted-foreground">{trace.decision.reason}</div>
+                                  </div>
+                                </div>
+                              ))}
                           </div>
                         </div>
                       )}
@@ -1118,224 +1267,6 @@ export default function TestRoteamento() {
           </ScrollArea>
         </Card>
       </div>
-
-      {/* Detalhes da Simulação Selecionada */}
-      {selectedSimulation && (
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">
-            Detalhes: {selectedSimulation.name}
-          </h2>
-          
-          <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="chat">Chat</TabsTrigger>
-              <TabsTrigger value="trace">Rastreamento</TabsTrigger>
-              <TabsTrigger value="steps">Etapas</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="chat" className="mt-4">
-              <div className="border rounded-lg bg-background">
-                <div 
-                  ref={chatScrollRef}
-                  className="h-[400px] overflow-y-auto p-4 space-y-3"
-                >
-                  {selectedSimulation.chatMessages.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground h-full flex flex-col items-center justify-center">
-                      <Send className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                      <p>Aguardando mensagens...</p>
-                      <p className="text-xs mt-2">As mensagens aparecerão aqui durante a simulação</p>
-                    </div>
-                  ) : (
-                    <>
-                      {selectedSimulation.chatMessages.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={cn(
-                            "p-3 rounded-lg animate-in slide-in-from-bottom-2",
-                            msg.sender === "system" && "bg-orange-100 dark:bg-orange-950/30 text-sm border border-orange-200 dark:border-orange-900",
-                            msg.sender === "bot" && "bg-blue-100 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900",
-                            msg.sender === "user" && "bg-primary text-primary-foreground ml-auto max-w-[80%]"
-                          )}
-                        >
-                          <div className="flex items-start gap-2">
-                            {msg.sender === "system" && <Zap className="w-4 h-4 shrink-0" />}
-                            {msg.sender === "bot" && <Bot className="w-4 h-4 shrink-0" />}
-                            {msg.sender === "user" && <User className="w-4 h-4 shrink-0" />}
-                            <div className="flex-1 min-w-0">
-                              <div className="break-words">{msg.text}</div>
-                              <div className="text-xs opacity-70 mt-1">
-                                {msg.timestamp.toLocaleTimeString()}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="trace" className="mt-4">
-              {selectedSimulation.executionTrace.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Layers className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>Aguardando rastreamento...</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium mb-3">Blocos Executados ({selectedSimulation.executionTrace.length})</h4>
-                    <ScrollArea className="h-[350px]">
-                      <div className="space-y-2 pr-4">
-                        {selectedSimulation.executionTrace.map((trace, index) => (
-                          <div
-                            key={`${trace.blockId}-${index}`}
-                            onClick={() => setSelectedExecution(trace)}
-                            className={cn(
-                              "p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md",
-                              selectedExecution?.blockId === trace.blockId && selectedExecution?.timestamp === trace.timestamp
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
-                            )}
-                          >
-                            <div className="flex items-start justify-between mb-1">
-                              <div className="font-medium text-sm">{trace.blockLabel}</div>
-                              <Badge variant="outline" className="text-xs">{trace.duration}ms</Badge>
-                            </div>
-                            <div className="text-xs text-muted-foreground">{trace.blockType}</div>
-                            <div className="flex gap-1 mt-2">
-                              <Badge variant="secondary" className="text-xs">
-                                {Object.keys(trace.variables).length} vars
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {trace.conditions.length} cond
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-3">Detalhes</h4>
-                    {selectedExecution ? (
-                      <ScrollArea className="h-[350px]">
-                        <div className="space-y-4 pr-4">
-                          <div className="p-3 bg-primary/10 rounded-lg">
-                            <h5 className="font-semibold">{selectedExecution.blockLabel}</h5>
-                            <p className="text-xs text-muted-foreground mt-1">{selectedExecution.blockType}</p>
-                            <Badge variant="default" className="mt-2">{selectedExecution.duration}ms</Badge>
-                          </div>
-
-                          <div>
-                            <h6 className="font-medium text-sm mb-2">📊 Variáveis</h6>
-                            <div className="space-y-1">
-                              {Object.entries(selectedExecution.variables).map(([key, value]) => (
-                                <div key={key} className="p-2 bg-muted rounded text-xs">
-                                  <span className="font-mono font-semibold text-primary">{key}:</span>{" "}
-                                  <span className="break-all">
-                                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {selectedExecution.conditions.length > 0 && (
-                            <div>
-                              <h6 className="font-medium text-sm mb-2">✓ Condições</h6>
-                              <div className="space-y-2">
-                                {selectedExecution.conditions.map((condition, idx) => (
-                                  <div 
-                                    key={idx}
-                                    className={cn(
-                                      "p-2 rounded border-l-4 text-xs",
-                                      condition.result 
-                                        ? "bg-green-50 dark:bg-green-950/20 border-green-500" 
-                                        : "bg-red-50 dark:bg-red-950/20 border-red-500"
-                                    )}
-                                  >
-                                    <div className="font-medium mb-1">
-                                      {condition.result ? "✓" : "✗"} {condition.condition}
-                                    </div>
-                                    <div className="text-muted-foreground italic">{condition.reason}</div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          <div>
-                            <h6 className="font-medium text-sm mb-2">➜ Decisão</h6>
-                            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded text-xs">
-                              <div className="font-semibold mb-1">{selectedExecution.decision.action}</div>
-                              <div className="text-muted-foreground">{selectedExecution.decision.reason}</div>
-                              {selectedExecution.decision.nextBlock && (
-                                <div className="flex items-center gap-1 mt-2">
-                                  <ArrowRight className="w-3 h-3" />
-                                  <Badge variant="outline" className="text-xs">{selectedExecution.decision.nextBlock}</Badge>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </ScrollArea>
-                    ) : (
-                      <div className="h-[350px] flex items-center justify-center border rounded-lg text-muted-foreground">
-                        <div className="text-center">
-                          <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                          <p className="text-sm">Selecione um bloco</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="steps" className="mt-4">
-              <div className="text-center py-12 text-muted-foreground">
-                <CheckCircle2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>Etapas do roteamento serão exibidas aqui</p>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </Card>
-      )}
-
-      {/* Dialog para adicionar vínculo com empresa */}
-      <Dialog open={showVinculoDialog} onOpenChange={setShowVinculoDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Adicionar Vínculo com Empresa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
-                {availableEmpresas.map((empresa) => (
-                  <Button
-                    key={empresa.id}
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => {
-                      if (selectedAtendenteForVinculo) {
-                        addVinculoEmpresa(selectedAtendenteForVinculo, empresa.id);
-                        setShowVinculoDialog(false);
-                      }
-                    }}
-                  >
-                    <Building2 className="w-4 h-4 mr-2" />
-                    {empresa.nome}
-                    {empresa.cnpj && <span className="text-xs text-muted-foreground ml-auto">{empresa.cnpj}</span>}
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
