@@ -312,22 +312,29 @@ export default function TestRoteamento() {
             </div>
             
             <div className="flex items-center gap-3">
-              <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="default" size="sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nova Simulação
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Configure sua Simulação</DialogTitle>
-                    <DialogDescription>
-                      Selecione os parâmetros para testar o roteamento
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4 py-4">
+              <Button
+                onClick={resetAllSimulations}
+                variant="outline"
+                size="sm"
+              >
+                Limpar Todas Simulações
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Dialog de Configuração */}
+      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configure sua Simulação</DialogTitle>
+            <DialogDescription>
+              Selecione os parâmetros para testar o roteamento
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
                     <div>
                       <Label htmlFor="canal" className="text-base font-medium">Canal *</Label>
                       <Select value={selectedCanal} onValueChange={setSelectedCanal}>
@@ -467,18 +474,6 @@ export default function TestRoteamento() {
                 </DialogContent>
               </Dialog>
 
-              <Button
-                onClick={resetAllSimulations}
-                variant="outline"
-                size="sm"
-              >
-                Limpar Todas Simulações
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="container mx-auto px-6 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -611,7 +606,7 @@ export default function TestRoteamento() {
                           <Card 
                             key={`empty-${i}`} 
                             className="p-3 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center min-h-[100px] cursor-pointer hover:border-primary/50 transition-all"
-                            onClick={addNewSimulation}
+                            onClick={() => setConfigDialogOpen(true)}
                           >
                             <div className="text-center">
                               <Plus className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
