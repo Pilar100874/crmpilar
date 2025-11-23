@@ -245,7 +245,7 @@ export default function FlowSimulationCanvas({
     // Atualizar variáveis baseado no tipo de bloco
     const newVariables = { ...executionState.variables };
     
-    // Extrair configurações do bloco
+    // Extrair configurações do bloco e enviar ao chat
     if (currentNode.data?.config) {
       const config = currentNode.data.config;
       
@@ -263,10 +263,51 @@ export default function FlowSimulationCanvas({
       }
       
       // Para blocos de questão
-      if (currentNode.data.type === 'ask_question' && config.question) {
+      else if (currentNode.data.type === 'ask_question' && config.question) {
         newVariables['question'] = config.question;
         if (onBotMessage) {
           onBotMessage(config.question, currentNode.data);
+        }
+      }
+      
+      // Para blocos de geração de relatório
+      else if (currentNode.data.type === 'crm_gerar_relatorio') {
+        const message = `📊 Gerando relatório em formato ${config.outputType || 'PDF'}...`;
+        if (onBotMessage) {
+          onBotMessage(message, currentNode.data);
+        }
+      }
+      
+      // Para blocos de webhook
+      else if (currentNode.data.type === 'webhook') {
+        const message = `🔗 Executando webhook: ${config.url || 'URL configurada'}`;
+        if (onBotMessage) {
+          onBotMessage(message, currentNode.data);
+        }
+      }
+      
+      // Para blocos de condição
+      else if (currentNode.data.type === 'condition') {
+        const message = `⚙️ Avaliando condições...`;
+        if (onBotMessage) {
+          onBotMessage(message, currentNode.data);
+        }
+      }
+      
+      // Para blocos de definir campo
+      else if (currentNode.data.type === 'set_field') {
+        const fieldName = config.field || 'campo';
+        const message = `✏️ Definindo ${fieldName}...`;
+        if (onBotMessage) {
+          onBotMessage(message, currentNode.data);
+        }
+      }
+      
+      // Para blocos genéricos com label
+      else if (currentNode.data.label && currentNode.data.type !== 'start') {
+        const message = `⚡ Executando: ${currentNode.data.label}`;
+        if (onBotMessage) {
+          onBotMessage(message, currentNode.data);
         }
       }
       
