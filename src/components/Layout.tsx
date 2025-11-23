@@ -468,6 +468,11 @@ export default function Layout({ children }: LayoutProps) {
 
   // Filtra os menus baseado nas permissões
   const visibleMenus = menuItems.filter(item => {
+    // Itens especiais que sempre devem aparecer
+    if (item.id === "Sair") {
+      return true;
+    }
+
     const permission = allowedMenus[item.id];
     
     // Se o menu tem subitems, verifica se pelo menos um tem permissão
