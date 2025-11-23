@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Building2, ShieldCheck } from "lucide-react";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
+import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import logo from "@/assets/logo.jpg";
 import logoFallback from "@/assets/logo_preto.png";
 
@@ -18,6 +19,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<LoginStep>("select-type");
   const [showEstabelecimentoSelector, setShowEstabelecimentoSelector] = useState(false);
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   
   // Admin login
   const [adminCpf, setAdminCpf] = useState("196.820.298-64");
@@ -219,6 +221,14 @@ export default function Login() {
           </Button>
           <Button 
             type="button" 
+            variant="outline" 
+            className="w-full"
+            onClick={() => setShowForgotPasswordDialog(true)}
+          >
+            Esqueci minha senha
+          </Button>
+          <Button 
+            type="button" 
             variant="ghost" 
             className="w-full"
             onClick={() => setStep("select-type")}
@@ -272,6 +282,14 @@ export default function Login() {
           </Button>
           <Button 
             type="button" 
+            variant="outline" 
+            className="w-full"
+            onClick={() => setShowForgotPasswordDialog(true)}
+          >
+            Esqueci minha senha
+          </Button>
+          <Button 
+            type="button" 
             variant="ghost" 
             className="w-full"
             onClick={() => setStep("select-type")}
@@ -306,6 +324,11 @@ export default function Login() {
       <EstabelecimentoSelector
         open={showEstabelecimentoSelector}
         onSelectEstabelecimento={handleEstabelecimentoSelected}
+      />
+      
+      <ForgotPasswordDialog
+        open={showForgotPasswordDialog}
+        onOpenChange={setShowForgotPasswordDialog}
       />
     </div>
   );

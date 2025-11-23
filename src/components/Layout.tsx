@@ -884,31 +884,118 @@ export default function Layout({ children }: LayoutProps) {
               </button>
             )}
 
-            <button
-              onClick={() => setShowUsuarioSelector(true)}
-              className={`${
-                menuLocked 
-                  ? 'w-10 h-10 rounded-full flex items-center justify-center' 
-                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-              } bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors`}
-              title={userName || "Usuário"}
-            >
-              <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
-              {!menuLocked && <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>}
-            </button>
-            
-            <button 
-              onClick={handleLogout}
-              className={`${
-                menuLocked 
-                  ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
-                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-              } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
-              title="Sair"
-            >
-              <LogOut className="w-5 h-5 flex-shrink-0" />
-              {!menuLocked && <span className="text-sm font-medium">Sair</span>}
-            </button>
+            {/* Menu de usuário como submenu */}
+            {menuLocked ? (
+              <div className="relative w-full flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setOpenSubmenuId(openSubmenuId === "UserMenu" ? null : "UserMenu")}
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
+                  title={userName || "Minha Conta"}
+                >
+                  <UserIcon className="w-5 h-5 text-sidebar-foreground/70" />
+                </button>
+                
+                {openSubmenuId === "UserMenu" && (
+                  <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50">
+                    <div className="px-4 py-6">
+                      <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
+                        {userName || "Minha Conta"}
+                      </h3>
+                      
+                      <div className="space-y-1">
+                        <button
+                          onClick={() => {
+                            setOpenSubmenuId(null);
+                            setShowUsuarioSelector(true);
+                          }}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                        >
+                          <UserIcon className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">Perfil</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setOpenSubmenuId(null);
+                            setShowChangePasswordDialog(true);
+                          }}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                        >
+                          <KeyRound className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">Alterar Senha</span>
+                        </button>
+                        
+                        <div className="h-px bg-sidebar-border/50 my-2" />
+                        
+                        <button
+                          onClick={() => {
+                            setOpenSubmenuId(null);
+                            handleLogout();
+                          }}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                        >
+                          <LogOut className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">Sair</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative w-full">
+                <button
+                  type="button"
+                  onClick={() => setOpenSubmenuId(openSubmenuId === "UserMenu" ? null : "UserMenu")}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
+                  title={userName || "Minha Conta"}
+                >
+                  <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
+                  <span className="text-sm font-medium text-sidebar-foreground/70 flex-1 text-left truncate">{userName || "Minha Conta"}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openSubmenuId === "UserMenu" ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {openSubmenuId === "UserMenu" && (
+                  <div className="mt-1 ml-8 space-y-1">
+                    <button
+                      onClick={() => {
+                        setOpenSubmenuId(null);
+                        setShowUsuarioSelector(true);
+                      }}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                    >
+                      <UserIcon className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-sm">Perfil</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setOpenSubmenuId(null);
+                        setShowChangePasswordDialog(true);
+                      }}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                    >
+                      <KeyRound className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-sm">Alterar Senha</span>
+                    </button>
+                    
+                    <div className="h-px bg-sidebar-border/50 my-2" />
+                    
+                    <button
+                      onClick={() => {
+                        setOpenSubmenuId(null);
+                        handleLogout();
+                      }}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                    >
+                      <LogOut className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-sm">Sair</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         )}
