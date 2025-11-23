@@ -42,10 +42,10 @@ interface Simulation {
 
 export default function TestRoteamento() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedCanal, setSelectedCanal] = useState<string>("");
-  const [selectedBot, setSelectedBot] = useState<string>("");
-  const [selectedFluxo, setSelectedFluxo] = useState<string>("");
-  const [selectedCliente, setSelectedCliente] = useState<string>("");
+  const [selectedCanal, setSelectedCanal] = useState<string | undefined>();
+  const [selectedBot, setSelectedBot] = useState<string | undefined>();
+  const [selectedFluxo, setSelectedFluxo] = useState<string | undefined>();
+  const [selectedCliente, setSelectedCliente] = useState<string | undefined>();
   const [activeSimulation, setActiveSimulation] = useState<Simulation | null>(null);
   const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
 
@@ -183,10 +183,10 @@ export default function TestRoteamento() {
   const resetSimulation = () => {
     setActiveSimulation(null);
     setCurrentStep(1);
-    setSelectedCanal("");
-    setSelectedBot("");
-    setSelectedFluxo("");
-    setSelectedCliente("");
+    setSelectedCanal(undefined);
+    setSelectedBot(undefined);
+    setSelectedFluxo(undefined);
+    setSelectedCliente(undefined);
   };
 
   const addMessageToChat = (text: string) => {
@@ -422,12 +422,11 @@ export default function TestRoteamento() {
 
                     <div>
                       <Label htmlFor="bot" className="text-base font-medium">Bot (Opcional)</Label>
-                      <Select value={selectedBot} onValueChange={setSelectedBot}>
+                      <Select value={selectedBot} onValueChange={(val) => setSelectedBot(val || undefined)}>
                         <SelectTrigger id="bot" className="mt-2">
-                          <SelectValue placeholder="Selecione um bot" />
+                          <SelectValue placeholder="Selecione um bot (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhum</SelectItem>
                           {bots?.map((bot) => (
                             <SelectItem key={bot.id} value={bot.id}>
                               {bot.name}
@@ -439,12 +438,11 @@ export default function TestRoteamento() {
 
                     <div>
                       <Label htmlFor="fluxo" className="text-base font-medium">Workflow Omnichannel (Opcional)</Label>
-                      <Select value={selectedFluxo} onValueChange={setSelectedFluxo}>
+                      <Select value={selectedFluxo} onValueChange={(val) => setSelectedFluxo(val || undefined)}>
                         <SelectTrigger id="fluxo" className="mt-2">
-                          <SelectValue placeholder="Selecione um workflow" />
+                          <SelectValue placeholder="Selecione um workflow (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhum</SelectItem>
                           {fluxos?.map((fluxo) => (
                             <SelectItem key={fluxo.id} value={fluxo.id}>
                               {fluxo.nome}
@@ -456,12 +454,11 @@ export default function TestRoteamento() {
 
                     <div>
                       <Label htmlFor="cliente" className="text-base font-medium">Cliente (Opcional)</Label>
-                      <Select value={selectedCliente} onValueChange={setSelectedCliente}>
+                      <Select value={selectedCliente} onValueChange={(val) => setSelectedCliente(val || undefined)}>
                         <SelectTrigger id="cliente" className="mt-2">
-                          <SelectValue placeholder="Selecione um cliente" />
+                          <SelectValue placeholder="Selecione um cliente (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhum</SelectItem>
                           {clientes?.map((cliente) => (
                             <SelectItem key={cliente.id} value={cliente.id}>
                               {cliente.nome} - {cliente.telefone}
