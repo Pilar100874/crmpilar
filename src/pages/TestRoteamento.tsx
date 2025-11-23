@@ -204,17 +204,6 @@ export default function TestRoteamento() {
     setSelectedSimulationId(newSimulation.id);
     setCurrentStep(2);
     
-    // Se houver bot, iniciar com mensagens iniciais
-    if (selectedBot) {
-      const bot = bots?.find(b => b.id === selectedBot);
-      if (bot?.flow_data) {
-        setTimeout(() => {
-          const flowData = typeof bot.flow_data === 'string' ? JSON.parse(bot.flow_data) : bot.flow_data;
-          processBotFlow(flowData, newSimulation.id);
-        }, 500);
-      }
-    }
-    
     toast.success("Simulação iniciada!");
   };
 
@@ -249,7 +238,15 @@ export default function TestRoteamento() {
     setSelectedCliente(undefined);
   };
 
-  const addMessageToChat = async (text: string) => {
+  const addMessageToChat = (simulationId: string, message: ChatMessage) => {
+    setSimulations(prev => prev.map(sim => 
+      sim.id === simulationId 
+        ? { ...sim, chatMessages: [...sim.chatMessages, message] }
+        : sim
+    ));
+  };
+
+  const sendUserMessage = async (text: string) => {
     if (!selectedSimulationId || !text.trim()) return;
 
     const newMessage: ChatMessage = {
@@ -260,85 +257,8 @@ export default function TestRoteamento() {
     };
 
     // Adicionar mensagem do usuário
-    setSimulations(prev => prev.map(sim => 
-      sim.id === selectedSimulationId 
-        ? { ...sim, chatMessages: [...sim.chatMessages, newMessage] }
-        : sim
-    ));
-
-    // Se houver bot configurado, processar fluxo do bot
-    const simulation = simulations.find(s => s.id === selectedSimulationId);
-    if (simulation?.config.botId) {
-      const bot = bots?.find(b => b.id === simulation.config.botId);
-      if (bot?.flow_data) {
-        const flowData = typeof bot.flow_data === 'string' ? JSON.parse(bot.flow_data) : bot.flow_data;
-        
-        // Processar blocos do bot
-        setTimeout(() => {
-          processBotFlow(flowData, simulation.id);
-        }, 500);
-      }
-    }
-  };
-
-  const processBotFlow = (flowData: any, simulationId: string) => {
-    if (!flowData?.nodes || !flowData?.edges) return;
-
-    // Encontrar o nó inicial
-    const startNode = flowData.nodes.find((node: any) => 
-      node.data?.type === 'start' || 
-      !flowData.edges.some((edge: any) => edge.target === node.id)
-    );
-
-    if (!startNode) {
-      console.warn('Nenhum nó inicial encontrado');
-      return;
-    }
-
-    // Processar fluxo sequencialmente
-    const processNode = (nodeId: string, delay: number = 0) => {
-      setTimeout(() => {
-        const node = flowData.nodes.find((n: any) => n.id === nodeId);
-        if (!node) return;
-
-        console.log('Processando nó:', node.data?.label, node.data?.type);
-
-        // Se for mensagem, enviar ao chat
-        if (node.data?.type === 'send_message' && node.data?.config?.messages) {
-          const messages = node.data.config.messages;
-          messages.forEach((msg: any, msgIndex: number) => {
-            if (msg.text) {
-              setTimeout(() => {
-                const botMessage: ChatMessage = {
-                  id: `bot-msg-${Date.now()}-${msgIndex}`,
-                  sender: "bot",
-                  text: msg.text,
-                  timestamp: new Date(),
-                };
-
-                setSimulations(prev => prev.map(sim => 
-                  sim.id === simulationId 
-                    ? { ...sim, chatMessages: [...sim.chatMessages, botMessage] }
-                    : sim
-                ));
-              }, msgIndex * 300);
-            }
-          });
-        }
-
-        // Encontrar próximo nó e continuar
-        const nextEdge = flowData.edges.find((edge: any) => edge.source === nodeId);
-        if (nextEdge) {
-          processNode(nextEdge.target, 1000);
-        }
-      }, delay);
-    };
-
-    // Iniciar do primeiro nó
-    const firstEdge = flowData.edges.find((edge: any) => edge.source === startNode.id);
-    if (firstEdge) {
-      processNode(firstEdge.target, 500);
-    }
+    addMessageToChat(selectedSimulationId, newMessage);
+    setChatInput("");
   };
 
   return (
@@ -816,6 +736,14 @@ export default function TestRoteamento() {
                           simulation={activeSimulation}
                           bots={bots || []}
                           fluxos={fluxos || []}
+                          onBotMessage={(message) => {
+                            addMessageToChat(activeSimulation.id, {
+                              id: `bot-${Date.now()}`,
+                              sender: 'bot',
+                              text: message,
+                              timestamp: new Date(),
+                            });
+                          }}
                         />
                       </div>
 
@@ -887,8 +815,7 @@ export default function TestRoteamento() {
                               className="flex-1 bg-background"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && chatInput.trim()) {
-                                  addMessageToChat(chatInput.trim());
-                                  setChatInput("");
+                                  sendUserMessage(chatInput.trim());
                                 }
                               }}
                             />
@@ -897,8 +824,7 @@ export default function TestRoteamento() {
                               variant="default"
                               onClick={() => {
                                 if (chatInput.trim()) {
-                                  addMessageToChat(chatInput.trim());
-                                  setChatInput("");
+                                  sendUserMessage(chatInput.trim());
                                 }
                               }}
                               disabled={!chatInput.trim()}

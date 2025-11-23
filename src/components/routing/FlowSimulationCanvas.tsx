@@ -40,6 +40,7 @@ interface FlowSimulationCanvasProps {
   simulation: Simulation;
   bots: any[];
   fluxos: any[];
+  onBotMessage?: (message: string, nodeData?: any) => void;
 }
 
 interface ExecutionState {
@@ -110,6 +111,7 @@ export default function FlowSimulationCanvas({
   simulation,
   bots,
   fluxos,
+  onBotMessage,
 }: FlowSimulationCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -250,13 +252,25 @@ export default function FlowSimulationCanvas({
         config.messages.forEach((msg: any, idx: number) => {
           if (msg.text) {
             newVariables[`message_${idx}`] = msg.text;
+            // Enviar mensagem para o chat
+            if (onBotMessage) {
+              onBotMessage(msg.text, currentNode.data);
+            }
           }
         });
       }
       
+      // Para blocos de questão
+      if (currentNode.data.type === 'ask_question' && config.question) {
+        newVariables['question'] = config.question;
+        if (onBotMessage) {
+          onBotMessage(config.question, currentNode.data);
+        }
+      }
+      
       // Para outros blocos, adicionar todas as configs
       Object.entries(config).forEach(([key, value]) => {
-        if (key !== 'messages' && value !== undefined && value !== null) {
+        if (key !== 'messages' && key !== 'question' && value !== undefined && value !== null) {
           newVariables[key] = value;
         }
       });
