@@ -88,14 +88,50 @@ export default function TestRoteamento() {
     },
   });
 
-  // Buscar atendentes
+  // Buscar atendentes com skills
   const { data: atendentes } = useQuery({
     queryKey: ["atendentes"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("atendentes")
-        .select("id, usuario_id, status, max_chats_simultaneos, usuarios(nome)")
-        .eq("status", "disponivel");
+        .select(`
+          id, 
+          usuario_id, 
+          status, 
+          max_chats_simultaneos, 
+          aceita_novos_chats,
+          usuarios(nome),
+          atendente_skills(
+            skill_id,
+            nivel,
+            skills(nome)
+          )
+        `);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Buscar skills
+  const { data: skills } = useQuery({
+    queryKey: ["skills"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("skills")
+        .select("id, nome, descricao");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Buscar conversas ativas por atendente (para calcular carga)
+  const { data: conversasAtivas } = useQuery({
+    queryKey: ["conversas-ativas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("atendente_atual_id")
+        .in("chat_status", ["em_atendimento", "aguardando_cliente"]);
       if (error) throw error;
       return data || [];
     },
@@ -355,35 +391,94 @@ export default function TestRoteamento() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setFlowBlocks(prev => prev.map(b => b.id === "fila" ? { ...b, status: "completed" } : b));
 
-      // Simular seleção de atendente
+      // Simular seleção de atendente com lógica detalhada
       if (atendentes && atendentes.length > 0) {
         await new Promise(resolve => setTimeout(resolve, 800));
         setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "active" } : b));
         
-        const atendenteEscolhido = atendentes[0];
+        // Filtrar atendentes disponíveis
+        addSystemMessage("Analisando atendentes disponíveis...");
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        const atendentesDisponiveis = atendentes.filter(a => 
+          a.status === "disponivel" && a.aceita_novos_chats
+        );
+        
+        addSystemMessage(`${atendentesDisponiveis.length} atendentes disponíveis encontrados`);
+        
+        // Calcular carga de trabalho
+        const cargaPorAtendente = new Map();
+        conversasAtivas?.forEach(conv => {
+          const count = cargaPorAtendente.get(conv.atendente_atual_id) || 0;
+          cargaPorAtendente.set(conv.atendente_atual_id, count + 1);
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 600));
+        addSystemMessage("Calculando carga de trabalho dos atendentes...");
+        
+        // Aplicar regras de roteamento
+        const tipoRoteamento = filaEscolhida.tipo_roteamento || "round_robin";
+        addSystemMessage(`Aplicando regra: ${tipoRoteamento}`);
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        let atendenteEscolhido = atendentesDisponiveis[0];
+        
+        if (tipoRoteamento === "por_disponibilidade") {
+          // Escolher o com menor carga
+          atendenteEscolhido = atendentesDisponiveis.reduce((prev, curr) => {
+            const prevCarga = cargaPorAtendente.get(prev.id) || 0;
+            const currCarga = cargaPorAtendente.get(curr.id) || 0;
+            return currCarga < prevCarga ? curr : prev;
+          });
+          addSystemMessage(`Selecionado atendente com menor carga de trabalho`);
+        } else if (tipoRoteamento === "round_robin") {
+          addSystemMessage(`Distribuição por rodízio (round-robin)`);
+        } else if (tipoRoteamento === "por_skill") {
+          addSystemMessage(`Seleção baseada em habilidades (skills)`);
+        } else if (tipoRoteamento === "por_prioridade") {
+          addSystemMessage(`Seleção baseada em prioridade`);
+        } else if (tipoRoteamento === "por_carteira") {
+          addSystemMessage(`Seleção baseada em carteira fixa`);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        // Verificar skills se necessário
+        const atendenteSkills = atendenteEscolhido.atendente_skills || [];
+        if (atendenteSkills.length > 0) {
+          addSystemMessage(`Atendente possui ${atendenteSkills.length} skill(s):`);
+          atendenteSkills.forEach((as: any) => {
+            addSystemMessage(`  • ${as.skills?.nome} (Nível ${as.nivel})`);
+          });
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+        
+        const cargaAtual = cargaPorAtendente.get(atendenteEscolhido.id) || 0;
         addSystemMessage(`Conectando com ${atendenteEscolhido.usuarios?.nome}...`);
+        addSystemMessage(`Carga atual: ${cargaAtual}/${atendenteEscolhido.max_chats_simultaneos} chats`);
         
         steps.push({
           step: steps.length + 1,
           type: "Atendente Selecionado",
           description: `Atendente "${atendenteEscolhido.usuarios?.nome}" designado`,
-          detail: `Status: ${atendenteEscolhido.status} | Capacidade: ${atendenteEscolhido.max_chats_simultaneos} chats`,
+          detail: `Status: ${atendenteEscolhido.status} | Carga: ${cargaAtual}/${atendenteEscolhido.max_chats_simultaneos} | Skills: ${atendenteSkills.length}`,
           status: "success",
         });
         
         await new Promise(resolve => setTimeout(resolve, 1000));
         setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "completed" } : b));
-        addBotMessage("Você foi conectado com um atendente. Como posso ajudar?");
+        addBotMessage(`Você foi conectado com ${atendenteEscolhido.usuarios?.nome}. Como posso ajudar?`);
       } else {
         await new Promise(resolve => setTimeout(resolve, 800));
         setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "active" } : b));
-        addSystemMessage("Aguardando atendente disponível...");
+        addSystemMessage("Nenhum atendente disponível no momento");
+        addSystemMessage("Chat será mantido em fila de espera");
         
         steps.push({
           step: steps.length + 1,
           type: "Fila de Espera",
           description: "Nenhum atendente disponível",
-          detail: "Chat permanecerá em fila de espera",
+          detail: "Chat permanecerá em fila de espera até que um atendente fique disponível",
           status: "warning",
         });
       }
@@ -452,7 +547,7 @@ export default function TestRoteamento() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Painel de Configuração */}
         <Card className="p-6 space-y-6">
           <div>
@@ -537,6 +632,103 @@ export default function TestRoteamento() {
             <Button onClick={resetSimulation} variant="outline">
               Limpar
             </Button>
+          </div>
+        </Card>
+
+        {/* Painel de Status do Sistema */}
+        <Card className="p-6 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Status do Sistema</h2>
+          </div>
+
+          <div className="space-y-3">
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Atendentes</span>
+                <Badge variant="outline">{atendentes?.length || 0} Total</Badge>
+              </div>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>Disponíveis:</span>
+                  <span className="font-medium text-green-600">
+                    {atendentes?.filter(a => a.status === "disponivel").length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Ocupados:</span>
+                  <span className="font-medium text-yellow-600">
+                    {atendentes?.filter(a => a.status === "ocupado").length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Offline:</span>
+                  <span className="font-medium text-gray-500">
+                    {atendentes?.filter(a => a.status === "offline").length || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Skills Cadastradas</span>
+                <Badge variant="outline">{skills?.length || 0}</Badge>
+              </div>
+              {skills && skills.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {skills.slice(0, 5).map(skill => (
+                    <Badge key={skill.id} variant="secondary" className="text-xs">
+                      {skill.nome}
+                    </Badge>
+                  ))}
+                  {skills.length > 5 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{skills.length - 5}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Filas Ativas</span>
+                <Badge variant="outline">{filas?.length || 0}</Badge>
+              </div>
+              {filas && filas.length > 0 && (
+                <div className="space-y-1 text-xs">
+                  {filas.slice(0, 3).map(fila => (
+                    <div key={fila.id} className="flex justify-between items-center">
+                      <span className="text-muted-foreground">{fila.nome}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {fila.tipo_roteamento}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Bots Ativos</span>
+                <Badge variant="outline">{bots?.length || 0}</Badge>
+              </div>
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Workflows Ativos</span>
+                <Badge variant="outline">{fluxos?.length || 0}</Badge>
+              </div>
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Chats em Atendimento</span>
+                <Badge variant="outline">{conversasAtivas?.length || 0}</Badge>
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -656,7 +848,7 @@ export default function TestRoteamento() {
             )}
           </ScrollArea>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-4 pt-4 border-t">
             <Input
               placeholder={simulationStarted ? "Digite uma mensagem..." : "Inicie a simulação primeiro"}
               value={inputMessage}
@@ -673,6 +865,70 @@ export default function TestRoteamento() {
             </Button>
           </div>
         </Card>
+
+        {/* Detalhes dos Atendentes */}
+        {simulationStarted && atendentes && atendentes.length > 0 && (
+          <Card className="p-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Atendentes Disponíveis</h2>
+            </div>
+
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-3 pr-4">
+                {atendentes.map((atendente: any) => {
+                  const carga = conversasAtivas?.filter(c => c.atendente_atual_id === atendente.id).length || 0;
+                  const atendenteSkills = atendente.atendente_skills || [];
+                  
+                  return (
+                    <div key={atendente.id} className="p-3 border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{atendente.usuarios?.nome}</span>
+                        <Badge 
+                          variant={
+                            atendente.status === "disponivel" ? "default" : 
+                            atendente.status === "ocupado" ? "secondary" : 
+                            "outline"
+                          }
+                        >
+                          {atendente.status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Carga:</span>
+                          <span className="font-medium">
+                            {carga}/{atendente.max_chats_simultaneos}
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Aceita novos:</span>
+                          <span className={atendente.aceita_novos_chats ? "text-green-600" : "text-red-600"}>
+                            {atendente.aceita_novos_chats ? "Sim" : "Não"}
+                          </span>
+                        </div>
+                        
+                        {atendenteSkills.length > 0 && (
+                          <div className="pt-2">
+                            <span className="text-muted-foreground">Skills:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {atendenteSkills.map((as: any) => (
+                                <Badge key={as.skill_id} variant="outline" className="text-xs">
+                                  {as.skills?.nome} (N{as.nivel})
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </Card>
+        )}
 
         {/* Painel de Resultado */}
         <Card className="p-6">
