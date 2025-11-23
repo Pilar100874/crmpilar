@@ -496,9 +496,13 @@ export default function TestRoteamento() {
 
                     <div>
                       <Label htmlFor="bot" className="text-base font-medium">Bot (Opcional)</Label>
-                      <Select value={selectedBot} onValueChange={(val) => setSelectedBot(val || undefined)}>
+                      <Select 
+                        value={selectedBot} 
+                        onValueChange={(val) => setSelectedBot(val || undefined)}
+                        disabled={!selectedCanal}
+                      >
                         <SelectTrigger id="bot" className="mt-2">
-                          <SelectValue placeholder="Selecione um bot (opcional)" />
+                          <SelectValue placeholder={selectedCanal ? "Selecione um bot (opcional)" : "Selecione um canal primeiro"} />
                         </SelectTrigger>
                         <SelectContent>
                           {availableBots.length > 0 ? (
