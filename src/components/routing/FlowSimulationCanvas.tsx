@@ -186,7 +186,10 @@ export default function FlowSimulationCanvas({
 
   // Executar próximo passo
   const executeNextStep = useCallback(() => {
-    if (executionState.isComplete || executionState.isPaused) return;
+    if (executionState.isComplete) {
+      console.log('✅ Simulação completa');
+      return;
+    }
 
     // Se não tem node atual, começar do primeiro
     let currentNode;
@@ -199,8 +202,8 @@ export default function FlowSimulationCanvas({
     }
 
     if (!currentNode) {
-      console.log('✅ Simulação completa');
-      setExecutionState(prev => ({ ...prev, isComplete: true, currentNodeId: null }));
+      console.log('✅ Simulação completa - sem mais nodes');
+      setExecutionState(prev => ({ ...prev, isComplete: true, currentNodeId: null, isPaused: true }));
       return;
     }
 
@@ -232,17 +235,22 @@ export default function FlowSimulationCanvas({
     console.log('➡️ Próximo node:', nextNode?.id);
 
     // Atualizar estado
+    const newExecutedNodes = new Set([...executionState.executedNodes, currentNode.id]);
+    const isComplete = !nextNode;
+    
     setExecutionState(prev => ({
       ...prev,
       currentNodeId: nextNode?.id || null,
-      executedNodes: new Set([...prev.executedNodes, currentNode.id]),
+      executedNodes: newExecutedNodes,
       variables: newVariables,
-      isComplete: !nextNode,
+      isComplete: isComplete,
       currentStep: prev.currentStep + 1,
+      // Se não estiver pausado e não terminou, continua automaticamente
     }));
 
-    // Se tiver próximo node, executar automaticamente se não estiver pausado
-    if (nextNode && !executionState.isPaused) {
+    // Se tiver próximo node e NÃO estiver pausado, executar automaticamente
+    if (nextNode && !executionState.isPaused && !isComplete) {
+      console.log('⏭️ Executando automaticamente próximo passo...');
       setTimeout(() => executeNextStep(), 1000);
     }
   }, [executionState, nodes, edges]);
@@ -290,6 +298,8 @@ export default function FlowSimulationCanvas({
             size="sm"
             onClick={() => {
               if (!executionState.currentNodeId && !executionState.isComplete) {
+                // Primeira execução - iniciar pausado
+                setExecutionState(prev => ({ ...prev, isPaused: true }));
                 executeNextStep();
               } else {
                 togglePause();
@@ -298,8 +308,8 @@ export default function FlowSimulationCanvas({
             disabled={executionState.isComplete}
             variant={executionState.isPaused ? "default" : "secondary"}
           >
-            {executionState.isPaused || !executionState.currentNodeId ? (
-              <><Play className="w-4 h-4 mr-1" /> Iniciar</>
+            {executionState.isPaused ? (
+              <><Play className="w-4 h-4 mr-1" /> Continuar</>
             ) : (
               <><Pause className="w-4 h-4 mr-1" /> Pausar</>
             )}
@@ -308,8 +318,18 @@ export default function FlowSimulationCanvas({
           <Button
             size="sm"
             variant="outline"
-            onClick={executeNextStep}
-            disabled={executionState.isComplete || !executionState.isPaused}
+            onClick={() => {
+              console.log('🔵 Botão Próximo clicado');
+              console.log('Estado atual:', { 
+                isPaused: executionState.isPaused, 
+                isComplete: executionState.isComplete,
+                currentNodeId: executionState.currentNodeId 
+              });
+              // Pausar antes de executar para garantir modo passo a passo
+              setExecutionState(prev => ({ ...prev, isPaused: true }));
+              executeNextStep();
+            }}
+            disabled={executionState.isComplete}
           >
             <SkipForward className="w-4 h-4 mr-1" />
             Próximo
