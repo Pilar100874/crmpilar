@@ -288,17 +288,19 @@ export default function TestRoteamento() {
     }
 
     const simId = `sim-${Date.now()}`;
+    const config = {
+      canal: selectedCanal,
+      bot: selectedBot,
+      fluxo: selectedFluxo,
+      cliente: selectedCliente,
+    };
+    
     const newSimulation: Simulation = {
       id: simId,
       name: `Simulação #${simulations.length + 1}`,
       status: "running",
       startTime: new Date(),
-      config: {
-        canal: selectedCanal,
-        bot: selectedBot,
-        fluxo: selectedFluxo,
-        cliente: selectedCliente,
-      },
+      config,
       chatMessages: [],
       executionTrace: [],
       routeSteps: [],
@@ -307,8 +309,8 @@ export default function TestRoteamento() {
 
     setSimulations(prev => [...prev, newSimulation]);
     
-    // Iniciar simulação em background
-    simulateRoutingForSimulation(simId);
+    // Executar simulação diretamente com a config
+    simulateRoutingForSimulation(simId, config);
   };
 
   const deleteSimulation = (id: string) => {
@@ -334,14 +336,13 @@ export default function TestRoteamento() {
     };
 
     setSimulations(prev => [...prev, newSimulation]);
-    simulateRoutingForSimulation(simId);
+    simulateRoutingForSimulation(simId, simToDuplicate.config);
   };
 
-  const simulateRoutingForSimulation = async (simulationId: string) => {
-    const simulation = simulations.find(s => s.id === simulationId);
-    if (!simulation) return;
-
-    const { canal, bot, fluxo, cliente } = simulation.config;
+  const simulateRoutingForSimulation = async (simulationId: string, config: Simulation['config']) => {
+    console.log('🚀 Iniciando simulação:', simulationId, 'Config:', config);
+    
+    const { canal, bot, fluxo, cliente } = config;
     
     let contextVariables: Record<string, any> = {
       canal,
