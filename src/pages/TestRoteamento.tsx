@@ -476,68 +476,9 @@ export default function TestRoteamento() {
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Sidebar - Filas */}
-          <div className="xl:col-span-1 space-y-6">
-            {/* Filas de Atendimento */}
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold">Filas</h3>
-              </div>
-
-              <ScrollArea className="h-[250px]">
-                <div className="space-y-2 pr-3">
-                  {filas && filas.length > 0 ? (
-                    filas.map((fila) => {
-                      const chatsNaFila = conversasAtivas?.filter(c => c.fila_id === fila.id).length || 0;
-                      
-                      return (
-                        <Card key={fila.id} className="p-3 bg-muted/30">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="text-sm font-medium truncate flex-1">{fila.nome}</div>
-                            {fila.ativa ? (
-                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-green-600 text-green-600">
-                                ATIVA
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-gray-400 text-gray-400">
-                                INATIVA
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-1 text-[10px] text-muted-foreground">
-                            <div className="flex justify-between">
-                              <span>Chats na fila:</span>
-                              <span className="font-medium text-foreground">{chatsNaFila}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Prioridade:</span>
-                              <span className="font-medium text-foreground">{fila.prioridade || 0}</span>
-                            </div>
-                            {fila.tipo_roteamento && (
-                              <div className="flex justify-between">
-                                <span>Roteamento:</span>
-                                <span className="font-medium text-foreground">{fila.tipo_roteamento}</span>
-                              </div>
-                            )}
-                          </div>
-                        </Card>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center text-sm text-muted-foreground py-8">
-                      Nenhuma fila cadastrada
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </Card>
-          </div>
-
+        <div className="grid grid-cols-1 gap-6">
           {/* Main Area */}
-          <div className="xl:col-span-3">
+          <div>
             <div className="space-y-6">
                 {/* Controles e Seletor de Simulações */}
                 <Card className="p-4">
