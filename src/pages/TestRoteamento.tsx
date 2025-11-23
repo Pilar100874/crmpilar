@@ -11,11 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { 
   ArrowRight, ArrowLeft, Play, Send, Bot, User, Zap, 
-  Users, Activity, CheckCircle2, AlertCircle, Circle 
+  Users, Activity, CheckCircle2, AlertCircle, Circle, Network, MessageSquare, Plus, X
 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
 import FlowSimulationCanvas from "@/components/routing/FlowSimulationCanvas";
+import OmnichannelWorkflowViewer from "@/components/routing/OmnichannelWorkflowViewer";
 
 interface ChatMessage {
   id: string;
@@ -516,7 +517,7 @@ export default function TestRoteamento() {
                           size="sm"
                         >
                           <ArrowLeft className="w-4 h-4 mr-2" />
-                          Nova Configuração
+                          Adicionar Simulação
                         </Button>
                         <Badge variant="default" className="text-sm">
                           <Play className="w-3 h-3 mr-1" />
@@ -543,7 +544,7 @@ export default function TestRoteamento() {
                             className="h-8 w-8"
                             onClick={() => removeSimulation(sim.id)}
                           >
-                            ×
+                            <X className="w-4 h-4" />
                           </Button>
                         </div>
                       ))}
@@ -655,6 +656,29 @@ export default function TestRoteamento() {
                     </div>
                   </Card>
                 </div>
+
+                {/* Workflow Omnichannel */}
+                {activeSimulation?.config.fluxoId && (
+                  <Card className="p-0 h-[450px] shadow-lg overflow-hidden">
+                    <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+                      <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <Network className="w-5 h-5 text-cyan-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">Workflow Omnichannel</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome || 'Visualização do fluxo'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="h-[calc(100%-73px)]">
+                      <OmnichannelWorkflowViewer
+                        fluxoId={activeSimulation.config.fluxoId}
+                        fluxos={fluxos || []}
+                      />
+                    </div>
+                  </Card>
+                )}
               </div>
             )}
           </div>
