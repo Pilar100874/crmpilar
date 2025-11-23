@@ -36,6 +36,7 @@ import {
   Upload,
   Activity,
   Star,
+  KeyRound,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,16 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import * as LucideIcons from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MenuPermissions {
   view: boolean;
@@ -178,6 +188,7 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -836,18 +847,38 @@ export default function Layout({ children }: LayoutProps) {
               </button>
             )}
 
-            <button
-              onClick={() => setShowUsuarioSelector(true)}
-              className={`${
-                menuLocked 
-                  ? 'w-10 h-10 rounded-full flex items-center justify-center' 
-                  : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-              } bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors`}
-              title={userName || "Usuário"}
-            >
-              <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
-              {!menuLocked && <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>}
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`${
+                    menuLocked 
+                      ? 'w-10 h-10 rounded-full flex items-center justify-center' 
+                      : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
+                  } bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors`}
+                  title={userName || "Usuário"}
+                >
+                  <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
+                  {!menuLocked && <span className="text-sm font-medium text-sidebar-foreground/70 truncate">{userName || "Usuário"}</span>}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>{userName || "Minha Conta"}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowUsuarioSelector(true)}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowChangePasswordDialog(true)}>
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  <span>Alterar Senha</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <button 
               onClick={handleLogout}
@@ -900,6 +931,11 @@ export default function Layout({ children }: LayoutProps) {
       />
 
       <IncomingCallNotification />
+      
+      <ChangePasswordDialog
+        open={showChangePasswordDialog}
+        onOpenChange={setShowChangePasswordDialog}
+      />
     </LayoutContext.Provider>
   );
 }
