@@ -143,12 +143,11 @@ const menuItems: MenuItem[] = [
       { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: Video },
     ]
   },
-  { id: "Perfil", title: "Perfil", url: "/perfil", icon: UserIcon },
+  { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
   { id: "Alterar Senha", title: "Alterar Senha", url: "#alterar-senha", icon: KeyRound },
-  { id: "Sair", title: "Sair", url: "#sair", icon: LogOut },
   { 
     id: "Configurações",
-    title: "Configurações",
+    title: "Configurações", 
     icon: Settings,
     subItems: [
       { id: "Config Geral", title: "Configurações", url: "/config", icon: Settings },
@@ -159,6 +158,7 @@ const menuItems: MenuItem[] = [
       { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: Megaphone },
     ]
   },
+  { id: "Sair", title: "Sair", url: "#sair", icon: LogOut },
 ];
 
 interface LayoutProps {
