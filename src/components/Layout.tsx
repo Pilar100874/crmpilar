@@ -232,15 +232,34 @@ export default function Layout({ children }: LayoutProps) {
           return;
         }
 
-        // Busca o usuário na tabela usuarios
-        const { data: usuario } = await supabase
+        // Busca o usuário na tabela usuarios primeiro por auth_user_id, depois por email
+        let usuario = null;
+        
+        // Tenta buscar por auth_user_id primeiro (mais confiável)
+        const { data: usuarioByAuthId } = await supabase
           .from("usuarios")
           .select("id, grupo_acesso_id")
-          .ilike("email", user.email || "")
+          .eq("auth_user_id", user.id)
           .maybeSingle();
+
+        if (usuarioByAuthId) {
+          usuario = usuarioByAuthId;
+        } else {
+          // Se não encontrou, tenta por email
+          const { data: usuarioByEmail } = await supabase
+            .from("usuarios")
+            .select("id, grupo_acesso_id")
+            .eq("email", user.email || "")
+            .maybeSingle();
+          
+          usuario = usuarioByEmail;
+        }
+
+        console.log("Usuario encontrado:", usuario);
 
         // Se não encontrou usuário, bloqueia tudo
         if (!usuario) {
+          console.log("Nenhum usuário encontrado, bloqueando menus");
           setAllowedMenus({});
           setIsLoading(false);
           return;
@@ -285,9 +304,17 @@ export default function Layout({ children }: LayoutProps) {
           .eq("id", usuario.grupo_acesso_id)
           .single();
 
-        if (groupError) throw groupError;
+        console.log("Grupo de acesso encontrado:", grupo);
+        console.log("Menus permitidos do grupo:", grupo?.menus_permitidos);
 
-        setAllowedMenus((grupo?.menus_permitidos as unknown as Record<string, MenuPermissions>) || {});
+        if (groupError) {
+          console.error("Erro ao buscar grupo:", groupError);
+          throw groupError;
+        }
+
+        const menusPermitidos = (grupo?.menus_permitidos as unknown as Record<string, MenuPermissions>) || {};
+        console.log("Definindo allowedMenus com:", menusPermitidos);
+        setAllowedMenus(menusPermitidos);
       } catch (error) {
         console.error("Erro ao buscar permissões:", error);
         toast.error("Erro ao carregar permissões do usuário");
