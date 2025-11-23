@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   Node,
   Edge,
   useNodesState,
@@ -423,14 +422,6 @@ export default function FlowSimulationCanvas({
             >
               <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
               <Controls />
-              <MiniMap
-                nodeColor={(node) => {
-                  if (node.data.isCurrent) return '#0ea5e9';
-                  if (node.data.isExecuted) return '#22c55e';
-                  return '#94a3b8';
-                }}
-                className="bg-background border border-border"
-              />
             </ReactFlow>
           ) : (
             <div className="flex items-center justify-center h-full">
