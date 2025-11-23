@@ -114,17 +114,66 @@ export const useOmnichannelRouting = () => {
     estabelecimentoId: string,
     canal: string
   ): Promise<boolean> => {
-    // Verificar se há um fluxo omnichannel ativo
-    const { data: flows } = await supabase
-      .from("omnichannel_flows")
-      .select("id")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .eq("ativo", true)
-      .limit(1);
+    try {
+      console.log('[Omnichannel] Roteando chat:', conversationId);
 
-    // Se houver fluxo, executar o fluxo omnichannel
-    if (flows && flows.length > 0) {
-      console.log("Executando fluxo omnichannel:", flows[0].id);
+      // Buscar fluxo omnichannel ativo (OBRIGATÓRIO)
+      const { data: flows, error: flowError } = await supabase
+        .from("omnichannel_flows")
+        .select("id")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("ativo", true)
+        .limit(1);
+
+      if (flowError) {
+        console.error('[Omnichannel] Erro ao buscar workflow:', flowError);
+        toast.error('Erro ao buscar workflow omnichannel');
+        return false;
+      }
+
+      // Se não houver workflow, criar um padrão
+      if (!flows || flows.length === 0) {
+        console.log('[Omnichannel] Nenhum workflow encontrado, criando workflow padrão...');
+        
+        const { data: createResult, error: createError } = await supabase.functions.invoke(
+          'criar-workflow-padrao',
+          { body: { estabelecimentoId } }
+        );
+
+        if (createError || !createResult?.success) {
+          console.error('[Omnichannel] Erro ao criar workflow padrão:', createError);
+          toast.error('Erro: workflow omnichannel não configurado');
+          return false;
+        }
+
+        // Buscar novamente o workflow criado
+        const { data: newFlows } = await supabase
+          .from("omnichannel_flows")
+          .select("id")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .eq("ativo", true)
+          .limit(1);
+
+        if (!newFlows || newFlows.length === 0) {
+          toast.error('Erro: não foi possível criar workflow padrão');
+          return false;
+        }
+
+        console.log('[Omnichannel] Workflow padrão criado:', newFlows[0].id);
+        toast.info('Workflow padrão criado automaticamente');
+        
+        // Executar o workflow recém-criado
+        return await executarFluxoOmnichannel(
+          newFlows[0].id,
+          conversationId,
+          customerId,
+          estabelecimentoId,
+          canal
+        );
+      }
+
+      // Executar o workflow existente
+      console.log('[Omnichannel] Executando workflow:', flows[0].id);
       return await executarFluxoOmnichannel(
         flows[0].id,
         conversationId,
@@ -132,33 +181,6 @@ export const useOmnichannelRouting = () => {
         estabelecimentoId,
         canal
       );
-    }
-
-    // Caso contrário, usar o roteamento padrão
-    try {
-      console.log('[Omnichannel] Roteando chat:', conversationId);
-
-      const rotearResponse = await supabase.functions.invoke('rotear-chat-automatico', {
-        body: {
-          conversationId,
-          customerId,
-          estabelecimentoId,
-          canal
-        }
-      });
-
-      if (rotearResponse.data?.success) {
-        if (rotearResponse.data.atendenteId) {
-          console.log('[Omnichannel] Chat atribuído ao atendente:', rotearResponse.data.atendenteId);
-          toast.success('Chat atribuído automaticamente');
-        } else {
-          console.log('[Omnichannel] Chat colocado na fila');
-          toast.info('Chat em fila de espera');
-        }
-        return true;
-      }
-
-      return false;
 
     } catch (error: any) {
       console.error('[Omnichannel] Erro ao rotear chat:', error);
