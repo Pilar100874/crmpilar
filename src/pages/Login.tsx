@@ -7,24 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Building2, ShieldCheck } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import logo from "@/assets/logo.jpg";
 import logoFallback from "@/assets/logo_preto.png";
 
-type LoginStep = "select-type" | "admin-login" | "select-company" | "select-user" | "user-password";
-
-interface Estabelecimento {
-  id: string;
-  nome: string;
-  cnpj: string;
-}
-
-interface Usuario {
-  id: string;
-  nome: string;
-  email: string;
-}
+type LoginStep = "select-type" | "admin-login" | "user-login";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,66 +24,15 @@ export default function Login() {
   const [adminPassword, setAdminPassword] = useState("Ceotto2468");
   
   // User login
-  const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
-  const [selectedEstabelecimento, setSelectedEstabelecimento] = useState<string>("");
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [selectedUsuario, setSelectedUsuario] = useState<string>("");
+  const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
 
-  // Garantir logout ao entrar na tela de login
   useEffect(() => {
     const clearSession = async () => {
       await supabase.auth.signOut();
     };
     clearSession();
   }, []);
-
-  useEffect(() => {
-    if (step === "select-company") {
-      fetchEstabelecimentos();
-    }
-  }, [step]);
-
-  useEffect(() => {
-    if (selectedEstabelecimento) {
-      fetchUsuarios(selectedEstabelecimento);
-    }
-  }, [selectedEstabelecimento]);
-
-  const fetchEstabelecimentos = async () => {
-    console.log("Buscando estabelecimentos...");
-    const { data, error } = await supabase
-      .from("estabelecimentos")
-      .select("id, nome, cnpj")
-      .order("nome");
-
-    console.log("Estabelecimentos retornados:", data);
-    console.log("Erro (se houver):", error);
-
-    if (error) {
-      toast.error("Erro ao carregar estabelecimentos");
-      console.error(error);
-      return;
-    }
-
-    setEstabelecimentos(data || []);
-  };
-
-  const fetchUsuarios = async (estabelecimentoId: string) => {
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("id, nome, email")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .order("nome");
-
-    if (error) {
-      toast.error("Erro ao carregar usuários");
-      console.error(error);
-      return;
-    }
-
-    setUsuarios(data || []);
-  };
 
   const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -162,68 +98,50 @@ export default function Login() {
     }
   };
 
-  const handleUserPasswordSubmit = async (e: React.FormEvent) => {
+  const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Buscar usuário
-    const { data: usuario, error } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("id", selectedUsuario)
-      .single();
-
-    if (error || !usuario) {
-      setIsLoading(false);
-      toast.error("Erro ao buscar usuário");
-      return;
-    }
-
-    // Verificar senha
-    if (usuario.senha_hash !== userPassword) {
-      setIsLoading(false);
-      toast.error("Senha inválida");
-      return;
-    }
-
-    // Verificar se senha tem pelo menos 6 caracteres (requisito do Supabase)
-    if (userPassword.length < 6) {
-      setIsLoading(false);
-      toast.error("A senha deve ter pelo menos 6 caracteres. Entre em contato com o administrador para atualizar sua senha.");
-      return;
-    }
-
-    // Fazer login
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: usuario.email,
-      password: userPassword,
-    });
-
-    if (signInError) {
-      // Se não existe usuário no auth, criar um
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: usuario.email,
+    try {
+      // Fazer login com email e senha
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: userEmail,
         password: userPassword,
       });
 
-      if (signUpError) {
-        if (signUpError.message.includes("weak_password") || signUpError.message.includes("6 characters")) {
-          toast.error("A senha deve ter pelo menos 6 caracteres. Entre em contato com o administrador para atualizar sua senha.");
-        } else {
-          toast.error(`Erro ao realizar login: ${signUpError.message}`);
-        }
+      if (signInError) {
+        toast.error("Email ou senha inválidos");
         setIsLoading(false);
         return;
       }
-    }
 
-    // Salvar informações no localStorage
-    localStorage.setItem("userType", "user");
-    localStorage.setItem("userId", usuario.id);
-    localStorage.setItem("estabelecimentoId", selectedEstabelecimento);
-    toast.success("Login realizado com sucesso!");
-    setIsLoading(false);
-    navigate("/dashboard");
+      // Buscar dados do usuário após autenticação
+      const { data: usuario, error: userError } = await supabase
+        .from("usuarios")
+        .select("id, estabelecimento_id")
+        .eq("auth_user_id", authData.user.id)
+        .maybeSingle();
+
+      if (userError || !usuario) {
+        toast.error("Usuário não encontrado no sistema");
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        return;
+      }
+
+      // Salvar informações no localStorage
+      localStorage.setItem("userType", "user");
+      localStorage.setItem("userId", usuario.id);
+      localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
+      
+      toast.success("Login realizado com sucesso!");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Erro no login:", err);
+      toast.error("Erro inesperado no login");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleEstabelecimentoSelected = (estabelecimentoId: string) => {
@@ -250,7 +168,7 @@ export default function Login() {
         <Button 
           variant="outline"
           className="w-full"
-          onClick={() => setStep("select-company")}
+          onClick={() => setStep("user-login")}
         >
           <Building2 className="mr-2 h-4 w-4" />
           Acessar como Usuário
@@ -312,107 +230,27 @@ export default function Login() {
     </Card>
   );
 
-  const renderSelectCompany = () => (
+  const renderUserLogin = () => (
     <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
       <CardHeader>
-        <CardTitle className="text-foreground">Selecione a Empresa</CardTitle>
+        <CardTitle className="text-foreground">Login de Usuário</CardTitle>
         <CardDescription>
-          Escolha o estabelecimento para acessar
+          Entre com seu email e senha
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label>Estabelecimento</Label>
-          <Select value={selectedEstabelecimento} onValueChange={setSelectedEstabelecimento}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um estabelecimento" />
-            </SelectTrigger>
-            <SelectContent>
-              {estabelecimentos.map((est) => (
-                <SelectItem key={est.id} value={est.id}>
-                  {est.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Button 
-            className="w-full"
-            onClick={() => setStep("select-user")}
-            disabled={!selectedEstabelecimento}
-          >
-            Continuar
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="w-full"
-            onClick={() => setStep("select-type")}
-          >
-            Voltar
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderSelectUser = () => (
-    <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-foreground">Selecione o Usuário</CardTitle>
-        <CardDescription>
-          Escolha seu usuário para continuar
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label>Usuário</Label>
-          <Select value={selectedUsuario} onValueChange={setSelectedUsuario}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um usuário" />
-            </SelectTrigger>
-            <SelectContent>
-              {usuarios.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Button 
-            className="w-full"
-            onClick={() => setStep("user-password")}
-            disabled={!selectedUsuario}
-          >
-            Continuar
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="w-full"
-            onClick={() => {
-              setSelectedUsuario("");
-              setStep("select-company");
-            }}
-          >
-            Voltar
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderUserPassword = () => (
-    <Card className="border-border/50 bg-card/50 backdrop-blur shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-foreground">Digite sua Senha</CardTitle>
-        <CardDescription>
-          {usuarios.find(u => u.id === selectedUsuario)?.nome}
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleUserPasswordSubmit}>
+      <form onSubmit={handleUserLogin}>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="user-email">Email</Label>
+            <Input
+              id="user-email"
+              type="email"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              placeholder="seu@email.com"
+              required
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="user-password">Senha</Label>
             <Input
@@ -436,10 +274,7 @@ export default function Login() {
             type="button" 
             variant="ghost" 
             className="w-full"
-            onClick={() => {
-              setUserPassword("");
-              setStep("select-user");
-            }}
+            onClick={() => setStep("select-type")}
           >
             Voltar
           </Button>
@@ -465,9 +300,7 @@ export default function Login() {
 
         {step === "select-type" && renderSelectType()}
         {step === "admin-login" && renderAdminLogin()}
-        {step === "select-company" && renderSelectCompany()}
-        {step === "select-user" && renderSelectUser()}
-        {step === "user-password" && renderUserPassword()}
+        {step === "user-login" && renderUserLogin()}
       </div>
 
       <EstabelecimentoSelector
