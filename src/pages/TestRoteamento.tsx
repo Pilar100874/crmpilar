@@ -59,12 +59,36 @@ export default function TestRoteamento() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bot_flows")
-        .select("id, name, active, flow_data")
+        .select("id, name, active, flow_data, canais, whatsapp_type")
         .eq("active", true);
       if (error) throw error;
       return data || [];
     },
   });
+
+  // Filtrar bots por canal selecionado
+  const availableBots = bots?.filter((bot) => {
+    if (!selectedCanal) return true;
+    
+    // Se não tem canais definidos, mostrar para todos
+    if (!bot.canais || bot.canais.length === 0) return true;
+    
+    // Para WhatsApp, verificar o tipo (business ou waha)
+    if (selectedCanal === "whatsapp") {
+      return bot.canais.includes("whatsapp");
+    }
+    
+    // Para outros canais, verificar se está na lista
+    return bot.canais.includes(selectedCanal);
+  }) || [];
+
+  // Limpar bot selecionado se não estiver mais disponível para o canal
+  useEffect(() => {
+    if (selectedBot && !availableBots.find(b => b.id === selectedBot)) {
+      setSelectedBot(undefined);
+      toast.info("Bot não disponível para este canal");
+    }
+  }, [selectedCanal, availableBots, selectedBot]);
 
   const { data: fluxos } = useQuery({
     queryKey: ["omnichannel-flows"],
@@ -437,12 +461,35 @@ export default function TestRoteamento() {
                           <SelectValue placeholder="Selecione o canal de entrada" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                          <SelectItem value="instagram">Instagram</SelectItem>
-                          <SelectItem value="telegram">Telegram</SelectItem>
-                          <SelectItem value="webchat">WebChat</SelectItem>
+                          <SelectItem value="whatsapp">
+                            WhatsApp ({bots?.filter(b => b.canais?.includes("whatsapp")).length || 0} bots)
+                          </SelectItem>
+                          <SelectItem value="instagram">
+                            Instagram ({bots?.filter(b => b.canais?.includes("instagram")).length || 0} bots)
+                          </SelectItem>
+                          <SelectItem value="telegram">
+                            Telegram ({bots?.filter(b => b.canais?.includes("telegram")).length || 0} bots)
+                          </SelectItem>
+                          <SelectItem value="webchat">
+                            WebChat ({bots?.filter(b => b.canais?.includes("webchat")).length || 0} bots)
+                          </SelectItem>
                         </SelectContent>
                       </Select>
+                      {selectedCanal === "whatsapp" && bots && bots.length > 0 && (
+                        <div className="mt-2 p-3 bg-muted/50 rounded-lg">
+                          <p className="text-xs font-medium mb-2">
+                            Tipos de WhatsApp disponíveis:
+                          </p>
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            <span>
+                              Business: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business").length}
+                            </span>
+                            <span>
+                              WAHA: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha").length}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -452,13 +499,33 @@ export default function TestRoteamento() {
                           <SelectValue placeholder="Selecione um bot (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          {bots?.map((bot) => (
-                            <SelectItem key={bot.id} value={bot.id}>
-                              {bot.name}
+                          {availableBots.length > 0 ? (
+                            availableBots.map((bot) => (
+                              <SelectItem key={bot.id} value={bot.id}>
+                                {bot.name}
+                                {bot.whatsapp_type && selectedCanal === "whatsapp" 
+                                  ? ` (${bot.whatsapp_type === "business" ? "Business" : "WAHA"})`
+                                  : ""
+                                }
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none" disabled>
+                              Nenhum bot disponível para {selectedCanal || "este canal"}
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
+                      {selectedCanal && availableBots.length === 0 && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          ⚠️ Não há bots configurados para o canal {selectedCanal}
+                        </p>
+                      )}
+                      {selectedCanal && availableBots.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          ✓ {availableBots.length} bot(s) disponível(is) para {selectedCanal}
+                        </p>
+                      )}
                     </div>
 
                     <div>
