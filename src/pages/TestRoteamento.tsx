@@ -747,6 +747,13 @@ export default function TestRoteamento() {
 
   const selectedSimulation = simulations.find(s => s.id === selectedSimulationId);
 
+  // Auto-scroll do chat quando novas mensagens chegam
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [selectedSimulation?.chatMessages]);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -1127,40 +1134,46 @@ export default function TestRoteamento() {
             </TabsList>
             
             <TabsContent value="chat" className="mt-4">
-              <ScrollArea className="h-[400px] border rounded-lg p-4">
-                {selectedSimulation.chatMessages.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Send className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                    <p>Aguardando mensagens...</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {selectedSimulation.chatMessages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={cn(
-                          "p-3 rounded-lg",
-                          msg.sender === "system" && "bg-orange-50 dark:bg-orange-950/20 text-sm",
-                          msg.sender === "bot" && "bg-blue-50 dark:bg-blue-950/20",
-                          msg.sender === "user" && "bg-primary text-primary-foreground ml-auto max-w-[80%]"
-                        )}
-                      >
-                        <div className="flex items-start gap-2">
-                          {msg.sender === "system" && <Zap className="w-4 h-4" />}
-                          {msg.sender === "bot" && <Bot className="w-4 h-4" />}
-                          {msg.sender === "user" && <User className="w-4 h-4" />}
-                          <div className="flex-1">
-                            <div>{msg.text}</div>
-                            <div className="text-xs opacity-70 mt-1">
-                              {msg.timestamp.toLocaleTimeString()}
+              <div className="border rounded-lg bg-background">
+                <div 
+                  ref={chatScrollRef}
+                  className="h-[400px] overflow-y-auto p-4 space-y-3"
+                >
+                  {selectedSimulation.chatMessages.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground h-full flex flex-col items-center justify-center">
+                      <Send className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                      <p>Aguardando mensagens...</p>
+                      <p className="text-xs mt-2">As mensagens aparecerão aqui durante a simulação</p>
+                    </div>
+                  ) : (
+                    <>
+                      {selectedSimulation.chatMessages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={cn(
+                            "p-3 rounded-lg animate-in slide-in-from-bottom-2",
+                            msg.sender === "system" && "bg-orange-100 dark:bg-orange-950/30 text-sm border border-orange-200 dark:border-orange-900",
+                            msg.sender === "bot" && "bg-blue-100 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900",
+                            msg.sender === "user" && "bg-primary text-primary-foreground ml-auto max-w-[80%]"
+                          )}
+                        >
+                          <div className="flex items-start gap-2">
+                            {msg.sender === "system" && <Zap className="w-4 h-4 shrink-0" />}
+                            {msg.sender === "bot" && <Bot className="w-4 h-4 shrink-0" />}
+                            {msg.sender === "user" && <User className="w-4 h-4 shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              <div className="break-words">{msg.text}</div>
+                              <div className="text-xs opacity-70 mt-1">
+                                {msg.timestamp.toLocaleTimeString()}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="trace" className="mt-4">
