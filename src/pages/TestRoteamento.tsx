@@ -156,9 +156,14 @@ export default function TestRoteamento() {
       return;
     }
 
+    if (simulations.length >= 6) {
+      toast.error("Máximo de 6 simulações simultâneas atingido");
+      return;
+    }
+
     const newSimulation: Simulation = {
       id: `sim-${Date.now()}`,
-      name: `${selectedCanal} - ${new Date().toLocaleTimeString()}`,
+      name: `Simulação ${simulations.length + 1}`,
       status: "running",
       startTime: new Date(),
       config: {
@@ -198,6 +203,14 @@ export default function TestRoteamento() {
     setSelectedFluxo(undefined);
     setSelectedCliente(undefined);
     toast.success("Todas simulações foram limpas");
+  };
+
+  const addNewSimulation = () => {
+    setCurrentStep(1);
+    setSelectedCanal(undefined);
+    setSelectedBot(undefined);
+    setSelectedFluxo(undefined);
+    setSelectedCliente(undefined);
   };
 
   const addMessageToChat = (text: string) => {
@@ -512,42 +525,78 @@ export default function TestRoteamento() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <Button
+                          onClick={addNewSimulation}
+                          variant="default"
+                          size="sm"
+                          disabled={simulations.length >= 6}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Nova Simulação ({simulations.length}/6)
+                        </Button>
+                        <Button
                           onClick={resetAllSimulations}
                           variant="outline"
                           size="sm"
                         >
                           <ArrowLeft className="w-4 h-4 mr-2" />
-                          Adicionar Simulação
+                          Limpar Todas
                         </Button>
-                        <Badge variant="default" className="text-sm">
-                          <Play className="w-3 h-3 mr-1" />
-                          {simulations.length} Simulação(ões) Ativa(s)
-                        </Badge>
                       </div>
                     </div>
 
                     {/* Tabs de Simulações */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                      {simulations.map((sim) => (
-                        <div key={sim.id} className="flex items-center gap-1">
-                          <Button
-                            variant={selectedSimulationId === sim.id ? "default" : "outline"}
-                            size="sm"
+                    <div className="border-t pt-3">
+                      <div className="text-xs text-muted-foreground mb-2 px-1">Simulações Ativas:</div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                        {simulations.map((sim, index) => (
+                          <Card 
+                            key={sim.id} 
+                            className={cn(
+                              "relative p-3 cursor-pointer transition-all border-2",
+                              selectedSimulationId === sim.id 
+                                ? "border-primary bg-primary/5" 
+                                : "border-border hover:border-primary/50"
+                            )}
                             onClick={() => setSelectedSimulationId(sim.id)}
-                            className="whitespace-nowrap"
                           >
-                            {sim.name}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => removeSimulation(sim.id)}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeSimulation(sim.id);
+                              }}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                            <div className="text-sm font-semibold mb-1">{sim.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {sim.config.canal}
+                            </div>
+                            <Badge 
+                              variant={selectedSimulationId === sim.id ? "default" : "secondary"} 
+                              className="mt-2 text-xs"
+                            >
+                              {sim.chatMessages.length} msgs
+                            </Badge>
+                          </Card>
+                        ))}
+                        
+                        {/* Slots vazios para mostrar que pode adicionar mais */}
+                        {[...Array(Math.max(0, 6 - simulations.length))].map((_, i) => (
+                          <Card 
+                            key={`empty-${i}`} 
+                            className="p-3 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center min-h-[100px] cursor-pointer hover:border-primary/50 transition-all"
+                            onClick={addNewSimulation}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <div className="text-center">
+                              <Plus className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                              <div className="text-xs text-muted-foreground">Adicionar</div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Info da Simulação Selecionada */}
@@ -566,117 +615,131 @@ export default function TestRoteamento() {
                 </Card>
 
                 {/* Canvas + Chat */}
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                  {/* Canvas Visual */}
-                  <div className="xl:col-span-2 border rounded-lg overflow-hidden bg-background shadow-lg">
-                    {activeSimulation && (
-                      <FlowSimulationCanvas
-                        simulation={activeSimulation}
-                        bots={bots || []}
-                        fluxos={fluxos || []}
-                      />
-                    )}
-                  </div>
-
-                  {/* Chat Interativo */}
-                  <Card className="p-0 flex flex-col h-[700px] shadow-lg overflow-hidden">
-                    <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Send className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">Chat da Simulação</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {activeSimulation?.chatMessages.length || 0} mensagens
-                        </p>
-                      </div>
-                    </div>
-
-                    <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-3">
-                        {activeSimulation?.chatMessages.map((msg) => (
-                          <div
-                            key={msg.id}
-                            className={cn(
-                              "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                              msg.sender === "user" && "flex-row-reverse"
-                            )}
-                          >
-                            <div className={cn(
-                              "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                              msg.sender === "system" && "bg-orange-100 dark:bg-orange-950/40",
-                              msg.sender === "bot" && "bg-blue-100 dark:bg-blue-950/40",
-                              msg.sender === "user" && "bg-primary"
-                            )}>
-                              {msg.sender === "system" && <Zap className="w-4 h-4 text-orange-600" />}
-                              {msg.sender === "bot" && <Bot className="w-4 h-4 text-blue-600" />}
-                              {msg.sender === "user" && <User className="w-4 h-4 text-primary-foreground" />}
-                            </div>
-                            
-                            <div className={cn(
-                              "flex-1 space-y-1",
-                              msg.sender === "user" && "flex flex-col items-end"
-                            )}>
-                              <div className={cn(
-                                "inline-block px-4 py-2.5 rounded-2xl text-sm max-w-[85%] break-words shadow-sm",
-                                msg.sender === "system" && "bg-orange-50 dark:bg-orange-950/30 text-orange-900 dark:text-orange-100",
-                                msg.sender === "bot" && "bg-muted text-foreground",
-                                msg.sender === "user" && "bg-primary text-primary-foreground"
-                              )}>
-                                {msg.text}
-                              </div>
-                              <span className="text-[10px] text-muted-foreground px-2">
-                                {msg.timestamp.toLocaleTimeString('pt-BR', { 
-                                  hour: '2-digit', 
-                                  minute: '2-digit' 
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-
-                    <div className="p-4 border-t bg-muted/30">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Digite uma mensagem..."
-                          className="flex-1 bg-background"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                              addMessageToChat(e.currentTarget.value.trim());
-                              e.currentTarget.value = "";
-                            }
-                          }}
+                {activeSimulation ? (
+                  <>
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                      {/* Canvas Visual */}
+                      <div className="xl:col-span-2 border rounded-lg overflow-hidden bg-background shadow-lg">
+                        <FlowSimulationCanvas
+                          simulation={activeSimulation}
+                          bots={bots || []}
+                          fluxos={fluxos || []}
                         />
-                        <Button size="icon" variant="default">
-                          <Send className="w-4 h-4" />
-                        </Button>
                       </div>
-                    </div>
-                  </Card>
-                </div>
 
-                {/* Workflow Omnichannel */}
-                {activeSimulation?.config.fluxoId && (
-                  <Card className="p-0 h-[450px] shadow-lg overflow-hidden">
-                    <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
-                      <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Network className="w-5 h-5 text-cyan-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">Workflow Omnichannel</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome || 'Visualização do fluxo'}
-                        </p>
-                      </div>
+                      {/* Chat Interativo */}
+                      <Card className="p-0 flex flex-col h-[700px] shadow-lg overflow-hidden">
+                        <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
+                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                            <Send className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold">Chat da Simulação</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {activeSimulation.chatMessages.length} mensagens
+                            </p>
+                          </div>
+                        </div>
+
+                        <ScrollArea className="flex-1 p-4">
+                          <div className="space-y-3">
+                            {activeSimulation.chatMessages.map((msg) => (
+                              <div
+                                key={msg.id}
+                                className={cn(
+                                  "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                                  msg.sender === "user" && "flex-row-reverse"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                                  msg.sender === "system" && "bg-orange-100 dark:bg-orange-950/40",
+                                  msg.sender === "bot" && "bg-blue-100 dark:bg-blue-950/40",
+                                  msg.sender === "user" && "bg-primary"
+                                )}>
+                                  {msg.sender === "system" && <Zap className="w-4 h-4 text-orange-600" />}
+                                  {msg.sender === "bot" && <Bot className="w-4 h-4 text-blue-600" />}
+                                  {msg.sender === "user" && <User className="w-4 h-4 text-primary-foreground" />}
+                                </div>
+                                
+                                <div className={cn(
+                                  "flex-1 space-y-1",
+                                  msg.sender === "user" && "flex flex-col items-end"
+                                )}>
+                                  <div className={cn(
+                                    "inline-block px-4 py-2.5 rounded-2xl text-sm max-w-[85%] break-words shadow-sm",
+                                    msg.sender === "system" && "bg-orange-50 dark:bg-orange-950/30 text-orange-900 dark:text-orange-100",
+                                    msg.sender === "bot" && "bg-muted text-foreground",
+                                    msg.sender === "user" && "bg-primary text-primary-foreground"
+                                  )}>
+                                    {msg.text}
+                                  </div>
+                                  <span className="text-[10px] text-muted-foreground px-2">
+                                    {msg.timestamp.toLocaleTimeString('pt-BR', { 
+                                      hour: '2-digit', 
+                                      minute: '2-digit' 
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+
+                        <div className="p-4 border-t bg-muted/30">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Digite uma mensagem..."
+                              className="flex-1 bg-background"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                                  addMessageToChat(e.currentTarget.value.trim());
+                                  e.currentTarget.value = "";
+                                }
+                              }}
+                            />
+                            <Button size="icon" variant="default">
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
                     </div>
-                    <div className="h-[calc(100%-73px)]">
-                      <OmnichannelWorkflowViewer
-                        fluxoId={activeSimulation.config.fluxoId}
-                        fluxos={fluxos || []}
-                      />
-                    </div>
+
+                    {/* Workflow Omnichannel */}
+                    {activeSimulation.config.fluxoId && (
+                      <Card className="p-0 h-[450px] shadow-lg overflow-hidden">
+                        <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+                          <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                            <Network className="w-5 h-5 text-cyan-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold">Workflow Omnichannel</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome || 'Visualização do fluxo'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="h-[calc(100%-73px)]">
+                          <OmnichannelWorkflowViewer
+                            fluxoId={activeSimulation.config.fluxoId}
+                            fluxos={fluxos || []}
+                          />
+                        </div>
+                      </Card>
+                    )}
+                  </>
+                ) : (
+                  <Card className="p-12 text-center">
+                    <AlertCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <h3 className="text-xl font-semibold mb-2">Nenhuma Simulação Selecionada</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Selecione uma simulação existente ou crie uma nova
+                    </p>
+                    <Button onClick={addNewSimulation} size="lg">
+                      <Plus className="w-5 h-5 mr-2" />
+                      Criar Nova Simulação
+                    </Button>
                   </Card>
                 )}
               </div>
