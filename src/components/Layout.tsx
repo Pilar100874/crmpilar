@@ -158,7 +158,6 @@ const menuItems: MenuItem[] = [
       { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: Megaphone },
     ]
   },
-  { id: "Sair", title: "Sair", url: "#sair", icon: LogOut },
 ];
 
 interface LayoutProps {
@@ -468,11 +467,6 @@ export default function Layout({ children }: LayoutProps) {
 
   // Filtra os menus baseado nas permissões
   const visibleMenus = menuItems.filter(item => {
-    // Itens especiais que sempre devem aparecer
-    if (item.id === "Sair") {
-      return true;
-    }
-
     const permission = allowedMenus[item.id];
     
     // Se o menu tem subitems, verifica se pelo menos um tem permissão
@@ -850,36 +844,6 @@ export default function Layout({ children }: LayoutProps) {
                   );
                 }
                 
-                // Tratamento especial para Sair
-                if (item.url === "#sair") {
-                  if (menuLocked) {
-                    return (
-                      <button
-                        key={item.title}
-                        type="button"
-                        onClick={handleLogout}
-                        className="w-12 h-12 flex items-center justify-center rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                        title={item.title}
-                      >
-                        <item.icon className="w-6 h-6" />
-                      </button>
-                    );
-                  }
-                  
-                  return (
-                    <button
-                      key={item.title}
-                      type="button"
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      title={item.title}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-sm font-medium">{item.title}</span>
-                    </button>
-                  );
-                }
-                
                 if (menuLocked) {
                   return (
                     <NavLink
@@ -1009,6 +973,28 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Botão Sair - sempre abaixo do menu do usuário */}
+            {menuLocked ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-12 h-12 flex items-center justify-center rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                title="Sair"
+              >
+                <LogOut className="w-6 h-6" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                title="Sair"
+              >
+                <LogOut className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm font-medium">Sair</span>
+              </button>
             )}
           </div>
         </div>
