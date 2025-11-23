@@ -59,8 +59,7 @@ export default function TestRoteamento() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bot_flows")
-        .select("id, name, active, flow_data, canais, whatsapp_type")
-        .eq("active", true);
+        .select("id, name, active, flow_data, canais, whatsapp_type");
       if (error) throw error;
       return data || [];
     },
@@ -462,19 +461,19 @@ export default function TestRoteamento() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="whatsapp">
-                            WhatsApp ({bots?.filter(b => b.canais?.includes("whatsapp")).length || 0} bots)
+                            WhatsApp ({bots?.filter(b => b.canais?.includes("whatsapp")).length || 0} bots, {bots?.filter(b => b.canais?.includes("whatsapp") && b.active).length || 0} ativos)
                           </SelectItem>
                           <SelectItem value="instagram">
-                            Instagram ({bots?.filter(b => b.canais?.includes("instagram")).length || 0} bots)
+                            Instagram ({bots?.filter(b => b.canais?.includes("instagram")).length || 0} bots, {bots?.filter(b => b.canais?.includes("instagram") && b.active).length || 0} ativos)
                           </SelectItem>
                           <SelectItem value="facebook">
-                            Facebook ({bots?.filter(b => b.canais?.includes("facebook")).length || 0} bots)
+                            Facebook ({bots?.filter(b => b.canais?.includes("facebook")).length || 0} bots, {bots?.filter(b => b.canais?.includes("facebook") && b.active).length || 0} ativos)
                           </SelectItem>
                           <SelectItem value="telegram">
-                            Telegram ({bots?.filter(b => b.canais?.includes("telegram")).length || 0} bots)
+                            Telegram ({bots?.filter(b => b.canais?.includes("telegram")).length || 0} bots, {bots?.filter(b => b.canais?.includes("telegram") && b.active).length || 0} ativos)
                           </SelectItem>
                           <SelectItem value="webchat">
-                            WebChat ({bots?.filter(b => b.canais?.includes("webchat")).length || 0} bots)
+                            WebChat ({bots?.filter(b => b.canais?.includes("webchat")).length || 0} bots, {bots?.filter(b => b.canais?.includes("webchat") && b.active).length || 0} ativos)
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -485,10 +484,10 @@ export default function TestRoteamento() {
                           </p>
                           <div className="flex gap-4 text-xs text-muted-foreground">
                             <span>
-                              Business: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business").length}
+                              Business: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business" && b.active).length} ativos)
                             </span>
                             <span>
-                              WAHA: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha").length}
+                              WAHA: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha" && b.active).length} ativos)
                             </span>
                           </div>
                         </div>
@@ -505,11 +504,23 @@ export default function TestRoteamento() {
                           {availableBots.length > 0 ? (
                             availableBots.map((bot) => (
                               <SelectItem key={bot.id} value={bot.id}>
-                                {bot.name}
-                                {bot.whatsapp_type && selectedCanal === "whatsapp" 
-                                  ? ` (${bot.whatsapp_type === "business" ? "Business" : "WAHA"})`
-                                  : ""
-                                }
+                                <div className="flex items-center gap-2">
+                                  {bot.active && (
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                                  )}
+                                  <span>
+                                    {bot.name}
+                                    {bot.whatsapp_type && selectedCanal === "whatsapp" 
+                                      ? ` (${bot.whatsapp_type === "business" ? "Business" : "WAHA"})`
+                                      : ""
+                                    }
+                                    {bot.active && (
+                                      <Badge variant="outline" className="ml-2 text-[10px] h-4 px-1.5 border-green-600 text-green-600">
+                                        ATIVO
+                                      </Badge>
+                                    )}
+                                  </span>
+                                </div>
                               </SelectItem>
                             ))
                           ) : (
