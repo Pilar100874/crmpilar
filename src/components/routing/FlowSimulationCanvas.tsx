@@ -210,9 +210,12 @@ export default function FlowSimulationCanvas({
     // Se não tem node atual, começar do primeiro
     let currentNode;
     if (!executionState.currentNodeId) {
+      // Encontrar o nó inicial (start ou sem entrada)
       currentNode = nodes.find(n => 
-        !edges.some(e => e.target === n.id) // Node sem entrada = início
-      ) || nodes[0];
+        n.data?.type === 'start' || 
+        !edges.some(e => e.target === n.id)
+      );
+      console.log('🎬 Iniciando do nó:', currentNode?.id, currentNode?.data?.label);
     } else {
       currentNode = nodes.find(n => n.id === executionState.currentNodeId);
     }
@@ -238,17 +241,35 @@ export default function FlowSimulationCanvas({
 
     // Atualizar variáveis baseado no tipo de bloco
     const newVariables = { ...executionState.variables };
+    
+    // Extrair configurações do bloco
     if (currentNode.data?.config) {
-      Object.assign(newVariables, currentNode.data.config);
+      const config = currentNode.data.config;
+      
+      // Para blocos de mensagem
+      if (currentNode.data.type === 'send_message' && config.messages) {
+        config.messages.forEach((msg: any, idx: number) => {
+          if (msg.text) {
+            newVariables[`message_${idx}`] = msg.text;
+          }
+        });
+      }
+      
+      // Para outros blocos, adicionar todas as configs
+      Object.entries(config).forEach(([key, value]) => {
+        if (key !== 'messages' && value !== undefined && value !== null) {
+          newVariables[key] = value;
+        }
+      });
     }
 
-    // Encontrar próximo node
-    const outgoingEdges = edges.filter(e => e.source === currentNode.id);
-    const nextNode = outgoingEdges.length > 0 
-      ? nodes.find(n => n.id === outgoingEdges[0].target)
+    // Encontrar próximo node seguindo as edges
+    const outgoingEdge = edges.find(e => e.source === currentNode.id);
+    const nextNode = outgoingEdge 
+      ? nodes.find(n => n.id === outgoingEdge.target)
       : null;
 
-    console.log('➡️ Próximo node:', nextNode?.id);
+    console.log('➡️ Próximo node:', nextNode?.id, nextNode?.data?.label);
 
     // Atualizar estado
     const newExecutedNodes = new Set([...executionState.executedNodes, currentNode.id]);
@@ -261,13 +282,14 @@ export default function FlowSimulationCanvas({
       variables: newVariables,
       isComplete: isComplete,
       currentStep: prev.currentStep + 1,
-      // Se não estiver pausado e não terminou, continua automaticamente
     }));
 
-    // Se tiver próximo node e NÃO estiver pausado, executar automaticamente
+    // Se tiver próximo node e NÃO estiver pausado, continuar automaticamente
     if (nextNode && !executionState.isPaused && !isComplete) {
       console.log('⏭️ Executando automaticamente próximo passo...');
-      setTimeout(() => executeNextStep(), 1000);
+      setTimeout(() => executeNextStep(), 1200);
+    } else if (isComplete) {
+      console.log('🏁 Fluxo concluído!');
     }
   }, [executionState, nodes, edges]);
 
@@ -303,12 +325,19 @@ export default function FlowSimulationCanvas({
             <div>
               <h3 className="font-semibold text-lg">Simulação Visual - {flowType}</h3>
               <p className="text-xs text-muted-foreground mt-1">
-                {bot?.name || fluxo?.nome || 'Fluxo'} • {nodes.length} blocos
+                {bot?.name || fluxo?.nome || 'Fluxo'} • {nodes.length} blocos • Canal: {simulation.config.canal}
               </p>
             </div>
-            <Badge variant={executionState.isComplete ? "secondary" : "default"}>
-              Passo {executionState.currentStep} / {nodes.length}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={executionState.isComplete ? "secondary" : "default"}>
+                Passo {executionState.currentStep} / {nodes.length}
+              </Badge>
+              {executionState.currentNodeId && (
+                <Badge variant="outline" className="bg-primary/10">
+                  Executando: {nodes.find(n => n.id === executionState.currentNodeId)?.data?.label}
+                </Badge>
+              )}
+            </div>
           </div>
 
         <div className="flex items-center gap-2">
@@ -443,7 +472,7 @@ export default function FlowSimulationCanvas({
       </div>
 
       {/* Painel lateral de variáveis à direita */}
-      <div className="w-80 flex-shrink-0">
+      <div className="flex-shrink-0">
         <VariableMonitor 
           variables={executionState.variables} 
           title="Variáveis do Fluxo"
