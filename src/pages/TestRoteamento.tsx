@@ -1152,8 +1152,6 @@ export default function TestRoteamento() {
               </ScrollArea>
             )}
           </Card>
-            </TabsContent>
-          </Tabs>
         </div>
 
         {/* Controle de Atendentes */}
