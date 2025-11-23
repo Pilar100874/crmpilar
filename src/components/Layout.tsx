@@ -144,10 +144,9 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
-  { id: "Alterar Senha", title: "Alterar Senha", url: "#alterar-senha", icon: KeyRound },
   { 
     id: "Configurações",
-    title: "Configurações", 
+    title: "Configurações",
     icon: Settings,
     subItems: [
       { id: "Config Geral", title: "Configurações", url: "/config", icon: Settings },
@@ -814,36 +813,6 @@ export default function Layout({ children }: LayoutProps) {
                 // Menu normal sem submenu
                 const isInAtalhos = item.url && atalhos.some(a => a.path === item.url);
                 
-                // Tratamento especial para Alterar Senha
-                if (item.url === "#alterar-senha") {
-                  if (menuLocked) {
-                    return (
-                      <button
-                        key={item.title}
-                        type="button"
-                        onClick={() => setShowChangePasswordDialog(true)}
-                        className="w-12 h-12 flex items-center justify-center rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                        title={item.title}
-                      >
-                        <item.icon className="w-6 h-6" />
-                      </button>
-                    );
-                  }
-                  
-                  return (
-                    <button
-                      key={item.title}
-                      type="button"
-                      onClick={() => setShowChangePasswordDialog(true)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      title={item.title}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-sm font-medium">{item.title}</span>
-                    </button>
-                  );
-                }
-                
                 if (menuLocked) {
                   return (
                     <NavLink
@@ -939,6 +908,17 @@ export default function Layout({ children }: LayoutProps) {
                           <span className="text-sm">Trocar Usuário</span>
                         </button>
                         
+                        <button
+                          onClick={() => {
+                            setOpenSubmenuId(null);
+                            setShowChangePasswordDialog(true);
+                          }}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                        >
+                          <KeyRound className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">Alterar Senha</span>
+                        </button>
+                        
                       </div>
                     </div>
                   </div>
@@ -968,6 +948,17 @@ export default function Layout({ children }: LayoutProps) {
                     >
                       <UserIcon className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Trocar Usuário</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setOpenSubmenuId(null);
+                        setShowChangePasswordDialog(true);
+                      }}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                    >
+                      <KeyRound className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-sm">Alterar Senha</span>
                     </button>
                     
                   </div>
