@@ -66,6 +66,7 @@ export default function TestRoteamento() {
   const [selectedSimulationId, setSelectedSimulationId] = useState<string | null>(null);
   const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState<string>("");
+  const [atendentesExpanded, setAtendentesExpanded] = useState(true);
   
   const activeSimulation = simulations.find(s => s.id === selectedSimulationId) || null;
 
@@ -348,199 +349,8 @@ export default function TestRoteamento() {
       {/* Main Content */}
       <div className="container mx-auto px-6 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Sidebar - Status & Controles */}
+          {/* Sidebar - Filas */}
           <div className="xl:col-span-1 space-y-6">
-            {/* Status do Sistema */}
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Activity className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold">Status do Sistema</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-sm font-medium">Disponíveis</span>
-                  </div>
-                  <Badge variant="default" className="bg-green-600">
-                    {simulatedAtendentes.filter(a => a.simulatedStatus === "disponivel" && a.simulatedAcceptsNew).length}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    <span className="text-sm font-medium">Ocupados</span>
-                  </div>
-                  <Badge variant="outline" className="border-yellow-600 text-yellow-600">
-                    {simulatedAtendentes.filter(a => a.simulatedStatus === "ocupado").length}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-muted-foreground" />
-                    <span className="text-sm font-medium">Offline</span>
-                  </div>
-                  <Badge variant="outline">
-                    {simulatedAtendentes.filter(a => a.simulatedStatus === "offline").length}
-                  </Badge>
-                </div>
-
-                <div className="pt-3 border-t">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">Chats Ativos</span>
-                    <span className="font-medium">{conversasAtivas?.length || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total Atendentes</span>
-                    <span className="font-medium">{simulatedAtendentes.length}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Controle de Atendentes */}
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold">Atendentes</h3>
-                <Badge variant="outline" className="ml-auto">
-                  {simulatedAtendentes.length}
-                </Badge>
-              </div>
-
-              <ScrollArea className="h-[300px]">
-                <div className="space-y-2 pr-3">
-                  {simulatedAtendentes.map((atendente) => {
-                    const carga = conversasAtivas?.filter(c => c.atendente_atual_id === atendente.id).length || 0;
-                    const skills = atendente.atendente_skills || [];
-                    
-                    return (
-                      <Card key={atendente.id} className="p-3 bg-gradient-to-br from-muted/30 to-muted/10 border-l-4 border-l-primary/50 hover:border-l-primary transition-all">
-                        {/* Header com status e nome */}
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className={cn(
-                            "w-2.5 h-2.5 rounded-full flex-shrink-0 animate-pulse",
-                            atendente.simulatedStatus === "disponivel" && "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]",
-                            atendente.simulatedStatus === "ocupado" && "bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]",
-                            atendente.simulatedStatus === "ausente" && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]",
-                            atendente.simulatedStatus === "offline" && "bg-gray-400"
-                          )} />
-                          <span className="font-medium text-sm flex-1 truncate">{atendente.usuarios?.nome}</span>
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "text-[10px] h-5 px-1.5",
-                              atendente.simulatedStatus === "disponivel" && "border-green-600 text-green-600 bg-green-50 dark:bg-green-950/30",
-                              atendente.simulatedStatus === "ocupado" && "border-yellow-600 text-yellow-600 bg-yellow-50 dark:bg-yellow-950/30",
-                              atendente.simulatedStatus === "ausente" && "border-orange-600 text-orange-600 bg-orange-50 dark:bg-orange-950/30",
-                              atendente.simulatedStatus === "offline" && "border-gray-400 text-gray-400"
-                            )}
-                          >
-                            {atendente.simulatedStatus.toUpperCase()}
-                          </Badge>
-                        </div>
-
-                        {/* Skills */}
-                        {skills.length > 0 && (
-                          <div className="mb-3 pb-3 border-b border-border/50">
-                            <div className="text-[10px] text-muted-foreground mb-1.5 font-medium">SKILLS:</div>
-                            <div className="flex flex-wrap gap-1">
-                              {skills.map((skill: any) => (
-                                <Badge 
-                                  key={skill.skill_id} 
-                                  variant="secondary"
-                                  className="text-[9px] h-5 px-1.5 bg-primary/10 text-primary border-primary/20"
-                                >
-                                  <Zap className="w-2.5 h-2.5 mr-0.5" />
-                                  {skill.skills?.nome} (Nv.{skill.nivel})
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Botões de status */}
-                        <div className="grid grid-cols-2 gap-1.5 mb-3">
-                          <Button
-                            size="sm"
-                            variant={atendente.simulatedStatus === "disponivel" ? "default" : "outline"}
-                            onClick={() => toggleAtendenteStatus(atendente.id, "disponivel")}
-                            className={cn(
-                              "h-7 text-[10px] px-2 transition-all",
-                              atendente.simulatedStatus === "disponivel" && "bg-green-600 hover:bg-green-700"
-                            )}
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Disponível
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={atendente.simulatedStatus === "ocupado" ? "default" : "outline"}
-                            onClick={() => toggleAtendenteStatus(atendente.id, "ocupado")}
-                            className={cn(
-                              "h-7 text-[10px] px-2 transition-all",
-                              atendente.simulatedStatus === "ocupado" && "bg-yellow-600 hover:bg-yellow-700"
-                            )}
-                          >
-                            <Circle className="w-3 h-3 mr-1 fill-current" />
-                            Ocupado
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={atendente.simulatedStatus === "ausente" ? "default" : "outline"}
-                            onClick={() => toggleAtendenteStatus(atendente.id, "ausente")}
-                            className={cn(
-                              "h-7 text-[10px] px-2 transition-all",
-                              atendente.simulatedStatus === "ausente" && "bg-orange-600 hover:bg-orange-700"
-                            )}
-                          >
-                            <Clock className="w-3 h-3 mr-1" />
-                            Ausente
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={atendente.simulatedStatus === "offline" ? "default" : "outline"}
-                            onClick={() => toggleAtendenteStatus(atendente.id, "offline")}
-                            className={cn(
-                              "h-7 text-[10px] px-2 transition-all",
-                              atendente.simulatedStatus === "offline" && "bg-gray-600 hover:bg-gray-700"
-                            )}
-                          >
-                            <Circle className="w-3 h-3 mr-1" />
-                            Offline
-                          </Button>
-                        </div>
-
-                        {/* Footer com aceita novos e carga */}
-                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
-                          <div className="flex items-center gap-2 text-[10px]">
-                            <Switch
-                              checked={atendente.simulatedAcceptsNew}
-                              onCheckedChange={() => toggleAtendenteAcceptsNew(atendente.id)}
-                              className="scale-75"
-                            />
-                            <span className="text-muted-foreground">Aceita novos</span>
-                          </div>
-                          <div className="text-[10px] font-medium">
-                            <span className="text-muted-foreground">Carga:</span>{' '}
-                            <span className={cn(
-                              "font-bold",
-                              carga >= atendente.max_chats_simultaneos ? "text-red-600" : "text-primary"
-                            )}>
-                              {carga}/{atendente.max_chats_simultaneos}
-                            </span>
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </Card>
-
             {/* Filas de Atendimento */}
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-4">
@@ -879,15 +689,29 @@ export default function TestRoteamento() {
 
                 {/* Tabela de Atendentes */}
                 <Card className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <UserCog className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold">Controle de Atendentes</h3>
-                    <Badge variant="outline" className="ml-auto">
-                      {simulatedAtendentes.length} atendentes
-                    </Badge>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <UserCog className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold">Controle de Atendentes</h3>
+                      <Badge variant="outline">
+                        {simulatedAtendentes.length} atendentes
+                      </Badge>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAtendentesExpanded(!atendentesExpanded)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronDown className={cn(
+                        "w-4 h-4 transition-transform",
+                        !atendentesExpanded && "-rotate-90"
+                      )} />
+                    </Button>
                   </div>
 
-                  <div className="border rounded-lg overflow-hidden">
+                  {atendentesExpanded && (
+                    <div className="border rounded-lg overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/50">
@@ -1051,6 +875,7 @@ export default function TestRoteamento() {
                       </div>
                     )}
                   </div>
+                  )}
                 </Card>
 
                 {/* Canvas + Chat */}
