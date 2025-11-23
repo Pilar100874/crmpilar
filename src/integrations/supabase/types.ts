@@ -2255,6 +2255,7 @@ export type Database = {
           estabelecimento_id: string
           flow_data: Json
           id: string
+          is_default: boolean | null
           nome: string
           trigger_bot_id: string | null
           updated_at: string
@@ -2266,6 +2267,7 @@ export type Database = {
           estabelecimento_id: string
           flow_data?: Json
           id?: string
+          is_default?: boolean | null
           nome: string
           trigger_bot_id?: string | null
           updated_at?: string
@@ -2277,6 +2279,7 @@ export type Database = {
           estabelecimento_id?: string
           flow_data?: Json
           id?: string
+          is_default?: boolean | null
           nome?: string
           trigger_bot_id?: string | null
           updated_at?: string
