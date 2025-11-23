@@ -11,8 +11,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { 
   ArrowRight, ArrowLeft, Play, Send, Bot, User, Zap, 
-  Users, Activity, CheckCircle2, AlertCircle, Circle, Network, MessageSquare, Plus, X, Clock
+  Users, Activity, CheckCircle2, AlertCircle, Circle, Network, MessageSquare, Plus, X, Clock,
+  UserCog, ChevronDown
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
 import FlowSimulationCanvas from "@/components/routing/FlowSimulationCanvas";
@@ -857,6 +872,182 @@ export default function TestRoteamento() {
                         {activeSimulation.config.fluxoId && <> • Workflow: <span className="font-medium text-foreground">
                           {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome}
                         </span></>}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Tabela de Atendentes */}
+                <Card className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <UserCog className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold">Controle de Atendentes</h3>
+                    <Badge variant="outline" className="ml-auto">
+                      {simulatedAtendentes.length} atendentes
+                    </Badge>
+                  </div>
+
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="font-semibold">Atendente</TableHead>
+                          <TableHead className="font-semibold">Status</TableHead>
+                          <TableHead className="font-semibold">Atividade Atual</TableHead>
+                          <TableHead className="font-semibold">Skills</TableHead>
+                          <TableHead className="font-semibold text-center">Carga</TableHead>
+                          <TableHead className="font-semibold text-center">Aceita Novos</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {simulatedAtendentes.map((atendente) => {
+                          const carga = conversasAtivas?.filter(c => c.atendente_atual_id === atendente.id).length || 0;
+                          const skills = atendente.atendente_skills || [];
+                          const chatsEmAtendimento = conversasAtivas?.filter(
+                            c => c.atendente_atual_id === atendente.id && c.chat_status === 'em_atendimento'
+                          ) || [];
+                          
+                          return (
+                            <TableRow key={atendente.id} className="hover:bg-muted/30">
+                              {/* Nome */}
+                              <TableCell className="font-medium">
+                                <div className="flex items-center gap-2">
+                                  <div className={cn(
+                                    "w-2.5 h-2.5 rounded-full flex-shrink-0",
+                                    atendente.simulatedStatus === "disponivel" && "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]",
+                                    atendente.simulatedStatus === "ocupado" && "bg-yellow-500 animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.6)]",
+                                    atendente.simulatedStatus === "ausente" && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]",
+                                    atendente.simulatedStatus === "offline" && "bg-gray-400"
+                                  )} />
+                                  <span>{atendente.usuarios?.nome}</span>
+                                </div>
+                              </TableCell>
+
+                              {/* Status com Dropdown */}
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className={cn(
+                                        "w-full justify-between gap-2 h-8 text-xs",
+                                        atendente.simulatedStatus === "disponivel" && "border-green-600 text-green-600 bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/40",
+                                        atendente.simulatedStatus === "ocupado" && "border-yellow-600 text-yellow-600 bg-yellow-50 dark:bg-yellow-950/30 hover:bg-yellow-100 dark:hover:bg-yellow-950/40",
+                                        atendente.simulatedStatus === "ausente" && "border-orange-600 text-orange-600 bg-orange-50 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/40",
+                                        atendente.simulatedStatus === "offline" && "border-gray-400 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-950/30"
+                                      )}
+                                    >
+                                      <span className="capitalize">{atendente.simulatedStatus}</span>
+                                      <ChevronDown className="w-3 h-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="start" className="w-[160px]">
+                                    <DropdownMenuItem 
+                                      onClick={() => toggleAtendenteStatus(atendente.id, "disponivel")}
+                                      className="cursor-pointer"
+                                    >
+                                      <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
+                                      Disponível
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => toggleAtendenteStatus(atendente.id, "ocupado")}
+                                      className="cursor-pointer"
+                                    >
+                                      <Circle className="w-4 h-4 mr-2 text-yellow-600 fill-current" />
+                                      Ocupado
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => toggleAtendenteStatus(atendente.id, "ausente")}
+                                      className="cursor-pointer"
+                                    >
+                                      <Clock className="w-4 h-4 mr-2 text-orange-600" />
+                                      Ausente
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => toggleAtendenteStatus(atendente.id, "offline")}
+                                      className="cursor-pointer"
+                                    >
+                                      <Circle className="w-4 h-4 mr-2 text-gray-400" />
+                                      Offline
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+
+                              {/* Atividade Atual */}
+                              <TableCell>
+                                {chatsEmAtendimento.length > 0 ? (
+                                  <div className="space-y-1">
+                                    {chatsEmAtendimento.map((chat, idx) => (
+                                      <Badge 
+                                        key={chat.id} 
+                                        variant="secondary" 
+                                        className="text-xs bg-primary/10 text-primary"
+                                      >
+                                        <MessageSquare className="w-3 h-3 mr-1" />
+                                        Chat {idx + 1}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground italic">Sem atendimentos</span>
+                                )}
+                              </TableCell>
+
+                              {/* Skills */}
+                              <TableCell>
+                                {skills.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1">
+                                    {skills.map((skill: any) => (
+                                      <Badge 
+                                        key={skill.skill_id} 
+                                        variant="outline"
+                                        className="text-[10px] h-5 px-1.5 border-primary/30"
+                                      >
+                                        <Zap className="w-2.5 h-2.5 mr-0.5" />
+                                        {skill.skills?.nome} <span className="ml-0.5 opacity-70">Nv.{skill.nivel}</span>
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">Sem skills</span>
+                                )}
+                              </TableCell>
+
+                              {/* Carga */}
+                              <TableCell className="text-center">
+                                <Badge 
+                                  variant={carga >= atendente.max_chats_simultaneos ? "destructive" : "default"}
+                                  className={cn(
+                                    "font-mono text-xs",
+                                    carga >= atendente.max_chats_simultaneos 
+                                      ? "bg-red-600 hover:bg-red-700" 
+                                      : "bg-primary hover:bg-primary/90"
+                                  )}
+                                >
+                                  {carga} / {atendente.max_chats_simultaneos}
+                                </Badge>
+                              </TableCell>
+
+                              {/* Aceita Novos */}
+                              <TableCell className="text-center">
+                                <Switch
+                                  checked={atendente.simulatedAcceptsNew}
+                                  onCheckedChange={() => toggleAtendenteAcceptsNew(atendente.id)}
+                                  className="mx-auto"
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+
+                    {simulatedAtendentes.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                        <p className="text-sm">Nenhum atendente cadastrado</p>
                       </div>
                     )}
                   </div>
