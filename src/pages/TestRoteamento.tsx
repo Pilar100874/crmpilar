@@ -47,6 +47,7 @@ export default function TestRoteamento() {
   const [flowBlocks, setFlowBlocks] = useState<FlowBlock[]>([]);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [simulationStarted, setSimulationStarted] = useState(false);
+  const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Buscar bots disponíveis
@@ -124,6 +125,25 @@ export default function TestRoteamento() {
     },
   });
 
+  // Buscar carteiras de atendentes
+  const { data: carteiras } = useQuery({
+    queryKey: ["atendente-carteiras"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("atendente_carteiras")
+        .select(`
+          id,
+          atendente_id,
+          customer_id,
+          ativa,
+          customers(nome, email)
+        `)
+        .eq("ativa", true);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   // Buscar conversas ativas por atendente (para calcular carga)
   const { data: conversasAtivas } = useQuery({
     queryKey: ["conversas-ativas"],
@@ -136,6 +156,36 @@ export default function TestRoteamento() {
       return data || [];
     },
   });
+
+  // Inicializar atendentes simulados quando os dados reais forem carregados
+  useEffect(() => {
+    if (atendentes && atendentes.length > 0 && simulatedAtendentes.length === 0) {
+      const initialSimulated = atendentes.map((atendente: any) => ({
+        ...atendente,
+        simulatedStatus: atendente.status,
+        simulatedAcceptsNew: atendente.aceita_novos_chats,
+      }));
+      setSimulatedAtendentes(initialSimulated);
+    }
+  }, [atendentes]);
+
+  const toggleAtendenteStatus = (atendenteId: string) => {
+    setSimulatedAtendentes(prev => prev.map(a => {
+      if (a.id === atendenteId) {
+        const statusOrder = ["disponivel", "ocupado", "ausente", "offline"];
+        const currentIndex = statusOrder.indexOf(a.simulatedStatus);
+        const nextIndex = (currentIndex + 1) % statusOrder.length;
+        return { ...a, simulatedStatus: statusOrder[nextIndex] };
+      }
+      return a;
+    }));
+  };
+
+  const toggleAtendenteAcceptsNew = (atendenteId: string) => {
+    setSimulatedAtendentes(prev => prev.map(a => 
+      a.id === atendenteId ? { ...a, simulatedAcceptsNew: !a.simulatedAcceptsNew } : a
+    ));
+  };
 
   // Buscar clientes para teste
   const { data: clientes } = useQuery({
@@ -392,19 +442,36 @@ export default function TestRoteamento() {
       setFlowBlocks(prev => prev.map(b => b.id === "fila" ? { ...b, status: "completed" } : b));
 
       // Simular seleção de atendente com lógica detalhada
-      if (atendentes && atendentes.length > 0) {
+      if (simulatedAtendentes && simulatedAtendentes.length > 0) {
         await new Promise(resolve => setTimeout(resolve, 800));
         setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "active" } : b));
         
-        // Filtrar atendentes disponíveis
+        // Filtrar atendentes disponíveis USANDO STATUS SIMULADO
         addSystemMessage("Analisando atendentes disponíveis...");
         await new Promise(resolve => setTimeout(resolve, 600));
         
-        const atendentesDisponiveis = atendentes.filter(a => 
-          a.status === "disponivel" && a.aceita_novos_chats
+        const atendentesDisponiveis = simulatedAtendentes.filter(a => 
+          a.simulatedStatus === "disponivel" && a.simulatedAcceptsNew
         );
         
         addSystemMessage(`${atendentesDisponiveis.length} atendentes disponíveis encontrados`);
+        
+        if (atendentesDisponiveis.length === 0) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+          addSystemMessage("Nenhum atendente disponível no momento");
+          addSystemMessage("Chat será mantido em fila de espera");
+          
+          steps.push({
+            step: steps.length + 1,
+            type: "Fila de Espera",
+            description: "Nenhum atendente disponível",
+            detail: "Chat permanecerá em fila de espera até que um atendente fique disponível",
+            status: "warning",
+          });
+          
+          setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "active" } : b));
+          return;
+        }
         
         // Calcular carga de trabalho
         const cargaPorAtendente = new Map();
@@ -438,7 +505,25 @@ export default function TestRoteamento() {
         } else if (tipoRoteamento === "por_prioridade") {
           addSystemMessage(`Seleção baseada em prioridade`);
         } else if (tipoRoteamento === "por_carteira") {
-          addSystemMessage(`Seleção baseada em carteira fixa`);
+          // Verificar se o cliente tem um atendente fixo
+          const clienteCarteira = carteiras?.find(c => 
+            c.customer_id === selectedCliente && c.ativa
+          );
+          
+          if (clienteCarteira) {
+            const atendenteCarteira = atendentesDisponiveis.find(a => 
+              a.id === clienteCarteira.atendente_id
+            );
+            
+            if (atendenteCarteira) {
+              atendenteEscolhido = atendenteCarteira;
+              addSystemMessage(`Cliente tem atendente fixo na carteira: ${atendenteEscolhido.usuarios?.nome}`);
+            } else {
+              addSystemMessage(`Atendente da carteira não está disponível, aplicando regra secundária`);
+            }
+          } else {
+            addSystemMessage(`Cliente não possui atendente fixo, aplicando round-robin`);
+          }
         }
         
         await new Promise(resolve => setTimeout(resolve, 600));
@@ -453,6 +538,16 @@ export default function TestRoteamento() {
           await new Promise(resolve => setTimeout(resolve, 800));
         }
         
+        // Verificar carteira
+        const clientesNaCarteira = carteiras?.filter(c => 
+          c.atendente_id === atendenteEscolhido.id && c.ativa
+        ) || [];
+        
+        if (clientesNaCarteira.length > 0) {
+          addSystemMessage(`Atendente possui ${clientesNaCarteira.length} cliente(s) na carteira`);
+          await new Promise(resolve => setTimeout(resolve, 600));
+        }
+        
         const cargaAtual = cargaPorAtendente.get(atendenteEscolhido.id) || 0;
         addSystemMessage(`Conectando com ${atendenteEscolhido.usuarios?.nome}...`);
         addSystemMessage(`Carga atual: ${cargaAtual}/${atendenteEscolhido.max_chats_simultaneos} chats`);
@@ -461,7 +556,7 @@ export default function TestRoteamento() {
           step: steps.length + 1,
           type: "Atendente Selecionado",
           description: `Atendente "${atendenteEscolhido.usuarios?.nome}" designado`,
-          detail: `Status: ${atendenteEscolhido.status} | Carga: ${cargaAtual}/${atendenteEscolhido.max_chats_simultaneos} | Skills: ${atendenteSkills.length}`,
+          detail: `Status: ${atendenteEscolhido.simulatedStatus} | Carga: ${cargaAtual}/${atendenteEscolhido.max_chats_simultaneos} | Skills: ${atendenteSkills.length} | Carteira: ${clientesNaCarteira.length} clientes`,
           status: "success",
         });
         
@@ -471,14 +566,13 @@ export default function TestRoteamento() {
       } else {
         await new Promise(resolve => setTimeout(resolve, 800));
         setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "active" } : b));
-        addSystemMessage("Nenhum atendente disponível no momento");
-        addSystemMessage("Chat será mantido em fila de espera");
+        addSystemMessage("Nenhum atendente cadastrado no sistema");
         
         steps.push({
           step: steps.length + 1,
-          type: "Fila de Espera",
-          description: "Nenhum atendente disponível",
-          detail: "Chat permanecerá em fila de espera até que um atendente fique disponível",
+          type: "Erro de Configuração",
+          description: "Nenhum atendente cadastrado",
+          detail: "Verifique as configurações de atendentes",
           status: "warning",
         });
       }
@@ -867,56 +961,92 @@ export default function TestRoteamento() {
         </Card>
 
         {/* Detalhes dos Atendentes */}
-        {simulationStarted && atendentes && atendentes.length > 0 && (
+        {simulatedAtendentes && simulatedAtendentes.length > 0 && (
           <Card className="p-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Atendentes Disponíveis</h2>
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold">Controle de Atendentes</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Configure o status dos atendentes para simular diferentes cenários
+              </p>
             </div>
 
-            <ScrollArea className="h-[300px]">
+            <ScrollArea className="h-[400px]">
               <div className="space-y-3 pr-4">
-                {atendentes.map((atendente: any) => {
+                {simulatedAtendentes.map((atendente: any) => {
                   const carga = conversasAtivas?.filter(c => c.atendente_atual_id === atendente.id).length || 0;
                   const atendenteSkills = atendente.atendente_skills || [];
+                  const clientesCarteira = carteiras?.filter(c => 
+                    c.atendente_id === atendente.id && c.ativa
+                  ) || [];
                   
                   return (
-                    <div key={atendente.id} className="p-3 border rounded-lg space-y-2">
+                    <div key={atendente.id} className="p-4 border rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{atendente.usuarios?.nome}</span>
-                        <Badge 
+                        <Button
+                          size="sm"
                           variant={
-                            atendente.status === "disponivel" ? "default" : 
-                            atendente.status === "ocupado" ? "secondary" : 
-                            "outline"
+                            atendente.simulatedStatus === "disponivel" ? "default" : 
+                            atendente.simulatedStatus === "ocupado" ? "secondary" : 
+                            atendente.simulatedStatus === "ausente" ? "outline" :
+                            "ghost"
                           }
+                          onClick={() => toggleAtendenteStatus(atendente.id)}
                         >
-                          {atendente.status}
-                        </Badge>
+                          {atendente.simulatedStatus}
+                        </Button>
                       </div>
                       
-                      <div className="text-xs space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Carga:</span>
+                      <div className="text-xs space-y-2">
+                        <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                          <span className="text-muted-foreground">Carga Atual:</span>
                           <span className="font-medium">
                             {carga}/{atendente.max_chats_simultaneos}
                           </span>
                         </div>
                         
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Aceita novos:</span>
-                          <span className={atendente.aceita_novos_chats ? "text-green-600" : "text-red-600"}>
-                            {atendente.aceita_novos_chats ? "Sim" : "Não"}
-                          </span>
+                        <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                          <span className="text-muted-foreground">Aceita novos chats:</span>
+                          <Button
+                            size="sm"
+                            variant={atendente.simulatedAcceptsNew ? "default" : "outline"}
+                            onClick={() => toggleAtendenteAcceptsNew(atendente.id)}
+                            className="h-6 text-xs"
+                          >
+                            {atendente.simulatedAcceptsNew ? "Sim" : "Não"}
+                          </Button>
                         </div>
                         
                         {atendenteSkills.length > 0 && (
-                          <div className="pt-2">
-                            <span className="text-muted-foreground">Skills:</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
+                          <div className="pt-2 border-t">
+                            <div className="font-medium mb-2 flex items-center gap-2">
+                              <Zap className="w-3 h-3" />
+                              Skills ({atendenteSkills.length})
+                            </div>
+                            <div className="flex flex-wrap gap-1">
                               {atendenteSkills.map((as: any) => (
-                                <Badge key={as.skill_id} variant="outline" className="text-xs">
-                                  {as.skills?.nome} (N{as.nivel})
+                                <Badge key={as.skill_id} variant="secondary" className="text-xs">
+                                  {as.skills?.nome} <span className="ml-1 text-primary">N{as.nivel}</span>
                                 </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {clientesCarteira.length > 0 && (
+                          <div className="pt-2 border-t">
+                            <div className="font-medium mb-2 flex items-center gap-2">
+                              <User className="w-3 h-3" />
+                              Carteira de Clientes ({clientesCarteira.length})
+                            </div>
+                            <div className="space-y-1 max-h-24 overflow-y-auto">
+                              {clientesCarteira.map((carteira: any) => (
+                                <div key={carteira.id} className="text-xs p-2 bg-muted rounded flex items-center justify-between">
+                                  <span>{carteira.customers?.nome}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {carteira.customers?.email}
+                                  </Badge>
+                                </div>
                               ))}
                             </div>
                           </div>
