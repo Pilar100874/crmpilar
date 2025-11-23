@@ -348,15 +348,373 @@ export default function TestRoteamento() {
   };
 
   const simulateRoutingForSimulation = async (simulationId: string) => {
-    // Função simplificada para simulação
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const simulation = simulations.find(s => s.id === simulationId);
+    if (!simulation) return;
+
+    const { canal, bot, fluxo, cliente } = simulation.config;
     
-    const hasAvailableAgent = simulatedAtendentes.some(a => a.simulatedStatus === "disponivel");
+    let contextVariables: Record<string, any> = {
+      canal,
+      cliente_id: cliente,
+      timestamp_entrada: new Date().toISOString(),
+      simulation_id: simulationId,
+    };
+
+    // Adicionar mensagem inicial
+    addSimulationMessage(simulationId, {
+      id: `${Date.now()}-1`,
+      sender: "system",
+      text: `Simulação iniciada - Canal: ${canal}`,
+      timestamp: new Date()
+    });
+
+    // Processar entrada
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const startTime = Date.now();
+    
+    addSimulationTrace(simulationId, {
+      blockId: "entrada",
+      blockLabel: "Entrada do Cliente",
+      blockType: "start",
+      timestamp: new Date(),
+      variables: { ...contextVariables },
+      conditions: [
+        {
+          condition: "Canal válido?",
+          result: true,
+          reason: `Canal ${canal} está configurado e disponível`
+        }
+      ],
+      decision: {
+        action: "Iniciar fluxo de atendimento",
+        reason: "Cliente conectado com sucesso",
+        nextBlock: bot ? "bot-processing" : (fluxo ? "workflow-processing" : "fila")
+      },
+      duration: Date.now() - startTime
+    });
+
+    addSimulationMessage(simulationId, {
+      id: `${Date.now()}-2`,
+      sender: "system",
+      text: "Cliente conectado, iniciando atendimento...",
+      timestamp: new Date()
+    });
+
+    // Processar Bot (se selecionado)
+    if (bot) {
+      const botData = bots?.find(b => b.id === bot);
+      if (botData) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        addSimulationMessage(simulationId, {
+          id: `${Date.now()}-bot`,
+          sender: "system",
+          text: `Bot "${botData.name}" ativado`,
+          timestamp: new Date()
+        });
+
+        contextVariables.bot_id = bot;
+        contextVariables.bot_name = botData.name;
+
+        const botFlowData = botData.flow_data as any;
+        if (botFlowData?.nodes && Array.isArray(botFlowData.nodes)) {
+          // Processar cada nó do bot
+          for (const node of botFlowData.nodes.slice(0, 3)) { // Limitar para não demorar muito
+            const nodeStartTime = Date.now();
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const label = node.data?.label || node.data?.type || 'Etapa';
+            const nodeType = node.data?.type || 'unknown';
+
+            addSimulationMessage(simulationId, {
+              id: `${Date.now()}-bot-${node.id}`,
+              sender: "bot",
+              text: `[${label}] Processando...`,
+              timestamp: new Date()
+            });
+
+            const blockVariables: Record<string, any> = {
+              node_id: node.id,
+              node_type: nodeType,
+              node_label: label,
+            };
+
+            const blockConditions = [];
+            if (nodeType === 'message') {
+              blockVariables.message_sent = true;
+              blockConditions.push({
+                condition: "Mensagem válida?",
+                result: true,
+                reason: "Mensagem configurada corretamente"
+              });
+            } else if (nodeType === 'question') {
+              blockVariables.awaiting_response = true;
+              blockConditions.push({
+                condition: "Pergunta configurada?",
+                result: true,
+                reason: "Pergunta definida no bloco"
+              });
+            }
+
+            contextVariables = { ...contextVariables, ...blockVariables };
+
+            addSimulationTrace(simulationId, {
+              blockId: `bot-${node.id}`,
+              blockLabel: label,
+              blockType: `bot-${nodeType}`,
+              timestamp: new Date(),
+              variables: { ...contextVariables },
+              conditions: blockConditions,
+              decision: {
+                action: "Continuar para próximo bloco",
+                reason: `Bloco ${label} executado com sucesso`,
+                nextBlock: "next-bot-block"
+              },
+              duration: Date.now() - nodeStartTime
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 400));
+          }
+        }
+      }
+    }
+
+    // Processar Workflow Omnichannel (se selecionado)
+    if (fluxo) {
+      const fluxoData = fluxos?.find(f => f.id === fluxo);
+      if (fluxoData) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        addSimulationMessage(simulationId, {
+          id: `${Date.now()}-workflow`,
+          sender: "system",
+          text: `Workflow "${fluxoData.nome}" iniciado`,
+          timestamp: new Date()
+        });
+
+        contextVariables.workflow_id = fluxo;
+        contextVariables.workflow_name = fluxoData.nome;
+
+        const fluxoFlowData = fluxoData.flow_data as any;
+        if (fluxoFlowData?.nodes && Array.isArray(fluxoFlowData.nodes)) {
+          // Processar cada nó do workflow
+          for (const node of fluxoFlowData.nodes.slice(0, 3)) { // Limitar para não demorar muito
+            const nodeStartTime = Date.now();
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const label = node.data?.label || node.data?.type || 'Etapa';
+            const nodeType = node.data?.type || 'unknown';
+
+            addSimulationMessage(simulationId, {
+              id: `${Date.now()}-workflow-${node.id}`,
+              sender: "system",
+              text: `[${label}] Executando bloco...`,
+              timestamp: new Date()
+            });
+
+            const blockVariables: Record<string, any> = {
+              workflow_node_id: node.id,
+              workflow_node_type: nodeType,
+              workflow_node_label: label,
+            };
+
+            const blockConditions = [];
+            let decision = {
+              action: "Continuar fluxo",
+              reason: "Bloco executado com sucesso",
+              nextBlock: "next-workflow-block"
+            };
+
+            if (nodeType === 'horario_funcionamento') {
+              blockVariables.horario_atual = new Date().toLocaleTimeString();
+              blockVariables.dentro_horario = true;
+              blockConditions.push({
+                condition: "Dentro do horário comercial?",
+                result: true,
+                reason: "Horário atual está dentro do período configurado"
+              });
+            } else if (nodeType === 'fila') {
+              blockVariables.fila_selecionada = filas?.[0]?.nome || 'Padrão';
+              blockConditions.push({
+                condition: "Fila disponível?",
+                result: true,
+                reason: "Fila encontrada e ativa"
+              });
+            } else if (nodeType === 'skill_requerida') {
+              blockVariables.skill_necessaria = "Atendimento Técnico";
+              blockConditions.push({
+                condition: "Skill configurada?",
+                result: true,
+                reason: "Skill requerida está definida"
+              });
+            }
+
+            contextVariables = { ...contextVariables, ...blockVariables };
+
+            addSimulationTrace(simulationId, {
+              blockId: `workflow-${node.id}`,
+              blockLabel: label,
+              blockType: `workflow-${nodeType}`,
+              timestamp: new Date(),
+              variables: { ...contextVariables },
+              conditions: blockConditions,
+              decision,
+              duration: Date.now() - nodeStartTime
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 400));
+          }
+        }
+      }
+    }
+
+    // Processar seleção de fila
+    await new Promise(resolve => setTimeout(resolve, 600));
+    const filaEscolhida = filas?.[0];
+    
+    if (filaEscolhida) {
+      addSimulationMessage(simulationId, {
+        id: `${Date.now()}-fila`,
+        sender: "system",
+        text: `Direcionando para fila: ${filaEscolhida.nome}`,
+        timestamp: new Date()
+      });
+
+      contextVariables.fila_id = filaEscolhida.id;
+      contextVariables.fila_nome = filaEscolhida.nome;
+      contextVariables.tipo_roteamento = filaEscolhida.tipo_roteamento;
+
+      const filaStartTime = Date.now();
+      addSimulationTrace(simulationId, {
+        blockId: "fila",
+        blockLabel: "Seleção de Fila",
+        blockType: "queue-selection",
+        timestamp: new Date(),
+        variables: { ...contextVariables },
+        conditions: [
+          {
+            condition: "Fila ativa?",
+            result: true,
+            reason: `Fila "${filaEscolhida.nome}" está ativa e disponível`
+          },
+          {
+            condition: "Tipo de roteamento definido?",
+            result: !!filaEscolhida.tipo_roteamento,
+            reason: `Roteamento configurado: ${filaEscolhida.tipo_roteamento || 'padrão'}`
+          }
+        ],
+        decision: {
+          action: "Buscar atendente",
+          reason: `Aplicar regra de roteamento: ${filaEscolhida.tipo_roteamento}`,
+          nextBlock: "atendente"
+        },
+        duration: Date.now() - filaStartTime
+      });
+    }
+
+    // Processar seleção de atendente
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    const atendentesDisponiveis = simulatedAtendentes.filter(a => 
+      a.simulatedStatus === "disponivel" && a.simulatedAcceptsNew
+    );
+
+    addSimulationMessage(simulationId, {
+      id: `${Date.now()}-atendentes`,
+      sender: "system",
+      text: `${atendentesDisponiveis.length} atendentes disponíveis encontrados`,
+      timestamp: new Date()
+    });
+
+    let resultStatus: "success" | "waiting" | "error" = "waiting";
+    let atendenteNome = "Nenhum disponível";
+    
+    if (atendentesDisponiveis.length > 0) {
+      const cargaPorAtendente = new Map();
+      conversasAtivas?.forEach(conv => {
+        const count = cargaPorAtendente.get(conv.atendente_atual_id) || 0;
+        cargaPorAtendente.set(conv.atendente_atual_id, count + 1);
+      });
+
+      const tipoRoteamento = filaEscolhida?.tipo_roteamento || "round_robin";
+      let atendenteEscolhido = atendentesDisponiveis[0];
+
+      if (tipoRoteamento === "por_disponibilidade") {
+        atendenteEscolhido = atendentesDisponiveis.reduce((prev, curr) => {
+          const prevCarga = cargaPorAtendente.get(prev.id) || 0;
+          const currCarga = cargaPorAtendente.get(curr.id) || 0;
+          return currCarga < prevCarga ? curr : prev;
+        });
+      }
+
+      atendenteNome = atendenteEscolhido.usuarios?.nome || "Atendente";
+      const cargaAtual = cargaPorAtendente.get(atendenteEscolhido.id) || 0;
+      const atendenteSkills = atendenteEscolhido.atendente_skills || [];
+
+      contextVariables.atendente_id = atendenteEscolhido.id;
+      contextVariables.atendente_nome = atendenteNome;
+      contextVariables.atendente_carga = cargaAtual;
+      contextVariables.atendente_skills = atendenteSkills.map((s: any) => ({
+        nome: s.skills?.nome,
+        nivel: s.nivel
+      }));
+
+      const atendenteStartTime = Date.now();
+      addSimulationTrace(simulationId, {
+        blockId: "atendente",
+        blockLabel: "Seleção de Atendente",
+        blockType: "agent-selection",
+        timestamp: new Date(),
+        variables: { ...contextVariables },
+        conditions: [
+          {
+            condition: "Atendente disponível?",
+            result: true,
+            reason: `${atendenteNome} está ${atendenteEscolhido.simulatedStatus}`
+          },
+          {
+            condition: "Aceita novos chats?",
+            result: atendenteEscolhido.simulatedAcceptsNew,
+            reason: "Atendente está aceitando novos chats"
+          },
+          {
+            condition: "Capacidade disponível?",
+            result: cargaAtual < atendenteEscolhido.max_chats_simultaneos,
+            reason: `Carga ${cargaAtual}/${atendenteEscolhido.max_chats_simultaneos}`
+          }
+        ],
+        decision: {
+          action: "Conectar com atendente",
+          reason: `${atendenteNome} selecionado via regra: ${tipoRoteamento}`,
+          nextBlock: "chat-ativo"
+        },
+        duration: Date.now() - atendenteStartTime
+      });
+
+      addSimulationMessage(simulationId, {
+        id: `${Date.now()}-conectado`,
+        sender: "bot",
+        text: `Você foi conectado com ${atendenteNome}. Como posso ajudar?`,
+        timestamp: new Date()
+      });
+
+      resultStatus = "success";
+    } else {
+      addSimulationMessage(simulationId, {
+        id: `${Date.now()}-fila-espera`,
+        sender: "system",
+        text: "Nenhum atendente disponível. Chat será mantido em fila de espera.",
+        timestamp: new Date()
+      });
+    }
+
+    // Finalizar simulação
+    const tempoTotal = Date.now() - startTime;
     const mockResult: Simulation['result'] = {
-      atendenteNome: simulatedAtendentes.find(a => a.simulatedStatus === "disponivel")?.usuarios?.nome || "Nenhum disponível",
-      filaNome: filas?.[0]?.nome || "Fila Padrão",
-      tempoTotal: Math.floor(Math.random() * 5000) + 1000,
-      status: hasAvailableAgent ? "success" : "waiting",
+      atendenteNome,
+      filaNome: filaEscolhida?.nome || "Fila Padrão",
+      tempoTotal,
+      status: resultStatus,
     };
 
     setSimulations(prev => prev.map(sim => 
@@ -366,12 +724,23 @@ export default function TestRoteamento() {
             status: "completed" as const,
             endTime: new Date(),
             result: mockResult,
-            chatMessages: [
-              { id: '1', sender: 'system' as const, text: `Simulação iniciada - Canal: ${sim.config.canal}`, timestamp: new Date() },
-              { id: '2', sender: 'system' as const, text: `Direcionando para fila: ${mockResult.filaNome}`, timestamp: new Date() },
-              { id: '3', sender: 'system' as const, text: `Conectado com ${mockResult.atendenteNome}`, timestamp: new Date() },
-            ]
           }
+        : sim
+    ));
+  };
+
+  const addSimulationMessage = (simulationId: string, message: ChatMessage) => {
+    setSimulations(prev => prev.map(sim => 
+      sim.id === simulationId 
+        ? { ...sim, chatMessages: [...sim.chatMessages, message] }
+        : sim
+    ));
+  };
+
+  const addSimulationTrace = (simulationId: string, trace: BlockExecution) => {
+    setSimulations(prev => prev.map(sim => 
+      sim.id === simulationId 
+        ? { ...sim, executionTrace: [...sim.executionTrace, trace] }
         : sim
     ));
   };
@@ -795,10 +1164,122 @@ export default function TestRoteamento() {
             </TabsContent>
             
             <TabsContent value="trace" className="mt-4">
-              <div className="text-center py-12 text-muted-foreground">
-                <Layers className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>Rastreamento detalhado será exibido aqui</p>
-              </div>
+              {selectedSimulation.executionTrace.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Layers className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>Aguardando rastreamento...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium mb-3">Blocos Executados ({selectedSimulation.executionTrace.length})</h4>
+                    <ScrollArea className="h-[350px]">
+                      <div className="space-y-2 pr-4">
+                        {selectedSimulation.executionTrace.map((trace, index) => (
+                          <div
+                            key={`${trace.blockId}-${index}`}
+                            onClick={() => setSelectedExecution(trace)}
+                            className={cn(
+                              "p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md",
+                              selectedExecution?.blockId === trace.blockId && selectedExecution?.timestamp === trace.timestamp
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/50"
+                            )}
+                          >
+                            <div className="flex items-start justify-between mb-1">
+                              <div className="font-medium text-sm">{trace.blockLabel}</div>
+                              <Badge variant="outline" className="text-xs">{trace.duration}ms</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">{trace.blockType}</div>
+                            <div className="flex gap-1 mt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {Object.keys(trace.variables).length} vars
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {trace.conditions.length} cond
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">Detalhes</h4>
+                    {selectedExecution ? (
+                      <ScrollArea className="h-[350px]">
+                        <div className="space-y-4 pr-4">
+                          <div className="p-3 bg-primary/10 rounded-lg">
+                            <h5 className="font-semibold">{selectedExecution.blockLabel}</h5>
+                            <p className="text-xs text-muted-foreground mt-1">{selectedExecution.blockType}</p>
+                            <Badge variant="default" className="mt-2">{selectedExecution.duration}ms</Badge>
+                          </div>
+
+                          <div>
+                            <h6 className="font-medium text-sm mb-2">📊 Variáveis</h6>
+                            <div className="space-y-1">
+                              {Object.entries(selectedExecution.variables).map(([key, value]) => (
+                                <div key={key} className="p-2 bg-muted rounded text-xs">
+                                  <span className="font-mono font-semibold text-primary">{key}:</span>{" "}
+                                  <span className="break-all">
+                                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {selectedExecution.conditions.length > 0 && (
+                            <div>
+                              <h6 className="font-medium text-sm mb-2">✓ Condições</h6>
+                              <div className="space-y-2">
+                                {selectedExecution.conditions.map((condition, idx) => (
+                                  <div 
+                                    key={idx}
+                                    className={cn(
+                                      "p-2 rounded border-l-4 text-xs",
+                                      condition.result 
+                                        ? "bg-green-50 dark:bg-green-950/20 border-green-500" 
+                                        : "bg-red-50 dark:bg-red-950/20 border-red-500"
+                                    )}
+                                  >
+                                    <div className="font-medium mb-1">
+                                      {condition.result ? "✓" : "✗"} {condition.condition}
+                                    </div>
+                                    <div className="text-muted-foreground italic">{condition.reason}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div>
+                            <h6 className="font-medium text-sm mb-2">➜ Decisão</h6>
+                            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded text-xs">
+                              <div className="font-semibold mb-1">{selectedExecution.decision.action}</div>
+                              <div className="text-muted-foreground">{selectedExecution.decision.reason}</div>
+                              {selectedExecution.decision.nextBlock && (
+                                <div className="flex items-center gap-1 mt-2">
+                                  <ArrowRight className="w-3 h-3" />
+                                  <Badge variant="outline" className="text-xs">{selectedExecution.decision.nextBlock}</Badge>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <div className="h-[350px] flex items-center justify-center border rounded-lg text-muted-foreground">
+                        <div className="text-center">
+                          <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                          <p className="text-sm">Selecione um bloco</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="steps" className="mt-4">
