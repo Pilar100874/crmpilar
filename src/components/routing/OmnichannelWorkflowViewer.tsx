@@ -8,6 +8,8 @@ import {
   useEdgesState,
   type NodeTypes,
   BackgroundVariant,
+  Handle,
+  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { cn } from '@/lib/utils';
@@ -24,6 +26,7 @@ const CustomNode = ({ data }: any) => {
         "px-4 py-3 rounded-lg border-2 shadow-lg transition-all min-w-[180px] bg-background"
       )}
     >
+      <Handle type="target" position={Position.Top} className="w-3 h-3" />
       <div className="flex items-center gap-2 mb-1">
         <div className="w-2.5 h-2.5 rounded-full bg-cyan-500 flex-shrink-0" />
         <span className="font-semibold text-sm truncate">{data.label || data.type || 'Bloco'}</span>
@@ -32,6 +35,7 @@ const CustomNode = ({ data }: any) => {
       {data.description && (
         <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{data.description}</p>
       )}
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
     </div>
   );
 };
