@@ -217,11 +217,14 @@ export default function Layout({ children }: LayoutProps) {
           .eq("id", user.id)
           .maybeSingle();
 
-        // Se for administrador da tabela, marca como admin mas NÃO dá acesso total
+        // Se for administrador da tabela, dá acesso total a todos os menus
         if (adminData) {
           setIsAdmin(true);
-          // Administradores não têm acesso aos menus, apenas criam estabelecimentos
-          setAllowedMenus({});
+          const allMenus: Record<string, MenuPermissions> = {};
+          MENUS_DISPONIVEIS.forEach(menuId => {
+            allMenus[menuId] = { view: true, create: true, edit: true, delete: true };
+          });
+          setAllowedMenus(allMenus);
           setIsLoading(false);
           return;
         }
