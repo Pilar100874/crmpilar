@@ -295,14 +295,6 @@ export default function FlowSimulationCanvas({
 
   return (
     <div className="flex h-full gap-4">
-      {/* Painel lateral de variáveis */}
-      <div className="w-80 flex-shrink-0">
-        <VariableMonitor 
-          variables={executionState.variables} 
-          title="Variáveis do Fluxo"
-        />
-      </div>
-
       {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header com controles */}
@@ -448,6 +440,14 @@ export default function FlowSimulationCanvas({
             </ScrollArea>
           </Card>
         )}
+      </div>
+
+      {/* Painel lateral de variáveis à direita */}
+      <div className="w-80 flex-shrink-0">
+        <VariableMonitor 
+          variables={executionState.variables} 
+          title="Variáveis do Fluxo"
+        />
       </div>
     </div>
   );

@@ -110,14 +110,6 @@ export default function OmnichannelWorkflowViewer({
 
   return (
     <div className="flex h-full gap-4">
-      {/* Painel lateral de variáveis */}
-      <div className="w-80 flex-shrink-0">
-        <VariableMonitor 
-          variables={workflowVariables} 
-          title="Configurações do Workflow"
-        />
-      </div>
-
       {/* Visualização do workflow */}
       <div className="flex-1 flex flex-col min-w-0">
         <Card className="p-4 mb-4">
@@ -158,6 +150,14 @@ export default function OmnichannelWorkflowViewer({
             />
           </ReactFlow>
         </div>
+      </div>
+
+      {/* Painel lateral de variáveis à direita */}
+      <div className="w-80 flex-shrink-0">
+        <VariableMonitor 
+          variables={workflowVariables} 
+          title="Configurações do Workflow"
+        />
       </div>
     </div>
   );
