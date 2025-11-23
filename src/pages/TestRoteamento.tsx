@@ -50,6 +50,7 @@ export default function TestRoteamento() {
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [selectedSimulationId, setSelectedSimulationId] = useState<string | null>(null);
   const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState<string>("");
   
   const activeSimulation = simulations.find(s => s.id === selectedSimulationId) || null;
 
@@ -202,6 +203,18 @@ export default function TestRoteamento() {
     setSimulations(prev => [...prev, newSimulation]);
     setSelectedSimulationId(newSimulation.id);
     setCurrentStep(2);
+    
+    // Se houver bot, iniciar com mensagens iniciais
+    if (selectedBot) {
+      const bot = bots?.find(b => b.id === selectedBot);
+      if (bot?.flow_data) {
+        setTimeout(() => {
+          const flowData = typeof bot.flow_data === 'string' ? JSON.parse(bot.flow_data) : bot.flow_data;
+          processBotFlow(flowData, newSimulation.id);
+        }, 500);
+      }
+    }
+    
     toast.success("Simulação iniciada!");
   };
 
@@ -236,8 +249,8 @@ export default function TestRoteamento() {
     setSelectedCliente(undefined);
   };
 
-  const addMessageToChat = (text: string) => {
-    if (!selectedSimulationId) return;
+  const addMessageToChat = async (text: string) => {
+    if (!selectedSimulationId || !text.trim()) return;
 
     const newMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -246,11 +259,59 @@ export default function TestRoteamento() {
       timestamp: new Date(),
     };
 
+    // Adicionar mensagem do usuário
     setSimulations(prev => prev.map(sim => 
       sim.id === selectedSimulationId 
         ? { ...sim, chatMessages: [...sim.chatMessages, newMessage] }
         : sim
     ));
+
+    // Se houver bot configurado, processar fluxo do bot
+    const simulation = simulations.find(s => s.id === selectedSimulationId);
+    if (simulation?.config.botId) {
+      const bot = bots?.find(b => b.id === simulation.config.botId);
+      if (bot?.flow_data) {
+        const flowData = typeof bot.flow_data === 'string' ? JSON.parse(bot.flow_data) : bot.flow_data;
+        
+        // Processar blocos do bot
+        setTimeout(() => {
+          processBotFlow(flowData, simulation.id);
+        }, 500);
+      }
+    }
+  };
+
+  const processBotFlow = (flowData: any, simulationId: string) => {
+    if (!flowData?.nodes) return;
+
+    // Encontrar blocos de mensagem
+    const messageBlocks = flowData.nodes.filter((node: any) => 
+      node.data?.type === 'send_message' && 
+      node.data?.config?.messages?.length > 0
+    );
+
+    // Enviar mensagens do bot
+    messageBlocks.forEach((block: any, index: number) => {
+      setTimeout(() => {
+        const messages = block.data.config.messages || [];
+        messages.forEach((msg: any) => {
+          if (msg.text) {
+            const botMessage: ChatMessage = {
+              id: `bot-msg-${Date.now()}-${index}`,
+              sender: "bot",
+              text: msg.text,
+              timestamp: new Date(),
+            };
+
+            setSimulations(prev => prev.map(sim => 
+              sim.id === simulationId 
+                ? { ...sim, chatMessages: [...sim.chatMessages, botMessage] }
+                : sim
+            ));
+          }
+        });
+      }, (index + 1) * 800);
+    });
   };
 
   return (
@@ -793,16 +854,28 @@ export default function TestRoteamento() {
                         <div className="p-4 border-t bg-muted/30">
                           <div className="flex gap-2">
                             <Input
+                              value={chatInput}
+                              onChange={(e) => setChatInput(e.target.value)}
                               placeholder="Digite uma mensagem..."
                               className="flex-1 bg-background"
                               onKeyDown={(e) => {
-                                if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                                  addMessageToChat(e.currentTarget.value.trim());
-                                  e.currentTarget.value = "";
+                                if (e.key === "Enter" && chatInput.trim()) {
+                                  addMessageToChat(chatInput.trim());
+                                  setChatInput("");
                                 }
                               }}
                             />
-                            <Button size="icon" variant="default">
+                            <Button 
+                              size="icon" 
+                              variant="default"
+                              onClick={() => {
+                                if (chatInput.trim()) {
+                                  addMessageToChat(chatInput.trim());
+                                  setChatInput("");
+                                }
+                              }}
+                              disabled={!chatInput.trim()}
+                            >
                               <Send className="w-4 h-4" />
                             </Button>
                           </div>
