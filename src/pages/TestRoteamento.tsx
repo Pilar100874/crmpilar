@@ -744,6 +744,14 @@ export default function TestRoteamento() {
                               timestamp: new Date(),
                             });
                           }}
+                          onReset={() => {
+                            // Limpar mensagens do chat ao resetar
+                            setSimulations(prev => prev.map(sim => 
+                              sim.id === activeSimulation.id 
+                                ? { ...sim, chatMessages: [] }
+                                : sim
+                            ));
+                          }}
                         />
                       </div>
 
