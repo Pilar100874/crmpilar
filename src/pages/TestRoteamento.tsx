@@ -57,7 +57,7 @@ interface Simulation {
 }
 
 export default function TestRoteamento() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(2);
   const [selectedCanal, setSelectedCanal] = useState<string | undefined>();
   const [selectedBot, setSelectedBot] = useState<string | undefined>();
   const [selectedFluxo, setSelectedFluxo] = useState<string | undefined>();
@@ -577,25 +577,14 @@ export default function TestRoteamento() {
                 <Card className="p-4">
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Button
-                          onClick={addNewSimulation}
-                          variant="default"
-                          size="sm"
-                          disabled={simulations.length >= 6}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Nova Simulação ({simulations.length}/6)
-                        </Button>
-                        <Button
-                          onClick={resetAllSimulations}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <ArrowLeft className="w-4 h-4 mr-2" />
-                          Limpar Todas
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={resetAllSimulations}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Limpar Todas
+                      </Button>
                     </div>
 
                     {/* Tabs de Simulações */}
