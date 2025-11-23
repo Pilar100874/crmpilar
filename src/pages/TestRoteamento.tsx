@@ -132,12 +132,30 @@ export default function TestRoteamento() {
     },
   });
 
+  const { data: filas } = useQuery({
+    queryKey: ["filas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filas_atendimento")
+        .select(`
+          id,
+          nome,
+          ativa,
+          prioridade,
+          max_chats_por_atendente,
+          tipo_roteamento
+        `);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const { data: conversasAtivas } = useQuery({
     queryKey: ["active-conversations"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("conversations")
-        .select("id, atendente_atual_id, chat_status")
+        .select("id, atendente_atual_id, chat_status, fila_id")
         .in("chat_status", ["em_atendimento", "em_fila", "aguardando_cliente"]);
       if (error) throw error;
       return data || [];
@@ -375,30 +393,30 @@ export default function TestRoteamento() {
                 <h3 className="font-semibold">Atendentes</h3>
               </div>
 
-              <ScrollArea className="h-[600px]">
-                <div className="space-y-3 pr-3">
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-2 pr-3">
                   {simulatedAtendentes.map((atendente) => {
                     const carga = conversasAtivas?.filter(c => c.atendente_atual_id === atendente.id).length || 0;
                     
                     return (
-                      <Card key={atendente.id} className="p-4 bg-muted/30">
-                        <div className="font-medium mb-3 flex items-center gap-2">
+                      <Card key={atendente.id} className="p-3 bg-muted/30">
+                        <div className="text-sm font-medium mb-2 flex items-center gap-2">
                           <Circle className={cn(
-                            "w-3 h-3 fill-current",
+                            "w-2.5 h-2.5 fill-current flex-shrink-0",
                             atendente.simulatedStatus === "disponivel" && "text-green-500",
                             atendente.simulatedStatus === "ocupado" && "text-yellow-500",
                             atendente.simulatedStatus === "ausente" && "text-orange-500",
                             atendente.simulatedStatus === "offline" && "text-gray-400"
                           )} />
-                          {atendente.usuarios?.nome}
+                          <span className="truncate">{atendente.usuarios?.nome}</span>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="grid grid-cols-2 gap-1.5 mb-2">
                           <Button
                             size="sm"
                             variant={atendente.simulatedStatus === "disponivel" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "disponivel")}
-                            className="h-8 text-xs"
+                            className="h-7 text-[10px] px-2"
                           >
                             Disponível
                           </Button>
@@ -406,7 +424,7 @@ export default function TestRoteamento() {
                             size="sm"
                             variant={atendente.simulatedStatus === "ocupado" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "ocupado")}
-                            className="h-8 text-xs"
+                            className="h-7 text-[10px] px-2"
                           >
                             Ocupado
                           </Button>
@@ -414,7 +432,7 @@ export default function TestRoteamento() {
                             size="sm"
                             variant={atendente.simulatedStatus === "ausente" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "ausente")}
-                            className="h-8 text-xs"
+                            className="h-7 text-[10px] px-2"
                           >
                             Ausente
                           </Button>
@@ -422,26 +440,83 @@ export default function TestRoteamento() {
                             size="sm"
                             variant={atendente.simulatedStatus === "offline" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "offline")}
-                            className="h-8 text-xs"
+                            className="h-7 text-[10px] px-2"
                           >
                             Offline
                           </Button>
                         </div>
 
-                        <div className="flex items-center gap-2 p-2 bg-background rounded text-xs">
+                        <div className="flex items-center gap-2 p-1.5 bg-background rounded text-[10px]">
                           <Switch
                             checked={atendente.simulatedAcceptsNew}
                             onCheckedChange={() => toggleAtendenteAcceptsNew(atendente.id)}
+                            className="scale-75"
                           />
-                          <span>Aceita novos chats</span>
+                          <span>Aceita novos</span>
                         </div>
 
-                        <div className="mt-3 text-xs text-muted-foreground">
+                        <div className="mt-2 text-[10px] text-muted-foreground">
                           Carga: {carga}/{atendente.max_chats_simultaneos}
                         </div>
                       </Card>
                     );
                   })}
+                </div>
+              </ScrollArea>
+            </Card>
+
+            {/* Filas de Atendimento */}
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold">Filas</h3>
+              </div>
+
+              <ScrollArea className="h-[250px]">
+                <div className="space-y-2 pr-3">
+                  {filas && filas.length > 0 ? (
+                    filas.map((fila) => {
+                      const chatsNaFila = conversasAtivas?.filter(c => c.fila_id === fila.id).length || 0;
+                      
+                      return (
+                        <Card key={fila.id} className="p-3 bg-muted/30">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-medium truncate flex-1">{fila.nome}</div>
+                            {fila.ativa ? (
+                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-green-600 text-green-600">
+                                ATIVA
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-gray-400 text-gray-400">
+                                INATIVA
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-1 text-[10px] text-muted-foreground">
+                            <div className="flex justify-between">
+                              <span>Chats na fila:</span>
+                              <span className="font-medium text-foreground">{chatsNaFila}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Prioridade:</span>
+                              <span className="font-medium text-foreground">{fila.prioridade || 0}</span>
+                            </div>
+                            {fila.tipo_roteamento && (
+                              <div className="flex justify-between">
+                                <span>Roteamento:</span>
+                                <span className="font-medium text-foreground">{fila.tipo_roteamento}</span>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center text-sm text-muted-foreground py-8">
+                      Nenhuma fila cadastrada
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </Card>
