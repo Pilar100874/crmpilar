@@ -282,36 +282,63 @@ export default function TestRoteamento() {
   };
 
   const processBotFlow = (flowData: any, simulationId: string) => {
-    if (!flowData?.nodes) return;
+    if (!flowData?.nodes || !flowData?.edges) return;
 
-    // Encontrar blocos de mensagem
-    const messageBlocks = flowData.nodes.filter((node: any) => 
-      node.data?.type === 'send_message' && 
-      node.data?.config?.messages?.length > 0
+    // Encontrar o nó inicial
+    const startNode = flowData.nodes.find((node: any) => 
+      node.data?.type === 'start' || 
+      !flowData.edges.some((edge: any) => edge.target === node.id)
     );
 
-    // Enviar mensagens do bot
-    messageBlocks.forEach((block: any, index: number) => {
-      setTimeout(() => {
-        const messages = block.data.config.messages || [];
-        messages.forEach((msg: any) => {
-          if (msg.text) {
-            const botMessage: ChatMessage = {
-              id: `bot-msg-${Date.now()}-${index}`,
-              sender: "bot",
-              text: msg.text,
-              timestamp: new Date(),
-            };
+    if (!startNode) {
+      console.warn('Nenhum nó inicial encontrado');
+      return;
+    }
 
-            setSimulations(prev => prev.map(sim => 
-              sim.id === simulationId 
-                ? { ...sim, chatMessages: [...sim.chatMessages, botMessage] }
-                : sim
-            ));
-          }
-        });
-      }, (index + 1) * 800);
-    });
+    // Processar fluxo sequencialmente
+    const processNode = (nodeId: string, delay: number = 0) => {
+      setTimeout(() => {
+        const node = flowData.nodes.find((n: any) => n.id === nodeId);
+        if (!node) return;
+
+        console.log('Processando nó:', node.data?.label, node.data?.type);
+
+        // Se for mensagem, enviar ao chat
+        if (node.data?.type === 'send_message' && node.data?.config?.messages) {
+          const messages = node.data.config.messages;
+          messages.forEach((msg: any, msgIndex: number) => {
+            if (msg.text) {
+              setTimeout(() => {
+                const botMessage: ChatMessage = {
+                  id: `bot-msg-${Date.now()}-${msgIndex}`,
+                  sender: "bot",
+                  text: msg.text,
+                  timestamp: new Date(),
+                };
+
+                setSimulations(prev => prev.map(sim => 
+                  sim.id === simulationId 
+                    ? { ...sim, chatMessages: [...sim.chatMessages, botMessage] }
+                    : sim
+                ));
+              }, msgIndex * 300);
+            }
+          });
+        }
+
+        // Encontrar próximo nó e continuar
+        const nextEdge = flowData.edges.find((edge: any) => edge.source === nodeId);
+        if (nextEdge) {
+          processNode(nextEdge.target, 1000);
+        }
+      }, delay);
+    };
+
+    // Iniciar do primeiro nó
+    const firstEdge = flowData.edges.find((edge: any) => edge.source === startNode.id);
+    if (firstEdge) {
+      processNode(firstEdge.target, 500);
+    }
   };
 
   return (

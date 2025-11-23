@@ -153,7 +153,7 @@ export default function OmnichannelWorkflowViewer({
       </div>
 
       {/* Painel lateral de variáveis à direita */}
-      <div className="w-80 flex-shrink-0">
+      <div className="flex-shrink-0">
         <VariableMonitor 
           variables={workflowVariables} 
           title="Configurações do Workflow"
