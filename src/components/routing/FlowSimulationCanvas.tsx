@@ -42,6 +42,7 @@ interface FlowSimulationCanvasProps {
   fluxos: any[];
   onBotMessage?: (message: string, nodeData?: any) => void;
   onReset?: () => void;
+  onOmnichannelTransfer?: (workflowId: string) => void;
 }
 
 interface ExecutionState {
@@ -114,6 +115,7 @@ export default function FlowSimulationCanvas({
   fluxos,
   onBotMessage,
   onReset,
+  onOmnichannelTransfer,
 }: FlowSimulationCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -287,6 +289,27 @@ export default function FlowSimulationCanvas({
         const message = `✏️ Definindo ${fieldName}...`;
         if (onBotMessage) {
           onBotMessage(message, currentNode.data);
+        }
+      }
+      
+      // Para blocos de transferência para omnichannel
+      else if (currentNode.data.type === 'transferir_omnichannel') {
+        const workflowId = config.workflowId;
+        const workflowNome = config.workflowNome || 'workflow omnichannel';
+        const message = `🔄 Transferindo para ${workflowNome}...`;
+        
+        console.log('🔄 Bloco transferir_omnichannel detectado:', { workflowId, workflowNome });
+        
+        if (onBotMessage) {
+          onBotMessage(message, currentNode.data);
+        }
+        
+        // Notificar o componente pai sobre a transferência
+        if (onOmnichannelTransfer && workflowId) {
+          console.log('✅ Notificando transferência para workflow:', workflowId);
+          onOmnichannelTransfer(workflowId);
+        } else {
+          console.warn('⚠️ workflowId não encontrado no bloco ou callback não definido');
         }
       }
       

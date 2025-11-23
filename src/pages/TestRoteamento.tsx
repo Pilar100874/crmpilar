@@ -793,6 +793,19 @@ export default function TestRoteamento() {
                                   : sim
                               ));
                             }}
+                            onOmnichannelTransfer={(workflowId) => {
+                              console.log('🔄 Recebido callback de transferência para workflow:', workflowId);
+                              // Atualizar a simulação com o workflow ID
+                              setSimulations(prev => prev.map(sim => 
+                                sim.id === activeSimulation.id 
+                                  ? { 
+                                      ...sim, 
+                                      config: { ...sim.config, fluxoId: workflowId } 
+                                    }
+                                  : sim
+                              ));
+                              toast.success('Transferido para workflow omnichannel!');
+                            }}
                           />
                         </div>
 
