@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { 
   ArrowRight, ArrowLeft, Play, Send, Bot, User, Zap, 
-  Users, Activity, CheckCircle2, AlertCircle, Circle, Network, MessageSquare, Plus, X
+  Users, Activity, CheckCircle2, AlertCircle, Circle, Network, MessageSquare, Plus, X, Clock
 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
@@ -391,72 +391,133 @@ export default function TestRoteamento() {
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-5 h-5 text-primary" />
                 <h3 className="font-semibold">Atendentes</h3>
+                <Badge variant="outline" className="ml-auto">
+                  {simulatedAtendentes.length}
+                </Badge>
               </div>
 
               <ScrollArea className="h-[300px]">
                 <div className="space-y-2 pr-3">
                   {simulatedAtendentes.map((atendente) => {
                     const carga = conversasAtivas?.filter(c => c.atendente_atual_id === atendente.id).length || 0;
+                    const skills = atendente.atendente_skills || [];
                     
                     return (
-                      <Card key={atendente.id} className="p-3 bg-muted/30">
-                        <div className="text-sm font-medium mb-2 flex items-center gap-2">
-                          <Circle className={cn(
-                            "w-2.5 h-2.5 fill-current flex-shrink-0",
-                            atendente.simulatedStatus === "disponivel" && "text-green-500",
-                            atendente.simulatedStatus === "ocupado" && "text-yellow-500",
-                            atendente.simulatedStatus === "ausente" && "text-orange-500",
-                            atendente.simulatedStatus === "offline" && "text-gray-400"
+                      <Card key={atendente.id} className="p-3 bg-gradient-to-br from-muted/30 to-muted/10 border-l-4 border-l-primary/50 hover:border-l-primary transition-all">
+                        {/* Header com status e nome */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className={cn(
+                            "w-2.5 h-2.5 rounded-full flex-shrink-0 animate-pulse",
+                            atendente.simulatedStatus === "disponivel" && "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]",
+                            atendente.simulatedStatus === "ocupado" && "bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]",
+                            atendente.simulatedStatus === "ausente" && "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]",
+                            atendente.simulatedStatus === "offline" && "bg-gray-400"
                           )} />
-                          <span className="truncate">{atendente.usuarios?.nome}</span>
+                          <span className="font-medium text-sm flex-1 truncate">{atendente.usuarios?.nome}</span>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px] h-5 px-1.5",
+                              atendente.simulatedStatus === "disponivel" && "border-green-600 text-green-600 bg-green-50 dark:bg-green-950/30",
+                              atendente.simulatedStatus === "ocupado" && "border-yellow-600 text-yellow-600 bg-yellow-50 dark:bg-yellow-950/30",
+                              atendente.simulatedStatus === "ausente" && "border-orange-600 text-orange-600 bg-orange-50 dark:bg-orange-950/30",
+                              atendente.simulatedStatus === "offline" && "border-gray-400 text-gray-400"
+                            )}
+                          >
+                            {atendente.simulatedStatus.toUpperCase()}
+                          </Badge>
                         </div>
+
+                        {/* Skills */}
+                        {skills.length > 0 && (
+                          <div className="mb-3 pb-3 border-b border-border/50">
+                            <div className="text-[10px] text-muted-foreground mb-1.5 font-medium">SKILLS:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {skills.map((skill: any) => (
+                                <Badge 
+                                  key={skill.skill_id} 
+                                  variant="secondary"
+                                  className="text-[9px] h-5 px-1.5 bg-primary/10 text-primary border-primary/20"
+                                >
+                                  <Zap className="w-2.5 h-2.5 mr-0.5" />
+                                  {skill.skills?.nome} (Nv.{skill.nivel})
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         
-                        <div className="grid grid-cols-2 gap-1.5 mb-2">
+                        {/* Botões de status */}
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
                           <Button
                             size="sm"
                             variant={atendente.simulatedStatus === "disponivel" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "disponivel")}
-                            className="h-7 text-[10px] px-2"
+                            className={cn(
+                              "h-7 text-[10px] px-2 transition-all",
+                              atendente.simulatedStatus === "disponivel" && "bg-green-600 hover:bg-green-700"
+                            )}
                           >
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
                             Disponível
                           </Button>
                           <Button
                             size="sm"
                             variant={atendente.simulatedStatus === "ocupado" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "ocupado")}
-                            className="h-7 text-[10px] px-2"
+                            className={cn(
+                              "h-7 text-[10px] px-2 transition-all",
+                              atendente.simulatedStatus === "ocupado" && "bg-yellow-600 hover:bg-yellow-700"
+                            )}
                           >
+                            <Circle className="w-3 h-3 mr-1 fill-current" />
                             Ocupado
                           </Button>
                           <Button
                             size="sm"
                             variant={atendente.simulatedStatus === "ausente" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "ausente")}
-                            className="h-7 text-[10px] px-2"
+                            className={cn(
+                              "h-7 text-[10px] px-2 transition-all",
+                              atendente.simulatedStatus === "ausente" && "bg-orange-600 hover:bg-orange-700"
+                            )}
                           >
+                            <Clock className="w-3 h-3 mr-1" />
                             Ausente
                           </Button>
                           <Button
                             size="sm"
                             variant={atendente.simulatedStatus === "offline" ? "default" : "outline"}
                             onClick={() => toggleAtendenteStatus(atendente.id, "offline")}
-                            className="h-7 text-[10px] px-2"
+                            className={cn(
+                              "h-7 text-[10px] px-2 transition-all",
+                              atendente.simulatedStatus === "offline" && "bg-gray-600 hover:bg-gray-700"
+                            )}
                           >
+                            <Circle className="w-3 h-3 mr-1" />
                             Offline
                           </Button>
                         </div>
 
-                        <div className="flex items-center gap-2 p-1.5 bg-background rounded text-[10px]">
-                          <Switch
-                            checked={atendente.simulatedAcceptsNew}
-                            onCheckedChange={() => toggleAtendenteAcceptsNew(atendente.id)}
-                            className="scale-75"
-                          />
-                          <span>Aceita novos</span>
-                        </div>
-
-                        <div className="mt-2 text-[10px] text-muted-foreground">
-                          Carga: {carga}/{atendente.max_chats_simultaneos}
+                        {/* Footer com aceita novos e carga */}
+                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+                          <div className="flex items-center gap-2 text-[10px]">
+                            <Switch
+                              checked={atendente.simulatedAcceptsNew}
+                              onCheckedChange={() => toggleAtendenteAcceptsNew(atendente.id)}
+                              className="scale-75"
+                            />
+                            <span className="text-muted-foreground">Aceita novos</span>
+                          </div>
+                          <div className="text-[10px] font-medium">
+                            <span className="text-muted-foreground">Carga:</span>{' '}
+                            <span className={cn(
+                              "font-bold",
+                              carga >= atendente.max_chats_simultaneos ? "text-red-600" : "text-primary"
+                            )}>
+                              {carga}/{atendente.max_chats_simultaneos}
+                            </span>
+                          </div>
                         </div>
                       </Card>
                     );
