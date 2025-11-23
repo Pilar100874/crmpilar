@@ -41,6 +41,7 @@ interface FlowSimulationCanvasProps {
   bots: any[];
   fluxos: any[];
   onBotMessage?: (message: string, nodeData?: any) => void;
+  onReset?: () => void;
 }
 
 interface ExecutionState {
@@ -112,6 +113,7 @@ export default function FlowSimulationCanvas({
   bots,
   fluxos,
   onBotMessage,
+  onReset,
 }: FlowSimulationCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -350,6 +352,11 @@ export default function FlowSimulationCanvas({
       currentStep: 0,
     });
     setExecutionHistory([]);
+    
+    // Notificar componente pai para limpar o chat
+    if (onReset) {
+      onReset();
+    }
   };
 
   return (
