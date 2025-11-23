@@ -976,6 +976,43 @@ export default function TestRoteamento() {
                                     Tipo: {fila.tipo_roteamento || "round_robin"}
                                   </span>
                                 </div>
+                                
+                                {/* Atendentes atendendo esta fila */}
+                                {(() => {
+                                  const chatsDestaFila = conversasAtivas?.filter(
+                                    c => c.fila_id === fila.id && c.chat_status === 'em_atendimento' && c.atendente_atual_id
+                                  ) || [];
+                                  
+                                  const atendentesIds = [...new Set(chatsDestaFila.map(c => c.atendente_atual_id))];
+                                  const atendentesDestaFila = simulatedAtendentes.filter(a => atendentesIds.includes(a.id));
+                                  
+                                  if (atendentesDestaFila.length > 0) {
+                                    return (
+                                      <div className="mt-2 pt-2 border-t">
+                                        <p className="text-xs font-medium text-foreground mb-1 flex items-center gap-1">
+                                          <UserCog className="w-3 h-3" />
+                                          Atendendo agora:
+                                        </p>
+                                        <div className="flex flex-col gap-1">
+                                          {atendentesDestaFila.map(atendente => {
+                                            const chatsDoAtendente = chatsDestaFila.filter(c => c.atendente_atual_id === atendente.id).length;
+                                            return (
+                                              <div key={atendente.id} className="flex items-center justify-between text-xs">
+                                                <span className="text-foreground truncate flex-1">
+                                                  {atendente.usuarios?.nome || 'Atendente'}
+                                                </span>
+                                                <Badge variant="outline" className="text-[10px] h-4 px-1">
+                                                  {chatsDoAtendente} chat{chatsDoAtendente !== 1 ? 's' : ''}
+                                                </Badge>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                               </div>
                             ))}
                           </div>
