@@ -10,6 +10,8 @@ import {
   useEdgesState,
   NodeTypes,
   BackgroundVariant,
+  Handle,
+  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Card } from '@/components/ui/card';
@@ -18,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Play, Pause, RotateCcw, SkipForward, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import VariableMonitor from './VariableMonitor';
 
 interface Simulation {
   id: string;
@@ -63,6 +66,7 @@ const CustomNode = ({ data, selected }: any) => {
         selected && "ring-2 ring-blue-500"
       )}
     >
+      <Handle type="target" position={Position.Top} className="w-3 h-3" />
       <div className="flex items-center gap-2 mb-2">
         <div className={cn(
           "w-3 h-3 rounded-full flex-shrink-0",
@@ -94,6 +98,7 @@ const CustomNode = ({ data, selected }: any) => {
           Concluído
         </Badge>
       )}
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
     </div>
   );
 };
@@ -289,20 +294,30 @@ export default function FlowSimulationCanvas({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header com controles */}
-      <div className="p-4 border-b bg-muted/30">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="font-semibold text-lg">Simulação Visual - {flowType}</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              {bot?.name || fluxo?.nome || 'Fluxo'} • {nodes.length} blocos
-            </p>
+    <div className="flex h-full gap-4">
+      {/* Painel lateral de variáveis */}
+      <div className="w-80 flex-shrink-0">
+        <VariableMonitor 
+          variables={executionState.variables} 
+          title="Variáveis do Fluxo"
+        />
+      </div>
+
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header com controles */}
+        <div className="p-4 border-b bg-muted/30">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-semibold text-lg">Simulação Visual - {flowType}</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                {bot?.name || fluxo?.nome || 'Fluxo'} • {nodes.length} blocos
+              </p>
+            </div>
+            <Badge variant={executionState.isComplete ? "secondary" : "default"}>
+              Passo {executionState.currentStep} / {nodes.length}
+            </Badge>
           </div>
-          <Badge variant={executionState.isComplete ? "secondary" : "default"}>
-            Passo {executionState.currentStep} / {nodes.length}
-          </Badge>
-        </div>
 
         <div className="flex items-center gap-2">
           <Button
@@ -364,70 +379,76 @@ export default function FlowSimulationCanvas({
         </div>
       </div>
 
-      {/* Canvas */}
-      <div className="flex-1 bg-muted/10">
-        {nodes.length > 0 ? (
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.2 }}
-            minZoom={0.1}
-            maxZoom={2}
-          >
-            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-            <Controls />
-            <MiniMap
-              nodeColor={(node) => {
-                if (node.data.isCurrent) return '#0ea5e9';
-                if (node.data.isExecuted) return '#22c55e';
-                return '#94a3b8';
+        {/* Canvas */}
+        <div className="flex-1 bg-muted/10">
+          {nodes.length > 0 ? (
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={nodeTypes}
+              fitView
+              fitViewOptions={{ padding: 0.2 }}
+              minZoom={0.1}
+              maxZoom={2}
+              defaultEdgeOptions={{
+                style: { strokeWidth: 2, stroke: '#94a3b8' },
+                type: 'smoothstep',
+                animated: true,
               }}
-              className="bg-background border border-border"
-            />
-          </ReactFlow>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground">
-                Nenhum fluxo encontrado para esta simulação
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Selecione um Bot ou Workflow válido
-              </p>
+            >
+              <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+              <Controls />
+              <MiniMap
+                nodeColor={(node) => {
+                  if (node.data.isCurrent) return '#0ea5e9';
+                  if (node.data.isExecuted) return '#22c55e';
+                  return '#94a3b8';
+                }}
+                className="bg-background border border-border"
+              />
+            </ReactFlow>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground">
+                  Nenhum fluxo encontrado para esta simulação
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Selecione um Bot ou Workflow válido
+                </p>
+              </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Histórico de execução */}
+        {executionHistory.length > 0 && (
+          <Card className="m-4 p-3">
+            <h4 className="font-semibold text-sm mb-2">Histórico de Execução</h4>
+            <ScrollArea className="h-[120px]">
+              <div className="space-y-1 pr-3">
+                {executionHistory.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-xs p-2 rounded bg-muted/50"
+                  >
+                    <Badge variant="outline" className="text-xs">
+                      #{idx + 1}
+                    </Badge>
+                    <span className="flex-1 font-medium">{item.label || item.type}</span>
+                    <span className="text-muted-foreground">
+                      {item.timestamp.toLocaleTimeString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </Card>
         )}
       </div>
-
-      {/* Histórico de execução */}
-      {executionHistory.length > 0 && (
-        <Card className="m-4 p-3">
-          <h4 className="font-semibold text-sm mb-2">Histórico de Execução</h4>
-          <ScrollArea className="h-[120px]">
-            <div className="space-y-1 pr-3">
-              {executionHistory.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 text-xs p-2 rounded bg-muted/50"
-                >
-                  <Badge variant="outline" className="text-xs">
-                    #{idx + 1}
-                  </Badge>
-                  <span className="flex-1 font-medium">{item.label || item.type}</span>
-                  <span className="text-muted-foreground">
-                    {item.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </Card>
-      )}
     </div>
   );
 }
