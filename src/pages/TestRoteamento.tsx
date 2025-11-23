@@ -8,11 +8,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, AlertCircle, Play, Send, Bot, User, Zap, Building2, UserCheck, UserX, Plus, X, Trash2, Copy, Clock, Users, Layers } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
+import FlowSimulationCanvas from "@/components/routing/FlowSimulationCanvas";
 
 interface RouteStep {
   step: number;
@@ -1150,6 +1152,8 @@ export default function TestRoteamento() {
               </ScrollArea>
             )}
           </Card>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Controle de Atendentes */}
