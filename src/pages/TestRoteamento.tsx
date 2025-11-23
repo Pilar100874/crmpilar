@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +68,7 @@ export default function TestRoteamento() {
   const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState<string>("");
   const [atendentesExpanded, setAtendentesExpanded] = useState(true);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
   
   const activeSimulation = simulations.find(s => s.id === selectedSimulationId) || null;
 
@@ -237,6 +239,7 @@ export default function TestRoteamento() {
     setSimulations(prev => [...prev, newSimulation]);
     setSelectedSimulationId(newSimulation.id);
     setCurrentStep(2);
+    setConfigDialogOpen(false);
     
     toast.success("Simulação iniciada!");
   };
@@ -308,94 +311,23 @@ export default function TestRoteamento() {
               </p>
             </div>
             
-            <Button
-              onClick={resetAllSimulations}
-              variant="outline"
-              size="sm"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Limpar Todas Simulações
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Sidebar - Filas */}
-          <div className="xl:col-span-1 space-y-6">
-            {/* Filas de Atendimento */}
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold">Filas</h3>
-              </div>
-
-              <ScrollArea className="h-[250px]">
-                <div className="space-y-2 pr-3">
-                  {filas && filas.length > 0 ? (
-                    filas.map((fila) => {
-                      const chatsNaFila = conversasAtivas?.filter(c => c.fila_id === fila.id).length || 0;
-                      
-                      return (
-                        <Card key={fila.id} className="p-3 bg-muted/30">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="text-sm font-medium truncate flex-1">{fila.nome}</div>
-                            {fila.ativa ? (
-                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-green-600 text-green-600">
-                                ATIVA
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-gray-400 text-gray-400">
-                                INATIVA
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-1 text-[10px] text-muted-foreground">
-                            <div className="flex justify-between">
-                              <span>Chats na fila:</span>
-                              <span className="font-medium text-foreground">{chatsNaFila}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Prioridade:</span>
-                              <span className="font-medium text-foreground">{fila.prioridade || 0}</span>
-                            </div>
-                            {fila.tipo_roteamento && (
-                              <div className="flex justify-between">
-                                <span>Roteamento:</span>
-                                <span className="font-medium text-foreground">{fila.tipo_roteamento}</span>
-                              </div>
-                            )}
-                          </div>
-                        </Card>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center text-sm text-muted-foreground py-8">
-                      Nenhuma fila cadastrada
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </Card>
-          </div>
-
-          {/* Main Area */}
-          <div className="xl:col-span-3">
-            {currentStep === 1 ? (
-              /* PASSO 1: Configuração */
-              <Card className="p-8">
-                <div className="max-w-2xl mx-auto space-y-6">
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold mb-2">Configure sua Simulação</h2>
-                    <p className="text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default" size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nova Simulação
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Configure sua Simulação</DialogTitle>
+                    <DialogDescription>
                       Selecione os parâmetros para testar o roteamento
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-4">
                     <div>
                       <Label htmlFor="canal" className="text-base font-medium">Canal *</Label>
                       <Select value={selectedCanal} onValueChange={setSelectedCanal}>
@@ -520,39 +452,104 @@ export default function TestRoteamento() {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
 
-                  <div className="flex justify-between items-center pt-6">
-                    {simulations.length > 0 && (
+                    <div className="flex justify-end pt-4">
                       <Button
-                        onClick={() => setCurrentStep(2)}
-                        variant="outline"
+                        onClick={startSimulation}
+                        disabled={!selectedCanal || simulations.length >= 6}
                         size="lg"
                       >
-                        Ver Simulações Ativas ({simulations.length})
+                        Iniciar Simulação
+                        <ArrowRight className="w-5 h-5 ml-2" />
                       </Button>
-                    )}
-                    <Button
-                      onClick={startSimulation}
-                      disabled={!selectedCanal}
-                      size="lg"
-                      className="min-w-[200px] ml-auto"
-                    >
-                      {simulations.length > 0 ? "Adicionar" : "Iniciar"} Simulação
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
+                    </div>
                   </div>
+                </DialogContent>
+              </Dialog>
+
+              <Button
+                onClick={resetAllSimulations}
+                variant="outline"
+                size="sm"
+              >
+                Limpar Todas Simulações
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Sidebar - Filas */}
+          <div className="xl:col-span-1 space-y-6">
+            {/* Filas de Atendimento */}
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold">Filas</h3>
+              </div>
+
+              <ScrollArea className="h-[250px]">
+                <div className="space-y-2 pr-3">
+                  {filas && filas.length > 0 ? (
+                    filas.map((fila) => {
+                      const chatsNaFila = conversasAtivas?.filter(c => c.fila_id === fila.id).length || 0;
+                      
+                      return (
+                        <Card key={fila.id} className="p-3 bg-muted/30">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-medium truncate flex-1">{fila.nome}</div>
+                            {fila.ativa ? (
+                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-green-600 text-green-600">
+                                ATIVA
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-gray-400 text-gray-400">
+                                INATIVA
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-1 text-[10px] text-muted-foreground">
+                            <div className="flex justify-between">
+                              <span>Chats na fila:</span>
+                              <span className="font-medium text-foreground">{chatsNaFila}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Prioridade:</span>
+                              <span className="font-medium text-foreground">{fila.prioridade || 0}</span>
+                            </div>
+                            {fila.tipo_roteamento && (
+                              <div className="flex justify-between">
+                                <span>Roteamento:</span>
+                                <span className="font-medium text-foreground">{fila.tipo_roteamento}</span>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center text-sm text-muted-foreground py-8">
+                      Nenhuma fila cadastrada
+                    </div>
+                  )}
                 </div>
-              </Card>
-            ) : (
-              /* PASSO 2: Simulação */
-              <div className="space-y-6">
+              </ScrollArea>
+            </Card>
+          </div>
+
+          {/* Main Area */}
+          <div className="xl:col-span-3">
+            <div className="space-y-6">
                 {/* Controles e Seletor de Simulações */}
                 <Card className="p-4">
                   <div className="flex flex-col gap-4">
 
                     {/* Tabs de Simulações */}
-                    <div className="border-t pt-3">
+                    <div className="pt-3">
                       <div className="text-xs text-muted-foreground mb-2 px-1">Simulações Ativas:</div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
                         {simulations.map((sim, index) => (
@@ -986,7 +983,6 @@ export default function TestRoteamento() {
                   </Card>
                 )}
               </div>
-            )}
           </div>
         </div>
       </div>
