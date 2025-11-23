@@ -1021,28 +1021,42 @@ export default function TestRoteamento() {
                       </Card>
                     </div>
 
-                    {/* Segunda Linha: Workflow Omnichannel (se houver, em largura completa) */}
-                    {activeSimulation.config.fluxoId && (
-                      <Card className="p-0 h-[700px] shadow-lg overflow-hidden mt-6">
-                        <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
-                          <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                            <Network className="w-5 h-5 text-cyan-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">Workflow Omnichannel</h3>
-                            <p className="text-xs text-muted-foreground">
-                              {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome || 'Visualização do fluxo'}
-                            </p>
-                          </div>
+                    {/* Segunda Linha: Workflow Omnichannel (sempre exibido) */}
+                    <Card className="p-0 h-[700px] shadow-lg overflow-hidden mt-6">
+                      <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+                        <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                          <Network className="w-5 h-5 text-cyan-600" />
                         </div>
-                        <div className="h-[calc(100%-73px)]">
+                        <div className="flex-1">
+                          <h3 className="font-semibold">Workflow Omnichannel</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {activeSimulation.config.fluxoId 
+                              ? fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome || 'Visualização do fluxo'
+                              : 'Workflow padrão será criado automaticamente'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      <div className="h-[calc(100%-73px)]">
+                        {activeSimulation.config.fluxoId ? (
                           <OmnichannelWorkflowViewer
                             fluxoId={activeSimulation.config.fluxoId}
                             fluxos={fluxos || []}
                           />
-                        </div>
-                      </Card>
-                    )}
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-center px-6">
+                            <div>
+                              <Network className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+                              <h3 className="text-lg font-semibold mb-2">Workflow Não Configurado</h3>
+                              <p className="text-sm text-muted-foreground max-w-md">
+                                Um workflow padrão será criado automaticamente ao iniciar o roteamento. 
+                                Ele será exibido aqui assim que o chat for roteado.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
                   </>
                 ) : (
                   <Card className="p-12 text-center">
