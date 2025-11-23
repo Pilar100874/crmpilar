@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CheckCircle2, AlertCircle, Play } from "lucide-react";
+import { ArrowRight, CheckCircle2, AlertCircle, Play, Send, Bot, User, Zap } from "lucide-react";
 import { toast } from "@/lib/toast-config";
+import { cn } from "@/lib/utils";
 
 interface RouteStep {
   step: number;
@@ -16,6 +20,21 @@ interface RouteStep {
   status: "success" | "warning" | "info";
 }
 
+interface ChatMessage {
+  id: string;
+  sender: "user" | "bot" | "system";
+  text: string;
+  timestamp: Date;
+}
+
+interface FlowBlock {
+  id: string;
+  type: string;
+  label: string;
+  status: "pending" | "active" | "completed" | "skipped";
+  position: { x: number; y: number };
+}
+
 export default function TestRoteamento() {
   const [selectedCanal, setSelectedCanal] = useState<string>("");
   const [selectedBot, setSelectedBot] = useState<string>("");
@@ -23,6 +42,12 @@ export default function TestRoteamento() {
   const [selectedCliente, setSelectedCliente] = useState<string>("");
   const [routeSteps, setRouteSteps] = useState<RouteStep[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [flowBlocks, setFlowBlocks] = useState<FlowBlock[]>([]);
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
+  const [simulationStarted, setSimulationStarted] = useState(false);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Buscar bots disponíveis
   const { data: bots } = useQuery({
@@ -89,6 +114,41 @@ export default function TestRoteamento() {
     },
   });
 
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  const addSystemMessage = (text: string) => {
+    setChatMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      sender: "system",
+      text,
+      timestamp: new Date()
+    }]);
+  };
+
+  const addBotMessage = (text: string) => {
+    setChatMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      sender: "bot",
+      text,
+      timestamp: new Date()
+    }]);
+  };
+
+  const initializeFlowBlocks = () => {
+    const blocks: FlowBlock[] = [
+      { id: "1", type: "start", label: "Entrada do Cliente", status: "pending", position: { x: 50, y: 50 } },
+      { id: "2", type: "bot", label: "Bot Inicial", status: "pending", position: { x: 50, y: 150 } },
+      { id: "3", type: "workflow", label: "Workflow Omnichannel", status: "pending", position: { x: 50, y: 250 } },
+      { id: "4", type: "queue", label: "Seleção de Fila", status: "pending", position: { x: 50, y: 350 } },
+      { id: "5", type: "agent", label: "Atendente", status: "pending", position: { x: 50, y: 450 } },
+    ];
+    setFlowBlocks(blocks);
+  };
+
   const simulateRouting = async () => {
     if (!selectedCanal) {
       toast.error("Selecione um canal de entrada");
@@ -97,10 +157,21 @@ export default function TestRoteamento() {
 
     setIsSimulating(true);
     setRouteSteps([]);
+    setSimulationStarted(true);
+    setChatMessages([]);
+    setCurrentBlockIndex(0);
+    initializeFlowBlocks();
 
     const steps: RouteStep[] = [];
+    
+    // Mensagem inicial do sistema
+    addSystemMessage(`Simulação iniciada - Canal: ${selectedCanal}`);
 
     // Passo 1: Canal de entrada
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setFlowBlocks(prev => prev.map((b, i) => i === 0 ? { ...b, status: "active" } : b));
+    addSystemMessage("Cliente conectado, iniciando atendimento...");
+    
     steps.push({
       step: 1,
       type: "Canal de Entrada",
@@ -108,10 +179,20 @@ export default function TestRoteamento() {
       detail: selectedCliente ? `Cliente selecionado para teste` : "Cliente novo",
       status: "success",
     });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setFlowBlocks(prev => prev.map((b, i) => i === 0 ? { ...b, status: "completed" } : b));
+    setCurrentBlockIndex(1);
 
     // Passo 2: Bot (se selecionado)
     if (selectedBot) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setFlowBlocks(prev => prev.map((b, i) => i === 1 ? { ...b, status: "active" } : b));
+      setCurrentBlockIndex(2);
+      
       const bot = bots?.find((b) => b.id === selectedBot);
+      addBotMessage(`Olá! Sou o bot ${bot?.name}. Como posso ajudar?`);
+      
       steps.push({
         step: 2,
         type: "Bot Acionado",
@@ -119,11 +200,22 @@ export default function TestRoteamento() {
         detail: "Bot processou a mensagem inicial",
         status: "success",
       });
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setFlowBlocks(prev => prev.map((b, i) => i === 1 ? { ...b, status: "completed" } : b));
+    } else {
+      setFlowBlocks(prev => prev.map((b, i) => i === 1 ? { ...b, status: "skipped" } : b));
     }
 
     // Passo 3: Fluxo Omnichannel (se selecionado)
     if (selectedFluxo) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setFlowBlocks(prev => prev.map((b, i) => i === 2 ? { ...b, status: "active" } : b));
+      setCurrentBlockIndex(3);
+      
       const fluxo = fluxos?.find((f) => f.id === selectedFluxo);
+      addSystemMessage(`Executando workflow: ${fluxo?.nome}`);
+      
       steps.push({
         step: steps.length + 1,
         type: "Workflow Omnichannel",
@@ -131,69 +223,96 @@ export default function TestRoteamento() {
         detail: "Processando regras de roteamento",
         status: "success",
       });
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setFlowBlocks(prev => prev.map((b, i) => i === 2 ? { ...b, status: "completed" } : b));
+    } else {
+      setFlowBlocks(prev => prev.map((b, i) => i === 2 ? { ...b, status: "skipped" } : b));
+    }
 
-      // Simular análise de fila
-      if (filas && filas.length > 0) {
-        const filaEscolhida = filas[0];
+    // Simular análise de fila
+    if (filas && filas.length > 0) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setFlowBlocks(prev => prev.map((b, i) => i === 3 ? { ...b, status: "active" } : b));
+      setCurrentBlockIndex(4);
+      
+      const filaEscolhida = filas[0];
+      addSystemMessage(`Direcionando para fila: ${filaEscolhida.nome}`);
+      
+      steps.push({
+        step: steps.length + 1,
+        type: "Seleção de Fila",
+        description: `Fila "${filaEscolhida.nome}" selecionada`,
+        detail: `Tipo de roteamento: ${filaEscolhida.tipo_roteamento}`,
+        status: "info",
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setFlowBlocks(prev => prev.map((b, i) => i === 3 ? { ...b, status: "completed" } : b));
+
+      // Simular seleção de atendente
+      if (atendentes && atendentes.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setFlowBlocks(prev => prev.map((b, i) => i === 4 ? { ...b, status: "active" } : b));
+        
+        const atendenteEscolhido = atendentes[0];
+        addSystemMessage(`Conectando com ${atendenteEscolhido.usuarios?.nome}...`);
+        
         steps.push({
           step: steps.length + 1,
-          type: "Seleção de Fila",
-          description: `Fila "${filaEscolhida.nome}" selecionada`,
-          detail: `Tipo de roteamento: ${filaEscolhida.tipo_roteamento}`,
-          status: "info",
+          type: "Atendente Selecionado",
+          description: `Atendente "${atendenteEscolhido.usuarios?.nome}" designado`,
+          detail: `Status: ${atendenteEscolhido.status} | Capacidade: ${atendenteEscolhido.max_chats_simultaneos} chats`,
+          status: "success",
         });
-
-        // Simular seleção de atendente
-        if (atendentes && atendentes.length > 0) {
-          const atendenteEscolhido = atendentes[0];
-          steps.push({
-            step: steps.length + 1,
-            type: "Atendente Selecionado",
-            description: `Atendente "${atendenteEscolhido.usuarios?.nome}" designado`,
-            detail: `Status: ${atendenteEscolhido.status} | Capacidade: ${atendenteEscolhido.max_chats_simultaneos} chats`,
-            status: "success",
-          });
-        } else {
-          steps.push({
-            step: steps.length + 1,
-            type: "Fila de Espera",
-            description: "Nenhum atendente disponível",
-            detail: "Chat permanecerá em fila de espera",
-            status: "warning",
-          });
-        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setFlowBlocks(prev => prev.map((b, i) => i === 4 ? { ...b, status: "completed" } : b));
+        addBotMessage("Você foi conectado com um atendente. Como posso ajudar?");
       } else {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setFlowBlocks(prev => prev.map((b, i) => i === 4 ? { ...b, status: "active" } : b));
+        addSystemMessage("Aguardando atendente disponível...");
+        
         steps.push({
           step: steps.length + 1,
-          type: "Erro",
-          description: "Nenhuma fila ativa encontrada",
-          detail: "Verifique as configurações de filas",
+          type: "Fila de Espera",
+          description: "Nenhum atendente disponível",
+          detail: "Chat permanecerá em fila de espera",
           status: "warning",
         });
       }
     } else {
-      // Roteamento direto sem fluxo
       steps.push({
         step: steps.length + 1,
-        type: "Roteamento Direto",
-        description: "Sem workflow omnichannel configurado",
-        detail: "Chat será direcionado para fila padrão",
-        status: "info",
+        type: "Erro",
+        description: "Nenhuma fila ativa encontrada",
+        detail: "Verifique as configurações de filas",
+        status: "warning",
       });
-
-      if (filas && filas.length > 0) {
-        const filaDefault = filas[0];
-        steps.push({
-          step: steps.length + 1,
-          type: "Fila Padrão",
-          description: `Direcionado para fila "${filaDefault.nome}"`,
-          status: "info",
-        });
-      }
     }
 
     setRouteSteps(steps);
     setIsSimulating(false);
+    addSystemMessage("Simulação concluída!");
+  };
+
+  const handleSendMessage = () => {
+    if (!inputMessage.trim() || !simulationStarted) return;
+    
+    setChatMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      sender: "user",
+      text: inputMessage,
+      timestamp: new Date()
+    }]);
+    
+    // Simular resposta do bot/atendente
+    setTimeout(() => {
+      addBotMessage("Mensagem recebida! Esta é uma simulação.");
+    }, 500);
+    
+    setInputMessage("");
   };
 
   const resetSimulation = () => {
@@ -202,6 +321,21 @@ export default function TestRoteamento() {
     setSelectedFluxo("");
     setSelectedCliente("");
     setRouteSteps([]);
+    setChatMessages([]);
+    setFlowBlocks([]);
+    setCurrentBlockIndex(0);
+    setSimulationStarted(false);
+  };
+
+  const getBlockIcon = (type: string) => {
+    switch (type) {
+      case "start": return Play;
+      case "bot": return Bot;
+      case "workflow": return Zap;
+      case "queue": return AlertCircle;
+      case "agent": return User;
+      default: return CheckCircle2;
+    }
   };
 
   return (
@@ -213,7 +347,7 @@ export default function TestRoteamento() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Painel de Configuração */}
         <Card className="p-6 space-y-6">
           <div>
@@ -297,6 +431,140 @@ export default function TestRoteamento() {
             </Button>
             <Button onClick={resetSimulation} variant="outline">
               Limpar
+            </Button>
+          </div>
+        </Card>
+
+        {/* Visualização de Blocos */}
+        <Card className="p-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Fluxo Visual</h2>
+          </div>
+
+          {flowBlocks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <Zap className="w-12 h-12 mb-4 opacity-20" />
+              <p>Inicie a simulação para visualizar o fluxo</p>
+            </div>
+          ) : (
+            <ScrollArea className="h-[500px]">
+              <div className="space-y-4 pr-4">
+                {flowBlocks.map((block, index) => {
+                  const BlockIcon = getBlockIcon(block.type);
+                  const isActive = block.status === "active";
+                  const isCompleted = block.status === "completed";
+                  const isSkipped = block.status === "skipped";
+                  
+                  return (
+                    <div key={block.id} className="relative">
+                      {index < flowBlocks.length - 1 && (
+                        <div className={cn(
+                          "absolute left-6 top-14 w-0.5 h-8",
+                          isCompleted ? "bg-green-500" : "bg-border"
+                        )} />
+                      )}
+                      <div className={cn(
+                        "flex items-center gap-4 p-4 rounded-lg border-2 transition-all",
+                        isActive && "border-blue-500 bg-blue-50 dark:bg-blue-950/20 shadow-lg",
+                        isCompleted && "border-green-500 bg-green-50 dark:bg-green-950/20",
+                        isSkipped && "border-gray-300 bg-gray-50 dark:bg-gray-900/20 opacity-50",
+                        !isActive && !isCompleted && !isSkipped && "border-border"
+                      )}>
+                        <div className={cn(
+                          "w-12 h-12 rounded-full flex items-center justify-center",
+                          isActive && "bg-blue-500 text-white",
+                          isCompleted && "bg-green-500 text-white",
+                          isSkipped && "bg-gray-400 text-white",
+                          !isActive && !isCompleted && !isSkipped && "bg-muted"
+                        )}>
+                          <BlockIcon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold">{block.label}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {isActive && "Em execução..."}
+                            {isCompleted && "Concluído"}
+                            {isSkipped && "Ignorado"}
+                            {!isActive && !isCompleted && !isSkipped && "Aguardando"}
+                          </div>
+                        </div>
+                        {isActive && (
+                          <Badge variant="default" className="animate-pulse">
+                            Ativo
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
+        </Card>
+
+        {/* Painel de Chat */}
+        <Card className="p-6 flex flex-col">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Chat Simulado</h2>
+          </div>
+
+          <ScrollArea className="flex-1 h-[400px] mb-4 border rounded-lg p-4" ref={chatScrollRef}>
+            {chatMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                <Send className="w-12 h-12 mb-4 opacity-20" />
+                <p>As mensagens aparecerão aqui</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {chatMessages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      "flex gap-3",
+                      message.sender === "user" && "flex-row-reverse"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                      message.sender === "user" && "bg-primary text-primary-foreground",
+                      message.sender === "bot" && "bg-blue-500 text-white",
+                      message.sender === "system" && "bg-orange-500 text-white"
+                    )}>
+                      {message.sender === "user" && <User className="w-4 h-4" />}
+                      {message.sender === "bot" && <Bot className="w-4 h-4" />}
+                      {message.sender === "system" && <Zap className="w-4 h-4" />}
+                    </div>
+                    <div className={cn(
+                      "flex-1 p-3 rounded-lg max-w-[80%]",
+                      message.sender === "user" && "bg-primary text-primary-foreground ml-auto",
+                      message.sender === "bot" && "bg-blue-100 dark:bg-blue-900/30",
+                      message.sender === "system" && "bg-orange-100 dark:bg-orange-900/30 text-sm italic"
+                    )}>
+                      <div>{message.text}</div>
+                      <div className="text-xs opacity-70 mt-1">
+                        {message.timestamp.toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+
+          <div className="flex gap-2">
+            <Input
+              placeholder={simulationStarted ? "Digite uma mensagem..." : "Inicie a simulação primeiro"}
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              disabled={!simulationStarted || isSimulating}
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!simulationStarted || isSimulating || !inputMessage.trim()}
+              size="icon"
+            >
+              <Send className="w-4 h-4" />
             </Button>
           </div>
         </Card>
