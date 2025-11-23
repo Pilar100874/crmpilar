@@ -15,6 +15,7 @@ interface RoutingConfigProps {
 
 export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   const [workflows, setWorkflows] = useState<any[]>([]);
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(config.workflowId || '');
 
   useEffect(() => {
     console.log("🔄 [TransferirOmnichannelConfig] Montado com config:", config);
@@ -23,7 +24,8 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
 
   useEffect(() => {
     console.log("📝 [TransferirOmnichannelConfig] Config atualizado:", config);
-  }, [config]);
+    setSelectedWorkflowId(config.workflowId || '');
+  }, [config.workflowId]);
 
   const loadWorkflows = async () => {
     try {
@@ -44,22 +46,14 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
 
   const handleWorkflowChange = (value: string) => {
     console.log("🎯 [TransferirOmnichannelConfig] Selecionando workflow:", value);
-    const workflow = workflows.find(w => w.id === value);
     
-    console.log("📦 [TransferirOmnichannelConfig] Workflow encontrado:", workflow);
+    // Atualizar estado local imediatamente
+    setSelectedWorkflowId(value);
     
-    // Salvar o ID do workflow
+    // Salvar no config do bloco
     handleConfigChange('workflowId', value);
     
-    // Salvar também o nome para exibição
-    if (workflow) {
-      handleConfigChange('workflowNome', workflow.nome);
-    }
-    
-    console.log("✅ [TransferirOmnichannelConfig] handleConfigChange chamado com:", {
-      workflowId: value,
-      workflowNome: workflow?.nome
-    });
+    console.log("✅ [TransferirOmnichannelConfig] workflowId salvo:", value);
   };
 
   return (
@@ -67,7 +61,7 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
       <div className="space-y-2">
         <Label>Workflow Omnichannel *</Label>
         <Select
-          value={config.workflowId || ''}
+          value={selectedWorkflowId}
           onValueChange={handleWorkflowChange}
         >
           <SelectTrigger>
@@ -93,9 +87,9 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
             )}
           </SelectContent>
         </Select>
-        {config.workflowId && config.workflowNome && (
+        {selectedWorkflowId && (
           <p className="text-xs text-muted-foreground">
-            Selecionado: <strong>{config.workflowNome}</strong>
+            Selecionado: <strong>{workflows.find(w => w.id === selectedWorkflowId)?.nome || 'Workflow'}</strong>
           </p>
         )}
         <p className="text-xs text-muted-foreground">
