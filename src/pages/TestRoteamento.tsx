@@ -32,7 +32,7 @@ interface FlowBlock {
   type: string;
   label: string;
   status: "pending" | "active" | "completed" | "skipped";
-  position: { x: number; y: number };
+  position: number;
 }
 
 export default function TestRoteamento() {
@@ -55,7 +55,7 @@ export default function TestRoteamento() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bot_flows")
-        .select("id, name, active")
+        .select("id, name, active, flow_data")
         .eq("active", true);
       if (error) throw error;
       return data || [];
@@ -68,7 +68,7 @@ export default function TestRoteamento() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("omnichannel_flows")
-        .select("id, nome, ativo")
+        .select("id, nome, ativo, flow_data")
         .eq("ativo", true);
       if (error) throw error;
       return data || [];
@@ -139,13 +139,85 @@ export default function TestRoteamento() {
   };
 
   const initializeFlowBlocks = () => {
-    const blocks: FlowBlock[] = [
-      { id: "1", type: "start", label: "Entrada do Cliente", status: "pending", position: { x: 50, y: 50 } },
-      { id: "2", type: "bot", label: "Bot Inicial", status: "pending", position: { x: 50, y: 150 } },
-      { id: "3", type: "workflow", label: "Workflow Omnichannel", status: "pending", position: { x: 50, y: 250 } },
-      { id: "4", type: "queue", label: "Seleção de Fila", status: "pending", position: { x: 50, y: 350 } },
-      { id: "5", type: "agent", label: "Atendente", status: "pending", position: { x: 50, y: 450 } },
-    ];
+    const blocks: FlowBlock[] = [];
+    let position = 0;
+
+    // Bloco de entrada
+    blocks.push({
+      id: "entrada",
+      type: "start",
+      label: "Entrada do Cliente",
+      status: "pending",
+      position: position++
+    });
+
+    // Expandir blocos do bot se selecionado
+    if (selectedBot) {
+      const bot = bots?.find(b => b.id === selectedBot);
+      const botFlowData = bot?.flow_data as any;
+      if (botFlowData?.nodes && Array.isArray(botFlowData.nodes)) {
+        botFlowData.nodes.forEach((node: any) => {
+          blocks.push({
+            id: `bot-${node.id}`,
+            type: "bot",
+            label: `Bot: ${node.data?.label || node.data?.type || 'Etapa'}`,
+            status: "pending",
+            position: position++
+          });
+        });
+      } else {
+        blocks.push({
+          id: "bot-generic",
+          type: "bot",
+          label: "Processamento Bot",
+          status: "pending",
+          position: position++
+        });
+      }
+    }
+
+    // Expandir blocos do workflow omnichannel se selecionado
+    if (selectedFluxo) {
+      const fluxo = fluxos?.find(f => f.id === selectedFluxo);
+      const fluxoFlowData = fluxo?.flow_data as any;
+      if (fluxoFlowData?.nodes && Array.isArray(fluxoFlowData.nodes)) {
+        fluxoFlowData.nodes.forEach((node: any) => {
+          blocks.push({
+            id: `workflow-${node.id}`,
+            type: "workflow",
+            label: `Workflow: ${node.data?.label || node.data?.type || 'Etapa'}`,
+            status: "pending",
+            position: position++
+          });
+        });
+      } else {
+        blocks.push({
+          id: "workflow-generic",
+          type: "workflow",
+          label: "Workflow Omnichannel",
+          status: "pending",
+          position: position++
+        });
+      }
+    }
+
+    // Blocos finais
+    blocks.push({
+      id: "fila",
+      type: "queue",
+      label: "Seleção de Fila",
+      status: "pending",
+      position: position++
+    });
+
+    blocks.push({
+      id: "atendente",
+      type: "agent",
+      label: "Atendente",
+      status: "pending",
+      position: position++
+    });
+
     setFlowBlocks(blocks);
   };
 
@@ -169,7 +241,7 @@ export default function TestRoteamento() {
 
     // Passo 1: Canal de entrada
     await new Promise(resolve => setTimeout(resolve, 1000));
-    setFlowBlocks(prev => prev.map((b, i) => i === 0 ? { ...b, status: "active" } : b));
+    setFlowBlocks(prev => prev.map(b => b.id === "entrada" ? { ...b, status: "active" } : b));
     addSystemMessage("Cliente conectado, iniciando atendimento...");
     
     steps.push({
@@ -181,40 +253,78 @@ export default function TestRoteamento() {
     });
     
     await new Promise(resolve => setTimeout(resolve, 1000));
-    setFlowBlocks(prev => prev.map((b, i) => i === 0 ? { ...b, status: "completed" } : b));
-    setCurrentBlockIndex(1);
+    setFlowBlocks(prev => prev.map(b => b.id === "entrada" ? { ...b, status: "completed" } : b));
+    setCurrentBlockIndex(prev => prev + 1);
 
     // Passo 2: Bot (se selecionado)
     if (selectedBot) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setFlowBlocks(prev => prev.map((b, i) => i === 1 ? { ...b, status: "active" } : b));
-      setCurrentBlockIndex(2);
+      const bot = bots?.find(b => b.id === selectedBot);
+      addSystemMessage(`Bot "${bot?.name || 'Desconhecido'}" ativado`);
       
-      const bot = bots?.find((b) => b.id === selectedBot);
-      addBotMessage(`Olá! Sou o bot ${bot?.name}. Como posso ajudar?`);
+      const botFlowData = bot?.flow_data as any;
+      if (botFlowData?.nodes && Array.isArray(botFlowData.nodes)) {
+        // Processar cada nó do bot
+        for (const node of botFlowData.nodes) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+          const blockId = `bot-${node.id}`;
+          
+          setFlowBlocks(prev => prev.map(b => b.id === blockId ? { ...b, status: "active" } : b));
+          
+          const label = node.data?.label || node.data?.type || 'Etapa';
+          addBotMessage(`[${label}] Processando...`);
+          
+          await new Promise(resolve => setTimeout(resolve, 600));
+          
+          setFlowBlocks(prev => prev.map(b => b.id === blockId ? { ...b, status: "completed" } : b));
+          setCurrentBlockIndex(prev => prev + 1);
+        }
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setFlowBlocks(prev => prev.map(b => b.id === "bot-generic" ? { ...b, status: "active" } : b));
+        addBotMessage(`Olá! Sou o bot ${bot?.name}. Como posso ajudar?`);
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setFlowBlocks(prev => prev.map(b => b.id === "bot-generic" ? { ...b, status: "completed" } : b));
+        setCurrentBlockIndex(prev => prev + 1);
+      }
       
       steps.push({
-        step: 2,
+        step: steps.length + 1,
         type: "Bot Acionado",
         description: `Bot "${bot?.name}" foi acionado`,
         detail: "Bot processou a mensagem inicial",
         status: "success",
       });
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setFlowBlocks(prev => prev.map((b, i) => i === 1 ? { ...b, status: "completed" } : b));
-    } else {
-      setFlowBlocks(prev => prev.map((b, i) => i === 1 ? { ...b, status: "skipped" } : b));
     }
 
     // Passo 3: Fluxo Omnichannel (se selecionado)
     if (selectedFluxo) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setFlowBlocks(prev => prev.map((b, i) => i === 2 ? { ...b, status: "active" } : b));
-      setCurrentBlockIndex(3);
+      const fluxo = fluxos?.find(f => f.id === selectedFluxo);
+      addSystemMessage(`Workflow "${fluxo?.nome || 'Desconhecido'}" iniciado`);
       
-      const fluxo = fluxos?.find((f) => f.id === selectedFluxo);
-      addSystemMessage(`Executando workflow: ${fluxo?.nome}`);
+      const fluxoFlowData = fluxo?.flow_data as any;
+      if (fluxoFlowData?.nodes && Array.isArray(fluxoFlowData.nodes)) {
+        // Processar cada nó do workflow
+        for (const node of fluxoFlowData.nodes) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+          const blockId = `workflow-${node.id}`;
+          
+          setFlowBlocks(prev => prev.map(b => b.id === blockId ? { ...b, status: "active" } : b));
+          
+          const label = node.data?.label || node.data?.type || 'Etapa';
+          addSystemMessage(`[${label}] Executando bloco...`);
+          
+          await new Promise(resolve => setTimeout(resolve, 600));
+          
+          setFlowBlocks(prev => prev.map(b => b.id === blockId ? { ...b, status: "completed" } : b));
+          setCurrentBlockIndex(prev => prev + 1);
+        }
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setFlowBlocks(prev => prev.map(b => b.id === "workflow-generic" ? { ...b, status: "active" } : b));
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setFlowBlocks(prev => prev.map(b => b.id === "workflow-generic" ? { ...b, status: "completed" } : b));
+        setCurrentBlockIndex(prev => prev + 1);
+      }
       
       steps.push({
         step: steps.length + 1,
@@ -223,18 +333,13 @@ export default function TestRoteamento() {
         detail: "Processando regras de roteamento",
         status: "success",
       });
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setFlowBlocks(prev => prev.map((b, i) => i === 2 ? { ...b, status: "completed" } : b));
-    } else {
-      setFlowBlocks(prev => prev.map((b, i) => i === 2 ? { ...b, status: "skipped" } : b));
     }
 
     // Simular análise de fila
     if (filas && filas.length > 0) {
       await new Promise(resolve => setTimeout(resolve, 800));
-      setFlowBlocks(prev => prev.map((b, i) => i === 3 ? { ...b, status: "active" } : b));
-      setCurrentBlockIndex(4);
+      setFlowBlocks(prev => prev.map(b => b.id === "fila" ? { ...b, status: "active" } : b));
+      setCurrentBlockIndex(prev => prev + 1);
       
       const filaEscolhida = filas[0];
       addSystemMessage(`Direcionando para fila: ${filaEscolhida.nome}`);
@@ -248,12 +353,12 @@ export default function TestRoteamento() {
       });
       
       await new Promise(resolve => setTimeout(resolve, 1000));
-      setFlowBlocks(prev => prev.map((b, i) => i === 3 ? { ...b, status: "completed" } : b));
+      setFlowBlocks(prev => prev.map(b => b.id === "fila" ? { ...b, status: "completed" } : b));
 
       // Simular seleção de atendente
       if (atendentes && atendentes.length > 0) {
         await new Promise(resolve => setTimeout(resolve, 800));
-        setFlowBlocks(prev => prev.map((b, i) => i === 4 ? { ...b, status: "active" } : b));
+        setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "active" } : b));
         
         const atendenteEscolhido = atendentes[0];
         addSystemMessage(`Conectando com ${atendenteEscolhido.usuarios?.nome}...`);
@@ -267,11 +372,11 @@ export default function TestRoteamento() {
         });
         
         await new Promise(resolve => setTimeout(resolve, 1000));
-        setFlowBlocks(prev => prev.map((b, i) => i === 4 ? { ...b, status: "completed" } : b));
+        setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "completed" } : b));
         addBotMessage("Você foi conectado com um atendente. Como posso ajudar?");
       } else {
         await new Promise(resolve => setTimeout(resolve, 800));
-        setFlowBlocks(prev => prev.map((b, i) => i === 4 ? { ...b, status: "active" } : b));
+        setFlowBlocks(prev => prev.map(b => b.id === "atendente" ? { ...b, status: "active" } : b));
         addSystemMessage("Aguardando atendente disponível...");
         
         steps.push({
