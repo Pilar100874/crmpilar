@@ -6,9 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CheckCircle2, AlertCircle, Play, Send, Bot, User, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, AlertCircle, Play, Send, Bot, User, Zap, Building2, UserCheck, UserX, Plus, X } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +50,9 @@ export default function TestRoteamento() {
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [simulationStarted, setSimulationStarted] = useState(false);
   const [simulatedAtendentes, setSimulatedAtendentes] = useState<any[]>([]);
+  const [availableEmpresas, setAvailableEmpresas] = useState<any[]>([]);
+  const [showVinculoDialog, setShowVinculoDialog] = useState(false);
+  const [selectedAtendenteForVinculo, setSelectedAtendenteForVinculo] = useState<string | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Buscar bots disponíveis
@@ -144,6 +149,18 @@ export default function TestRoteamento() {
     },
   });
 
+  // Buscar empresas disponíveis
+  const { data: empresasData } = useQuery({
+    queryKey: ["empresas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("empresas")
+        .select("id, nome, cnpj");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   // Buscar conversas ativas por atendente (para calcular carga)
   const { data: conversasAtivas } = useQuery({
     queryKey: ["conversas-ativas"],
@@ -164,27 +181,55 @@ export default function TestRoteamento() {
         ...atendente,
         simulatedStatus: atendente.status,
         simulatedAcceptsNew: atendente.aceita_novos_chats,
+        simulatedVinculos: [], // vínculos simulados com empresas
       }));
       setSimulatedAtendentes(initialSimulated);
     }
   }, [atendentes]);
 
-  const toggleAtendenteStatus = (atendenteId: string) => {
-    setSimulatedAtendentes(prev => prev.map(a => {
-      if (a.id === atendenteId) {
-        const statusOrder = ["disponivel", "ocupado", "ausente", "offline"];
-        const currentIndex = statusOrder.indexOf(a.simulatedStatus);
-        const nextIndex = (currentIndex + 1) % statusOrder.length;
-        return { ...a, simulatedStatus: statusOrder[nextIndex] };
-      }
-      return a;
-    }));
+  // Set available empresas
+  useEffect(() => {
+    if (empresasData) {
+      setAvailableEmpresas(empresasData);
+    }
+  }, [empresasData]);
+
+  const toggleAtendenteStatus = (atendenteId: string, status: string) => {
+    setSimulatedAtendentes(prev => prev.map(a => 
+      a.id === atendenteId ? { ...a, simulatedStatus: status } : a
+    ));
   };
 
   const toggleAtendenteAcceptsNew = (atendenteId: string) => {
     setSimulatedAtendentes(prev => prev.map(a => 
       a.id === atendenteId ? { ...a, simulatedAcceptsNew: !a.simulatedAcceptsNew } : a
     ));
+  };
+
+  const addVinculoEmpresa = (atendenteId: string, empresaId: string) => {
+    setSimulatedAtendentes(prev => 
+      prev.map(a => {
+        if (a.id === atendenteId) {
+          const empresa = availableEmpresas.find(e => e.id === empresaId);
+          if (empresa && !a.simulatedVinculos?.some((v: any) => v.id === empresaId)) {
+            return {
+              ...a,
+              simulatedVinculos: [...(a.simulatedVinculos || []), empresa]
+            };
+          }
+        }
+        return a;
+      })
+    );
+  };
+
+  const removeVinculoEmpresa = (atendenteId: string, empresaId: string) => {
+    setSimulatedAtendentes(prev => 
+      prev.map(a => a.id === atendenteId ? {
+        ...a,
+        simulatedVinculos: (a.simulatedVinculos || []).filter((v: any) => v.id !== empresaId)
+      } : a)
+    );
   };
 
   // Buscar clientes para teste
@@ -505,7 +550,7 @@ export default function TestRoteamento() {
         } else if (tipoRoteamento === "por_prioridade") {
           addSystemMessage(`Seleção baseada em prioridade`);
         } else if (tipoRoteamento === "por_carteira") {
-          // Verificar se o cliente tem um atendente fixo
+          // Verificar se o cliente tem um atendente fixo (carteira real)
           const clienteCarteira = carteiras?.find(c => 
             c.customer_id === selectedCliente && c.ativa
           );
@@ -523,6 +568,23 @@ export default function TestRoteamento() {
             }
           } else {
             addSystemMessage(`Cliente não possui atendente fixo, aplicando round-robin`);
+          }
+        }
+        
+        // Se não encontrou via regras normais, verificar vínculos simulados com empresas
+        if (!selectedCliente && atendenteEscolhido === atendentesDisponiveis[0]) {
+          // Simular que temos uma empresa vinculada (usar a primeira empresa como exemplo)
+          const empresaSimuladaId = availableEmpresas?.[0]?.id;
+          if (empresaSimuladaId) {
+            const atendenteComVinculo = atendentesDisponiveis.find(a => 
+              a.simulatedVinculos?.some((v: any) => v.id === empresaSimuladaId)
+            );
+            
+            if (atendenteComVinculo) {
+              const empresa = atendenteComVinculo.simulatedVinculos?.find((v: any) => v.id === empresaSimuladaId);
+              addSystemMessage(`✅ Vínculo simulado: Empresa "${empresa?.nome}" direcionada para ${atendenteComVinculo.usuarios?.nome}`);
+              atendenteEscolhido = atendenteComVinculo;
+            }
           }
         }
         
@@ -978,43 +1040,64 @@ export default function TestRoteamento() {
                   const clientesCarteira = carteiras?.filter(c => 
                     c.atendente_id === atendente.id && c.ativa
                   ) || [];
+                  const vinculosSimulados = atendente.simulatedVinculos || [];
                   
                   return (
                     <div key={atendente.id} className="p-4 border rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{atendente.usuarios?.nome}</span>
-                        <Button
-                          size="sm"
-                          variant={
-                            atendente.simulatedStatus === "disponivel" ? "default" : 
-                            atendente.simulatedStatus === "ocupado" ? "secondary" : 
-                            atendente.simulatedStatus === "ausente" ? "outline" :
-                            "ghost"
-                          }
-                          onClick={() => toggleAtendenteStatus(atendente.id)}
-                        >
-                          {atendente.simulatedStatus}
-                        </Button>
+                        <div className="flex gap-2 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant={atendente.simulatedStatus === "disponivel" ? "default" : "outline"}
+                            onClick={() => toggleAtendenteStatus(atendente.id, "disponivel")}
+                            className="h-7"
+                          >
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            Disponível
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={atendente.simulatedStatus === "ocupado" ? "default" : "outline"}
+                            onClick={() => toggleAtendenteStatus(atendente.id, "ocupado")}
+                            className="h-7"
+                          >
+                            <UserX className="w-3 h-3 mr-1" />
+                            Ocupado
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={atendente.simulatedStatus === "ausente" ? "default" : "outline"}
+                            onClick={() => toggleAtendenteStatus(atendente.id, "ausente")}
+                            className="h-7"
+                          >
+                            Ausente
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={atendente.simulatedStatus === "offline" ? "default" : "outline"}
+                            onClick={() => toggleAtendenteStatus(atendente.id, "offline")}
+                            className="h-7"
+                          >
+                            Offline
+                          </Button>
+                        </div>
                       </div>
                       
-                      <div className="text-xs space-y-2">
+                      <div className="flex items-center gap-2 pt-2 border-t">
+                        <Switch
+                          checked={atendente.simulatedAcceptsNew}
+                          onCheckedChange={() => toggleAtendenteAcceptsNew(atendente.id)}
+                        />
+                        <span className="text-sm">Aceita novos chats</span>
+                      </div>
+                      
+                      <div className="text-xs space-y-2 pt-2 border-t">
                         <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
                           <span className="text-muted-foreground">Carga Atual:</span>
                           <span className="font-medium">
                             {carga}/{atendente.max_chats_simultaneos}
                           </span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
-                          <span className="text-muted-foreground">Aceita novos chats:</span>
-                          <Button
-                            size="sm"
-                            variant={atendente.simulatedAcceptsNew ? "default" : "outline"}
-                            onClick={() => toggleAtendenteAcceptsNew(atendente.id)}
-                            className="h-6 text-xs"
-                          >
-                            {atendente.simulatedAcceptsNew ? "Sim" : "Não"}
-                          </Button>
                         </div>
                         
                         {atendenteSkills.length > 0 && (
@@ -1051,6 +1134,45 @@ export default function TestRoteamento() {
                             </div>
                           </div>
                         )}
+
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="font-medium flex items-center gap-2">
+                              <Building2 className="w-3 h-3" />
+                              Vínculos com Empresas (Simulação)
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setSelectedAtendenteForVinculo(atendente.id);
+                                setShowVinculoDialog(true);
+                              }}
+                              className="h-6 text-xs"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          {vinculosSimulados.length > 0 ? (
+                            <div className="space-y-1">
+                              {vinculosSimulados.map((empresa: any) => (
+                                <div key={empresa.id} className="flex items-center justify-between text-xs bg-muted/30 p-2 rounded">
+                                  <span>• {empresa.nome}</span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => removeVinculoEmpresa(atendente.id, empresa.id)}
+                                    className="h-5 w-5 p-0"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Nenhum vínculo simulado</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -1132,6 +1254,53 @@ export default function TestRoteamento() {
           </div>
         </div>
       </Card>
+
+      {/* Dialog para adicionar vínculo com empresa */}
+      <Dialog open={showVinculoDialog} onOpenChange={setShowVinculoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Vínculo com Empresa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Selecione uma empresa para vincular ao atendente (simulação):
+            </p>
+            <ScrollArea className="max-h-96">
+              <div className="space-y-2 pr-4">
+                {availableEmpresas.map((empresa) => {
+                  const atendente = simulatedAtendentes.find(a => a.id === selectedAtendenteForVinculo);
+                  const jaVinculado = atendente?.simulatedVinculos?.some((v: any) => v.id === empresa.id);
+                  
+                  return (
+                    <Button
+                      key={empresa.id}
+                      variant={jaVinculado ? "secondary" : "outline"}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (selectedAtendenteForVinculo && !jaVinculado) {
+                          addVinculoEmpresa(selectedAtendenteForVinculo, empresa.id);
+                        }
+                      }}
+                      disabled={jaVinculado}
+                    >
+                      <Building2 className="h-4 w-4 mr-2" />
+                      <div className="text-left flex-1">
+                        <p className="font-medium">{empresa.nome}</p>
+                        {empresa.cnpj && (
+                          <p className="text-xs text-muted-foreground">{empresa.cnpj}</p>
+                        )}
+                      </div>
+                      {jaVinculado && (
+                        <Badge variant="secondary" className="ml-2">Vinculado</Badge>
+                      )}
+                    </Button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
