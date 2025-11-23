@@ -720,6 +720,7 @@ export default function TestRoteamento() {
   };
 
   const addSimulationMessage = (simulationId: string, message: ChatMessage) => {
+    console.log(`Adding message to ${simulationId}:`, message);
     setSimulations(prev => prev.map(sim => 
       sim.id === simulationId 
         ? { ...sim, chatMessages: [...sim.chatMessages, message] }
@@ -728,6 +729,7 @@ export default function TestRoteamento() {
   };
 
   const addSimulationTrace = (simulationId: string, trace: BlockExecution) => {
+    console.log(`Adding trace to ${simulationId}:`, trace.blockType, trace.blockLabel);
     setSimulations(prev => prev.map(sim => 
       sim.id === simulationId 
         ? { ...sim, executionTrace: [...sim.executionTrace, trace] }
@@ -966,7 +968,7 @@ export default function TestRoteamento() {
                         <div className="mb-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Send className="w-4 h-4 text-primary" />
-                            <h4 className="font-medium text-sm">Chat</h4>
+                            <h4 className="font-medium text-sm">Chat ({sim.chatMessages.length} mensagens)</h4>
                           </div>
                           <div className="border rounded-lg bg-muted/30 p-3 max-h-[200px] overflow-y-auto space-y-2">
                             {sim.chatMessages.map((msg) => (
@@ -997,19 +999,20 @@ export default function TestRoteamento() {
                       )}
 
                       {/* Fluxo Bot Detalhado */}
-                      {sim.executionTrace.filter(t => t.blockType.startsWith('bot-')).length > 0 && (
-                        <div className="mb-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Bot className="w-4 h-4 text-blue-500" />
-                            <h4 className="font-medium text-sm">Fluxo do Bot</h4>
-                            <Badge variant="secondary" className="text-xs">
-                              {sim.executionTrace.filter(t => t.blockType.startsWith('bot-')).length} blocos
-                            </Badge>
-                          </div>
-                          <div className="space-y-2">
-                            {sim.executionTrace
-                              .filter(t => t.blockType.startsWith('bot-'))
-                              .map((trace, idx) => (
+                      {(() => {
+                        const botTraces = sim.executionTrace.filter(t => t.blockType.startsWith('bot-'));
+                        console.log(`Simulação ${sim.id} - Bot traces:`, botTraces.length);
+                        return botTraces.length > 0 && (
+                          <div className="mb-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Bot className="w-4 h-4 text-blue-500" />
+                              <h4 className="font-medium text-sm">Fluxo do Bot</h4>
+                              <Badge variant="secondary" className="text-xs">
+                                {botTraces.length} blocos
+                              </Badge>
+                            </div>
+                            <div className="space-y-2">
+                              {botTraces.map((trace, idx) => (
                                 <div key={`bot-${idx}`} className="border rounded-lg p-3 bg-blue-50/50 dark:bg-blue-950/20">
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="font-medium text-sm">{trace.blockLabel}</span>
@@ -1060,24 +1063,26 @@ export default function TestRoteamento() {
                                   </div>
                                 </div>
                               ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Fluxo Workflow Detalhado */}
-                      {sim.executionTrace.filter(t => t.blockType.startsWith('workflow-')).length > 0 && (
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Layers className="w-4 h-4 text-purple-500" />
-                            <h4 className="font-medium text-sm">Fluxo Workflow Omnichannel</h4>
-                            <Badge variant="secondary" className="text-xs">
-                              {sim.executionTrace.filter(t => t.blockType.startsWith('workflow-')).length} blocos
-                            </Badge>
-                          </div>
-                          <div className="space-y-2">
-                            {sim.executionTrace
-                              .filter(t => t.blockType.startsWith('workflow-'))
-                              .map((trace, idx) => (
+                      {(() => {
+                        const workflowTraces = sim.executionTrace.filter(t => t.blockType.startsWith('workflow-'));
+                        console.log(`Simulação ${sim.id} - Workflow traces:`, workflowTraces.length);
+                        return workflowTraces.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Layers className="w-4 h-4 text-purple-500" />
+                              <h4 className="font-medium text-sm">Fluxo Workflow Omnichannel</h4>
+                              <Badge variant="secondary" className="text-xs">
+                                {workflowTraces.length} blocos
+                              </Badge>
+                            </div>
+                            <div className="space-y-2">
+                              {workflowTraces.map((trace, idx) => (
                                 <div key={`workflow-${idx}`} className="border rounded-lg p-3 bg-purple-50/50 dark:bg-purple-950/20">
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="font-medium text-sm">{trace.blockLabel}</span>
@@ -1134,9 +1139,10 @@ export default function TestRoteamento() {
                                   </div>
                                 </div>
                               ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </Card>
                   ))}
                 </div>
