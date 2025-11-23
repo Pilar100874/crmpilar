@@ -210,15 +210,18 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       try {
-        // Verifica se é administrador da tabela administradores
+        // Verifica se é administrador (tabela administradores)
+        const storedUserType = localStorage.getItem("userType");
+        const storedAdminId = localStorage.getItem("userId");
+
         const { data: adminData } = await supabase
           .from("administradores")
           .select("id")
-          .eq("id", user.id)
+          .eq("id", storedAdminId || user.id)
           .maybeSingle();
 
         // Se for administrador da tabela, dá acesso total a todos os menus
-        if (adminData) {
+        if (adminData && storedUserType === "admin") {
           setIsAdmin(true);
           const allMenus: Record<string, MenuPermissions> = {};
           MENUS_DISPONIVEIS.forEach(menuId => {
@@ -303,10 +306,11 @@ export default function Layout({ children }: LayoutProps) {
       try {
         // Buscar nome do usuário
         if (isAdmin) {
+          const storedAdminId = localStorage.getItem("userId");
           const { data: adminData } = await supabase
             .from("administradores")
             .select("nome")
-            .eq("id", user.id)
+            .eq("id", storedAdminId || user.id)
             .maybeSingle();
           
           setUserName(adminData?.nome || "Administrador");
