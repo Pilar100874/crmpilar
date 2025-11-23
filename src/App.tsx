@@ -48,6 +48,7 @@ import DashboardSupervisorPage from "./pages/DashboardSupervisor";
 import OmnichannelBuilder from "./pages/OmnichannelBuilder";
 import GerenciarAtalhos from "./pages/GerenciarAtalhos";
 import Perfil from "./pages/Perfil";
+import TestRoteamento from "./pages/TestRoteamento";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,7 @@ const App = () => (
             <Route path="/omnichannel-builder/:id" element={<OmnichannelBuilder />} />
             <Route path="/dashboard-atendente" element={<DashboardAtendentePage />} />
             <Route path="/dashboard-supervisor" element={<DashboardSupervisorPage />} />
+            <Route path="/test-roteamento" element={<TestRoteamento />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
           </Route>
