@@ -30,7 +30,7 @@ serve(async (req) => {
     const { data: whatsappConfig, error: configError } = await supabase
       .from("whatsapp_config")
       .select("*")
-      .eq("active", true)
+      .limit(1)
       .maybeSingle();
 
     if (configError || !whatsappConfig) {
