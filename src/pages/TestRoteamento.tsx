@@ -898,11 +898,85 @@ export default function TestRoteamento() {
                     <p className="text-sm mt-1">Configure os parâmetros e inicie uma simulação</p>
                   </div>
                 ) : (
-                  <FlowSimulationCanvas
-                    simulation={simulations[simulations.length - 1]}
-                    bots={bots || []}
-                    fluxos={fluxos || []}
-                  />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Canvas Visual */}
+                    <div className="border rounded-lg overflow-hidden">
+                      <FlowSimulationCanvas
+                        simulation={simulations[simulations.length - 1]}
+                        bots={bots || []}
+                        fluxos={fluxos || []}
+                      />
+                    </div>
+
+                    {/* Chat Interativo */}
+                    <Card className="p-4 flex flex-col h-[600px]">
+                      <div className="flex items-center gap-2 mb-4 pb-3 border-b">
+                        <Send className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Chat da Simulação</h3>
+                        <Badge variant="outline" className="ml-auto">
+                          {simulations[simulations.length - 1].chatMessages.length} mensagens
+                        </Badge>
+                      </div>
+
+                      <ScrollArea className="flex-1 pr-4">
+                        <div className="space-y-3">
+                          {simulations[simulations.length - 1].chatMessages.map((msg) => (
+                            <div
+                              key={msg.id}
+                              className={cn(
+                                "p-3 rounded-lg text-sm",
+                                msg.sender === "system" && "bg-orange-50 dark:bg-orange-950/40 border border-orange-200",
+                                msg.sender === "bot" && "bg-blue-50 dark:bg-blue-950/40 border border-blue-200",
+                                msg.sender === "user" && "bg-primary text-primary-foreground ml-auto max-w-[85%]"
+                              )}
+                            >
+                              <div className="flex items-start gap-2">
+                                {msg.sender === "system" && <Zap className="w-4 h-4 shrink-0 mt-0.5" />}
+                                {msg.sender === "bot" && <Bot className="w-4 h-4 shrink-0 mt-0.5" />}
+                                {msg.sender === "user" && <User className="w-4 h-4 shrink-0 mt-0.5" />}
+                                <div className="flex-1 min-w-0">
+                                  <div className="break-words">{msg.text}</div>
+                                  <div className="text-xs opacity-70 mt-1">
+                                    {msg.timestamp.toLocaleTimeString()}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+
+                      <div className="mt-4 pt-3 border-t">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Digite uma mensagem..."
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                                const lastSim = simulations[simulations.length - 1];
+                                const newMsg: ChatMessage = {
+                                  id: `user-${Date.now()}`,
+                                  sender: "user",
+                                  text: e.currentTarget.value.trim(),
+                                  timestamp: new Date()
+                                };
+                                
+                                setSimulations(prev => prev.map(sim => 
+                                  sim.id === lastSim.id 
+                                    ? { ...sim, chatMessages: [...sim.chatMessages, newMsg] }
+                                    : sim
+                                ));
+                                
+                                e.currentTarget.value = "";
+                              }
+                            }}
+                          />
+                          <Button size="icon" variant="default">
+                            <Send className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
                 )}
               </TabsContent>
 
