@@ -47,6 +47,7 @@ import DashboardAtendentePage from "./pages/DashboardAtendente";
 import DashboardSupervisorPage from "./pages/DashboardSupervisor";
 import OmnichannelBuilder from "./pages/OmnichannelBuilder";
 import GerenciarAtalhos from "./pages/GerenciarAtalhos";
+import Perfil from "./pages/Perfil";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,7 @@ const App = () => (
             <Route path="/dashboard-atendente" element={<DashboardAtendentePage />} />
             <Route path="/dashboard-supervisor" element={<DashboardSupervisorPage />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
+            <Route path="/perfil" element={<Perfil />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
