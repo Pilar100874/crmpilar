@@ -9,13 +9,15 @@ import {
   useNodesState,
   useEdgesState,
   NodeTypes,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, RotateCcw, SkipForward, AlertCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipForward, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Simulation {
   id: string;
@@ -29,6 +31,7 @@ interface Simulation {
     fluxoId?: string;
     cliente?: string;
   };
+  executionTrace: any[];
 }
 
 interface FlowSimulationCanvasProps {
@@ -43,6 +46,7 @@ interface ExecutionState {
   variables: Record<string, any>;
   isPaused: boolean;
   isComplete: boolean;
+  currentStep: number;
 }
 
 const CustomNode = ({ data, selected }: any) => {
@@ -52,31 +56,43 @@ const CustomNode = ({ data, selected }: any) => {
   return (
     <div
       className={cn(
-        "px-4 py-3 rounded-lg border-2 shadow-lg transition-all min-w-[180px]",
-        isCurrent && "ring-4 ring-primary ring-offset-2 animate-pulse",
-        isExecuted && !isCurrent && "bg-green-50 dark:bg-green-950/20 border-green-500",
-        !isExecuted && !isCurrent && "bg-background border-border",
-        selected && "ring-2 ring-primary"
+        "px-4 py-3 rounded-lg border-2 shadow-lg transition-all min-w-[200px] bg-background",
+        isCurrent && "ring-4 ring-primary ring-offset-2 border-primary",
+        isExecuted && !isCurrent && "bg-green-50 dark:bg-green-950/30 border-green-500",
+        !isExecuted && !isCurrent && "border-border hover:border-primary/50",
+        selected && "ring-2 ring-blue-500"
       )}
     >
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-2">
         <div className={cn(
-          "w-2 h-2 rounded-full",
+          "w-3 h-3 rounded-full flex-shrink-0",
           isCurrent && "bg-primary animate-pulse",
           isExecuted && !isCurrent && "bg-green-500",
           !isExecuted && !isCurrent && "bg-muted"
         )} />
-        <div className="font-medium text-sm">{data.label}</div>
+        <span className="font-semibold text-sm truncate">{data.label || data.type || 'Bloco'}</span>
       </div>
-      {data.type && (
-        <Badge variant="outline" className="text-xs">
-          {data.type}
-        </Badge>
+      
+      {data.description && (
+        <p className="text-xs text-muted-foreground line-clamp-2">{data.description}</p>
       )}
+      
       {data.executionTime && (
-        <div className="text-xs text-muted-foreground mt-1">
+        <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+          <Clock className="w-3 h-3" />
           {data.executionTime}ms
         </div>
+      )}
+
+      {isCurrent && (
+        <Badge variant="default" className="mt-2 text-xs">Executando...</Badge>
+      )}
+      
+      {isExecuted && !isCurrent && (
+        <Badge variant="secondary" className="mt-2 text-xs bg-green-100 dark:bg-green-950/50">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Concluído
+        </Badge>
       )}
     </div>
   );
@@ -99,37 +115,61 @@ export default function FlowSimulationCanvas({
     variables: {},
     isPaused: false,
     isComplete: false,
+    currentStep: 0,
   });
   const [executionHistory, setExecutionHistory] = useState<any[]>([]);
 
   // Determinar flow data e tipo
   const bot = bots.find(b => b.id === simulation.config.botId);
   const fluxo = fluxos.find(f => f.id === simulation.config.fluxoId);
-  const flowData = bot?.flow_data || fluxo?.flow_data;
-  const flowType = bot ? 'bot' : 'workflow';
+  
+  console.log('🔍 Simulation config:', simulation.config);
+  console.log('🤖 Bot encontrado:', bot);
+  console.log('⚙️ Fluxo encontrado:', fluxo);
+  
+  const rawFlowData = bot?.flow_data || fluxo?.flow_data;
+  const flowData = typeof rawFlowData === 'string' ? JSON.parse(rawFlowData) : rawFlowData;
+  const flowType = bot ? 'Bot' : 'Workflow';
+  
+  console.log('📊 Flow data:', flowData);
+  console.log('📦 Nodes:', flowData?.nodes?.length || 0);
+  console.log('🔗 Edges:', flowData?.edges?.length || 0);
 
   // Carregar fluxo inicial
   useEffect(() => {
-    if (flowData?.nodes && flowData?.edges) {
-      const initialNodes = flowData.nodes.map((node: any) => ({
-        ...node,
-        type: 'custom',
-        data: {
-          ...node.data,
-          isExecuted: false,
-          isCurrent: false,
-        },
-      }));
+    console.log('🚀 Carregando fluxo...');
+    
+    if (flowData?.nodes && Array.isArray(flowData.nodes)) {
+      console.log('✅ Flow data válido com', flowData.nodes.length, 'nodes');
+      
+      const initialNodes = flowData.nodes.map((node: any) => {
+        const nodeData = {
+          ...node,
+          type: 'custom',
+          data: {
+            ...node.data,
+            isExecuted: false,
+            isCurrent: false,
+          },
+        };
+        console.log('📍 Node carregado:', nodeData.id, nodeData.data.label);
+        return nodeData;
+      });
+      
+      const initialEdges = flowData.edges || [];
+      console.log('🔗 Edges carregadas:', initialEdges.length);
       
       setNodes(initialNodes);
-      setEdges(flowData.edges || []);
+      setEdges(initialEdges);
+    } else {
+      console.warn('⚠️ Flow data inválido ou vazio');
     }
   }, [flowData]);
 
   // Atualizar visualização dos nodes
   const updateNodeStates = useCallback(() => {
-    setNodes((nds) =>
-      nds.map((node) => ({
+    setNodes(nds =>
+      nds.map(node => ({
         ...node,
         data: {
           ...node.data,
@@ -142,51 +182,39 @@ export default function FlowSimulationCanvas({
 
   useEffect(() => {
     updateNodeStates();
-  }, [updateNodeStates]);
+  }, [executionState, updateNodeStates]);
 
   // Executar próximo passo
-  const executeNextStep = useCallback(async () => {
+  const executeNextStep = useCallback(() => {
     if (executionState.isComplete || executionState.isPaused) return;
 
-    let nextNodeId = executionState.currentNodeId;
-    
-    // Se não tem node atual, começar pelo primeiro
-    if (!nextNodeId) {
-      const startNode = nodes.find(n => 
-        n.data?.type === 'inicio' || 
-        n.data?.type === 'start' ||
-        n.id === 'start'
-      );
-      nextNodeId = startNode?.id || nodes[0]?.id;
+    // Se não tem node atual, começar do primeiro
+    let currentNode;
+    if (!executionState.currentNodeId) {
+      currentNode = nodes.find(n => 
+        !edges.some(e => e.target === n.id) // Node sem entrada = início
+      ) || nodes[0];
+    } else {
+      currentNode = nodes.find(n => n.id === executionState.currentNodeId);
     }
 
-    if (!nextNodeId) {
-      setExecutionState(prev => ({ ...prev, isComplete: true }));
-      return;
-    }
-
-    const currentNode = nodes.find(n => n.id === nextNodeId);
     if (!currentNode) {
-      setExecutionState(prev => ({ ...prev, isComplete: true }));
+      console.log('✅ Simulação completa');
+      setExecutionState(prev => ({ ...prev, isComplete: true, currentNodeId: null }));
       return;
     }
 
-    // Simular execução do bloco
-    const startTime = Date.now();
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const executionTime = Date.now() - startTime;
+    console.log('▶️ Executando node:', currentNode.id, currentNode.data.label);
 
-    // Coletar dados da execução
+    // Registrar execução
     const executionData = {
       nodeId: currentNode.id,
-      nodeLabel: currentNode.data?.label || 'Sem label',
-      nodeType: currentNode.data?.type || 'unknown',
+      label: currentNode.data.label,
+      type: currentNode.data.type,
       timestamp: new Date(),
       variables: { ...executionState.variables },
-      executionTime,
     };
-
-    // Adicionar ao histórico
+    
     setExecutionHistory(prev => [...prev, executionData]);
 
     // Atualizar variáveis baseado no tipo de bloco
@@ -201,6 +229,8 @@ export default function FlowSimulationCanvas({
       ? nodes.find(n => n.id === outgoingEdges[0].target)
       : null;
 
+    console.log('➡️ Próximo node:', nextNode?.id);
+
     // Atualizar estado
     setExecutionState(prev => ({
       ...prev,
@@ -208,119 +238,104 @@ export default function FlowSimulationCanvas({
       executedNodes: new Set([...prev.executedNodes, currentNode.id]),
       variables: newVariables,
       isComplete: !nextNode,
+      currentStep: prev.currentStep + 1,
     }));
 
     // Se tiver próximo node, executar automaticamente se não estiver pausado
     if (nextNode && !executionState.isPaused) {
-      setTimeout(() => executeNextStep(), 800);
+      setTimeout(() => executeNextStep(), 1000);
     }
   }, [executionState, nodes, edges]);
 
   // Resetar simulação
   const resetSimulation = () => {
+    console.log('🔄 Resetando simulação');
     setExecutionState({
       currentNodeId: null,
       executedNodes: new Set(),
       variables: {},
       isPaused: false,
       isComplete: false,
+      currentStep: 0,
     });
     setExecutionHistory([]);
   };
 
-  // Play/Pause
+  // Toggle pause
   const togglePause = () => {
-    setExecutionState(prev => {
-      const newState = { ...prev, isPaused: !prev.isPaused };
-      if (!newState.isPaused && !newState.isComplete) {
-        setTimeout(() => executeNextStep(), 100);
-      }
-      return newState;
-    });
-  };
-
-  // Iniciar simulação
-  const startSimulation = () => {
-    if (executionState.currentNodeId === null && !executionState.isComplete) {
-      executeNextStep();
+    setExecutionState(prev => ({ ...prev, isPaused: !prev.isPaused }));
+    if (executionState.isPaused && !executionState.isComplete) {
+      setTimeout(() => executeNextStep(), 500);
     }
   };
 
   return (
-    <div className="flex gap-4 h-[600px]">
-      {/* Canvas do Fluxo */}
-      <Card className="flex-1 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold">
-              Fluxo {flowType === 'bot' ? 'do Bot' : 'Omnichannel'}
-            </h3>
-            <Badge variant="secondary">
-              {executionState.executedNodes.size}/{nodes.length} executados
-            </Badge>
+    <div className="flex flex-col h-full">
+      {/* Header com controles */}
+      <div className="p-4 border-b bg-muted/30">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-semibold text-lg">Simulação Visual - {flowType}</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {bot?.name || fluxo?.nome || 'Fluxo'} • {nodes.length} blocos
+            </p>
           </div>
-          
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={resetSimulation}
-              disabled={executionState.executedNodes.size === 0}
-            >
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-            
-            {!executionState.currentNodeId && !executionState.isComplete ? (
-              <Button
-                size="sm"
-                onClick={startSimulation}
-              >
-                <Play className="w-4 h-4 mr-1" />
-                Iniciar
-              </Button>
-            ) : executionState.isComplete ? (
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled
-              >
-                Completo
-              </Button>
-            ) : (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={togglePause}
-                >
-                  {executionState.isPaused ? (
-                    <>
-                      <Play className="w-4 h-4 mr-1" />
-                      Continuar
-                    </>
-                  ) : (
-                    <>
-                      <Pause className="w-4 h-4 mr-1" />
-                      Pausar
-                    </>
-                  )}
-                </Button>
-                
-                {executionState.isPaused && (
-                  <Button
-                    size="sm"
-                    onClick={executeNextStep}
-                  >
-                    <SkipForward className="w-4 h-4 mr-1" />
-                    Próximo
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
+          <Badge variant={executionState.isComplete ? "secondary" : "default"}>
+            Passo {executionState.currentStep} / {nodes.length}
+          </Badge>
         </div>
 
-        <div className="h-[calc(100%-60px)] border rounded-lg bg-muted/30">
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => {
+              if (!executionState.currentNodeId && !executionState.isComplete) {
+                executeNextStep();
+              } else {
+                togglePause();
+              }
+            }}
+            disabled={executionState.isComplete}
+            variant={executionState.isPaused ? "default" : "secondary"}
+          >
+            {executionState.isPaused || !executionState.currentNodeId ? (
+              <><Play className="w-4 h-4 mr-1" /> Iniciar</>
+            ) : (
+              <><Pause className="w-4 h-4 mr-1" /> Pausar</>
+            )}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={executeNextStep}
+            disabled={executionState.isComplete || !executionState.isPaused}
+          >
+            <SkipForward className="w-4 h-4 mr-1" />
+            Próximo
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={resetSimulation}
+          >
+            <RotateCcw className="w-4 h-4 mr-1" />
+            Resetar
+          </Button>
+
+          {nodes.length === 0 && (
+            <Badge variant="destructive" className="ml-auto">
+              <AlertCircle className="w-3 h-3 mr-1" />
+              Nenhum bloco encontrado
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Canvas */}
+      <div className="flex-1 bg-muted/10">
+        {nodes.length > 0 ? (
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -328,79 +343,60 @@ export default function FlowSimulationCanvas({
             onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
             fitView
+            fitViewOptions={{ padding: 0.2 }}
             minZoom={0.1}
             maxZoom={2}
           >
-            <Background />
+            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
             <Controls />
-            <MiniMap 
+            <MiniMap
               nodeColor={(node) => {
-                if (node.data?.isCurrent) return '#3b82f6';
-                if (node.data?.isExecuted) return '#22c55e';
+                if (node.data.isCurrent) return '#0ea5e9';
+                if (node.data.isExecuted) return '#22c55e';
                 return '#94a3b8';
               }}
+              className="bg-background border border-border"
             />
           </ReactFlow>
-        </div>
-      </Card>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <p className="text-muted-foreground">
+                Nenhum fluxo encontrado para esta simulação
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Selecione um Bot ou Workflow válido
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* Painel de Detalhes */}
-      <Card className="w-80 p-4 space-y-4 overflow-y-auto">
-        <div>
-          <h4 className="font-semibold mb-2">Estado Atual</h4>
-          {executionState.currentNodeId ? (
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <div className="text-sm font-medium">
-                {nodes.find(n => n.id === executionState.currentNodeId)?.data?.label}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {nodes.find(n => n.id === executionState.currentNodeId)?.data?.type}
-              </div>
-            </div>
-          ) : executionState.isComplete ? (
-            <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900 text-sm">
-              ✓ Simulação completa
-            </div>
-          ) : (
-            <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
-              Aguardando início
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h4 className="font-semibold mb-2">Variáveis ({Object.keys(executionState.variables).length})</h4>
-          {Object.keys(executionState.variables).length > 0 ? (
-            <div className="space-y-1">
-              {Object.entries(executionState.variables).map(([key, value]) => (
-                <div key={key} className="p-2 bg-muted rounded text-xs">
-                  <span className="font-mono font-semibold text-primary">{key}:</span>{' '}
-                  <span className="break-all">
-                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+      {/* Histórico de execução */}
+      {executionHistory.length > 0 && (
+        <Card className="m-4 p-3">
+          <h4 className="font-semibold text-sm mb-2">Histórico de Execução</h4>
+          <ScrollArea className="h-[120px]">
+            <div className="space-y-1 pr-3">
+              {executionHistory.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 text-xs p-2 rounded bg-muted/50"
+                >
+                  <Badge variant="outline" className="text-xs">
+                    #{idx + 1}
+                  </Badge>
+                  <span className="flex-1 font-medium">{item.label || item.type}</span>
+                  <span className="text-muted-foreground">
+                    {item.timestamp.toLocaleTimeString()}
                   </span>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-xs text-muted-foreground">Nenhuma variável ainda</div>
-          )}
-        </div>
-
-        <div>
-          <h4 className="font-semibold mb-2">Histórico ({executionHistory.length})</h4>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {executionHistory.map((item, idx) => (
-              <div key={idx} className="p-2 bg-muted rounded-lg text-xs">
-                <div className="font-medium">{item.nodeLabel}</div>
-                <div className="text-muted-foreground flex items-center justify-between mt-1">
-                  <span>{item.nodeType}</span>
-                  <span>{item.executionTime}ms</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
+          </ScrollArea>
+        </Card>
+      )}
     </div>
   );
 }
