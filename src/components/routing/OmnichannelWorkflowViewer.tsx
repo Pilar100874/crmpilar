@@ -52,6 +52,7 @@ export default function OmnichannelWorkflowViewer({
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   useEffect(() => {
+    console.log('🔄 Atualizando workflow para fluxoId:', fluxoId);
     const fluxo = fluxos.find(f => f.id === fluxoId);
     
     if (fluxo?.flow_data) {
@@ -59,6 +60,7 @@ export default function OmnichannelWorkflowViewer({
       const flowData = typeof rawFlowData === 'string' ? JSON.parse(rawFlowData) : rawFlowData;
       
       if (flowData?.nodes && Array.isArray(flowData.nodes)) {
+        console.log('✅ Workflow carregado:', flowData.nodes.length, 'nodes');
         const workflowNodes = flowData.nodes.map((node: any) => ({
           ...node,
           type: 'custom',
@@ -72,6 +74,10 @@ export default function OmnichannelWorkflowViewer({
         setNodes(workflowNodes);
         setEdges(workflowEdges);
       }
+    } else {
+      console.warn('⚠️ Nenhum workflow encontrado para:', fluxoId);
+      setNodes([]);
+      setEdges([]);
     }
   }, [fluxoId, fluxos, setNodes, setEdges]);
 
