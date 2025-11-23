@@ -17,7 +17,7 @@ import '@xyflow/react/dist/style.css';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, RotateCcw, SkipForward, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { RotateCcw, SkipForward, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import VariableMonitor from './VariableMonitor';
@@ -200,7 +200,7 @@ export default function FlowSimulationCanvas({
     updateNodeStates();
   }, [executionState, updateNodeStates]);
 
-  // Executar próximo passo
+  // Executar próximo passo (apenas um passo por vez)
   const executeNextStep = useCallback(() => {
     if (executionState.isComplete) {
       console.log('✅ Simulação completa');
@@ -222,7 +222,7 @@ export default function FlowSimulationCanvas({
 
     if (!currentNode) {
       console.log('✅ Simulação completa - sem mais nodes');
-      setExecutionState(prev => ({ ...prev, isComplete: true, currentNodeId: null, isPaused: true }));
+      setExecutionState(prev => ({ ...prev, isComplete: true, currentNodeId: null }));
       return;
     }
 
@@ -284,14 +284,46 @@ export default function FlowSimulationCanvas({
       currentStep: prev.currentStep + 1,
     }));
 
-    // Se tiver próximo node e NÃO estiver pausado, continuar automaticamente
-    if (nextNode && !executionState.isPaused && !isComplete) {
-      console.log('⏭️ Executando automaticamente próximo passo...');
-      setTimeout(() => executeNextStep(), 1200);
-    } else if (isComplete) {
+    if (isComplete) {
       console.log('🏁 Fluxo concluído!');
     }
   }, [executionState, nodes, edges]);
+
+  // Retroceder um passo
+  const executePreviousStep = useCallback(() => {
+    if (executionState.currentStep === 0) {
+      console.log('⏮️ Já está no início');
+      return;
+    }
+
+    // Remover último item do histórico
+    const newHistory = executionHistory.slice(0, -1);
+    setExecutionHistory(newHistory);
+
+    // Encontrar o node anterior
+    const previousExecution = newHistory[newHistory.length - 1];
+    const previousNodeId = previousExecution?.nodeId || null;
+
+    // Remover o node atual dos executados
+    const newExecutedNodes = new Set(executionState.executedNodes);
+    if (executionState.currentNodeId) {
+      newExecutedNodes.delete(executionState.currentNodeId);
+    }
+
+    // Restaurar variáveis do passo anterior
+    const previousVariables = previousExecution?.variables || {};
+
+    setExecutionState(prev => ({
+      ...prev,
+      currentNodeId: previousNodeId,
+      executedNodes: newExecutedNodes,
+      variables: previousVariables,
+      isComplete: false,
+      currentStep: Math.max(0, prev.currentStep - 1),
+    }));
+
+    console.log('⏮️ Retrocedeu para:', previousNodeId);
+  }, [executionState, executionHistory]);
 
   // Resetar simulação
   const resetSimulation = () => {
@@ -305,14 +337,6 @@ export default function FlowSimulationCanvas({
       currentStep: 0,
     });
     setExecutionHistory([]);
-  };
-
-  // Toggle pause
-  const togglePause = () => {
-    setExecutionState(prev => ({ ...prev, isPaused: !prev.isPaused }));
-    if (executionState.isPaused && !executionState.isComplete) {
-      setTimeout(() => executeNextStep(), 500);
-    }
   };
 
   return (
@@ -343,39 +367,17 @@ export default function FlowSimulationCanvas({
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            onClick={() => {
-              if (!executionState.currentNodeId && !executionState.isComplete) {
-                // Primeira execução - iniciar pausado
-                setExecutionState(prev => ({ ...prev, isPaused: true }));
-                executeNextStep();
-              } else {
-                togglePause();
-              }
-            }}
-            disabled={executionState.isComplete}
-            variant={executionState.isPaused ? "default" : "secondary"}
+            variant="outline"
+            onClick={executePreviousStep}
+            disabled={executionState.currentStep === 0}
           >
-            {executionState.isPaused ? (
-              <><Play className="w-4 h-4 mr-1" /> Continuar</>
-            ) : (
-              <><Pause className="w-4 h-4 mr-1" /> Pausar</>
-            )}
+            <SkipForward className="w-4 h-4 mr-1 rotate-180" />
+            Anterior
           </Button>
 
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => {
-              console.log('🔵 Botão Próximo clicado');
-              console.log('Estado atual:', { 
-                isPaused: executionState.isPaused, 
-                isComplete: executionState.isComplete,
-                currentNodeId: executionState.currentNodeId 
-              });
-              // Pausar antes de executar para garantir modo passo a passo
-              setExecutionState(prev => ({ ...prev, isPaused: true }));
-              executeNextStep();
-            }}
+            onClick={executeNextStep}
             disabled={executionState.isComplete}
           >
             <SkipForward className="w-4 h-4 mr-1" />
