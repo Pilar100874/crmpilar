@@ -135,9 +135,20 @@ export default function FlowSimulationCanvas({
   console.log('📦 Nodes:', flowData?.nodes?.length || 0);
   console.log('🔗 Edges:', flowData?.edges?.length || 0);
 
-  // Carregar fluxo inicial
+  // Carregar fluxo inicial e resetar quando mudar de simulação
   useEffect(() => {
-    console.log('🚀 Carregando fluxo...');
+    console.log('🚀 Carregando fluxo para simulação:', simulation.id);
+    
+    // Resetar estado de execução ao trocar de simulação
+    setExecutionState({
+      currentNodeId: null,
+      executedNodes: new Set(),
+      variables: {},
+      isPaused: false,
+      isComplete: false,
+      currentStep: 0,
+    });
+    setExecutionHistory([]);
     
     if (flowData?.nodes && Array.isArray(flowData.nodes)) {
       console.log('✅ Flow data válido com', flowData.nodes.length, 'nodes');
@@ -164,7 +175,7 @@ export default function FlowSimulationCanvas({
     } else {
       console.warn('⚠️ Flow data inválido ou vazio');
     }
-  }, [flowData]);
+  }, [flowData, simulation.id]);
 
   // Atualizar visualização dos nodes
   const updateNodeStates = useCallback(() => {

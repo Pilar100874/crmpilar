@@ -552,12 +552,16 @@ export default function TestRoteamento() {
                           <Card 
                             key={sim.id} 
                             className={cn(
-                              "relative p-3 cursor-pointer transition-all border-2",
+                              "relative p-3 cursor-pointer transition-all border-2 hover:shadow-lg",
                               selectedSimulationId === sim.id 
-                                ? "border-primary bg-primary/5" 
+                                ? "border-primary bg-primary/10 shadow-md" 
                                 : "border-border hover:border-primary/50"
                             )}
-                            onClick={() => setSelectedSimulationId(sim.id)}
+                            onClick={() => {
+                              console.log('🔀 Trocando para simulação:', sim.id, sim.name);
+                              setSelectedSimulationId(sim.id);
+                              toast.info(`Visualizando: ${sim.name}`);
+                            }}
                           >
                             <Button
                               variant="ghost"
@@ -570,13 +574,28 @@ export default function TestRoteamento() {
                             >
                               <X className="w-3 h-3" />
                             </Button>
-                            <div className="text-sm font-semibold mb-1">{sim.name}</div>
-                            <div className="text-xs text-muted-foreground truncate">
+                            <div className="text-sm font-semibold mb-1 flex items-center gap-1">
+                              {sim.name}
+                              {selectedSimulationId === sim.id && (
+                                <CheckCircle2 className="w-3 h-3 text-primary" />
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate mb-1">
                               {sim.config.canal}
                             </div>
+                            {sim.config.botId && (
+                              <div className="text-[10px] text-muted-foreground truncate mb-1">
+                                Bot: {bots?.find(b => b.id === sim.config.botId)?.name}
+                              </div>
+                            )}
+                            {sim.config.fluxoId && (
+                              <div className="text-[10px] text-muted-foreground truncate mb-1">
+                                Workflow: {fluxos?.find(f => f.id === sim.config.fluxoId)?.nome}
+                              </div>
+                            )}
                             <Badge 
                               variant={selectedSimulationId === sim.id ? "default" : "secondary"} 
-                              className="mt-2 text-xs"
+                              className="mt-1 text-xs"
                             >
                               {sim.chatMessages.length} msgs
                             </Badge>
