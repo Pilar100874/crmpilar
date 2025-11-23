@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
+import { Plus, Edit, Trash2, Power, PowerOff, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -72,6 +73,35 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
     }
   };
 
+  const handleToggleDefault = async (id: string, currentDefault: boolean) => {
+    try {
+      // Se estamos marcando como padrão, primeiro desmarcamos todos os outros
+      if (!currentDefault) {
+        const { error: clearError } = await supabase
+          .from("omnichannel_flows")
+          .update({ is_default: false })
+          .eq("estabelecimento_id", estabelecimentoId);
+
+        if (clearError) throw clearError;
+      }
+
+      const { error } = await supabase
+        .from("omnichannel_flows")
+        .update({ is_default: !currentDefault })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success(
+        !currentDefault ? "Definido como fluxo padrão!" : "Removido como fluxo padrão!"
+      );
+      loadFlows();
+    } catch (error) {
+      console.error("Erro ao atualizar fluxo padrão:", error);
+      toast.error("Erro ao definir fluxo padrão");
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
 
@@ -123,6 +153,7 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
               <TableHead>Nome</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Padrão</TableHead>
               <TableHead>Blocos</TableHead>
               <TableHead>Criado em</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -134,8 +165,15 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
               const numBlocos = flowData?.nodes?.length || 0;
               
               return (
-                <TableRow key={flow.id}>
-                  <TableCell className="font-medium">{flow.nome}</TableCell>
+                <TableRow key={flow.id} className={flow.is_default ? "bg-accent/50" : ""}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {flow.nome}
+                      {flow.is_default && (
+                        <Star className="h-4 w-4 text-primary fill-primary" />
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {flow.descricao || "-"}
                   </TableCell>
@@ -143,6 +181,18 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
                     <Badge variant={flow.ativo ? "default" : "secondary"}>
                       {flow.ativo ? "Ativo" : "Inativo"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={flow.is_default || false}
+                        onCheckedChange={() => handleToggleDefault(flow.id, flow.is_default || false)}
+                        disabled={!flow.ativo}
+                      />
+                      {flow.is_default && (
+                        <span className="text-xs text-muted-foreground">Padrão</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">{numBlocos} blocos</span>
@@ -175,6 +225,8 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeleteId(flow.id)}
+                        disabled={flow.is_default}
+                        title={flow.is_default ? "Não é possível excluir o fluxo padrão" : "Excluir"}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

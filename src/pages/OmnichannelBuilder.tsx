@@ -27,7 +27,9 @@ import { FlowAnalytics } from "@/components/omnichannel-builder/FlowAnalytics";
 import { FlowSimulator } from "@/components/omnichannel-builder/FlowSimulator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Star } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -73,6 +75,7 @@ export default function OmnichannelBuilder() {
   const [currentBotId, setCurrentBotId] = useState<string>();
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [isDefault, setIsDefault] = useState(false);
 
   // Carregar fluxo existente
   useEffect(() => {
@@ -97,6 +100,7 @@ export default function OmnichannelBuilder() {
         console.log("✅ Fluxo carregado:", data.nome);
         setFlowName(data.nome);
         setCurrentBotId(data.trigger_bot_id || undefined);
+        setIsDefault(data.is_default || false);
         const flowData = data.flow_data as unknown as OmnichannelFlowData;
         setNodes(flowData.nodes || initialNodes);
         setEdges(flowData.edges || []);
@@ -428,12 +432,26 @@ export default function OmnichannelBuilder() {
       };
 
       if (id) {
+        // Se estamos marcando como padrão, desmarcar os outros primeiro
+        if (isDefault) {
+          const { error: clearError } = await supabase
+            .from("omnichannel_flows")
+            .update({ is_default: false })
+            .eq("estabelecimento_id", estabId)
+            .neq("id", id);
+
+          if (clearError) {
+            console.error("Erro ao limpar outros padrões:", clearError);
+          }
+        }
+
         // Atualizar fluxo existente
         const { error } = await supabase
           .from("omnichannel_flows")
           .update({
             nome: flowName,
             flow_data: flowData as any,
+            is_default: isDefault,
             updated_at: new Date().toISOString(),
           })
           .eq("id", id);
@@ -625,6 +643,20 @@ export default function OmnichannelBuilder() {
                 flowName={flowName}
                 onImport={handleImportFlow}
               />
+
+              {id && (
+                <div className="flex items-center gap-2 px-3 py-1 border rounded-full bg-card/50 backdrop-blur-sm">
+                  <Star className={`h-3 w-3 sm:h-4 sm:w-4 ${isDefault ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
+                  <Label htmlFor="default-switch" className="text-xs cursor-pointer whitespace-nowrap">
+                    Padrão
+                  </Label>
+                  <Switch
+                    id="default-switch"
+                    checked={isDefault}
+                    onCheckedChange={setIsDefault}
+                  />
+                </div>
+              )}
 
               <Button 
                 variant="outline" 

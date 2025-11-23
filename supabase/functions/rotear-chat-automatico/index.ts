@@ -49,6 +49,36 @@ serve(async (req) => {
     console.log(`[Roteamento Omnichannel] Iniciando para conversa ${conversationId}`);
     console.log(`[Roteamento] Canal: ${canal}, Prioridade: ${prioridade || 'normal'}`);
 
+    // === BUSCAR E EXECUTAR WORKFLOW OMNICHANNEL ===
+    const workflowId = await buscarWorkflowAplicavel(supabase, estabelecimentoId, canal, opcaoBot);
+    
+    if (workflowId) {
+      console.log(`[Roteamento] Executando workflow: ${workflowId}`);
+      
+      // Executar o workflow omnichannel
+      const { error: workflowError } = await supabase.functions.invoke('executar-fluxo-omnichannel', {
+        body: {
+          flowId: workflowId,
+          conversationId,
+          customerId,
+          estabelecimentoId,
+          canal
+        }
+      });
+      
+      if (workflowError) {
+        console.error(`[Roteamento] Erro ao executar workflow:`, workflowError);
+        // Continua com roteamento tradicional em caso de erro
+      } else {
+        console.log(`[Roteamento] Workflow executado com sucesso`);
+        return respondWithSuccess({ 
+          message: 'Chat roteado via workflow omnichannel',
+          workflowId,
+          tipo: 'workflow'
+        });
+      }
+    }
+
     // === ETAPA 1: VERIFICAR SE JÁ ESTÁ SENDO ATENDIDO ===
     const { data: conversation } = await supabase
       .from('conversations')
@@ -154,6 +184,68 @@ serve(async (req) => {
 // ============================================
 // FUNÇÕES DE IDENTIFICAÇÃO DE FILA
 // ============================================
+
+async function buscarWorkflowAplicavel(
+  supabase: any,
+  estabelecimentoId: string,
+  canal?: string,
+  opcaoBot?: string
+): Promise<string | null> {
+  
+  try {
+    // 1. Buscar workflow específico baseado em trigger_bot_id ou canal
+    if (opcaoBot) {
+      const { data: botWorkflow } = await supabase
+        .from('omnichannel_flows')
+        .select('id')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('trigger_bot_id', opcaoBot)
+        .eq('ativo', true)
+        .maybeSingle();
+      
+      if (botWorkflow) {
+        console.log(`[Workflow] Encontrado workflow específico para bot: ${botWorkflow.id}`);
+        return botWorkflow.id;
+      }
+    }
+    
+    // 2. Buscar workflow padrão
+    const { data: defaultWorkflow } = await supabase
+      .from('omnichannel_flows')
+      .select('id, nome')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .eq('is_default', true)
+      .eq('ativo', true)
+      .maybeSingle();
+    
+    if (defaultWorkflow) {
+      console.log(`[Workflow] Usando workflow padrão: ${defaultWorkflow.nome} (${defaultWorkflow.id})`);
+      return defaultWorkflow.id;
+    }
+    
+    // 3. Buscar qualquer workflow ativo como fallback
+    const { data: anyWorkflow } = await supabase
+      .from('omnichannel_flows')
+      .select('id, nome')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .eq('ativo', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (anyWorkflow) {
+      console.log(`[Workflow] Usando primeiro workflow ativo: ${anyWorkflow.nome} (${anyWorkflow.id})`);
+      return anyWorkflow.id;
+    }
+    
+    console.log(`[Workflow] Nenhum workflow disponível`);
+    return null;
+    
+  } catch (error) {
+    console.error('[Workflow] Erro ao buscar workflow:', error);
+    return null;
+  }
+}
 
 async function identificarFila(
   supabase: any,

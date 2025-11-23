@@ -52,6 +52,7 @@ export interface OmnichannelFlow {
   descricao?: string;
   flow_data: OmnichannelFlowData;
   ativo: boolean;
+  is_default?: boolean;
   created_at: string;
   updated_at: string;
 }
