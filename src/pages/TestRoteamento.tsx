@@ -827,32 +827,134 @@ export default function TestRoteamento() {
                 {activeSimulation ? (
                   <>
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                      {/* Canvas Visual */}
-                      <div className="xl:col-span-2 border rounded-lg overflow-hidden bg-background shadow-lg h-[700px]">
-                        <FlowSimulationCanvas
-                          simulation={activeSimulation}
-                          bots={bots || []}
-                          fluxos={fluxos || []}
-                          onBotMessage={(message) => {
-                            addMessageToChat(activeSimulation.id, {
-                              id: `bot-${Date.now()}`,
-                              sender: 'bot',
-                              text: message,
-                              timestamp: new Date(),
-                            });
-                          }}
-                          onReset={() => {
-                            // Limpar mensagens do chat ao resetar
-                            setSimulations(prev => prev.map(sim => 
-                              sim.id === activeSimulation.id 
-                                ? { ...sim, chatMessages: [] }
-                                : sim
-                            ));
-                          }}
-                        />
+                      {/* Coluna Esquerda - Simuladores */}
+                      <div className="xl:col-span-2 space-y-6">
+                        {/* Canvas Visual - Bot Flow */}
+                        <div className="border rounded-lg overflow-hidden bg-background shadow-lg h-[700px]">
+                          <FlowSimulationCanvas
+                            simulation={activeSimulation}
+                            bots={bots || []}
+                            fluxos={fluxos || []}
+                            onBotMessage={(message) => {
+                              addMessageToChat(activeSimulation.id, {
+                                id: `bot-${Date.now()}`,
+                                sender: 'bot',
+                                text: message,
+                                timestamp: new Date(),
+                              });
+                            }}
+                            onReset={() => {
+                              // Limpar mensagens do chat ao resetar
+                              setSimulations(prev => prev.map(sim => 
+                                sim.id === activeSimulation.id 
+                                  ? { ...sim, chatMessages: [] }
+                                  : sim
+                              ));
+                            }}
+                          />
+                        </div>
+
+                        {/* Workflow Omnichannel */}
+                        {activeSimulation.config.fluxoId && (
+                          <>
+                            <Card className="p-0 h-[700px] shadow-lg overflow-hidden">
+                              <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+                                <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                                  <Network className="w-5 h-5 text-cyan-600" />
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold">Workflow Omnichannel</h3>
+                                  <p className="text-xs text-muted-foreground">
+                                    {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome || 'Visualização do fluxo'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="h-[calc(100%-73px)]">
+                                <OmnichannelWorkflowViewer
+                                  fluxoId={activeSimulation.config.fluxoId}
+                                  fluxos={fluxos || []}
+                                />
+                              </div>
+                            </Card>
+
+                            {/* Resultado do Roteamento */}
+                            <Card className="p-6 shadow-lg">
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold">Resultado do Roteamento</h3>
+                                  <p className="text-xs text-muted-foreground">
+                                    Informações sobre o direcionamento
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Fila */}
+                                <div className="p-4 rounded-lg border bg-muted/30">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Users className="w-4 h-4 text-primary" />
+                                    <span className="text-sm font-medium">Fila de Atendimento</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Fila Geral
+                                  </p>
+                                  <Badge variant="secondary" className="mt-2">
+                                    Prioridade: Normal
+                                  </Badge>
+                                </div>
+
+                                {/* Atendente */}
+                                <div className="p-4 rounded-lg border bg-muted/30">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <UserCog className="w-4 h-4 text-primary" />
+                                    <span className="text-sm font-medium">Atendente Designado</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    João Silva
+                                  </p>
+                                  <Badge variant="default" className="mt-2">
+                                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                                    Disponível
+                                  </Badge>
+                                </div>
+
+                                {/* Status */}
+                                <div className="p-4 rounded-lg border bg-muted/30">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Activity className="w-4 h-4 text-primary" />
+                                    <span className="text-sm font-medium">Status do Chat</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Em Atendimento
+                                  </p>
+                                  <Badge variant="default" className="mt-2 bg-green-600">
+                                    Ativo
+                                  </Badge>
+                                </div>
+
+                                {/* Tempo */}
+                                <div className="p-4 rounded-lg border bg-muted/30">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Clock className="w-4 h-4 text-primary" />
+                                    <span className="text-sm font-medium">Tempo de Resposta</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    2 minutos
+                                  </p>
+                                  <Badge variant="secondary" className="mt-2">
+                                    SLA: OK
+                                  </Badge>
+                                </div>
+                              </div>
+                            </Card>
+                          </>
+                        )}
                       </div>
 
-                      {/* Chat Interativo */}
+                      {/* Coluna Direita - Chat Interativo */}
                       <Card className="p-0 flex flex-col h-[700px] shadow-lg overflow-hidden">
                         <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
                           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -940,29 +1042,6 @@ export default function TestRoteamento() {
                         </div>
                       </Card>
                     </div>
-
-                    {/* Workflow Omnichannel */}
-                    {activeSimulation.config.fluxoId && (
-                      <Card className="p-0 h-[700px] shadow-lg overflow-hidden">
-                        <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
-                          <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                            <Network className="w-5 h-5 text-cyan-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">Workflow Omnichannel</h3>
-                            <p className="text-xs text-muted-foreground">
-                              {fluxos?.find(f => f.id === activeSimulation.config.fluxoId)?.nome || 'Visualização do fluxo'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="h-[calc(100%-73px)]">
-                          <OmnichannelWorkflowViewer
-                            fluxoId={activeSimulation.config.fluxoId}
-                            fluxos={fluxos || []}
-                          />
-                        </div>
-                      </Card>
-                    )}
                   </>
                 ) : (
                   <Card className="p-12 text-center">
