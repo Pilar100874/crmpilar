@@ -17,8 +17,13 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
   const [workflows, setWorkflows] = useState<any[]>([]);
 
   useEffect(() => {
+    console.log("🔄 [TransferirOmnichannelConfig] Montado com config:", config);
     loadWorkflows();
   }, []);
+
+  useEffect(() => {
+    console.log("📝 [TransferirOmnichannelConfig] Config atualizado:", config);
+  }, [config]);
 
   const loadWorkflows = async () => {
     try {
@@ -27,11 +32,34 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
         .from("omnichannel_flows")
         .select("*")
         .eq("estabelecimento_id", estabId)
-        .eq("ativo", true);
+        .eq("ativo", true)
+        .order("nome");
+      
+      console.log("✅ [TransferirOmnichannelConfig] Workflows carregados:", data?.length);
       setWorkflows(data || []);
     } catch (error) {
-      console.error("Erro ao carregar workflows:", error);
+      console.error("❌ [TransferirOmnichannelConfig] Erro ao carregar workflows:", error);
     }
+  };
+
+  const handleWorkflowChange = (value: string) => {
+    console.log("🎯 [TransferirOmnichannelConfig] Selecionando workflow:", value);
+    const workflow = workflows.find(w => w.id === value);
+    
+    console.log("📦 [TransferirOmnichannelConfig] Workflow encontrado:", workflow);
+    
+    // Salvar o ID do workflow
+    handleConfigChange('workflowId', value);
+    
+    // Salvar também o nome para exibição
+    if (workflow) {
+      handleConfigChange('workflowNome', workflow.nome);
+    }
+    
+    console.log("✅ [TransferirOmnichannelConfig] handleConfigChange chamado com:", {
+      workflowId: value,
+      workflowNome: workflow?.nome
+    });
   };
 
   return (
@@ -40,28 +68,36 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
         <Label>Workflow Omnichannel *</Label>
         <Select
           value={config.workflowId || ''}
-          onValueChange={(value) => {
-            const workflow = workflows.find(w => w.id === value);
-            handleConfigChange('workflowId', value);
-            if (workflow) {
-              handleConfigChange('workflowNome', workflow.nome);
-            }
-          }}
+          onValueChange={handleWorkflowChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o workflow" />
           </SelectTrigger>
           <SelectContent>
-            {workflows.map((workflow) => (
-              <SelectItem key={workflow.id} value={workflow.id}>
-                <div className="flex items-center gap-2">
-                  <Database className="h-3 w-3" />
-                  {workflow.nome}
-                </div>
-              </SelectItem>
-            ))}
+            {workflows.length === 0 ? (
+              <div className="p-2 text-sm text-muted-foreground text-center">
+                Nenhum workflow ativo encontrado
+              </div>
+            ) : (
+              workflows.map((workflow) => (
+                <SelectItem key={workflow.id} value={workflow.id}>
+                  <div className="flex items-center gap-2">
+                    <Database className="h-3 w-3" />
+                    {workflow.nome}
+                    {workflow.is_default && (
+                      <span className="text-xs text-primary">(Padrão)</span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
+        {config.workflowId && config.workflowNome && (
+          <p className="text-xs text-muted-foreground">
+            Selecionado: <strong>{config.workflowNome}</strong>
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">
           Escolha o workflow omnichannel que será acionado
         </p>
@@ -71,7 +107,10 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
         <Label>Passar Contexto do Chat</Label>
         <Switch
           checked={config.contextoChat !== false}
-          onCheckedChange={(checked) => handleConfigChange('contextoChat', checked)}
+          onCheckedChange={(checked) => {
+            console.log("🔄 [TransferirOmnichannelConfig] Alterando contextoChat:", checked);
+            handleConfigChange('contextoChat', checked);
+          }}
         />
       </div>
       <p className="text-xs text-muted-foreground">
