@@ -125,7 +125,6 @@ export default function FlowSimulationCanvas({
     isComplete: false,
     currentStep: 0,
   });
-  const [executionHistory, setExecutionHistory] = useState<any[]>([]);
 
   // Determinar flow data e tipo
   const bot = bots.find(b => b.id === simulation.config.botId);
@@ -156,7 +155,6 @@ export default function FlowSimulationCanvas({
       isComplete: false,
       currentStep: 0,
     });
-    setExecutionHistory([]);
     
     if (flowData?.nodes && Array.isArray(flowData.nodes)) {
       console.log('✅ Flow data válido com', flowData.nodes.length, 'nodes');
@@ -230,17 +228,6 @@ export default function FlowSimulationCanvas({
     }
 
     console.log('▶️ Executando node:', currentNode.id, currentNode.data.label);
-
-    // Registrar execução
-    const executionData = {
-      nodeId: currentNode.id,
-      label: currentNode.data.label,
-      type: currentNode.data.type,
-      timestamp: new Date(),
-      variables: { ...executionState.variables },
-    };
-    
-    setExecutionHistory(prev => [...prev, executionData]);
 
     // Atualizar variáveis baseado no tipo de bloco
     const newVariables = { ...executionState.variables };
@@ -345,20 +332,18 @@ export default function FlowSimulationCanvas({
     }
   }, [executionState, nodes, edges]);
 
-  // Retroceder um passo
   const executePreviousStep = useCallback(() => {
     if (executionState.currentStep === 0) {
       console.log('⏮️ Já está no início');
       return;
     }
 
-    // Remover último item do histórico
-    const newHistory = executionHistory.slice(0, -1);
-    setExecutionHistory(newHistory);
-
-    // Encontrar o node anterior
-    const previousExecution = newHistory[newHistory.length - 1];
-    const previousNodeId = previousExecution?.nodeId || null;
+    // Encontrar edge reversa
+    const currentNode = nodes.find(n => n.id === executionState.currentNodeId);
+    const incomingEdge = edges.find(e => e.target === currentNode?.id);
+    const previousNode = incomingEdge 
+      ? nodes.find(n => n.id === incomingEdge.source)
+      : null;
 
     // Remover o node atual dos executados
     const newExecutedNodes = new Set(executionState.executedNodes);
@@ -366,22 +351,17 @@ export default function FlowSimulationCanvas({
       newExecutedNodes.delete(executionState.currentNodeId);
     }
 
-    // Restaurar variáveis do passo anterior
-    const previousVariables = previousExecution?.variables || {};
-
     setExecutionState(prev => ({
       ...prev,
-      currentNodeId: previousNodeId,
+      currentNodeId: previousNode?.id || null,
       executedNodes: newExecutedNodes,
-      variables: previousVariables,
       isComplete: false,
       currentStep: Math.max(0, prev.currentStep - 1),
     }));
 
-    console.log('⏮️ Retrocedeu para:', previousNodeId);
-  }, [executionState, executionHistory]);
+    console.log('⏮️ Retrocedeu para:', previousNode?.id);
+  }, [executionState, nodes, edges]);
 
-  // Resetar simulação
   const resetSimulation = () => {
     console.log('🔄 Resetando simulação');
     setExecutionState({
@@ -392,7 +372,6 @@ export default function FlowSimulationCanvas({
       isComplete: false,
       currentStep: 0,
     });
-    setExecutionHistory([]);
     
     // Notificar componente pai para limpar o chat
     if (onReset) {
@@ -499,31 +478,6 @@ export default function FlowSimulationCanvas({
             </div>
           )}
         </div>
-
-        {/* Histórico de execução */}
-        {executionHistory.length > 0 && (
-          <Card className="m-4 p-3">
-            <h4 className="font-semibold text-sm mb-2">Histórico de Execução</h4>
-            <ScrollArea className="h-[120px]">
-              <div className="space-y-1 pr-3">
-                {executionHistory.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 text-xs p-2 rounded bg-muted/50"
-                  >
-                    <Badge variant="outline" className="text-xs">
-                      #{idx + 1}
-                    </Badge>
-                    <span className="flex-1 font-medium">{item.label || item.type}</span>
-                    <span className="text-muted-foreground">
-                      {item.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </Card>
-        )}
       </div>
 
       {/* Painel lateral de variáveis à direita */}
