@@ -55,6 +55,13 @@ interface Simulation {
   };
   chatMessages: ChatMessage[];
   executionTrace: any[];
+  routedTo?: {
+    type: 'fila' | 'atendente';
+    filaId?: string;
+    atendenteId?: string;
+    filaNome?: string;
+    atendenteNome?: string;
+  };
 }
 
 export default function TestRoteamento() {
@@ -804,7 +811,52 @@ export default function TestRoteamento() {
                                     }
                                   : sim
                               ));
-                              toast.success('Transferido para workflow omnichannel!');
+                              
+                              // Simular roteamento baseado no workflow
+                              const workflow = fluxos?.find(f => f.id === workflowId);
+                              if (workflow?.flow_data) {
+                                const flowData = typeof workflow.flow_data === 'string' 
+                                  ? JSON.parse(workflow.flow_data) 
+                                  : workflow.flow_data;
+                                
+                                // Procurar blocos de fila ou atendente no workflow
+                                const filaNode = flowData.nodes?.find((n: any) => n.data?.type === 'fila');
+                                const atendenteNode = flowData.nodes?.find((n: any) => n.data?.type === 'atendente');
+                                
+                                if (filaNode?.data?.config?.filaId) {
+                                  const fila = filas?.find(f => f.id === filaNode.data.config.filaId);
+                                  setSimulations(prev => prev.map(sim => 
+                                    sim.id === activeSimulation.id 
+                                      ? { 
+                                          ...sim,
+                                          routedTo: {
+                                            type: 'fila',
+                                            filaId: filaNode.data.config.filaId,
+                                            filaNome: fila?.nome || 'Fila desconhecida'
+                                          }
+                                        }
+                                      : sim
+                                  ));
+                                  toast.success(`Roteado para fila: ${fila?.nome || 'Fila'}`);
+                                } else if (atendenteNode?.data?.config?.atendenteId) {
+                                  const atendente = atendentes?.find(a => a.id === atendenteNode.data.config.atendenteId);
+                                  setSimulations(prev => prev.map(sim => 
+                                    sim.id === activeSimulation.id 
+                                      ? { 
+                                          ...sim,
+                                          routedTo: {
+                                            type: 'atendente',
+                                            atendenteId: atendenteNode.data.config.atendenteId,
+                                            atendenteNome: atendente?.usuarios?.nome || 'Atendente desconhecido'
+                                          }
+                                        }
+                                      : sim
+                                  ));
+                                  toast.success(`Roteado para atendente: ${atendente?.usuarios?.nome || 'Atendente'}`);
+                                } else {
+                                  toast.info('Workflow transferido, mas nenhum destino específico foi configurado');
+                                }
+                              }
                             }}
                           />
                         </div>
@@ -947,10 +999,44 @@ export default function TestRoteamento() {
                           <h3 className="font-semibold">Filas Disponíveis</h3>
                           <p className="text-xs text-muted-foreground">
                             {filas?.length || 0} fila(s) configurada(s)
+                            {activeSimulation?.routedTo && (
+                              <span className="ml-2 font-semibold text-primary">
+                                • Roteado: {activeSimulation.routedTo.type === 'fila' 
+                                  ? activeSimulation.routedTo.filaNome 
+                                  : activeSimulation.routedTo.atendenteNome}
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
                       <ScrollArea className="h-[400px] p-4">
+                        {/* Exibir destino do roteamento */}
+                        {activeSimulation?.routedTo && (
+                          <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-2 border-green-500/30">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-sm text-green-700 dark:text-green-400">
+                                  Chat Roteado
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  {activeSimulation.routedTo.type === 'fila' 
+                                    ? 'Direcionado para fila' 
+                                    : 'Direcionado para atendente'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="pl-[52px]">
+                              <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30">
+                                {activeSimulation.routedTo.type === 'fila' 
+                                  ? `📋 ${activeSimulation.routedTo.filaNome}` 
+                                  : `👤 ${activeSimulation.routedTo.atendenteNome}`}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
                         {filas && filas.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filas.map((fila) => (
