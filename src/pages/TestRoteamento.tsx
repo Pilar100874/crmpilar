@@ -66,8 +66,8 @@ interface Simulation {
   endTime?: Date;
   config: {
     canal: string;
-    bot?: string;
-    fluxo?: string;
+    botId?: string;
+    fluxoId?: string;
     cliente?: string;
   };
   chatMessages: ChatMessage[];
@@ -344,7 +344,7 @@ export default function TestRoteamento() {
   const simulateRoutingForSimulation = async (simulationId: string, config: Simulation['config']) => {
     console.log('🚀 Iniciando simulação:', simulationId, 'Config:', config);
     
-    const { canal, bot, fluxo, cliente } = config;
+    const { canal, botId, fluxoId, cliente } = config;
     
     let contextVariables: Record<string, any> = {
       canal,
@@ -381,7 +381,7 @@ export default function TestRoteamento() {
       decision: {
         action: "Iniciar fluxo de atendimento",
         reason: "Cliente conectado com sucesso",
-        nextBlock: bot ? "bot-processing" : (fluxo ? "workflow-processing" : "fila")
+        nextBlock: botId ? "bot-processing" : (fluxoId ? "workflow-processing" : "fila")
       },
       duration: Date.now() - startTime
     });
@@ -394,8 +394,8 @@ export default function TestRoteamento() {
     });
 
     // Processar Bot (se selecionado)
-    if (bot) {
-      const botData = bots?.find(b => b.id === bot);
+    if (botId) {
+      const botData = bots?.find(b => b.id === botId);
       if (botData) {
         await new Promise(resolve => setTimeout(resolve, 600));
         
@@ -406,7 +406,7 @@ export default function TestRoteamento() {
           timestamp: new Date()
         });
 
-        contextVariables.bot_id = bot;
+        contextVariables.bot_id = botId;
         contextVariables.bot_name = botData.name;
 
         const botFlowData = botData.flow_data as any;
@@ -473,8 +473,8 @@ export default function TestRoteamento() {
     }
 
     // Processar Workflow Omnichannel (se selecionado)
-    if (fluxo) {
-      const fluxoData = fluxos?.find(f => f.id === fluxo);
+    if (fluxoId) {
+      const fluxoData = fluxos?.find(f => f.id === fluxoId);
       if (fluxoData) {
         await new Promise(resolve => setTimeout(resolve, 600));
         
@@ -485,7 +485,7 @@ export default function TestRoteamento() {
           timestamp: new Date()
         });
 
-        contextVariables.workflow_id = fluxo;
+        contextVariables.workflow_id = fluxoId;
         contextVariables.workflow_name = fluxoData.nome;
 
         const fluxoFlowData = fluxoData.flow_data as any;
@@ -878,16 +878,36 @@ export default function TestRoteamento() {
 
         {/* Simulações & Resultados */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Lista de Simulações */}
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Simulações Ativas</h2>
-              <Badge variant="secondary">
-                {simulations.filter(s => s.status === "running").length} em execução
-              </Badge>
-            </div>
+            <Tabs defaultValue="visual" className="w-full">
+              <div className="flex items-center justify-between mb-4">
+                <TabsList>
+                  <TabsTrigger value="visual">Simulação Visual</TabsTrigger>
+                  <TabsTrigger value="lista">Lista de Simulações</TabsTrigger>
+                </TabsList>
+                <Badge variant="secondary">
+                  {simulations.filter(s => s.status === "running").length} em execução
+                </Badge>
+              </div>
 
-            {simulations.length === 0 ? (
+              <TabsContent value="visual" className="mt-0">
+                {simulations.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Play className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p>Nenhuma simulação criada ainda</p>
+                    <p className="text-sm mt-1">Configure os parâmetros e inicie uma simulação</p>
+                  </div>
+                ) : (
+                  <FlowSimulationCanvas
+                    simulation={simulations[simulations.length - 1]}
+                    bots={bots || []}
+                    fluxos={fluxos || []}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="lista" className="mt-0">
+                {simulations.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Play className="w-12 h-12 mx-auto mb-4 opacity-20" />
                 <p>Nenhuma simulação criada ainda</p>
@@ -1151,6 +1171,8 @@ export default function TestRoteamento() {
                 </div>
               </ScrollArea>
             )}
+              </TabsContent>
+            </Tabs>
           </Card>
         </div>
 

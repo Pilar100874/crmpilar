@@ -17,10 +17,24 @@ import { Badge } from '@/components/ui/badge';
 import { Play, Pause, RotateCcw, SkipForward, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+interface Simulation {
+  id: string;
+  name: string;
+  status: "running" | "completed" | "error";
+  startTime: Date;
+  endTime?: Date;
+  config: {
+    canal: string;
+    botId?: string;
+    fluxoId?: string;
+    cliente?: string;
+  };
+}
+
 interface FlowSimulationCanvasProps {
-  flowData: any;
-  flowType: 'bot' | 'workflow';
-  onStepExecute?: (nodeId: string, data: any) => void;
+  simulation: Simulation;
+  bots: any[];
+  fluxos: any[];
 }
 
 interface ExecutionState {
@@ -73,9 +87,9 @@ const nodeTypes: NodeTypes = {
 };
 
 export default function FlowSimulationCanvas({
-  flowData,
-  flowType,
-  onStepExecute,
+  simulation,
+  bots,
+  fluxos,
 }: FlowSimulationCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -87,6 +101,12 @@ export default function FlowSimulationCanvas({
     isComplete: false,
   });
   const [executionHistory, setExecutionHistory] = useState<any[]>([]);
+
+  // Determinar flow data e tipo
+  const bot = bots.find(b => b.id === simulation.config.botId);
+  const fluxo = fluxos.find(f => f.id === simulation.config.fluxoId);
+  const flowData = bot?.flow_data || fluxo?.flow_data;
+  const flowType = bot ? 'bot' : 'workflow';
 
   // Carregar fluxo inicial
   useEffect(() => {
@@ -169,11 +189,6 @@ export default function FlowSimulationCanvas({
     // Adicionar ao histórico
     setExecutionHistory(prev => [...prev, executionData]);
 
-    // Notificar execução
-    if (onStepExecute) {
-      onStepExecute(currentNode.id, executionData);
-    }
-
     // Atualizar variáveis baseado no tipo de bloco
     const newVariables = { ...executionState.variables };
     if (currentNode.data?.config) {
@@ -199,7 +214,7 @@ export default function FlowSimulationCanvas({
     if (nextNode && !executionState.isPaused) {
       setTimeout(() => executeNextStep(), 800);
     }
-  }, [executionState, nodes, edges, onStepExecute]);
+  }, [executionState, nodes, edges]);
 
   // Resetar simulação
   const resetSimulation = () => {
