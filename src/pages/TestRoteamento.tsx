@@ -723,7 +723,7 @@ export default function TestRoteamento() {
                   <>
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                       {/* Canvas Visual */}
-                      <div className="xl:col-span-2 border rounded-lg overflow-hidden bg-background shadow-lg">
+                      <div className="xl:col-span-2 border rounded-lg overflow-hidden bg-background shadow-lg h-[700px]">
                         <FlowSimulationCanvas
                           simulation={activeSimulation}
                           bots={bots || []}
@@ -812,7 +812,7 @@ export default function TestRoteamento() {
 
                     {/* Workflow Omnichannel */}
                     {activeSimulation.config.fluxoId && (
-                      <Card className="p-0 h-[450px] shadow-lg overflow-hidden">
+                      <Card className="p-0 h-[700px] shadow-lg overflow-hidden">
                         <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
                           <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
                             <Network className="w-5 h-5 text-cyan-600" />

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -13,6 +13,10 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Network } from 'lucide-react';
+import VariableMonitor from './VariableMonitor';
 
 interface OmnichannelWorkflowViewerProps {
   fluxoId: string;
@@ -50,6 +54,7 @@ export default function OmnichannelWorkflowViewer({
 }: OmnichannelWorkflowViewerProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [workflowVariables, setWorkflowVariables] = useState<Record<string, any>>({});
 
   useEffect(() => {
     console.log('🔄 Atualizando workflow para fluxoId:', fluxoId);
@@ -71,13 +76,27 @@ export default function OmnichannelWorkflowViewer({
         
         const workflowEdges = flowData.edges || [];
         
+        // Extrair variáveis do workflow
+        const variables: Record<string, any> = {};
+        workflowNodes.forEach((node: any) => {
+          if (node.data?.config) {
+            Object.entries(node.data.config).forEach(([key, value]) => {
+              if (key && value !== undefined) {
+                variables[`${node.data.label || node.id}_${key}`] = value;
+              }
+            });
+          }
+        });
+        
         setNodes(workflowNodes);
         setEdges(workflowEdges);
+        setWorkflowVariables(variables);
       }
     } else {
       console.warn('⚠️ Nenhum workflow encontrado para:', fluxoId);
       setNodes([]);
       setEdges([]);
+      setWorkflowVariables({});
     }
   }, [fluxoId, fluxos, setNodes, setEdges]);
 
@@ -90,28 +109,56 @@ export default function OmnichannelWorkflowViewer({
   }
 
   return (
-    <div className="h-full bg-muted/10">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.1}
-        maxZoom={1.5}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-        <Controls showInteractive={false} />
-        <MiniMap
-          nodeColor="#06b6d4"
-          className="bg-background border border-border"
+    <div className="flex h-full gap-4">
+      {/* Painel lateral de variáveis */}
+      <div className="w-80 flex-shrink-0">
+        <VariableMonitor 
+          variables={workflowVariables} 
+          title="Configurações do Workflow"
         />
-      </ReactFlow>
+      </div>
+
+      {/* Visualização do workflow */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <Card className="p-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Network className="w-4 h-4 text-cyan-500" />
+            <h3 className="font-semibold text-sm">Workflow Omnichannel</h3>
+            <Badge variant="secondary" className="ml-auto">
+              {nodes.length} blocos
+            </Badge>
+          </div>
+        </Card>
+
+        <div className="flex-1 bg-muted/10 rounded-lg overflow-hidden">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.2 }}
+            minZoom={0.1}
+            maxZoom={1.5}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            defaultEdgeOptions={{
+              style: { strokeWidth: 2, stroke: '#06b6d4' },
+              type: 'smoothstep',
+              animated: true,
+            }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+            <Controls showInteractive={false} />
+            <MiniMap
+              nodeColor="#06b6d4"
+              className="bg-background border border-border"
+            />
+          </ReactFlow>
+        </div>
+      </div>
     </div>
   );
 }
