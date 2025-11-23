@@ -42,20 +42,13 @@ export function EstabelecimentoSelector({ open, onSelectEstabelecimento, onClose
 
   const fetchEstabelecimentos = async () => {
     setIsLoading(true);
-    console.log("Buscando estabelecimentos...");
-    
     const { data, error } = await supabase
       .from("estabelecimentos")
       .select("id, nome, cnpj")
       .order("nome");
 
-    console.log("Estabelecimentos retornados:", data);
-    console.log("Erro (se houver):", error);
-
     if (!error && data) {
       setEstabelecimentos(data);
-    } else if (error) {
-      console.error("Erro ao buscar estabelecimentos:", error);
     }
     setIsLoading(false);
   };
