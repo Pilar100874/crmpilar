@@ -1903,6 +1903,332 @@ export type Database = {
           },
         ]
       }
+      kb_anexos: {
+        Row: {
+          artigo_id: string
+          created_at: string | null
+          id: string
+          nome: string
+          tamanho: number | null
+          tipo: string | null
+          url: string
+        }
+        Insert: {
+          artigo_id: string
+          created_at?: string | null
+          id?: string
+          nome: string
+          tamanho?: number | null
+          tipo?: string | null
+          url: string
+        }
+        Update: {
+          artigo_id?: string
+          created_at?: string | null
+          id?: string
+          nome?: string
+          tamanho?: number | null
+          tipo?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_anexos_artigo_id_fkey"
+            columns: ["artigo_id"]
+            isOneToOne: false
+            referencedRelation: "kb_artigos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_artigo_tags: {
+        Row: {
+          artigo_id: string
+          created_at: string | null
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          artigo_id: string
+          created_at?: string | null
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          artigo_id?: string
+          created_at?: string | null
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_artigo_tags_artigo_id_fkey"
+            columns: ["artigo_id"]
+            isOneToOne: false
+            referencedRelation: "kb_artigos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_artigo_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "kb_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_artigos: {
+        Row: {
+          autor_id: string | null
+          categoria_id: string | null
+          conteudo: string
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          nao_util_count: number | null
+          ordem: number | null
+          palavras_chave: string[] | null
+          publicado_em: string | null
+          publico: boolean | null
+          resumo: string | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+          util_count: number | null
+          visualizacoes: number | null
+        }
+        Insert: {
+          autor_id?: string | null
+          categoria_id?: string | null
+          conteudo: string
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          nao_util_count?: number | null
+          ordem?: number | null
+          palavras_chave?: string[] | null
+          publicado_em?: string | null
+          publico?: boolean | null
+          resumo?: string | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+          util_count?: number | null
+          visualizacoes?: number | null
+        }
+        Update: {
+          autor_id?: string | null
+          categoria_id?: string | null
+          conteudo?: string
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nao_util_count?: number | null
+          ordem?: number | null
+          palavras_chave?: string[] | null
+          publicado_em?: string | null
+          publico?: boolean | null
+          resumo?: string | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+          util_count?: number | null
+          visualizacoes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_artigos_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_artigos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "kb_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_artigos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_artigos_relacionados: {
+        Row: {
+          artigo_id: string
+          artigo_relacionado_id: string
+          created_at: string | null
+          id: string
+          ordem: number | null
+        }
+        Insert: {
+          artigo_id: string
+          artigo_relacionado_id: string
+          created_at?: string | null
+          id?: string
+          ordem?: number | null
+        }
+        Update: {
+          artigo_id?: string
+          artigo_relacionado_id?: string
+          created_at?: string | null
+          id?: string
+          ordem?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_artigos_relacionados_artigo_id_fkey"
+            columns: ["artigo_id"]
+            isOneToOne: false
+            referencedRelation: "kb_artigos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_artigos_relacionados_artigo_relacionado_id_fkey"
+            columns: ["artigo_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "kb_artigos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_categorias: {
+        Row: {
+          ativa: boolean | null
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativa?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativa?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_categorias_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_feedback: {
+        Row: {
+          artigo_id: string
+          comentario: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          usuario_id: string | null
+          util: boolean
+        }
+        Insert: {
+          artigo_id: string
+          comentario?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          usuario_id?: string | null
+          util: boolean
+        }
+        Update: {
+          artigo_id?: string
+          comentario?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          usuario_id?: string | null
+          util?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_feedback_artigo_id_fkey"
+            columns: ["artigo_id"]
+            isOneToOne: false
+            referencedRelation: "kb_artigos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_feedback_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_feedback_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_tags: {
+        Row: {
+          cor: string | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          cor?: string | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          cor?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_tags_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_automations: {
         Row: {
           active: boolean
