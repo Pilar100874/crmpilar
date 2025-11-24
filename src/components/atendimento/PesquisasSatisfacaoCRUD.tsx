@@ -322,8 +322,8 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="csat">CSAT - Satisfação do Cliente</SelectItem>
-                    <SelectItem value="nps">NPS - Net Promoter Score</SelectItem>
-                    <SelectItem value="ces">CES - Customer Effort Score</SelectItem>
+                    <SelectItem value="nps">NPS - Pontuação de Indicação</SelectItem>
+                    <SelectItem value="ces">CES - Pontuação de Esforço do Cliente</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
