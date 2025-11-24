@@ -51,6 +51,7 @@ import Perfil from "./pages/Perfil";
 import TestRoteamento from "./pages/TestRoteamento";
 import SLADashboardPage from "./pages/SLADashboard";
 import AdvancedAnalyticsPage from "./pages/AdvancedAnalytics";
+import PesquisasSatisfacaoPage from "./pages/PesquisasSatisfacao";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +117,7 @@ const App = () => (
             <Route path="/test-roteamento" element={<TestRoteamento />} />
             <Route path="/sla-dashboard" element={<SLADashboardPage />} />
             <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
+            <Route path="/pesquisas-satisfacao" element={<PesquisasSatisfacaoPage />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
           </Route>

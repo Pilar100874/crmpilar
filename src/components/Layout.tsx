@@ -88,6 +88,7 @@ const menuItems: MenuItem[] = [
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
       { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: Activity },
       { id: "Analytics Dashboard", title: "Analytics Avançado", url: "/advanced-analytics", icon: FileBarChart },
+      { id: "CSAT/NPS", title: "Pesquisas de Satisfação", url: "/pesquisas-satisfacao", icon: Star },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
     ]
   },

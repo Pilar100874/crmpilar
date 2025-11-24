@@ -2709,6 +2709,167 @@ export type Database = {
           },
         ]
       }
+      pesquisas_respostas: {
+        Row: {
+          atendente_id: string | null
+          canal: string
+          classificacao: string | null
+          comentario: string | null
+          conversation_id: string
+          created_at: string
+          customer_id: string
+          enviada_em: string
+          fila_id: string | null
+          id: string
+          nota: number
+          pesquisa_id: string
+          respondida_em: string | null
+          tempo_resposta_segundos: number | null
+        }
+        Insert: {
+          atendente_id?: string | null
+          canal: string
+          classificacao?: string | null
+          comentario?: string | null
+          conversation_id: string
+          created_at?: string
+          customer_id: string
+          enviada_em?: string
+          fila_id?: string | null
+          id?: string
+          nota: number
+          pesquisa_id: string
+          respondida_em?: string | null
+          tempo_resposta_segundos?: number | null
+        }
+        Update: {
+          atendente_id?: string | null
+          canal?: string
+          classificacao?: string | null
+          comentario?: string | null
+          conversation_id?: string
+          created_at?: string
+          customer_id?: string
+          enviada_em?: string
+          fila_id?: string | null
+          id?: string
+          nota?: number
+          pesquisa_id?: string
+          respondida_em?: string | null
+          tempo_resposta_segundos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pesquisas_respostas_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pesquisas_respostas_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pesquisas_respostas_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pesquisas_respostas_fila_id_fkey"
+            columns: ["fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pesquisas_respostas_pesquisa_id_fkey"
+            columns: ["pesquisa_id"]
+            isOneToOne: false
+            referencedRelation: "pesquisas_satisfacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pesquisas_satisfacao: {
+        Row: {
+          aplica_atendentes: string[] | null
+          aplica_filas: string[] | null
+          ativa: boolean
+          canais: string[]
+          created_at: string
+          escala_maxima: number
+          escala_minima: number
+          estabelecimento_id: string
+          id: string
+          label_maxima: string | null
+          label_minima: string | null
+          nome: string
+          pergunta_comentario: string | null
+          pergunta_principal: string
+          permite_comentario: boolean
+          tipo: string
+          trigger_delay_minutos: number | null
+          trigger_tipo: string
+          updated_at: string
+        }
+        Insert: {
+          aplica_atendentes?: string[] | null
+          aplica_filas?: string[] | null
+          ativa?: boolean
+          canais?: string[]
+          created_at?: string
+          escala_maxima?: number
+          escala_minima?: number
+          estabelecimento_id: string
+          id?: string
+          label_maxima?: string | null
+          label_minima?: string | null
+          nome: string
+          pergunta_comentario?: string | null
+          pergunta_principal: string
+          permite_comentario?: boolean
+          tipo: string
+          trigger_delay_minutos?: number | null
+          trigger_tipo: string
+          updated_at?: string
+        }
+        Update: {
+          aplica_atendentes?: string[] | null
+          aplica_filas?: string[] | null
+          ativa?: boolean
+          canais?: string[]
+          created_at?: string
+          escala_maxima?: number
+          escala_minima?: number
+          estabelecimento_id?: string
+          id?: string
+          label_maxima?: string | null
+          label_minima?: string | null
+          nome?: string
+          pergunta_comentario?: string | null
+          pergunta_principal?: string
+          permite_comentario?: boolean
+          tipo?: string
+          trigger_delay_minutos?: number | null
+          trigger_tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pesquisas_satisfacao_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produto_categorias: {
         Row: {
           created_at: string | null
