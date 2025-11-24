@@ -10,6 +10,7 @@ export const MENU_CONFIG = [
   { id: "Dashboard Supervisor", label: "Dashboard Supervisor" },
   { id: "SLA Dashboard", label: "Dashboard SLA" },
   { id: "Analytics Dashboard", label: "Analytics Avançado" },
+  { id: "CSAT/NPS", label: "Pesquisas de Satisfação" },
   { id: "Campanhas", label: "Calendário" },
   { id: "Orçamentos", label: "Orçamentos" },
   { id: "Conteúdos", label: "Listas" },
