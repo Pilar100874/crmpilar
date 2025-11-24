@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
-import FlowSimulationCanvas from "@/components/routing/FlowSimulationCanvas";
+import FlowSimulationCanvas, { FlowSimulationCanvasRef } from "@/components/routing/FlowSimulationCanvas";
 import OmnichannelWorkflowViewer from "@/components/routing/OmnichannelWorkflowViewer";
 
 interface ChatMessage {
@@ -76,6 +76,7 @@ export default function TestRoteamento() {
   const [chatInput, setChatInput] = useState<string>("");
   const [atendentesExpanded, setAtendentesExpanded] = useState(true);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const flowSimulationRef = useRef<FlowSimulationCanvasRef>(null);
   
   const activeSimulation = simulations.find(s => s.id === selectedSimulationId) || null;
 
@@ -304,8 +305,9 @@ export default function TestRoteamento() {
     addMessageToChat(selectedSimulationId, newMessage);
     
     // Se o FlowSimulationCanvas estiver aguardando input, processar a resposta
-    if ((window as any).__flowSimulationProcessUserResponse) {
-      (window as any).__flowSimulationProcessUserResponse(text);
+    if (flowSimulationRef.current?.isWaitingForInput()) {
+      console.log('📥 Enviando resposta para simulação:', text);
+      flowSimulationRef.current.processUserResponse(text);
     }
     
     setChatInput("");
@@ -787,6 +789,7 @@ export default function TestRoteamento() {
                         {/* Canvas Visual - Bot Flow */}
                         <div className="border rounded-lg overflow-hidden bg-background shadow-lg h-[700px]">
                           <FlowSimulationCanvas
+                            ref={flowSimulationRef}
                             simulation={activeSimulation}
                             bots={bots || []}
                             fluxos={fluxos || []}

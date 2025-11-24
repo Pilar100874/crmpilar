@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -43,7 +43,11 @@ interface FlowSimulationCanvasProps {
   onBotMessage?: (message: string, nodeData?: any) => void;
   onReset?: () => void;
   onOmnichannelTransfer?: (workflowId: string) => void;
-  onUserResponse?: (response: string) => void;
+}
+
+export interface FlowSimulationCanvasRef {
+  processUserResponse: (response: string) => void;
+  isWaitingForInput: () => boolean;
 }
 
 interface ExecutionState {
@@ -112,15 +116,14 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
-export default function FlowSimulationCanvas({
+const FlowSimulationCanvas = forwardRef<FlowSimulationCanvasRef, FlowSimulationCanvasProps>(({
   simulation,
   bots,
   fluxos,
   onBotMessage,
   onReset,
   onOmnichannelTransfer,
-  onUserResponse,
-}: FlowSimulationCanvasProps) {
+}, ref) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [executionState, setExecutionState] = useState<ExecutionState>({
@@ -437,14 +440,11 @@ export default function FlowSimulationCanvas({
     }));
   }, [executionState, nodes, edges]);
 
-  // Expor função para o componente pai
-  useEffect(() => {
-    if (onUserResponse) {
-      // This is a bit of a hack, but we need to expose this function
-      // to the parent component somehow
-      (window as any).__flowSimulationProcessUserResponse = processUserResponse;
-    }
-  }, [onUserResponse, processUserResponse]);
+  // Expor funções para o componente pai via ref
+  useImperativeHandle(ref, () => ({
+    processUserResponse,
+    isWaitingForInput: () => executionState.waitingForInput,
+  }), [processUserResponse, executionState.waitingForInput]);
 
   const executePreviousStep = useCallback(() => {
     if (executionState.currentStep === 0) {
@@ -650,4 +650,8 @@ export default function FlowSimulationCanvas({
       </div>
     </div>
   );
-}
+});
+
+FlowSimulationCanvas.displayName = 'FlowSimulationCanvas';
+
+export default FlowSimulationCanvas;
