@@ -16,7 +16,7 @@ import '@xyflow/react/dist/style.css';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RotateCcw, SkipForward, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { RotateCcw, SkipForward, AlertCircle, CheckCircle2, Clock, Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import VariableMonitor from './VariableMonitor';
@@ -127,6 +127,7 @@ export default function FlowSimulationCanvas({
     isComplete: false,
     currentStep: 0,
   });
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
   // Determinar flow data e tipo
   const bot = bots.find(b => b.id === simulation.config.botId);
@@ -387,6 +388,7 @@ export default function FlowSimulationCanvas({
 
   const resetSimulation = () => {
     console.log('🔄 Resetando simulação');
+    setIsAutoPlaying(false);
     setExecutionState({
       currentNodeId: null,
       executedNodes: new Set(),
@@ -400,6 +402,26 @@ export default function FlowSimulationCanvas({
     if (onReset) {
       onReset();
     }
+  };
+
+  // Auto-play: executar automaticamente os passos
+  useEffect(() => {
+    if (!isAutoPlaying || executionState.isComplete) {
+      if (executionState.isComplete) {
+        setIsAutoPlaying(false);
+      }
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      executeNextStep();
+    }, 800); // Delay de 800ms entre cada passo
+
+    return () => clearTimeout(timer);
+  }, [isAutoPlaying, executionState.isComplete, executionState.currentStep]);
+
+  const toggleAutoPlay = () => {
+    setIsAutoPlaying(prev => !prev);
   };
 
   return (
@@ -430,9 +452,28 @@ export default function FlowSimulationCanvas({
         <div className="flex items-center gap-2">
           <Button
             size="sm"
+            variant={isAutoPlaying ? "default" : "outline"}
+            onClick={toggleAutoPlay}
+            disabled={executionState.isComplete && !isAutoPlaying}
+          >
+            {isAutoPlaying ? (
+              <>
+                <Pause className="w-4 h-4 mr-1" />
+                Pausar
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 mr-1" />
+                Play Automático
+              </>
+            )}
+          </Button>
+
+          <Button
+            size="sm"
             variant="outline"
             onClick={executePreviousStep}
-            disabled={executionState.currentStep === 0}
+            disabled={executionState.currentStep === 0 || isAutoPlaying}
           >
             <SkipForward className="w-4 h-4 mr-1 rotate-180" />
             Anterior
@@ -441,7 +482,7 @@ export default function FlowSimulationCanvas({
           <Button
             size="sm"
             onClick={executeNextStep}
-            disabled={executionState.isComplete}
+            disabled={executionState.isComplete || isAutoPlaying}
           >
             <SkipForward className="w-4 h-4 mr-1" />
             Próximo
