@@ -4428,6 +4428,267 @@ export type Database = {
           },
         ]
       }
+      sentiment_alerts: {
+        Row: {
+          atendente_id: string
+          chat_id: string
+          created_at: string | null
+          descricao: string
+          estabelecimento_id: string
+          id: string
+          resolvido: boolean | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          score_sentimento: number | null
+          tipo_alerta: string
+        }
+        Insert: {
+          atendente_id: string
+          chat_id: string
+          created_at?: string | null
+          descricao: string
+          estabelecimento_id: string
+          id?: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          score_sentimento?: number | null
+          tipo_alerta: string
+        }
+        Update: {
+          atendente_id?: string
+          chat_id?: string
+          created_at?: string | null
+          descricao?: string
+          estabelecimento_id?: string
+          id?: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          score_sentimento?: number | null
+          tipo_alerta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sentiment_alerts_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentiment_alerts_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentiment_alerts_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentiment_alerts_resolvido_por_fkey"
+            columns: ["resolvido_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sentiment_analysis: {
+        Row: {
+          analysis_metadata: Json | null
+          chat_id: string
+          confidence: number
+          created_at: string | null
+          emotion: string | null
+          estabelecimento_id: string
+          id: string
+          keywords: Json | null
+          message_id: string
+          score: number
+          sentiment: string
+        }
+        Insert: {
+          analysis_metadata?: Json | null
+          chat_id: string
+          confidence: number
+          created_at?: string | null
+          emotion?: string | null
+          estabelecimento_id: string
+          id?: string
+          keywords?: Json | null
+          message_id: string
+          score: number
+          sentiment: string
+        }
+        Update: {
+          analysis_metadata?: Json | null
+          chat_id?: string
+          confidence?: number
+          created_at?: string | null
+          emotion?: string | null
+          estabelecimento_id?: string
+          id?: string
+          keywords?: Json | null
+          message_id?: string
+          score?: number
+          sentiment?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sentiment_analysis_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentiment_analysis_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentiment_analysis_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sentiment_config: {
+        Row: {
+          alerta_sentimento_negativo: boolean | null
+          alerta_threshold: number | null
+          ativo: boolean | null
+          canais_ativos: string[] | null
+          created_at: string | null
+          escalar_automaticamente: boolean | null
+          estabelecimento_id: string
+          fila_escalacao_id: string | null
+          id: string
+          threshold_negativo: number | null
+          threshold_positivo: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          alerta_sentimento_negativo?: boolean | null
+          alerta_threshold?: number | null
+          ativo?: boolean | null
+          canais_ativos?: string[] | null
+          created_at?: string | null
+          escalar_automaticamente?: boolean | null
+          estabelecimento_id: string
+          fila_escalacao_id?: string | null
+          id?: string
+          threshold_negativo?: number | null
+          threshold_positivo?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          alerta_sentimento_negativo?: boolean | null
+          alerta_threshold?: number | null
+          ativo?: boolean | null
+          canais_ativos?: string[] | null
+          created_at?: string | null
+          escalar_automaticamente?: boolean | null
+          estabelecimento_id?: string
+          fila_escalacao_id?: string | null
+          id?: string
+          threshold_negativo?: number | null
+          threshold_positivo?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sentiment_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentiment_config_fila_escalacao_id_fkey"
+            columns: ["fila_escalacao_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sentiment_conversation_summary: {
+        Row: {
+          chat_id: string
+          created_at: string | null
+          emocoes_predominantes: Json | null
+          estabelecimento_id: string
+          id: string
+          mensagens_negativas: number | null
+          mensagens_neutras: number | null
+          mensagens_positivas: number | null
+          pontos_escalacao: Json | null
+          requer_atencao: boolean | null
+          score_medio: number
+          sentiment_geral: string
+          total_mensagens_analisadas: number
+          updated_at: string | null
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string | null
+          emocoes_predominantes?: Json | null
+          estabelecimento_id: string
+          id?: string
+          mensagens_negativas?: number | null
+          mensagens_neutras?: number | null
+          mensagens_positivas?: number | null
+          pontos_escalacao?: Json | null
+          requer_atencao?: boolean | null
+          score_medio: number
+          sentiment_geral: string
+          total_mensagens_analisadas: number
+          updated_at?: string | null
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string | null
+          emocoes_predominantes?: Json | null
+          estabelecimento_id?: string
+          id?: string
+          mensagens_negativas?: number | null
+          mensagens_neutras?: number | null
+          mensagens_positivas?: number | null
+          pontos_escalacao?: Json | null
+          requer_atencao?: boolean | null
+          score_medio?: number
+          sentiment_geral?: string
+          total_mensagens_analisadas?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sentiment_conversation_summary_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: true
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sentiment_conversation_summary_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skills: {
         Row: {
           cor: string | null
