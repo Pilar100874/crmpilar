@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import SLADashboard from "@/components/atendimento/SLADashboard";
 import { toast } from "@/lib/toast-config";
 
@@ -10,20 +10,11 @@ export default function SLADashboardPage() {
   useEffect(() => {
     const loadEstabelecimento = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error("Usuário não autenticado");
-          return;
-        }
-
-        const { data: usuario } = await supabase
-          .from("usuarios")
-          .select("estabelecimento_id")
-          .eq("email", user.email)
-          .single();
-
-        if (usuario?.estabelecimento_id) {
-          setEstabelecimentoId(usuario.estabelecimento_id);
+        const id = await getEstabelecimentoId();
+        if (id) {
+          setEstabelecimentoId(id);
+        } else {
+          toast.error("Nenhum estabelecimento selecionado");
         }
       } catch (error) {
         console.error("Erro ao carregar estabelecimento:", error);
