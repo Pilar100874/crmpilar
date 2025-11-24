@@ -33,6 +33,7 @@ import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
 import FlowSimulationCanvas, { FlowSimulationCanvasRef } from "@/components/routing/FlowSimulationCanvas";
 import OmnichannelWorkflowViewer from "@/components/routing/OmnichannelWorkflowViewer";
+import ChannelAdaptedChat from "@/components/routing/ChannelAdaptedChat";
 
 interface ChatMessage {
   id: string;
@@ -944,71 +945,19 @@ export default function TestRoteamento() {
                       </div>
 
                       {/* Coluna Direita - Chat Interativo */}
-                      <Card className="p-0 flex flex-col h-[700px] shadow-lg overflow-hidden">
-                        <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <Send className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">Chat da Simulação</h3>
-                            <p className="text-xs text-muted-foreground">
-                              {activeSimulation.chatMessages.length} mensagens
-                            </p>
-                          </div>
-                        </div>
-
-                        <ScrollArea className="flex-1 p-4">
-                          <div className="space-y-3">
-                            {activeSimulation.chatMessages.map((msg) => (
-                              <div
-                                key={msg.id}
-                                className={cn(
-                                  "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                                  msg.sender === "user" && "flex-row-reverse"
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                                  msg.sender === "system" && "bg-orange-100 dark:bg-orange-950/40",
-                                  msg.sender === "bot" && "bg-blue-100 dark:bg-blue-950/40",
-                                  msg.sender === "user" && "bg-primary"
-                                )}>
-                                  {msg.sender === "system" && <Zap className="w-4 h-4 text-orange-600" />}
-                                  {msg.sender === "bot" && <Bot className="w-4 h-4 text-blue-600" />}
-                                  {msg.sender === "user" && <User className="w-4 h-4 text-primary-foreground" />}
-                                </div>
-                                
-                                <div className={cn(
-                                  "flex-1 space-y-1",
-                                  msg.sender === "user" && "flex flex-col items-end"
-                                )}>
-                                  <div className={cn(
-                                    "inline-block px-4 py-2.5 rounded-2xl text-sm max-w-[85%] break-words shadow-sm",
-                                    msg.sender === "system" && "bg-orange-50 dark:bg-orange-950/30 text-orange-900 dark:text-orange-100",
-                                    msg.sender === "bot" && "bg-muted text-foreground",
-                                    msg.sender === "user" && "bg-primary text-primary-foreground"
-                                  )}>
-                                    {msg.text}
-                                  </div>
-                                  <span className="text-[10px] text-muted-foreground px-2">
-                                    {msg.timestamp.toLocaleTimeString('pt-BR', { 
-                                      hour: '2-digit', 
-                                      minute: '2-digit' 
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
-
-                        <div className="p-4 border-t bg-muted/30">
+                      <div className="flex flex-col h-[700px] gap-4">
+                        <ChannelAdaptedChat
+                          messages={activeSimulation.chatMessages}
+                          canal={activeSimulation.config.canal}
+                        />
+                        
+                        <Card className="p-4">
                           <div className="flex gap-2">
                             <Input
                               value={chatInput}
                               onChange={(e) => setChatInput(e.target.value)}
                               placeholder="Digite uma mensagem..."
-                              className="flex-1 bg-background"
+                              className="flex-1"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && chatInput.trim()) {
                                   sendUserMessage(chatInput.trim());
@@ -1028,8 +977,8 @@ export default function TestRoteamento() {
                               <Send className="w-4 h-4" />
                             </Button>
                           </div>
-                        </div>
-                      </Card>
+                        </Card>
+                      </div>
                     </div>
 
                     {/* Segunda Linha: Workflow Omnichannel (sempre exibido) */}
