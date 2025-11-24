@@ -52,6 +52,8 @@ import TestRoteamento from "./pages/TestRoteamento";
 import SLADashboardPage from "./pages/SLADashboard";
 import AdvancedAnalyticsPage from "./pages/AdvancedAnalytics";
 import PesquisasSatisfacaoPage from "./pages/PesquisasSatisfacao";
+import BaseConhecimento from "./pages/BaseConhecimento";
+import QualityAssurance from "./pages/QualityAssurance";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +120,8 @@ const App = () => (
             <Route path="/sla-dashboard" element={<SLADashboardPage />} />
             <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
             <Route path="/pesquisas-satisfacao" element={<PesquisasSatisfacaoPage />} />
+            <Route path="/base-conhecimento" element={<BaseConhecimento />} />
+            <Route path="/quality-assurance" element={<QualityAssurance />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
           </Route>

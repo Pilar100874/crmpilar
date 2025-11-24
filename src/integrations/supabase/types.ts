@@ -3494,6 +3494,277 @@ export type Database = {
           },
         ]
       }
+      qa_avaliacoes: {
+        Row: {
+          atendente_id: string
+          avaliador_id: string
+          chat_id: string
+          created_at: string | null
+          data_avaliacao: string | null
+          estabelecimento_id: string
+          formulario_id: string
+          id: string
+          observacoes: string | null
+          percentual: number | null
+          pontuacao_maxima: number | null
+          pontuacao_total: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          atendente_id: string
+          avaliador_id: string
+          chat_id: string
+          created_at?: string | null
+          data_avaliacao?: string | null
+          estabelecimento_id: string
+          formulario_id: string
+          id?: string
+          observacoes?: string | null
+          percentual?: number | null
+          pontuacao_maxima?: number | null
+          pontuacao_total?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          atendente_id?: string
+          avaliador_id?: string
+          chat_id?: string
+          created_at?: string | null
+          data_avaliacao?: string | null
+          estabelecimento_id?: string
+          formulario_id?: string
+          id?: string
+          observacoes?: string | null
+          percentual?: number | null
+          pontuacao_maxima?: number | null
+          pontuacao_total?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_avaliacoes_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_avaliacoes_avaliador_id_fkey"
+            columns: ["avaliador_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_avaliacoes_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_avaliacoes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_avaliacoes_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "qa_formularios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_criterios: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          formulario_id: string
+          id: string
+          nome: string
+          obrigatorio: boolean | null
+          opcoes: Json | null
+          ordem: number | null
+          peso: number | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          formulario_id: string
+          id?: string
+          nome: string
+          obrigatorio?: boolean | null
+          opcoes?: Json | null
+          ordem?: number | null
+          peso?: number | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          formulario_id?: string
+          id?: string
+          nome?: string
+          obrigatorio?: boolean | null
+          opcoes?: Json | null
+          ordem?: number | null
+          peso?: number | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_criterios_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "qa_formularios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_formularios: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_formularios_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_metas_atendente: {
+        Row: {
+          atendente_id: string
+          ativo: boolean | null
+          avaliacoes_minimas_mes: number | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          meta_percentual: number | null
+          periodo_fim: string | null
+          periodo_inicio: string
+          updated_at: string | null
+        }
+        Insert: {
+          atendente_id: string
+          ativo?: boolean | null
+          avaliacoes_minimas_mes?: number | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          meta_percentual?: number | null
+          periodo_fim?: string | null
+          periodo_inicio: string
+          updated_at?: string | null
+        }
+        Update: {
+          atendente_id?: string
+          ativo?: boolean | null
+          avaliacoes_minimas_mes?: number | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          meta_percentual?: number | null
+          periodo_fim?: string | null
+          periodo_inicio?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_metas_atendente_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_metas_atendente_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_respostas: {
+        Row: {
+          avaliacao_id: string
+          comentario: string | null
+          created_at: string | null
+          criterio_id: string
+          id: string
+          pontuacao: number | null
+          valor: Json
+        }
+        Insert: {
+          avaliacao_id: string
+          comentario?: string | null
+          created_at?: string | null
+          criterio_id: string
+          id?: string
+          pontuacao?: number | null
+          valor: Json
+        }
+        Update: {
+          avaliacao_id?: string
+          comentario?: string | null
+          created_at?: string | null
+          criterio_id?: string
+          id?: string
+          pontuacao?: number | null
+          valor?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_respostas_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "qa_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_respostas_criterio_id_fkey"
+            columns: ["criterio_id"]
+            isOneToOne: false
+            referencedRelation: "qa_criterios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quick_attachments: {
         Row: {
           created_at: string | null
