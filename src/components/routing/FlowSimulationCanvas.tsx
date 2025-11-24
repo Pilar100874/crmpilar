@@ -20,6 +20,8 @@ import { RotateCcw, SkipForward, AlertCircle, CheckCircle2, Clock, Play, Pause }
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import VariableMonitor from './VariableMonitor';
+import { validateCNPJ, validateEmail, validatePhone, validateCPF } from '@/lib/validators';
+import { toast } from '@/lib/toast-config';
 
 interface Simulation {
   id: string;
@@ -251,9 +253,11 @@ const FlowSimulationCanvas = forwardRef<FlowSimulationCanvasRef, FlowSimulationC
     const needsInput = [
       'ask_question',
       'ask_cnpj',
+      'ask_cpf',
       'ask_name',
       'ask_email',
       'ask_phone',
+      'ask_number',
       'collect_input'
     ].includes(currentNode.data.type);
 
@@ -408,15 +412,85 @@ const FlowSimulationCanvas = forwardRef<FlowSimulationCanvasRef, FlowSimulationC
 
     console.log('✅ Recebendo resposta do usuário:', response);
 
-    // Atualizar variáveis com a resposta
+    // Marcar node atual como executado e avançar para o próximo
+    const currentNode = nodes.find(n => n.id === executionState.currentNodeId);
+    if (!currentNode) return;
+
+    // Validar entrada baseada no tipo de bloco
+    const blockType = currentNode.data?.type;
+    const config = currentNode.data?.config;
+    let validationError: string | null = null;
+
+    switch (blockType) {
+      case 'ask_cnpj':
+        if (!validateCNPJ(response)) {
+          validationError = config?.errorMessage || 'CNPJ inválido. Por favor, digite um CNPJ válido (14 dígitos).';
+        }
+        break;
+      
+      case 'ask_email':
+        if (!validateEmail(response)) {
+          validationError = config?.errorMessage || 'Email inválido. Por favor, digite um email válido.';
+        }
+        break;
+      
+      case 'ask_phone':
+        if (!validatePhone(response)) {
+          validationError = config?.errorMessage || 'Telefone inválido. Por favor, digite um telefone válido (10 ou 11 dígitos).';
+        }
+        break;
+      
+      case 'ask_cpf':
+        if (!validateCPF(response)) {
+          validationError = config?.errorMessage || 'CPF inválido. Por favor, digite um CPF válido (11 dígitos).';
+        }
+        break;
+      
+      case 'ask_number':
+        const num = parseFloat(response);
+        if (isNaN(num)) {
+          validationError = config?.errorMessage || 'Por favor, digite um número válido.';
+        } else {
+          // Validar min/max se configurado
+          if (config?.min !== undefined && num < parseFloat(config.min)) {
+            validationError = config?.errorMessage || `O número deve ser maior ou igual a ${config.min}.`;
+          }
+          if (config?.max !== undefined && num > parseFloat(config.max)) {
+            validationError = config?.errorMessage || `O número deve ser menor ou igual a ${config.max}.`;
+          }
+        }
+        break;
+      
+      case 'ask_name':
+        if (!response.trim() || response.trim().length < 2) {
+          validationError = config?.errorMessage || 'Por favor, digite um nome válido (mínimo 2 caracteres).';
+        }
+        break;
+      
+      case 'ask_question':
+      case 'collect_input':
+        // Validação genérica - apenas verificar se não está vazio
+        if (!response.trim()) {
+          validationError = config?.errorMessage || 'Por favor, digite uma resposta.';
+        }
+        break;
+    }
+
+    // Se houver erro de validação, enviar mensagem de erro e não avançar
+    if (validationError) {
+      console.warn('❌ Validação falhou:', validationError);
+      if (onBotMessage) {
+        onBotMessage(validationError, { type: 'system', label: 'Erro de Validação' });
+      }
+      toast.error(validationError);
+      return; // NÃO avançar para o próximo bloco
+    }
+
+    // Validação passou - atualizar variáveis com a resposta
     const newVariables = {
       ...executionState.variables,
       [executionState.expectedVariable || 'user_input']: response,
     };
-
-    // Marcar node atual como executado e avançar para o próximo
-    const currentNode = nodes.find(n => n.id === executionState.currentNodeId);
-    if (!currentNode) return;
 
     const newExecutedNodes = new Set([...executionState.executedNodes, currentNode.id]);
 
@@ -438,7 +512,7 @@ const FlowSimulationCanvas = forwardRef<FlowSimulationCanvasRef, FlowSimulationC
       expectedVariable: undefined,
       isComplete: !nextNode,
     }));
-  }, [executionState, nodes, edges]);
+  }, [executionState, nodes, edges, onBotMessage]);
 
   // Expor funções para o componente pai via ref
   useImperativeHandle(ref, () => ({
