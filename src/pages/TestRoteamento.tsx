@@ -302,6 +302,12 @@ export default function TestRoteamento() {
 
     // Adicionar mensagem do usuário
     addMessageToChat(selectedSimulationId, newMessage);
+    
+    // Se o FlowSimulationCanvas estiver aguardando input, processar a resposta
+    if ((window as any).__flowSimulationProcessUserResponse) {
+      (window as any).__flowSimulationProcessUserResponse(text);
+    }
+    
     setChatInput("");
   };
 

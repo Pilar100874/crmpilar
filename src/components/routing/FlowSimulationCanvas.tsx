@@ -43,6 +43,7 @@ interface FlowSimulationCanvasProps {
   onBotMessage?: (message: string, nodeData?: any) => void;
   onReset?: () => void;
   onOmnichannelTransfer?: (workflowId: string) => void;
+  onUserResponse?: (response: string) => void;
 }
 
 interface ExecutionState {
@@ -52,6 +53,8 @@ interface ExecutionState {
   isPaused: boolean;
   isComplete: boolean;
   currentStep: number;
+  waitingForInput: boolean;
+  expectedVariable?: string;
 }
 
 const CustomNode = ({ data, selected }: any) => {
@@ -116,6 +119,7 @@ export default function FlowSimulationCanvas({
   onBotMessage,
   onReset,
   onOmnichannelTransfer,
+  onUserResponse,
 }: FlowSimulationCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -126,6 +130,7 @@ export default function FlowSimulationCanvas({
     isPaused: false,
     isComplete: false,
     currentStep: 0,
+    waitingForInput: false,
   });
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
@@ -157,6 +162,7 @@ export default function FlowSimulationCanvas({
       isPaused: false,
       isComplete: false,
       currentStep: 0,
+      waitingForInput: false,
     });
     
     if (flowData?.nodes && Array.isArray(flowData.nodes)) {
@@ -211,6 +217,12 @@ export default function FlowSimulationCanvas({
       return;
     }
 
+    // Se estamos aguardando input do usuário, não avançar
+    if (executionState.waitingForInput) {
+      console.log('⏸️ Aguardando input do usuário');
+      return;
+    }
+
     // Se não tem node atual, começar do primeiro
     let currentNode;
     if (!executionState.currentNodeId) {
@@ -231,6 +243,16 @@ export default function FlowSimulationCanvas({
     }
 
     console.log('▶️ Executando node:', currentNode.id, currentNode.data.label);
+
+    // Verificar se este bloco precisa de input do usuário
+    const needsInput = [
+      'ask_question',
+      'ask_cnpj',
+      'ask_name',
+      'ask_email',
+      'ask_phone',
+      'collect_input'
+    ].includes(currentNode.data.type);
 
     // Atualizar variáveis baseado no tipo de bloco
     const newVariables = { ...executionState.variables };
@@ -330,6 +352,24 @@ export default function FlowSimulationCanvas({
       });
     }
 
+    // Se precisa de input, pausar e aguardar
+    if (needsInput) {
+      console.log('⏸️ Bloco precisa de input, pausando execução');
+      const variableName = currentNode.data.config?.variable || 'user_input';
+      
+      setExecutionState(prev => ({
+        ...prev,
+        variables: newVariables,
+        waitingForInput: true,
+        expectedVariable: variableName,
+        currentStep: prev.currentStep + 1,
+      }));
+      
+      // Pausar auto-play se estiver ativo
+      setIsAutoPlaying(false);
+      return;
+    }
+
     // Encontrar próximo node seguindo as edges
     const outgoingEdge = edges.find(e => e.source === currentNode.id);
     const nextNode = outgoingEdge 
@@ -355,6 +395,56 @@ export default function FlowSimulationCanvas({
       console.log('🏁 Fluxo concluído!');
     }
   }, [executionState, nodes, edges]);
+
+  // Processar resposta do usuário
+  const processUserResponse = useCallback((response: string) => {
+    if (!executionState.waitingForInput) {
+      console.warn('⚠️ Não está aguardando input do usuário');
+      return;
+    }
+
+    console.log('✅ Recebendo resposta do usuário:', response);
+
+    // Atualizar variáveis com a resposta
+    const newVariables = {
+      ...executionState.variables,
+      [executionState.expectedVariable || 'user_input']: response,
+    };
+
+    // Marcar node atual como executado e avançar para o próximo
+    const currentNode = nodes.find(n => n.id === executionState.currentNodeId);
+    if (!currentNode) return;
+
+    const newExecutedNodes = new Set([...executionState.executedNodes, currentNode.id]);
+
+    // Encontrar próximo node
+    const outgoingEdge = edges.find(e => e.source === currentNode.id);
+    const nextNode = outgoingEdge 
+      ? nodes.find(n => n.id === outgoingEdge.target)
+      : null;
+
+    console.log('➡️ Avançando para próximo node:', nextNode?.id, nextNode?.data?.label);
+
+    // Atualizar estado e continuar execução
+    setExecutionState(prev => ({
+      ...prev,
+      currentNodeId: nextNode?.id || null,
+      executedNodes: newExecutedNodes,
+      variables: newVariables,
+      waitingForInput: false,
+      expectedVariable: undefined,
+      isComplete: !nextNode,
+    }));
+  }, [executionState, nodes, edges]);
+
+  // Expor função para o componente pai
+  useEffect(() => {
+    if (onUserResponse) {
+      // This is a bit of a hack, but we need to expose this function
+      // to the parent component somehow
+      (window as any).__flowSimulationProcessUserResponse = processUserResponse;
+    }
+  }, [onUserResponse, processUserResponse]);
 
   const executePreviousStep = useCallback(() => {
     if (executionState.currentStep === 0) {
@@ -396,6 +486,7 @@ export default function FlowSimulationCanvas({
       isPaused: false,
       isComplete: false,
       currentStep: 0,
+      waitingForInput: false,
     });
     
     // Notificar componente pai para limpar o chat
@@ -406,7 +497,7 @@ export default function FlowSimulationCanvas({
 
   // Auto-play: executar automaticamente os passos
   useEffect(() => {
-    if (!isAutoPlaying || executionState.isComplete) {
+    if (!isAutoPlaying || executionState.isComplete || executionState.waitingForInput) {
       if (executionState.isComplete) {
         setIsAutoPlaying(false);
       }
@@ -418,7 +509,7 @@ export default function FlowSimulationCanvas({
     }, 800); // Delay de 800ms entre cada passo
 
     return () => clearTimeout(timer);
-  }, [isAutoPlaying, executionState.isComplete, executionState.currentStep]);
+  }, [isAutoPlaying, executionState.isComplete, executionState.waitingForInput, executionState.currentStep, executeNextStep]);
 
   const toggleAutoPlay = () => {
     setIsAutoPlaying(prev => !prev);
@@ -449,61 +540,67 @@ export default function FlowSimulationCanvas({
             </div>
           </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant={isAutoPlaying ? "default" : "outline"}
-            onClick={toggleAutoPlay}
-            disabled={executionState.isComplete && !isAutoPlaying}
-          >
-            {isAutoPlaying ? (
-              <>
-                <Pause className="w-4 h-4 mr-1" />
-                Pausar
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 mr-1" />
-                Play Automático
-              </>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={isAutoPlaying ? "default" : "outline"}
+              onClick={toggleAutoPlay}
+              disabled={executionState.isComplete && !isAutoPlaying || executionState.waitingForInput}
+            >
+              {isAutoPlaying ? (
+                <>
+                  <Pause className="w-4 h-4 mr-1" />
+                  Pausar
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-1" />
+                  Play Automático
+                </>
+              )}
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={executePreviousStep}
+              disabled={executionState.currentStep === 0 || isAutoPlaying || executionState.waitingForInput}
+            >
+              <SkipForward className="w-4 h-4 mr-1 rotate-180" />
+              Anterior
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={executeNextStep}
+              disabled={executionState.isComplete || isAutoPlaying || executionState.waitingForInput}
+            >
+              <SkipForward className="w-4 h-4 mr-1" />
+              Próximo
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={resetSimulation}
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Resetar
+            </Button>
+
+            {executionState.waitingForInput && (
+              <Badge variant="default" className="ml-2 animate-pulse">
+                ⏸️ Aguardando resposta do usuário...
+              </Badge>
             )}
-          </Button>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={executePreviousStep}
-            disabled={executionState.currentStep === 0 || isAutoPlaying}
-          >
-            <SkipForward className="w-4 h-4 mr-1 rotate-180" />
-            Anterior
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={executeNextStep}
-            disabled={executionState.isComplete || isAutoPlaying}
-          >
-            <SkipForward className="w-4 h-4 mr-1" />
-            Próximo
-          </Button>
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={resetSimulation}
-          >
-            <RotateCcw className="w-4 h-4 mr-1" />
-            Resetar
-          </Button>
-
-          {nodes.length === 0 && (
-            <Badge variant="destructive" className="ml-auto">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              Nenhum bloco encontrado
-            </Badge>
-          )}
-        </div>
+            {nodes.length === 0 && (
+              <Badge variant="destructive" className="ml-auto">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                Nenhum bloco encontrado
+              </Badge>
+            )}
+          </div>
       </div>
 
         {/* Canvas */}
