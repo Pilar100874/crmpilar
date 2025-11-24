@@ -1974,6 +1974,166 @@ export type Database = {
           },
         ]
       }
+      metricas_agregadas: {
+        Row: {
+          atendente_id: string | null
+          avaliacao_media: number | null
+          avaliacoes_recebidas: number | null
+          canal: string | null
+          chats_com_followup: number | null
+          chats_dentro_sla: number | null
+          chats_em_atendimento: number | null
+          chats_encerrados: number | null
+          chats_fora_sla: number | null
+          chats_novos: number | null
+          chats_reabertos: number | null
+          chats_resolvidos_primeiro_contato: number | null
+          chats_simultaneos_medio: number | null
+          chats_simultaneos_pico: number | null
+          chats_transferidos: number | null
+          created_at: string | null
+          data: string
+          estabelecimento_id: string
+          fila_id: string | null
+          id: string
+          mensagens_enviadas: number | null
+          mensagens_recebidas: number | null
+          nps_detratores: number | null
+          nps_neutros: number | null
+          nps_promotores: number | null
+          nps_score: number | null
+          periodo_tipo: string
+          taxa_cumprimento_sla: number | null
+          taxa_fcr: number | null
+          taxa_ocupacao: number | null
+          tempo_disponivel: number | null
+          tempo_medio_atendimento: number | null
+          tempo_medio_espera: number | null
+          tempo_medio_primeira_resposta: number | null
+          tempo_medio_resposta: number | null
+          tempo_ocupado: number | null
+          tempo_offline: number | null
+          tempo_pausa: number | null
+          tempo_total_atendimento: number | null
+          total_chats: number | null
+          updated_at: string | null
+          violacoes_primeira_resposta: number | null
+          violacoes_resolucao: number | null
+        }
+        Insert: {
+          atendente_id?: string | null
+          avaliacao_media?: number | null
+          avaliacoes_recebidas?: number | null
+          canal?: string | null
+          chats_com_followup?: number | null
+          chats_dentro_sla?: number | null
+          chats_em_atendimento?: number | null
+          chats_encerrados?: number | null
+          chats_fora_sla?: number | null
+          chats_novos?: number | null
+          chats_reabertos?: number | null
+          chats_resolvidos_primeiro_contato?: number | null
+          chats_simultaneos_medio?: number | null
+          chats_simultaneos_pico?: number | null
+          chats_transferidos?: number | null
+          created_at?: string | null
+          data: string
+          estabelecimento_id: string
+          fila_id?: string | null
+          id?: string
+          mensagens_enviadas?: number | null
+          mensagens_recebidas?: number | null
+          nps_detratores?: number | null
+          nps_neutros?: number | null
+          nps_promotores?: number | null
+          nps_score?: number | null
+          periodo_tipo: string
+          taxa_cumprimento_sla?: number | null
+          taxa_fcr?: number | null
+          taxa_ocupacao?: number | null
+          tempo_disponivel?: number | null
+          tempo_medio_atendimento?: number | null
+          tempo_medio_espera?: number | null
+          tempo_medio_primeira_resposta?: number | null
+          tempo_medio_resposta?: number | null
+          tempo_ocupado?: number | null
+          tempo_offline?: number | null
+          tempo_pausa?: number | null
+          tempo_total_atendimento?: number | null
+          total_chats?: number | null
+          updated_at?: string | null
+          violacoes_primeira_resposta?: number | null
+          violacoes_resolucao?: number | null
+        }
+        Update: {
+          atendente_id?: string | null
+          avaliacao_media?: number | null
+          avaliacoes_recebidas?: number | null
+          canal?: string | null
+          chats_com_followup?: number | null
+          chats_dentro_sla?: number | null
+          chats_em_atendimento?: number | null
+          chats_encerrados?: number | null
+          chats_fora_sla?: number | null
+          chats_novos?: number | null
+          chats_reabertos?: number | null
+          chats_resolvidos_primeiro_contato?: number | null
+          chats_simultaneos_medio?: number | null
+          chats_simultaneos_pico?: number | null
+          chats_transferidos?: number | null
+          created_at?: string | null
+          data?: string
+          estabelecimento_id?: string
+          fila_id?: string | null
+          id?: string
+          mensagens_enviadas?: number | null
+          mensagens_recebidas?: number | null
+          nps_detratores?: number | null
+          nps_neutros?: number | null
+          nps_promotores?: number | null
+          nps_score?: number | null
+          periodo_tipo?: string
+          taxa_cumprimento_sla?: number | null
+          taxa_fcr?: number | null
+          taxa_ocupacao?: number | null
+          tempo_disponivel?: number | null
+          tempo_medio_atendimento?: number | null
+          tempo_medio_espera?: number | null
+          tempo_medio_primeira_resposta?: number | null
+          tempo_medio_resposta?: number | null
+          tempo_ocupado?: number | null
+          tempo_offline?: number | null
+          tempo_pausa?: number | null
+          tempo_total_atendimento?: number | null
+          total_chats?: number | null
+          updated_at?: string | null
+          violacoes_primeira_resposta?: number | null
+          violacoes_resolucao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metricas_agregadas_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metricas_agregadas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metricas_agregadas_fila_id_fkey"
+            columns: ["fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metricas_atendente: {
         Row: {
           atendente_id: string
@@ -3102,6 +3262,168 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relatorios_customizados: {
+        Row: {
+          agendado: boolean | null
+          ativo: boolean | null
+          compartilhado_com: Json | null
+          created_at: string | null
+          descricao: string | null
+          destinatarios: Json | null
+          dia_execucao: number | null
+          dimensoes: Json
+          estabelecimento_id: string
+          filtros: Json | null
+          formato_exportacao: string | null
+          frequencia: string | null
+          hora_execucao: string | null
+          id: string
+          incluir_graficos: boolean | null
+          incluir_tabelas: boolean | null
+          metricas: Json
+          nome: string
+          proxima_execucao: string | null
+          publico: boolean | null
+          tipo: string
+          ultima_execucao: string | null
+          updated_at: string | null
+          usuario_criador_id: string | null
+        }
+        Insert: {
+          agendado?: boolean | null
+          ativo?: boolean | null
+          compartilhado_com?: Json | null
+          created_at?: string | null
+          descricao?: string | null
+          destinatarios?: Json | null
+          dia_execucao?: number | null
+          dimensoes?: Json
+          estabelecimento_id: string
+          filtros?: Json | null
+          formato_exportacao?: string | null
+          frequencia?: string | null
+          hora_execucao?: string | null
+          id?: string
+          incluir_graficos?: boolean | null
+          incluir_tabelas?: boolean | null
+          metricas?: Json
+          nome: string
+          proxima_execucao?: string | null
+          publico?: boolean | null
+          tipo: string
+          ultima_execucao?: string | null
+          updated_at?: string | null
+          usuario_criador_id?: string | null
+        }
+        Update: {
+          agendado?: boolean | null
+          ativo?: boolean | null
+          compartilhado_com?: Json | null
+          created_at?: string | null
+          descricao?: string | null
+          destinatarios?: Json | null
+          dia_execucao?: number | null
+          dimensoes?: Json
+          estabelecimento_id?: string
+          filtros?: Json | null
+          formato_exportacao?: string | null
+          frequencia?: string | null
+          hora_execucao?: string | null
+          id?: string
+          incluir_graficos?: boolean | null
+          incluir_tabelas?: boolean | null
+          metricas?: Json
+          nome?: string
+          proxima_execucao?: string | null
+          publico?: boolean | null
+          tipo?: string
+          ultima_execucao?: string | null
+          updated_at?: string | null
+          usuario_criador_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_customizados_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relatorios_customizados_usuario_criador_id_fkey"
+            columns: ["usuario_criador_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relatorios_execucoes: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          created_at: string | null
+          dados: Json | null
+          erro_mensagem: string | null
+          executado_em: string | null
+          executado_por: string | null
+          formato: string | null
+          id: string
+          parametros: Json | null
+          relatorio_id: string
+          status: string | null
+          tamanho_bytes: number | null
+          tempo_execucao_ms: number | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string | null
+          dados?: Json | null
+          erro_mensagem?: string | null
+          executado_em?: string | null
+          executado_por?: string | null
+          formato?: string | null
+          id?: string
+          parametros?: Json | null
+          relatorio_id: string
+          status?: string | null
+          tamanho_bytes?: number | null
+          tempo_execucao_ms?: number | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string | null
+          dados?: Json | null
+          erro_mensagem?: string | null
+          executado_em?: string | null
+          executado_por?: string | null
+          formato?: string | null
+          id?: string
+          parametros?: Json | null
+          relatorio_id?: string
+          status?: string | null
+          tamanho_bytes?: number | null
+          tempo_execucao_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_execucoes_executado_por_fkey"
+            columns: ["executado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relatorios_execucoes_relatorio_id_fkey"
+            columns: ["relatorio_id"]
+            isOneToOne: false
+            referencedRelation: "relatorios_customizados"
             referencedColumns: ["id"]
           },
         ]
