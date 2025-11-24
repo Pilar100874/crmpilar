@@ -800,7 +800,7 @@ export default function TestRoteamento() {
                                   : sim
                               ));
                             }}
-                            onOmnichannelTransfer={(workflowId) => {
+                            onOmnichannelTransfer={async (workflowId) => {
                               console.log('🔄 Recebido callback de transferência para workflow:', workflowId);
                               // Atualizar a simulação com o workflow ID
                               setSimulations(prev => prev.map(sim => 
@@ -839,20 +839,91 @@ export default function TestRoteamento() {
                                   ));
                                   toast.success(`Roteado para fila: ${fila?.nome || 'Fila'}`);
                                 } else if (atendenteNode?.data?.config?.atendenteId) {
-                                  const atendente = atendentes?.find(a => a.id === atendenteNode.data.config.atendenteId);
+                                  const atendenteId = atendenteNode.data.config.atendenteId;
+                                  
+                                  // Buscar dados atualizados do atendente
+                                  const { data: atendenteData } = await supabase
+                                    .from('atendentes')
+                                    .select('*, usuarios(*)')
+                                    .eq('id', atendenteId)
+                                    .single();
+                                  
+                                  if (!atendenteData) {
+                                    toast.error('Atendente não encontrado');
+                                    return;
+                                  }
+                                  
+                                  // Verificar status do atendente
+                                  const status = atendenteData.status;
+                                  const isAvailable = status === 'disponivel' || status === 'ocupado';
+                                  
+                                  if (!isAvailable) {
+                                    toast.error(`Atendente ${atendenteData.usuarios?.nome} está ${status}. Roteando para fila...`);
+                                    // Tentar rotear para fila padrão
+                                    const filasPossiveis = filas?.filter(f => f.ativa) || [];
+                                    if (filasPossiveis.length > 0) {
+                                      const filaPadrao = filasPossiveis[0];
+                                      setSimulations(prev => prev.map(sim => 
+                                        sim.id === activeSimulation.id 
+                                          ? { 
+                                              ...sim,
+                                              routedTo: {
+                                                type: 'fila',
+                                                filaId: filaPadrao.id,
+                                                filaNome: filaPadrao.nome
+                                              }
+                                            }
+                                          : sim
+                                      ));
+                                      toast.info(`Roteado para fila: ${filaPadrao.nome}`);
+                                    }
+                                    return;
+                                  }
+                                  
+                                  // Verificar se atendente já está em uso em outro simulador
+                                  const atendenteEmUso = simulations.some(sim => 
+                                    sim.id !== activeSimulation.id && 
+                                    sim.routedTo?.type === 'atendente' && 
+                                    sim.routedTo?.atendenteId === atendenteId
+                                  );
+                                  
+                                  if (atendenteEmUso) {
+                                    toast.warning(`Atendente ${atendenteData.usuarios?.nome} já está em uso em outro simulador. Roteando para fila...`);
+                                    // Tentar rotear para fila padrão
+                                    const filasPossiveis = filas?.filter(f => f.ativa) || [];
+                                    if (filasPossiveis.length > 0) {
+                                      const filaPadrao = filasPossiveis[0];
+                                      setSimulations(prev => prev.map(sim => 
+                                        sim.id === activeSimulation.id 
+                                          ? { 
+                                              ...sim,
+                                              routedTo: {
+                                                type: 'fila',
+                                                filaId: filaPadrao.id,
+                                                filaNome: filaPadrao.nome
+                                              }
+                                            }
+                                          : sim
+                                      ));
+                                      toast.info(`Roteado para fila: ${filaPadrao.nome}`);
+                                    }
+                                    return;
+                                  }
+                                  
+                                  // Atendente disponível e não em uso
                                   setSimulations(prev => prev.map(sim => 
                                     sim.id === activeSimulation.id 
                                       ? { 
                                           ...sim,
                                           routedTo: {
                                             type: 'atendente',
-                                            atendenteId: atendenteNode.data.config.atendenteId,
-                                            atendenteNome: atendente?.usuarios?.nome || 'Atendente desconhecido'
+                                            atendenteId: atendenteId,
+                                            atendenteNome: atendenteData.usuarios?.nome || 'Atendente desconhecido'
                                           }
                                         }
                                       : sim
                                   ));
-                                  toast.success(`Roteado para atendente: ${atendente?.usuarios?.nome || 'Atendente'}`);
+                                  toast.success(`Roteado para atendente: ${atendenteData.usuarios?.nome || 'Atendente'}`);
                                 } else {
                                   toast.info('Workflow transferido, mas nenhum destino específico foi configurado');
                                 }
