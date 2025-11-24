@@ -310,6 +310,7 @@ serve(async (req) => {
     // ====== Buscar ou criar customer e conversation ======
     let conversationId: string | null = null;
     let isBotActive = true;
+    let customerId: string | null = null;
     
     if (estabelecimentoId) {
       console.log("[ATENDIMENTO] Buscando/criando customer e conversation para:", { from, estabelecimentoId });
@@ -322,7 +323,7 @@ serve(async (req) => {
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
       
-      let customerId = existingCustomer?.id;
+      customerId = existingCustomer?.id;
       
       if (!customerId) {
         console.log("[ATENDIMENTO] Criando novo customer");
@@ -427,6 +428,60 @@ serve(async (req) => {
         await respond(message);
       }
     };
+
+    // ====== Verificar se há pesquisa de satisfação pendente ======
+    if (conversationId && customerId) {
+      const { data: pesquisaPendente } = await supabase
+        .from("pesquisas_respostas")
+        .select("id, pesquisa_id, pesquisas_satisfacao(escala_minima, escala_maxima, tipo, permite_comentario)")
+        .eq("conversation_id", conversationId)
+        .eq("customer_id", customerId)
+        .is("respondida_em", null)
+        .maybeSingle();
+      
+      if (pesquisaPendente) {
+        console.log("[PESQUISA] Detectada resposta de pesquisa pendente");
+        
+        // Tentar extrair nota da mensagem
+        const notaMatch = body.match(/\d+/);
+        if (notaMatch) {
+          const nota = parseInt(notaMatch[0], 10);
+          const pesquisa = pesquisaPendente.pesquisas_satisfacao as any;
+          
+          // Validar se a nota está dentro da escala
+          if (nota >= pesquisa.escala_minima && nota <= pesquisa.escala_maxima) {
+            console.log("[PESQUISA] Processando resposta com nota:", nota);
+            
+            // Processar a resposta da pesquisa
+            const { data: processResult } = await supabase.functions.invoke("processar-resposta-pesquisa", {
+              body: {
+                resposta_id: pesquisaPendente.id,
+                nota: nota,
+                comentario: pesquisa.permite_comentario ? body : null
+              }
+            });
+            
+            console.log("[PESQUISA] ✓ Resposta processada");
+            
+            // Enviar mensagem de agradecimento
+            if (processResult?.mensagemAgradecimento) {
+              await respond(processResult.mensagemAgradecimento);
+            }
+            
+            return new Response(JSON.stringify({ success: true, survey_processed: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+        
+        // Se não conseguiu extrair nota válida, pedir novamente
+        const pesquisa = pesquisaPendente.pesquisas_satisfacao as any;
+        await respond(`Por favor, responda com um número de ${pesquisa.escala_minima} a ${pesquisa.escala_maxima}.`);
+        return new Response(JSON.stringify({ success: true, awaiting_valid_response: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // ====== Verificar se bot está ativo ======
     if (!isBotActive) {

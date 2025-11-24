@@ -128,7 +128,37 @@ export const useChatStatus = () => {
   };
 
   const encerrarChat = async (chatId: string, motivo: string) => {
-    return mudarStatus(chatId, 'encerrado', { motivoEncerramento: motivo });
+    const success = await mudarStatus(chatId, 'encerrado', { motivoEncerramento: motivo });
+    
+    if (success) {
+      // Buscar dados da conversa para enviar pesquisa
+      try {
+        const { data: conversation } = await supabase
+          .from('conversations')
+          .select('customer_id, atendente_atual_id, fila_id, canal')
+          .eq('id', chatId)
+          .single();
+        
+        if (conversation) {
+          // Enviar pesquisa de satisfação automaticamente
+          await supabase.functions.invoke('enviar-pesquisa-satisfacao', {
+            body: {
+              conversation_id: chatId,
+              customer_id: conversation.customer_id,
+              atendente_id: conversation.atendente_atual_id,
+              fila_id: conversation.fila_id,
+              canal: conversation.canal
+            }
+          });
+          console.log('Pesquisa de satisfação enviada para conversa:', chatId);
+        }
+      } catch (error) {
+        console.error('Erro ao enviar pesquisa de satisfação:', error);
+        // Não bloqueia o encerramento se a pesquisa falhar
+      }
+    }
+    
+    return success;
   };
 
   const reabrirChat = async (chatId: string) => {

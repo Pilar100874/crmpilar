@@ -143,13 +143,72 @@ Deno.serve(async (req) => {
       mensagem += `\n${pesquisaSelecionada.pergunta_comentario}`;
     }
 
-    // Aqui você integraria com o sistema de envio de mensagens
-    // Por exemplo, enviar via WhatsApp, Telegram, etc.
-    // Por ora, apenas logamos
-    console.log('Mensagem da pesquisa:', mensagem);
 
-    // TODO: Integrar com sistema de mensagens para enviar a pesquisa ao cliente
-    // Isso dependerá do canal (WhatsApp, Telegram, WebChat, etc.)
+    // Enviar a pesquisa de fato via canal apropriado
+    if (canal === 'whatsapp') {
+      try {
+        // Buscar dados do cliente
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('telefone')
+          .eq('id', customer_id)
+          .single();
+
+        if (!customer?.telefone) {
+          throw new Error('Cliente sem telefone cadastrado');
+        }
+
+        // Buscar configuração WAHA do estabelecimento
+        const { data: wahaConfig } = await supabase
+          .from('whatsapp_config')
+          .select('waha_url, waha_api_key')
+          .eq('estabelecimento_id', conversation.estabelecimento_id)
+          .single();
+
+        if (!wahaConfig?.waha_url || !wahaConfig?.waha_api_key) {
+          throw new Error('Configuração WAHA não encontrada');
+        }
+
+        // Buscar sessão ativa para o estabelecimento
+        const { data: session } = await supabase
+          .from('whatsapp_sessions')
+          .select('session_name')
+          .eq('estabelecimento_id', conversation.estabelecimento_id)
+          .eq('status', 'active')
+          .single();
+
+        if (!session?.session_name) {
+          throw new Error('Nenhuma sessão WhatsApp ativa encontrada');
+        }
+
+        // Enviar mensagem via WAHA
+        const wahaResponse = await fetch(`${wahaConfig.waha_url}/api/sendText`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Api-Key': wahaConfig.waha_api_key
+          },
+          body: JSON.stringify({
+            session: session.session_name,
+            chatId: `${customer.telefone}@c.us`,
+            text: mensagem
+          })
+        });
+
+        if (!wahaResponse.ok) {
+          const errorText = await wahaResponse.text();
+          throw new Error(`Erro ao enviar mensagem WAHA: ${errorText}`);
+        }
+
+        console.log('✓ Pesquisa enviada via WhatsApp para:', customer.telefone);
+      } catch (error) {
+        console.error('Erro ao enviar pesquisa via WhatsApp:', error);
+        throw error;
+      }
+    } else {
+      console.log(`Canal ${canal} ainda não implementado para envio de pesquisas`);
+    }
+
 
     return new Response(
       JSON.stringify({
