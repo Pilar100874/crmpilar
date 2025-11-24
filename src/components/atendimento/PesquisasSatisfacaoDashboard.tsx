@@ -164,6 +164,26 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
     });
   };
 
+  const getTipoLabel = (tipo: string | undefined) => {
+    if (!tipo) return "";
+    switch (tipo) {
+      case "nps": return "NPS";
+      case "csat": return "CSAT";
+      case "ces": return "CES";
+      default: return tipo.toUpperCase();
+    }
+  };
+
+  const getClassificacaoLabel = (classificacao: string | undefined) => {
+    if (!classificacao) return "";
+    switch (classificacao) {
+      case "promotor": return "Promotor";
+      case "neutro": return "Neutro";
+      case "detrator": return "Detrator";
+      default: return classificacao;
+    }
+  };
+
   const formatarTempo = (segundos: number | undefined): string => {
     if (!segundos) return "-";
     
@@ -310,7 +330,7 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
                               {resposta.pesquisas_satisfacao?.nome}
                             </div>
                             <Badge variant="outline" className="text-xs mt-1">
-                              {resposta.pesquisas_satisfacao?.tipo?.toUpperCase()}
+                              {getTipoLabel(resposta.pesquisas_satisfacao?.tipo)}
                             </Badge>
                           </div>
                         </TableCell>
@@ -377,7 +397,7 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
                                 : "destructive"
                             }
                           >
-                            {resposta.classificacao}
+                            {getClassificacaoLabel(resposta.classificacao)}
                           </Badge>
                         )}
                       </div>

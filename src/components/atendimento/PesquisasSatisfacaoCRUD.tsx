@@ -188,6 +188,15 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
     }
   };
 
+  const getTipoLabel = (tipo: string) => {
+    switch (tipo) {
+      case "nps": return "NPS";
+      case "csat": return "CSAT";
+      case "ces": return "CES";
+      default: return tipo.toUpperCase();
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-8">Carregando...</div>;
   }
@@ -233,7 +242,7 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
                   <TableCell className="font-medium">{pesquisa.nome}</TableCell>
                   <TableCell>
                     <Badge className={getTipoBadgeColor(pesquisa.tipo)}>
-                      {pesquisa.tipo.toUpperCase()}
+                      {getTipoLabel(pesquisa.tipo)}
                     </Badge>
                   </TableCell>
                   <TableCell>
