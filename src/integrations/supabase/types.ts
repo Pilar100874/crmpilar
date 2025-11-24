@@ -613,6 +613,87 @@ export type Database = {
           },
         ]
       }
+      canal_transitions: {
+        Row: {
+          canal_destino: string
+          canal_origem: string
+          contexto_transferido: Json | null
+          conversa_destino_id: string | null
+          conversa_origem_id: string | null
+          created_at: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id: string
+          motivo: string | null
+          session_id: string
+          sucesso: boolean | null
+        }
+        Insert: {
+          canal_destino: string
+          canal_origem: string
+          contexto_transferido?: Json | null
+          conversa_destino_id?: string | null
+          conversa_origem_id?: string | null
+          created_at?: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id?: string
+          motivo?: string | null
+          session_id: string
+          sucesso?: boolean | null
+        }
+        Update: {
+          canal_destino?: string
+          canal_origem?: string
+          contexto_transferido?: Json | null
+          conversa_destino_id?: string | null
+          conversa_origem_id?: string | null
+          created_at?: string | null
+          customer_id?: string
+          estabelecimento_id?: string
+          id?: string
+          motivo?: string | null
+          session_id?: string
+          sucesso?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canal_transitions_conversa_destino_id_fkey"
+            columns: ["conversa_destino_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canal_transitions_conversa_origem_id_fkey"
+            columns: ["conversa_origem_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canal_transitions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canal_transitions_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canal_transitions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "omnichannel_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_sessions: {
         Row: {
           context: Json | null
@@ -1035,6 +1116,54 @@ export type Database = {
             columns: ["sla_config_id"]
             isOneToOne: false
             referencedRelation: "sla_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_canal_preferences: {
+        Row: {
+          ativo: boolean | null
+          canal: string
+          created_at: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id: string
+          preferencia_ordem: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          canal: string
+          created_at?: string | null
+          customer_id: string
+          estabelecimento_id: string
+          id?: string
+          preferencia_ordem?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          canal?: string
+          created_at?: string | null
+          customer_id?: string
+          estabelecimento_id?: string
+          id?: string
+          preferencia_ordem?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_canal_preferences_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_canal_preferences_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]
@@ -2818,6 +2947,63 @@ export type Database = {
           },
         ]
       }
+      omnichannel_sessions: {
+        Row: {
+          ativa: boolean | null
+          canais_ativos: string[] | null
+          contexto_compartilhado: Json | null
+          created_at: string | null
+          customer_id: string
+          estabelecimento_id: string
+          expires_at: string | null
+          id: string
+          session_token: string
+          ultima_interacao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativa?: boolean | null
+          canais_ativos?: string[] | null
+          contexto_compartilhado?: Json | null
+          created_at?: string | null
+          customer_id: string
+          estabelecimento_id: string
+          expires_at?: string | null
+          id?: string
+          session_token: string
+          ultima_interacao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativa?: boolean | null
+          canais_ativos?: string[] | null
+          contexto_compartilhado?: Json | null
+          created_at?: string | null
+          customer_id?: string
+          estabelecimento_id?: string
+          expires_at?: string | null
+          id?: string
+          session_token?: string
+          ultima_interacao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "omnichannel_sessions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "omnichannel_sessions_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_historico: {
         Row: {
           acao: string
@@ -3189,6 +3375,201 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "pesquisas_satisfacao_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_artigos: {
+        Row: {
+          ajudou: number | null
+          categoria: string | null
+          conteudo: string
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          kb_artigo_id: string | null
+          nao_ajudou: number | null
+          ordem: number | null
+          publicado: boolean | null
+          slug: string
+          tags: string[] | null
+          titulo: string
+          updated_at: string | null
+          visualizacoes: number | null
+        }
+        Insert: {
+          ajudou?: number | null
+          categoria?: string | null
+          conteudo: string
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          kb_artigo_id?: string | null
+          nao_ajudou?: number | null
+          ordem?: number | null
+          publicado?: boolean | null
+          slug: string
+          tags?: string[] | null
+          titulo: string
+          updated_at?: string | null
+          visualizacoes?: number | null
+        }
+        Update: {
+          ajudou?: number | null
+          categoria?: string | null
+          conteudo?: string
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          kb_artigo_id?: string | null
+          nao_ajudou?: number | null
+          ordem?: number | null
+          publicado?: boolean | null
+          slug?: string
+          tags?: string[] | null
+          titulo?: string
+          updated_at?: string | null
+          visualizacoes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_artigos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_artigos_kb_artigo_id_fkey"
+            columns: ["kb_artigo_id"]
+            isOneToOne: false
+            referencedRelation: "kb_artigos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_ticket_respostas: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          is_cliente: boolean | null
+          mensagem: string
+          ticket_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          is_cliente?: boolean | null
+          mensagem: string
+          ticket_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          is_cliente?: boolean | null
+          mensagem?: string
+          ticket_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_ticket_respostas_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_ticket_respostas_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "portal_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_ticket_respostas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_tickets: {
+        Row: {
+          assunto: string
+          atribuido_a: string | null
+          categoria: string | null
+          conversa_id: string | null
+          created_at: string | null
+          customer_id: string | null
+          descricao: string
+          estabelecimento_id: string
+          id: string
+          prioridade: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assunto: string
+          atribuido_a?: string | null
+          categoria?: string | null
+          conversa_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          descricao: string
+          estabelecimento_id: string
+          id?: string
+          prioridade?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assunto?: string
+          atribuido_a?: string | null
+          categoria?: string | null
+          conversa_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          descricao?: string
+          estabelecimento_id?: string
+          id?: string
+          prioridade?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_tickets_atribuido_a_fkey"
+            columns: ["atribuido_a"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_tickets_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_tickets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_tickets_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
