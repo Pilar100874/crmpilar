@@ -919,6 +919,14 @@ export type Database = {
           origem_abertura: string | null
           prioridade: Database["public"]["Enums"]["chat_prioridade"] | null
           reaberto_automaticamente: boolean | null
+          sla_config_id: string | null
+          sla_primeira_resposta_at: string | null
+          sla_tempo_primeira_resposta: number | null
+          sla_tempo_total_resolucao: number | null
+          sla_ultima_resposta_cliente_at: string | null
+          sla_violacao_primeira_resposta: boolean | null
+          sla_violacao_resolucao: boolean | null
+          sla_violacao_resposta_subsequente: boolean | null
           status: string | null
           tempo_atendimento_inicio: string | null
           tempo_encerramento: string | null
@@ -945,6 +953,14 @@ export type Database = {
           origem_abertura?: string | null
           prioridade?: Database["public"]["Enums"]["chat_prioridade"] | null
           reaberto_automaticamente?: boolean | null
+          sla_config_id?: string | null
+          sla_primeira_resposta_at?: string | null
+          sla_tempo_primeira_resposta?: number | null
+          sla_tempo_total_resolucao?: number | null
+          sla_ultima_resposta_cliente_at?: string | null
+          sla_violacao_primeira_resposta?: boolean | null
+          sla_violacao_resolucao?: boolean | null
+          sla_violacao_resposta_subsequente?: boolean | null
           status?: string | null
           tempo_atendimento_inicio?: string | null
           tempo_encerramento?: string | null
@@ -971,6 +987,14 @@ export type Database = {
           origem_abertura?: string | null
           prioridade?: Database["public"]["Enums"]["chat_prioridade"] | null
           reaberto_automaticamente?: boolean | null
+          sla_config_id?: string | null
+          sla_primeira_resposta_at?: string | null
+          sla_tempo_primeira_resposta?: number | null
+          sla_tempo_total_resolucao?: number | null
+          sla_ultima_resposta_cliente_at?: string | null
+          sla_violacao_primeira_resposta?: boolean | null
+          sla_violacao_resolucao?: boolean | null
+          sla_violacao_resposta_subsequente?: boolean | null
           status?: string | null
           tempo_atendimento_inicio?: string | null
           tempo_encerramento?: string | null
@@ -1004,6 +1028,13 @@ export type Database = {
             columns: ["fila_id"]
             isOneToOne: false
             referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_sla_config_id_fkey"
+            columns: ["sla_config_id"]
+            isOneToOne: false
+            referencedRelation: "sla_config"
             referencedColumns: ["id"]
           },
         ]
@@ -3348,6 +3379,199 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sla_config: {
+        Row: {
+          alerta_porcentagem: number | null
+          ativo: boolean | null
+          considera_horario_comercial: boolean | null
+          created_at: string | null
+          descricao: string | null
+          escalar_automaticamente: boolean | null
+          estabelecimento_id: string
+          fila_escalacao_id: string | null
+          fila_id: string | null
+          horario_funcionamento: Json | null
+          id: string
+          multiplicador_alta: number | null
+          multiplicador_baixa: number | null
+          multiplicador_normal: number | null
+          multiplicador_urgente: number | null
+          nome: string
+          tempo_primeira_resposta: number
+          tempo_resolucao: number
+          tempo_resposta_subsequente: number
+          updated_at: string | null
+        }
+        Insert: {
+          alerta_porcentagem?: number | null
+          ativo?: boolean | null
+          considera_horario_comercial?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          escalar_automaticamente?: boolean | null
+          estabelecimento_id: string
+          fila_escalacao_id?: string | null
+          fila_id?: string | null
+          horario_funcionamento?: Json | null
+          id?: string
+          multiplicador_alta?: number | null
+          multiplicador_baixa?: number | null
+          multiplicador_normal?: number | null
+          multiplicador_urgente?: number | null
+          nome: string
+          tempo_primeira_resposta?: number
+          tempo_resolucao?: number
+          tempo_resposta_subsequente?: number
+          updated_at?: string | null
+        }
+        Update: {
+          alerta_porcentagem?: number | null
+          ativo?: boolean | null
+          considera_horario_comercial?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          escalar_automaticamente?: boolean | null
+          estabelecimento_id?: string
+          fila_escalacao_id?: string | null
+          fila_id?: string | null
+          horario_funcionamento?: Json | null
+          id?: string
+          multiplicador_alta?: number | null
+          multiplicador_baixa?: number | null
+          multiplicador_normal?: number | null
+          multiplicador_urgente?: number | null
+          nome?: string
+          tempo_primeira_resposta?: number
+          tempo_resolucao?: number
+          tempo_resposta_subsequente?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_config_fila_escalacao_id_fkey"
+            columns: ["fila_escalacao_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_config_fila_id_fkey"
+            columns: ["fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sla_violations: {
+        Row: {
+          alerta_enviado: boolean | null
+          atendente_id: string | null
+          conversation_id: string
+          created_at: string | null
+          escalado: boolean | null
+          escalado_at: string | null
+          escalado_para_fila_id: string | null
+          fila_id: string | null
+          id: string
+          notas: string | null
+          porcentagem_excedida: number
+          prioridade_chat: string | null
+          resolvido: boolean | null
+          resolvido_at: string | null
+          sla_config_id: string
+          tempo_esperado: number
+          tempo_excedido: number
+          tempo_real: number
+          tipo_violacao: string
+        }
+        Insert: {
+          alerta_enviado?: boolean | null
+          atendente_id?: string | null
+          conversation_id: string
+          created_at?: string | null
+          escalado?: boolean | null
+          escalado_at?: string | null
+          escalado_para_fila_id?: string | null
+          fila_id?: string | null
+          id?: string
+          notas?: string | null
+          porcentagem_excedida: number
+          prioridade_chat?: string | null
+          resolvido?: boolean | null
+          resolvido_at?: string | null
+          sla_config_id: string
+          tempo_esperado: number
+          tempo_excedido: number
+          tempo_real: number
+          tipo_violacao: string
+        }
+        Update: {
+          alerta_enviado?: boolean | null
+          atendente_id?: string | null
+          conversation_id?: string
+          created_at?: string | null
+          escalado?: boolean | null
+          escalado_at?: string | null
+          escalado_para_fila_id?: string | null
+          fila_id?: string | null
+          id?: string
+          notas?: string | null
+          porcentagem_excedida?: number
+          prioridade_chat?: string | null
+          resolvido?: boolean | null
+          resolvido_at?: string | null
+          sla_config_id?: string
+          tempo_esperado?: number
+          tempo_excedido?: number
+          tempo_real?: number
+          tipo_violacao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_violations_atendente_id_fkey"
+            columns: ["atendente_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_violations_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_violations_escalado_para_fila_id_fkey"
+            columns: ["escalado_para_fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_violations_fila_id_fkey"
+            columns: ["fila_id"]
+            isOneToOne: false
+            referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_violations_sla_config_id_fkey"
+            columns: ["sla_config_id"]
+            isOneToOne: false
+            referencedRelation: "sla_config"
             referencedColumns: ["id"]
           },
         ]
