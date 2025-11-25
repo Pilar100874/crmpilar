@@ -398,10 +398,9 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
       {/* Configuração de Monitoramento Automático */}
       <CronJobManager
-        estabelecimentoId={estabelecimentoId}
         jobType="monitorar_sla"
-        title="Monitoramento Automático de SLA"
-        defaultCron="*/5 * * * *"
+        jobName="Monitoramento Automático de SLA"
+        defaultSchedule="*/1 * * * *"
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -293,10 +293,9 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
 
       {/* Configuração de Agendamento Automático */}
       <CronJobManager
-        estabelecimentoId={estabelecimentoId}
         jobType="pesquisa_satisfacao"
-        title="Envio Automático de Pesquisas"
-        defaultCron="*/5 * * * *"
+        jobName="Envio Automático de Pesquisas"
+        defaultSchedule="*/5 * * * *"
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
