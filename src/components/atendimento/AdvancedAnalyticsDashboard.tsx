@@ -82,7 +82,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         .from('atendentes')
         .select('id, usuario_id, usuarios!inner(nome)')
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('usuarios.nome');
+        .order('nome', { ascending: true, referencedTable: 'usuarios' });
       
       if (error) throw error;
       setAtendentes(data || []);
@@ -217,17 +217,172 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
     // Implementar exportação
   };
 
-  const handleCriarRelatorio = () => {
+  const handleCriarRelatorio = async () => {
     if (!nomeRelatorio.trim()) {
       toast.error('Informe um nome para o relatório');
       return;
     }
 
-    toast.success(`Relatório "${nomeRelatorio}" criado com sucesso!`);
-    setNovoRelatorioOpen(false);
-    setNomeRelatorio('');
-    setTipoRelatorio('geral');
-    setMetricasSelecionadas(['volume', 'sla', 'fcr', 'aht', 'csat', 'nps']);
+    if (metricasSelecionadas.length === 0) {
+      toast.error('Selecione pelo menos uma métrica');
+      return;
+    }
+
+    try {
+      // Salvar configuração do relatório
+      const { data: relatorio, error: saveError } = await supabase
+        .from('relatorios_customizados')
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          nome: nomeRelatorio,
+          tipo: tipoRelatorio,
+          metricas: metricasSelecionadas,
+          filtros: {
+            data_inicio: format(dataInicio, 'yyyy-MM-dd'),
+            data_fim: format(dataFim, 'yyyy-MM-dd'),
+            fila_id: filaFiltro !== 'todas' ? filaFiltro : null,
+            atendente_id: atendenteFiltro !== 'todos' ? atendenteFiltro : null,
+            canal: canalFiltro !== 'todos' ? canalFiltro : null,
+          }
+        })
+        .select()
+        .single();
+
+      if (saveError) throw saveError;
+
+      toast.success(`Relatório "${nomeRelatorio}" salvo com sucesso!`);
+      
+      // Gerar PDF
+      await gerarPDF(relatorio);
+      
+      setNovoRelatorioOpen(false);
+      setNomeRelatorio('');
+      setTipoRelatorio('geral');
+      setMetricasSelecionadas(['volume', 'sla', 'fcr', 'aht', 'csat', 'nps']);
+    } catch (error: any) {
+      console.error('Erro ao criar relatório:', error);
+      toast.error('Erro ao criar relatório: ' + error.message);
+    }
+  };
+
+  const gerarPDF = async (relatorio: any) => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Cabeçalho
+      doc.setFontSize(20);
+      doc.text(relatorio.nome, 20, 20);
+      
+      doc.setFontSize(12);
+      doc.text(`Período: ${format(dataInicio, 'dd/MM/yyyy')} a ${format(dataFim, 'dd/MM/yyyy')}`, 20, 30);
+      doc.text(`Tipo: ${relatorio.tipo.charAt(0).toUpperCase() + relatorio.tipo.slice(1)}`, 20, 37);
+      doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, 44);
+      
+      let yPos = 55;
+      
+      // Métricas consolidadas
+      doc.setFontSize(16);
+      doc.text('Métricas Consolidadas', 20, yPos);
+      yPos += 10;
+      
+      doc.setFontSize(11);
+      
+      if (metricasSelecionadas.includes('volume')) {
+        doc.text(`Total de Chats: ${metricsConsolidadas.totalChats}`, 25, yPos);
+        yPos += 7;
+      }
+      
+      if (metricasSelecionadas.includes('sla')) {
+        doc.text(`Taxa de Cumprimento SLA: ${mediaSLA.toFixed(1)}%`, 25, yPos);
+        yPos += 7;
+      }
+      
+      if (metricasSelecionadas.includes('fcr')) {
+        doc.text(`FCR (First Contact Resolution): ${mediaFCR.toFixed(1)}%`, 25, yPos);
+        yPos += 7;
+      }
+      
+      if (metricasSelecionadas.includes('aht')) {
+        const mediaAtendimento = metricsConsolidadas.dias > 0 
+          ? metricsConsolidadas.tempoMedioAtendimento / metricsConsolidadas.dias 
+          : 0;
+        doc.text(`AHT (Average Handle Time): ${Math.round(mediaAtendimento / 60)} minutos`, 25, yPos);
+        yPos += 7;
+      }
+      
+      if (metricasSelecionadas.includes('csat')) {
+        doc.text(`CSAT (Customer Satisfaction): ${mediaAvaliacao.toFixed(1)}/5`, 25, yPos);
+        yPos += 7;
+      }
+      
+      if (metricasSelecionadas.includes('nps')) {
+        doc.text(`NPS Score: ${Math.round(mediaNPS)}`, 25, yPos);
+        yPos += 7;
+      }
+      
+      // Adicionar quebra de página se necessário
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      // Métricas por dia (se houver dados)
+      if (metricas.length > 0) {
+        yPos += 10;
+        doc.setFontSize(16);
+        doc.text('Evolução Diária', 20, yPos);
+        yPos += 10;
+        
+        doc.setFontSize(9);
+        const headers = ['Data'];
+        if (metricasSelecionadas.includes('volume')) headers.push('Chats');
+        if (metricasSelecionadas.includes('sla')) headers.push('SLA %');
+        if (metricasSelecionadas.includes('fcr')) headers.push('FCR %');
+        if (metricasSelecionadas.includes('csat')) headers.push('CSAT');
+        if (metricasSelecionadas.includes('nps')) headers.push('NPS');
+        
+        // Cabeçalho da tabela
+        let xPos = 20;
+        headers.forEach((header, i) => {
+          doc.text(header, xPos, yPos);
+          xPos += i === 0 ? 30 : 25;
+        });
+        
+        yPos += 7;
+        
+        // Dados (últimos 10 dias para não ficar muito grande)
+        metricas.slice(-10).forEach((m) => {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          xPos = 20;
+          const row = [format(new Date(m.data), 'dd/MM')];
+          if (metricasSelecionadas.includes('volume')) row.push(m.total_chats.toString());
+          if (metricasSelecionadas.includes('sla')) row.push((m.taxa_cumprimento_sla || 0).toFixed(1));
+          if (metricasSelecionadas.includes('fcr')) row.push((m.taxa_fcr || 0).toFixed(1));
+          if (metricasSelecionadas.includes('csat')) row.push((m.avaliacao_media || 0).toFixed(1));
+          if (metricasSelecionadas.includes('nps')) row.push((m.nps_score || 0).toFixed(0));
+          
+          row.forEach((cell, i) => {
+            doc.text(cell, xPos, yPos);
+            xPos += i === 0 ? 30 : 25;
+          });
+          
+          yPos += 7;
+        });
+      }
+      
+      // Salvar PDF
+      doc.save(`relatorio-${relatorio.nome.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(), 'yyyyMMdd')}.pdf`);
+      
+      toast.success('PDF gerado com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF: ' + error.message);
+    }
   };
 
   const toggleMetrica = (metrica: string) => {
