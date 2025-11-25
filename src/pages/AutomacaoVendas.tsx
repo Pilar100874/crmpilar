@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, ArrowLeft, Download, Upload, Play } from "lucide-react";
+import { Save, ArrowLeft, Download, Upload, Play, MoreVertical, Copy, Trash2, StickyNote } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
 import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
 import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
@@ -21,6 +22,21 @@ interface BlockData {
   note?: string;
   nextBlockId?: string;
 }
+
+const BLOCK_COLORS: Record<string, string> = {
+  inicio: "#4caf50",
+  desconto_valor_compra: "#2196f3",
+  desconto_quantidade_compras: "#9c27b0",
+  desconto_produtos_grupo: "#ff9800",
+  desconto_pagamento_antecipado: "#ffc107",
+  desconto_aniversario_cliente: "#e91e63",
+  desconto_aniversario_empresa: "#673ab7",
+  desconto_data_especial: "#f44336",
+  desconto_historico_crescimento: "#009688",
+  desconto_tempo_desde_ultimo: "#00bcd4",
+  aplicar_desconto: "#8bc34a",
+  fim: "#607d8b",
+};
 
 export default function AutomacaoVendas() {
   const { id } = useParams();
@@ -101,18 +117,15 @@ export default function AutomacaoVendas() {
 
       setBlocks((prevBlocks) => {
         if (targetBlockId) {
-          // Inserir após o bloco alvo
           const targetIndex = prevBlocks.findIndex((b) => b.id === targetBlockId);
           if (targetIndex !== -1) {
             const newBlocks = [...prevBlocks];
-            // Conectar: bloco alvo -> novo bloco -> próximo bloco antigo
             newBlock.nextBlockId = prevBlocks[targetIndex].nextBlockId;
             newBlocks[targetIndex].nextBlockId = newBlock.id;
             newBlocks.splice(targetIndex + 1, 0, newBlock);
             return newBlocks;
           }
         }
-        // Adicionar ao final se não houver alvo
         return [...prevBlocks, newBlock];
       });
 
@@ -129,7 +142,6 @@ export default function AutomacaoVendas() {
       const newBlocks = [...prevBlocks];
       const deletedBlock = newBlocks[blockIndex];
 
-      // Reconectar: bloco anterior -> próximo bloco do deletado
       if (blockIndex > 0) {
         newBlocks[blockIndex - 1].nextBlockId = deletedBlock.nextBlockId;
       }
@@ -287,21 +299,24 @@ export default function AutomacaoVendas() {
             className="flex-1 bg-muted/20 overflow-auto p-8"
             onDragOver={onDragOver}
             onDrop={(e) => onDrop(e)}
+            style={{
+              backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
           >
-            <div className="max-w-4xl mx-auto space-y-2">
+            <div className="max-w-4xl mx-auto space-y-1">
               {blocks.map((block) => (
-                <div key={block.id} className="relative">
-                  <BlockComponent
-                    block={block}
-                    onSelect={() => setSelectedBlock(block)}
-                    onDelete={() => handleDeleteBlock(block.id)}
-                    onDuplicate={() => handleDuplicateBlock(block.id)}
-                    onAddNote={() => handleAddNote(block.id)}
-                    onDrop={(e) => onDrop(e, block.id)}
-                    onDragOver={onDragOver}
-                    isSelected={selectedBlock?.id === block.id}
-                  />
-                </div>
+                <BlocklyBlock
+                  key={block.id}
+                  block={block}
+                  onSelect={() => setSelectedBlock(block)}
+                  onDelete={() => handleDeleteBlock(block.id)}
+                  onDuplicate={() => handleDuplicateBlock(block.id)}
+                  onAddNote={() => handleAddNote(block.id)}
+                  onDrop={(e) => onDrop(e, block.id)}
+                  onDragOver={onDragOver}
+                  isSelected={selectedBlock?.id === block.id}
+                />
               ))}
             </div>
           </div>
@@ -325,8 +340,7 @@ export default function AutomacaoVendas() {
   );
 }
 
-// Componente de Bloco individual
-interface BlockComponentProps {
+interface BlocklyBlockProps {
   block: BlockData;
   onSelect: () => void;
   onDelete: () => void;
@@ -337,7 +351,7 @@ interface BlockComponentProps {
   isSelected: boolean;
 }
 
-function BlockComponent({
+function BlocklyBlock({
   block,
   onSelect,
   onDelete,
@@ -346,88 +360,122 @@ function BlockComponent({
   onDrop,
   onDragOver,
   isSelected,
-}: BlockComponentProps) {
-  const blockColors: Record<string, string> = {
-    inicio: "bg-green-500",
-    desconto_valor_compra: "bg-blue-500",
-    desconto_quantidade_compras: "bg-purple-500",
-    desconto_produtos_grupo: "bg-orange-500",
-    desconto_pagamento_antecipado: "bg-yellow-500",
-    desconto_aniversario_cliente: "bg-pink-500",
-    desconto_aniversario_empresa: "bg-indigo-500",
-    desconto_data_especial: "bg-red-500",
-    desconto_historico_crescimento: "bg-teal-500",
-    desconto_tempo_desde_ultimo: "bg-cyan-500",
-    aplicar_desconto: "bg-emerald-500",
-    fim: "bg-gray-500",
-  };
-
-  const color = blockColors[block.type] || "bg-gray-400";
+}: BlocklyBlockProps) {
+  const color = BLOCK_COLORS[block.type] || "#607d8b";
+  const isStart = block.type === "inicio";
+  const isEnd = block.type === "fim";
 
   return (
     <div
       onClick={onSelect}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      className={`cursor-pointer transition-all ${isSelected ? "ring-4 ring-primary" : ""}`}
+      className={`relative cursor-pointer transition-all ${
+        isSelected ? "scale-105" : "hover:scale-102"
+      }`}
+      style={{ filter: isSelected ? "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" : "" }}
     >
-      {/* Conector Superior (encaixe para receber) */}
-      {block.type !== "inicio" && (
+      {/* Notch Superior (Encaixe de entrada) */}
+      {!isStart && (
         <div className="flex justify-center">
-          <div className={`w-8 h-4 ${color} rounded-t-lg`} />
+          <svg width="40" height="8" viewBox="0 0 40 8" className="block">
+            <path
+              d="M 0,8 L 0,0 L 15,0 L 20,4 L 25,0 L 40,0 L 40,8 Z"
+              fill={color}
+              stroke="rgba(0,0,0,0.2)"
+              strokeWidth="1"
+            />
+          </svg>
         </div>
       )}
 
       {/* Corpo do Bloco */}
-      <div className={`${color} text-white rounded-lg p-4 shadow-lg hover:shadow-xl transition-shadow`}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-bold text-lg">{block.label}</span>
-          <div className="flex gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicate();
-              }}
-              className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-xs"
-            >
-              📋
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddNote();
-              }}
-              className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-xs"
-            >
-              📝
-            </button>
-            {block.type !== "inicio" && (
-              <button
+      <div
+        className="relative"
+        style={{
+          backgroundColor: color,
+          minHeight: "60px",
+          padding: "12px 16px",
+          boxShadow: "2px 2px 4px rgba(0,0,0,0.2)",
+        }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <div className="text-white font-bold text-base leading-tight mb-1">
+              {block.label}
+            </div>
+            <div className="text-white/80 text-xs">
+              {block.type.replace(/_/g, " ")}
+            </div>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-white hover:bg-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete();
+                  onDuplicate();
                 }}
-                className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-xs"
               >
-                🗑️
-              </button>
-            )}
-          </div>
+                <Copy className="h-4 w-4 mr-2" />
+                Duplicar
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddNote();
+                }}
+              >
+                <StickyNote className="h-4 w-4 mr-2" />
+                {block.note ? "Editar Nota" : "Adicionar Nota"}
+              </DropdownMenuItem>
+              {!isStart && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Deletar
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div className="text-sm opacity-90">{block.type.replace(/_/g, " ")}</div>
-
         {block.note && (
-          <div className="mt-2 p-2 bg-black/20 rounded text-sm">
+          <div
+            className="mt-3 p-2 rounded text-sm leading-snug"
+            style={{ backgroundColor: "rgba(0,0,0,0.15)", color: "white" }}
+          >
             📝 {block.note}
           </div>
         )}
       </div>
 
-      {/* Conector Inferior (encaixe para conectar) */}
-      {block.type !== "fim" && (
+      {/* Notch Inferior (Encaixe de saída) */}
+      {!isEnd && (
         <div className="flex justify-center">
-          <div className={`w-8 h-4 ${color} rounded-b-lg`} />
+          <svg width="40" height="8" viewBox="0 0 40 8" className="block">
+            <path
+              d="M 0,0 L 0,8 L 15,8 L 20,4 L 25,8 L 40,8 L 40,0 Z"
+              fill={color}
+              stroke="rgba(0,0,0,0.2)"
+              strokeWidth="1"
+            />
+          </svg>
         </div>
       )}
     </div>
