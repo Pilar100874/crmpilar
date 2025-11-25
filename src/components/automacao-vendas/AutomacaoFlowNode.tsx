@@ -114,12 +114,12 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
             </DropdownMenu>
           </div>
 
-          {/* Nota (se houver) */}
-          {note && (
-            <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
-              📝 {String(note)}
-            </div>
-          )}
+        {/* Nota (se houver) */}
+        {note && (
+          <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500 whitespace-pre-wrap">
+            📝 {String(note)}
+          </div>
+        )}
         </div>
 
         {/* Handle inferior - não renderizar para bloco fim */}
