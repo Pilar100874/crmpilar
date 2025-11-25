@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
+import { Plus, Edit, Trash2, Power, PowerOff, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -82,6 +87,23 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
       toast.error("Erro ao atualizar status");
+    }
+  };
+
+  const handleUpdateExpiration = async (id: string, expiresAt: Date | null) => {
+    try {
+      const { error } = await supabase
+        .from("automacoes_vendas")
+        .update({ expires_at: expiresAt ? expiresAt.toISOString() : null })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Vencimento atualizado com sucesso!");
+      loadAutomacoes();
+    } catch (error) {
+      console.error("Erro ao atualizar vencimento:", error);
+      toast.error("Erro ao atualizar vencimento");
     }
   };
 
@@ -170,13 +192,47 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                     <span className="text-sm">{numBlocos} blocos</span>
                   </TableCell>
                   <TableCell>
-                    {automacao.expires_at ? (
-                      <span className="text-sm">
-                        {new Date(automacao.expires_at).toLocaleDateString()}
-                      </span>
-                    ) : (
-                      <Badge variant="outline">Indeterminado</Badge>
-                    )}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "h-8 justify-start text-left font-normal",
+                            !automacao.expires_at && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {automacao.expires_at ? (
+                            format(new Date(automacao.expires_at), "dd/MM/yyyy")
+                          ) : (
+                            "Indeterminado"
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={automacao.expires_at ? new Date(automacao.expires_at) : undefined}
+                          onSelect={(date) => handleUpdateExpiration(automacao.id, date || null)}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                          disabled={(date) => date < new Date()}
+                        />
+                        {automacao.expires_at && (
+                          <div className="p-3 border-t">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUpdateExpiration(automacao.id, null)}
+                              className="w-full"
+                            >
+                              Remover vencimento
+                            </Button>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
                   </TableCell>
                   <TableCell className="text-sm">
                     {new Date(automacao.created_at).toLocaleDateString()}
