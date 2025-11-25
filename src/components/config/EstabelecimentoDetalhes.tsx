@@ -1132,19 +1132,19 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                   <OmnichannelFlowsCRUD estabelecimentoId={estabelecimentoId} />
                 </AccordionContent>
               </AccordionItem>
-
-              <AccordionItem value="quality-assurance" className="border rounded-md">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <ClipboardCheck className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Quality Assurance</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  <QualityAssuranceCRUD estabelecimentoId={estabelecimentoId} />
-                </AccordionContent>
-              </AccordionItem>
             </Accordion>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="quality-assurance" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-primary" />
+              <span className="font-medium">Quality Assurance</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <QualityAssuranceCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
