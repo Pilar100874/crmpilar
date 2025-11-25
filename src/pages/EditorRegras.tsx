@@ -267,6 +267,7 @@ function EditorRegrasContent() {
           title: "Sucesso!",
           description: "Regra atualizada com sucesso",
         });
+        navigate("/automacoes-vendas");
       } else {
         const { data, error } = await supabase
           .from("automacoes_vendas")
@@ -302,7 +303,7 @@ function EditorRegrasContent() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/orcamentos")}
+            onClick={() => navigate("/automacoes-vendas")}
             className="h-8 w-8"
           >
             <ArrowLeft className="h-4 w-4" />
