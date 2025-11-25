@@ -547,6 +547,17 @@ function EditorRegrasContent() {
             nodeTypes={nodeTypes}
             fitView
             className="bg-background"
+            defaultEdgeOptions={{
+              animated: true,
+              style: { stroke: '#8B5CF6', strokeWidth: 2 },
+              markerEnd: {
+                type: 'arrowclosed',
+                width: 20,
+                height: 20,
+                color: '#8B5CF6',
+              },
+              type: 'smoothstep',
+            }}
           >
             <Background 
               variant={BackgroundVariant.Dots} 

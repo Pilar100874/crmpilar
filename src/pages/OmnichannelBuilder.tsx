@@ -734,9 +734,15 @@ export default function OmnichannelBuilder() {
               edgesFocusable={!isLocked}
               fitView
               defaultEdgeOptions={{
+                animated: true,
                 type: "smoothstep",
-                style: { stroke: "#06b6d4", strokeWidth: 1.33 },
-                markerEnd: { type: "arrowclosed", color: "#06b6d4" },
+                style: { stroke: "#06b6d4", strokeWidth: 2 },
+                markerEnd: { 
+                  type: "arrowclosed", 
+                  width: 20,
+                  height: 20,
+                  color: "#06b6d4" 
+                },
               }}
             >
               <Background />
