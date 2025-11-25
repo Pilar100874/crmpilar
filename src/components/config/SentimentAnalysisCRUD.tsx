@@ -8,8 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, HelpCircle, Brain, AlertTriangle, TrendingUp } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Save, Brain, AlertTriangle, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SentimentAnalysisCRUDProps {
@@ -113,71 +112,14 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Brain className="w-5 h-5 text-primary" />
-            Análise de Sentimento
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Configure a análise automática de sentimento usando IA
-          </p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <HelpCircle className="w-4 h-4 mr-2" />
-              Ajuda
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Como funciona a Análise de Sentimento?</DialogTitle>
-              <DialogDescription className="text-left space-y-4 pt-4">
-                <div>
-                  <h4 className="font-semibold mb-2">📊 Análise Automática</h4>
-                  <p className="text-sm">Cada mensagem do cliente é analisada em tempo real usando IA (Lovable AI) para detectar:</p>
-                  <ul className="text-sm list-disc ml-6 mt-2 space-y-1">
-                    <li><strong>Sentimento:</strong> Positivo, Neutro ou Negativo</li>
-                    <li><strong>Emoção:</strong> Feliz, Triste, Irritado, Frustrado, Satisfeito</li>
-                    <li><strong>Pontuação:</strong> 0.0 (muito negativo) a 1.0 (muito positivo)</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">🚨 Alertas Automáticos</h4>
-                  <p className="text-sm">O sistema gera alertas quando detecta:</p>
-                  <ul className="text-sm list-disc ml-6 mt-2 space-y-1">
-                    <li>Múltiplas mensagens negativas consecutivas</li>
-                    <li>Pontuação muito baixa (abaixo do limite)</li>
-                    <li>Mudança brusca de sentimento</li>
-                    <li>Palavras de escalação (gerente, reclamação, advogado)</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">⚡ Ações Automáticas</h4>
-                  <p className="text-sm">Quando um alerta é gerado:</p>
-                  <ul className="text-sm list-disc ml-6 mt-2 space-y-1">
-                    <li>Supervisor recebe notificação em tempo real</li>
-                    <li>Chat é destacado no painel</li>
-                    <li>Prioridade pode ser aumentada automaticamente</li>
-                    <li>Chat pode ser escalado para fila específica</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">📈 Limites de Pontuação</h4>
-                  <ul className="text-sm list-disc ml-6 space-y-1">
-                    <li><strong>Negativo:</strong> Pontuação abaixo deste valor = sentimento negativo</li>
-                    <li><strong>Positivo:</strong> Pontuação acima deste valor = sentimento positivo</li>
-                    <li><strong>Neutro:</strong> Pontuação entre os dois limites</li>
-                  </ul>
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Brain className="w-5 h-5 text-primary" />
+          Análise de Sentimento
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          Configure a análise automática de sentimento usando IA
+        </p>
       </div>
 
       <Card>
