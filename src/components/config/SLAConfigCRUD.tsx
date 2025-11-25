@@ -346,14 +346,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 <div>
                   <Label>Fila</Label>
                   <Select
-                    value={formData.fila_id}
+                    value={formData.fila_id || undefined}
                     onValueChange={(value) => setFormData({ ...formData, fila_id: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Todas as filas" />
+                      <SelectValue placeholder="Todas as filas (padrão)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas as filas (padrão)</SelectItem>
                       {filas.map((fila) => (
                         <SelectItem key={fila.id} value={fila.id}>
                           {fila.nome}
