@@ -404,53 +404,67 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {selectedConfig ? 'Editar' : 'Nova'} Configuração de SLA
+            <DialogTitle className="text-2xl">
+              {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
             </DialogTitle>
-            <DialogDescription>
-              Configure os tempos de resposta e resolução esperados
-            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Informações Básicas */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Clock className="w-5 h-5" />
+            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-primary" />
+                </div>
                 Informações Básicas
               </h3>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label>Nome *</Label>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="nome" className="text-sm font-medium">
+                    Nome da Configuração *
+                  </Label>
                   <Input
+                    id="nome"
                     value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    placeholder="Ex: SLA Padrão, SLA Suporte Premium"
-                    required
+                    onChange={(e) =>
+                      setFormData({ ...formData, nome: e.target.value })
+                    }
+                    placeholder="Ex: SLA Suporte Básico"
+                    className="mt-1.5"
                     maxLength={100}
                   />
                 </div>
 
-                <div className="col-span-2">
-                  <Label>Descrição</Label>
+                <div>
+                  <Label htmlFor="descricao" className="text-sm font-medium">
+                    Descrição
+                  </Label>
                   <Textarea
-                    value={formData.descricao}
-                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    placeholder="Descrição opcional desta configuração"
+                    id="descricao"
+                    value={formData.descricao || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descricao: e.target.value })
+                    }
+                    placeholder="Descreva quando esta configuração deve ser aplicada"
+                    className="mt-1.5 min-h-[80px]"
                     maxLength={500}
                   />
                 </div>
 
                 <div>
-                  <Label>Fila</Label>
+                  <Label htmlFor="fila_id" className="text-sm font-medium">
+                    Fila de Atendimento
+                  </Label>
                   <Select
                     value={formData.fila_id || undefined}
-                    onValueChange={(value) => setFormData({ ...formData, fila_id: value })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, fila_id: value })
+                    }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1.5">
                       <SelectValue placeholder="Todas as filas (padrão)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -461,214 +475,241 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Deixe em branco para aplicar a todas as filas
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tempos de SLA */}
+            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4 text-primary" />
+                </div>
+                Tempos de SLA
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-background rounded-md p-3 border">
+                  <Label htmlFor="tempo_primeira_resposta" className="text-sm font-medium">
+                    Primeira Resposta *
+                  </Label>
+                  <Input
+                    id="tempo_primeira_resposta"
+                    type="number"
+                    min="1"
+                    value={Math.floor(formData.tempo_primeira_resposta / 60)}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tempo_primeira_resposta: (parseInt(e.target.value) || 0) * 60,
+                      })
+                    }
+                    placeholder="5"
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Tempo em minutos para primeira resposta
+                  </p>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="bg-background rounded-md p-3 border">
+                  <Label htmlFor="tempo_resposta_subsequente" className="text-sm font-medium">
+                    Resposta Subsequente *
+                  </Label>
+                  <Input
+                    id="tempo_resposta_subsequente"
+                    type="number"
+                    min="1"
+                    value={Math.floor(formData.tempo_resposta_subsequente / 60)}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tempo_resposta_subsequente: (parseInt(e.target.value) || 0) * 60,
+                      })
+                    }
+                    placeholder="10"
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Tempo em minutos para respostas seguintes
+                  </p>
+                </div>
+
+                <div className="bg-background rounded-md p-3 border">
+                  <Label htmlFor="tempo_resolucao" className="text-sm font-medium">
+                    Resolução Total *
+                  </Label>
+                  <Input
+                    id="tempo_resolucao"
+                    type="number"
+                    min="1"
+                    value={Math.floor(formData.tempo_resolucao / 60)}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tempo_resolucao: (parseInt(e.target.value) || 0) * 60,
+                      })
+                    }
+                    placeholder="60"
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Tempo total em minutos para resolver
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Alertas */}
+            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                </div>
+                Configuração de Alertas
+              </h3>
+              
+              <div className="bg-background rounded-md p-3 border">
+                <Label htmlFor="alerta_porcentagem" className="text-sm font-medium">
+                  Porcentagem para Alerta (%) *
+                </Label>
+                <Input
+                  id="alerta_porcentagem"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={formData.alerta_porcentagem}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      alerta_porcentagem: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="80"
+                  className="mt-1.5"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Sistema alertará quando atingir este percentual do tempo SLA (ex: 80% = alerta aos 48min de um SLA de 60min)
+                </p>
+              </div>
+            </div>
+
+            {/* Ações Automáticas */}
+            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary text-sm">⚡</span>
+                </div>
+                Ações Automáticas
+              </h3>
+
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3 bg-background rounded-md p-3 border">
                   <Switch
-                    checked={formData.ativo}
-                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-                  />
-                  <Label>Configuração ativa</Label>
-                </div>
-              </div>
-            </div>
-
-            {/* Tempos de Resposta */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Tempos de Resposta (em segundos)
-              </h3>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Primeira Resposta *</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    required
-                    value={formData.tempo_primeira_resposta}
-                    onChange={(e) => setFormData({ ...formData, tempo_primeira_resposta: parseInt(e.target.value) || 1 })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatarTempo(formData.tempo_primeira_resposta)}
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Respostas Subsequentes *</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    required
-                    value={formData.tempo_resposta_subsequente}
-                    onChange={(e) => setFormData({ ...formData, tempo_resposta_subsequente: parseInt(e.target.value) || 1 })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatarTempo(formData.tempo_resposta_subsequente)}
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Resolução Total *</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    required
-                    value={formData.tempo_resolucao}
-                    onChange={(e) => setFormData({ ...formData, tempo_resolucao: parseInt(e.target.value) || 1 })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatarTempo(formData.tempo_resolucao)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Multiplicadores de Prioridade */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Multiplicadores por Prioridade
-              </h3>
-              
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <Label>Urgente</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={formData.multiplicador_urgente}
-                    onChange={(e) => setFormData({ ...formData, multiplicador_urgente: parseFloat(e.target.value) })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(formData.multiplicador_urgente * 100).toFixed(0)}%
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Alta</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={formData.multiplicador_alta}
-                    onChange={(e) => setFormData({ ...formData, multiplicador_alta: parseFloat(e.target.value) })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(formData.multiplicador_alta * 100).toFixed(0)}%
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Normal</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={formData.multiplicador_normal}
-                    onChange={(e) => setFormData({ ...formData, multiplicador_normal: parseFloat(e.target.value) })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(formData.multiplicador_normal * 100).toFixed(0)}%
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Baixa</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={formData.multiplicador_baixa}
-                    onChange={(e) => setFormData({ ...formData, multiplicador_baixa: parseFloat(e.target.value) })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(formData.multiplicador_baixa * 100).toFixed(0)}%
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Alertas e Escalação */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
-                Alertas e Escalação
-              </h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Porcentagem para Alerta (%) *</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="100"
-                    required
-                    value={formData.alerta_porcentagem}
-                    onChange={(e) => setFormData({ ...formData, alerta_porcentagem: parseInt(e.target.value) || 80 })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Alertar quando atingir {formData.alerta_porcentagem}% do tempo
-                  </p>
-                </div>
-
-                <div className="flex items-center space-x-2 pt-8">
-                  <Switch
+                    id="notificar_supervisor"
                     checked={formData.notificar_supervisor}
-                    onCheckedChange={(checked) => setFormData({ ...formData, notificar_supervisor: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, notificar_supervisor: checked })
+                    }
+                    className="mt-0.5"
                   />
-                  <Label>Notificar supervisor</Label>
+                  <div className="flex-1">
+                    <Label htmlFor="notificar_supervisor" className="text-sm font-medium cursor-pointer">
+                      Notificar Supervisor
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Envia notificação em tempo real ao supervisor quando SLA está próximo da violação
+                    </p>
+                  </div>
                 </div>
 
                 {formData.notificar_supervisor && (
-                  <div className="col-span-2">
-                    <Label>Supervisor *</Label>
+                  <div className={`ml-6 ${formData.notificar_supervisor && !formData.supervisor_id ? "border-destructive" : "border-border"} border rounded-md p-3 bg-background`}>
+                    <Label htmlFor="supervisor_id" className="text-sm font-medium">
+                      Supervisor Responsável *
+                    </Label>
                     <Select
-                      value={formData.supervisor_id || undefined}
-                      onValueChange={(value) => setFormData({ ...formData, supervisor_id: value })}
-                      required
+                      value={formData.supervisor_id || ""}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, supervisor_id: value })
+                      }
                     >
-                      <SelectTrigger className={!formData.supervisor_id ? 'border-destructive' : ''}>
+                      <SelectTrigger className="mt-1.5">
                         <SelectValue placeholder="Selecione o supervisor" />
                       </SelectTrigger>
                       <SelectContent>
                         {usuarios.map((usuario) => (
                           <SelectItem key={usuario.id} value={usuario.id}>
-                            {usuario.nome} ({usuario.email})
+                            {usuario.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Obrigatório quando notificação de supervisor estiver ativa
-                    </p>
+                    {formData.notificar_supervisor && !formData.supervisor_id && (
+                      <p className="text-xs text-destructive mt-1.5">
+                        ⚠️ Supervisor é obrigatório quando notificação está ativa
+                      </p>
+                    )}
                   </div>
                 )}
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-3 bg-background rounded-md p-3 border">
                   <Switch
+                    id="aumentar_prioridade_automatica"
                     checked={formData.aumentar_prioridade_automatica}
-                    onCheckedChange={(checked) => setFormData({ ...formData, aumentar_prioridade_automatica: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, aumentar_prioridade_automatica: checked })
+                    }
+                    className="mt-0.5"
                   />
-                  <Label>Aumentar prioridade automaticamente</Label>
+                  <div className="flex-1">
+                    <Label htmlFor="aumentar_prioridade_automatica" className="text-sm font-medium cursor-pointer">
+                      Aumentar Prioridade Automaticamente
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Eleva automaticamente a prioridade do chat quando SLA é violado
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-3 bg-background rounded-md p-3 border">
                   <Switch
+                    id="escalar_automaticamente"
                     checked={formData.escalar_automaticamente}
-                    onCheckedChange={(checked) => setFormData({ ...formData, escalar_automaticamente: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({
+                        ...formData,
+                        escalar_automaticamente: checked,
+                      })
+                    }
+                    className="mt-0.5"
                   />
-                  <Label>Escalar automaticamente</Label>
+                  <div className="flex-1">
+                    <Label htmlFor="escalar_automaticamente" className="text-sm font-medium cursor-pointer">
+                      Escalar Automaticamente
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Transfere automaticamente o chat para outra fila quando SLA é violado
+                    </p>
+                  </div>
                 </div>
 
                 {formData.escalar_automaticamente && (
-                  <div className="col-span-2">
-                    <Label>Fila de Escalação *</Label>
+                  <div className={`ml-6 ${formData.escalar_automaticamente && !formData.fila_escalacao_id ? "border-destructive" : "border-border"} border rounded-md p-3 bg-background`}>
+                    <Label htmlFor="fila_escalacao_id" className="text-sm font-medium">
+                      Fila de Escalação *
+                    </Label>
                     <Select
-                      value={formData.fila_escalacao_id}
-                      onValueChange={(value) => setFormData({ ...formData, fila_escalacao_id: value })}
-                      required
+                      value={formData.fila_escalacao_id || ""}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, fila_escalacao_id: value })
+                      }
                     >
-                      <SelectTrigger className={!formData.fila_escalacao_id ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Selecione a fila para escalação" />
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Selecione a fila de escalação" />
                       </SelectTrigger>
                       <SelectContent>
                         {filas.map((fila) => (
@@ -678,21 +719,44 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Obrigatório quando escalação automática estiver ativa
-                    </p>
+                    {formData.escalar_automaticamente && !formData.fila_escalacao_id && (
+                      <p className="text-xs text-destructive mt-1.5">
+                        ⚠️ Fila de escalação é obrigatória quando escalação automática está ativa
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Status */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="ativo"
+                  checked={formData.ativo}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, ativo: checked })
+                  }
+                />
+                <div>
+                  <Label htmlFor="ativo" className="text-sm font-medium cursor-pointer">
+                    Configuração Ativa
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {formData.ativo ? "Esta configuração está ativa e será aplicada aos novos chats" : "Esta configuração está inativa e não será aplicada"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleSave} disabled={!formData.nome}>
-              Salvar
+              {selectedConfig ? "Atualizar" : "Criar"} Configuração
             </Button>
           </DialogFooter>
         </DialogContent>
