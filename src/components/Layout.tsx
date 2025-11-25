@@ -763,36 +763,40 @@ export default function Layout({ children }: LayoutProps) {
                                           </NavLink>
                                         </div>
                                        )}
-                                      <button
-                                        onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Atendimento" ? null : "Atendimento")}
-                                        className="flex items-center justify-between w-full px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                                          <span className="text-sm">Atendimento</span>
-                                        </div>
-                                        <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Atendimento" ? 'rotate-180' : ''}`} />
-                                      </button>
-                                      {openNestedSubmenu === "Atendimento" && (
-                                        <div className="ml-6 space-y-1">
-                                          <NavLink
-                                            to="/pesquisas-satisfacao"
-                                            onClick={() => {
-                                              setOpenSubmenuId(null);
-                                              setOpenNestedSubmenu(null);
-                                            }}
-                                            className={({ isActive }) =>
-                                              `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                                                isActive
-                                                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                                              }`
-                                            }
+                                      {allowedMenus["CSAT/NPS"]?.view && (
+                                        <>
+                                          <button
+                                            onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Atendimento" ? null : "Atendimento")}
+                                            className="flex items-center justify-between w-full px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                                           >
-                                            <Star className="w-4 h-4 flex-shrink-0" />
-                                            <span className="text-sm">Pesquisas de Satisfação</span>
-                                          </NavLink>
-                                        </div>
+                                            <div className="flex items-center gap-3">
+                                              <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                                              <span className="text-sm">Atendimento</span>
+                                            </div>
+                                            <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Atendimento" ? 'rotate-180' : ''}`} />
+                                          </button>
+                                          {openNestedSubmenu === "Atendimento" && (
+                                            <div className="ml-6 space-y-1">
+                                              <NavLink
+                                                to="/pesquisas-satisfacao"
+                                                onClick={() => {
+                                                  setOpenSubmenuId(null);
+                                                  setOpenNestedSubmenu(null);
+                                                }}
+                                                className={({ isActive }) =>
+                                                  `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                                                    isActive
+                                                      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                                      : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                                  }`
+                                                }
+                                              >
+                                                <Star className="w-4 h-4 flex-shrink-0" />
+                                                <span className="text-sm">Pesquisas de Satisfação</span>
+                                              </NavLink>
+                                            </div>
+                                          )}
+                                        </>
                                       )}
                                     </>
                                   )}
@@ -912,36 +916,40 @@ export default function Layout({ children }: LayoutProps) {
                                     </NavLink>
                                   </div>
                                 )}
-                                <button
-                                  onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Atendimento" ? null : "Atendimento")}
-                                  className="flex items-center justify-between w-full px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm">Atendimento</span>
-                                  </div>
-                                  <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Atendimento" ? 'rotate-180' : ''}`} />
-                                </button>
-                                {openNestedSubmenu === "Atendimento" && (
-                                  <div className="ml-6 space-y-1">
-                                    <NavLink
-                                      to="/pesquisas-satisfacao"
-                                      onClick={() => {
-                                        setOpenSubmenuId(null);
-                                        setOpenNestedSubmenu(null);
-                                      }}
-                                      className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                                          isActive
-                                            ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                            : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-                                        }`
-                                      }
+                                {allowedMenus["CSAT/NPS"]?.view && (
+                                  <>
+                                    <button
+                                      onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Atendimento" ? null : "Atendimento")}
+                                      className="flex items-center justify-between w-full px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
                                     >
-                                      <Star className="w-4 h-4 flex-shrink-0" />
-                                      <span className="text-sm">Pesquisas de Satisfação</span>
-                                    </NavLink>
-                                  </div>
+                                      <div className="flex items-center gap-3">
+                                        <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                                        <span className="text-sm">Atendimento</span>
+                                      </div>
+                                      <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Atendimento" ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {openNestedSubmenu === "Atendimento" && (
+                                      <div className="ml-6 space-y-1">
+                                        <NavLink
+                                          to="/pesquisas-satisfacao"
+                                          onClick={() => {
+                                            setOpenSubmenuId(null);
+                                            setOpenNestedSubmenu(null);
+                                          }}
+                                          className={({ isActive }) =>
+                                            `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                              isActive
+                                                ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                                : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                            }`
+                                          }
+                                        >
+                                          <Star className="w-4 h-4 flex-shrink-0" />
+                                          <span className="text-sm">Pesquisas de Satisfação</span>
+                                        </NavLink>
+                                      </div>
+                                    )}
+                                  </>
                                 )}
                               </>
                             )}
