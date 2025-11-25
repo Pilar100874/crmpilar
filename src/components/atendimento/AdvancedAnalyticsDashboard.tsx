@@ -745,35 +745,35 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold">NPS (Net Promoter Score)</h4>
+                  <h4 className="font-semibold">NPS (Índice de Promotores Líquidos)</h4>
                   <p className="text-sm text-muted-foreground">Probabilidade de recomendação</p>
                   <p className="text-sm mt-1">
                     <strong>Como calcular:</strong> % Promotores - % Detratores
                   </p>
                   <p className="text-sm mt-1">
-                    <strong>Uso:</strong> Medir lealdade do cliente
+                    <strong>Uso:</strong> Medir lealdade e satisfação do cliente
                   </p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="font-semibold text-lg mb-2">📈 Dashboards Disponíveis</h3>
+              <h3 className="font-semibold text-lg mb-2">📈 Painéis Disponíveis</h3>
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-semibold">Dashboard Principal</h4>
+                  <h4 className="font-semibold">Painel Principal</h4>
                   <p className="text-sm text-muted-foreground">
                     Visão geral de todas as métricas com gráficos de tendência e comparativos
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold">Dashboard por Atendente</h4>
+                  <h4 className="font-semibold">Painel por Atendente</h4>
                   <p className="text-sm text-muted-foreground">
-                    Performance individual, ranking de atendentes e metas vs. realizado
+                    Desempenho individual, ranking de atendentes e metas versus realizado
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold">Dashboard por Canal</h4>
+                  <h4 className="font-semibold">Painel por Canal</h4>
                   <p className="text-sm text-muted-foreground">
                     Distribuição de volume, métricas por canal (WhatsApp, WebChat, etc.) e comparativo de satisfação
                   </p>
@@ -840,7 +840,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
-            <CardTitle className="text-sm font-medium text-muted-foreground">FCR</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Resolução 1º Contato</CardTitle>
             <div className="p-2 rounded-lg bg-purple-500/10">
               <Award className="h-5 w-5 text-purple-500" />
             </div>
@@ -854,7 +854,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
-            <CardTitle className="text-sm font-medium text-muted-foreground">NPS Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Índice NPS</CardTitle>
             <div className="p-2 rounded-lg bg-orange-500/10">
               <TrendingUp className="h-5 w-5 text-orange-500" />
             </div>
@@ -938,7 +938,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
               className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap gap-2 inline-flex items-center"
             >
               <BarChart3 className="h-4 w-4" />
-              Principal
+              Visão Geral
             </TabsTrigger>
             <TabsTrigger 
               value="volume" 
@@ -986,7 +986,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                   <div className="p-2 rounded-lg bg-primary/10">
                     <BarChart3 className="w-5 h-5 text-primary" />
                   </div>
-                  Visão Geral - Volume
+                  Volume de Atendimentos
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1005,7 +1005,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                   <div className="p-2 rounded-lg bg-primary/10">
                     <TrendingUp className="w-5 h-5 text-primary" />
                   </div>
-                  NPS Score
+                  Índice NPS
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1030,7 +1030,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                 </div>
                 Volume de Atendimentos e SLA
               </CardTitle>
-              <CardDescription className="mt-2">Evolução diária do volume e cumprimento de SLA</CardDescription>
+              <CardDescription className="mt-2">Evolução diária do volume de atendimentos e cumprimento de SLA</CardDescription>
             </CardHeader>
             <CardContent>
               {metricas.length > 0 ? (
@@ -1072,7 +1072,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
               <CardHeader className="relative">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-500" />
-                  Tempo Médio Primeira Resposta
+                  Tempo Médio de Primeira Resposta
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative">
@@ -1108,9 +1108,9 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                 <div className="p-2 rounded-lg bg-primary/10">
                   <Award className="w-5 h-5 text-primary" />
                 </div>
-                Net Promoter Score (NPS)
+                Índice de Promotores Líquidos (NPS)
               </CardTitle>
-              <CardDescription className="mt-2">Análise de satisfação do cliente</CardDescription>
+              <CardDescription className="mt-2">Análise de satisfação e lealdade do cliente</CardDescription>
             </CardHeader>
             <CardContent>
               {metricas.length > 0 ? (
@@ -1181,7 +1181,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                 <div className="p-2 rounded-lg bg-primary/10">
                   <Users className="w-5 h-5 text-primary" />
                 </div>
-                Performance por Atendente
+                Desempenho por Atendente
               </CardTitle>
               <CardDescription className="mt-2">Ranking e métricas individuais dos atendentes</CardDescription>
             </CardHeader>
@@ -1262,18 +1262,18 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                         <CardContent className="space-y-4 pt-6">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Volume</span>
-                            <span className="font-bold">{canal.total_chats}</span>
+                            <span className="font-bold">{canal.total_chats} chats</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">FCR</span>
+                            <span className="text-muted-foreground">Resolução 1º Contato</span>
                             <span className="font-bold">
                               {((canal.taxa_fcr / canal.dias) || 0).toFixed(1)}%
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Satisfação</span>
+                            <span className="text-muted-foreground">Satisfação Média</span>
                             <span className="font-bold">
-                              {((canal.avaliacao_media / canal.dias) || 0).toFixed(1)}
+                              {((canal.avaliacao_media / canal.dias) || 0).toFixed(1)}/5
                             </span>
                           </div>
                         </CardContent>
