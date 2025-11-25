@@ -2,7 +2,8 @@ import { AUTOMACAO_VENDAS_BLOCKS, AutomacaoVendasBlockType } from "@/types/autom
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, Settings, Search, Zap, Calendar } from "lucide-react";
+import * as Icons from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,34 +18,42 @@ interface AutomacaoBlockLibraryProps {
 const blockCategories = [
   {
     name: "Sistema",
-    icon: "⚙️",
+    icon: "Settings",
+    color: "purple",
     gradient: "from-purple-500/10 to-violet-500/10",
     border: "border-purple-500/20",
     borderHover: "hover:border-purple-500/40",
+    iconColor: "text-purple-600",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "sistema"),
   },
   {
     name: "Condições",
-    icon: "🔍",
+    icon: "Search",
+    color: "blue",
     gradient: "from-blue-500/10 to-cyan-500/10",
     border: "border-blue-500/20",
     borderHover: "hover:border-blue-500/40",
+    iconColor: "text-blue-600",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "condicao"),
   },
   {
     name: "Ações",
-    icon: "⚡",
+    icon: "Zap",
+    color: "orange",
     gradient: "from-orange-500/10 to-amber-500/10",
     border: "border-orange-500/20",
     borderHover: "hover:border-orange-500/40",
+    iconColor: "text-orange-600",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "acao"),
   },
   {
     name: "Datas Especiais",
-    icon: "📅",
+    icon: "Calendar",
+    color: "rose",
     gradient: "from-rose-500/10 to-pink-500/10",
     border: "border-rose-500/20",
     borderHover: "hover:border-rose-500/40",
+    iconColor: "text-rose-600",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "data"),
   },
 ];
@@ -103,18 +112,22 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
         <div className="p-2 space-y-1">
           {filteredCategories.map((category) => {
             const isOpen = openCategories.includes(category.name);
+            const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
 
             return (
               <Collapsible
                 key={category.name}
                 open={isOpen}
                 onOpenChange={() => toggleCategory(category.name)}
+                className="group"
               >
                 <CollapsibleTrigger className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all duration-150 group border border-transparent ${category.borderHover}`}>
                   <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded-md bg-gradient-to-br ${category.gradient} border ${category.border} transition-all`}>
-                      <span className="text-base">{category.icon}</span>
-                    </div>
+                    {CategoryIcon && (
+                      <div className={`p-1 rounded-md bg-gradient-to-br ${category.gradient} border ${category.border} transition-all`}>
+                        <CategoryIcon className={`w-3 h-3 ${category.iconColor}`} />
+                      </div>
+                    )}
                     <span className="font-semibold text-xs text-foreground transition-colors">{category.name}</span>
                   </div>
                   <ChevronDown 
@@ -124,6 +137,8 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
 
                 <CollapsibleContent className="pt-1 space-y-1 animate-accordion-down">
                   {category.blocks.map((block) => {
+                    const BlockIcon = Icons[block.icon as keyof typeof Icons] as any;
+                    
                     return (
                       <Card
                         key={block.type}
@@ -132,9 +147,11 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                         className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-2xl"
                       >
                         <div className="flex items-center gap-2">
-                          <div className="p-1 rounded-md bg-gradient-to-br from-primary/15 to-primary/10 border border-primary/25 group-hover:border-primary/50 transition-all flex-shrink-0">
-                            <span className="text-base">{block.icon}</span>
-                          </div>
+                          {BlockIcon && (
+                            <div className="p-1 rounded-md bg-gradient-to-br from-primary/15 to-primary/10 border border-primary/25 group-hover:border-primary/50 transition-all flex-shrink-0">
+                              <BlockIcon className="w-3 h-3 text-primary" />
+                            </div>
+                          )}
                           <div className="min-w-0 flex-1">
                             <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
                               {block.label}

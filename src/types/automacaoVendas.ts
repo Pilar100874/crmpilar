@@ -191,7 +191,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_pagamento_antecipado",
     label: "Desconto Pagamento Antecipado",
     description: "Desconto especial para pagamento antecipado",
-    icon: "Flash",
+    icon: "Zap",
     color: "#06b6d4",
     category: "condicao",
     defaultData: {
