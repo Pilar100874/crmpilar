@@ -255,95 +255,116 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-semibold">Controle de Qualidade</h2>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-            Gerencie formulários de avaliação e acompanhe a qualidade
+    <div className="space-y-3 sm:space-y-5 p-3 sm:p-6 max-w-7xl mx-auto animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-3">
+        <div className="space-y-0.5 sm:space-y-1">
+          <h2 className="text-lg sm:text-xl font-medium tracking-tight">Controle de Qualidade</h2>
+          <p className="text-muted-foreground/80 text-[11px] sm:text-xs">
+            Avalie e monitore a qualidade dos atendimentos
           </p>
         </div>
-        <Button onClick={() => setFormDialogOpen(true)} size="sm" className="self-start sm:self-auto">
-          <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-          <span className="text-xs sm:text-sm">Novo Formulário</span>
+        <Button 
+          onClick={() => setFormDialogOpen(true)} 
+          size="sm" 
+          className="self-start sm:self-auto text-[11px] sm:text-xs h-7 sm:h-8 px-2.5 sm:px-3 hover-scale shadow-sm"
+        >
+          <Plus className="mr-1 sm:mr-1.5 h-3 w-3" />
+          Novo
         </Button>
       </div>
 
       <Tabs defaultValue="formularios" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
-          <TabsTrigger value="formularios" className="text-xs sm:text-sm py-2">
-            <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Formulários</span>
-            <span className="sm:hidden">Forms</span>
+        <TabsList className="grid w-full grid-cols-3 h-auto bg-muted/30 p-0.5 sm:p-1">
+          <TabsTrigger 
+            value="formularios" 
+            className="text-[11px] sm:text-xs py-1.5 sm:py-2 gap-1 sm:gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+          >
+            <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden xs:inline">Formulários</span>
+            <span className="xs:hidden">Forms</span>
           </TabsTrigger>
-          <TabsTrigger value="avaliacoes" className="text-xs sm:text-sm py-2">
-            <ClipboardCheck className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Avaliações</span>
-            <span className="sm:hidden">Aval.</span>
+          <TabsTrigger 
+            value="avaliacoes" 
+            className="text-[11px] sm:text-xs py-1.5 sm:py-2 gap-1 sm:gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+          >
+            <ClipboardCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden xs:inline">Avaliações</span>
+            <span className="xs:hidden">Aval.</span>
           </TabsTrigger>
-          <TabsTrigger value="metricas" className="text-xs sm:text-sm py-2">
-            <BarChart3 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Métricas</span>
-            <span className="sm:hidden">Métr.</span>
+          <TabsTrigger 
+            value="metricas" 
+            className="text-[11px] sm:text-xs py-1.5 sm:py-2 gap-1 sm:gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+          >
+            <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden xs:inline">Métricas</span>
+            <span className="xs:hidden">Métr.</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="formularios" className="space-y-3 sm:space-y-4 mt-4">
+        <TabsContent value="formularios" className="space-y-2.5 sm:space-y-3 mt-3 sm:mt-4">
           {formularios.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
-                <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground text-center text-xs sm:text-sm">
-                  Nenhum formulário criado ainda
+            <Card className="border-dashed border-muted/50 bg-muted/5">
+              <CardContent className="flex flex-col items-center justify-center py-10 sm:py-16">
+                <div className="rounded-full bg-muted/30 p-3 sm:p-4 mb-3">
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/60" />
+                </div>
+                <p className="text-muted-foreground/70 text-center text-[11px] sm:text-xs font-medium">
+                  Nenhum formulário criado
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {formularios.map((form) => (
-                <Card key={form.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
+            <div className="grid gap-2.5 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {formularios.map((form, index) => (
+                <Card 
+                  key={form.id} 
+                  className="group hover:shadow-lg transition-all duration-200 border-muted/50 hover:border-muted animate-fade-in bg-card/50 backdrop-blur-sm"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardHeader className="pb-2 sm:pb-3 space-y-1">
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm sm:text-base flex items-center gap-2 flex-wrap">
+                        <CardTitle className="text-xs sm:text-sm flex items-center gap-1.5 flex-wrap font-medium">
                           <span className="truncate">{form.nome}</span>
                           {form.ativo && (
-                            <span className="text-[10px] sm:text-xs bg-green-500/10 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            <span className="text-[9px] sm:text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full whitespace-nowrap font-medium">
                               Ativo
                             </span>
                           )}
                         </CardTitle>
                         {form.descricao && (
-                          <CardDescription className="text-xs mt-1 line-clamp-2">{form.descricao}</CardDescription>
+                          <CardDescription className="text-[10px] sm:text-xs mt-1 line-clamp-2 text-muted-foreground/70">
+                            {form.descricao}
+                          </CardDescription>
                         )}
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex gap-1.5 sm:gap-2">
+                  <CardContent className="pt-0 pb-2.5 sm:pb-3">
+                    <div className="flex gap-1 sm:gap-1.5">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => openCriteriosDialog(form)}
-                        className="flex-1 text-xs"
+                        className="flex-1 text-[10px] sm:text-xs h-7 hover:bg-muted/50 transition-colors"
                       >
                         <Award className="mr-1 h-3 w-3" />
                         <span className="hidden sm:inline">Critérios</span>
                         <span className="sm:hidden">Crit.</span>
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => openEditDialog(form)}
-                        className="px-2"
+                        className="h-7 w-7 p-0 hover:bg-muted/50 transition-colors"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => setDeletingFormularioId(form.id)}
-                        className="px-2"
+                        className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -355,48 +376,58 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
           )}
         </TabsContent>
 
-        <TabsContent value="avaliacoes" className="mt-4">
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold">Avaliações Realizadas</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">Histórico de avaliações</p>
+        <TabsContent value="avaliacoes" className="mt-3 sm:mt-4">
+          <div className="space-y-2.5 sm:space-y-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+              <div className="space-y-0.5">
+                <h3 className="text-sm sm:text-base font-medium">Avaliações Realizadas</h3>
+                <p className="text-[11px] sm:text-xs text-muted-foreground/70">Histórico completo</p>
               </div>
-              <Button onClick={() => setAvaliacaoDialogOpen(true)} size="sm" className="self-start">
-                <Plus className="mr-1.5 h-3 w-3" />
-                <span className="text-xs">Nova Avaliação</span>
+              <Button 
+                onClick={() => setAvaliacaoDialogOpen(true)} 
+                size="sm" 
+                className="self-start text-[11px] sm:text-xs h-7 sm:h-8 px-2.5 hover-scale shadow-sm"
+              >
+                <Plus className="mr-1 h-3 w-3" />
+                Nova
               </Button>
             </div>
 
             {avaliacoes.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
-                  <ClipboardCheck className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground text-center text-xs sm:text-sm">
-                    Nenhuma avaliação realizada ainda
+              <Card className="border-dashed border-muted/50 bg-muted/5">
+                <CardContent className="flex flex-col items-center justify-center py-10 sm:py-16">
+                  <div className="rounded-full bg-muted/30 p-3 sm:p-4 mb-3">
+                    <ClipboardCheck className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-muted-foreground/70 text-center text-[11px] sm:text-xs font-medium">
+                    Nenhuma avaliação realizada
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-3">
-                {avaliacoes.map((avaliacao) => (
-                  <Card key={avaliacao.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start gap-3">
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="text-sm sm:text-base truncate">
+              <div className="grid gap-2.5">
+                {avaliacoes.map((avaliacao, index) => (
+                  <Card 
+                    key={avaliacao.id} 
+                    className="hover:shadow-lg transition-all duration-200 border-muted/50 hover:border-muted animate-fade-in bg-card/50 backdrop-blur-sm"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <CardHeader className="pb-2.5 sm:pb-3">
+                      <div className="flex justify-between items-center gap-3">
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <CardTitle className="text-xs sm:text-sm truncate font-medium">
                             Avaliação #{avaliacao.id.substring(0, 8)}
                           </CardTitle>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-[10px] sm:text-xs text-muted-foreground/70">
                             {new Date(avaliacao.data_avaliacao).toLocaleDateString('pt-BR')}
                           </CardDescription>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-xl sm:text-2xl font-bold text-primary">
+                          <div className="text-lg sm:text-xl font-semibold text-primary">
                             {avaliacao.percentual.toFixed(1)}%
                           </div>
-                          <div className="text-[10px] sm:text-xs text-muted-foreground">
-                            {avaliacao.pontuacao_total} / {avaliacao.pontuacao_maxima}
+                          <div className="text-[9px] sm:text-[10px] text-muted-foreground/60">
+                            {avaliacao.pontuacao_total}/{avaliacao.pontuacao_maxima}
                           </div>
                         </div>
                       </div>
@@ -408,96 +439,96 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
           </div>
         </TabsContent>
 
-        <TabsContent value="metricas" className="mt-4">
-          <div className="space-y-3 sm:space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold">Dashboard de Qualidade</h3>
+        <TabsContent value="metricas" className="mt-3 sm:mt-4">
+          <div className="space-y-2.5 sm:space-y-3">
+            <h3 className="text-sm sm:text-base font-medium">Dashboard de Qualidade</h3>
             
-            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Score Médio</CardTitle>
+            <div className="grid gap-2.5 grid-cols-2 lg:grid-cols-4">
+              <Card className="hover:shadow-lg transition-all duration-200 border-muted/50 bg-card/50 backdrop-blur-sm animate-fade-in">
+                <CardHeader className="pb-1.5 sm:pb-2">
+                  <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground/70">Score Médio</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold">85.2%</div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Últimos 30 dias</p>
+                <CardContent className="pb-2.5 sm:pb-3">
+                  <div className="text-lg sm:text-xl font-semibold">85.2%</div>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 mt-0.5">30 dias</p>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Avaliações</CardTitle>
+              <Card className="hover:shadow-lg transition-all duration-200 border-muted/50 bg-card/50 backdrop-blur-sm animate-fade-in" style={{ animationDelay: '50ms' }}>
+                <CardHeader className="pb-1.5 sm:pb-2">
+                  <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground/70">Avaliações</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold">{avaliacoes.length}</div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Total realizadas</p>
+                <CardContent className="pb-2.5 sm:pb-3">
+                  <div className="text-lg sm:text-xl font-semibold">{avaliacoes.length}</div>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 mt-0.5">Realizadas</p>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Acima da Meta</CardTitle>
+              <Card className="hover:shadow-lg transition-all duration-200 border-muted/50 bg-card/50 backdrop-blur-sm animate-fade-in" style={{ animationDelay: '100ms' }}>
+                <CardHeader className="pb-1.5 sm:pb-2">
+                  <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground/70">Acima da Meta</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold text-green-600">75%</div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Atendentes</p>
+                <CardContent className="pb-2.5 sm:pb-3">
+                  <div className="text-lg sm:text-xl font-semibold text-emerald-600 dark:text-emerald-500">75%</div>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 mt-0.5">Atendentes</p>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Abaixo da Meta</CardTitle>
+              <Card className="hover:shadow-lg transition-all duration-200 border-muted/50 bg-card/50 backdrop-blur-sm animate-fade-in" style={{ animationDelay: '150ms' }}>
+                <CardHeader className="pb-1.5 sm:pb-2">
+                  <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground/70">Abaixo da Meta</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold text-red-600">25%</div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Atendentes</p>
+                <CardContent className="pb-2.5 sm:pb-3">
+                  <div className="text-lg sm:text-xl font-semibold text-rose-600 dark:text-rose-500">25%</div>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 mt-0.5">Atendentes</p>
                 </CardContent>
               </Card>
             </div>
 
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm sm:text-base">Evolução Temporal</CardTitle>
-                <CardDescription className="text-xs">Score médio por período</CardDescription>
+            <Card className="hover:shadow-lg transition-all duration-200 border-muted/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium">Evolução Temporal</CardTitle>
+                <CardDescription className="text-[10px] sm:text-xs text-muted-foreground/70">Score médio por período</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground text-xs sm:text-sm">
+              <CardContent className="pb-2.5 sm:pb-3">
+                <div className="h-40 sm:h-56 flex items-center justify-center text-muted-foreground/60 text-[11px] sm:text-xs rounded-lg bg-muted/20">
                   Gráfico de evolução temporal
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm sm:text-base">Critérios com Pior Desempenho</CardTitle>
-                <CardDescription className="text-xs">Áreas de melhoria</CardDescription>
+            <Card className="hover:shadow-lg transition-all duration-200 border-muted/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium">Critérios com Pior Desempenho</CardTitle>
+                <CardDescription className="text-[10px] sm:text-xs text-muted-foreground/70">Áreas de melhoria</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex justify-between items-center gap-3">
-                    <span className="text-xs sm:text-sm truncate flex-1">Clareza na comunicação</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="w-20 sm:w-32 bg-muted rounded-full h-2">
-                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+              <CardContent className="pb-2.5 sm:pb-3">
+                <div className="space-y-2.5 sm:space-y-3">
+                  <div className="flex justify-between items-center gap-2 sm:gap-3">
+                    <span className="text-[11px] sm:text-xs truncate flex-1 font-medium">Clareza na comunicação</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                      <div className="w-16 sm:w-24 bg-muted/30 rounded-full h-1.5">
+                        <div className="bg-rose-500 h-1.5 rounded-full transition-all duration-500" style={{ width: '60%' }}></div>
                       </div>
-                      <span className="text-xs sm:text-sm font-medium w-10 text-right">60%</span>
+                      <span className="text-[11px] sm:text-xs font-medium w-8 text-right">60%</span>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center gap-3">
-                    <span className="text-xs sm:text-sm truncate flex-1">Tempo de resposta</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="w-20 sm:w-32 bg-muted rounded-full h-2">
-                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '72%' }}></div>
+                  <div className="flex justify-between items-center gap-2 sm:gap-3">
+                    <span className="text-[11px] sm:text-xs truncate flex-1 font-medium">Tempo de resposta</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                      <div className="w-16 sm:w-24 bg-muted/30 rounded-full h-1.5">
+                        <div className="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style={{ width: '72%' }}></div>
                       </div>
-                      <span className="text-xs sm:text-sm font-medium w-10 text-right">72%</span>
+                      <span className="text-[11px] sm:text-xs font-medium w-8 text-right">72%</span>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center gap-3">
-                    <span className="text-xs sm:text-sm truncate flex-1">Empatia</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="w-20 sm:w-32 bg-muted rounded-full h-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '88%' }}></div>
+                  <div className="flex justify-between items-center gap-2 sm:gap-3">
+                    <span className="text-[11px] sm:text-xs truncate flex-1 font-medium">Empatia</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                      <div className="w-16 sm:w-24 bg-muted/30 rounded-full h-1.5">
+                        <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: '88%' }}></div>
                       </div>
-                      <span className="text-xs sm:text-sm font-medium w-10 text-right">88%</span>
+                      <span className="text-[11px] sm:text-xs font-medium w-8 text-right">88%</span>
                     </div>
                   </div>
                 </div>
