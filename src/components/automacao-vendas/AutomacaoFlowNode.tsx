@@ -27,6 +27,7 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const blockDef = AUTOMACAO_VENDAS_BLOCKS.find((b) => b.type === (data as any).type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const isStartBlock = (data as any).type === 'iniciar_validacao';
   
   if (!blockDef) return null;
 
@@ -100,16 +101,18 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                 
                 <DropdownMenuSeparator className="bg-slate-200" />
                 
-                <DropdownMenuItem
-                  onClick={() => {
-                    setDeleteDialogOpen(true);
-                    setDropdownOpen(false);
-                  }}
-                  className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Excluir Bloco
-                </DropdownMenuItem>
+                {!isStartBlock && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setDeleteDialogOpen(true);
+                      setDropdownOpen(false);
+                    }}
+                    className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir Bloco
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
