@@ -2,13 +2,15 @@ import { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import * as Icons from "lucide-react";
 
 export const AutomacaoFlowNode = memo(({ data, selected }: NodeProps) => {
   const blockDef = AUTOMACAO_VENDAS_BLOCKS.find((b) => b.type === (data as any).type);
-  const icon = String(blockDef?.icon || "🔷");
-  const description = String(blockDef?.description || (data as any).type);
-  const label = String((data as any).label || blockDef?.label || "");
+  if (!blockDef) return null;
+
+  const IconComponent = Icons[blockDef.icon as keyof typeof Icons] as any;
+  const description = String(blockDef.description || (data as any).type);
+  const label = String((data as any).label || blockDef.label || "");
   const note = (data as any).note;
 
   const getCardClassName = () => {
@@ -30,14 +32,15 @@ export const AutomacaoFlowNode = memo(({ data, selected }: NodeProps) => {
       />
       
       <div className="p-3">
-        {/* Cabeçalho com checkbox, ícone e título */}
+        {/* Cabeçalho com ícone e título */}
         <div className="flex items-start gap-2 mb-3">
-          <Checkbox className="mt-0.5 h-4 w-4 border-slate-300" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <div className="p-1 rounded bg-primary/5 border border-primary/20 flex items-center justify-center">
-                <span className="text-base">{icon}</span>
-              </div>
+              {IconComponent && (
+                <div className="p-1 rounded bg-primary/5 border border-primary/20 flex items-center justify-center">
+                  <IconComponent className="w-3.5 h-3.5 text-primary" />
+                </div>
+              )}
               <span className="font-semibold text-sm text-slate-900 truncate">{label}</span>
             </div>
             <p className="text-xs text-slate-500 line-clamp-2">{description}</p>
