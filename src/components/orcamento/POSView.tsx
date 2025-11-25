@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
+import { aplicarRegrasBlockly } from "@/services/blocklyAutomacaoEngine";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -303,9 +304,68 @@ export default function POSView({
 
     setLoading(true);
     try {
+      // Buscar empresa selecionada para obter dados do cliente
+      const { data: empresaData } = await supabase
+        .from('empresas')
+        .select('*')
+        .eq('id', selectedEmpresa)
+        .single();
+
+      // Buscar regras ativas de automação
+      const { data: regras } = await supabase
+        .from('automacoes_vendas')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('ativo', true)
+        .order('prioridade', { ascending: false });
+
+      // Calcular valor total inicial
+      const valorInicial = getTotal();
+
+      // Aplicar regras de automação
+      let valorFinal = valorInicial;
+      let descontosAplicados: any[] = [];
+      let regrasAplicadas: string[] = [];
+
+      if (regras && regras.length > 0) {
+        const customFields = empresaData?.custom_fields as any;
+        const mesAniversario = customFields?.mes_aniversario;
+
+        const resultado = await aplicarRegrasBlockly(
+          {
+            valor_total: valorInicial,
+            quantidade_produtos: cartItems.size,
+            mes_compra: new Date().getMonth() + 1,
+            cliente: {
+              mes_aniversario: mesAniversario
+            }
+          },
+          regras.map(r => {
+            const flowData = r.flow_data as any;
+            return {
+              id: r.id,
+              name: r.nome,
+              trigger: '',
+              xml: flowData?.xml || '',
+              code: flowData?.code || '',
+              ativo: r.ativo,
+              prioridade: r.prioridade
+            };
+          })
+        );
+
+        valorFinal = resultado.valorFinal;
+        descontosAplicados = resultado.descontos;
+        regrasAplicadas = resultado.regrasAplicadas;
+
+        if (regrasAplicadas.length > 0) {
+          toast.success(`${regrasAplicadas.length} regra(s) de automação aplicada(s)!`);
+        }
+      }
+
       // Gerar token de compartilhamento no cliente para evitar dependência de funções no banco
       const token = crypto.randomUUID().replace(/-/g, '');
-      // Criar orçamento já com o token (evita trigger/func no banco)
+      // Criar orçamento já com o token e valor final após regras
       const { data: orcamento, error: orcamentoError } = await supabase
         .from('orcamentos')
         .insert({
@@ -313,7 +373,8 @@ export default function POSView({
           empresa_id: selectedEmpresa,
           etapa: 'orcamento',
           status: 'em_aberto',
-          valor_total: getTotal(),
+          valor_total: valorFinal,
+          valor_desconto: valorInicial - valorFinal,
           token_compartilhamento: token,
         })
         .select()
@@ -337,6 +398,21 @@ export default function POSView({
         .insert(items);
 
       if (itensError) throw itensError;
+
+      // Salvar log das regras aplicadas
+      if (regrasAplicadas.length > 0 && descontosAplicados.length > 0) {
+        const logsToInsert = descontosAplicados.map((desconto, idx) => ({
+          automacao_id: regras![idx]?.id,
+          orcamento_id: orcamento.id,
+          regra_aplicada: desconto.regra,
+          valor_desconto: desconto.valor,
+          percentual_desconto: desconto.tipo === 'percentual' ? (desconto.valor / valorInicial) * 100 : null
+        }));
+
+        await supabase
+          .from('automacoes_vendas_log')
+          .insert(logsToInsert);
+      }
 
       // Link de compartilhamento a partir do token gerado
       const link = `${window.location.origin}/orcamento/${token}`;

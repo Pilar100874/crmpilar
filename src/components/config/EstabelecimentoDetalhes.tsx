@@ -2230,11 +2230,11 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                       Gerencie automações de vendas com regras visuais para descontos e promoções.
                     </p>
                     <Button
-                      onClick={() => navigate("/automacao-vendas")}
+                      onClick={() => navigate("/editor-regras")}
                       className="w-full"
                     >
                       <Zap className="h-4 w-4 mr-2" />
-                      Abrir Automação de Vendas
+                      Abrir Editor de Regras
                     </Button>
                   </div>
                 </AccordionContent>
