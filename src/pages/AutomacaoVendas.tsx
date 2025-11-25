@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,31 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
+import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
 
 interface BlockData {
   id: string;
   type: AutomacaoVendasBlockType;
   label: string;
   config: any;
-  x: number;
-  y: number;
+  note?: string;
+  nextBlockId?: string;
 }
+
+const BLOCK_COLORS: Record<string, string> = {
+  inicio: "#5CB85C",
+  desconto_valor_compra: "#5C6BC0",
+  desconto_quantidade_compras: "#9575CD",
+  desconto_produtos_grupo: "#FF8A65",
+  desconto_pagamento_antecipado: "#FFD54F",
+  desconto_aniversario_cliente: "#F06292",
+  desconto_aniversario_empresa: "#BA68C8",
+  desconto_data_especial: "#EF5350",
+  desconto_historico_crescimento: "#4DB6AC",
+  desconto_tempo_desde_ultimo: "#4FC3F7",
+  aplicar_desconto: "#81C784",
+  fim: "#90A4AE",
+};
 
 const BLOCK_CATEGORIES = [
   {
@@ -32,8 +48,8 @@ const BLOCK_CATEGORIES = [
     name: "Descontos por Valor",
     color: "#5C6BC0",
     blocks: [
-      { type: "desconto_valor_compra" as AutomacaoVendasBlockType, label: "💰 Desconto por Valor de Compra" },
-      { type: "desconto_quantidade_compras" as AutomacaoVendasBlockType, label: "🛒 Desconto por Quantidade" },
+      { type: "desconto_valor_compra" as AutomacaoVendasBlockType, label: "💰 Desconto por Valor" },
+      { type: "desconto_quantidade_compras" as AutomacaoVendasBlockType, label: "🛒 Desconto Quantidade" },
     ],
   },
   {
@@ -57,7 +73,7 @@ const BLOCK_CATEGORIES = [
     name: "Descontos por Histórico",
     color: "#4DB6AC",
     blocks: [
-      { type: "desconto_historico_crescimento" as AutomacaoVendasBlockType, label: "📈 Histórico Crescimento" },
+      { type: "desconto_historico_crescimento" as AutomacaoVendasBlockType, label: "📈 Crescimento" },
       { type: "desconto_tempo_desde_ultimo" as AutomacaoVendasBlockType, label: "⏰ Tempo Sem Comprar" },
     ],
   },
@@ -74,13 +90,23 @@ const BLOCK_CATEGORIES = [
 export default function AutomacaoVendas() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [blocks, setBlocks] = useState<BlockData[]>([]);
+  const [blocks, setBlocks] = useState<BlockData[]>([
+    {
+      id: "start_block",
+      type: "inicio",
+      label: "🚀 Início da Automação",
+      config: {},
+    },
+  ]);
+  const [selectedBlock, setSelectedBlock] = useState<BlockData | null>(null);
   const [automacaoNome, setAutomacaoNome] = useState("Nova Automação de Vendas");
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  const [draggedBlock, setDraggedBlock] = useState<{ type: AutomacaoVendasBlockType; label: string } | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["Início"]));
+  const [draggedType, setDraggedType] = useState<AutomacaoVendasBlockType | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(["Início", "Descontos por Valor", "Descontos Especiais"])
+  );
 
   useEffect(() => {
     if (id) {
@@ -113,6 +139,99 @@ export default function AutomacaoVendas() {
     } catch (error: any) {
       console.error("Erro ao carregar automação:", error);
       toast.error("Erro ao carregar automação: " + error.message);
+    }
+  };
+
+  const onDragStart = (event: React.DragEvent, nodeType: AutomacaoVendasBlockType) => {
+    setDraggedType(nodeType);
+    event.dataTransfer.effectAllowed = "move";
+  };
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent, targetBlockId?: string) => {
+      event.preventDefault();
+
+      if (!draggedType) return;
+
+      const blockInfo = BLOCK_CATEGORIES.flatMap((cat) => cat.blocks).find(
+        (b) => b.type === draggedType
+      );
+
+      const newBlock: BlockData = {
+        id: `${draggedType}_${Date.now()}`,
+        type: draggedType,
+        label: blockInfo?.label || draggedType,
+        config: {},
+      };
+
+      setBlocks((prevBlocks) => {
+        if (targetBlockId) {
+          const targetIndex = prevBlocks.findIndex((b) => b.id === targetBlockId);
+          if (targetIndex !== -1) {
+            const newBlocks = [...prevBlocks];
+            newBlock.nextBlockId = prevBlocks[targetIndex].nextBlockId;
+            newBlocks[targetIndex].nextBlockId = newBlock.id;
+            newBlocks.splice(targetIndex + 1, 0, newBlock);
+            return newBlocks;
+          }
+        }
+        return [...prevBlocks, newBlock];
+      });
+
+      setDraggedType(null);
+    },
+    [draggedType]
+  );
+
+  const handleDeleteBlock = (blockId: string) => {
+    setBlocks((prevBlocks) => {
+      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
+      if (blockIndex === -1 || blockId === "start_block") return prevBlocks;
+
+      const newBlocks = [...prevBlocks];
+      const deletedBlock = newBlocks[blockIndex];
+
+      if (blockIndex > 0) {
+        newBlocks[blockIndex - 1].nextBlockId = deletedBlock.nextBlockId;
+      }
+
+      newBlocks.splice(blockIndex, 1);
+      return newBlocks;
+    });
+
+    if (selectedBlock?.id === blockId) {
+      setSelectedBlock(null);
+    }
+  };
+
+  const handleDuplicateBlock = (blockId: string) => {
+    const block = blocks.find((b) => b.id === blockId);
+    if (!block) return;
+
+    const newBlock: BlockData = {
+      ...block,
+      id: `${block.type}_${Date.now()}`,
+    };
+
+    setBlocks((prevBlocks) => {
+      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
+      const newBlocks = [...prevBlocks];
+      newBlocks.splice(blockIndex + 1, 0, newBlock);
+      return newBlocks;
+    });
+  };
+
+  const handleAddNote = (blockId: string) => {
+    const note = prompt("Digite a nota para este bloco:");
+    if (note !== null) {
+      setBlocks((prevBlocks) =>
+        prevBlocks.map((b) => (b.id === blockId ? { ...b, note } : b))
+      );
     }
   };
 
@@ -160,35 +279,6 @@ export default function AutomacaoVendas() {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleDragStart = (blockType: AutomacaoVendasBlockType, blockLabel: string) => {
-    setDraggedBlock({ type: blockType, label: blockLabel });
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (!draggedBlock) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const newBlock: BlockData = {
-      id: `${draggedBlock.type}_${Date.now()}`,
-      type: draggedBlock.type,
-      label: draggedBlock.label,
-      config: {},
-      x: Math.max(0, x - 120), // Center the block on cursor
-      y: Math.max(0, y - 25),
-    };
-
-    setBlocks([...blocks, newBlock]);
-    setDraggedBlock(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
   };
 
   const toggleCategory = (categoryName: string) => {
@@ -291,8 +381,11 @@ export default function AutomacaoVendas() {
               <div key={category.name} className="border-b">
                 <button
                   onClick={() => toggleCategory(category.name)}
-                  className="w-full px-4 py-3 flex items-center gap-2 text-left font-semibold hover:bg-gray-200 transition-colors"
-                  style={{ backgroundColor: expandedCategories.has(category.name) ? category.color : undefined, color: expandedCategories.has(category.name) ? "white" : undefined }}
+                  className="w-full px-4 py-3 flex items-center gap-2 text-left font-semibold hover:bg-gray-200 transition-colors text-sm"
+                  style={{
+                    backgroundColor: expandedCategories.has(category.name) ? category.color : "#ddd",
+                    color: expandedCategories.has(category.name) ? "white" : "#333",
+                  }}
                 >
                   {expandedCategories.has(category.name) ? (
                     <ChevronDown className="h-4 w-4" />
@@ -302,13 +395,13 @@ export default function AutomacaoVendas() {
                   {category.name}
                 </button>
                 {expandedCategories.has(category.name) && (
-                  <div className="p-2 space-y-2">
+                  <div className="p-2 space-y-2 bg-white">
                     {category.blocks.map((block) => (
                       <div
                         key={block.type}
                         draggable
-                        onDragStart={() => handleDragStart(block.type, block.label)}
-                        className="cursor-move rounded-lg px-3 py-2 text-white font-medium text-sm shadow-md hover:shadow-lg transition-shadow"
+                        onDragStart={(e) => onDragStart(e, block.type)}
+                        className="cursor-move rounded px-3 py-2 text-white font-medium text-sm shadow-md hover:shadow-lg transition-all hover:scale-105"
                         style={{ backgroundColor: category.color }}
                       >
                         {block.label}
@@ -322,52 +415,220 @@ export default function AutomacaoVendas() {
 
           {/* Workspace */}
           <div
-            className="flex-1 relative overflow-auto"
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
+            className="flex-1 overflow-auto p-8"
+            onDragOver={onDragOver}
+            onDrop={(e) => onDrop(e)}
             style={{
               backgroundColor: "#ffffff",
               backgroundImage: `
-                linear-gradient(#e0e0e0 1px, transparent 1px),
-                linear-gradient(90deg, #e0e0e0 1px, transparent 1px)
+                linear-gradient(#e5e5e5 1px, transparent 1px),
+                linear-gradient(90deg, #e5e5e5 1px, transparent 1px)
               `,
               backgroundSize: "20px 20px",
             }}
           >
-            {blocks.map((block) => {
-              const category = BLOCK_CATEGORIES.find((cat) =>
-                cat.blocks.some((b) => b.type === block.type)
-              );
-              const color = category?.color || "#90A4AE";
-
-              return (
-                <div
+            <div className="max-w-4xl mx-auto py-8">
+              {blocks.map((block) => (
+                <BlocklyStyleBlock
                   key={block.id}
-                  className="absolute cursor-move rounded-lg px-4 py-3 text-white font-medium shadow-lg"
-                  style={{
-                    backgroundColor: color,
-                    left: block.x,
-                    top: block.y,
-                    minWidth: "240px",
-                  }}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("blockId", block.id);
-                  }}
-                >
-                  {block.label}
-                  <button
-                    onClick={() => setBlocks(blocks.filter((b) => b.id !== block.id))}
-                    className="ml-2 px-2 py-1 bg-white/20 rounded hover:bg-white/30 text-xs"
-                  >
-                    ✕
-                  </button>
-                </div>
-              );
-            })}
+                  block={block}
+                  onSelect={() => setSelectedBlock(block)}
+                  onDelete={() => handleDeleteBlock(block.id)}
+                  onDuplicate={() => handleDuplicateBlock(block.id)}
+                  onAddNote={() => handleAddNote(block.id)}
+                  onDrop={(e) => onDrop(e, block.id)}
+                  onDragOver={onDragOver}
+                  isSelected={selectedBlock?.id === block.id}
+                />
+              ))}
+            </div>
           </div>
+
+          {/* Properties Panel */}
+          {selectedBlock && (
+            <AutomacaoPropertiesPanel
+              block={selectedBlock}
+              onClose={() => setSelectedBlock(null)}
+              onUpdate={(updatedBlock) => {
+                setBlocks((prevBlocks) =>
+                  prevBlocks.map((b) => (b.id === updatedBlock.id ? updatedBlock : b))
+                );
+                setSelectedBlock(updatedBlock);
+              }}
+            />
+          )}
         </div>
       </div>
     </Layout>
+  );
+}
+
+interface BlocklyStyleBlockProps {
+  block: BlockData;
+  onSelect: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onAddNote: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  isSelected: boolean;
+}
+
+function BlocklyStyleBlock({
+  block,
+  onSelect,
+  onDelete,
+  onDuplicate,
+  onAddNote,
+  onDrop,
+  onDragOver,
+  isSelected,
+}: BlocklyStyleBlockProps) {
+  const color = BLOCK_COLORS[block.type] || BLOCK_COLORS.fim;
+  const isStart = block.type === "inicio";
+  const isEnd = block.type === "fim";
+
+  // Calcular cor mais escura para bordas
+  const darkerColor = `color-mix(in srgb, ${color} 80%, black)`;
+
+  return (
+    <div
+      onClick={onSelect}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className={`relative cursor-pointer transition-all mb-1 ${
+        isSelected ? "scale-105" : ""
+      }`}
+      style={{
+        filter: isSelected
+          ? `drop-shadow(0 0 12px ${color})`
+          : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+      }}
+    >
+      {/* Notch de Entrada (encaixe superior) */}
+      {!isStart && (
+        <svg
+          width="240"
+          height="15"
+          viewBox="0 0 240 15"
+          style={{ display: "block" }}
+          className="block-connector-top"
+        >
+          <path
+            d="M 0,15 L 0,5 L 15,5 L 20,0 L 25,5 L 35,5 L 40,0 L 45,5 L 240,5 L 240,15 Z"
+            fill={color}
+            stroke={darkerColor}
+            strokeWidth="2"
+          />
+        </svg>
+      )}
+
+      {/* Corpo do Bloco */}
+      <div
+        style={{
+          backgroundColor: color,
+          position: "relative",
+          minWidth: "240px",
+          border: `2px solid ${darkerColor}`,
+          borderTop: isStart ? `2px solid ${darkerColor}` : "none",
+          borderBottom: isEnd ? `2px solid ${darkerColor}` : "none",
+          borderRadius: isStart ? "8px 8px 0 0" : isEnd ? "0 0 8px 8px" : "0",
+        }}
+      >
+        <div style={{ padding: "12px 16px" }}>
+          <div className="flex items-center justify-between gap-4">
+            <div
+              style={{
+                color: "white",
+                fontWeight: "600",
+                fontSize: "15px",
+                textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                fontFamily: "Helvetica, Arial, sans-serif",
+              }}
+            >
+              {block.label}
+            </div>
+
+            <div className="flex gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate();
+                }}
+                className="px-2 py-1 rounded text-xs font-semibold hover:bg-black/20 transition-colors"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.15)",
+                  color: "white",
+                }}
+                title="Duplicar"
+              >
+                📋
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddNote();
+                }}
+                className="px-2 py-1 rounded text-xs font-semibold hover:bg-black/20 transition-colors"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.15)",
+                  color: "white",
+                }}
+                title="Nota"
+              >
+                📝
+              </button>
+              {!isStart && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  className="px-2 py-1 rounded text-xs font-semibold hover:bg-black/20 transition-colors"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.15)",
+                    color: "white",
+                  }}
+                  title="Deletar"
+                >
+                  🗑️
+                </button>
+              )}
+            </div>
+          </div>
+
+          {block.note && (
+            <div
+              className="mt-3 p-2 rounded text-sm"
+              style={{
+                backgroundColor: "rgba(0,0,0,0.2)",
+                color: "white",
+                textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+              }}
+            >
+              📝 {block.note}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Notch de Saída (encaixe inferior) */}
+      {!isEnd && (
+        <svg
+          width="240"
+          height="10"
+          viewBox="0 0 240 10"
+          style={{ display: "block" }}
+          className="block-connector-bottom"
+        >
+          <path
+            d="M 0,0 L 0,10 L 45,10 L 40,5 L 35,10 L 25,10 L 20,5 L 15,10 L 240,10 L 240,0 Z"
+            fill={color}
+            stroke={darkerColor}
+            strokeWidth="2"
+          />
+        </svg>
+      )}
+    </div>
   );
 }
