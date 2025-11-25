@@ -26,6 +26,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
 import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
 import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatusSelector";
+import { ConversationSummaryPanel } from "@/components/atendimento/ConversationSummaryPanel";
 import type { Atendente } from "@/types/atendimento";
 
 interface Conversation {
@@ -98,6 +99,12 @@ export default function Atendimento() {
   const [aiContext, setAiContext] = useState("");
   const [showContextBox, setShowContextBox] = useState(false);
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  
+  // Summary Panel states
+  const [showSummaryPanel, setShowSummaryPanel] = useState(false);
+  const [conversationSummary, setConversationSummary] = useState<string | null>(null);
+  const [summaryGeneratedAt, setSummaryGeneratedAt] = useState<Date | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
   const aiScrollRef = useRef<HTMLDivElement>(null);
   const [currentAISessionId, setCurrentAISessionId] = useState<string | null>(null);
@@ -2611,6 +2618,22 @@ ${recentMessages}
                 </Card>
               )}
 
+              {/* Summary Panel */}
+              {showSummaryPanel && (
+                <Card className="bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl overflow-hidden">
+                  <ConversationSummaryPanel
+                    summary={conversationSummary}
+                    isLoading={isSummaryLoading}
+                    onClose={() => {
+                      setShowSummaryPanel(false);
+                      setConversationSummary(null);
+                      setSummaryGeneratedAt(null);
+                    }}
+                    generatedAt={summaryGeneratedAt || undefined}
+                  />
+                </Card>
+              )}
+
               <div className="flex flex-col gap-3">
                 <ChatInput
                   onSendMessage={handleSendMessage}
@@ -2640,6 +2663,20 @@ ${recentMessages}
                   aiWebhooks={aiWebhooks}
                   conversationId={selectedConversation || undefined}
                   conversationMessages={messages}
+                  onSummaryGenerated={(summary) => {
+                    if (summary === "") {
+                      // Empty string means loading started
+                      setShowSummaryPanel(true);
+                      setIsSummaryLoading(true);
+                      setConversationSummary(null);
+                    } else {
+                      // Actual summary received
+                      setConversationSummary(summary);
+                      setSummaryGeneratedAt(new Date());
+                      setIsSummaryLoading(false);
+                      setShowSummaryPanel(true);
+                    }
+                  }}
                 />
               </div>
             </div>
