@@ -54,6 +54,7 @@ export const MENU_CONFIG = [
   { id: "Gerenciar Atalhos", label: "Gerenciar Atalhos" },
   { id: "SLA Config", label: "SLA" },
   { id: "Análise de Sentimento", label: "Análise de Sentimento" },
+  { id: "Automação de Vendas", label: "Automação de Vendas" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)

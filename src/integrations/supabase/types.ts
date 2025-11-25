@@ -309,6 +309,98 @@ export type Database = {
           },
         ]
       }
+      automacoes_vendas: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id: string
+          nome: string
+          prioridade: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id?: string
+          nome: string
+          prioridade?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          flow_data?: Json
+          id?: string
+          nome?: string
+          prioridade?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_automacoes_vendas_estabelecimento"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automacoes_vendas_log: {
+        Row: {
+          automacao_id: string
+          created_at: string | null
+          detalhes: Json | null
+          id: string
+          orcamento_id: string
+          percentual_desconto: number | null
+          regra_aplicada: string
+          valor_desconto: number | null
+        }
+        Insert: {
+          automacao_id: string
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+          orcamento_id: string
+          percentual_desconto?: number | null
+          regra_aplicada: string
+          valor_desconto?: number | null
+        }
+        Update: {
+          automacao_id?: string
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+          orcamento_id?: string
+          percentual_desconto?: number | null
+          regra_aplicada?: string
+          valor_desconto?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_automacoes_vendas_log_automacao"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "automacoes_vendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_automacoes_vendas_log_orcamento"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_flows: {
         Row: {
           active: boolean | null
