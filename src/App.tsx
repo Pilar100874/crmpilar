@@ -56,7 +56,7 @@ import PesquisasSatisfacaoPage from "./pages/PesquisasSatisfacao";
 import DashboardPesquisasSatisfacao from "./pages/DashboardPesquisasSatisfacao";
 import BaseConhecimento from "./pages/BaseConhecimento";
 import QualityAssurance from "./pages/QualityAssurance";
-import AutomacaoVendas from "./pages/AutomacaoVendas";
+// AutomacaoVendas removida - Blockly não suportado neste projeto
 
 const queryClient = new QueryClient();
 
@@ -127,8 +127,7 @@ const App = () => (
             <Route path="/pesquisas-satisfacao" element={<PesquisasSatisfacaoPage />} />
             <Route path="/base-conhecimento" element={<BaseConhecimento />} />
             <Route path="/quality-assurance" element={<QualityAssurance />} />
-            <Route path="/automacao-vendas" element={<AutomacaoVendas />} />
-            <Route path="/automacao-vendas/:id" element={<AutomacaoVendas />} />
+          {/* Rota /editor-regras removida - Blockly não suportado */}
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
           </Route>
