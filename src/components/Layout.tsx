@@ -151,19 +151,12 @@ const menuItems: MenuItem[] = [
   },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
   { 
-    id: "Estabelecimentos Cadastrados",
-    title: "Estabelecimentos Cadastrados",
-    icon: Building2,
-    subItems: [
-      { id: "Config Geral", title: "Configurações Gerais", url: "/config", icon: Settings },
-      { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: Users },
-    ]
-  },
-  { 
     id: "Configurações",
     title: "Configurações",
     icon: Settings,
     subItems: [
+      { id: "Config Geral", title: "Configurações Gerais", url: "/config", icon: Settings },
+      { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: Users },
       { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: Users },
       { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: Workflow },
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: Globe },
@@ -715,19 +708,19 @@ export default function Layout({ children }: LayoutProps) {
                               </h3>
                               
                                <div className="space-y-1">
-                                  {item.id === "Estabelecimentos Cadastrados" && (
+                                  {item.id === "Configurações" && (
                                     <>
                                       <button
-                                        onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "SLA" ? null : "SLA")}
+                                        onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Estabelecimento" ? null : "Estabelecimento")}
                                         className="flex items-center justify-between w-full px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                                       >
                                         <div className="flex items-center gap-3">
-                                          <Activity className="w-4 h-4 flex-shrink-0" />
-                                          <span className="text-sm">SLA</span>
+                                          <Building className="w-4 h-4 flex-shrink-0" />
+                                          <span className="text-sm">Estabelecimento</span>
                                         </div>
-                                        <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "SLA" ? 'rotate-180' : ''}`} />
+                                        <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Estabelecimento" ? 'rotate-180' : ''}`} />
                                       </button>
-                                      {openNestedSubmenu === "SLA" && (
+                                      {openNestedSubmenu === "Estabelecimento" && (
                                         <div className="ml-6 space-y-1">
                                           <NavLink
                                             to="/config/sla"
@@ -743,7 +736,7 @@ export default function Layout({ children }: LayoutProps) {
                                               }`
                                             }
                                           >
-                                            <Activity className="w-4 h-4 flex-shrink-0" />
+                                            <Clock className="w-4 h-4 flex-shrink-0" />
                                             <span className="text-sm">SLA</span>
                                           </NavLink>
                                         </div>
@@ -816,19 +809,19 @@ export default function Layout({ children }: LayoutProps) {
                       
                         {isMenuOpen && (
                           <div className="mt-1 ml-8 space-y-1">
-                            {item.id === "Estabelecimentos Cadastrados" && (
+                            {item.id === "Configurações" && (
                               <>
                                 <button
-                                  onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "SLA" ? null : "SLA")}
+                                  onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Estabelecimento" ? null : "Estabelecimento")}
                                   className="flex items-center justify-between w-full px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <Activity className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm">SLA</span>
+                                    <Building className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-sm">Estabelecimento</span>
                                   </div>
-                                  <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "SLA" ? 'rotate-180' : ''}`} />
+                                  <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Estabelecimento" ? 'rotate-180' : ''}`} />
                                 </button>
-                                {openNestedSubmenu === "SLA" && (
+                                {openNestedSubmenu === "Estabelecimento" && (
                                   <div className="ml-6 space-y-1">
                                     <NavLink
                                       to="/config/sla"
@@ -844,7 +837,7 @@ export default function Layout({ children }: LayoutProps) {
                                         }`
                                       }
                                     >
-                                      <Activity className="w-4 h-4 flex-shrink-0" />
+                                      <Clock className="w-4 h-4 flex-shrink-0" />
                                       <span className="text-sm">SLA</span>
                                     </NavLink>
                                   </div>
