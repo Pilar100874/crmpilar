@@ -711,16 +711,16 @@ export default function Layout({ children }: LayoutProps) {
                                   {item.id === "Configurações" && (
                                     <>
                                       <button
-                                        onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Estabelecimento" ? null : "Estabelecimento")}
+                                        onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Estabelecimentos Cadastrados" ? null : "Estabelecimentos Cadastrados")}
                                         className="flex items-center justify-between w-full px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                                       >
                                         <div className="flex items-center gap-3">
                                           <Building className="w-4 h-4 flex-shrink-0" />
-                                          <span className="text-sm">Estabelecimento</span>
+                                          <span className="text-sm">Estabelecimentos Cadastrados</span>
                                         </div>
-                                        <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Estabelecimento" ? 'rotate-180' : ''}`} />
+                                        <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Estabelecimentos Cadastrados" ? 'rotate-180' : ''}`} />
                                       </button>
-                                      {openNestedSubmenu === "Estabelecimento" && (
+                                      {openNestedSubmenu === "Estabelecimentos Cadastrados" && (
                                         <div className="ml-6 space-y-1">
                                           <NavLink
                                             to="/config/sla"
@@ -812,16 +812,16 @@ export default function Layout({ children }: LayoutProps) {
                             {item.id === "Configurações" && (
                               <>
                                 <button
-                                  onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Estabelecimento" ? null : "Estabelecimento")}
+                                  onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "Estabelecimentos Cadastrados" ? null : "Estabelecimentos Cadastrados")}
                                   className="flex items-center justify-between w-full px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
                                 >
                                   <div className="flex items-center gap-3">
                                     <Building className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm">Estabelecimento</span>
+                                    <span className="text-sm">Estabelecimentos Cadastrados</span>
                                   </div>
-                                  <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Estabelecimento" ? 'rotate-180' : ''}`} />
+                                  <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "Estabelecimentos Cadastrados" ? 'rotate-180' : ''}`} />
                                 </button>
-                                {openNestedSubmenu === "Estabelecimento" && (
+                                {openNestedSubmenu === "Estabelecimentos Cadastrados" && (
                                   <div className="ml-6 space-y-1">
                                     <NavLink
                                       to="/config/sla"
