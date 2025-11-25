@@ -1,66 +1,47 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-  addEdge,
-  useNodesState,
-  useEdgesState,
-  type Connection,
-  type NodeTypes,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, ArrowLeft, Plus, Download, Upload, Play } from "lucide-react";
+import { Save, ArrowLeft, Download, Upload, Play } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import type { AutomacaoVendasBlockType, AutomacaoVendasNode, AutomacaoVendasEdge, AutomacaoVendasFlowData } from "@/types/automacaoVendas";
-
-// Importar componentes que criaremos
-import { AutomacaoFlowNode } from "@/components/automacao-vendas/AutomacaoFlowNode";
+import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
 import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
 import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
 
-const nodeTypes: NodeTypes = {
-  custom: AutomacaoFlowNode,
-};
-
-const initialNodes: AutomacaoVendasNode[] = [
-  {
-    id: "start_node",
-    type: "custom",
-    position: { x: 400, y: 50 },
-    data: {
-      type: "inicio",
-      label: "Início da Automação",
-      config: {},
-    },
-  },
-];
+interface BlockData {
+  id: string;
+  type: AutomacaoVendasBlockType;
+  label: string;
+  config: any;
+  note?: string;
+  nextBlockId?: string;
+}
 
 export default function AutomacaoVendas() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [nodes, setNodes, onNodesChange] = useNodesState<AutomacaoVendasNode>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [selectedNode, setSelectedNode] = useState<AutomacaoVendasNode | null>(null);
+  const [blocks, setBlocks] = useState<BlockData[]>([
+    {
+      id: "start_block",
+      type: "inicio",
+      label: "Início da Automação",
+      config: {},
+    },
+  ]);
+  const [selectedBlock, setSelectedBlock] = useState<BlockData | null>(null);
   const [automacaoNome, setAutomacaoNome] = useState("Nova Automação de Vendas");
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [draggedType, setDraggedType] = useState<AutomacaoVendasBlockType | null>(null);
-  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
+  const workspaceRef = useRef<HTMLDivElement>(null);
 
-  // Carregar automação existente
   useEffect(() => {
     if (id) {
       loadAutomacao(id);
@@ -83,9 +64,8 @@ export default function AutomacaoVendas() {
         setPrioridade(data.prioridade || 0);
         
         const flowData = data.flow_data as any;
-        if (flowData && flowData.nodes && flowData.edges) {
-          setNodes(flowData.nodes);
-          setEdges(flowData.edges);
+        if (flowData && flowData.blocks) {
+          setBlocks(flowData.blocks);
         }
         
         toast.success("Automação carregada com sucesso!");
@@ -95,13 +75,6 @@ export default function AutomacaoVendas() {
       toast.error("Erro ao carregar automação: " + error.message);
     }
   };
-
-  const onConnect = useCallback(
-    (params: Connection) => {
-      setEdges((eds) => addEdge({ ...params, animated: true }, eds));
-    },
-    [setEdges]
-  );
 
   const onDragStart = (event: React.DragEvent, nodeType: AutomacaoVendasBlockType) => {
     setDraggedType(nodeType);
@@ -114,70 +87,84 @@ export default function AutomacaoVendas() {
   }, []);
 
   const onDrop = useCallback(
-    (event: React.DragEvent) => {
+    (event: React.DragEvent, targetBlockId?: string) => {
       event.preventDefault();
 
-      if (!draggedType || !reactFlowWrapper.current || !reactFlowInstance) return;
+      if (!draggedType) return;
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.project({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      });
-
-      const newNode: AutomacaoVendasNode = {
+      const newBlock: BlockData = {
         id: `${draggedType}_${Date.now()}`,
-        type: "custom",
-        position,
-        data: {
-          type: draggedType,
-          label: draggedType.replace(/_/g, " "),
-          config: {},
-          onDelete: handleDeleteNode,
-          onDuplicate: handleDuplicateNode,
-          onAddNote: handleAddNote,
-        },
+        type: draggedType,
+        label: draggedType.replace(/_/g, " "),
+        config: {},
       };
 
-      setNodes((nds) => nds.concat(newNode));
+      setBlocks((prevBlocks) => {
+        if (targetBlockId) {
+          // Inserir após o bloco alvo
+          const targetIndex = prevBlocks.findIndex((b) => b.id === targetBlockId);
+          if (targetIndex !== -1) {
+            const newBlocks = [...prevBlocks];
+            // Conectar: bloco alvo -> novo bloco -> próximo bloco antigo
+            newBlock.nextBlockId = prevBlocks[targetIndex].nextBlockId;
+            newBlocks[targetIndex].nextBlockId = newBlock.id;
+            newBlocks.splice(targetIndex + 1, 0, newBlock);
+            return newBlocks;
+          }
+        }
+        // Adicionar ao final se não houver alvo
+        return [...prevBlocks, newBlock];
+      });
+
       setDraggedType(null);
     },
-    [draggedType, reactFlowInstance, setNodes]
+    [draggedType]
   );
 
-  const handleDeleteNode = (nodeId: string) => {
-    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
-    if (selectedNode?.id === nodeId) {
-      setSelectedNode(null);
+  const handleDeleteBlock = (blockId: string) => {
+    setBlocks((prevBlocks) => {
+      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
+      if (blockIndex === -1 || blockId === "start_block") return prevBlocks;
+
+      const newBlocks = [...prevBlocks];
+      const deletedBlock = newBlocks[blockIndex];
+
+      // Reconectar: bloco anterior -> próximo bloco do deletado
+      if (blockIndex > 0) {
+        newBlocks[blockIndex - 1].nextBlockId = deletedBlock.nextBlockId;
+      }
+
+      newBlocks.splice(blockIndex, 1);
+      return newBlocks;
+    });
+
+    if (selectedBlock?.id === blockId) {
+      setSelectedBlock(null);
     }
   };
 
-  const handleDuplicateNode = (nodeId: string) => {
-    const node = nodes.find((n) => n.id === nodeId);
-    if (!node) return;
+  const handleDuplicateBlock = (blockId: string) => {
+    const block = blocks.find((b) => b.id === blockId);
+    if (!block) return;
 
-    const newNode: AutomacaoVendasNode = {
-      ...node,
-      id: `${node.data.type}_${Date.now()}`,
-      position: {
-        x: node.position.x + 50,
-        y: node.position.y + 50,
-      },
+    const newBlock: BlockData = {
+      ...block,
+      id: `${block.type}_${Date.now()}`,
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    setBlocks((prevBlocks) => {
+      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
+      const newBlocks = [...prevBlocks];
+      newBlocks.splice(blockIndex + 1, 0, newBlock);
+      return newBlocks;
+    });
   };
 
-  const handleAddNote = (nodeId: string) => {
+  const handleAddNote = (blockId: string) => {
     const note = prompt("Digite a nota para este bloco:");
     if (note !== null) {
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === nodeId
-            ? { ...n, data: { ...n.data, note } }
-            : n
-        )
+      setBlocks((prevBlocks) =>
+        prevBlocks.map((b) => (b.id === blockId ? { ...b, note } : b))
       );
     }
   };
@@ -191,10 +178,7 @@ export default function AutomacaoVendas() {
         return;
       }
 
-      const flowData: AutomacaoVendasFlowData = {
-        nodes,
-        edges,
-      };
+      const flowData = { blocks };
 
       const automacaoData = {
         estabelecimento_id: estabelecimentoId,
@@ -205,7 +189,6 @@ export default function AutomacaoVendas() {
       };
 
       if (id) {
-        // Atualizar existente
         const { error } = await supabase
           .from("automacoes_vendas")
           .update(automacaoData)
@@ -214,7 +197,6 @@ export default function AutomacaoVendas() {
         if (error) throw error;
         toast.success("Automação atualizada com sucesso!");
       } else {
-        // Criar nova
         const { data, error } = await supabase
           .from("automacoes_vendas")
           .insert(automacaoData)
@@ -242,32 +224,26 @@ export default function AutomacaoVendas() {
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-4">
+            <Input
+              value={automacaoNome}
+              onChange={(e) => setAutomacaoNome(e.target.value)}
+              className="w-64"
+              placeholder="Nome da automação"
+            />
+            <div className="flex items-center gap-2">
+              <Switch id="ativa" checked={isAtiva} onCheckedChange={setIsAtiva} />
+              <Label htmlFor="ativa">Ativa</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="prioridade">Prioridade:</Label>
               <Input
-                value={automacaoNome}
-                onChange={(e) => setAutomacaoNome(e.target.value)}
-                className="w-64"
-                placeholder="Nome da automação"
+                id="prioridade"
+                type="number"
+                value={prioridade}
+                onChange={(e) => setPrioridade(parseInt(e.target.value) || 0)}
+                className="w-20"
+                min="0"
               />
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="ativa"
-                  checked={isAtiva}
-                  onCheckedChange={setIsAtiva}
-                />
-                <Label htmlFor="ativa">Ativa</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="prioridade">Prioridade:</Label>
-                <Input
-                  id="prioridade"
-                  type="number"
-                  value={prioridade}
-                  onChange={(e) => setPrioridade(parseInt(e.target.value) || 0)}
-                  className="w-20"
-                  min="0"
-                />
-              </div>
             </div>
           </div>
 
@@ -298,49 +274,162 @@ export default function AutomacaoVendas() {
             onDragStart={onDragStart}
             isExpanded={isBlockLibraryExpanded}
             onToggleExpand={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
-            nodes={nodes}
-            onSelectNode={(nodeId) => {
-              const node = nodes.find((n) => n.id === nodeId);
-              if (node) setSelectedNode(node);
+            blocks={blocks}
+            onSelectBlock={(blockId) => {
+              const block = blocks.find((b) => b.id === blockId);
+              if (block) setSelectedBlock(block);
             }}
           />
 
-          {/* Flow Canvas */}
-          <div className="flex-1" ref={reactFlowWrapper}>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onInit={setReactFlowInstance}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeClick={(_, node) => setSelectedNode(node as AutomacaoVendasNode)}
-              nodeTypes={nodeTypes}
-              fitView
-            >
-              <Background />
-              <Controls />
-              <MiniMap />
-            </ReactFlow>
+          {/* Workspace Canvas */}
+          <div
+            ref={workspaceRef}
+            className="flex-1 bg-muted/20 overflow-auto p-8"
+            onDragOver={onDragOver}
+            onDrop={(e) => onDrop(e)}
+          >
+            <div className="max-w-4xl mx-auto space-y-2">
+              {blocks.map((block) => (
+                <div key={block.id} className="relative">
+                  <BlockComponent
+                    block={block}
+                    onSelect={() => setSelectedBlock(block)}
+                    onDelete={() => handleDeleteBlock(block.id)}
+                    onDuplicate={() => handleDuplicateBlock(block.id)}
+                    onAddNote={() => handleAddNote(block.id)}
+                    onDrop={(e) => onDrop(e, block.id)}
+                    onDragOver={onDragOver}
+                    isSelected={selectedBlock?.id === block.id}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Properties Panel */}
-          {selectedNode && (
+          {selectedBlock && (
             <AutomacaoPropertiesPanel
-              node={selectedNode}
-              onClose={() => setSelectedNode(null)}
-              onUpdate={(updatedNode) => {
-                setNodes((nds) =>
-                  nds.map((n) => (n.id === updatedNode.id ? updatedNode : n))
+              block={selectedBlock}
+              onClose={() => setSelectedBlock(null)}
+              onUpdate={(updatedBlock) => {
+                setBlocks((prevBlocks) =>
+                  prevBlocks.map((b) => (b.id === updatedBlock.id ? updatedBlock : b))
                 );
-                setSelectedNode(updatedNode);
+                setSelectedBlock(updatedBlock);
               }}
             />
           )}
         </div>
       </div>
     </Layout>
+  );
+}
+
+// Componente de Bloco individual
+interface BlockComponentProps {
+  block: BlockData;
+  onSelect: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onAddNote: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  isSelected: boolean;
+}
+
+function BlockComponent({
+  block,
+  onSelect,
+  onDelete,
+  onDuplicate,
+  onAddNote,
+  onDrop,
+  onDragOver,
+  isSelected,
+}: BlockComponentProps) {
+  const blockColors: Record<string, string> = {
+    inicio: "bg-green-500",
+    desconto_valor_compra: "bg-blue-500",
+    desconto_quantidade_compras: "bg-purple-500",
+    desconto_produtos_grupo: "bg-orange-500",
+    desconto_pagamento_antecipado: "bg-yellow-500",
+    desconto_aniversario_cliente: "bg-pink-500",
+    desconto_aniversario_empresa: "bg-indigo-500",
+    desconto_data_especial: "bg-red-500",
+    desconto_historico_crescimento: "bg-teal-500",
+    desconto_tempo_desde_ultimo: "bg-cyan-500",
+    aplicar_desconto: "bg-emerald-500",
+    fim: "bg-gray-500",
+  };
+
+  const color = blockColors[block.type] || "bg-gray-400";
+
+  return (
+    <div
+      onClick={onSelect}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className={`cursor-pointer transition-all ${isSelected ? "ring-4 ring-primary" : ""}`}
+    >
+      {/* Conector Superior (encaixe para receber) */}
+      {block.type !== "inicio" && (
+        <div className="flex justify-center">
+          <div className={`w-8 h-4 ${color} rounded-t-lg`} />
+        </div>
+      )}
+
+      {/* Corpo do Bloco */}
+      <div className={`${color} text-white rounded-lg p-4 shadow-lg hover:shadow-xl transition-shadow`}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-bold text-lg">{block.label}</span>
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate();
+              }}
+              className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-xs"
+            >
+              📋
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddNote();
+              }}
+              className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-xs"
+            >
+              📝
+            </button>
+            {block.type !== "inicio" && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-xs"
+              >
+                🗑️
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="text-sm opacity-90">{block.type.replace(/_/g, " ")}</div>
+
+        {block.note && (
+          <div className="mt-2 p-2 bg-black/20 rounded text-sm">
+            📝 {block.note}
+          </div>
+        )}
+      </div>
+
+      {/* Conector Inferior (encaixe para conectar) */}
+      {block.type !== "fim" && (
+        <div className="flex justify-center">
+          <div className={`w-8 h-4 ${color} rounded-b-lg`} />
+        </div>
+      )}
+    </div>
   );
 }
