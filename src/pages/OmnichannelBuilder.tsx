@@ -20,7 +20,7 @@ import { FlowValidator } from "@/components/omnichannel-builder/FlowValidator";
 import { TemplateSelector } from "@/components/omnichannel-builder/TemplateSelector";
 import { FlowVersionHistory } from "@/components/omnichannel-builder/FlowVersionHistory";
 import { FlowExportImport } from "@/components/omnichannel-builder/FlowExportImport";
-import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
+import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { BotTriggerSelector } from "@/components/omnichannel-builder/BotTriggerSelector";
 import { FlowExecutionLogs } from "@/components/omnichannel-builder/FlowExecutionLogs";
 import { FlowAnalytics } from "@/components/omnichannel-builder/FlowAnalytics";
@@ -329,15 +329,22 @@ export default function OmnichannelBuilder() {
 
   const handleSaveNote = useCallback((note: string) => {
     if (currentNoteNodeId) {
-      onUpdateNode(currentNoteNodeId, {
-        config: {
-          ...nodes.find(n => n.id === currentNoteNodeId)?.data.config,
-          nota: note
+      setNodes(nds => nds.map(n => {
+        if (n.id === currentNoteNodeId) {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              note: note
+            }
+          };
         }
-      });
-      toast.success("Nota salva");
+        return n;
+      }));
+      toast.success(note ? "Nota adicionada" : "Nota removida");
+      setCurrentNoteNodeId(null);
     }
-  }, [currentNoteNodeId, nodes, onUpdateNode]);
+  }, [currentNoteNodeId, setNodes]);
 
   const handleLoadTemplate = useCallback((templateNodes: OmnichannelNode[], templateEdges: OmnichannelEdge[]) => {
     setNodes(templateNodes);
@@ -708,10 +715,7 @@ export default function OmnichannelBuilder() {
                   onDuplicate: handleDuplicateNode,
                   onDelete: handleDeleteNode,
                   onClearDebug: handleClearDebug,
-                  onAddNote: (nodeId: string) => {
-                    setCurrentNoteNodeId(nodeId);
-                    setShowNoteDialog(true);
-                  },
+                  onAddNote: handleAddNote,
                 }
               }))}
               edges={edges}
@@ -803,7 +807,7 @@ export default function OmnichannelBuilder() {
         <BlockNoteDialog
           open={showNoteDialog}
           onOpenChange={setShowNoteDialog}
-          currentNote={currentNoteNodeId ? nodes.find(n => n.id === currentNoteNodeId)?.data.config.nota : ""}
+          currentNote={currentNoteNodeId ? (nodes.find(n => n.id === currentNoteNodeId)?.data.note || "") : ""}
           onSave={handleSaveNote}
         />
       </div>

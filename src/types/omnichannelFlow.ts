@@ -17,6 +17,7 @@ export interface OmnichannelNode {
     type: OmnichannelBlockType;
     label: string;
     config: any;
+    note?: string;
     isSkipped?: boolean;
     isBreakpoint?: boolean;
     isHighlighted?: boolean;
