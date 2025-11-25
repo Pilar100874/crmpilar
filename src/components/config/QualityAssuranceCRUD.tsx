@@ -70,8 +70,7 @@ interface QAAvaliacao {
   data_avaliacao: string;
 }
 
-export default function QualityAssuranceCRUD() {
-  const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
+export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [formularios, setFormularios] = useState<QAFormulario[]>([]);
   const [criterios, setCriterios] = useState<QACriterio[]>([]);
   const [avaliacoes, setAvaliacoes] = useState<QAAvaliacao[]>([]);
@@ -101,34 +100,10 @@ export default function QualityAssuranceCRUD() {
   });
 
   useEffect(() => {
-    loadEstabelecimento();
-  }, []);
-
-  useEffect(() => {
     if (estabelecimentoId) {
       loadFormularios();
     }
   }, [estabelecimentoId]);
-
-  const loadEstabelecimento = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: usuario } = await supabase
-        .from("usuarios")
-        .select("estabelecimento_id")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (usuario) {
-        setEstabelecimentoId(usuario.estabelecimento_id);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar estabelecimento:", error);
-      toast.error("Erro ao carregar estabelecimento");
-    }
-  };
 
   const loadFormularios = async () => {
     try {
