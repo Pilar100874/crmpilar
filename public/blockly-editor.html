@@ -45,7 +45,6 @@
 </head>
 <body>
   <div id="controls">
-    <button onclick="exportRule()">Exportar Regra</button>
     <button class="secondary" onclick="clearWorkspace()">Limpar</button>
     <span id="status" style="margin-left: 10px; color: #666;"></span>
   </div>
@@ -269,6 +268,9 @@
         const xml = Blockly.Xml.textToDom(event.data.xml);
         Blockly.Xml.domToWorkspace(xml, workspace);
         showStatus('Regra carregada');
+      } else if (event.data.type === 'EXPORT_RULE') {
+        // Parent pediu exportação (quando clica em Salvar)
+        exportRule();
       }
     });
 
