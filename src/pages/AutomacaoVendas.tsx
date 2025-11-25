@@ -23,19 +23,19 @@ interface BlockData {
   nextBlockId?: string;
 }
 
-const BLOCK_COLORS: Record<string, string> = {
-  inicio: "#4caf50",
-  desconto_valor_compra: "#2196f3",
-  desconto_quantidade_compras: "#9c27b0",
-  desconto_produtos_grupo: "#ff9800",
-  desconto_pagamento_antecipado: "#ffc107",
-  desconto_aniversario_cliente: "#e91e63",
-  desconto_aniversario_empresa: "#673ab7",
-  desconto_data_especial: "#f44336",
-  desconto_historico_crescimento: "#009688",
-  desconto_tempo_desde_ultimo: "#00bcd4",
-  aplicar_desconto: "#8bc34a",
-  fim: "#607d8b",
+const BLOCK_COLORS: Record<string, { primary: string; dark: string; darker: string }> = {
+  inicio: { primary: "#4CAF50", dark: "#43A047", darker: "#388E3C" },
+  desconto_valor_compra: { primary: "#5C6BC0", dark: "#3949AB", darker: "#283593" },
+  desconto_quantidade_compras: { primary: "#7E57C2", dark: "#5E35B1", darker: "#4527A0" },
+  desconto_produtos_grupo: { primary: "#FF7043", dark: "#F4511E", darker: "#D84315" },
+  desconto_pagamento_antecipado: { primary: "#FFA726", dark: "#FB8C00", darker: "#EF6C00" },
+  desconto_aniversario_cliente: { primary: "#EC407A", dark: "#D81B60", darker: "#AD1457" },
+  desconto_aniversario_empresa: { primary: "#AB47BC", dark: "#8E24AA", darker: "#6A1B9A" },
+  desconto_data_especial: { primary: "#EF5350", dark: "#E53935", darker: "#C62828" },
+  desconto_historico_crescimento: { primary: "#26A69A", dark: "#00897B", darker: "#00695C" },
+  desconto_tempo_desde_ultimo: { primary: "#29B6F6", dark: "#039BE5", darker: "#0277BD" },
+  aplicar_desconto: { primary: "#66BB6A", dark: "#43A047", darker: "#2E7D32" },
+  fim: { primary: "#78909C", dark: "#546E7A", darker: "#37474F" },
 };
 
 export default function AutomacaoVendas() {
@@ -56,7 +56,6 @@ export default function AutomacaoVendas() {
   const [isSaving, setIsSaving] = useState(false);
   const [draggedType, setDraggedType] = useState<AutomacaoVendasBlockType | null>(null);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
-  const workspaceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (id) {
@@ -295,16 +294,18 @@ export default function AutomacaoVendas() {
 
           {/* Workspace Canvas */}
           <div
-            ref={workspaceRef}
-            className="flex-1 bg-muted/20 overflow-auto p-8"
+            className="flex-1 overflow-auto p-8"
             onDragOver={onDragOver}
             onDrop={(e) => onDrop(e)}
             style={{
-              backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
+              backgroundColor: "#ffffff",
+              backgroundImage: `
+                radial-gradient(circle, #d0d0d0 1px, transparent 1px)
+              `,
               backgroundSize: "20px 20px",
             }}
           >
-            <div className="max-w-4xl mx-auto space-y-1">
+            <div className="max-w-4xl mx-auto py-4">
               {blocks.map((block) => (
                 <BlocklyBlock
                   key={block.id}
@@ -361,7 +362,7 @@ function BlocklyBlock({
   onDragOver,
   isSelected,
 }: BlocklyBlockProps) {
-  const color = BLOCK_COLORS[block.type] || "#607d8b";
+  const colors = BLOCK_COLORS[block.type] || BLOCK_COLORS.fim;
   const isStart = block.type === "inicio";
   const isEnd = block.type === "fim";
 
@@ -370,113 +371,169 @@ function BlocklyBlock({
       onClick={onSelect}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      className={`relative cursor-pointer transition-all ${
-        isSelected ? "scale-105" : "hover:scale-102"
+      className={`relative cursor-pointer transition-all mb-1 ${
+        isSelected ? "scale-105" : ""
       }`}
-      style={{ filter: isSelected ? "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" : "" }}
+      style={{
+        filter: isSelected
+          ? `drop-shadow(0 0 8px ${colors.primary})`
+          : "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
+      }}
     >
-      {/* Notch Superior (Encaixe de entrada) */}
+      {/* Encaixe Superior (notch de entrada) */}
       {!isStart && (
-        <div className="flex justify-center">
-          <svg width="40" height="8" viewBox="0 0 40 8" className="block">
-            <path
-              d="M 0,8 L 0,0 L 15,0 L 20,4 L 25,0 L 40,0 L 40,8 Z"
-              fill={color}
-              stroke="rgba(0,0,0,0.2)"
-              strokeWidth="1"
-            />
-          </svg>
-        </div>
+        <svg
+          width="200"
+          height="12"
+          viewBox="0 0 200 12"
+          style={{ display: "block", margin: "0 auto" }}
+        >
+          <path
+            d="M 0,12 L 0,0 L 40,0 L 45,5 L 50,0 L 200,0 L 200,12 Z"
+            fill={colors.primary}
+          />
+          <path
+            d="M 0,0 L 40,0 L 45,5 L 50,0 L 200,0"
+            fill="none"
+            stroke={colors.darker}
+            strokeWidth="1"
+          />
+        </svg>
       )}
 
-      {/* Corpo do Bloco */}
+      {/* Corpo Principal do Bloco */}
       <div
-        className="relative"
         style={{
-          backgroundColor: color,
-          minHeight: "60px",
-          padding: "12px 16px",
-          boxShadow: "2px 2px 4px rgba(0,0,0,0.2)",
+          backgroundColor: colors.primary,
+          position: "relative",
+          minWidth: "200px",
         }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <div className="text-white font-bold text-base leading-tight mb-1">
-              {block.label}
-            </div>
-            <div className="text-white/80 text-xs">
-              {block.type.replace(/_/g, " ")}
-            </div>
-          </div>
+        {/* Borda superior escura (efeito 3D) */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "4px",
+            backgroundColor: colors.dark,
+          }}
+        />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-white hover:bg-white/20"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDuplicate();
+        {/* Conteúdo do Bloco */}
+        <div style={{ padding: "8px 12px", paddingTop: "12px" }}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <div
+                style={{
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: "14px",
+                  textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                  marginBottom: "2px",
                 }}
               >
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicar
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddNote();
-                }}
-              >
-                <StickyNote className="h-4 w-4 mr-2" />
-                {block.note ? "Editar Nota" : "Adicionar Nota"}
-              </DropdownMenuItem>
-              {!isStart && (
+                {block.label}
+              </div>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-white hover:bg-white/20"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDelete();
+                    onDuplicate();
                   }}
-                  className="text-destructive"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Deletar
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicar
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddNote();
+                  }}
+                >
+                  <StickyNote className="h-4 w-4 mr-2" />
+                  {block.note ? "Editar Nota" : "Adicionar Nota"}
+                </DropdownMenuItem>
+                {!isStart && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete();
+                    }}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Deletar
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Nota */}
+          {block.note && (
+            <div
+              style={{
+                marginTop: "8px",
+                padding: "6px 8px",
+                backgroundColor: colors.darker,
+                borderRadius: "4px",
+                color: "white",
+                fontSize: "12px",
+                textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+              }}
+            >
+              📝 {block.note}
+            </div>
+          )}
         </div>
 
-        {block.note && (
-          <div
-            className="mt-3 p-2 rounded text-sm leading-snug"
-            style={{ backgroundColor: "rgba(0,0,0,0.15)", color: "white" }}
-          >
-            📝 {block.note}
-          </div>
-        )}
+        {/* Borda inferior clara (efeito 3D) */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "2px",
+            backgroundColor: colors.darker,
+          }}
+        />
       </div>
 
-      {/* Notch Inferior (Encaixe de saída) */}
+      {/* Encaixe Inferior (notch de saída) */}
       {!isEnd && (
-        <div className="flex justify-center">
-          <svg width="40" height="8" viewBox="0 0 40 8" className="block">
-            <path
-              d="M 0,0 L 0,8 L 15,8 L 20,4 L 25,8 L 40,8 L 40,0 Z"
-              fill={color}
-              stroke="rgba(0,0,0,0.2)"
-              strokeWidth="1"
-            />
-          </svg>
-        </div>
+        <svg
+          width="200"
+          height="8"
+          viewBox="0 0 200 8"
+          style={{ display: "block", margin: "0 auto" }}
+        >
+          <path
+            d="M 0,0 L 0,8 L 50,8 L 45,3 L 40,8 L 200,8 L 200,0 Z"
+            fill={colors.primary}
+          />
+          <path
+            d="M 0,8 L 50,8 L 45,3 L 40,8 L 200,8"
+            fill="none"
+            stroke={colors.darker}
+            strokeWidth="1"
+          />
+        </svg>
       )}
     </div>
   );
