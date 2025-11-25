@@ -147,14 +147,6 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     category: "sistema",
   },
   {
-    type: "inicio",
-    label: "Início",
-    description: "Ponto inicial da automação",
-    icon: "▶️",
-    color: "#10b981",
-    category: "sistema",
-  },
-  {
     type: "desconto_valor_compra",
     label: "Desconto por Valor",
     description: "Aplica desconto baseado no valor total da compra",
