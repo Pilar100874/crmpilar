@@ -42,64 +42,93 @@ export function BlockNode({ data }: BlockNodeProps) {
   const hasOutputs = !isEnd;
 
   return (
-    <div
-      className="px-4 py-3 rounded-lg shadow-lg border-2 min-w-[200px]"
-      style={{
-        backgroundColor: color,
-        borderColor: `color-mix(in srgb, ${color} 80%, black)`,
-      }}
-    >
-      {/* Handle de entrada (exceto bloco início) */}
+    <div className="relative min-w-[220px]">
+      {/* Handle de entrada invisível (exceto bloco início) */}
       {hasInputs && (
         <Handle
           type="target"
           position={Position.Top}
-          className="w-3 h-3 !bg-white border-2"
-          style={{ borderColor: color }}
+          className="w-3 h-3 !bg-transparent !border-0"
+          style={{ top: "15px" }}
         />
       )}
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-white font-semibold text-sm flex-1">
-          {data.label}
-        </div>
+      {/* Bloco estilo Blockly com SVG */}
+      <svg
+        width="100%"
+        height="auto"
+        viewBox="0 0 220 80"
+        className="drop-shadow-lg"
+        style={{ overflow: "visible" }}
+      >
+        {/* Forma do bloco com encaixe tipo puzzle */}
+        <path
+          d={`
+            M 0,${hasInputs ? "20" : "4"}
+            ${hasInputs ? "L 20,20 L 25,15 L 35,15 L 40,20 L 60,20" : ""}
+            L 60,${hasInputs ? "20" : "4"}
+            Q 65,${hasInputs ? "20" : "4"} 65,${hasInputs ? "25" : "9"}
+            L 65,${hasOutputs ? "60" : "76"}
+            ${hasOutputs ? "L 40,60 L 35,65 L 25,65 L 20,60 L 0,60" : "L 0,76"}
+            Q 0,${hasOutputs ? "60" : "76"} 0,${hasOutputs ? "55" : "71"}
+            L 0,${hasInputs ? "25" : "9"}
+            Q 0,${hasInputs ? "20" : "4"} 0,${hasInputs ? "20" : "4"}
+            Z
+          `}
+          fill={color}
+          stroke={`color-mix(in srgb, ${color} 70%, black)`}
+          strokeWidth="2"
+        />
 
-        <div className="flex gap-1">
-          {data.onEdit && (
-            <button
-              onClick={data.onEdit}
-              className="p-1 hover:bg-white/20 rounded transition-colors"
-              title="Editar"
-            >
-              <Edit className="w-3 h-3 text-white" />
-            </button>
+        {/* Conteúdo do bloco */}
+        <foreignObject x="10" y={hasInputs ? "25" : "10"} width="200" height="50">
+          <div className="flex items-center justify-between gap-2 px-2">
+            <div className="text-white font-semibold text-sm flex-1">
+              {data.label}
+            </div>
+
+            <div className="flex gap-1">
+              {data.onEdit && (
+                <button
+                  onClick={data.onEdit}
+                  className="p-1 hover:bg-white/20 rounded transition-colors"
+                  title="Editar"
+                >
+                  <Edit className="w-3 h-3 text-white" />
+                </button>
+              )}
+              {data.onDelete && !isStart && (
+                <button
+                  onClick={data.onDelete}
+                  className="p-1 hover:bg-white/20 rounded transition-colors"
+                  title="Excluir"
+                >
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Mostrar configuração do bloco (se houver) */}
+          {data.config && Object.keys(data.config).length > 0 && (
+            <div className="mt-1 text-xs text-white/90 bg-black/20 rounded px-2 py-1 mx-2">
+              {Object.entries(data.config).map(([key, value]) => (
+                <div key={key}>
+                  <span className="font-semibold">{key}:</span> {String(value)}
+                </div>
+              ))}
+            </div>
           )}
-          {data.onDelete && !isStart && (
-            <button
-              onClick={data.onDelete}
-              className="p-1 hover:bg-white/20 rounded transition-colors"
-              title="Excluir"
-            >
-              <X className="w-3 h-3 text-white" />
-            </button>
-          )}
-        </div>
-      </div>
+        </foreignObject>
+      </svg>
 
-      {/* Mostrar configuração do bloco (se houver) */}
-      {data.config && (
-        <div className="mt-2 text-xs text-white/90 bg-black/20 rounded px-2 py-1">
-          {JSON.stringify(data.config, null, 0)}
-        </div>
-      )}
-
-      {/* Handle de saída (exceto bloco fim) */}
+      {/* Handle de saída invisível (exceto bloco fim) */}
       {hasOutputs && (
         <Handle
           type="source"
           position={Position.Bottom}
-          className="w-3 h-3 !bg-white border-2"
-          style={{ borderColor: color }}
+          className="w-3 h-3 !bg-transparent !border-0"
+          style={{ bottom: "15px" }}
         />
       )}
     </div>
