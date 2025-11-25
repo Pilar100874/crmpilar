@@ -1120,6 +1120,56 @@ export type Database = {
           },
         ]
       }
+      cron_jobs: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          estabelecimento_id: string
+          id: string
+          job_name: string
+          job_type: string
+          last_run: string | null
+          next_run: string | null
+          schedule_cron: string
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          job_name: string
+          job_type: string
+          last_run?: string | null
+          next_run?: string | null
+          schedule_cron: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          job_name?: string
+          job_type?: string
+          last_run?: string | null
+          next_run?: string | null
+          schedule_cron?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cron_jobs_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_canal_preferences: {
         Row: {
           ativo: boolean | null

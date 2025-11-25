@@ -13,6 +13,7 @@ import { Pencil, Trash2, Plus, Clock, AlertTriangle, TrendingUp, HelpCircle } fr
 import { Textarea } from '@/components/ui/textarea';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { z } from 'zod';
+import { CronJobManager } from './CronJobManager';
 
 interface SLAConfig {
   id: string;
@@ -394,6 +395,14 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           )}
         </CardContent>
       </Card>
+
+      {/* Configuração de Monitoramento Automático */}
+      <CronJobManager
+        estabelecimentoId={estabelecimentoId}
+        jobType="monitorar_sla"
+        title="Monitoramento Automático de SLA"
+        defaultCron="*/5 * * * *"
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
