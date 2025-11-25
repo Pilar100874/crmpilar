@@ -29,6 +29,8 @@ interface SLAConfig {
   multiplicador_normal: number;
   multiplicador_baixa: number;
   alerta_porcentagem: number;
+  notificar_supervisor: boolean;
+  aumentar_prioridade_automatica: boolean;
   escalar_automaticamente: boolean;
   fila_escalacao_id: string | null;
   ativo: boolean;
@@ -62,6 +64,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     multiplicador_normal: 1.0,
     multiplicador_baixa: 1.5,
     alerta_porcentagem: 80,
+    notificar_supervisor: true,
+    aumentar_prioridade_automatica: false,
     escalar_automaticamente: false,
     fila_escalacao_id: '',
     ativo: true,
@@ -122,6 +126,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         multiplicador_normal: formData.multiplicador_normal,
         multiplicador_baixa: formData.multiplicador_baixa,
         alerta_porcentagem: formData.alerta_porcentagem,
+        notificar_supervisor: formData.notificar_supervisor,
+        aumentar_prioridade_automatica: formData.aumentar_prioridade_automatica,
         escalar_automaticamente: formData.escalar_automaticamente,
         fila_escalacao_id: formData.fila_escalacao_id || null,
         ativo: formData.ativo,
@@ -168,6 +174,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       multiplicador_normal: config.multiplicador_normal,
       multiplicador_baixa: config.multiplicador_baixa,
       alerta_porcentagem: config.alerta_porcentagem,
+      notificar_supervisor: config.notificar_supervisor,
+      aumentar_prioridade_automatica: config.aumentar_prioridade_automatica,
       escalar_automaticamente: config.escalar_automaticamente,
       fila_escalacao_id: config.fila_escalacao_id || '',
       ativo: config.ativo,
@@ -211,6 +219,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       multiplicador_normal: 1.0,
       multiplicador_baixa: 1.5,
       alerta_porcentagem: 80,
+      notificar_supervisor: true,
+      aumentar_prioridade_automatica: false,
       escalar_automaticamente: false,
       fila_escalacao_id: '',
       ativo: true,
@@ -501,6 +511,22 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 </div>
 
                 <div className="flex items-center space-x-2 pt-8">
+                  <Switch
+                    checked={formData.notificar_supervisor}
+                    onCheckedChange={(checked) => setFormData({ ...formData, notificar_supervisor: checked })}
+                  />
+                  <Label>Notificar supervisor</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.aumentar_prioridade_automatica}
+                    onCheckedChange={(checked) => setFormData({ ...formData, aumentar_prioridade_automatica: checked })}
+                  />
+                  <Label>Aumentar prioridade automaticamente</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
                   <Switch
                     checked={formData.escalar_automaticamente}
                     onCheckedChange={(checked) => setFormData({ ...formData, escalar_automaticamente: checked })}

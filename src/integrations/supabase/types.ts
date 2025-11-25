@@ -5109,6 +5109,7 @@ export type Database = {
         Row: {
           alerta_porcentagem: number | null
           ativo: boolean | null
+          aumentar_prioridade_automatica: boolean | null
           considera_horario_comercial: boolean | null
           created_at: string | null
           descricao: string | null
@@ -5123,6 +5124,7 @@ export type Database = {
           multiplicador_normal: number | null
           multiplicador_urgente: number | null
           nome: string
+          notificar_supervisor: boolean | null
           tempo_primeira_resposta: number
           tempo_resolucao: number
           tempo_resposta_subsequente: number
@@ -5131,6 +5133,7 @@ export type Database = {
         Insert: {
           alerta_porcentagem?: number | null
           ativo?: boolean | null
+          aumentar_prioridade_automatica?: boolean | null
           considera_horario_comercial?: boolean | null
           created_at?: string | null
           descricao?: string | null
@@ -5145,6 +5148,7 @@ export type Database = {
           multiplicador_normal?: number | null
           multiplicador_urgente?: number | null
           nome: string
+          notificar_supervisor?: boolean | null
           tempo_primeira_resposta?: number
           tempo_resolucao?: number
           tempo_resposta_subsequente?: number
@@ -5153,6 +5157,7 @@ export type Database = {
         Update: {
           alerta_porcentagem?: number | null
           ativo?: boolean | null
+          aumentar_prioridade_automatica?: boolean | null
           considera_horario_comercial?: boolean | null
           created_at?: string | null
           descricao?: string | null
@@ -5167,6 +5172,7 @@ export type Database = {
           multiplicador_normal?: number | null
           multiplicador_urgente?: number | null
           nome?: string
+          notificar_supervisor?: boolean | null
           tempo_primeira_resposta?: number
           tempo_resolucao?: number
           tempo_resposta_subsequente?: number
