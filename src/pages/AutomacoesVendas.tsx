@@ -145,7 +145,7 @@ export default function AutomacoesVendas() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Automações de Vendas</h1>
+          <h1 className="text-3xl font-bold text-foreground">Regras para o Orçamento</h1>
           <p className="text-muted-foreground mt-1">
             Gerencie regras automáticas de desconto e promoções
           </p>
@@ -170,7 +170,7 @@ export default function AutomacoesVendas() {
             <div>
               <h3 className="text-lg font-semibold mb-2">Nenhuma regra criada</h3>
               <p className="text-muted-foreground mb-4">
-                Crie sua primeira regra de automação de vendas
+                Crie sua primeira regra para o orçamento
               </p>
               <Button onClick={() => navigate("/editor-regras")}>
                 <Plus className="h-4 w-4 mr-2" />

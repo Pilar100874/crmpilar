@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -155,7 +154,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
           </div>
         </div>
       ) : (
-        <ScrollArea className="flex-1">
+        <div className="flex-1">
           <div className="p-6">
             <div className="rounded-md border">
               <Table>
@@ -280,7 +279,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
               </Table>
             </div>
           </div>
-        </ScrollArea>
+        </div>
       )}
 
       <DeleteConfirmDialog

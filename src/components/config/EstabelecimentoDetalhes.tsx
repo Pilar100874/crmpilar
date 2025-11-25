@@ -2191,7 +2191,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                   <div className="flex items-center justify-between w-full pr-2">
                     <div className="flex items-center gap-2">
                       <Zap className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Automação de Vendas</span>
+                      <span className="font-medium">Regras para o Orçamento</span>
                     </div>
                     <Dialog open={helpDialogOpen === "automacao-vendas"} onOpenChange={(open) => setHelpDialogOpen(open ? "automacao-vendas" : null)}>
                       <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -2201,7 +2201,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                         <DialogHeader>
-                          <DialogTitle>Automação de Vendas - Ajuda</DialogTitle>
+                          <DialogTitle>Regras para o Orçamento - Ajuda</DialogTitle>
                           <DialogDescription className="text-left space-y-4 pt-4">
                             <div>
                               <h4 className="font-semibold mb-2">🤖 Automação Visual</h4>

@@ -54,7 +54,7 @@ export const MENU_CONFIG = [
   { id: "Gerenciar Atalhos", label: "Gerenciar Atalhos" },
   { id: "SLA Config", label: "SLA" },
   { id: "Análise de Sentimento", label: "Análise de Sentimento" },
-  { id: "Automação de Vendas", label: "Automação de Vendas" },
+  { id: "Automação de Vendas", label: "Regras para o Orçamento" },
   { id: "Editor de Regras", label: "Editor de Regras" },
 ] as const;
 
