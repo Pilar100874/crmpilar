@@ -61,3 +61,18 @@ verify_jwt = false
 [functions.enviar-codigo-verificacao]
 verify_jwt = true
 
+[functions.agent-assist-suggest-response]
+verify_jwt = true
+
+[functions.agent-assist-summarize]
+verify_jwt = true
+
+[functions.agent-assist-suggest-kb]
+verify_jwt = true
+
+[functions.agent-assist-translate]
+verify_jwt = true
+
+[functions.analisar-sentimento]
+verify_jwt = false
+

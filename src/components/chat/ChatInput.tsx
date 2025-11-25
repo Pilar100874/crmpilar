@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet } from "lucide-react";
+import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,6 +51,9 @@ interface ChatInputProps {
   showAIChat?: boolean;
   onToggleAIChat?: () => void;
   aiWebhooks?: any[];
+  // Agent Assist props
+  conversationId?: string;
+  conversationMessages?: any[];
 }
 
 export default function ChatInput({ 
@@ -74,7 +77,9 @@ export default function ChatInput({
   onTransferUser,
   showAIChat = false,
   onToggleAIChat,
-  aiWebhooks = []
+  aiWebhooks = [],
+  conversationId,
+  conversationMessages = []
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -90,6 +95,14 @@ export default function ChatInput({
   const [reportFileType, setReportFileType] = useState<'pdf' | 'excel' | null>(null);
   const [reportProgress, setReportProgress] = useState<number>(0);
   const [isProcessingReport, setIsProcessingReport] = useState(false);
+  
+  // Agent Assist states
+  const [isGeneratingContextResponse, setIsGeneratingContextResponse] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [isSuggestingKBArticles, setIsSuggestingKBArticles] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showTranslatePopover, setShowTranslatePopover] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState<string>("en");
   
   // Auto-resize textarea to avoid inner scrollbars
   useEffect(() => {
@@ -566,6 +579,231 @@ export default function ChatInput({
               <Sparkles className="h-4 w-4" />
             </Button>
           )}
+
+          {/* Agent Assist Separator */}
+          <div className="h-6 w-px bg-border" />
+
+          {/* 1. Sugestão de Resposta Contextual */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={async () => {
+              if (!conversationMessages || conversationMessages.length === 0) {
+                toast.error("Nenhuma mensagem para analisar");
+                return;
+              }
+              
+              setIsGeneratingContextResponse(true);
+              try {
+                const { data, error } = await supabase.functions.invoke('agent-assist-suggest-response', {
+                  body: {
+                    conversationId,
+                    messages: conversationMessages.slice(-10) // Últimas 10 mensagens
+                  }
+                });
+                
+                if (error) throw error;
+                
+                const suggestion = data?.suggestion || "";
+                setMessage(suggestion);
+                toast.success("Sugestão gerada com sucesso!");
+              } catch (error: any) {
+                console.error("Erro ao gerar sugestão:", error);
+                toast.error("Erro ao gerar sugestão de resposta");
+              } finally {
+                setIsGeneratingContextResponse(false);
+              }
+            }}
+            disabled={disabled || isGeneratingContextResponse || !conversationId}
+            title="Sugerir resposta com base no contexto"
+            className="rounded-full"
+          >
+            {isGeneratingContextResponse ? (
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <MessageSquareText className="h-4 w-4" />
+            )}
+          </Button>
+
+          {/* 2. Resumo Automático */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={async () => {
+              if (!conversationMessages || conversationMessages.length === 0) {
+                toast.error("Nenhuma mensagem para resumir");
+                return;
+              }
+              
+              setIsGeneratingSummary(true);
+              try {
+                const { data, error } = await supabase.functions.invoke('agent-assist-summarize', {
+                  body: {
+                    conversationId,
+                    messages: conversationMessages
+                  }
+                });
+                
+                if (error) throw error;
+                
+                const summary = data?.summary || "";
+                // Mostrar resumo em um toast ou modal
+                toast.success("Resumo gerado! Verifique o painel lateral.");
+                // Aqui você pode adicionar lógica para mostrar o resumo em um painel
+                console.log("📝 Resumo:", summary);
+              } catch (error: any) {
+                console.error("Erro ao gerar resumo:", error);
+                toast.error("Erro ao gerar resumo");
+              } finally {
+                setIsGeneratingSummary(false);
+              }
+            }}
+            disabled={disabled || isGeneratingSummary || !conversationId}
+            title="Resumir conversa"
+            className="rounded-full"
+          >
+            {isGeneratingSummary ? (
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FileCheck className="h-4 w-4" />
+            )}
+          </Button>
+
+          {/* 3. Sugerir Artigos KB */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={async () => {
+              if (!lastUserMessage) {
+                toast.error("Nenhuma mensagem do cliente para analisar");
+                return;
+              }
+              
+              setIsSuggestingKBArticles(true);
+              try {
+                const estabId = await getEstabelecimentoId();
+                if (!estabId) {
+                  toast.error("Estabelecimento não encontrado");
+                  return;
+                }
+                
+                const { data, error } = await supabase.functions.invoke('agent-assist-suggest-kb', {
+                  body: {
+                    conversationId,
+                    lastUserMessage,
+                    estabelecimentoId: estabId
+                  }
+                });
+                
+                if (error) throw error;
+                
+                const articles = data?.articles || [];
+                if (articles.length > 0) {
+                  toast.success(`${articles.length} artigo(s) sugerido(s)! Verifique o painel lateral.`);
+                  console.log("📚 Artigos sugeridos:", articles);
+                } else {
+                  toast.info("Nenhum artigo relevante encontrado");
+                }
+              } catch (error: any) {
+                console.error("Erro ao sugerir artigos:", error);
+                toast.error("Erro ao buscar artigos da base de conhecimento");
+              } finally {
+                setIsSuggestingKBArticles(false);
+              }
+            }}
+            disabled={disabled || isSuggestingKBArticles || !lastUserMessage}
+            title="Sugerir artigos da base de conhecimento"
+            className="rounded-full"
+          >
+            {isSuggestingKBArticles ? (
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <BookOpen className="h-4 w-4" />
+            )}
+          </Button>
+
+          {/* 4. Tradução Automática */}
+          <Popover open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                title="Traduzir mensagem"
+                disabled={disabled || !message.trim()}
+                className="rounded-full"
+              >
+                <Languages className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 border-b pb-2">
+                  <Languages className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-sm font-semibold">Traduzir mensagem</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Idioma de destino</Label>
+                  <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                    <SelectTrigger className="w-full rounded-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 rounded-2xl">
+                      <SelectItem value="en">Inglês</SelectItem>
+                      <SelectItem value="es">Espanhol</SelectItem>
+                      <SelectItem value="fr">Francês</SelectItem>
+                      <SelectItem value="de">Alemão</SelectItem>
+                      <SelectItem value="it">Italiano</SelectItem>
+                      <SelectItem value="pt">Português</SelectItem>
+                      <SelectItem value="zh">Chinês</SelectItem>
+                      <SelectItem value="ja">Japonês</SelectItem>
+                      <SelectItem value="ko">Coreano</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={async () => {
+                    if (!message.trim()) return;
+                    
+                    setIsTranslating(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke('agent-assist-translate', {
+                        body: {
+                          text: message,
+                          targetLanguage
+                        }
+                      });
+                      
+                      if (error) throw error;
+                      
+                      const translation = data?.translation || "";
+                      setMessage(translation);
+                      setShowTranslatePopover(false);
+                      toast.success("Mensagem traduzida!");
+                    } catch (error: any) {
+                      console.error("Erro ao traduzir:", error);
+                      toast.error("Erro ao traduzir mensagem");
+                    } finally {
+                      setIsTranslating(false);
+                    }
+                  }}
+                  disabled={!message.trim() || isTranslating}
+                  className="w-full rounded-full"
+                >
+                  {isTranslating ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
+                      Traduzindo...
+                    </>
+                  ) : (
+                    <>
+                      <Languages className="h-4 w-4 mr-2" />
+                      Traduzir
+                    </>
+                  )}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Import Reports Button */}
           <Popover open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>

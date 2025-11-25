@@ -167,6 +167,11 @@ export default function Atendimento() {
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
   
+  // Compute last user message for agent assist
+  const lastUserMessage = messages
+    .filter(m => m.sender === 'customer')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.text || null;
+  
   const loadAtendente = async (authUserId: string) => {
     try {
       const estabId = await getEstabelecimentoId();
@@ -2610,6 +2615,8 @@ ${recentMessages}
                 <ChatInput
                   onSendMessage={handleSendMessage}
                   disabled={false}
+                  lastUserMessage={lastUserMessage}
+                  onSuggestionGenerated={(suggestion) => console.log("Suggestion:", suggestion)}
                   availableBots={availableBots}
                   selectedBotRedirect={selectedBotRedirect}
                   onBotRedirectChange={setSelectedBotRedirect}
@@ -2631,6 +2638,8 @@ ${recentMessages}
                   showAIChat={showAIChat}
                   onToggleAIChat={() => setShowAIChat(!showAIChat)}
                   aiWebhooks={aiWebhooks}
+                  conversationId={selectedConversation || undefined}
+                  conversationMessages={messages}
                 />
               </div>
             </div>
