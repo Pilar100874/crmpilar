@@ -28,6 +28,7 @@ interface AutomacaoVenda {
   ativo: boolean;
   prioridade: number;
   flow_data: any;
+  expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -137,6 +138,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
               <TableHead>Status</TableHead>
               <TableHead>Prioridade</TableHead>
               <TableHead>Blocos</TableHead>
+              <TableHead>Vencimento</TableHead>
               <TableHead>Criado em</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -166,6 +168,15 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">{numBlocos} blocos</span>
+                  </TableCell>
+                  <TableCell>
+                    {automacao.expires_at ? (
+                      <span className="text-sm">
+                        {new Date(automacao.expires_at).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <Badge variant="outline">Indeterminado</Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm">
                     {new Date(automacao.created_at).toLocaleDateString()}
