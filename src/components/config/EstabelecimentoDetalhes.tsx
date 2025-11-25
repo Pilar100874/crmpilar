@@ -906,6 +906,7 @@ function SkillsManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string
 
 export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome }: EstabelecimentoDetalhesProps) {
   const [userEstabId, setUserEstabId] = useState<string | null>(null);
+  const [helpDialogOpen, setHelpDialogOpen] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -1108,9 +1109,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             <Accordion type="single" collapsible className="space-y-2 pl-4">
               <AccordionItem value="grupos-acesso" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <FolderTree className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Grupos de Acesso</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <FolderTree className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Grupos de Acesso</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "grupos-acesso"} onOpenChange={(open) => setHelpDialogOpen(open ? "grupos-acesso" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Grupos de Acesso - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🔐 Controle de Permissões</h4>
+                              <p className="text-sm">Crie perfis personalizados definindo quais menus e funcionalidades cada grupo pode acessar.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">📋 Exemplos de Grupos</h4>
+                              <p className="text-sm">Administrador (acesso total), Atendente (somente atendimento), Supervisor (relatórios + atendimento), Vendedor (somente vendas).</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1120,9 +1145,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="cadastro-usuarios" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <UserCog className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Cadastro de Usuários</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <UserCog className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Cadastro de Usuários</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "cadastro-usuarios"} onOpenChange={(open) => setHelpDialogOpen(open ? "cadastro-usuarios" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Cadastro de Usuários - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">👤 Gestão de Usuários</h4>
+                              <p className="text-sm">Crie e gerencie os usuários que terão acesso ao sistema, definindo nome, email, senha e grupo de acesso.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎭 Atribuição de Roles</h4>
+                              <p className="text-sm">Associe cada usuário a um grupo de acesso para definir suas permissões no sistema.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1132,9 +1181,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="cadastro-segmentos" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Cadastro de Segmentos</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Cadastro de Segmentos</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "cadastro-segmentos"} onOpenChange={(open) => setHelpDialogOpen(open ? "cadastro-segmentos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Cadastro de Segmentos - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🏷️ Segmentação de Clientes</h4>
+                              <p className="text-sm">Crie segmentos para organizar seus clientes por características comuns (VIP, Bronze, Prata, Ouro, etc.).</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎯 Campanhas Direcionadas</h4>
+                              <p className="text-sm">Use segmentos para enviar campanhas de marketing personalizadas e criar relatórios específicos.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1144,9 +1217,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="gerenciar-atalhos" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Gerenciar Atalhos</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Gerenciar Atalhos</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "gerenciar-atalhos"} onOpenChange={(open) => setHelpDialogOpen(open ? "gerenciar-atalhos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Gerenciar Atalhos - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">⚡ Acesso Rápido</h4>
+                              <p className="text-sm">Configure atalhos personalizados para cada usuário acessar rapidamente as funcionalidades mais utilizadas.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎨 Personalização</h4>
+                              <p className="text-sm">Defina ícones, cores e ordem de exibição dos atalhos no menu principal.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1220,9 +1317,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             <Accordion type="single" collapsible className="space-y-2 pl-4">
               <AccordionItem value="skills-atendimento" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Skills de Atendimento</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Skills de Atendimento</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "skills-atendimento"} onOpenChange={(open) => setHelpDialogOpen(open ? "skills-atendimento" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Skills de Atendimento - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🎓 Habilidades Especializadas</h4>
+                              <p className="text-sm">Cadastre habilidades como idiomas, conhecimentos técnicos e especialidades dos atendentes.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎯 Roteamento Inteligente</h4>
+                              <p className="text-sm">Use as skills para direcionar conversas automaticamente ao atendente mais qualificado.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1232,9 +1353,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="filas-atendimento" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <ListTree className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Filas de Atendimento</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <ListTree className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Filas de Atendimento</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "filas-atendimento"} onOpenChange={(open) => setHelpDialogOpen(open ? "filas-atendimento" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Filas de Atendimento - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📋 Organização</h4>
+                              <p className="text-sm">Crie filas para organizar conversas por departamento, especialidade ou prioridade.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">⚙️ Tipos de Roteamento</h4>
+                              <p className="text-sm">Round-robin, por skill, por prioridade, por disponibilidade ou por carteira fixa.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1244,9 +1389,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="anexos-rapidos" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <LinkIcon className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Anexos Rápidos Globais</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Anexos Rápidos Globais</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "anexos-rapidos"} onOpenChange={(open) => setHelpDialogOpen(open ? "anexos-rapidos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Anexos Rápidos Globais - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📎 Arquivos Prontos</h4>
+                              <p className="text-sm">Cadastre documentos, manuais, catálogos e imagens para envio rápido durante atendimentos.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">⚡ Envio Ágil</h4>
+                              <p className="text-sm">Todos os atendentes terão acesso aos anexos cadastrados para envio com um clique.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1256,9 +1425,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="textos-prontos" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Textos Prontos Globais</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Textos Prontos Globais</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "textos-prontos"} onOpenChange={(open) => setHelpDialogOpen(open ? "textos-prontos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Textos Prontos Globais - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">💬 Respostas Padronizadas</h4>
+                              <p className="text-sm">Crie mensagens pré-definidas para situações comuns (boas-vindas, horário de funcionamento, políticas).</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🚀 Agilidade no Atendimento</h4>
+                              <p className="text-sm">Reduza o tempo de resposta usando textos prontos com atalhos personalizados.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1268,9 +1461,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="redes-sociais" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Share2 className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Redes Sociais</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Share2 className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Redes Sociais</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "redes-sociais"} onOpenChange={(open) => setHelpDialogOpen(open ? "redes-sociais" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Redes Sociais - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🌐 Integração Multicanal</h4>
+                              <p className="text-sm">Conecte Facebook, Instagram, Twitter e outras redes para atendimento unificado.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">📱 Configuração de APIs</h4>
+                              <p className="text-sm">Configure tokens e credenciais de acesso para cada rede social integrada.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1280,9 +1497,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="canais" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Key className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Canais de Atendimento</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Key className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Canais de Atendimento</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "canais"} onOpenChange={(open) => setHelpDialogOpen(open ? "canais" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Canais de Atendimento - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📱 Ative ou Desative Canais</h4>
+                              <p className="text-sm">Controle quais canais de atendimento estarão ativos: WhatsApp, Telegram, WebChat, etc.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">⚙️ Configurações por Canal</h4>
+                              <p className="text-sm">Configure horários, mensagens automáticas e comportamentos específicos para cada canal.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1292,9 +1533,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="omnichannel-workflows" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Workflow className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Workflow Builder Omnichannel</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Workflow className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Workflow Builder Omnichannel</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "omnichannel-workflows"} onOpenChange={(open) => setHelpDialogOpen(open ? "omnichannel-workflows" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Workflow Builder Omnichannel - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🎨 Construtor Visual</h4>
+                              <p className="text-sm">Crie fluxos de roteamento arrastando e conectando blocos visualmente, sem programação.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🔀 Regras Avançadas</h4>
+                              <p className="text-sm">Configure condições, horários, prioridades e regras complexas de roteamento.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1432,9 +1697,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             <Accordion type="single" collapsible className="space-y-2 pl-4">
               <AccordionItem value="gerador-api" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Gerador de APIs</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Gerador de APIs</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "gerador-api"} onOpenChange={(open) => setHelpDialogOpen(open ? "gerador-api" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Gerador de APIs - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🔗 APIs REST Automáticas</h4>
+                              <p className="text-sm">Transforme consultas SQL em endpoints REST prontos para integração com sistemas externos.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🔒 Segurança</h4>
+                              <p className="text-sm">Configure autenticação, permissões e limites de acesso para cada endpoint criado.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1444,9 +1733,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="cadastro-webhooks" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Webhook className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Cadastro de Webhooks</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Webhook className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Cadastro de Webhooks</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "cadastro-webhooks"} onOpenChange={(open) => setHelpDialogOpen(open ? "cadastro-webhooks" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Cadastro de Webhooks - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📤 Webhooks de Saída</h4>
+                              <p className="text-sm">Envie dados automaticamente para URLs externas quando eventos específicos ocorrerem no sistema.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎯 Eventos Configuráveis</h4>
+                              <p className="text-sm">Configure gatilhos como novo chat, mensagem recebida, chat encerrado, etc.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1456,9 +1769,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="cadastro-webhooks-entrada" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Webhook className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Cadastro de Webhooks de Entrada</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Webhook className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Cadastro de Webhooks de Entrada</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "cadastro-webhooks-entrada"} onOpenChange={(open) => setHelpDialogOpen(open ? "cadastro-webhooks-entrada" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Webhooks de Entrada - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📥 Receba Dados Externos</h4>
+                              <p className="text-sm">Gere URLs únicas para receber dados de sistemas externos via POST.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🔄 Processamento Automático</h4>
+                              <p className="text-sm">Configure ações automáticas para processar os dados recebidos (criar contato, abrir chat, etc.).</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1632,9 +1969,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             <Accordion type="single" collapsible className="space-y-2 pl-4">
               <AccordionItem value="tipos-pagamento" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Tipos de Pagamento</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Tipos de Pagamento</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "tipos-pagamento"} onOpenChange={(open) => setHelpDialogOpen(open ? "tipos-pagamento" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Tipos de Pagamento - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">💳 Formas de Pagamento</h4>
+                              <p className="text-sm">Configure as formas de pagamento aceitas: Cartão de Crédito, Débito, PIX, Boleto, Dinheiro, etc.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">⚙️ Configurações</h4>
+                              <p className="text-sm">Defina taxas, ative/desative formas de pagamento e configure integrações financeiras.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1644,9 +2005,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="tabelas-preco" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Tabelas de Preço</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Tabelas de Preço</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "tabelas-preco"} onOpenChange={(open) => setHelpDialogOpen(open ? "tabelas-preco" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Tabelas de Preço - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">💵 Múltiplas Tabelas</h4>
+                              <p className="text-sm">Crie diferentes tabelas de preço para segmentos de clientes (Varejo, Atacado, VIP, Promocional).</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">📊 Gestão Flexível</h4>
+                              <p className="text-sm">Defina preços personalizados por produto e aplique descontos ou acréscimos globais.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1656,9 +2041,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="condicoes-pagamento" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Condições de Pagamento</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Condições de Pagamento</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "condicoes-pagamento"} onOpenChange={(open) => setHelpDialogOpen(open ? "condicoes-pagamento" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Condições de Pagamento - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">💰 Termos Comerciais</h4>
+                              <p className="text-sm">Defina condições como "À Vista", "30 dias", "Parcelado em 3x", com valores mínimos e máximos.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎯 Aplicação Automática</h4>
+                              <p className="text-sm">As condições são aplicadas automaticamente nos orçamentos e vendas conforme o tipo de pagamento.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1668,9 +2077,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="produtos" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Cadastro de Produtos</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Cadastro de Produtos</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "produtos"} onOpenChange={(open) => setHelpDialogOpen(open ? "produtos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Cadastro de Produtos - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📦 Catálogo Completo</h4>
+                              <p className="text-sm">Cadastre produtos e serviços com descrição, imagens, código, preços e controle de estoque.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🏷️ Organização</h4>
+                              <p className="text-sm">Classifique produtos em grupos e categorias para facilitar gestão e busca.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1680,9 +2113,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="produto-grupos" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Grupos de Produtos</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Grupos de Produtos</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "produto-grupos"} onOpenChange={(open) => setHelpDialogOpen(open ? "produto-grupos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Grupos de Produtos - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📊 Agrupamento</h4>
+                              <p className="text-sm">Organize produtos em grupos para facilitar relatórios e análises (Eletrônicos, Alimentos, Vestuário).</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎯 Hierarquia</h4>
+                              <p className="text-sm">Use grupos para criar estruturas hierárquicas no seu catálogo de produtos.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -1692,9 +2149,33 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
               <AccordionItem value="produto-categorias" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Categorias de Produtos</span>
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Categorias de Produtos</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "produto-categorias"} onOpenChange={(open) => setHelpDialogOpen(open ? "produto-categorias" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Categorias de Produtos - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🗂️ Classificação</h4>
+                              <p className="text-sm">Crie categorias para classificar produtos com mais detalhes (Notebooks, Smartphones, Tablets).</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🔍 Busca Facilitada</h4>
+                              <p className="text-sm">Categorias facilitam a busca e filtro de produtos em orçamentos e vendas.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
