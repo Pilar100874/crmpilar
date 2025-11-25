@@ -1140,7 +1140,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">
               <ClipboardCheck className="w-4 h-4 text-primary" />
-              <span className="font-medium">Quality Assurance</span>
+              <span className="font-medium">Controle de Qualidade</span>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
