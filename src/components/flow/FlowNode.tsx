@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight, Copy, Trash2 } from "lucide-react";
+import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight, Copy, Trash2, StickyNote } from "lucide-react";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
@@ -239,6 +239,17 @@ export const FlowNode = memo((props: any) => {
                 Duplicar Bloco
               </DropdownMenuItem>
               
+              <DropdownMenuItem
+                onClick={() => {
+                  data.onAddNote?.(id);
+                  setDropdownOpen(false);
+                }}
+                className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+              >
+                <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
+                {data.note ? "Editar Nota" : "Adicionar Nota"}
+              </DropdownMenuItem>
+              
               <DropdownMenuSeparator className="bg-slate-200" />
               
               <DropdownMenuItem
@@ -408,6 +419,13 @@ export const FlowNode = memo((props: any) => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Nota (se houver) */}
+        {data.note && (
+          <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500 whitespace-pre-wrap">
+            📝 {data.note}
           </div>
         )}
       </div>

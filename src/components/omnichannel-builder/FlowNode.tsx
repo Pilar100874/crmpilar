@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
-import { 
+import {
   Users, 
   User, 
   Award, 
@@ -16,7 +16,8 @@ import {
   Copy,
   Trash2,
   X,
-  ArrowRight
+  ArrowRight,
+  StickyNote
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -55,6 +56,7 @@ interface FlowNodeProps {
     isSkipped?: boolean;
     isHighlighted?: boolean;
     isBreakpoint?: boolean;
+    note?: string;
     onSetBreakpoint?: (nodeId: string) => void;
     onSetSkip?: (nodeId: string) => void;
     onDuplicate?: (nodeId: string) => void;
@@ -87,7 +89,7 @@ const multipleOutputNodes: OmnichannelBlockType[] = [
 
 export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
   const { type, label, isSkipped, isHighlighted, isBreakpoint } = data;
-  const hasNote = !!data.config.nota;
+  const hasNote = !!(data.note || data.config?.nota);
   const hasMultipleOutputs = multipleOutputNodes.includes(type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -199,7 +201,7 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                       }}
                       className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
                     >
-                      <MessageSquare className="w-4 h-4 mr-2 text-amber-500" />
+                      <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
                       {hasNote ? "Editar Nota" : "Adicionar Nota"}
                     </DropdownMenuItem>
                     
@@ -234,11 +236,8 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
               </div>
 
               {hasNote && (
-                <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
-                  <div className="flex items-start gap-2">
-                    <MessageSquare className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                    <span className="line-clamp-2">{data.config.nota}</span>
-                  </div>
+                <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500 whitespace-pre-wrap">
+                  📝 {data.note || data.config?.nota}
                 </div>
               )}
             </div>
