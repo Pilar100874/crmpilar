@@ -404,26 +404,24 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">
+            <DialogTitle className="text-xl">
               {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Informações Básicas */}
-            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-primary" />
-                </div>
+            <div className="border rounded-lg p-3 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
                 Informações Básicas
               </h3>
               
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="nome" className="text-sm font-medium">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label htmlFor="nome" className="text-sm">
                     Nome da Configuração *
                   </Label>
                   <Input
@@ -433,13 +431,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       setFormData({ ...formData, nome: e.target.value })
                     }
                     placeholder="Ex: SLA Suporte Básico"
-                    className="mt-1.5"
+                    className="mt-1"
                     maxLength={100}
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="descricao" className="text-sm font-medium">
+                <div className="col-span-2">
+                  <Label htmlFor="descricao" className="text-sm">
                     Descrição
                   </Label>
                   <Textarea
@@ -449,13 +447,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       setFormData({ ...formData, descricao: e.target.value })
                     }
                     placeholder="Descreva quando esta configuração deve ser aplicada"
-                    className="mt-1.5 min-h-[80px]"
+                    className="mt-1 min-h-[60px] resize-none"
                     maxLength={500}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="fila_id" className="text-sm font-medium">
+                  <Label htmlFor="fila_id" className="text-sm">
                     Fila de Atendimento
                   </Label>
                   <Select
@@ -464,8 +462,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       setFormData({ ...formData, fila_id: value })
                     }
                   >
-                    <SelectTrigger className="mt-1.5">
-                      <SelectValue placeholder="Todas as filas (padrão)" />
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Todas as filas" />
                     </SelectTrigger>
                     <SelectContent>
                       {filas.map((fila) => (
@@ -475,25 +473,36 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    Deixe em branco para aplicar a todas as filas
-                  </p>
+                </div>
+
+                <div className="flex items-end">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="ativo"
+                      checked={formData.ativo}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, ativo: checked })
+                      }
+                    />
+                    <Label htmlFor="ativo" className="text-sm cursor-pointer">
+                      Configuração Ativa
+                    </Label>
+                  </div>
                 </div>
               </div>
             </div>
 
+
             {/* Tempos de SLA */}
-            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <AlertTriangle className="w-4 h-4 text-primary" />
-                </div>
-                Tempos de SLA
+            <div className="border rounded-lg p-3 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-primary" />
+                Tempos de SLA (minutos)
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-background rounded-md p-3 border">
-                  <Label htmlFor="tempo_primeira_resposta" className="text-sm font-medium">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label htmlFor="tempo_primeira_resposta" className="text-sm">
                     Primeira Resposta *
                   </Label>
                   <Input
@@ -508,16 +517,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       })
                     }
                     placeholder="5"
-                    className="mt-1.5"
+                    className="mt-1"
                   />
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    Tempo em minutos para primeira resposta
-                  </p>
                 </div>
 
-                <div className="bg-background rounded-md p-3 border">
-                  <Label htmlFor="tempo_resposta_subsequente" className="text-sm font-medium">
-                    Resposta Subsequente *
+                <div>
+                  <Label htmlFor="tempo_resposta_subsequente" className="text-sm">
+                    Resp. Subsequente *
                   </Label>
                   <Input
                     id="tempo_resposta_subsequente"
@@ -531,15 +537,12 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       })
                     }
                     placeholder="10"
-                    className="mt-1.5"
+                    className="mt-1"
                   />
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    Tempo em minutos para respostas seguintes
-                  </p>
                 </div>
 
-                <div className="bg-background rounded-md p-3 border">
-                  <Label htmlFor="tempo_resolucao" className="text-sm font-medium">
+                <div>
+                  <Label htmlFor="tempo_resolucao" className="text-sm">
                     Resolução Total *
                   </Label>
                   <Input
@@ -554,26 +557,21 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       })
                     }
                     placeholder="60"
-                    className="mt-1.5"
+                    className="mt-1"
                   />
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    Tempo total em minutos para resolver
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Alertas */}
-            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                </div>
-                Configuração de Alertas
+            <div className="border rounded-lg p-3 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                Alertas
               </h3>
               
-              <div className="bg-background rounded-md p-3 border">
-                <Label htmlFor="alerta_porcentagem" className="text-sm font-medium">
+              <div>
+                <Label htmlFor="alerta_porcentagem" className="text-sm">
                   Porcentagem para Alerta (%) *
                 </Label>
                 <Input
@@ -589,46 +587,38 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                     })
                   }
                   placeholder="80"
-                  className="mt-1.5"
+                  className="mt-1 max-w-[200px]"
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Sistema alertará quando atingir este percentual do tempo SLA (ex: 80% = alerta aos 48min de um SLA de 60min)
+                <p className="text-xs text-muted-foreground mt-1">
+                  Alerta quando atingir este percentual do tempo SLA
                 </p>
               </div>
             </div>
 
             {/* Ações Automáticas */}
-            <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary text-sm">⚡</span>
-                </div>
+            <div className="border rounded-lg p-3 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <span className="text-primary">⚡</span>
                 Ações Automáticas
               </h3>
 
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3 bg-background rounded-md p-3 border">
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 border rounded p-2">
                   <Switch
                     id="notificar_supervisor"
                     checked={formData.notificar_supervisor}
                     onCheckedChange={(checked) =>
                       setFormData({ ...formData, notificar_supervisor: checked })
                     }
-                    className="mt-0.5"
                   />
-                  <div className="flex-1">
-                    <Label htmlFor="notificar_supervisor" className="text-sm font-medium cursor-pointer">
-                      Notificar Supervisor
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Envia notificação em tempo real ao supervisor quando SLA está próximo da violação
-                    </p>
-                  </div>
+                  <Label htmlFor="notificar_supervisor" className="text-sm cursor-pointer">
+                    Notificar Supervisor
+                  </Label>
                 </div>
 
                 {formData.notificar_supervisor && (
-                  <div className={`ml-6 ${formData.notificar_supervisor && !formData.supervisor_id ? "border-destructive" : "border-border"} border rounded-md p-3 bg-background`}>
-                    <Label htmlFor="supervisor_id" className="text-sm font-medium">
+                  <div className={`ml-6 ${formData.notificar_supervisor && !formData.supervisor_id ? "border-destructive" : "border-border"} border rounded p-2`}>
+                    <Label htmlFor="supervisor_id" className="text-sm">
                       Supervisor Responsável *
                     </Label>
                     <Select
@@ -637,7 +627,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                         setFormData({ ...formData, supervisor_id: value })
                       }
                     >
-                      <SelectTrigger className="mt-1.5">
+                      <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Selecione o supervisor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -649,33 +639,27 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       </SelectContent>
                     </Select>
                     {formData.notificar_supervisor && !formData.supervisor_id && (
-                      <p className="text-xs text-destructive mt-1.5">
-                        ⚠️ Supervisor é obrigatório quando notificação está ativa
+                      <p className="text-xs text-destructive mt-1">
+                        ⚠️ Supervisor obrigatório
                       </p>
                     )}
                   </div>
                 )}
 
-                <div className="flex items-start space-x-3 bg-background rounded-md p-3 border">
+                <div className="flex items-center space-x-2 border rounded p-2">
                   <Switch
                     id="aumentar_prioridade_automatica"
                     checked={formData.aumentar_prioridade_automatica}
                     onCheckedChange={(checked) =>
                       setFormData({ ...formData, aumentar_prioridade_automatica: checked })
                     }
-                    className="mt-0.5"
                   />
-                  <div className="flex-1">
-                    <Label htmlFor="aumentar_prioridade_automatica" className="text-sm font-medium cursor-pointer">
-                      Aumentar Prioridade Automaticamente
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Eleva automaticamente a prioridade do chat quando SLA é violado
-                    </p>
-                  </div>
+                  <Label htmlFor="aumentar_prioridade_automatica" className="text-sm cursor-pointer">
+                    Aumentar Prioridade Automaticamente
+                  </Label>
                 </div>
 
-                <div className="flex items-start space-x-3 bg-background rounded-md p-3 border">
+                <div className="flex items-center space-x-2 border rounded p-2">
                   <Switch
                     id="escalar_automaticamente"
                     checked={formData.escalar_automaticamente}
@@ -685,21 +669,15 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                         escalar_automaticamente: checked,
                       })
                     }
-                    className="mt-0.5"
                   />
-                  <div className="flex-1">
-                    <Label htmlFor="escalar_automaticamente" className="text-sm font-medium cursor-pointer">
-                      Escalar Automaticamente
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Transfere automaticamente o chat para outra fila quando SLA é violado
-                    </p>
-                  </div>
+                  <Label htmlFor="escalar_automaticamente" className="text-sm cursor-pointer">
+                    Escalar Automaticamente
+                  </Label>
                 </div>
 
                 {formData.escalar_automaticamente && (
-                  <div className={`ml-6 ${formData.escalar_automaticamente && !formData.fila_escalacao_id ? "border-destructive" : "border-border"} border rounded-md p-3 bg-background`}>
-                    <Label htmlFor="fila_escalacao_id" className="text-sm font-medium">
+                  <div className={`ml-6 ${formData.escalar_automaticamente && !formData.fila_escalacao_id ? "border-destructive" : "border-border"} border rounded p-2`}>
+                    <Label htmlFor="fila_escalacao_id" className="text-sm">
                       Fila de Escalação *
                     </Label>
                     <Select
@@ -708,8 +686,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                         setFormData({ ...formData, fila_escalacao_id: value })
                       }
                     >
-                      <SelectTrigger className="mt-1.5">
-                        <SelectValue placeholder="Selecione a fila de escalação" />
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Selecione a fila" />
                       </SelectTrigger>
                       <SelectContent>
                         {filas.map((fila) => (
@@ -720,8 +698,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                       </SelectContent>
                     </Select>
                     {formData.escalar_automaticamente && !formData.fila_escalacao_id && (
-                      <p className="text-xs text-destructive mt-1.5">
-                        ⚠️ Fila de escalação é obrigatória quando escalação automática está ativa
+                      <p className="text-xs text-destructive mt-1">
+                        ⚠️ Fila obrigatória
                       </p>
                     )}
                   </div>
@@ -729,34 +707,15 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               </div>
             </div>
 
-            {/* Status */}
-            <div className="bg-muted/30 rounded-lg p-4">
-              <div className="flex items-center space-x-3">
-                <Switch
-                  id="ativo"
-                  checked={formData.ativo}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, ativo: checked })
-                  }
-                />
-                <div>
-                  <Label htmlFor="ativo" className="text-sm font-medium cursor-pointer">
-                    Configuração Ativa
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    {formData.ativo ? "Esta configuração está ativa e será aplicada aos novos chats" : "Esta configuração está inativa e não será aplicada"}
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/* Status removido daqui pois já está em Informações Básicas */}
           </div>
 
-          <DialogFooter className="mt-6">
+          <DialogFooter className="mt-4 pt-3 border-t">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleSave} disabled={!formData.nome}>
-              {selectedConfig ? "Atualizar" : "Criar"} Configuração
+              {selectedConfig ? "Atualizar" : "Criar"}
             </Button>
           </DialogFooter>
         </DialogContent>
