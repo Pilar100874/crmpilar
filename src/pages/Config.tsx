@@ -98,28 +98,7 @@ export default function Config() {
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
-              <div className="space-y-6">
-                <EstabelecimentosCRUD />
-                
-                <div className="pt-4 border-t">
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-                    Configurações do Estabelecimento
-                  </h3>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start gap-3 h-auto py-4"
-                    onClick={() => navigate('/pesquisas-satisfacao')}
-                  >
-                    <Star className="w-5 h-5 text-primary" />
-                    <div className="text-left">
-                      <div className="font-medium">Pesquisas de Satisfação</div>
-                      <div className="text-sm text-muted-foreground font-normal">
-                        Configure e visualize pesquisas CSAT/NPS
-                      </div>
-                    </div>
-                  </Button>
-                </div>
-              </div>
+              <EstabelecimentosCRUD />
             </AccordionContent>
           </AccordionItem>
 
