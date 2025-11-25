@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Editor Blockly</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    #blocklyDiv {
+      height: calc(100vh - 60px);
+      width: 100%;
+    }
+    #controls {
+      height: 60px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button.secondary {
+      background: #2196F3;
+    }
+    button.secondary:hover {
+      background: #0b7dda;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button onclick="exportRule()">Exportar Regra</button>
+    <button class="secondary" onclick="clearWorkspace()">Limpar</button>
+    <span id="status" style="margin-left: 10px; color: #666;"></span>
+  </div>
+  <div id="blocklyDiv"></div>
+
+  <xml id="toolbox" style="display: none">
+    <category name="Lógica" colour="#5C81A6">
+      <block type="controls_if"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+      <block type="logic_boolean"></block>
+    </category>
+    <category name="Matemática" colour="#5CA65C">
+      <block type="math_number">
+        <field name="NUM">0</field>
+      </block>
+      <block type="math_arithmetic"></block>
+      <block type="math_single"></block>
+    </category>
+    <category name="Texto" colour="#5CA699">
+      <block type="text">
+        <field name="TEXT"></field>
+      </block>
+      <block type="text_print"></block>
+      <block type="text_join"></block>
+    </category>
+    <category name="Orçamento" colour="#A65C81">
+      <block type="valor_total"></block>
+      <block type="mes_compra"></block>
+      <block type="mes_aniversario"></block>
+      <block type="quantidade_produtos"></block>
+    </category>
+    <category name="Ações" colour="#A6815C">
+      <block type="desconto_percentual"></block>
+      <block type="desconto_fixo"></block>
+      <block type="adicionar_frete"></block>
+      <block type="enviar_alerta"></block>
+    </category>
+  </xml>
+
+  <script>
+    let workspace;
+
+    // Definir blocos customizados
+    function defineCustomBlocks() {
+      // Bloco: valor_total
+      Blockly.Blocks['valor_total'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("valor total do orçamento");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+          this.setTooltip("Retorna o valor total do orçamento");
+        }
+      };
+
+      // Bloco: mes_compra
+      Blockly.Blocks['mes_compra'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("mês da compra");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+          this.setTooltip("Retorna o mês da compra (1-12)");
+        }
+      };
+
+      // Bloco: mes_aniversario
+      Blockly.Blocks['mes_aniversario'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("mês de aniversário do cliente");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+          this.setTooltip("Retorna o mês de aniversário do cliente");
+        }
+      };
+
+      // Bloco: quantidade_produtos
+      Blockly.Blocks['quantidade_produtos'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("quantidade de produtos");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+          this.setTooltip("Retorna quantidade de produtos no orçamento");
+        }
+      };
+
+      // Bloco: desconto_percentual
+      Blockly.Blocks['desconto_percentual'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("aplicar desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(290);
+          this.setTooltip("Aplica um desconto percentual");
+        }
+      };
+
+      // Bloco: desconto_fixo
+      Blockly.Blocks['desconto_fixo'] = {
+        init: function() {
+          this.appendValueInput("VALOR")
+              .setCheck("Number")
+              .appendField("aplicar desconto fixo de R$");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(290);
+          this.setTooltip("Aplica um desconto fixo em reais");
+        }
+      };
+
+      // Bloco: adicionar_frete
+      Blockly.Blocks['adicionar_frete'] = {
+        init: function() {
+          this.appendValueInput("VALOR")
+              .setCheck("Number")
+              .appendField("adicionar frete de R$");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(290);
+          this.setTooltip("Adiciona valor de frete ao orçamento");
+        }
+      };
+
+      // Bloco: enviar_alerta
+      Blockly.Blocks['enviar_alerta'] = {
+        init: function() {
+          this.appendValueInput("MENSAGEM")
+              .setCheck("String")
+              .appendField("enviar alerta:");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(290);
+          this.setTooltip("Envia uma mensagem de alerta");
+        }
+      };
+    }
+
+    // Inicializar Blockly
+    function initBlockly() {
+      defineCustomBlocks();
+
+      workspace = Blockly.inject('blocklyDiv', {
+        toolbox: document.getElementById('toolbox'),
+        grid: {
+          spacing: 20,
+          length: 3,
+          colour: '#ccc',
+          snap: true
+        },
+        zoom: {
+          controls: true,
+          wheel: true,
+          startScale: 1.0,
+          maxScale: 3,
+          minScale: 0.3,
+          scaleSpeed: 1.2
+        },
+        trashcan: true
+      });
+    }
+
+    // Exportar regra
+    function exportRule() {
+      const xml = Blockly.Xml.workspaceToDom(workspace);
+      const xmlText = Blockly.Xml.domToText(xml);
+      
+      // Gerar código JavaScript
+      const code = Blockly.JavaScript.workspaceToCode(workspace);
+
+      // Criar estrutura JSON
+      const blocks = workspace.getAllBlocks(false);
+      const rule = {
+        name: "Regra de Automação",
+        trigger: "onBudgetCalculate",
+        xml: xmlText,
+        code: code,
+        blocks: blocks.map(block => ({
+          type: block.type,
+          id: block.id
+        })),
+        timestamp: new Date().toISOString()
+      };
+
+      // Enviar para parent via postMessage
+      window.parent.postMessage({
+        type: 'BLOCKLY_EXPORT',
+        data: rule
+      }, '*');
+
+      showStatus('Regra exportada!');
+    }
+
+    // Limpar workspace
+    function clearWorkspace() {
+      if (confirm('Deseja limpar todos os blocos?')) {
+        workspace.clear();
+        showStatus('Workspace limpo');
+      }
+    }
+
+    // Mostrar status
+    function showStatus(message) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      setTimeout(() => {
+        status.textContent = '';
+      }, 3000);
+    }
+
+    // Receber mensagens do parent
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'LOAD_XML') {
+        const xml = Blockly.Xml.textToDom(event.data.xml);
+        Blockly.Xml.domToWorkspace(xml, workspace);
+        showStatus('Regra carregada');
+      }
+    });
+
+    // Inicializar quando carregar
+    window.addEventListener('load', initBlockly);
+  </script>
+</body>
+</html>
