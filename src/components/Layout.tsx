@@ -37,6 +37,8 @@ import {
   Activity,
   Star,
   KeyRound,
+  Building,
+  Clock,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -153,7 +155,7 @@ const menuItems: MenuItem[] = [
     title: "Estabelecimentos Cadastrados",
     icon: Building2,
     subItems: [
-      { id: "SLA Config", title: "SLA", url: "/config/sla", icon: Activity },
+      { id: "Config Geral", title: "Configurações Gerais", url: "/config", icon: Settings },
       { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: Users },
     ]
   },
@@ -162,7 +164,6 @@ const menuItems: MenuItem[] = [
     title: "Configurações",
     icon: Settings,
     subItems: [
-      { id: "Config Geral", title: "Configurações", url: "/config", icon: Settings },
       { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: Users },
       { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: Workflow },
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: Globe },
@@ -195,6 +196,7 @@ export default function Layout({ children }: LayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+  const [openNestedSubmenu, setOpenNestedSubmenu] = useState<string | null>(null);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -708,11 +710,46 @@ export default function Layout({ children }: LayoutProps) {
                         {isMenuOpen && (
                           <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50 overflow-y-auto">
                             <div className="px-4 py-6">
-                              <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
+                               <h3 className="text-sm font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-4 px-2">
                                 {item.title}
                               </h3>
                               
                                <div className="space-y-1">
+                                  {item.id === "Estabelecimentos Cadastrados" && (
+                                    <>
+                                      <button
+                                        onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "SLA" ? null : "SLA")}
+                                        className="flex items-center justify-between w-full px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <Activity className="w-4 h-4 flex-shrink-0" />
+                                          <span className="text-sm">SLA</span>
+                                        </div>
+                                        <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "SLA" ? 'rotate-180' : ''}`} />
+                                      </button>
+                                      {openNestedSubmenu === "SLA" && (
+                                        <div className="ml-6 space-y-1">
+                                          <NavLink
+                                            to="/config/sla"
+                                            onClick={() => {
+                                              setOpenSubmenuId(null);
+                                              setOpenNestedSubmenu(null);
+                                            }}
+                                            className={({ isActive }) =>
+                                              `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                                                isActive
+                                                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                              }`
+                                            }
+                                          >
+                                            <Activity className="w-4 h-4 flex-shrink-0" />
+                                            <span className="text-sm">SLA</span>
+                                          </NavLink>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
                                   {item.subItems.map((subItem) => {
                                     const isInAtalhos = atalhos.some(a => a.path === subItem.url);
                                     
@@ -779,6 +816,41 @@ export default function Layout({ children }: LayoutProps) {
                       
                         {isMenuOpen && (
                           <div className="mt-1 ml-8 space-y-1">
+                            {item.id === "Estabelecimentos Cadastrados" && (
+                              <>
+                                <button
+                                  onClick={() => setOpenNestedSubmenu(openNestedSubmenu === "SLA" ? null : "SLA")}
+                                  className="flex items-center justify-between w-full px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Activity className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-sm">SLA</span>
+                                  </div>
+                                  <ChevronDown className={`w-3 h-3 transition-transform ${openNestedSubmenu === "SLA" ? 'rotate-180' : ''}`} />
+                                </button>
+                                {openNestedSubmenu === "SLA" && (
+                                  <div className="ml-6 space-y-1">
+                                    <NavLink
+                                      to="/config/sla"
+                                      onClick={() => {
+                                        setOpenSubmenuId(null);
+                                        setOpenNestedSubmenu(null);
+                                      }}
+                                      className={({ isActive }) =>
+                                        `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                          isActive
+                                            ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                            : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                        }`
+                                      }
+                                    >
+                                      <Activity className="w-4 h-4 flex-shrink-0" />
+                                      <span className="text-sm">SLA</span>
+                                    </NavLink>
+                                  </div>
+                                )}
+                              </>
+                            )}
                             {item.subItems.map((subItem) => {
                               const isInAtalhos = atalhos.some(a => a.path === subItem.url);
                               
