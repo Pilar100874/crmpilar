@@ -254,11 +254,11 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Quality Assurance</h1>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold">Controle de Qualidade</h2>
+          <p className="text-muted-foreground text-sm">
             Gerencie formulários de avaliação e acompanhe a qualidade dos atendimentos
           </p>
         </div>
