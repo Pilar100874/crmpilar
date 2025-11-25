@@ -31,6 +31,7 @@ interface SLAConfig {
   alerta_porcentagem: number;
   notificar_supervisor: boolean;
   aumentar_prioridade_automatica: boolean;
+  supervisor_id: string | null;
   escalar_automaticamente: boolean;
   fila_escalacao_id: string | null;
   ativo: boolean;
@@ -43,9 +44,16 @@ interface Fila {
   nome: string;
 }
 
+interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
+}
+
 export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [configs, setConfigs] = useState<SLAConfig[]>([]);
   const [filas, setFilas] = useState<Fila[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -66,6 +74,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     alerta_porcentagem: 80,
     notificar_supervisor: true,
     aumentar_prioridade_automatica: false,
+    supervisor_id: '',
     escalar_automaticamente: false,
     fila_escalacao_id: '',
     ativo: true,
@@ -74,6 +83,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
   useEffect(() => {
     loadConfigs();
     loadFilas();
+    loadUsuarios();
   }, [estabelecimentoId]);
 
   const loadConfigs = async () => {
@@ -110,6 +120,21 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     }
   };
 
+  const loadUsuarios = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome, email')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+
+      if (error) throw error;
+      setUsuarios(data || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar usuários:', error);
+    }
+  };
+
   const handleSave = async () => {
     try {
       const dataToSave = {
@@ -128,6 +153,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         alerta_porcentagem: formData.alerta_porcentagem,
         notificar_supervisor: formData.notificar_supervisor,
         aumentar_prioridade_automatica: formData.aumentar_prioridade_automatica,
+        supervisor_id: formData.supervisor_id || null,
         escalar_automaticamente: formData.escalar_automaticamente,
         fila_escalacao_id: formData.fila_escalacao_id || null,
         ativo: formData.ativo,
@@ -176,6 +202,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       alerta_porcentagem: config.alerta_porcentagem,
       notificar_supervisor: config.notificar_supervisor,
       aumentar_prioridade_automatica: config.aumentar_prioridade_automatica,
+      supervisor_id: config.supervisor_id || '',
       escalar_automaticamente: config.escalar_automaticamente,
       fila_escalacao_id: config.fila_escalacao_id || '',
       ativo: config.ativo,
@@ -221,6 +248,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       alerta_porcentagem: 80,
       notificar_supervisor: true,
       aumentar_prioridade_automatica: false,
+      supervisor_id: '',
       escalar_automaticamente: false,
       fila_escalacao_id: '',
       ativo: true,
@@ -517,6 +545,27 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                   />
                   <Label>Notificar supervisor</Label>
                 </div>
+
+                {formData.notificar_supervisor && (
+                  <div className="col-span-2">
+                    <Label>Supervisor</Label>
+                    <Select
+                      value={formData.supervisor_id || undefined}
+                      onValueChange={(value) => setFormData({ ...formData, supervisor_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o supervisor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {usuarios.map((usuario) => (
+                          <SelectItem key={usuario.id} value={usuario.id}>
+                            {usuario.nome} ({usuario.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="flex items-center space-x-2">
                   <Switch
