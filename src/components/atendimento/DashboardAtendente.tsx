@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users } from "lucide-react";
 import type { DashboardAtendente } from "@/types/atendimento";
 
 interface DashboardAtendenteProps {
@@ -31,52 +32,36 @@ export const DashboardAtendenteComponent = ({ dashboard, onChangeStatus }: Dashb
 
   return (
     <div className="space-y-6">
-      {/* Header com Status */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Dashboard do Atendente</CardTitle>
-              <CardDescription>
-                Status atual: {getStatusBadge(dashboard.atendente.status)}
-              </CardDescription>
-            </div>
-            <div className="text-right text-sm">
-              <p className="text-muted-foreground">Chats simultâneos</p>
-              <p className="text-2xl font-bold">
-                {dashboard.chats_ativos.length}/{dashboard.atendente.max_chats_simultaneos}
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
       {/* Métricas do Dia */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="pb-2 relative">
             <CardDescription>Chats Atendidos Hoje</CardDescription>
-            <CardTitle className="text-3xl">{dashboard.metricas_hoje?.total_chats || 0}</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">{dashboard.metricas_hoje?.total_chats || 0}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="pb-2 relative">
             <CardDescription>Chats Encerrados</CardDescription>
-            <CardTitle className="text-3xl">{dashboard.metricas_hoje?.chats_encerrados || 0}</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">{dashboard.metricas_hoje?.chats_encerrados || 0}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="pb-2 relative">
             <CardDescription>Tempo Médio (min)</CardDescription>
-            <CardTitle className="text-3xl">
+            <CardTitle className="text-3xl font-bold tracking-tight">
               {dashboard.metricas_hoje ? Math.round(dashboard.metricas_hoje.tempo_medio_atendimento / 60) : 0}
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="pb-2 relative">
             <CardDescription>Avaliação Média</CardDescription>
-            <CardTitle className="text-3xl">
+            <CardTitle className="text-3xl font-bold tracking-tight">
               {dashboard.metricas_hoje?.avaliacao_media?.toFixed(1) || '-'}
             </CardTitle>
           </CardHeader>
@@ -84,15 +69,23 @@ export const DashboardAtendenteComponent = ({ dashboard, onChangeStatus }: Dashb
       </div>
 
       {/* Abas com Chats */}
-      <Tabs defaultValue="ativos" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="ativos">
-            Chats Ativos ({dashboard.chats_ativos.length})
-          </TabsTrigger>
-          <TabsTrigger value="espera">
-            Em Espera ({dashboard.chats_em_espera.length})
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="ativos" className="space-y-6">
+        <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
+          <TabsList className="inline-flex w-auto bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1.5 shadow-md">
+            <TabsTrigger 
+              value="ativos"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap"
+            >
+              Chats Ativos ({dashboard.chats_ativos.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="espera"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap"
+            >
+              Em Espera ({dashboard.chats_em_espera.length})
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="ativos" className="space-y-4">
           {dashboard.chats_ativos.length === 0 ? (
@@ -144,9 +137,14 @@ export const DashboardAtendenteComponent = ({ dashboard, onChangeStatus }: Dashb
       </Tabs>
 
       {/* Skills do Atendente */}
-      <Card>
+      <Card className="border-primary/20 shadow-lg">
         <CardHeader>
-          <CardTitle>Minhas Habilidades</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+            Minhas Habilidades
+          </CardTitle>
           <CardDescription>Skills e níveis de proficiência</CardDescription>
         </CardHeader>
         <CardContent>

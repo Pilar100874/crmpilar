@@ -129,12 +129,21 @@ export default function DashboardAtendentePage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dashboard do Atendente</h1>
-        {userId && estabelecimentoId && (
-          <NotificationCenter userId={userId} estabelecimentoId={estabelecimentoId} />
-        )}
+    <div className="space-y-6">
+      {/* Header com gradiente */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+        <div className="relative flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              Dashboard do Atendente
+            </h1>
+            <p className="text-muted-foreground mt-1">Gerencie seus atendimentos e monitore seu desempenho</p>
+          </div>
+          {userId && estabelecimentoId && (
+            <NotificationCenter userId={userId} estabelecimentoId={estabelecimentoId} />
+          )}
+        </div>
       </div>
 
       <DashboardAtendenteComponent

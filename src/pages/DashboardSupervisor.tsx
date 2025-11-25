@@ -107,32 +107,51 @@ export default function DashboardSupervisorPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard do Supervisor</h1>
-          <p className="text-muted-foreground">Monitore e gerencie toda a operação de atendimento</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {userId && estabelecimentoId && (
-            <NotificationCenter userId={userId} estabelecimentoId={estabelecimentoId} />
-          )}
-          <Button
-            onClick={handleProcessarFila}
-            disabled={processandoFila}
-            variant="outline"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${processandoFila ? 'animate-spin' : ''}`} />
-            Processar Fila
-          </Button>
+    <div className="space-y-6">
+      {/* Header com gradiente */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+        <div className="relative flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              Dashboard do Supervisor
+            </h1>
+            <p className="text-muted-foreground mt-1">Monitore e gerencie toda a operação de atendimento</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {userId && estabelecimentoId && (
+              <NotificationCenter userId={userId} estabelecimentoId={estabelecimentoId} />
+            )}
+            <Button
+              onClick={handleProcessarFila}
+              disabled={processandoFila}
+              variant="outline"
+              className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${processandoFila ? 'animate-spin' : ''}`} />
+              Processar Fila
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Tabs defaultValue="visao-geral" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
-          <TabsTrigger value="metricas">Métricas</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="visao-geral" className="space-y-6">
+        <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
+          <TabsList className="inline-flex w-auto bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1.5 shadow-md">
+            <TabsTrigger 
+              value="visao-geral" 
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap"
+            >
+              Visão Geral
+            </TabsTrigger>
+            <TabsTrigger 
+              value="metricas"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap"
+            >
+              Métricas
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="visao-geral" className="mt-6">
           <DashboardSupervisorComponent

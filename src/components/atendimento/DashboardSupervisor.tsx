@@ -35,46 +35,58 @@ export const DashboardSupervisorComponent = ({ dashboard, onForcarTransferencia,
   return (
     <div className="space-y-6">
       {/* Métricas Gerais */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chats Ativos</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Chats Ativos</CardTitle>
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <MessageSquare className="h-5 w-5 text-blue-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboard.metricas_gerais.total_chats_ativos}</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{dashboard.metricas_gerais.total_chats_ativos}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Em Fila</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Em Fila</CardTitle>
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Users className="h-5 w-5 text-green-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboard.metricas_gerais.total_chats_em_fila}</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{dashboard.metricas_gerais.total_chats_em_fila}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tempo Médio Espera</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tempo Médio Espera</CardTitle>
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <Clock className="h-5 w-5 text-purple-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">
               {dashboard.metricas_gerais.tempo_medio_espera}min
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa Abandono</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa Abandono</CardTitle>
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <TrendingDown className="h-5 w-5 text-orange-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">
               {dashboard.metricas_gerais.taxa_abandono.toFixed(1)}%
             </div>
           </CardContent>
@@ -82,19 +94,27 @@ export const DashboardSupervisorComponent = ({ dashboard, onForcarTransferencia,
       </div>
 
       {/* Abas Filas e Atendentes */}
-      <Tabs defaultValue="filas" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="filas">
-            Filas ({dashboard.filas.length})
-          </TabsTrigger>
-          <TabsTrigger value="atendentes">
-            Atendentes ({dashboard.atendentes.length})
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="filas" className="space-y-6">
+        <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
+          <TabsList className="inline-flex w-auto bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1.5 shadow-md">
+            <TabsTrigger 
+              value="filas"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap"
+            >
+              Filas ({dashboard.filas.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="atendentes"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap"
+            >
+              Atendentes ({dashboard.atendentes.length})
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="filas" className="space-y-4">
           {dashboard.filas.map((fila) => (
-            <Card key={fila.id}>
+            <Card key={fila.id} className="border-primary/20 hover:shadow-lg transition-all hover:border-primary/40">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -128,7 +148,7 @@ export const DashboardSupervisorComponent = ({ dashboard, onForcarTransferencia,
 
         <TabsContent value="atendentes" className="space-y-4">
           {dashboard.atendentes.map((atendente) => (
-            <Card key={atendente.id}>
+            <Card key={atendente.id} className="border-primary/20 hover:shadow-lg transition-all hover:border-primary/40">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
