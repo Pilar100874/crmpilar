@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Download, TrendingUp, Users, Clock, Target, Award, BarChart3, Plus, FileText, HelpCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, TrendingUp, Users, Clock, Target, Award, BarChart3, Plus, FileText } from 'lucide-react';
 import ReactECharts from 'echarts-for-react';
 import { toast } from '@/lib/toast-config';
 
@@ -50,7 +50,6 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
   const [metricasSelecionadas, setMetricasSelecionadas] = useState<string[]>([
     'volume', 'sla', 'fcr', 'aht', 'csat', 'nps'
   ]);
-  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
 
   useEffect(() => {
     loadMetricas();
@@ -613,28 +612,18 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
   };
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="container mx-auto p-6 space-y-8">
       {/* Header com gradiente */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
         <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
         <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-start gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8 rounded-full hover:bg-primary/20 transition-colors"
-              onClick={() => setHelpDialogOpen(true)}
-            >
-              <HelpCircle className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                Análises Avançadas
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Análise detalhada de performance e qualidade do atendimento
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              Análises Avançadas
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Análise detalhada de performance e qualidade do atendimento
+            </p>
           </div>
             
           <div className="flex flex-wrap gap-3">
@@ -758,112 +747,6 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
           </div>
         </div>
       </div>
-
-      {/* Dialog de Ajuda */}
-      <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Como usar as Análises Avançadas</DialogTitle>
-            <DialogDescription>
-              Guia completo de métricas e funcionalidades
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold text-lg mb-2">📊 Métricas Disponíveis</h3>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold">FCR (Resolução no Primeiro Contato)</h4>
-                  <p className="text-sm text-muted-foreground">Taxa de resolução no primeiro contato</p>
-                  <p className="text-sm mt-1">
-                    <strong>Como calcular:</strong> (Chats resolvidos na primeira interação / Total de chats) × 100
-                  </p>
-                  <p className="text-sm mt-1">
-                    <strong>Uso:</strong> Medir eficiência do atendimento
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">AHT (Tempo Médio de Atendimento)</h4>
-                  <p className="text-sm text-muted-foreground">Tempo médio de atendimento</p>
-                  <p className="text-sm mt-1">
-                    <strong>Como calcular:</strong> Soma total de tempo de atendimento / Número de atendimentos
-                  </p>
-                  <p className="text-sm mt-1">
-                    <strong>Uso:</strong> Otimizar alocação de recursos
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">CSAT (Satisfação do Cliente)</h4>
-                  <p className="text-sm text-muted-foreground">Satisfação do cliente</p>
-                  <p className="text-sm mt-1">
-                    <strong>Como calcular:</strong> Média das avaliações recebidas
-                  </p>
-                  <p className="text-sm mt-1">
-                    <strong>Uso:</strong> Medir qualidade do atendimento
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">NPS (Índice de Promotores Líquidos)</h4>
-                  <p className="text-sm text-muted-foreground">Probabilidade de recomendação</p>
-                  <p className="text-sm mt-1">
-                    <strong>Como calcular:</strong> % Promotores - % Detratores
-                  </p>
-                  <p className="text-sm mt-1">
-                    <strong>Uso:</strong> Medir lealdade e satisfação do cliente
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-lg mb-2">📈 Painéis Disponíveis</h3>
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-semibold">Painel Principal</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Visão geral de todas as métricas com gráficos de tendência e comparativos
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Painel por Atendente</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Desempenho individual, ranking de atendentes e metas versus realizado
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Painel por Canal</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Distribuição de volume, métricas por canal (WhatsApp, WebChat, etc.) e comparativo de satisfação
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-lg mb-2">🔄 Agregação Automática</h3>
-              <p className="text-sm text-muted-foreground">
-                As métricas são agregadas automaticamente de forma diária através de uma Edge Function que:
-              </p>
-              <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
-                <li>Executa diariamente às 00:00</li>
-                <li>Calcula métricas do dia anterior</li>
-                <li>Armazena na tabela metricas_agregadas</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-lg mb-2">📝 Criar Relatório Customizado</h3>
-              <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-1">
-                <li>Clique em "Novo Relatório"</li>
-                <li>Configure nome, tipo, e período desejado</li>
-                <li>Selecione filtros (fila, atendente, canal)</li>
-                <li>Escolha quais métricas incluir</li>
-                <li>Clique em "Criar Relatório"</li>
-              </ol>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Cards de Métricas Principais com visual aprimorado */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

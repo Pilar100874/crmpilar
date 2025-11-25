@@ -197,7 +197,7 @@ export default function SLADashboard({ estabelecimentoId }: { estabelecimentoId:
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6">
       {/* Header com gradiente */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
         <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
