@@ -1,6 +1,7 @@
 export type AutomacaoVendasBlockType =
   // Blocos de sistema
   | "inicio"
+  | "iniciar_validacao"
   | "fim"
   // Blocos de condição
   | "condicao_valor"
@@ -138,10 +139,18 @@ export interface BlockDefinition {
 
 export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
   {
+    type: "iniciar_validacao",
+    label: "Iniciar Validação",
+    description: "Ponto inicial da validação de automação",
+    icon: "▶️",
+    color: "#10b981",
+    category: "sistema",
+  },
+  {
     type: "inicio",
     label: "Início",
     description: "Ponto inicial da automação",
-    icon: "Play",
+    icon: "▶️",
     color: "#10b981",
     category: "sistema",
   },
