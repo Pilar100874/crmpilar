@@ -53,374 +53,6 @@
   </div>
   <div id="blocklyDiv"></div>
 
-  <xml id="toolbox" style="display: none">
-    <!-- Blocos Padrões do Blockly -->
-    <category name="🧩 Lógica" colour="#5C81A6">
-      <block type="controls_if"></block>
-      <block type="controls_ifelse"></block>
-      <block type="logic_compare"></block>
-      <block type="logic_operation"></block>
-      <block type="logic_negate"></block>
-      <block type="logic_boolean"></block>
-      <block type="logic_null"></block>
-      <block type="logic_ternary"></block>
-    </category>
-    
-    <category name="🔁 Repetições" colour="#5CA65C">
-      <block type="controls_repeat_ext">
-        <value name="TIMES">
-          <shadow type="math_number">
-            <field name="NUM">10</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="controls_whileUntil"></block>
-      <block type="controls_for">
-        <value name="FROM">
-          <shadow type="math_number">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-        <value name="TO">
-          <shadow type="math_number">
-            <field name="NUM">10</field>
-          </shadow>
-        </value>
-        <value name="BY">
-          <shadow type="math_number">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="controls_forEach"></block>
-      <block type="controls_flow_statements"></block>
-    </category>
-    
-    <category name="🔢 Matemática" colour="#5C68A6">
-      <block type="math_number">
-        <field name="NUM">0</field>
-      </block>
-      <block type="math_arithmetic">
-        <value name="A">
-          <shadow type="math_number">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-        <value name="B">
-          <shadow type="math_number">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_single">
-        <value name="NUM">
-          <shadow type="math_number">
-            <field name="NUM">9</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_trig">
-        <value name="NUM">
-          <shadow type="math_number">
-            <field name="NUM">45</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_constant"></block>
-      <block type="math_number_property">
-        <value name="NUMBER_TO_CHECK">
-          <shadow type="math_number">
-            <field name="NUM">0</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_round">
-        <value name="NUM">
-          <shadow type="math_number">
-            <field name="NUM">3.1</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_on_list"></block>
-      <block type="math_modulo">
-        <value name="DIVIDEND">
-          <shadow type="math_number">
-            <field name="NUM">64</field>
-          </shadow>
-        </value>
-        <value name="DIVISOR">
-          <shadow type="math_number">
-            <field name="NUM">10</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_constrain">
-        <value name="VALUE">
-          <shadow type="math_number">
-            <field name="NUM">50</field>
-          </shadow>
-        </value>
-        <value name="LOW">
-          <shadow type="math_number">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-        <value name="HIGH">
-          <shadow type="math_number">
-            <field name="NUM">100</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_random_int">
-        <value name="FROM">
-          <shadow type="math_number">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-        <value name="TO">
-          <shadow type="math_number">
-            <field name="NUM">100</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="math_random_float"></block>
-    </category>
-    
-    <category name="📝 Texto" colour="#5CA68D">
-      <block type="text">
-        <field name="TEXT"></field>
-      </block>
-      <block type="text_join"></block>
-      <block type="text_append">
-        <value name="TEXT">
-          <shadow type="text"></shadow>
-        </value>
-      </block>
-      <block type="text_length">
-        <value name="VALUE">
-          <shadow type="text">
-            <field name="TEXT">abc</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="text_isEmpty">
-        <value name="VALUE">
-          <shadow type="text">
-            <field name="TEXT"></field>
-          </shadow>
-        </value>
-      </block>
-      <block type="text_indexOf">
-        <value name="VALUE">
-          <block type="variables_get">
-            <field name="VAR">text</field>
-          </block>
-        </value>
-        <value name="FIND">
-          <shadow type="text">
-            <field name="TEXT">abc</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="text_charAt">
-        <value name="VALUE">
-          <block type="variables_get">
-            <field name="VAR">text</field>
-          </block>
-        </value>
-      </block>
-      <block type="text_getSubstring">
-        <value name="STRING">
-          <block type="variables_get">
-            <field name="VAR">text</field>
-          </block>
-        </value>
-      </block>
-      <block type="text_changeCase">
-        <value name="TEXT">
-          <shadow type="text">
-            <field name="TEXT">abc</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="text_trim">
-        <value name="TEXT">
-          <shadow type="text">
-            <field name="TEXT">abc</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="text_print">
-        <value name="TEXT">
-          <shadow type="text">
-            <field name="TEXT">abc</field>
-          </shadow>
-        </value>
-      </block>
-    </category>
-    
-    <category name="📋 Listas" colour="#745CA6">
-      <block type="lists_create_with">
-        <mutation items="0"></mutation>
-      </block>
-      <block type="lists_create_with"></block>
-      <block type="lists_repeat">
-        <value name="NUM">
-          <shadow type="math_number">
-            <field name="NUM">5</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="lists_length"></block>
-      <block type="lists_isEmpty"></block>
-      <block type="lists_indexOf">
-        <value name="VALUE">
-          <block type="variables_get">
-            <field name="VAR">list</field>
-          </block>
-        </value>
-      </block>
-      <block type="lists_getIndex">
-        <value name="VALUE">
-          <block type="variables_get">
-            <field name="VAR">list</field>
-          </block>
-        </value>
-      </block>
-      <block type="lists_setIndex">
-        <value name="LIST">
-          <block type="variables_get">
-            <field name="VAR">list</field>
-          </block>
-        </value>
-      </block>
-      <block type="lists_getSublist">
-        <value name="LIST">
-          <block type="variables_get">
-            <field name="VAR">list</field>
-          </block>
-        </value>
-      </block>
-      <block type="lists_split">
-        <value name="DELIM">
-          <shadow type="text">
-            <field name="TEXT">,</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="lists_sort"></block>
-    </category>
-    
-    <category name="🎨 Cores" colour="#A6745C">
-      <block type="colour_picker"></block>
-      <block type="colour_random"></block>
-      <block type="colour_rgb">
-        <value name="RED">
-          <shadow type="math_number">
-            <field name="NUM">100</field>
-          </shadow>
-        </value>
-        <value name="GREEN">
-          <shadow type="math_number">
-            <field name="NUM">50</field>
-          </shadow>
-        </value>
-        <value name="BLUE">
-          <shadow type="math_number">
-            <field name="NUM">0</field>
-          </shadow>
-        </value>
-      </block>
-      <block type="colour_blend">
-        <value name="COLOUR1">
-          <shadow type="colour_picker">
-            <field name="COLOUR">#ff0000</field>
-          </shadow>
-        </value>
-        <value name="COLOUR2">
-          <shadow type="colour_picker">
-            <field name="COLOUR">#3333ff</field>
-          </shadow>
-        </value>
-        <value name="RATIO">
-          <shadow type="math_number">
-            <field name="NUM">0.5</field>
-          </shadow>
-        </value>
-      </block>
-    </category>
-    
-    <category name="📦 Variáveis" colour="#A65C81" custom="VARIABLE"></category>
-    <category name="⚙️ Funções" colour="#9A5CA6" custom="PROCEDURE"></category>
-    
-    <sep></sep>
-    
-    <category name="📊 Valores Orçamento" colour="#A65C81">
-      <block type="valor_total"></block>
-      <block type="mes_compra"></block>
-      <block type="mes_aniversario"></block>
-      <block type="quantidade_produtos"></block>
-      <block type="historico_compras_mes"></block>
-      <block type="dias_desde_ultimo_orcamento"></block>
-      <block type="valor_grupo_produtos"></block>
-      <block type="tempo_cliente_anos"></block>
-      <block type="volume_acumulado_anual"></block>
-    </category>
-    
-    <category name="💰 Descontos por Valor" colour="#D4AF37">
-      <block type="desconto_por_faixa"></block>
-      <block type="desconto_progressivo"></block>
-      <block type="desconto_se_pagamento_antecipado"></block>
-      <block type="desconto_crescimento_historico"></block>
-    </category>
-    
-    <category name="🎂 Descontos por Data" colour="#FF69B4">
-      <block type="desconto_mes_aniversario"></block>
-      <block type="desconto_dia_aniversario"></block>
-      <block type="desconto_black_friday"></block>
-      <block type="desconto_primeiro_dia_mes"></block>
-      <block type="desconto_em_feriado"></block>
-    </category>
-    
-    <category name="👥 Fidelidade" colour="#4169E1">
-      <block type="desconto_cliente_vip"></block>
-      <block type="desconto_fidelidade_tempo"></block>
-      <block type="frete_gratis_apos_compras"></block>
-      <block type="desconto_sem_cancelamento"></block>
-      <block type="pontos_fidelidade"></block>
-    </category>
-    
-    <category name="📦 Produtos" colour="#32CD32">
-      <block type="combo_produtos"></block>
-      <block type="desconto_quantidade"></block>
-      <block type="desconto_mix_categorias"></block>
-      <block type="desconto_estoque_alto"></block>
-      <block type="desconto_produto_parado"></block>
-    </category>
-    
-    <category name="🧮 Cálculos" colour="#FF8C00">
-      <block type="adicionar_frete"></block>
-      <block type="taxa_urgencia"></block>
-      <block type="calcular_markup"></block>
-      <block type="validar_margem_minima"></block>
-      <block type="calcular_por_unidade"></block>
-    </category>
-    
-    <category name="💳 Financeiro" colour="#8B4513">
-      <block type="desconto_boleto"></block>
-      <block type="acrescimo_parcelamento"></block>
-      <block type="validar_credito"></block>
-      <block type="bloquear_por_inadimplencia"></block>
-    </category>
-    
-    <category name="⚡ Ações" colour="#DC143C">
-      <block type="desconto_percentual"></block>
-      <block type="desconto_fixo"></block>
-      <block type="enviar_alerta"></block>
-      <block type="bloquear_desconto"></block>
-    </category>
-  </xml>
-
   <script>
     let workspace;
 
@@ -1187,8 +819,220 @@
     function initBlockly() {
       defineCustomBlocks();
 
+      const toolbox = {
+        kind: 'categoryToolbox',
+        contents: [
+          // Blocos Padrões do Blockly
+          {
+            kind: 'category',
+            name: '🧩 Lógica',
+            colour: '#5C81A6',
+            contents: [
+              { kind: 'block', type: 'controls_if' },
+              { kind: 'block', type: 'controls_ifelse' },
+              { kind: 'block', type: 'logic_compare' },
+              { kind: 'block', type: 'logic_operation' },
+              { kind: 'block', type: 'logic_negate' },
+              { kind: 'block', type: 'logic_boolean' },
+              { kind: 'block', type: 'logic_null' },
+              { kind: 'block', type: 'logic_ternary' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '🔁 Repetições',
+            colour: '#5CA65C',
+            contents: [
+              { kind: 'block', type: 'controls_repeat_ext' },
+              { kind: 'block', type: 'controls_whileUntil' },
+              { kind: 'block', type: 'controls_for' },
+              { kind: 'block', type: 'controls_forEach' },
+              { kind: 'block', type: 'controls_flow_statements' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '🔢 Matemática',
+            colour: '#5C68A6',
+            contents: [
+              { kind: 'block', type: 'math_number' },
+              { kind: 'block', type: 'math_arithmetic' },
+              { kind: 'block', type: 'math_single' },
+              { kind: 'block', type: 'math_trig' },
+              { kind: 'block', type: 'math_constant' },
+              { kind: 'block', type: 'math_number_property' },
+              { kind: 'block', type: 'math_round' },
+              { kind: 'block', type: 'math_on_list' },
+              { kind: 'block', type: 'math_modulo' },
+              { kind: 'block', type: 'math_constrain' },
+              { kind: 'block', type: 'math_random_int' },
+              { kind: 'block', type: 'math_random_float' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '📝 Texto',
+            colour: '#5CA68D',
+            contents: [
+              { kind: 'block', type: 'text' },
+              { kind: 'block', type: 'text_join' },
+              { kind: 'block', type: 'text_append' },
+              { kind: 'block', type: 'text_length' },
+              { kind: 'block', type: 'text_isEmpty' },
+              { kind: 'block', type: 'text_indexOf' },
+              { kind: 'block', type: 'text_charAt' },
+              { kind: 'block', type: 'text_getSubstring' },
+              { kind: 'block', type: 'text_changeCase' },
+              { kind: 'block', type: 'text_trim' },
+              { kind: 'block', type: 'text_print' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '📋 Listas',
+            colour: '#745CA6',
+            contents: [
+              { kind: 'block', type: 'lists_create_with' },
+              { kind: 'block', type: 'lists_repeat' },
+              { kind: 'block', type: 'lists_length' },
+              { kind: 'block', type: 'lists_isEmpty' },
+              { kind: 'block', type: 'lists_indexOf' },
+              { kind: 'block', type: 'lists_getIndex' },
+              { kind: 'block', type: 'lists_setIndex' },
+              { kind: 'block', type: 'lists_getSublist' },
+              { kind: 'block', type: 'lists_split' },
+              { kind: 'block', type: 'lists_sort' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '🎨 Cores',
+            colour: '#A6745C',
+            contents: [
+              { kind: 'block', type: 'colour_picker' },
+              { kind: 'block', type: 'colour_random' },
+              { kind: 'block', type: 'colour_rgb' },
+              { kind: 'block', type: 'colour_blend' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '📦 Variáveis',
+            colour: '#A65C81',
+            custom: 'VARIABLE'
+          },
+          {
+            kind: 'category',
+            name: '⚙️ Funções',
+            colour: '#9A5CA6',
+            custom: 'PROCEDURE'
+          },
+          {
+            kind: 'sep'
+          },
+          // Blocos Customizados
+          {
+            kind: 'category',
+            name: '📊 Valores Orçamento',
+            colour: '#A65C81',
+            contents: [
+              { kind: 'block', type: 'valor_total' },
+              { kind: 'block', type: 'mes_compra' },
+              { kind: 'block', type: 'mes_aniversario' },
+              { kind: 'block', type: 'quantidade_produtos' },
+              { kind: 'block', type: 'historico_compras_mes' },
+              { kind: 'block', type: 'dias_desde_ultimo_orcamento' },
+              { kind: 'block', type: 'valor_grupo_produtos' },
+              { kind: 'block', type: 'tempo_cliente_anos' },
+              { kind: 'block', type: 'volume_acumulado_anual' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '💰 Descontos por Valor',
+            colour: '#D4AF37',
+            contents: [
+              { kind: 'block', type: 'desconto_por_faixa' },
+              { kind: 'block', type: 'desconto_progressivo' },
+              { kind: 'block', type: 'desconto_se_pagamento_antecipado' },
+              { kind: 'block', type: 'desconto_crescimento_historico' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '🎂 Descontos por Data',
+            colour: '#FF69B4',
+            contents: [
+              { kind: 'block', type: 'desconto_mes_aniversario' },
+              { kind: 'block', type: 'desconto_dia_aniversario' },
+              { kind: 'block', type: 'desconto_black_friday' },
+              { kind: 'block', type: 'desconto_primeiro_dia_mes' },
+              { kind: 'block', type: 'desconto_em_feriado' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '👥 Fidelidade',
+            colour: '#4169E1',
+            contents: [
+              { kind: 'block', type: 'desconto_cliente_vip' },
+              { kind: 'block', type: 'desconto_fidelidade_tempo' },
+              { kind: 'block', type: 'frete_gratis_apos_compras' },
+              { kind: 'block', type: 'desconto_sem_cancelamento' },
+              { kind: 'block', type: 'pontos_fidelidade' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '📦 Produtos',
+            colour: '#32CD32',
+            contents: [
+              { kind: 'block', type: 'combo_produtos' },
+              { kind: 'block', type: 'desconto_quantidade' },
+              { kind: 'block', type: 'desconto_mix_categorias' },
+              { kind: 'block', type: 'desconto_estoque_alto' },
+              { kind: 'block', type: 'desconto_produto_parado' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '🧮 Cálculos',
+            colour: '#FF8C00',
+            contents: [
+              { kind: 'block', type: 'adicionar_frete' },
+              { kind: 'block', type: 'taxa_urgencia' },
+              { kind: 'block', type: 'calcular_markup' },
+              { kind: 'block', type: 'validar_margem_minima' },
+              { kind: 'block', type: 'calcular_por_unidade' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '💳 Financeiro',
+            colour: '#8B4513',
+            contents: [
+              { kind: 'block', type: 'desconto_boleto' },
+              { kind: 'block', type: 'acrescimo_parcelamento' },
+              { kind: 'block', type: 'validar_credito' },
+              { kind: 'block', type: 'bloquear_por_inadimplencia' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '⚡ Ações',
+            colour: '#DC143C',
+            contents: [
+              { kind: 'block', type: 'desconto_percentual' },
+              { kind: 'block', type: 'desconto_fixo' },
+              { kind: 'block', type: 'enviar_alerta' },
+              { kind: 'block', type: 'bloquear_desconto' }
+            ]
+          }
+        ]
+      };
+
       workspace = Blockly.inject('blocklyDiv', {
-        toolbox: document.getElementById('toolbox'),
+        toolbox: toolbox,
         grid: {
           spacing: 20,
           length: 3,
