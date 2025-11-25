@@ -299,7 +299,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
       }
       
       if (metricasSelecionadas.includes('fcr')) {
-        doc.text(`FCR (First Contact Resolution): ${mediaFCR.toFixed(1)}%`, 25, yPos);
+        doc.text(`FCR (Resolução no Primeiro Contato): ${mediaFCR.toFixed(1)}%`, 25, yPos);
         yPos += 7;
       }
       
@@ -307,12 +307,12 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         const mediaAtendimento = metricsConsolidadas.dias > 0 
           ? metricsConsolidadas.tempoMedioAtendimento / metricsConsolidadas.dias 
           : 0;
-        doc.text(`AHT (Average Handle Time): ${Math.round(mediaAtendimento / 60)} minutos`, 25, yPos);
+        doc.text(`AHT (Tempo Médio de Atendimento): ${Math.round(mediaAtendimento / 60)} minutos`, 25, yPos);
         yPos += 7;
       }
       
       if (metricasSelecionadas.includes('csat')) {
-        doc.text(`CSAT (Customer Satisfaction): ${mediaAvaliacao.toFixed(1)}/5`, 25, yPos);
+        doc.text(`CSAT (Satisfação do Cliente): ${mediaAvaliacao.toFixed(1)}/5`, 25, yPos);
         yPos += 7;
       }
       
@@ -572,7 +572,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
             </Button>
             <div>
               <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                Analytics Avançado
+                Análises Avançadas
               </h1>
               <p className="text-muted-foreground mt-1">
                 Análise detalhada de performance e qualidade do atendimento
@@ -590,7 +590,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
               </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>Criar Relatório Customizado</DialogTitle>
+                    <DialogTitle>Criar Relatório Personalizado</DialogTitle>
                     <DialogDescription>
                       Configure um relatório personalizado com as métricas desejadas
                     </DialogDescription>
@@ -625,9 +625,9 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                         {[
                           { id: 'volume', label: 'Volume Total' },
                           { id: 'sla', label: 'Taxa SLA' },
-                          { id: 'fcr', label: 'FCR (First Contact Resolution)' },
-                          { id: 'aht', label: 'AHT (Average Handle Time)' },
-                          { id: 'csat', label: 'CSAT (Customer Satisfaction)' },
+                          { id: 'fcr', label: 'FCR (Resolução no Primeiro Contato)' },
+                          { id: 'aht', label: 'AHT (Tempo Médio de Atendimento)' },
+                          { id: 'csat', label: 'CSAT (Satisfação do Cliente)' },
                           { id: 'nps', label: 'NPS (Net Promoter Score)' },
                         ].map((metrica) => (
                           <div key={metrica.id} className="flex items-center space-x-2">
@@ -705,7 +705,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
       <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Como usar o Analytics Avançado</DialogTitle>
+            <DialogTitle>Como usar as Análises Avançadas</DialogTitle>
             <DialogDescription>
               Guia completo de métricas e funcionalidades
             </DialogDescription>
@@ -715,7 +715,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
               <h3 className="font-semibold text-lg mb-2">📊 Métricas Disponíveis</h3>
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold">FCR (First Contact Resolution)</h4>
+                  <h4 className="font-semibold">FCR (Resolução no Primeiro Contato)</h4>
                   <p className="text-sm text-muted-foreground">Taxa de resolução no primeiro contato</p>
                   <p className="text-sm mt-1">
                     <strong>Como calcular:</strong> (Chats resolvidos na primeira interação / Total de chats) × 100
@@ -725,7 +725,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold">AHT (Average Handle Time)</h4>
+                  <h4 className="font-semibold">AHT (Tempo Médio de Atendimento)</h4>
                   <p className="text-sm text-muted-foreground">Tempo médio de atendimento</p>
                   <p className="text-sm mt-1">
                     <strong>Como calcular:</strong> Soma total de tempo de atendimento / Número de atendimentos
@@ -735,7 +735,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold">CSAT (Customer Satisfaction)</h4>
+                  <h4 className="font-semibold">CSAT (Satisfação do Cliente)</h4>
                   <p className="text-sm text-muted-foreground">Satisfação do cliente</p>
                   <p className="text-sm mt-1">
                     <strong>Como calcular:</strong> Média das avaliações recebidas
@@ -847,7 +847,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
           </CardHeader>
           <CardContent className="relative">
             <div className="text-3xl font-bold tracking-tight">{mediaFCR.toFixed(1)}%</div>
-            <p className="text-sm text-muted-foreground mt-1">First Contact Resolution</p>
+            <p className="text-sm text-muted-foreground mt-1">Resolução no Primeiro Contato</p>
           </CardContent>
         </Card>
 
@@ -1053,7 +1053,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                 </div>
                 Tempos de Resposta e Atendimento
               </CardTitle>
-              <CardDescription className="mt-2">Análise de tempos médios (AHT - Average Handle Time)</CardDescription>
+              <CardDescription className="mt-2">Análise de tempos médios (AHT - Tempo Médio de Atendimento)</CardDescription>
             </CardHeader>
             <CardContent>
               {metricas.length > 0 ? (
@@ -1085,10 +1085,10 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
 
             <Card className="relative overflow-hidden border-primary/20 hover:shadow-lg transition-all group">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardHeader className="relative">
+               <CardHeader className="relative">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Target className="w-4 h-4 text-green-500" />
-                  AHT - Average Handle Time
+                  AHT - Tempo Médio de Atendimento
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative">
