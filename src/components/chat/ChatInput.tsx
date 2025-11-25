@@ -608,7 +608,11 @@ export default function ChatInput({
                 
                 const suggestion = data?.suggestion || "";
                 setMessage(suggestion);
-                toast.success("Sugestão gerada com sucesso!");
+                // Focus no textarea após inserir a sugestão
+                setTimeout(() => {
+                  textareaRef.current?.focus();
+                }, 100);
+                toast.success("Sugestão inserida no campo de texto!");
               } catch (error: any) {
                 console.error("Erro ao gerar sugestão:", error);
                 toast.error("Erro ao gerar sugestão de resposta");
