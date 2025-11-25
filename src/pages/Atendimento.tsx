@@ -98,6 +98,11 @@ export default function Atendimento() {
   const [aiInput, setAiInput] = useState("");
   const [aiContext, setAiContext] = useState("");
   const [showContextBox, setShowContextBox] = useState(false);
+  
+  // Real-time translation states
+  const [isRealTimeTranslationActive, setIsRealTimeTranslationActive] = useState(false);
+  const [messageTranslations, setMessageTranslations] = useState<Record<string, string>>({});
+  const [translationLanguage, setTranslationLanguage] = useState<string>("pt");
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   
   // Summary Panel states
@@ -1444,7 +1449,13 @@ ${recentMessages}
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const newMessage = payload.new as Message;
+          setMessages((prev) => [...prev, newMessage]);
+          
+          // Auto-translate client messages if real-time translation is active
+          if (isRealTimeTranslationActive && newMessage.sender !== "agent") {
+            translateMessage(newMessage.id, newMessage.text);
+          }
         }
       )
       .subscribe();
@@ -1452,6 +1463,47 @@ ${recentMessages}
     return () => {
       supabase.removeChannel(channel);
     };
+  };
+
+  // Função para traduzir uma mensagem
+  const translateMessage = async (messageId: string, text: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('agent-assist-translate', {
+        body: { text, targetLanguage: translationLanguage }
+      });
+
+      if (error) throw error;
+
+      if (data?.translation) {
+        setMessageTranslations(prev => ({
+          ...prev,
+          [messageId]: data.translation
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao traduzir mensagem:', error);
+    }
+  };
+
+  // Traduzir mensagens existentes quando a tradução em tempo real é ativada
+  useEffect(() => {
+    if (isRealTimeTranslationActive && messages.length > 0) {
+      messages
+        .filter(msg => msg.sender !== "agent" && !messageTranslations[msg.id])
+        .forEach(msg => {
+          translateMessage(msg.id, msg.text);
+        });
+    }
+  }, [isRealTimeTranslationActive, messages.length]);
+
+  const handleToggleRealTimeTranslation = () => {
+    setIsRealTimeTranslationActive(!isRealTimeTranslationActive);
+    if (!isRealTimeTranslationActive) {
+      toast.success("Tradução em tempo real ativada");
+    } else {
+      toast.success("Tradução em tempo real desativada");
+      setMessageTranslations({}); // Limpar traduções ao desativar
+    }
   };
 
   const handleSendMessage = async (
@@ -2375,7 +2427,22 @@ ${recentMessages}
                               : "bg-card border border-border shadow-sm hover:border-primary/30"
                           }`}
                         >
-                          <p className="text-[13px] whitespace-pre-wrap break-words leading-snug">{msg.text}</p>
+                           <p className="text-[13px] whitespace-pre-wrap break-words leading-snug">
+                            {msg.sender !== "agent" && isRealTimeTranslationActive && messageTranslations[msg.id] ? (
+                              <div className="space-y-2">
+                                <div className="pb-2 border-b border-white/20">
+                                  <p className="text-[11px] font-semibold opacity-70 mb-1">Original:</p>
+                                  <p className="text-[13px]">{msg.text}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[11px] font-semibold opacity-70 mb-1">Tradução:</p>
+                                  <p className="text-[13px]">{messageTranslations[msg.id]}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              msg.text
+                            )}
+                          </p>
                           {msg.attachments && msg.attachments.length > 0 ? (
                             msg.payload?.contentType === "image" ? (
                               <div className="mt-1.5">
@@ -2677,6 +2744,10 @@ ${recentMessages}
                       setShowSummaryPanel(true);
                     }
                   }}
+                  isRealTimeTranslationActive={isRealTimeTranslationActive}
+                  onToggleRealTimeTranslation={handleToggleRealTimeTranslation}
+                  translationLanguage={translationLanguage}
+                  onTranslationLanguageChange={setTranslationLanguage}
                 />
               </div>
             </div>

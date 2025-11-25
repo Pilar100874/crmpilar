@@ -55,6 +55,11 @@ interface ChatInputProps {
   conversationId?: string;
   conversationMessages?: any[];
   onSummaryGenerated?: (summary: string) => void;
+  // Real-time translation props
+  isRealTimeTranslationActive?: boolean;
+  onToggleRealTimeTranslation?: () => void;
+  translationLanguage?: string;
+  onTranslationLanguageChange?: (language: string) => void;
 }
 
 export default function ChatInput({ 
@@ -81,7 +86,11 @@ export default function ChatInput({
   aiWebhooks = [],
   onSummaryGenerated,
   conversationId,
-  conversationMessages = []
+  conversationMessages = [],
+  isRealTimeTranslationActive = false,
+  onToggleRealTimeTranslation,
+  translationLanguage = "pt",
+  onTranslationLanguageChange
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -808,6 +817,62 @@ export default function ChatInput({
                     </>
                   )}
                 </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Real-time Translation Toggle */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={isRealTimeTranslationActive ? "default" : "outline"}
+                size="icon"
+                title="Tradução em tempo real"
+                disabled={disabled}
+                className="rounded-full"
+              >
+                <Languages className={`h-4 w-4 ${isRealTimeTranslationActive ? 'animate-pulse' : ''}`} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">Tradução em Tempo Real</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Traduz automaticamente mensagens do cliente
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Ativar tradução</Label>
+                  <Switch
+                    checked={isRealTimeTranslationActive}
+                    onCheckedChange={onToggleRealTimeTranslation}
+                  />
+                </div>
+                {isRealTimeTranslationActive && (
+                  <div className="space-y-2">
+                    <Label className="text-xs">Idioma de destino</Label>
+                    <Select 
+                      value={translationLanguage} 
+                      onValueChange={onTranslationLanguageChange}
+                    >
+                      <SelectTrigger className="w-full rounded-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 rounded-2xl">
+                        <SelectItem value="en">Inglês</SelectItem>
+                        <SelectItem value="es">Espanhol</SelectItem>
+                        <SelectItem value="fr">Francês</SelectItem>
+                        <SelectItem value="de">Alemão</SelectItem>
+                        <SelectItem value="it">Italiano</SelectItem>
+                        <SelectItem value="pt">Português</SelectItem>
+                        <SelectItem value="zh">Chinês</SelectItem>
+                        <SelectItem value="ja">Japonês</SelectItem>
+                        <SelectItem value="ko">Coreano</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             </PopoverContent>
           </Popover>
