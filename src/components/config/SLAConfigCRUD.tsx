@@ -12,6 +12,7 @@ import { toast } from '@/lib/toast-config';
 import { Pencil, Trash2, Plus, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { z } from 'zod';
 
 interface SLAConfig {
   id: string;
@@ -49,6 +50,37 @@ interface Usuario {
   nome: string;
   email: string;
 }
+
+const slaConfigSchema = z.object({
+  nome: z.string().trim().min(1, { message: "Nome é obrigatório" }).max(100, { message: "Nome deve ter no máximo 100 caracteres" }),
+  descricao: z.string().max(500, { message: "Descrição deve ter no máximo 500 caracteres" }).optional(),
+  tempo_primeira_resposta: z.number().min(1, { message: "Tempo de primeira resposta deve ser maior que 0" }),
+  tempo_resposta_subsequente: z.number().min(1, { message: "Tempo de resposta subsequente deve ser maior que 0" }),
+  tempo_resolucao: z.number().min(1, { message: "Tempo de resolução deve ser maior que 0" }),
+  alerta_porcentagem: z.number().min(1).max(100, { message: "Porcentagem deve estar entre 1 e 100" }),
+  notificar_supervisor: z.boolean(),
+  supervisor_id: z.string().optional(),
+  escalar_automaticamente: z.boolean(),
+  fila_escalacao_id: z.string().optional(),
+}).refine((data) => {
+  // Se notificar supervisor estiver ativo, supervisor_id é obrigatório
+  if (data.notificar_supervisor && !data.supervisor_id) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Supervisor é obrigatório quando a notificação estiver ativada",
+  path: ["supervisor_id"],
+}).refine((data) => {
+  // Se escalar automaticamente estiver ativo, fila_escalacao_id é obrigatória
+  if (data.escalar_automaticamente && !data.fila_escalacao_id) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Fila de escalação é obrigatória quando a escalação automática estiver ativada",
+  path: ["fila_escalacao_id"],
+});
 
 export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [configs, setConfigs] = useState<SLAConfig[]>([]);
@@ -137,10 +169,30 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
   const handleSave = async () => {
     try {
+      // Validar dados do formulário
+      const validationResult = slaConfigSchema.safeParse({
+        nome: formData.nome,
+        descricao: formData.descricao,
+        tempo_primeira_resposta: formData.tempo_primeira_resposta,
+        tempo_resposta_subsequente: formData.tempo_resposta_subsequente,
+        tempo_resolucao: formData.tempo_resolucao,
+        alerta_porcentagem: formData.alerta_porcentagem,
+        notificar_supervisor: formData.notificar_supervisor,
+        supervisor_id: formData.supervisor_id,
+        escalar_automaticamente: formData.escalar_automaticamente,
+        fila_escalacao_id: formData.fila_escalacao_id,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        return;
+      }
+
       const dataToSave = {
         estabelecimento_id: estabelecimentoId,
-        nome: formData.nome,
-        descricao: formData.descricao || null,
+        nome: formData.nome.trim(),
+        descricao: formData.descricao?.trim() || null,
         fila_id: formData.fila_id || null,
         tempo_primeira_resposta: formData.tempo_primeira_resposta,
         tempo_resposta_subsequente: formData.tempo_resposta_subsequente,
@@ -369,6 +421,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Ex: SLA Padrão, SLA Suporte Premium"
+                    required
+                    maxLength={100}
                   />
                 </div>
 
@@ -378,6 +432,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                     placeholder="Descrição opcional desta configuração"
+                    maxLength={500}
                   />
                 </div>
 
@@ -419,11 +474,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label>Primeira Resposta</Label>
+                  <Label>Primeira Resposta *</Label>
                   <Input
                     type="number"
+                    min="1"
+                    required
                     value={formData.tempo_primeira_resposta}
-                    onChange={(e) => setFormData({ ...formData, tempo_primeira_resposta: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, tempo_primeira_resposta: parseInt(e.target.value) || 1 })}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatarTempo(formData.tempo_primeira_resposta)}
@@ -431,11 +488,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 </div>
 
                 <div>
-                  <Label>Respostas Subsequentes</Label>
+                  <Label>Respostas Subsequentes *</Label>
                   <Input
                     type="number"
+                    min="1"
+                    required
                     value={formData.tempo_resposta_subsequente}
-                    onChange={(e) => setFormData({ ...formData, tempo_resposta_subsequente: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, tempo_resposta_subsequente: parseInt(e.target.value) || 1 })}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatarTempo(formData.tempo_resposta_subsequente)}
@@ -443,11 +502,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 </div>
 
                 <div>
-                  <Label>Resolução Total</Label>
+                  <Label>Resolução Total *</Label>
                   <Input
                     type="number"
+                    min="1"
+                    required
                     value={formData.tempo_resolucao}
-                    onChange={(e) => setFormData({ ...formData, tempo_resolucao: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, tempo_resolucao: parseInt(e.target.value) || 1 })}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatarTempo(formData.tempo_resolucao)}
@@ -527,11 +588,14 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Porcentagem para Alerta (%)</Label>
+                  <Label>Porcentagem para Alerta (%) *</Label>
                   <Input
                     type="number"
+                    min="1"
+                    max="100"
+                    required
                     value={formData.alerta_porcentagem}
-                    onChange={(e) => setFormData({ ...formData, alerta_porcentagem: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, alerta_porcentagem: parseInt(e.target.value) || 80 })}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Alertar quando atingir {formData.alerta_porcentagem}% do tempo
@@ -548,12 +612,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
                 {formData.notificar_supervisor && (
                   <div className="col-span-2">
-                    <Label>Supervisor</Label>
+                    <Label>Supervisor *</Label>
                     <Select
                       value={formData.supervisor_id || undefined}
                       onValueChange={(value) => setFormData({ ...formData, supervisor_id: value })}
+                      required
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={!formData.supervisor_id ? 'border-destructive' : ''}>
                         <SelectValue placeholder="Selecione o supervisor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -564,6 +629,9 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Obrigatório quando notificação de supervisor estiver ativa
+                    </p>
                   </div>
                 )}
 
@@ -585,12 +653,13 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
                 {formData.escalar_automaticamente && (
                   <div className="col-span-2">
-                    <Label>Fila de Escalação</Label>
+                    <Label>Fila de Escalação *</Label>
                     <Select
                       value={formData.fila_escalacao_id}
                       onValueChange={(value) => setFormData({ ...formData, fila_escalacao_id: value })}
+                      required
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={!formData.fila_escalacao_id ? 'border-destructive' : ''}>
                         <SelectValue placeholder="Selecione a fila para escalação" />
                       </SelectTrigger>
                       <SelectContent>
@@ -601,6 +670,9 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Obrigatório quando escalação automática estiver ativa
+                    </p>
                   </div>
                 )}
               </div>
