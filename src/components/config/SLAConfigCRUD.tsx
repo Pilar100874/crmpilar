@@ -775,6 +775,17 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 <h3 className="font-semibold text-foreground mb-2">📈 Monitoramento</h3>
                 <p>O sistema verifica os SLAs automaticamente a cada minuto através de um processo em segundo plano.</p>
               </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">✅ Configuração Ativa</h3>
+                <p>O flag "Configuração Ativa" controla se esta regra de SLA será aplicada aos novos chats:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><strong>Ativo:</strong> A configuração será aplicada automaticamente aos novos chats que entrarem na fila</li>
+                  <li><strong>Inativo:</strong> A configuração fica salva mas não será usada - útil para desativar temporariamente sem excluir</li>
+                  <li>Você pode ter múltiplas configurações, mas apenas as ativas serão aplicadas</li>
+                  <li>Chats em andamento mantêm a configuração que foi aplicada quando iniciaram</li>
+                </ul>
+              </div>
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
