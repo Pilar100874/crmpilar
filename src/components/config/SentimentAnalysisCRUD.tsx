@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -15,8 +16,9 @@ interface SentimentAnalysisCRUDProps {
   estabelecimentoId: string;
 }
 
-export default function SentimentAnalysisCRUD({ estabelecimentoId }: SentimentAnalysisCRUDProps) {
+export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelecimentoId }: SentimentAnalysisCRUDProps) {
   const [loading, setLoading] = useState(false);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [config, setConfig] = useState({
     ativo: true,
     threshold_negativo: 0.30,
@@ -30,11 +32,22 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId }: SentimentAn
   const [filas, setFilas] = useState<any[]>([]);
 
   useEffect(() => {
-    loadConfig();
-    loadFilas();
+    const initEstabelecimento = async () => {
+      const id = await getEstabelecimentoId(propEstabelecimentoId);
+      setEstabelecimentoId(id);
+    };
+    initEstabelecimento();
+  }, [propEstabelecimentoId]);
+
+  useEffect(() => {
+    if (estabelecimentoId) {
+      loadConfig();
+      loadFilas();
+    }
   }, [estabelecimentoId]);
 
   const loadConfig = async () => {
+    if (!estabelecimentoId) return;
     const { data, error } = await supabase
       .from('sentiment_config')
       .select('*')
@@ -56,6 +69,7 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId }: SentimentAn
   };
 
   const loadFilas = async () => {
+    if (!estabelecimentoId) return;
     const { data } = await supabase
       .from('filas_atendimento')
       .select('id, nome')
@@ -66,6 +80,10 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId }: SentimentAn
   };
 
   const handleSave = async () => {
+    if (!estabelecimentoId) {
+      toast.error("Selecione um estabelecimento");
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase
