@@ -400,21 +400,21 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl">
-                {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
-              </DialogTitle>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setHelpDialogOpen(true)}
-                className="ml-4"
-              >
-                <HelpCircle className="w-4 h-4 mr-2" />
-                Como usar
-              </Button>
-            </div>
+            <DialogTitle className="text-xl pr-8">
+              {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
+            </DialogTitle>
           </DialogHeader>
+          
+          <div className="flex justify-end -mt-2 mb-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setHelpDialogOpen(true)}
+            >
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Como usar
+            </Button>
+          </div>
 
           <div className="space-y-4">
             {/* Informações Básicas */}
