@@ -149,6 +149,15 @@ const menuItems: MenuItem[] = [
   },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
   { 
+    id: "Estabelecimentos Cadastrados",
+    title: "Estabelecimentos Cadastrados",
+    icon: Building2,
+    subItems: [
+      { id: "SLA Config", title: "SLA", url: "/config/sla", icon: Activity },
+      { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: Users },
+    ]
+  },
+  { 
     id: "Configurações",
     title: "Configurações",
     icon: Settings,

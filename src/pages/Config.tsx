@@ -8,9 +8,7 @@ import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp,
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
-import SLAConfigCRUD from "@/components/config/SLAConfigCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
-import { supabase } from "@/integrations/supabase/client";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -18,34 +16,9 @@ import { toast } from "@/hooks/use-toast";
 
 export default function Config() {
   const { openSubmenu } = useLayout();
-  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
-
-  useEffect(() => {
-    const loadEstabelecimento = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: usuario } = await supabase
-          .from('usuarios')
-          .select('estabelecimento_id')
-          .eq('auth_user_id', user.id)
-          .maybeSingle();
-
-        if (usuario?.estabelecimento_id) {
-          setEstabelecimentoId(usuario.estabelecimento_id);
-        } else {
-          console.warn('Nenhum estabelecimento encontrado para este usuário em Config');
-        }
-      } catch (error) {
-        console.error('Erro ao carregar estabelecimento em Config:', error);
-      }
-    };
-    loadEstabelecimento();
-  }, []);
 
   const handleToggleConfirmationMessages = (checked: boolean) => {
     setShowConfirmationMessages(checked);
@@ -158,29 +131,6 @@ export default function Config() {
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <WhatsAppConfigCRUD />
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="sla-config" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Bell className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Service Level Agreement (SLA)</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Configure tempos de resposta e alertas para atendimento
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              {estabelecimentoId ? (
-                <SLAConfigCRUD estabelecimentoId={estabelecimentoId} />
-              ) : (
-                <div className="text-center text-muted-foreground py-4 text-sm">
-                  Selecione um estabelecimento para configurar o SLA.
-                </div>
-              )}
             </AccordionContent>
           </AccordionItem>
 
