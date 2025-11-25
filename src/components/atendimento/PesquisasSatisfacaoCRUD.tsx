@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/toast-config";
 import { Plus, Edit, Trash2, MessageCircle, HelpCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CronJobManager } from "@/components/config/CronJobManager";
 
 interface Pesquisa {
   id: string;
@@ -289,6 +290,14 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
           </TableBody>
         </Table>
       </div>
+
+      {/* Configuração de Agendamento Automático */}
+      <CronJobManager
+        estabelecimentoId={estabelecimentoId}
+        jobType="pesquisa_satisfacao"
+        title="Envio Automático de Pesquisas"
+        defaultCron="*/5 * * * *"
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
