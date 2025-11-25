@@ -62,66 +62,80 @@ function EditorRegrasContent() {
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
-      const nodeToDuplicate = nodes.find((n) => n.id === nodeId);
-      if (!nodeToDuplicate) return;
+      setNodes((nds) => {
+        const nodeToDuplicate = nds.find((n) => n.id === nodeId);
+        if (!nodeToDuplicate) return nds;
 
-      const newNode: Node = {
-        id: getId(),
-        type: "custom",
-        position: {
-          x: nodeToDuplicate.position.x + 50,
-          y: nodeToDuplicate.position.y + 50,
-        },
-        data: {
-          ...JSON.parse(JSON.stringify(nodeToDuplicate.data)),
-          onDuplicate: handleDuplicateNode,
-          onDelete: handleDeleteNode,
-          onAddNote: handleAddNote,
-        },
-      };
+        const newNode: Node = {
+          id: getId(),
+          type: "custom",
+          position: {
+            x: nodeToDuplicate.position.x + 50,
+            y: nodeToDuplicate.position.y + 50,
+          },
+          data: {
+            ...JSON.parse(JSON.stringify(nodeToDuplicate.data)),
+            onDuplicate: handleDuplicateNode,
+            onDelete: handleDeleteNode,
+            onAddNote: handleAddNote,
+          },
+        };
 
-      setNodes((nds) => [...nds, newNode]);
-      toast({
-        title: "Bloco duplicado",
-        description: "Bloco duplicado com sucesso!",
+        toast({
+          title: "Bloco duplicado",
+          description: "Bloco duplicado com sucesso!",
+        });
+
+        return [...nds, newNode];
       });
     },
-    [nodes, setNodes]
+    [setNodes]
   );
 
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
-      const nodeToDelete = nodes.find(n => n.id === nodeId);
-      if (nodeToDelete && (nodeToDelete.data as any).type === "iniciar_validacao") {
+      setNodes((nds) => {
+        const nodeToDelete = nds.find(n => n.id === nodeId);
+        if (nodeToDelete && (nodeToDelete.data as any).type === "iniciar_validacao") {
+          toast({
+            title: "Ação não permitida",
+            description: "O bloco inicial não pode ser excluído!",
+            variant: "destructive",
+          });
+          return nds;
+        }
+
         toast({
-          title: "Ação não permitida",
-          description: "O bloco inicial não pode ser excluído!",
-          variant: "destructive",
+          title: "Bloco excluído",
+          description: "Bloco removido com sucesso!",
         });
-        return;
-      }
-      
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-      setSelectedNode(null);
-      toast({
-        title: "Bloco excluído",
-        description: "Bloco removido com sucesso!",
+
+        setSelectedNode(null);
+        setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+        
+        return nds.filter((node) => node.id !== nodeId);
       });
     },
-    [setNodes, setEdges, nodes]
+    [setNodes, setEdges]
   );
 
   const handleAddNote = useCallback(
     (nodeId: string) => {
-      const node = nodes.find((n) => n.id === nodeId);
-      if (!node) return;
+      console.log("handleAddNote called with nodeId:", nodeId);
+      setNodes((nds) => {
+        const node = nds.find((n) => n.id === nodeId);
+        console.log("Found node:", node);
+        if (!node) return nds;
 
-      setCurrentNoteNodeId(nodeId);
-      setCurrentNoteValue((node.data as any).note || "");
-      setNoteDialogOpen(true);
+        setCurrentNoteNodeId(nodeId);
+        setCurrentNoteValue((node.data as any).note || "");
+        setNoteDialogOpen(true);
+        console.log("Dialog should open now");
+
+        return nds;
+      });
     },
-    [nodes]
+    [setNodes]
   );
 
   const handleSaveNote = useCallback(
@@ -136,6 +150,9 @@ function EditorRegrasContent() {
               data: {
                 ...n.data,
                 note: note,
+                onDuplicate: handleDuplicateNode,
+                onDelete: handleDeleteNode,
+                onAddNote: handleAddNote,
               },
             };
           }
@@ -148,7 +165,7 @@ function EditorRegrasContent() {
       });
       setCurrentNoteNodeId(null);
     },
-    [currentNoteNodeId, setNodes]
+    [currentNoteNodeId, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
   );
 
   // Initialize with start node
@@ -170,7 +187,7 @@ function EditorRegrasContent() {
         },
       ]);
     }
-  }, []);
+  }, [handleDuplicateNode, handleDeleteNode, handleAddNote, regraIdFromUrl]);
 
   useEffect(() => {
     if (regraIdFromUrl) {
