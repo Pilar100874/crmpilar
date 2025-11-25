@@ -59,11 +59,26 @@ export function BlockNoteDialog({
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave}>Salvar</Button>
+        <DialogFooter className="flex justify-between sm:justify-between">
+          <div className="flex gap-2">
+            {currentNote && (
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  onSave("");
+                  onOpenChange(false);
+                }}
+              >
+                Excluir Nota
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>Salvar</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
