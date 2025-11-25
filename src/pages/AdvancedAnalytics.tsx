@@ -3,7 +3,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import AdvancedAnalyticsDashboard from "@/components/atendimento/AdvancedAnalyticsDashboard";
 import { toast } from "@/lib/toast-config";
 
-export default function AdvancedAnalyticsPage() {
+export default function AnalyticsAvancadosPage() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
