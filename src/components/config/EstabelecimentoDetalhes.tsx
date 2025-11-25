@@ -939,9 +939,37 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
       <Accordion type="single" collapsible className="space-y-2">
         <AccordionItem value="resend-config" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-primary" />
-              <span className="font-medium">Configuração Resend (Email)</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-primary" />
+                <span className="font-medium">Configuração Resend (Email)</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Configuração Resend (Email) - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">📧 Serviço Resend</h4>
+                        <p className="text-sm">Configure o serviço Resend para envio profissional de emails transacionais e marketing.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🔑 API Key</h4>
+                        <p className="text-sm">Obtenha sua chave API em resend.com após criar uma conta e verificar seu domínio.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📮 Remetente</h4>
+                        <p className="text-sm">Configure o email e nome que aparecerão como remetente dos emails enviados.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -951,9 +979,37 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="cadastro-unidades" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span className="font-medium">Cadastro de Unidades</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <span className="font-medium">Cadastro de Unidades</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Cadastro de Unidades - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">🏢 Unidades Organizacionais</h4>
+                        <p className="text-sm">Cadastre filiais, departamentos ou unidades de negócio para organização hierárquica.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📍 Localização</h4>
+                        <p className="text-sm">Registre endereço completo, telefone e informações de contato de cada unidade.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">👥 Gestão de Equipes</h4>
+                        <p className="text-sm">Vincule usuários e equipes às unidades para segmentação de relatórios e permissões.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -963,9 +1019,45 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="cadastro-sla" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" />
-              <span className="font-medium">SLA de Atendimento</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
+                <span className="font-medium">SLA de Atendimento</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>SLA de Atendimento - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">📊 O que é SLA?</h4>
+                        <p className="text-sm">SLA (Service Level Agreement) define os tempos máximos de resposta e resolução para seus atendimentos.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">⏱️ Tempos Monitorados</h4>
+                        <ul className="text-sm list-disc ml-6 space-y-1">
+                          <li><strong>Primeira Resposta:</strong> Tempo até a primeira resposta do atendente</li>
+                          <li><strong>Respostas Subsequentes:</strong> Tempo entre mensagens do cliente e respostas</li>
+                          <li><strong>Resolução Total:</strong> Tempo total até encerramento do chat</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🎯 Multiplicadores de Prioridade</h4>
+                        <p className="text-sm">Os tempos são ajustados automaticamente pela prioridade do chat.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🔔 Notificações e Ações</h4>
+                        <p className="text-sm">Configure notificações automáticas para supervisores e ações como aumento de prioridade ou escalação quando SLA está em risco.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">

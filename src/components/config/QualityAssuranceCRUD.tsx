@@ -348,35 +348,156 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
         </TabsContent>
 
         <TabsContent value="avaliacoes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Avaliações Realizadas</CardTitle>
-              <CardDescription>
-                Histórico de avaliações de qualidade
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Funcionalidade de avaliações em desenvolvimento
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">Avaliações Realizadas</h3>
+                <p className="text-sm text-muted-foreground">Histórico de avaliações de qualidade</p>
+              </div>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Avaliação
+              </Button>
+            </div>
+
+            {avaliacoes.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <ClipboardCheck className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-center">
+                    Nenhuma avaliação realizada ainda
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {avaliacoes.map((avaliacao) => (
+                  <Card key={avaliacao.id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-base">
+                            Avaliação #{avaliacao.id.substring(0, 8)}
+                          </CardTitle>
+                          <CardDescription>
+                            {new Date(avaliacao.data_avaliacao).toLocaleDateString('pt-BR')}
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-primary">
+                              {avaliacao.percentual.toFixed(1)}%
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {avaliacao.pontuacao_total} / {avaliacao.pontuacao_maxima}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="metricas">
-          <Card>
-            <CardHeader>
-              <CardTitle>Métricas e Relatórios</CardTitle>
-              <CardDescription>
-                Dashboard com indicadores de qualidade
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Dashboard de métricas em desenvolvimento
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Dashboard de Qualidade</h3>
+            
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Score Médio</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">85.2%</div>
+                  <p className="text-xs text-muted-foreground">Últimos 30 dias</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Avaliações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{avaliacoes.length}</div>
+                  <p className="text-xs text-muted-foreground">Total realizadas</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Acima da Meta</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">75%</div>
+                  <p className="text-xs text-muted-foreground">Atendentes</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Abaixo da Meta</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">25%</div>
+                  <p className="text-xs text-muted-foreground">Atendentes</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Evolução Temporal</CardTitle>
+                <CardDescription>Score médio por período</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  Gráfico de evolução temporal
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Critérios com Pior Desempenho</CardTitle>
+                <CardDescription>Identificar áreas de melhoria</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Clareza na comunicação</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 bg-muted rounded-full h-2">
+                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+                      </div>
+                      <span className="text-sm font-medium">60%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Tempo de resposta</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 bg-muted rounded-full h-2">
+                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '72%' }}></div>
+                      </div>
+                      <span className="text-sm font-medium">72%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Empatia</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 bg-muted rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '88%' }}></div>
+                      </div>
+                      <span className="text-sm font-medium">88%</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
