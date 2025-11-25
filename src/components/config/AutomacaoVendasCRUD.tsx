@@ -136,7 +136,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
     <Card className="flex flex-col h-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 border-b">
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-semibold truncate">Automações de Vendas</h2>
+          <h2 className="text-xl font-semibold">Regras para o Orçamento</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Gerencie regras automáticas de desconto e promoções
           </p>
@@ -179,10 +179,10 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                     return (
                       <TableRow key={automacao.id}>
                         <TableCell className="font-medium">
-                          <div className="truncate max-w-[200px]">{automacao.nome}</div>
+                          {automacao.nome}
                         </TableCell>
                         <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                          <div className="truncate max-w-[250px]">{automacao.descricao || "-"}</div>
+                          {automacao.descricao || "-"}
                         </TableCell>
                         <TableCell>
                           <Badge variant={automacao.ativo ? "default" : "secondary"} className="whitespace-nowrap">
