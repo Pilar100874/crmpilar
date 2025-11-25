@@ -155,7 +155,6 @@ const menuItems: MenuItem[] = [
     title: "Configurações",
     icon: Settings,
     subItems: [
-      { id: "Config Geral", title: "Configurações Gerais", url: "/config", icon: Settings },
       { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: Users },
       { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: Users },
       { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: Workflow },
@@ -723,6 +722,23 @@ export default function Layout({ children }: LayoutProps) {
                                       {openNestedSubmenu === "Estabelecimentos Cadastrados" && (
                                         <div className="ml-6 space-y-1">
                                           <NavLink
+                                            to="/config"
+                                            onClick={() => {
+                                              setOpenSubmenuId(null);
+                                              setOpenNestedSubmenu(null);
+                                            }}
+                                            className={({ isActive }) =>
+                                              `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
+                                                isActive
+                                                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                                              }`
+                                            }
+                                          >
+                                            <Settings className="w-4 h-4 flex-shrink-0" />
+                                            <span className="text-sm">Configurações Gerais</span>
+                                          </NavLink>
+                                          <NavLink
                                             to="/config/sla"
                                             onClick={() => {
                                               setOpenSubmenuId(null);
@@ -823,6 +839,23 @@ export default function Layout({ children }: LayoutProps) {
                                 </button>
                                 {openNestedSubmenu === "Estabelecimentos Cadastrados" && (
                                   <div className="ml-6 space-y-1">
+                                    <NavLink
+                                      to="/config"
+                                      onClick={() => {
+                                        setOpenSubmenuId(null);
+                                        setOpenNestedSubmenu(null);
+                                      }}
+                                      className={({ isActive }) =>
+                                        `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                          isActive
+                                            ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                            : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                        }`
+                                      }
+                                    >
+                                      <Settings className="w-4 h-4 flex-shrink-0" />
+                                      <span className="text-sm">Configurações Gerais</span>
+                                    </NavLink>
                                     <NavLink
                                       to="/config/sla"
                                       onClick={() => {

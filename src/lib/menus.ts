@@ -42,7 +42,6 @@ export const MENU_CONFIG = [
   { id: "Perfil", label: "Perfil" },
   { id: "Alterar Senha", label: "Alterar Senha" },
   { id: "Configurações", label: "Configurações" },
-  { id: "Config Geral", label: "Configurações Gerais" },
   { id: "Config Filas", label: "Filas de Atendimento" },
   { id: "Config Skills", label: "Skills de Atendimento" },
   { id: "Monitor de Filas", label: "Monitor de Filas" },
