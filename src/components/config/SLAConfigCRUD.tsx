@@ -89,6 +89,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<SLAConfig | null>(null);
   
@@ -326,10 +327,19 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 Gerencie os níveis de serviço (SLA) para suas filas de atendimento
               </CardDescription>
             </div>
-            <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Configuração
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setManualDialogOpen(true)}
+              >
+                <HelpCircle className="w-4 h-4" />
+              </Button>
+              <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Configuração
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -728,6 +738,114 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         title="Excluir configuração de SLA"
         description="Tem certeza que deseja excluir esta configuração? Esta ação não pode ser desfeita."
       />
+
+      {/* Manual Dialog */}
+      <Dialog open={manualDialogOpen} onOpenChange={setManualDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="h-5 w-5" />
+              Manual de SLA (Service Level Agreement)
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 text-sm">
+            <section>
+              <h3 className="font-semibold text-base mb-2">📋 O que é SLA?</h3>
+              <p className="text-muted-foreground">
+                SLA (Service Level Agreement) define os tempos máximos de resposta e resolução para atendimentos. 
+                O sistema monitora automaticamente se os atendimentos estão cumprindo os prazos estabelecidos e pode tomar ações automáticas em caso de violações.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">⏱️ Tempos Monitorados</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Primeira Resposta:</strong> Tempo máximo para o primeiro atendimento ao cliente (em segundos)</li>
+                <li><strong>Respostas Subsequentes:</strong> Tempo máximo entre as respostas do atendente após mensagens do cliente</li>
+                <li><strong>Resolução Total:</strong> Tempo máximo para finalizar completamente o atendimento</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎯 Multiplicadores de Prioridade</h3>
+              <p className="text-muted-foreground mb-2">
+                Os tempos de SLA são ajustados automaticamente baseado na prioridade do chat:
+              </p>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Urgente (0.5x):</strong> Metade do tempo - atendimento prioritário</li>
+                <li><strong>Alta (0.75x):</strong> 75% do tempo padrão</li>
+                <li><strong>Normal (1.0x):</strong> Tempo integral configurado</li>
+                <li><strong>Baixa (1.5x):</strong> 50% a mais de tempo</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">⚙️ Ações Automáticas</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Notificar Supervisor:</strong> Envia alerta quando SLA está próximo de ser violado (configurável por %)</li>
+                <li><strong>Aumentar Prioridade:</strong> Eleva automaticamente a prioridade do chat quando SLA é violado</li>
+                <li><strong>Escalar Automaticamente:</strong> Transfere o chat para outra fila em caso de violação</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">⏰ Monitoramento Automático</h3>
+              <p className="text-muted-foreground mb-2">
+                Configure quando o sistema deve verificar os SLAs automaticamente:
+              </p>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Verificação Contínua:</strong> Recomendado verificar a cada 1 minuto para detectar violações rapidamente</li>
+                <li><strong>Personalizado:</strong> Configure horários específicos se preferir verificações menos frequentes</li>
+                <li><strong>Alertas em Tempo Real:</strong> Notificações são enviadas imediatamente quando limites são atingidos</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
+                💡 Dica: Para atendimento crítico, use verificações a cada 1 minuto. Para suporte padrão, 5 minutos é suficiente.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎨 Aplicação de SLA</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Por Fila:</strong> Associe configurações específicas a cada fila de atendimento</li>
+                <li><strong>Padrão:</strong> Configuração sem fila específica serve como padrão para todas</li>
+                <li><strong>Horário Comercial:</strong> Opção de pausar contagem fora do horário de trabalho</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">💡 Boas Práticas</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>✓ Defina tempos realistas baseados na complexidade do atendimento</li>
+                <li>✓ Configure alertas em 80% do tempo para dar margem de ação</li>
+                <li>✓ Use escalação automática apenas para casos críticos</li>
+                <li>✓ Revise periodicamente as configurações baseado nas métricas</li>
+                <li>✓ Ative monitoramento a cada 1 minuto para SLAs exigentes</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">📈 Acompanhamento</h3>
+              <p className="text-muted-foreground">
+                Acesse o <strong>Dashboard de SLA</strong> para visualizar:
+              </p>
+              <ul className="space-y-1 mt-2 text-muted-foreground">
+                <li>• Taxa de cumprimento de SLA</li>
+                <li>• Violações por tipo e fila</li>
+                <li>• Tempo médio de resposta e resolução</li>
+                <li>• Chats em risco de violar SLA</li>
+                <li>• Histórico de violações e tendências</li>
+              </ul>
+            </section>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setManualDialogOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

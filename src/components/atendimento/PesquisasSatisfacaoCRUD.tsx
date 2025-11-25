@@ -567,6 +567,22 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
             </section>
 
             <section>
+              <h3 className="font-semibold text-base mb-2">⏰ Agendamento Automático</h3>
+              <p className="text-muted-foreground mb-2">
+                Configure quando o sistema deve verificar e enviar pesquisas automaticamente:
+              </p>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Frequências Predefinidas:</strong> Escolha entre opções como a cada 1, 5, 15 minutos, ou intervalos maiores como horário, diário e semanal</li>
+                <li><strong>Personalizado:</strong> Crie uma expressão cron customizada para horários específicos (ex: 9h da manhã em dias úteis)</li>
+                <li><strong>Ativar/Desativar:</strong> Controle se o envio automático está ativo ou pausado</li>
+                <li><strong>Monitoramento:</strong> Acompanhe quando foi a última execução e quando será a próxima</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
+                💡 Dica: Para maior taxa de resposta, configure verificações frequentes (5-15 minutos) durante horário comercial.
+              </p>
+            </section>
+
+            <section>
               <h3 className="font-semibold text-base mb-2">📝 Campos Importantes</h3>
               <ul className="space-y-2 text-muted-foreground">
                 <li><strong>Nome:</strong> Identificação interna da pesquisa</li>
