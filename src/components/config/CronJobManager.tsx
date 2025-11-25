@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Info } from "lucide-react";
+import { Clock, Info, Edit2, Check } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -37,11 +38,15 @@ const CRON_PRESETS = [
   { value: "0 9 * * *", label: "Diariamente às 9h", description: "Executa todo dia às 09:00" },
   { value: "0 0 * * 0", label: "Semanalmente (Domingo)", description: "Executa todo domingo à meia-noite" },
   { value: "0 0 1 * *", label: "Mensalmente", description: "Executa no dia 1 de cada mês" },
+  { value: "custom", label: "Personalizado", description: "Digite uma expressão cron customizada" },
 ];
 
 const getCronDescription = (cron: string): string => {
   const preset = CRON_PRESETS.find(p => p.value === cron);
-  return preset ? preset.description : "Agendamento personalizado";
+  if (preset && preset.value !== "custom") {
+    return preset.description;
+  }
+  return "Agendamento personalizado";
 };
 
 export function CronJobManager({ 
@@ -52,6 +57,9 @@ export function CronJobManager({
   onConfigChange 
 }: CronJobManagerProps) {
   const [cronExpression, setCronExpression] = useState(defaultSchedule);
+  const [customCronExpression, setCustomCronExpression] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState(defaultSchedule);
+  const [isCustom, setIsCustom] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [lastRun, setLastRun] = useState<string | null>(null);
   const [nextRun, setNextRun] = useState<string | null>(null);
@@ -84,18 +92,49 @@ export function CronJobManager({
 
       if (data) {
         setJobId(data.id);
-        setCronExpression(data.schedule_cron);
+        const loadedCron = data.schedule_cron;
+        setCronExpression(loadedCron);
+        
+        // Verificar se é um preset ou customizado
+        const isPreset = CRON_PRESETS.some(p => p.value === loadedCron && p.value !== "custom");
+        if (isPreset) {
+          setSelectedPreset(loadedCron);
+          setIsCustom(false);
+        } else {
+          setSelectedPreset("custom");
+          setCustomCronExpression(loadedCron);
+          setIsCustom(true);
+        }
+        
         setEnabled(data.enabled || false);
         setLastRun(data.last_run);
         setNextRun(data.next_run);
       } else {
         // Se não existe, usar valores padrão
         setCronExpression(defaultSchedule);
+        setSelectedPreset(defaultSchedule);
+        setIsCustom(false);
         setEnabled(false);
       }
     } catch (error: any) {
       console.error("Erro ao carregar cron job:", error);
     }
+  };
+
+  const handlePresetChange = (value: string) => {
+    setSelectedPreset(value);
+    if (value === "custom") {
+      setIsCustom(true);
+      setCustomCronExpression(cronExpression);
+    } else {
+      setIsCustom(false);
+      setCronExpression(value);
+    }
+  };
+
+  const handleCustomCronChange = (value: string) => {
+    setCustomCronExpression(value);
+    setCronExpression(value);
   };
 
   const handleSave = async () => {
@@ -183,14 +222,14 @@ export function CronJobManager({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="max-w-xs">
-                    Selecione uma opção pré-definida para definir a frequência de execução automática.
+                    Selecione uma opção pré-definida ou escolha "Personalizado" para criar sua própria expressão cron.
                   </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
           
-          <Select value={cronExpression} onValueChange={setCronExpression}>
+          <Select value={selectedPreset} onValueChange={handlePresetChange}>
             <SelectTrigger id={`cron-${jobType}`}>
               <SelectValue />
             </SelectTrigger>
@@ -205,6 +244,43 @@ export function CronJobManager({
               ))}
             </SelectContent>
           </Select>
+
+          {isCustom && (
+            <div className="space-y-2 pt-2">
+              <Label htmlFor={`custom-cron-${jobType}`} className="text-sm flex items-center gap-2">
+                <Edit2 className="w-3 h-3" />
+                Expressão Cron Personalizada
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id={`custom-cron-${jobType}`}
+                  value={customCronExpression}
+                  onChange={(e) => handleCustomCronChange(e.target.value)}
+                  placeholder="Ex: 0 */3 * * *"
+                  className="font-mono text-sm"
+                />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="icon" className="shrink-0">
+                        <Info className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="font-semibold mb-2">Formato Cron:</p>
+                      <code className="text-xs">minuto hora dia mês dia-semana</code>
+                      <p className="text-xs mt-2">Exemplos:</p>
+                      <ul className="text-xs list-disc list-inside mt-1">
+                        <li>0 */3 * * * = A cada 3 horas</li>
+                        <li>30 9 * * 1-5 = 9:30 dias úteis</li>
+                        <li>0 0 1,15 * * = Dias 1 e 15</li>
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-md">
             <Clock className="w-4 h-4 text-muted-foreground" />
