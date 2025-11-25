@@ -122,11 +122,14 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
           )}
         </div>
 
-        <Handle 
-          type="source" 
-          position={Position.Bottom} 
-          className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
-        />
+        {/* Handle inferior - não renderizar para bloco fim */}
+        {(data as any).type !== "fim" && (
+          <Handle 
+            type="source" 
+            position={Position.Bottom} 
+            className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
+          />
+        )}
       </Card>
 
       {/* Dialog de confirmação de exclusão */}

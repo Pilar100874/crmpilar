@@ -25,6 +25,7 @@ import "@xyflow/react/dist/style.css";
 import { AutomacaoFlowNode } from "@/components/automacao-vendas/AutomacaoFlowNode";
 import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
 import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
+import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { toast } from "@/hooks/use-toast";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
@@ -55,6 +56,9 @@ function EditorRegrasContent() {
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(1);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
+  const [currentNoteValue, setCurrentNoteValue] = useState("");
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
@@ -113,31 +117,38 @@ function EditorRegrasContent() {
       const node = nodes.find((n) => n.id === nodeId);
       if (!node) return;
 
-      const currentNote = (node.data as any).note || "";
-      const newNote = window.prompt("Digite a nota para este bloco:", currentNote);
-
-      if (newNote !== null) {
-        setNodes((nds) =>
-          nds.map((n) => {
-            if (n.id === nodeId) {
-              return {
-                ...n,
-                data: {
-                  ...n.data,
-                  note: newNote,
-                },
-              };
-            }
-            return n;
-          })
-        );
-        toast({
-          title: newNote ? "Nota adicionada" : "Nota removida",
-          description: newNote ? "Nota adicionada com sucesso!" : "Nota removida com sucesso!",
-        });
-      }
+      setCurrentNoteNodeId(nodeId);
+      setCurrentNoteValue((node.data as any).note || "");
+      setNoteDialogOpen(true);
     },
-    [nodes, setNodes]
+    [nodes]
+  );
+
+  const handleSaveNote = useCallback(
+    (note: string) => {
+      if (!currentNoteNodeId) return;
+
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id === currentNoteNodeId) {
+            return {
+              ...n,
+              data: {
+                ...n.data,
+                note: note,
+              },
+            };
+          }
+          return n;
+        })
+      );
+      toast({
+        title: note ? "Nota adicionada" : "Nota removida",
+        description: note ? "Nota adicionada com sucesso!" : "Nota removida com sucesso!",
+      });
+      setCurrentNoteNodeId(null);
+    },
+    [currentNoteNodeId, setNodes]
   );
 
   // Initialize with start node
@@ -312,6 +323,54 @@ function EditorRegrasContent() {
       toast({
         title: "Erro",
         description: "Por favor, insira um nome para a regra.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar se existe pelo menos um bloco fim
+    const hasEndBlock = nodes.some((node) => (node.data as any).type === "fim");
+    if (!hasEndBlock) {
+      toast({
+        title: "Erro de Validação",
+        description: "É necessário adicionar pelo menos um bloco 'Fim' antes de salvar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar se todos os blocos estão conectados
+    const connectedNodeIds = new Set<string>();
+    
+    // Adicionar o nó inicial
+    const startNode = nodes.find((n) => (n.data as any).type === "iniciar_validacao");
+    if (startNode) {
+      connectedNodeIds.add(startNode.id);
+    }
+
+    // Percorrer edges para marcar nós conectados
+    let changed = true;
+    while (changed) {
+      changed = false;
+      edges.forEach((edge) => {
+        if (connectedNodeIds.has(edge.source)) {
+          if (!connectedNodeIds.has(edge.target)) {
+            connectedNodeIds.add(edge.target);
+            changed = true;
+          }
+        }
+      });
+    }
+
+    // Verificar se há blocos desconectados (exceto o inicial se estiver sozinho)
+    const disconnectedNodes = nodes.filter((node) => !connectedNodeIds.has(node.id));
+    if (disconnectedNodes.length > 0) {
+      const disconnectedLabels = disconnectedNodes
+        .map((n) => (n.data as any).label || (n.data as any).type)
+        .join(", ");
+      toast({
+        title: "Erro de Validação",
+        description: `Os seguintes blocos não estão conectados: ${disconnectedLabels}. Todos os blocos devem estar conectados ao fluxo.`,
         variant: "destructive",
       });
       return;
@@ -501,6 +560,14 @@ function EditorRegrasContent() {
           />
         )}
       </div>
+
+      {/* Dialog de nota */}
+      <BlockNoteDialog
+        open={noteDialogOpen}
+        onOpenChange={setNoteDialogOpen}
+        currentNote={currentNoteValue}
+        onSave={handleSaveNote}
+      />
     </div>
   );
 }
