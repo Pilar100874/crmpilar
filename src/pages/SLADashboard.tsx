@@ -46,7 +46,7 @@ export default function SLADashboardPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="space-y-6">
       <SLADashboard estabelecimentoId={estabelecimentoId} />
     </div>
   );

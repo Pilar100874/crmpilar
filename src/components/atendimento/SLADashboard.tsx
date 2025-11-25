@@ -198,29 +198,48 @@ export default function SLADashboard({ estabelecimentoId }: { estabelecimentoId:
 
   return (
     <div className="space-y-6">
+      {/* Header com gradiente */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+        <div className="relative">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            Dashboard SLA
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Monitore o cumprimento dos níveis de serviço em tempo real
+          </p>
+        </div>
+      </div>
+
       {/* Métricas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Cumprimento</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Cumprimento</CardTitle>
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Activity className="h-5 w-5 text-green-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.taxa_cumprimento.toFixed(1)}%</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{metrics?.taxa_cumprimento.toFixed(1)}%</div>
             <Progress value={metrics?.taxa_cumprimento} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               {metrics?.chats_dentro_sla} de {metrics?.total_chats} chats
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Violações Ativas</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Violações Ativas</CardTitle>
+            <div className="p-2 rounded-lg bg-red-500/10">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.chats_fora_sla}</div>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{metrics?.chats_fora_sla}</div>
             <div className="flex items-center gap-2 mt-2">
               {metrics && metrics.chats_fora_sla > metrics.chats_dentro_sla ? (
                 <>
@@ -237,31 +256,37 @@ export default function SLADashboard({ estabelecimentoId }: { estabelecimentoId:
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Tempo Médio 1ª Resposta</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tempo Médio 1ª Resposta</CardTitle>
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <Clock className="h-5 w-5 text-blue-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">
               {formatarTempo(metrics?.tempo_medio_primeira_resposta || 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-1">
               Últimos 30 dias
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Tempo Médio Resolução</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tempo Médio Resolução</CardTitle>
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <CheckCircle2 className="h-5 w-5 text-purple-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">
               {formatarTempo(metrics?.tempo_medio_resolucao || 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-1">
               Últimos 30 dias
             </p>
           </CardContent>
@@ -269,9 +294,14 @@ export default function SLADashboard({ estabelecimentoId }: { estabelecimentoId:
       </div>
 
       {/* Violações por Tipo */}
-      <Card>
+      <Card className="border-primary/20 shadow-lg">
         <CardHeader>
-          <CardTitle>Violações por Tipo</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <AlertTriangle className="w-5 h-5 text-primary" />
+            </div>
+            Violações por Tipo
+          </CardTitle>
           <CardDescription>Últimos 30 dias</CardDescription>
         </CardHeader>
         <CardContent>
@@ -313,9 +343,14 @@ export default function SLADashboard({ estabelecimentoId }: { estabelecimentoId:
       </Card>
 
       {/* Violações Recentes */}
-      <Card>
+      <Card className="border-primary/20 shadow-lg">
         <CardHeader>
-          <CardTitle>Violações Ativas Recentes</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Activity className="w-5 h-5 text-primary" />
+            </div>
+            Violações Ativas Recentes
+          </CardTitle>
           <CardDescription>
             Violações de SLA que ainda não foram resolvidas
           </CardDescription>

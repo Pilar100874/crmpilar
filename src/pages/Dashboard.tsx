@@ -34,41 +34,65 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
-        <div>
-          <h1 className="text-lg font-bold mb-2 text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-6 p-6">
+      {/* Header com gradiente */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+        <div className="relative">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-1">
             Visão geral do seu atendimento omnicanal
           </p>
         </div>
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <Card key={stat.title} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat, index) => {
+          const colors = [
+            { bg: 'from-blue-500/10', icon: 'bg-blue-500/10', iconColor: 'text-blue-500', border: 'border-blue-500/30' },
+            { bg: 'from-green-500/10', icon: 'bg-green-500/10', iconColor: 'text-green-500', border: 'border-green-500/30' },
+            { bg: 'from-purple-500/10', icon: 'bg-purple-500/10', iconColor: 'text-purple-500', border: 'border-purple-500/30' },
+            { bg: 'from-orange-500/10', icon: 'bg-orange-500/10', iconColor: 'text-orange-500', border: 'border-orange-500/30' }
+          ];
+          const color = colors[index % colors.length];
+          
+          return (
+            <Card key={stat.title} className={`relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group ${color.border}`}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${color.bg} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+              <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <div className={`p-2 rounded-lg ${color.icon}`}>
+                  <stat.icon className={`h-5 w-5 ${color.iconColor}`} />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">
+              <CardContent className="relative">
+                <div className="text-3xl font-bold tracking-tight">{stat.value}</div>
+                <p className="text-sm text-muted-foreground mt-1">
                   {stat.description}
                 </p>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Atividade Recente</CardTitle>
-              <CardDescription>
-                Últimas interações da plataforma
-              </CardDescription>
-            </CardHeader>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-primary/20 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <MessageSquare className="w-5 h-5 text-primary" />
+              </div>
+              Atividade Recente
+            </CardTitle>
+            <CardDescription>
+              Últimas interações da plataforma
+            </CardDescription>
+          </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {[1, 2, 3, 4].map((i) => (
@@ -86,13 +110,18 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Canais Ativos</CardTitle>
-              <CardDescription>
-                Distribuição de atendimentos por canal
-              </CardDescription>
-            </CardHeader>
+        <Card className="border-primary/20 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <TrendingUp className="w-5 h-5 text-primary" />
+              </div>
+              Canais Ativos
+            </CardTitle>
+            <CardDescription>
+              Distribuição de atendimentos por canal
+            </CardDescription>
+          </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {[
@@ -115,10 +144,10 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+    </div>
   );
 }
