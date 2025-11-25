@@ -4,9 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Save, ArrowLeft } from "lucide-react";
+import { Plus, Save, ArrowLeft, CalendarIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   ReactFlow,
   Background,
@@ -55,6 +59,7 @@ function EditorRegrasContent() {
   const [nomeRegra, setNomeRegra] = useState("Nova Regra");
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(1);
+  const [expiresAt, setExpiresAt] = useState<Date | undefined>();
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
@@ -210,6 +215,9 @@ function EditorRegrasContent() {
         setNomeRegra(data.nome);
         setIsAtiva(data.ativo);
         setPrioridade(data.prioridade || 1);
+        if (data.expires_at) {
+          setExpiresAt(new Date(data.expires_at));
+        }
 
         if (data.flow_data) {
           const flowData = typeof data.flow_data === "string" 
@@ -414,6 +422,7 @@ function EditorRegrasContent() {
         nome: nomeRegra,
         ativo: isAtiva,
         prioridade: prioridade,
+        expires_at: expiresAt ? expiresAt.toISOString() : null,
         flow_data: flowData as any,
       };
 
@@ -513,6 +522,47 @@ function EditorRegrasContent() {
               min="1"
               max="100"
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Vencimento:</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 justify-start text-left font-normal",
+                    !expiresAt && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {expiresAt ? format(expiresAt, "dd/MM/yyyy") : "Indeterminado"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={expiresAt}
+                  onSelect={setExpiresAt}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                  disabled={(date) => date < new Date()}
+                />
+                {expiresAt && (
+                  <div className="p-3 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpiresAt(undefined)}
+                      className="w-full"
+                    >
+                      Remover vencimento
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
