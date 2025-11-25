@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
+import PesquisasSatisfacaoDashboard from "@/components/atendimento/PesquisasSatisfacaoDashboard";
 import { toast } from "@/lib/toast-config";
 
-export default function PesquisasSatisfacaoPage() {
+export default function DashboardPesquisasSatisfacao() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,7 +47,7 @@ export default function PesquisasSatisfacaoPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <PesquisasSatisfacaoCRUD estabelecimentoId={estabelecimentoId} />
+      <PesquisasSatisfacaoDashboard estabelecimentoId={estabelecimentoId} />
     </div>
   );
 }

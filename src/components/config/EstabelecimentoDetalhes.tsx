@@ -27,6 +27,7 @@ import { SkillsManager } from "@/components/atendimento/SkillsManager";
 import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaManager";
 import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
 import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock } from "lucide-react";
+import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -1318,22 +1319,11 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-primary" />
-              <span className="font-medium">Pesquisas de Satisfação</span>
+              <span className="font-medium">Pesquisas de Satisfação (Config)</span>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                Configure e visualize pesquisas de satisfação CSAT/NPS para este estabelecimento.
-              </p>
-              <Button 
-                onClick={() => window.location.href = '/pesquisas-satisfacao'}
-                className="w-full gap-2"
-              >
-                <Star className="w-4 h-4" />
-                Acessar Pesquisas de Satisfação
-              </Button>
-            </div>
+            <PesquisasSatisfacaoCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
