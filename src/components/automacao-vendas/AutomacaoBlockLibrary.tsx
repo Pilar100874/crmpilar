@@ -1,166 +1,151 @@
+import { AUTOMACAO_VENDAS_BLOCKS, AutomacaoVendasBlockType } from "@/types/automacaoVendas";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { AUTOMACAO_VENDAS_BLOCKS, type AutomacaoVendasBlockType } from "@/types/automacaoVendas";
-
-interface BlockData {
-  id: string;
-  type: AutomacaoVendasBlockType;
-  label: string;
-  config: any;
-  note?: string;
-}
 
 interface AutomacaoBlockLibraryProps {
-  onDragStart: (event: React.DragEvent, type: AutomacaoVendasBlockType) => void;
+  onDragStart: (event: React.DragEvent, nodeType: string) => void;
   isExpanded: boolean;
-  onToggleExpand: () => void;
-  blocks: BlockData[];
-  onSelectBlock: (blockId: string) => void;
+  onToggleExpanded: (expanded: boolean) => void;
 }
 
-export const AutomacaoBlockLibrary = ({
-  onDragStart,
-  isExpanded,
-  onToggleExpand,
-  blocks,
-  onSelectBlock,
-}: AutomacaoBlockLibraryProps) => {
+// Organizar blocos por categoria
+const blockCategories = [
+  {
+    name: "Sistema",
+    color: "purple",
+    gradient: "from-purple-500/10 to-violet-500/10",
+    border: "border-purple-500/20",
+    blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "sistema"),
+  },
+  {
+    name: "Condições",
+    color: "blue",
+    gradient: "from-blue-500/10 to-cyan-500/10",
+    border: "border-blue-500/20",
+    blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "condicao"),
+  },
+  {
+    name: "Ações",
+    color: "orange",
+    gradient: "from-orange-500/10 to-amber-500/10",
+    border: "border-orange-500/20",
+    blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "acao"),
+  },
+  {
+    name: "Datas Especiais",
+    color: "rose",
+    gradient: "from-rose-500/10 to-pink-500/10",
+    border: "border-rose-500/20",
+    blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "data"),
+  },
+];
+
+export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: AutomacaoBlockLibraryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [openCategories, setOpenCategories] = useState<string[]>(["Sistema", "Condições"]);
 
-  const filteredBlocks = AUTOMACAO_VENDAS_BLOCKS.filter(
-    (block) =>
-      block.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      block.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredWorkspaceBlocks = blocks.filter((block) =>
-    block.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const blocksByCategory = filteredBlocks.reduce((acc, block) => {
-    if (!acc[block.category]) {
-      acc[block.category] = [];
-    }
-    acc[block.category].push(block);
-    return acc;
-  }, {} as Record<string, typeof AUTOMACAO_VENDAS_BLOCKS>);
-
-  const categoryLabels = {
-    sistema: "Sistema",
-    condicao: "Condições",
-    acao: "Ações",
-    data: "Datas Especiais",
+  const toggleCategory = (categoryName: string) => {
+    setOpenCategories(prev => 
+      prev.includes(categoryName) 
+        ? prev.filter(c => c !== categoryName)
+        : [...prev, categoryName]
+    );
   };
 
+  const filteredCategories = blockCategories.map(category => ({
+    ...category,
+    blocks: category.blocks.filter(block => {
+      const query = searchQuery.toLowerCase();
+      return block.label.toLowerCase().includes(query) ||
+             block.description.toLowerCase().includes(query);
+    })
+  })).filter(category => category.blocks.length > 0);
+
   if (!isExpanded) {
-    return (
-      <div className="w-12 border-r flex flex-col items-center py-2 bg-muted/20">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleExpand}
-          className="mb-2"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="w-80 border-r flex flex-col bg-background">
-      <div className="p-4 border-b space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold">Blocos Disponíveis</h3>
-          <Button variant="ghost" size="icon" onClick={onToggleExpand}>
-            <ChevronLeft className="h-4 w-4" />
+    <div className="w-64 bg-card border-r border-border flex flex-col h-full shadow-lg">
+      {/* Header */}
+      <div className="p-3 border-b border-border bg-gradient-to-r from-primary/20 to-primary/10">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold text-sm text-foreground">Blocos</h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleExpanded(false)}
+            className="h-7 w-7"
+          >
+            <X className="h-4 w-4" />
           </Button>
         </div>
-
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar blocos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
+        
+        {/* Search */}
+        <Input
+          placeholder="Buscar..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-8 text-xs"
+        />
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-6">
-          {/* Blocos no workspace */}
-          {filteredWorkspaceBlocks.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2 text-muted-foreground">
-                Blocos no Workspace
-              </h4>
-              <div className="space-y-2">
-                {filteredWorkspaceBlocks.map((block) => (
-                  <Button
-                    key={block.id}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => onSelectBlock(block.id)}
-                  >
-                    <div>
-                      <div className="font-medium text-sm">{block.label}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {block.type}
-                      </div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="p-2 space-y-1">
+          {filteredCategories.map((category) => {
+            const isOpen = openCategories.includes(category.name);
 
-          {/* Blocos disponíveis por categoria */}
-          {Object.entries(blocksByCategory).map(([category, categoryBlocks]) => (
-            <div key={category}>
-              <h4 className="text-sm font-medium mb-3 text-muted-foreground">
-                {categoryLabels[category as keyof typeof categoryLabels]}
-              </h4>
-              <div className="space-y-2">
-                {categoryBlocks.map((block) => (
-                  <div
-                    key={block.type}
-                    draggable
-                    onDragStart={(e) => onDragStart(e, block.type)}
-                    className="p-3 border rounded-lg cursor-move hover:bg-accent transition-all hover:shadow-md active:scale-95"
-                    style={{ 
-                      borderLeftColor: block.color, 
-                      borderLeftWidth: "4px",
-                      backgroundColor: block.color + "10"
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
-                        style={{ backgroundColor: block.color + "30" }}
-                      >
-                        <span style={{ color: block.color, fontSize: "1.25rem" }}>
-                          {block.icon}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm mb-1">{block.label}</div>
-                        <div className="text-xs text-muted-foreground leading-snug">
-                          {block.description}
-                        </div>
-                      </div>
+            return (
+              <Collapsible
+                key={category.name}
+                open={isOpen}
+                onOpenChange={() => toggleCategory(category.name)}
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1 rounded-md bg-gradient-to-br ${category.gradient} border ${category.border}`}>
+                      <span className="text-xs">{category.blocks[0]?.icon || "📦"}</span>
                     </div>
+                    <span className="font-semibold text-xs text-foreground">{category.name}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
+                  <ChevronDown 
+                    className={`w-3 h-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  />
+                </CollapsibleTrigger>
+
+                <CollapsibleContent className="pt-1 space-y-1">
+                  {category.blocks.map((block) => {
+                    return (
+                      <Card
+                        key={block.type}
+                        draggable
+                        onDragStart={(event) => onDragStart(event, block.type)}
+                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all hover:shadow-md group rounded-lg"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="p-1 rounded-md bg-primary/10 border border-primary/20 group-hover:border-primary/40 transition-all flex-shrink-0">
+                            <span className="text-sm">{block.icon}</span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                              {block.label}
+                            </h4>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
         </div>
       </ScrollArea>
     </div>
   );
-};
+}
