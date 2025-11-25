@@ -142,7 +142,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "iniciar_validacao",
     label: "Iniciar Validação",
     description: "Ponto inicial da validação de automação",
-    icon: "▶️",
+    icon: "Play",
     color: "#10b981",
     category: "sistema",
   },
@@ -150,7 +150,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_valor_compra",
     label: "Desconto por Valor",
     description: "Aplica desconto baseado no valor total da compra",
-    icon: "💰",
+    icon: "CircleDollarSign",
     color: "#3b82f6",
     category: "condicao",
     defaultData: {
@@ -165,7 +165,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_quantidade_compras",
     label: "Desconto por Frequência",
     description: "Desconto para clientes que compraram várias vezes no período",
-    icon: "🔄",
+    icon: "Repeat2",
     color: "#8b5cf6",
     category: "condicao",
     defaultData: {
@@ -178,7 +178,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_produtos_grupo",
     label: "Desconto por Grupo",
     description: "Desconto quando produtos do mesmo grupo atingem valor mínimo",
-    icon: "📦",
+    icon: "Boxes",
     color: "#f59e0b",
     category: "condicao",
     defaultData: {
@@ -191,7 +191,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_pagamento_antecipado",
     label: "Desconto Pagamento Antecipado",
     description: "Desconto especial para pagamento antecipado",
-    icon: "⚡",
+    icon: "Flash",
     color: "#06b6d4",
     category: "condicao",
     defaultData: {
@@ -203,7 +203,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_aniversario_cliente",
     label: "Aniversário do Cliente",
     description: "Desconto no mês/dia de aniversário do cliente",
-    icon: "🎁",
+    icon: "Gift",
     color: "#ec4899",
     category: "data",
     defaultData: {
@@ -215,7 +215,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_aniversario_empresa",
     label: "Aniversário da Empresa",
     description: "Desconto corporativo no mês de aniversário da empresa",
-    icon: "🏢",
+    icon: "Building2",
     color: "#a855f7",
     category: "data",
     defaultData: {
@@ -226,7 +226,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_data_especial",
     label: "Data Especial",
     description: "Desconto em datas específicas (Black Friday, Natal, etc)",
-    icon: "📅",
+    icon: "CalendarDays",
     color: "#ef4444",
     category: "data",
     defaultData: {
@@ -239,7 +239,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_historico_crescimento",
     label: "Bônus por Crescimento",
     description: "Bônus quando compras crescem em relação ao histórico",
-    icon: "📈",
+    icon: "TrendingUp",
     color: "#14b8a6",
     category: "condicao",
     defaultData: {
@@ -251,7 +251,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "desconto_tempo_desde_ultimo",
     label: "Desconto por Retorno Rápido",
     description: "Desconto se cliente comprar dentro de X dias após último orçamento",
-    icon: "⏱️",
+    icon: "Timer",
     color: "#f97316",
     category: "condicao",
     defaultData: {
@@ -263,7 +263,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "aplicar_desconto",
     label: "Aplicar Desconto",
     description: "Bloco que aplica o desconto calculado",
-    icon: "✅",
+    icon: "CheckCircle2",
     color: "#10b981",
     category: "acao",
     defaultData: {
@@ -274,7 +274,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     type: "fim",
     label: "Fim",
     description: "Fim da automação",
-    icon: "⏹️",
+    icon: "Square",
     color: "#6b7280",
     category: "sistema",
   },
