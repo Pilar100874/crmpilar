@@ -327,16 +327,10 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 Gerencie os níveis de serviço (SLA) para suas filas de atendimento
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setHelpDialogOpen(true)}>
-                <HelpCircle className="w-4 h-4 mr-2" />
-                Como usar
-              </Button>
-              <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Configuração
-              </Button>
-            </div>
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Configuração
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -406,9 +400,20 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">
-              {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl">
+                {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
+              </DialogTitle>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setHelpDialogOpen(true)}
+                className="ml-4"
+              >
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Como usar
+              </Button>
+            </div>
           </DialogHeader>
 
           <div className="space-y-4">
