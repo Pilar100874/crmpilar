@@ -1,348 +1,65 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, ArrowLeft, Download, Upload } from "lucide-react";
+import { Save, ArrowLeft, Download, Upload, Play } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import * as Blockly from "blockly";
+import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
+import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
+import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
+
+interface BlockData {
+  id: string;
+  type: AutomacaoVendasBlockType;
+  label: string;
+  config: any;
+  note?: string;
+  nextBlockId?: string;
+}
+
+const BLOCK_COLORS: Record<string, { primary: string; dark: string; darker: string }> = {
+  inicio: { primary: "#5CB85C", dark: "#4CAE4C", darker: "#449D44" },
+  desconto_valor_compra: { primary: "#5C6BC0", dark: "#3F51B5", darker: "#303F9F" },
+  desconto_quantidade_compras: { primary: "#9575CD", dark: "#673AB7", darker: "#512DA8" },
+  desconto_produtos_grupo: { primary: "#FF8A65", dark: "#FF7043", darker: "#F4511E" },
+  desconto_pagamento_antecipado: { primary: "#FFD54F", dark: "#FFCA28", darker: "#FFC107" },
+  desconto_aniversario_cliente: { primary: "#F06292", dark: "#EC407A", darker: "#E91E63" },
+  desconto_aniversario_empresa: { primary: "#BA68C8", dark: "#AB47BC", darker: "#9C27B0" },
+  desconto_data_especial: { primary: "#EF5350", dark: "#F44336", darker: "#E53935" },
+  desconto_historico_crescimento: { primary: "#4DB6AC", dark: "#26A69A", darker: "#009688" },
+  desconto_tempo_desde_ultimo: { primary: "#4FC3F7", dark: "#29B6F6", darker: "#03A9F4" },
+  aplicar_desconto: { primary: "#81C784", dark: "#66BB6A", darker: "#4CAF50" },
+  fim: { primary: "#90A4AE", dark: "#78909C", darker: "#607D8B" },
+};
 
 export default function AutomacaoVendas() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const blocklyDiv = useRef<HTMLDivElement>(null);
-  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
-  
+  const [blocks, setBlocks] = useState<BlockData[]>([
+    {
+      id: "start_block",
+      type: "inicio",
+      label: "Início da Automação",
+      config: {},
+    },
+  ]);
+  const [selectedBlock, setSelectedBlock] = useState<BlockData | null>(null);
   const [automacaoNome, setAutomacaoNome] = useState("Nova Automação de Vendas");
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [draggedType, setDraggedType] = useState<AutomacaoVendasBlockType | null>(null);
+  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
 
   useEffect(() => {
-    if (!blocklyDiv.current || workspaceRef.current) return;
-
-    // Definir blocos customizados
-    Blockly.Blocks['inicio'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("🚀 Início da Automação");
-        this.setNextStatement(true, null);
-        this.setColour(160);
-        this.setTooltip("Ponto inicial da automação");
-      }
-    };
-
-    Blockly.Blocks['desconto_valor_compra'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("💰 Desconto por Valor de Compra");
-        this.appendValueInput("VALOR_MIN")
-          .setCheck("Number")
-          .appendField("Valor mínimo R$:");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(230);
-        this.setTooltip("Aplica desconto baseado no valor da compra");
-      }
-    };
-
-    Blockly.Blocks['desconto_quantidade_compras'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("🛒 Desconto por Quantidade de Compras");
-        this.appendValueInput("QTD_MIN")
-          .setCheck("Number")
-          .appendField("Compras mínimas:");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(270);
-        this.setTooltip("Desconto baseado no histórico de compras");
-      }
-    };
-
-    Blockly.Blocks['desconto_produtos_grupo'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("📦 Desconto por Grupo de Produtos");
-        this.appendDummyInput()
-          .appendField("Grupo:")
-          .appendField(new Blockly.FieldTextInput(""), "GRUPO");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(20);
-        this.setTooltip("Desconto para produtos de grupo específico");
-      }
-    };
-
-    Blockly.Blocks['desconto_pagamento_antecipado'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("💳 Desconto por Pagamento Antecipado");
-        this.appendValueInput("DIAS")
-          .setCheck("Number")
-          .appendField("Dias de antecipação:");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(60);
-        this.setTooltip("Desconto para pagamento antecipado");
-      }
-    };
-
-    Blockly.Blocks['desconto_aniversario_cliente'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("🎂 Desconto Aniversário do Cliente");
-        this.appendValueInput("DIAS_ANTES")
-          .setCheck("Number")
-          .appendField("Dias antes:");
-        this.appendValueInput("DIAS_DEPOIS")
-          .setCheck("Number")
-          .appendField("Dias depois:");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(330);
-        this.setTooltip("Desconto no aniversário do cliente");
-      }
-    };
-
-    Blockly.Blocks['desconto_aniversario_empresa'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("🏢 Desconto Aniversário da Empresa");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(290);
-        this.setTooltip("Desconto no aniversário da empresa");
-      }
-    };
-
-    Blockly.Blocks['desconto_data_especial'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("📅 Desconto em Data Especial");
-        this.appendDummyInput()
-          .appendField("Data:")
-          .appendField(new Blockly.FieldTextInput("2024-01-01"), "DATA");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(0);
-        this.setTooltip("Desconto em datas especiais");
-      }
-    };
-
-    Blockly.Blocks['desconto_historico_crescimento'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("📈 Desconto por Crescimento de Compras");
-        this.appendValueInput("PERCENTUAL_CRESCIMENTO")
-          .setCheck("Number")
-          .appendField("Crescimento %:");
-        this.appendValueInput("DESCONTO")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(180);
-        this.setTooltip("Desconto baseado no crescimento");
-      }
-    };
-
-    Blockly.Blocks['desconto_tempo_desde_ultimo'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("⏰ Desconto por Tempo Sem Comprar");
-        this.appendValueInput("DIAS")
-          .setCheck("Number")
-          .appendField("Dias sem compra:");
-        this.appendValueInput("PERCENTUAL")
-          .setCheck("Number")
-          .appendField("Desconto %:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(200);
-        this.setTooltip("Desconto para reativar clientes");
-      }
-    };
-
-    Blockly.Blocks['aplicar_desconto'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("✅ Aplicar Desconto");
-        this.appendValueInput("VALOR")
-          .setCheck("Number")
-          .appendField("Valor/Percentual:");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(120);
-        this.setTooltip("Aplica o desconto calculado");
-      }
-    };
-
-    Blockly.Blocks['fim'] = {
-      init: function() {
-        this.appendDummyInput()
-          .appendField("🏁 Fim da Automação");
-        this.setPreviousStatement(true, null);
-        this.setColour(210);
-        this.setTooltip("Fim do fluxo");
-      }
-    };
-
-    // Criar workspace
-    workspaceRef.current = Blockly.inject(blocklyDiv.current, {
-      toolbox: {
-        kind: 'categoryToolbox',
-        contents: [
-          {
-            kind: 'category',
-            name: 'Início',
-            colour: 160,
-            contents: [
-              { kind: 'block', type: 'inicio' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Descontos por Valor',
-            colour: 230,
-            contents: [
-              { kind: 'block', type: 'desconto_valor_compra' },
-              { kind: 'block', type: 'desconto_quantidade_compras' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Descontos por Produto',
-            colour: 20,
-            contents: [
-              { kind: 'block', type: 'desconto_produtos_grupo' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Descontos Especiais',
-            colour: 60,
-            contents: [
-              { kind: 'block', type: 'desconto_pagamento_antecipado' },
-              { kind: 'block', type: 'desconto_aniversario_cliente' },
-              { kind: 'block', type: 'desconto_aniversario_empresa' },
-              { kind: 'block', type: 'desconto_data_especial' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Descontos por Histórico',
-            colour: 180,
-            contents: [
-              { kind: 'block', type: 'desconto_historico_crescimento' },
-              { kind: 'block', type: 'desconto_tempo_desde_ultimo' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Ações',
-            colour: 120,
-            contents: [
-              { kind: 'block', type: 'aplicar_desconto' },
-              { kind: 'block', type: 'fim' }
-            ]
-          },
-          {
-            kind: 'sep'
-          },
-          {
-            kind: 'category',
-            name: 'Lógica',
-            colour: 210,
-            contents: [
-              { kind: 'block', type: 'controls_if' },
-              { kind: 'block', type: 'logic_compare' },
-              { kind: 'block', type: 'logic_operation' },
-              { kind: 'block', type: 'logic_negate' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Matemática',
-            colour: 230,
-            contents: [
-              { kind: 'block', type: 'math_number' },
-              { kind: 'block', type: 'math_arithmetic' },
-              { kind: 'block', type: 'math_single' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Texto',
-            colour: 160,
-            contents: [
-              { kind: 'block', type: 'text' },
-              { kind: 'block', type: 'text_join' }
-            ]
-          },
-          {
-            kind: 'category',
-            name: 'Variáveis',
-            colour: 330,
-            custom: 'VARIABLE'
-          }
-        ]
-      },
-      grid: {
-        spacing: 20,
-        length: 3,
-        colour: '#ccc',
-        snap: true
-      },
-      zoom: {
-        controls: true,
-        wheel: true,
-        startScale: 1.0,
-        maxScale: 3,
-        minScale: 0.3,
-        scaleSpeed: 1.2
-      },
-      trashcan: true,
-      scrollbars: true,
-      sounds: true,
-      oneBasedIndex: false
-    });
-
     if (id) {
       loadAutomacao(id);
     }
-
-    return () => {
-      if (workspaceRef.current) {
-        workspaceRef.current.dispose();
-        workspaceRef.current = null;
-      }
-    };
   }, [id]);
 
   const loadAutomacao = async (automacaoId: string) => {
@@ -359,24 +76,114 @@ export default function AutomacaoVendas() {
         setAutomacaoNome(data.nome);
         setIsAtiva(data.ativo);
         setPrioridade(data.prioridade || 0);
-
+        
         const flowData = data.flow_data as any;
-        if (flowData?.xml && workspaceRef.current) {
-          const xml = Blockly.utils.xml.textToDom(flowData.xml);
-          Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
+        if (flowData && flowData.blocks) {
+          setBlocks(flowData.blocks);
         }
-
-        toast.success("Automação carregada!");
+        
+        toast.success("Automação carregada com sucesso!");
       }
     } catch (error: any) {
-      console.error("Erro ao carregar:", error);
-      toast.error("Erro ao carregar automação");
+      console.error("Erro ao carregar automação:", error);
+      toast.error("Erro ao carregar automação: " + error.message);
+    }
+  };
+
+  const onDragStart = (event: React.DragEvent, nodeType: AutomacaoVendasBlockType) => {
+    setDraggedType(nodeType);
+    event.dataTransfer.effectAllowed = "move";
+  };
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent, targetBlockId?: string) => {
+      event.preventDefault();
+
+      if (!draggedType) return;
+
+      const blockInfo = BLOCK_CATEGORIES.flatMap((cat) => cat.blocks).find(
+        (b) => b.type === draggedType
+      );
+
+      const newBlock: BlockData = {
+        id: `${draggedType}_${Date.now()}`,
+        type: draggedType,
+        label: blockInfo?.label || draggedType.replace(/_/g, " "),
+        config: {},
+      };
+
+      setBlocks((prevBlocks) => {
+        if (targetBlockId) {
+          const targetIndex = prevBlocks.findIndex((b) => b.id === targetBlockId);
+          if (targetIndex !== -1) {
+            const newBlocks = [...prevBlocks];
+            newBlock.nextBlockId = prevBlocks[targetIndex].nextBlockId;
+            newBlocks[targetIndex].nextBlockId = newBlock.id;
+            newBlocks.splice(targetIndex + 1, 0, newBlock);
+            return newBlocks;
+          }
+        }
+        return [...prevBlocks, newBlock];
+      });
+
+      setDraggedType(null);
+    },
+    [draggedType]
+  );
+
+  const handleDeleteBlock = (blockId: string) => {
+    setBlocks((prevBlocks) => {
+      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
+      if (blockIndex === -1 || blockId === "start_block") return prevBlocks;
+
+      const newBlocks = [...prevBlocks];
+      const deletedBlock = newBlocks[blockIndex];
+
+      if (blockIndex > 0) {
+        newBlocks[blockIndex - 1].nextBlockId = deletedBlock.nextBlockId;
+      }
+
+      newBlocks.splice(blockIndex, 1);
+      return newBlocks;
+    });
+
+    if (selectedBlock?.id === blockId) {
+      setSelectedBlock(null);
+    }
+  };
+
+  const handleDuplicateBlock = (blockId: string) => {
+    const block = blocks.find((b) => b.id === blockId);
+    if (!block) return;
+
+    const newBlock: BlockData = {
+      ...block,
+      id: `${block.type}_${Date.now()}`,
+    };
+
+    setBlocks((prevBlocks) => {
+      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
+      const newBlocks = [...prevBlocks];
+      newBlocks.splice(blockIndex + 1, 0, newBlock);
+      return newBlocks;
+    });
+  };
+
+  const handleAddNote = (blockId: string) => {
+    const note = prompt("Digite a nota para este bloco:");
+    if (note !== null) {
+      setBlocks((prevBlocks) =>
+        prevBlocks.map((b) => (b.id === blockId ? { ...b, note } : b))
+      );
     }
   };
 
   const handleSave = async () => {
-    if (!workspaceRef.current) return;
-
     setIsSaving(true);
     try {
       const estabelecimentoId = await getEstabelecimentoId();
@@ -385,15 +192,14 @@ export default function AutomacaoVendas() {
         return;
       }
 
-      const xml = Blockly.Xml.workspaceToDom(workspaceRef.current);
-      const xmlText = Blockly.Xml.domToText(xml);
+      const flowData = { blocks };
 
       const automacaoData = {
         estabelecimento_id: estabelecimentoId,
         nome: automacaoNome,
         ativo: isAtiva,
         prioridade,
-        flow_data: { xml: xmlText } as any,
+        flow_data: flowData as any,
       };
 
       if (id) {
@@ -403,7 +209,7 @@ export default function AutomacaoVendas() {
           .eq("id", id);
 
         if (error) throw error;
-        toast.success("Automação atualizada!");
+        toast.success("Automação atualizada com sucesso!");
       } else {
         const { data, error } = await supabase
           .from("automacoes_vendas")
@@ -412,54 +218,21 @@ export default function AutomacaoVendas() {
           .single();
 
         if (error) throw error;
-        toast.success("Automação criada!");
+        toast.success("Automação criada com sucesso!");
         navigate(`/automacao-vendas/${data.id}`);
       }
     } catch (error: any) {
-      console.error("Erro ao salvar:", error);
-      toast.error("Erro ao salvar automação");
+      console.error("Erro ao salvar automação:", error);
+      toast.error("Erro ao salvar automação: " + error.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleExport = () => {
-    if (!workspaceRef.current) return;
-
-    const xml = Blockly.Xml.workspaceToDom(workspaceRef.current);
-    const xmlText = Blockly.Xml.domToText(xml);
-    const blob = new Blob([xmlText], { type: "text/xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${automacaoNome}.xml`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Exportado!");
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !workspaceRef.current) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const xmlText = event.target?.result as string;
-        const xml = Blockly.utils.xml.textToDom(xmlText);
-        workspaceRef.current?.clear();
-        Blockly.Xml.domToWorkspace(xml, workspaceRef.current!);
-        toast.success("Importado!");
-      } catch (error) {
-        toast.error("Erro ao importar");
-      }
-    };
-    reader.readAsText(file);
-  };
-
   return (
     <Layout>
       <div className="h-[calc(100vh-4rem)] flex flex-col">
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-background">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -489,16 +262,17 @@ export default function AutomacaoVendas() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <label>
-                <Upload className="h-4 w-4 mr-2" />
-                Importar
-                <input type="file" accept=".xml" onChange={handleImport} className="hidden" />
-              </label>
+            <Button variant="outline" size="sm">
+              <Upload className="h-4 w-4 mr-2" />
+              Importar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
+            <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Exportar
+            </Button>
+            <Button variant="outline" size="sm">
+              <Play className="h-4 w-4 mr-2" />
+              Testar
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
@@ -507,8 +281,280 @@ export default function AutomacaoVendas() {
           </div>
         </div>
 
-        <div ref={blocklyDiv} className="flex-1" />
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Block Library */}
+          <AutomacaoBlockLibrary
+            onDragStart={onDragStart}
+            isExpanded={isBlockLibraryExpanded}
+            onToggleExpand={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
+            blocks={blocks}
+            onSelectBlock={(blockId) => {
+              const block = blocks.find((b) => b.id === blockId);
+              if (block) setSelectedBlock(block);
+            }}
+          />
+
+          {/* Workspace Canvas */}
+          <div
+            className="flex-1 overflow-auto p-8"
+            onDragOver={onDragOver}
+            onDrop={(e) => onDrop(e)}
+            style={{
+              backgroundColor: "#ffffff",
+              backgroundImage: `
+                radial-gradient(circle at 1px 1px, #d0d0d0 1px, transparent 1px)
+              `,
+              backgroundSize: "20px 20px",
+            }}
+          >
+            <div className="max-w-4xl mx-auto py-8">
+              {blocks.map((block) => (
+                <BlocklyStyleBlock
+                  key={block.id}
+                  block={block}
+                  onSelect={() => setSelectedBlock(block)}
+                  onDelete={() => handleDeleteBlock(block.id)}
+                  onDuplicate={() => handleDuplicateBlock(block.id)}
+                  onAddNote={() => handleAddNote(block.id)}
+                  onDrop={(e) => onDrop(e, block.id)}
+                  onDragOver={onDragOver}
+                  isSelected={selectedBlock?.id === block.id}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Properties Panel */}
+          {selectedBlock && (
+            <AutomacaoPropertiesPanel
+              block={selectedBlock}
+              onClose={() => setSelectedBlock(null)}
+              onUpdate={(updatedBlock) => {
+                setBlocks((prevBlocks) =>
+                  prevBlocks.map((b) => (b.id === updatedBlock.id ? updatedBlock : b))
+                );
+                setSelectedBlock(updatedBlock);
+              }}
+            />
+          )}
+        </div>
       </div>
     </Layout>
+  );
+}
+
+const BLOCK_CATEGORIES = [
+  {
+    name: "Início",
+    color: "#5CB85C",
+    blocks: [
+      { type: "inicio" as AutomacaoVendasBlockType, label: "🚀 Início da Automação" },
+    ],
+  },
+  {
+    name: "Descontos por Valor",
+    color: "#5C6BC0",
+    blocks: [
+      { type: "desconto_valor_compra" as AutomacaoVendasBlockType, label: "💰 Desconto por Valor" },
+      { type: "desconto_quantidade_compras" as AutomacaoVendasBlockType, label: "🛒 Desconto Quantidade" },
+    ],
+  },
+  {
+    name: "Descontos por Produto",
+    color: "#FF8A65",
+    blocks: [
+      { type: "desconto_produtos_grupo" as AutomacaoVendasBlockType, label: "📦 Desconto por Grupo" },
+    ],
+  },
+  {
+    name: "Descontos Especiais",
+    color: "#FFD54F",
+    blocks: [
+      { type: "desconto_pagamento_antecipado" as AutomacaoVendasBlockType, label: "💳 Pagamento Antecipado" },
+      { type: "desconto_aniversario_cliente" as AutomacaoVendasBlockType, label: "🎂 Aniversário Cliente" },
+      { type: "desconto_aniversario_empresa" as AutomacaoVendasBlockType, label: "🏢 Aniversário Empresa" },
+      { type: "desconto_data_especial" as AutomacaoVendasBlockType, label: "📅 Data Especial" },
+    ],
+  },
+  {
+    name: "Descontos por Histórico",
+    color: "#4DB6AC",
+    blocks: [
+      { type: "desconto_historico_crescimento" as AutomacaoVendasBlockType, label: "📈 Crescimento" },
+      { type: "desconto_tempo_desde_ultimo" as AutomacaoVendasBlockType, label: "⏰ Tempo Sem Comprar" },
+    ],
+  },
+  {
+    name: "Ações",
+    color: "#81C784",
+    blocks: [
+      { type: "aplicar_desconto" as AutomacaoVendasBlockType, label: "✅ Aplicar Desconto" },
+      { type: "fim" as AutomacaoVendasBlockType, label: "🏁 Fim" },
+    ],
+  },
+];
+
+interface BlocklyStyleBlockProps {
+  block: BlockData;
+  onSelect: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onAddNote: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  isSelected: boolean;
+}
+
+function BlocklyStyleBlock({
+  block,
+  onSelect,
+  onDelete,
+  onDuplicate,
+  onAddNote,
+  onDrop,
+  onDragOver,
+  isSelected,
+}: BlocklyStyleBlockProps) {
+  const colors = BLOCK_COLORS[block.type] || BLOCK_COLORS.fim;
+  const isStart = block.type === "inicio";
+  const isEnd = block.type === "fim";
+
+  return (
+    <div
+      onClick={onSelect}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className={`relative cursor-pointer transition-all mb-1 ${
+        isSelected ? "scale-105" : ""
+      }`}
+      style={{
+        filter: isSelected
+          ? `drop-shadow(0 0 10px ${colors.primary})`
+          : "drop-shadow(0 3px 5px rgba(0,0,0,0.2))",
+      }}
+    >
+      {/* Notch de Entrada */}
+      {!isStart && (
+        <svg
+          width="240"
+          height="15"
+          viewBox="0 0 240 15"
+          style={{ display: "block" }}
+        >
+          <path
+            d="M 0,15 L 0,0 L 60,0 L 70,7 L 80,0 L 240,0 L 240,15 Z"
+            fill={colors.primary}
+            stroke={colors.darker}
+            strokeWidth="1.5"
+          />
+        </svg>
+      )}
+
+      {/* Corpo do Bloco */}
+      <div
+        style={{
+          backgroundColor: colors.primary,
+          position: "relative",
+          minWidth: "240px",
+          border: `2px solid ${colors.darker}`,
+          borderTop: isStart ? `2px solid ${colors.darker}` : "none",
+          borderBottom: isEnd ? `2px solid ${colors.darker}` : "none",
+        }}
+      >
+        <div style={{ padding: "12px 16px" }}>
+          <div className="flex items-center justify-between gap-4">
+            <div
+              style={{
+                color: "white",
+                fontWeight: "600",
+                fontSize: "15px",
+                textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                fontFamily: "Helvetica, Arial, sans-serif",
+              }}
+            >
+              {block.label}
+            </div>
+
+            <div className="flex gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate();
+                }}
+                className="px-2 py-1 rounded text-xs font-semibold"
+                style={{
+                  backgroundColor: colors.darker,
+                  color: "white",
+                }}
+                title="Duplicar"
+              >
+                📋
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddNote();
+                }}
+                className="px-2 py-1 rounded text-xs font-semibold"
+                style={{
+                  backgroundColor: colors.darker,
+                  color: "white",
+                }}
+                title="Nota"
+              >
+                📝
+              </button>
+              {!isStart && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  className="px-2 py-1 rounded text-xs font-semibold"
+                  style={{
+                    backgroundColor: colors.darker,
+                    color: "white",
+                  }}
+                  title="Deletar"
+                >
+                  🗑️
+                </button>
+              )}
+            </div>
+          </div>
+
+          {block.note && (
+            <div
+              className="mt-3 p-2 rounded text-sm"
+              style={{
+                backgroundColor: colors.darker,
+                color: "white",
+                textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+              }}
+            >
+              📝 {block.note}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Notch de Saída */}
+      {!isEnd && (
+        <svg
+          width="240"
+          height="10"
+          viewBox="0 0 240 10"
+          style={{ display: "block" }}
+        >
+          <path
+            d="M 0,0 L 0,10 L 80,10 L 70,3 L 60,10 L 240,10 L 240,0 Z"
+            fill={colors.primary}
+            stroke={colors.darker}
+            strokeWidth="1.5"
+          />
+        </svg>
+      )}
+    </div>
   );
 }
