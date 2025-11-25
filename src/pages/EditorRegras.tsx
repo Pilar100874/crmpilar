@@ -46,20 +46,7 @@ function EditorRegrasContent() {
   const regraIdFromUrl = searchParams.get("id");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
-  const initialNodes: Node[] = [
-    {
-      id: "start_node",
-      type: "custom",
-      position: { x: 250, y: 100 },
-      data: {
-        label: "Iniciar Validação",
-        type: "iniciar_validacao",
-        config: {},
-      },
-    },
-  ];
-
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -68,6 +55,111 @@ function EditorRegrasContent() {
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(1);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
+
+  const handleDuplicateNode = useCallback(
+    (nodeId: string) => {
+      const nodeToDuplicate = nodes.find((n) => n.id === nodeId);
+      if (!nodeToDuplicate) return;
+
+      const newNode: Node = {
+        id: getId(),
+        type: "custom",
+        position: {
+          x: nodeToDuplicate.position.x + 50,
+          y: nodeToDuplicate.position.y + 50,
+        },
+        data: {
+          ...JSON.parse(JSON.stringify(nodeToDuplicate.data)),
+          onDuplicate: handleDuplicateNode,
+          onDelete: handleDeleteNode,
+          onAddNote: handleAddNote,
+        },
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      toast({
+        title: "Bloco duplicado",
+        description: "Bloco duplicado com sucesso!",
+      });
+    },
+    [nodes, setNodes]
+  );
+
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      const nodeToDelete = nodes.find(n => n.id === nodeId);
+      if (nodeToDelete && (nodeToDelete.data as any).type === "iniciar_validacao") {
+        toast({
+          title: "Ação não permitida",
+          description: "O bloco inicial não pode ser excluído!",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+      setSelectedNode(null);
+      toast({
+        title: "Bloco excluído",
+        description: "Bloco removido com sucesso!",
+      });
+    },
+    [setNodes, setEdges, nodes]
+  );
+
+  const handleAddNote = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+
+      const currentNote = (node.data as any).note || "";
+      const newNote = window.prompt("Digite a nota para este bloco:", currentNote);
+
+      if (newNote !== null) {
+        setNodes((nds) =>
+          nds.map((n) => {
+            if (n.id === nodeId) {
+              return {
+                ...n,
+                data: {
+                  ...n.data,
+                  note: newNote,
+                },
+              };
+            }
+            return n;
+          })
+        );
+        toast({
+          title: newNote ? "Nota adicionada" : "Nota removida",
+          description: newNote ? "Nota adicionada com sucesso!" : "Nota removida com sucesso!",
+        });
+      }
+    },
+    [nodes, setNodes]
+  );
+
+  // Initialize with start node
+  useEffect(() => {
+    if (nodes.length === 0 && !regraIdFromUrl) {
+      setNodes([
+        {
+          id: "start_node",
+          type: "custom",
+          position: { x: 250, y: 100 },
+          data: {
+            label: "Iniciar Validação",
+            type: "iniciar_validacao",
+            config: {},
+            onDuplicate: handleDuplicateNode,
+            onDelete: handleDeleteNode,
+            onAddNote: handleAddNote,
+          },
+        },
+      ]);
+    }
+  }, []);
 
   useEffect(() => {
     if (regraIdFromUrl) {
@@ -85,7 +177,7 @@ function EditorRegrasContent() {
 
       if (error) throw error;
 
-      if (data) {
+        if (data) {
         setCurrentRegraId(data.id);
         setNomeRegra(data.nome);
         setIsAtiva(data.ativo);
@@ -96,7 +188,18 @@ function EditorRegrasContent() {
             ? JSON.parse(data.flow_data) 
             : data.flow_data;
           
-          if (flowData.nodes) setNodes(flowData.nodes);
+          if (flowData.nodes) {
+            const nodesWithCallbacks = flowData.nodes.map((node: Node) => ({
+              ...node,
+              data: {
+                ...node.data,
+                onDuplicate: handleDuplicateNode,
+                onDelete: handleDeleteNode,
+                onAddNote: handleAddNote,
+              },
+            }));
+            setNodes(nodesWithCallbacks);
+          }
           if (flowData.edges) setEdges(flowData.edges);
         }
       }
@@ -147,6 +250,9 @@ function EditorRegrasContent() {
           label: blockDef.label,
           type: blockDef.type,
           config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+          onDuplicate: handleDuplicateNode,
+          onDelete: handleDeleteNode,
+          onAddNote: handleAddNote,
         },
       };
 
@@ -188,6 +294,9 @@ function EditorRegrasContent() {
                   ...(node.data as any).config,
                   ...data.config,
                 },
+                onDuplicate: handleDuplicateNode,
+                onDelete: handleDeleteNode,
+                onAddNote: handleAddNote,
               },
             };
           }
@@ -195,30 +304,7 @@ function EditorRegrasContent() {
         })
       );
     },
-    [setNodes]
-  );
-
-  const handleDeleteNode = useCallback(
-    (nodeId: string) => {
-      const nodeToDelete = nodes.find(n => n.id === nodeId);
-      if (nodeToDelete && (nodeToDelete.data as any).type === "iniciar_validacao") {
-        toast({
-          title: "Ação não permitida",
-          description: "O bloco inicial não pode ser excluído!",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-      setSelectedNode(null);
-      toast({
-        title: "Bloco excluído",
-        description: "Bloco removido com sucesso!",
-      });
-    },
-    [setNodes, setEdges, nodes]
+    [setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
   );
 
   const handleSave = async () => {
