@@ -37,6 +37,7 @@ export const FlowNode = memo((props: any) => {
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const isStartBlock = data.type === 'inicio';
   
   if (!blockDef) return null;
 
@@ -266,16 +267,18 @@ export const FlowNode = memo((props: any) => {
               
               <DropdownMenuSeparator className="bg-slate-200" />
               
-              <DropdownMenuItem
-                onClick={() => {
-                  setDeleteDialogOpen(true);
-                  setDropdownOpen(false);
-                }}
-                className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Excluir Bloco
-              </DropdownMenuItem>
+              {!isStartBlock && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setDeleteDialogOpen(true);
+                    setDropdownOpen(false);
+                  }}
+                  className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Excluir Bloco
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -494,13 +497,15 @@ export const FlowNode = memo((props: any) => {
         
         <ContextMenuSeparator className="bg-slate-200" />
         
-        <ContextMenuItem
-          onClick={() => setDeleteDialogOpen(true)}
-          className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Excluir Bloco
-        </ContextMenuItem>
+        {!isStartBlock && (
+          <ContextMenuItem
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Excluir Bloco
+          </ContextMenuItem>
+        )}
       </ContextMenuContent>
     </ContextMenu>
     
