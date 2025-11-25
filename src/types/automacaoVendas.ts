@@ -1,6 +1,12 @@
 export type AutomacaoVendasBlockType =
-  // Blocos de condição
+  // Blocos de sistema
   | "inicio"
+  | "fim"
+  // Blocos de condição
+  | "condicao_valor"
+  | "condicao_mes"
+  | "condicao_quantidade"
+  | "condicao_cliente_acumulado"
   | "desconto_valor_compra"
   | "desconto_quantidade_compras"
   | "desconto_produtos_grupo"
@@ -10,8 +16,73 @@ export type AutomacaoVendasBlockType =
   | "desconto_data_especial"
   | "desconto_historico_crescimento"
   | "desconto_tempo_desde_ultimo"
-  | "aplicar_desconto"
-  | "fim";
+  // Blocos de lógica
+  | "logica_e"
+  | "logica_ou"
+  // Blocos de ação
+  | "acao_desconto_percentual"
+  | "acao_desconto_fixo"
+  | "acao_adicionar_frete"
+  | "acao_enviar_alerta"
+  | "aplicar_desconto";
+
+// Operadores de comparação
+export type OperadorComparacao = ">" | ">=" | "=" | "<" | "<=" | "!=";
+
+// Estrutura de uma condição
+export interface Condicao {
+  type: "comparison";
+  field: string;
+  operator: OperadorComparacao;
+  value?: number | string;
+  valueSource?: string;
+}
+
+// Estrutura de uma ação
+export interface Acao {
+  type: "applyPercentageDiscount" | "applyFixedDiscount" | "addShipping" | "sendAlert";
+  value?: number;
+  message?: string;
+}
+
+// Estrutura completa de uma regra de automação
+export interface RegraAutomacao {
+  id: string;
+  name: string;
+  trigger: "onBudgetCalculate";
+  conditions: Condicao[];
+  logic: "AND" | "OR";
+  actions: Acao[];
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Dados do orçamento para aplicar regras
+export interface DadosOrcamento {
+  id: string;
+  valor_total: number;
+  quantidade_produtos: number;
+  data_compra: Date;
+  cliente: {
+    id: string;
+    nome: string;
+    mes_aniversario: number;
+    valor_acumulado_mes: number;
+  };
+  desconto_aplicado?: number;
+  frete?: number;
+  observacoes?: string;
+}
+
+// Resultado da aplicação de regras
+export interface ResultadoAutomacao {
+  regras_aplicadas: string[];
+  desconto_total: number;
+  frete_adicional: number;
+  alertas: string[];
+  valor_final: number;
+}
 
 export interface AutomacaoVendasNode {
   id: string;

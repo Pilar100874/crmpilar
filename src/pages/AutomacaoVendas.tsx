@@ -1,60 +1,67 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+/**
+ * Tela de Automação de Vendas
+ * 
+ * Editor visual tipo Google Blockly para criar regras de automação
+ * que são aplicadas automaticamente aos orçamentos
+ */
+
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  type Node,
+  type Edge,
+  type Connection,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, ArrowLeft, Download, Upload, Play } from "lucide-react";
+import { Save, ArrowLeft, Download, Upload, Eye } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { BlockNode } from "@/components/automacao-vendas/BlockNode";
+import { BlockPalette } from "@/components/automacao-vendas/BlockPalette";
+import { BlockConfigPanel } from "@/components/automacao-vendas/BlockConfigPanel";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
-import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
-import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
+import { gerarDescricaoRegra } from "@/services/automacaoEngine";
 
-interface BlockData {
-  id: string;
-  type: AutomacaoVendasBlockType;
-  label: string;
-  config: any;
-  note?: string;
-  nextBlockId?: string;
-}
-
-const BLOCK_COLORS: Record<string, { primary: string; dark: string; darker: string }> = {
-  inicio: { primary: "#5CB85C", dark: "#4CAE4C", darker: "#449D44" },
-  desconto_valor_compra: { primary: "#5C6BC0", dark: "#3F51B5", darker: "#303F9F" },
-  desconto_quantidade_compras: { primary: "#9575CD", dark: "#673AB7", darker: "#512DA8" },
-  desconto_produtos_grupo: { primary: "#FF8A65", dark: "#FF7043", darker: "#F4511E" },
-  desconto_pagamento_antecipado: { primary: "#FFD54F", dark: "#FFCA28", darker: "#FFC107" },
-  desconto_aniversario_cliente: { primary: "#F06292", dark: "#EC407A", darker: "#E91E63" },
-  desconto_aniversario_empresa: { primary: "#BA68C8", dark: "#AB47BC", darker: "#9C27B0" },
-  desconto_data_especial: { primary: "#EF5350", dark: "#F44336", darker: "#E53935" },
-  desconto_historico_crescimento: { primary: "#4DB6AC", dark: "#26A69A", darker: "#009688" },
-  desconto_tempo_desde_ultimo: { primary: "#4FC3F7", dark: "#29B6F6", darker: "#03A9F4" },
-  aplicar_desconto: { primary: "#81C784", dark: "#66BB6A", darker: "#4CAF50" },
-  fim: { primary: "#90A4AE", dark: "#78909C", darker: "#607D8B" },
+const nodeTypes = {
+  blockNode: BlockNode,
 };
 
 export default function AutomacaoVendas() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [blocks, setBlocks] = useState<BlockData[]>([
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([
     {
-      id: "start_block",
-      type: "inicio",
-      label: "Início da Automação",
-      config: {},
+      id: "start",
+      type: "blockNode",
+      position: { x: 250, y: 50 },
+      data: {
+        label: "🚀 Quando calcular orçamento",
+        type: "inicio" as AutomacaoVendasBlockType,
+      },
     },
   ]);
-  const [selectedBlock, setSelectedBlock] = useState<BlockData | null>(null);
-  const [automacaoNome, setAutomacaoNome] = useState("Nova Automação de Vendas");
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const [automacaoNome, setAutomacaoNome] = useState("Nova Regra de Automação");
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  const [draggedType, setDraggedType] = useState<AutomacaoVendasBlockType | null>(null);
-  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -76,112 +83,78 @@ export default function AutomacaoVendas() {
         setAutomacaoNome(data.nome);
         setIsAtiva(data.ativo);
         setPrioridade(data.prioridade || 0);
-        
+
         const flowData = data.flow_data as any;
-        if (flowData && flowData.blocks) {
-          setBlocks(flowData.blocks);
+        if (flowData?.nodes && flowData?.edges) {
+          setNodes(flowData.nodes);
+          setEdges(flowData.edges);
         }
-        
-        toast.success("Automação carregada com sucesso!");
+
+        toast.success("Automação carregada!");
       }
     } catch (error: any) {
-      console.error("Erro ao carregar automação:", error);
-      toast.error("Erro ao carregar automação: " + error.message);
+      console.error("Erro ao carregar:", error);
+      toast.error("Erro ao carregar automação");
     }
   };
 
-  const onDragStart = (event: React.DragEvent, nodeType: AutomacaoVendasBlockType) => {
-    setDraggedType(nodeType);
-    event.dataTransfer.effectAllowed = "move";
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  );
+
+  const handleDragStart = (type: AutomacaoVendasBlockType, label: string) => {
+    const dragData = { type, label };
+    window.draggedBlockData = dragData;
   };
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+
+      const dragData = window.draggedBlockData;
+      if (!dragData) return;
+
+      const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+      const position = {
+        x: event.clientX - reactFlowBounds.left - 120,
+        y: event.clientY - reactFlowBounds.top - 25,
+      };
+
+      const nodeId = `${dragData.type}_${Date.now()}`;
+      
+      const newNode: Node = {
+        id: nodeId,
+        type: "blockNode",
+        position,
+        data: {
+          label: dragData.label,
+          type: dragData.type,
+          config: {},
+          onDelete: () => {
+            setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+            setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+          },
+          onEdit: () => {
+            setNodes((current) => {
+              const node = current.find(n => n.id === nodeId);
+              if (node) setSelectedNode(node);
+              return current;
+            });
+          },
+        },
+      };
+
+      setNodes((nds) => [...nds, newNode] as typeof nds);
+      window.draggedBlockData = null;
+    },
+    [setNodes, setEdges]
+  );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
-
-  const onDrop = useCallback(
-    (event: React.DragEvent, targetBlockId?: string) => {
-      event.preventDefault();
-
-      if (!draggedType) return;
-
-      const blockInfo = BLOCK_CATEGORIES.flatMap((cat) => cat.blocks).find(
-        (b) => b.type === draggedType
-      );
-
-      const newBlock: BlockData = {
-        id: `${draggedType}_${Date.now()}`,
-        type: draggedType,
-        label: blockInfo?.label || draggedType.replace(/_/g, " "),
-        config: {},
-      };
-
-      setBlocks((prevBlocks) => {
-        if (targetBlockId) {
-          const targetIndex = prevBlocks.findIndex((b) => b.id === targetBlockId);
-          if (targetIndex !== -1) {
-            const newBlocks = [...prevBlocks];
-            newBlock.nextBlockId = prevBlocks[targetIndex].nextBlockId;
-            newBlocks[targetIndex].nextBlockId = newBlock.id;
-            newBlocks.splice(targetIndex + 1, 0, newBlock);
-            return newBlocks;
-          }
-        }
-        return [...prevBlocks, newBlock];
-      });
-
-      setDraggedType(null);
-    },
-    [draggedType]
-  );
-
-  const handleDeleteBlock = (blockId: string) => {
-    setBlocks((prevBlocks) => {
-      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
-      if (blockIndex === -1 || blockId === "start_block") return prevBlocks;
-
-      const newBlocks = [...prevBlocks];
-      const deletedBlock = newBlocks[blockIndex];
-
-      if (blockIndex > 0) {
-        newBlocks[blockIndex - 1].nextBlockId = deletedBlock.nextBlockId;
-      }
-
-      newBlocks.splice(blockIndex, 1);
-      return newBlocks;
-    });
-
-    if (selectedBlock?.id === blockId) {
-      setSelectedBlock(null);
-    }
-  };
-
-  const handleDuplicateBlock = (blockId: string) => {
-    const block = blocks.find((b) => b.id === blockId);
-    if (!block) return;
-
-    const newBlock: BlockData = {
-      ...block,
-      id: `${block.type}_${Date.now()}`,
-    };
-
-    setBlocks((prevBlocks) => {
-      const blockIndex = prevBlocks.findIndex((b) => b.id === blockId);
-      const newBlocks = [...prevBlocks];
-      newBlocks.splice(blockIndex + 1, 0, newBlock);
-      return newBlocks;
-    });
-  };
-
-  const handleAddNote = (blockId: string) => {
-    const note = prompt("Digite a nota para este bloco:");
-    if (note !== null) {
-      setBlocks((prevBlocks) =>
-        prevBlocks.map((b) => (b.id === blockId ? { ...b, note } : b))
-      );
-    }
-  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -192,7 +165,10 @@ export default function AutomacaoVendas() {
         return;
       }
 
-      const flowData = { blocks };
+      const flowData = {
+        nodes: nodes.map(n => ({ ...n, data: { ...n.data, onDelete: undefined, onEdit: undefined } })),
+        edges,
+      };
 
       const automacaoData = {
         estabelecimento_id: estabelecimentoId,
@@ -209,7 +185,7 @@ export default function AutomacaoVendas() {
           .eq("id", id);
 
         if (error) throw error;
-        toast.success("Automação atualizada com sucesso!");
+        toast.success("Regra atualizada!");
       } else {
         const { data, error } = await supabase
           .from("automacoes_vendas")
@@ -218,15 +194,68 @@ export default function AutomacaoVendas() {
           .single();
 
         if (error) throw error;
-        toast.success("Automação criada com sucesso!");
+        toast.success("Regra criada!");
         navigate(`/automacao-vendas/${data.id}`);
       }
     } catch (error: any) {
-      console.error("Erro ao salvar automação:", error);
-      toast.error("Erro ao salvar automação: " + error.message);
+      console.error("Erro ao salvar:", error);
+      toast.error("Erro ao salvar");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleExport = () => {
+    const data = JSON.stringify({ nodes, edges, name: automacaoNome }, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${automacaoNome}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Regra exportada!");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        if (data.nodes && data.edges) {
+          setNodes(data.nodes);
+          setEdges(data.edges);
+          if (data.name) setAutomacaoNome(data.name);
+          toast.success("Regra importada!");
+        }
+      } catch (error) {
+        toast.error("Erro ao importar");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleConfigSave = (config: any) => {
+    if (!selectedNode) return;
+
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === selectedNode.id) {
+          const updatedNode = {
+            ...node,
+            data: {
+              ...node.data,
+              config,
+            },
+          };
+          return updatedNode;
+        }
+        return node;
+      })
+    );
   };
 
   return (
@@ -242,7 +271,7 @@ export default function AutomacaoVendas() {
               value={automacaoNome}
               onChange={(e) => setAutomacaoNome(e.target.value)}
               className="w-64"
-              placeholder="Nome da automação"
+              placeholder="Nome da regra"
             />
             <div className="flex items-center gap-2">
               <Switch id="ativa" checked={isAtiva} onCheckedChange={setIsAtiva} />
@@ -262,17 +291,24 @@ export default function AutomacaoVendas() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Upload className="h-4 w-4 mr-2" />
-              Importar
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              {showPreview ? "Ocultar" : "Prévia"}
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" asChild>
+              <label>
+                <Upload className="h-4 w-4 mr-2" />
+                Importar
+                <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+              </label>
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4 mr-2" />
               Exportar
-            </Button>
-            <Button variant="outline" size="sm">
-              <Play className="h-4 w-4 mr-2" />
-              Testar
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
@@ -281,61 +317,49 @@ export default function AutomacaoVendas() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Block Library */}
-          <AutomacaoBlockLibrary
-            onDragStart={onDragStart}
-            isExpanded={isBlockLibraryExpanded}
-            onToggleExpand={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
-            blocks={blocks}
-            onSelectBlock={(blockId) => {
-              const block = blocks.find((b) => b.id === blockId);
-              if (block) setSelectedBlock(block);
-            }}
-          />
-
-          {/* Workspace Canvas */}
-          <div
-            className="flex-1 overflow-auto p-8"
-            onDragOver={onDragOver}
-            onDrop={(e) => onDrop(e)}
-            style={{
-              backgroundColor: "#ffffff",
-              backgroundImage: `
-                radial-gradient(circle at 1px 1px, #d0d0d0 1px, transparent 1px)
-              `,
-              backgroundSize: "20px 20px",
-            }}
-          >
-            <div className="max-w-4xl mx-auto py-8">
-              {blocks.map((block) => (
-                <BlocklyStyleBlock
-                  key={block.id}
-                  block={block}
-                  onSelect={() => setSelectedBlock(block)}
-                  onDelete={() => handleDeleteBlock(block.id)}
-                  onDuplicate={() => handleDuplicateBlock(block.id)}
-                  onAddNote={() => handleAddNote(block.id)}
-                  onDrop={(e) => onDrop(e, block.id)}
-                  onDragOver={onDragOver}
-                  isSelected={selectedBlock?.id === block.id}
-                />
-              ))}
+        {/* Preview em texto */}
+        {showPreview && (
+          <div className="p-4 bg-blue-50 border-b">
+            <div className="text-sm font-semibold mb-2">Prévia da regra em texto:</div>
+            <div className="text-sm text-gray-700 italic">
+              Esta regra será aplicada quando o orçamento for calculado.
+              Configure os blocos para definir condições e ações.
             </div>
           </div>
+        )}
 
-          {/* Properties Panel */}
-          {selectedBlock && (
-            <AutomacaoPropertiesPanel
-              block={selectedBlock}
-              onClose={() => setSelectedBlock(null)}
-              onUpdate={(updatedBlock) => {
-                setBlocks((prevBlocks) =>
-                  prevBlocks.map((b) => (b.id === updatedBlock.id ? updatedBlock : b))
-                );
-                setSelectedBlock(updatedBlock);
-              }}
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Paleta de blocos */}
+          <BlockPalette onDragStart={handleDragStart} />
+
+          {/* Canvas do React Flow */}
+          <div className="flex-1" onDrop={onDrop} onDragOver={onDragOver}>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              fitView
+              snapToGrid
+              snapGrid={[15, 15]}
+            >
+              <Background gap={20} size={1} />
+              <Controls />
+              <MiniMap />
+            </ReactFlow>
+          </div>
+
+          {/* Painel de configuração */}
+          {selectedNode && selectedNode.data?.type && (
+            <BlockConfigPanel
+              blockId={selectedNode.id}
+              blockType={selectedNode.data.type as AutomacaoVendasBlockType}
+              config={selectedNode.data.config || {}}
+              onClose={() => setSelectedNode(null)}
+              onSave={handleConfigSave}
             />
           )}
         </div>
@@ -344,217 +368,9 @@ export default function AutomacaoVendas() {
   );
 }
 
-const BLOCK_CATEGORIES = [
-  {
-    name: "Início",
-    color: "#5CB85C",
-    blocks: [
-      { type: "inicio" as AutomacaoVendasBlockType, label: "🚀 Início da Automação" },
-    ],
-  },
-  {
-    name: "Descontos por Valor",
-    color: "#5C6BC0",
-    blocks: [
-      { type: "desconto_valor_compra" as AutomacaoVendasBlockType, label: "💰 Desconto por Valor" },
-      { type: "desconto_quantidade_compras" as AutomacaoVendasBlockType, label: "🛒 Desconto Quantidade" },
-    ],
-  },
-  {
-    name: "Descontos por Produto",
-    color: "#FF8A65",
-    blocks: [
-      { type: "desconto_produtos_grupo" as AutomacaoVendasBlockType, label: "📦 Desconto por Grupo" },
-    ],
-  },
-  {
-    name: "Descontos Especiais",
-    color: "#FFD54F",
-    blocks: [
-      { type: "desconto_pagamento_antecipado" as AutomacaoVendasBlockType, label: "💳 Pagamento Antecipado" },
-      { type: "desconto_aniversario_cliente" as AutomacaoVendasBlockType, label: "🎂 Aniversário Cliente" },
-      { type: "desconto_aniversario_empresa" as AutomacaoVendasBlockType, label: "🏢 Aniversário Empresa" },
-      { type: "desconto_data_especial" as AutomacaoVendasBlockType, label: "📅 Data Especial" },
-    ],
-  },
-  {
-    name: "Descontos por Histórico",
-    color: "#4DB6AC",
-    blocks: [
-      { type: "desconto_historico_crescimento" as AutomacaoVendasBlockType, label: "📈 Crescimento" },
-      { type: "desconto_tempo_desde_ultimo" as AutomacaoVendasBlockType, label: "⏰ Tempo Sem Comprar" },
-    ],
-  },
-  {
-    name: "Ações",
-    color: "#81C784",
-    blocks: [
-      { type: "aplicar_desconto" as AutomacaoVendasBlockType, label: "✅ Aplicar Desconto" },
-      { type: "fim" as AutomacaoVendasBlockType, label: "🏁 Fim" },
-    ],
-  },
-];
-
-interface BlocklyStyleBlockProps {
-  block: BlockData;
-  onSelect: () => void;
-  onDelete: () => void;
-  onDuplicate: () => void;
-  onAddNote: () => void;
-  onDrop: (e: React.DragEvent) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  isSelected: boolean;
-}
-
-function BlocklyStyleBlock({
-  block,
-  onSelect,
-  onDelete,
-  onDuplicate,
-  onAddNote,
-  onDrop,
-  onDragOver,
-  isSelected,
-}: BlocklyStyleBlockProps) {
-  const colors = BLOCK_COLORS[block.type] || BLOCK_COLORS.fim;
-  const isStart = block.type === "inicio";
-  const isEnd = block.type === "fim";
-
-  return (
-    <div
-      onClick={onSelect}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      className={`relative cursor-pointer transition-all mb-1 ${
-        isSelected ? "scale-105" : ""
-      }`}
-      style={{
-        filter: isSelected
-          ? `drop-shadow(0 0 10px ${colors.primary})`
-          : "drop-shadow(0 3px 5px rgba(0,0,0,0.2))",
-      }}
-    >
-      {/* Notch de Entrada */}
-      {!isStart && (
-        <svg
-          width="240"
-          height="15"
-          viewBox="0 0 240 15"
-          style={{ display: "block" }}
-        >
-          <path
-            d="M 0,15 L 0,0 L 60,0 L 70,7 L 80,0 L 240,0 L 240,15 Z"
-            fill={colors.primary}
-            stroke={colors.darker}
-            strokeWidth="1.5"
-          />
-        </svg>
-      )}
-
-      {/* Corpo do Bloco */}
-      <div
-        style={{
-          backgroundColor: colors.primary,
-          position: "relative",
-          minWidth: "240px",
-          border: `2px solid ${colors.darker}`,
-          borderTop: isStart ? `2px solid ${colors.darker}` : "none",
-          borderBottom: isEnd ? `2px solid ${colors.darker}` : "none",
-        }}
-      >
-        <div style={{ padding: "12px 16px" }}>
-          <div className="flex items-center justify-between gap-4">
-            <div
-              style={{
-                color: "white",
-                fontWeight: "600",
-                fontSize: "15px",
-                textShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                fontFamily: "Helvetica, Arial, sans-serif",
-              }}
-            >
-              {block.label}
-            </div>
-
-            <div className="flex gap-1">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDuplicate();
-                }}
-                className="px-2 py-1 rounded text-xs font-semibold"
-                style={{
-                  backgroundColor: colors.darker,
-                  color: "white",
-                }}
-                title="Duplicar"
-              >
-                📋
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddNote();
-                }}
-                className="px-2 py-1 rounded text-xs font-semibold"
-                style={{
-                  backgroundColor: colors.darker,
-                  color: "white",
-                }}
-                title="Nota"
-              >
-                📝
-              </button>
-              {!isStart && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                  }}
-                  className="px-2 py-1 rounded text-xs font-semibold"
-                  style={{
-                    backgroundColor: colors.darker,
-                    color: "white",
-                  }}
-                  title="Deletar"
-                >
-                  🗑️
-                </button>
-              )}
-            </div>
-          </div>
-
-          {block.note && (
-            <div
-              className="mt-3 p-2 rounded text-sm"
-              style={{
-                backgroundColor: colors.darker,
-                color: "white",
-                textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-              }}
-            >
-              📝 {block.note}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Notch de Saída */}
-      {!isEnd && (
-        <svg
-          width="240"
-          height="10"
-          viewBox="0 0 240 10"
-          style={{ display: "block" }}
-        >
-          <path
-            d="M 0,0 L 0,10 L 80,10 L 70,3 L 60,10 L 240,10 L 240,0 Z"
-            fill={colors.primary}
-            stroke={colors.darker}
-            strokeWidth="1.5"
-          />
-        </svg>
-      )}
-    </div>
-  );
+// Estender window para armazenar dados de drag temporariamente
+declare global {
+  interface Window {
+    draggedBlockData: { type: AutomacaoVendasBlockType; label: string } | null;
+  }
 }
