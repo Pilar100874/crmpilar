@@ -1452,8 +1452,8 @@ ${recentMessages}
           const newMessage = payload.new as Message;
           setMessages((prev) => [...prev, newMessage]);
           
-          // Auto-translate client messages if real-time translation is active
-          if (isRealTimeTranslationActive && newMessage.sender !== "agent") {
+          // Auto-translate all messages if real-time translation is active
+          if (isRealTimeTranslationActive) {
             translateMessage(newMessage.id, newMessage.text);
           }
         }
@@ -1489,7 +1489,7 @@ ${recentMessages}
   useEffect(() => {
     if (isRealTimeTranslationActive && messages.length > 0) {
       messages
-        .filter(msg => msg.sender !== "agent" && !messageTranslations[msg.id])
+        .filter(msg => !messageTranslations[msg.id])
         .forEach(msg => {
           translateMessage(msg.id, msg.text);
         });
@@ -1590,6 +1590,11 @@ ${recentMessages}
         created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, newMessage]);
+      
+      // Traduzir a mensagem do agente se a tradução em tempo real estiver ativa
+      if (isRealTimeTranslationActive) {
+        translateMessage(newMessage.id, content);
+      }
 
       // Send message via WhatsApp
       const { data: sendData, error: sendError } = await supabase.functions.invoke("send-agent-message", {
@@ -2427,15 +2432,15 @@ ${recentMessages}
                               : "bg-card border border-border shadow-sm hover:border-primary/30"
                           }`}
                         >
-                           <p className="text-[13px] whitespace-pre-wrap break-words leading-snug">
-                            {msg.sender !== "agent" && isRealTimeTranslationActive && messageTranslations[msg.id] ? (
+                          <p className="text-[13px] whitespace-pre-wrap break-words leading-snug">
+                            {isRealTimeTranslationActive && messageTranslations[msg.id] ? (
                               <div className="space-y-2">
-                                <div className="pb-2 border-b border-white/20">
-                                  <p className="text-[11px] font-semibold opacity-70 mb-1">Original:</p>
+                                <div className={`pb-2 border-b ${msg.sender === "agent" ? "border-white/20" : "border-border/50"}`}>
+                                  <p className={`text-[11px] font-semibold mb-1 ${msg.sender === "agent" ? "opacity-70" : "text-muted-foreground"}`}>Original:</p>
                                   <p className="text-[13px]">{msg.text}</p>
                                 </div>
                                 <div>
-                                  <p className="text-[11px] font-semibold opacity-70 mb-1">Tradução:</p>
+                                  <p className={`text-[11px] font-semibold mb-1 ${msg.sender === "agent" ? "opacity-70" : "text-muted-foreground"}`}>Tradução:</p>
                                   <p className="text-[13px]">{messageTranslations[msg.id]}</p>
                                 </div>
                               </div>
