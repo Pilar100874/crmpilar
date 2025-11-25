@@ -84,7 +84,7 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
   }
 
   return (
-    <div className="w-64 bg-card border-r border-border flex flex-col h-full shadow-lg">
+    <div className="w-80 bg-card border-r border-border flex flex-col h-full shadow-lg">
       {/* Header */}
       <div className="p-3 border-b border-border bg-gradient-to-r from-primary/20 to-primary/10">
         <div className="flex items-center justify-between mb-2">
