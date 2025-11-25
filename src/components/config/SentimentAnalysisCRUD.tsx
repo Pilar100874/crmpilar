@@ -95,7 +95,7 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
 
       if (error) throw error;
 
-      toast.success("Configurações de análise de sentimento atualizadas com sucesso");
+      toast.success("Configurações atualizadas com sucesso");
     } catch (error: any) {
       console.error('Erro ao salvar configurações:', error);
       toast.error(error.message || "Erro ao salvar configurações");
@@ -115,8 +115,8 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="w-6 h-6 text-primary" />
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Brain className="w-5 h-5 text-primary" />
             Análise de Sentimento
           </h2>
           <p className="text-muted-foreground text-sm">
@@ -140,7 +140,7 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
                   <ul className="text-sm list-disc ml-6 mt-2 space-y-1">
                     <li><strong>Sentimento:</strong> Positivo, Neutro ou Negativo</li>
                     <li><strong>Emoção:</strong> Feliz, Triste, Irritado, Frustrado, Satisfeito</li>
-                    <li><strong>Score:</strong> 0.0 (muito negativo) a 1.0 (muito positivo)</li>
+                    <li><strong>Pontuação:</strong> 0.0 (muito negativo) a 1.0 (muito positivo)</li>
                   </ul>
                 </div>
 
@@ -149,7 +149,7 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
                   <p className="text-sm">O sistema gera alertas quando detecta:</p>
                   <ul className="text-sm list-disc ml-6 mt-2 space-y-1">
                     <li>Múltiplas mensagens negativas consecutivas</li>
-                    <li>Score muito baixo (abaixo do threshold)</li>
+                    <li>Pontuação muito baixa (abaixo do limite)</li>
                     <li>Mudança brusca de sentimento</li>
                     <li>Palavras de escalação (gerente, reclamação, advogado)</li>
                   </ul>
@@ -167,11 +167,11 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
                 </div>
 
                 <div>
-                  <h4 className="font-semibold mb-2">📈 Thresholds</h4>
+                  <h4 className="font-semibold mb-2">📈 Limites de Pontuação</h4>
                   <ul className="text-sm list-disc ml-6 space-y-1">
-                    <li><strong>Negativo:</strong> Score abaixo deste valor = sentimento negativo</li>
-                    <li><strong>Positivo:</strong> Score acima deste valor = sentimento positivo</li>
-                    <li><strong>Neutro:</strong> Score entre os dois thresholds</li>
+                    <li><strong>Negativo:</strong> Pontuação abaixo deste valor = sentimento negativo</li>
+                    <li><strong>Positivo:</strong> Pontuação acima deste valor = sentimento positivo</li>
+                    <li><strong>Neutro:</strong> Pontuação entre os dois limites</li>
                   </ul>
                 </div>
               </DialogDescription>
@@ -200,7 +200,7 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="threshold_negativo">
-                Threshold Negativo
+                Limite Negativo
                 <Badge variant="destructive" className="ml-2">0.0 - 1.0</Badge>
               </Label>
               <Input
@@ -212,12 +212,12 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
                 value={config.threshold_negativo}
                 onChange={(e) => setConfig({ ...config, threshold_negativo: parseFloat(e.target.value) })}
               />
-              <p className="text-xs text-muted-foreground">Score abaixo deste valor = negativo</p>
+              <p className="text-xs text-muted-foreground">Pontuação abaixo deste valor = negativo</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="threshold_positivo">
-                Threshold Positivo
+                Limite Positivo
                 <Badge variant="default" className="ml-2">0.0 - 1.0</Badge>
               </Label>
               <Input
@@ -229,7 +229,7 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
                 value={config.threshold_positivo}
                 onChange={(e) => setConfig({ ...config, threshold_positivo: parseFloat(e.target.value) })}
               />
-              <p className="text-xs text-muted-foreground">Score acima deste valor = positivo</p>
+              <p className="text-xs text-muted-foreground">Pontuação acima deste valor = positivo</p>
             </div>
           </div>
         </CardContent>

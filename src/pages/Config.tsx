@@ -4,11 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell, Star, Brain } from "lucide-react";
+import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell, Star } from "lucide-react";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
-import SentimentAnalysisCRUD from "@/components/config/SentimentAnalysisCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
@@ -117,23 +116,6 @@ export default function Config() {
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <AdministradoresCRUD />
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="analise-sentimento" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Análise de Sentimento</div>
-                  <div className="text-sm text-muted-foreground font-normal">
-                    Configure a análise automática de sentimento usando IA
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <SentimentAnalysisCRUD estabelecimentoId="" />
             </AccordionContent>
           </AccordionItem>
 
