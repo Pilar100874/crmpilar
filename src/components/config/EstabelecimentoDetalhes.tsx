@@ -1314,6 +1314,29 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
+        <AccordionItem value="pesquisas-satisfacao" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-primary" />
+              <span className="font-medium">Pesquisas de Satisfação</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                Configure e visualize pesquisas de satisfação CSAT/NPS para este estabelecimento.
+              </p>
+              <Button 
+                onClick={() => window.location.href = '/pesquisas-satisfacao'}
+                className="w-full gap-2"
+              >
+                <Star className="w-4 h-4" />
+                Acessar Pesquisas de Satisfação
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
       </Accordion>
     </div>
   );
