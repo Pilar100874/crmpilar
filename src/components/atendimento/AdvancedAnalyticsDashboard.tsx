@@ -46,7 +46,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
   const [metricasPorCanal, setMetricasPorCanal] = useState<any[]>([]);
   const [novoRelatorioOpen, setNovoRelatorioOpen] = useState(false);
   const [nomeRelatorio, setNomeRelatorio] = useState('');
-  const [tipoRelatorio, setTipoRelatorio] = useState('geral');
+  const [tipoRelatorio, setTipoRelatorio] = useState('atendimento');
   const [metricasSelecionadas, setMetricasSelecionadas] = useState<string[]>([
     'volume', 'sla', 'fcr', 'aht', 'csat', 'nps'
   ]);
@@ -257,7 +257,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
       
       setNovoRelatorioOpen(false);
       setNomeRelatorio('');
-      setTipoRelatorio('geral');
+      setTipoRelatorio('atendimento');
       setMetricasSelecionadas(['volume', 'sla', 'fcr', 'aht', 'csat', 'nps']);
     } catch (error: any) {
       console.error('Erro ao criar relatório:', error);
@@ -612,10 +612,11 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="geral">Geral</SelectItem>
-                          <SelectItem value="atendente">Por Atendente</SelectItem>
-                          <SelectItem value="fila">Por Fila</SelectItem>
-                          <SelectItem value="canal">Por Canal</SelectItem>
+                          <SelectItem value="atendimento">Atendimento</SelectItem>
+                          <SelectItem value="performance">Performance</SelectItem>
+                          <SelectItem value="satisfacao">Satisfação</SelectItem>
+                          <SelectItem value="operacional">Operacional</SelectItem>
+                          <SelectItem value="custom">Personalizado</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
