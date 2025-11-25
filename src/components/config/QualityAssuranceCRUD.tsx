@@ -79,6 +79,7 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
   // Estados de diálogo
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [criterioDialogOpen, setCriterioDialogOpen] = useState(false);
+  const [avaliacaoDialogOpen, setAvaliacaoDialogOpen] = useState(false);
   const [selectedFormulario, setSelectedFormulario] = useState<QAFormulario | null>(null);
   const [deletingFormularioId, setDeletingFormularioId] = useState<string | null>(null);
   
@@ -354,7 +355,7 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
                 <h3 className="text-lg font-semibold">Avaliações Realizadas</h3>
                 <p className="text-sm text-muted-foreground">Histórico de avaliações de qualidade</p>
               </div>
-              <Button>
+              <Button onClick={() => setAvaliacaoDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Avaliação
               </Button>
@@ -499,229 +500,248 @@ export default function QualityAssuranceCRUD({ estabelecimentoId }: { estabeleci
             </Card>
           </div>
         </TabsContent>
-      </Tabs>
-
-      {/* Dialog de Formulário */}
-      <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedFormulario ? "Editar Formulário" : "Novo Formulário"}
-            </DialogTitle>
-            <DialogDescription>
-              Configure o formulário de avaliação de qualidade
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome do Formulário</Label>
-              <Input
-                id="nome"
-                value={formData.nome}
-                onChange={(e) =>
-                  setFormData({ ...formData, nome: e.target.value })
-                }
-                placeholder="Ex: Avaliação Padrão de Atendimento"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="descricao">Descrição</Label>
-              <Textarea
-                id="descricao"
-                value={formData.descricao}
-                onChange={(e) =>
-                  setFormData({ ...formData, descricao: e.target.value })
-                }
-                placeholder="Descreva o propósito deste formulário"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="ativo"
-                checked={formData.ativo}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, ativo: checked })
-                }
-              />
-              <Label htmlFor="ativo">Formulário ativo</Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFormDialogOpen(false);
-                resetFormData();
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveFormulario}>Salvar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de Critérios */}
-      <Dialog
-        open={!!selectedFormulario && !formDialogOpen}
-        onOpenChange={(open) => !open && setSelectedFormulario(null)}
-      >
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Critérios: {selectedFormulario?.nome}
-            </DialogTitle>
-            <DialogDescription>
-              Gerencie os critérios de avaliação deste formulário
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Button
-              onClick={() => setCriterioDialogOpen(true)}
-              className="w-full"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Critério
-            </Button>
-            
-            {criterios.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                Nenhum critério adicionado ainda
-              </p>
-            ) : (
+        </Tabs>
+ 
+        {/* Dialog de Formulário */}
+        <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedFormulario ? "Editar Formulário" : "Novo Formulário"}
+              </DialogTitle>
+              <DialogDescription>
+                Configure o formulário de avaliação de qualidade
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                {criterios.map((criterio) => (
-                  <Card key={criterio.id}>
-                    <CardHeader className="py-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-sm">{criterio.nome}</CardTitle>
-                          {criterio.descricao && (
-                            <CardDescription className="text-xs">
-                              {criterio.descricao}
-                            </CardDescription>
-                          )}
-                        </div>
-                        <div className="flex gap-1">
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                            Peso: {criterio.peso}
-                          </span>
-                          <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                            {criterio.tipo}
-                          </span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de Novo Critério */}
-      <Dialog open={criterioDialogOpen} onOpenChange={setCriterioDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Novo Critério</DialogTitle>
-            <DialogDescription>
-              Adicione um novo critério de avaliação
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="criterio-nome">Nome do Critério</Label>
-              <Input
-                id="criterio-nome"
-                value={criterioData.nome}
-                onChange={(e) =>
-                  setCriterioData({ ...criterioData, nome: e.target.value })
-                }
-                placeholder="Ex: Clareza na comunicação"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="criterio-desc">Descrição</Label>
-              <Textarea
-                id="criterio-desc"
-                value={criterioData.descricao}
-                onChange={(e) =>
-                  setCriterioData({ ...criterioData, descricao: e.target.value })
-                }
-                placeholder="Explique o que deve ser avaliado"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="criterio-tipo">Tipo</Label>
-                <Select
-                  value={criterioData.tipo}
-                  onValueChange={(value) =>
-                    setCriterioData({ ...criterioData, tipo: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="boolean">Sim/Não</SelectItem>
-                    <SelectItem value="escala">Escala</SelectItem>
-                    <SelectItem value="texto">Texto</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="criterio-peso">Peso</Label>
+                <Label htmlFor="nome">Nome do Formulário</Label>
                 <Input
-                  id="criterio-peso"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={criterioData.peso}
+                  id="nome"
+                  value={formData.nome}
                   onChange={(e) =>
-                    setCriterioData({
-                      ...criterioData,
-                      peso: parseInt(e.target.value),
-                    })
+                    setFormData({ ...formData, nome: e.target.value })
                   }
+                  placeholder="Ex: Avaliação Padrão de Atendimento"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="descricao">Descrição</Label>
+                <Textarea
+                  id="descricao"
+                  value={formData.descricao}
+                  onChange={(e) =>
+                    setFormData({ ...formData, descricao: e.target.value })
+                  }
+                  placeholder="Descreva o propósito deste formulário"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="ativo"
+                  checked={formData.ativo}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, ativo: checked })
+                  }
+                />
+                <Label htmlFor="ativo">Formulário ativo</Label>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="obrigatorio"
-                checked={criterioData.obrigatorio}
-                onCheckedChange={(checked) =>
-                  setCriterioData({ ...criterioData, obrigatorio: checked })
-                }
-              />
-              <Label htmlFor="obrigatorio">Obrigatório</Label>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFormDialogOpen(false);
+                  resetFormData();
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveFormulario}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+ 
+        {/* Dialog de Critérios */}
+        <Dialog
+          open={!!selectedFormulario && !formDialogOpen}
+          onOpenChange={(open) => !open && setSelectedFormulario(null)}
+        >
+          <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Critérios: {selectedFormulario?.nome}
+              </DialogTitle>
+              <DialogDescription>
+                Gerencie os critérios de avaliação deste formulário
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <Button
+                onClick={() => setCriterioDialogOpen(true)}
+                className="w-full"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Critério
+              </Button>
+              
+              {criterios.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  Nenhum critério adicionado ainda
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {criterios.map((criterio) => (
+                    <Card key={criterio.id}>
+                      <CardHeader className="py-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-sm">{criterio.nome}</CardTitle>
+                            {criterio.descricao && (
+                              <CardDescription className="text-xs">
+                                {criterio.descricao}
+                              </CardDescription>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                              Peso: {criterio.peso}
+                            </span>
+                            <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
+                              {criterio.tipo}
+                            </span>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCriterioDialogOpen(false);
-                resetCriterioData();
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveCriterio}>Adicionar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de Confirmação de Exclusão */}
-      <DeleteConfirmDialog
-        open={!!deletingFormularioId}
-        onOpenChange={(open) => !open && setDeletingFormularioId(null)}
-        onConfirm={() => deletingFormularioId && handleDeleteFormulario(deletingFormularioId)}
-        title="Excluir Formulário"
-        description="Tem certeza que deseja excluir este formulário? Esta ação não pode ser desfeita e todas as avaliações associadas serão perdidas."
-      />
-    </div>
-  );
-}
+          </DialogContent>
+        </Dialog>
+ 
+        {/* Dialog de Novo Critério */}
+        <Dialog open={criterioDialogOpen} onOpenChange={setCriterioDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Novo Critério</DialogTitle>
+              <DialogDescription>
+                Adicione um novo critério de avaliação
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="criterio-nome">Nome do Critério</Label>
+                <Input
+                  id="criterio-nome"
+                  value={criterioData.nome}
+                  onChange={(e) =>
+                    setCriterioData({ ...criterioData, nome: e.target.value })
+                  }
+                  placeholder="Ex: Clareza na comunicação"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="criterio-desc">Descrição</Label>
+                <Textarea
+                  id="criterio-desc"
+                  value={criterioData.descricao}
+                  onChange={(e) =>
+                    setCriterioData({ ...criterioData, descricao: e.target.value })
+                  }
+                  placeholder="Explique o que deve ser avaliado"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="criterio-tipo">Tipo</Label>
+                  <Select
+                    value={criterioData.tipo}
+                    onValueChange={(value) =>
+                      setCriterioData({ ...criterioData, tipo: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="boolean">Sim/Não</SelectItem>
+                      <SelectItem value="escala">Escala</SelectItem>
+                      <SelectItem value="texto">Texto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="criterio-peso">Peso</Label>
+                  <Input
+                    id="criterio-peso"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={criterioData.peso}
+                    onChange={(e) =>
+                      setCriterioData({
+                        ...criterioData,
+                        peso: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="obrigatorio"
+                  checked={criterioData.obrigatorio}
+                  onCheckedChange={(checked) =>
+                    setCriterioData({ ...criterioData, obrigatorio: checked })
+                  }
+                />
+                <Label htmlFor="obrigatorio">Obrigatório</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCriterioDialogOpen(false);
+                  resetCriterioData();
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveCriterio}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+ 
+        {/* Dialog de Nova Avaliação */}
+        <Dialog open={avaliacaoDialogOpen} onOpenChange={setAvaliacaoDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Nova Avaliação</DialogTitle>
+              <DialogDescription>
+                Em breve você poderá registrar avaliações completas aqui.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 text-sm text-muted-foreground">
+              Esta versão já prepara o fluxo visual de avaliações. Nas próximas etapas
+              vamos conectar este formulário aos chats e atendentes avaliados.
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setAvaliacaoDialogOpen(false)}>Fechar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+ 
+        {/* Dialog de Confirmação de Exclusão */}
+        <DeleteConfirmDialog
+          open={!!deletingFormularioId}
+          onOpenChange={(open) => !open && setDeletingFormularioId(null)}
+          onConfirm={() => deletingFormularioId && handleDeleteFormulario(deletingFormularioId)}
+          title="Excluir Formulário"
+          description="Tem certeza que deseja excluir este formulário? Esta ação não pode ser desfeita e todas as avaliações associadas serão perdidas."
+        />
+      </div>
+    );
+  }
