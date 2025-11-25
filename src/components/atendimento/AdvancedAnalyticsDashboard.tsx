@@ -327,8 +327,65 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         yPos = 20;
       }
       
+      // Adicionar gráficos se houver dados
+      if (metricas.length > 0) {
+        yPos += 10;
+        doc.setFontSize(16);
+        doc.text('Gráficos', 20, yPos);
+        yPos += 10;
+        
+        // Capturar gráfico de volume (se estiver visível)
+        try {
+          const volumeChart = document.querySelector('[data-chart="volume"]');
+          if (volumeChart) {
+            const canvas = volumeChart.querySelector('canvas');
+            if (canvas) {
+              const imgData = canvas.toDataURL('image/png');
+              if (yPos + 80 > 280) {
+                doc.addPage();
+                yPos = 20;
+              }
+              doc.setFontSize(12);
+              doc.text('Volume de Atendimentos', 20, yPos);
+              yPos += 5;
+              doc.addImage(imgData, 'PNG', 20, yPos, 170, 70);
+              yPos += 80;
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao capturar gráfico de volume:', err);
+        }
+        
+        // Capturar gráfico de NPS (se estiver visível)
+        try {
+          const npsChart = document.querySelector('[data-chart="nps"]');
+          if (npsChart) {
+            const canvas = npsChart.querySelector('canvas');
+            if (canvas) {
+              const imgData = canvas.toDataURL('image/png');
+              if (yPos + 80 > 280) {
+                doc.addPage();
+                yPos = 20;
+              }
+              doc.setFontSize(12);
+              doc.text('Índice NPS', 20, yPos);
+              yPos += 5;
+              doc.addImage(imgData, 'PNG', 20, yPos, 170, 70);
+              yPos += 80;
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao capturar gráfico de NPS:', err);
+        }
+      }
+      
       // Métricas por dia (se houver dados)
       if (metricas.length > 0) {
+        if (yPos + 40 > 280) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
         yPos += 10;
         doc.setFontSize(16);
         doc.text('Evolução Diária', 20, yPos);
@@ -992,7 +1049,9 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
               </CardHeader>
               <CardContent>
                 {metricas.length > 0 ? (
-                  <ReactECharts option={volumeChartOptions} style={{ height: '300px' }} />
+                  <div data-chart="volume">
+                    <ReactECharts option={volumeChartOptions} style={{ height: '300px' }} />
+                  </div>
                 ) : (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                     Nenhum dado disponível
@@ -1011,7 +1070,9 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
               </CardHeader>
               <CardContent>
                 {metricas.length > 0 ? (
-                  <ReactECharts option={npsChartOptions} style={{ height: '300px' }} />
+                  <div data-chart="nps">
+                    <ReactECharts option={npsChartOptions} style={{ height: '300px' }} />
+                  </div>
                 ) : (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                     Nenhum dado disponível
