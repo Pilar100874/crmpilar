@@ -271,18 +271,17 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
                       {/* Header do Card */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-sm truncate">{regra.nome}</h4>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge 
+                              variant="outline" 
+                              className={`${getTipoColor(regra.tipo)} text-white text-sm`}
+                            >
+                              {getTipoLabel(regra.tipo)}
+                            </Badge>
                             <Badge variant={regra.ativa ? "default" : "secondary"} className="shrink-0">
                               {regra.ativa ? 'Ativa' : 'Inativa'}
                             </Badge>
                           </div>
-                          <Badge 
-                            variant="outline" 
-                            className={`${getTipoColor(regra.tipo)} text-white text-xs`}
-                          >
-                            {getTipoLabel(regra.tipo)}
-                          </Badge>
                         </div>
                         <Switch
                           checked={regra.ativa}
