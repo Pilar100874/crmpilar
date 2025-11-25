@@ -1344,7 +1344,8 @@ function BotBuilderContent() {
               autoPanOnConnect={false}
               autoPanOnNodeDrag={true}
               defaultEdgeOptions={{
-                style: { stroke: '#f97316', strokeWidth: 1.33 },
+                animated: true,
+                style: { stroke: '#f97316', strokeWidth: 2 },
                 markerEnd: {
                   type: 'arrowclosed',
                   width: 20,
