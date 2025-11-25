@@ -108,8 +108,8 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
         />
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+      <ScrollArea className="flex-1 overflow-y-auto">
+        <div className="p-2 space-y-1 pb-4">
           {filteredCategories.map((category) => {
             const isOpen = openCategories.includes(category.name);
             const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
@@ -135,7 +135,7 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                   />
                 </CollapsibleTrigger>
 
-                <CollapsibleContent className="pt-1 space-y-1 animate-accordion-down">
+                <CollapsibleContent className="pt-1 pb-1 space-y-1">
                   {category.blocks.map((block) => {
                     const BlockIcon = Icons[block.icon as keyof typeof Icons] as any;
                     
