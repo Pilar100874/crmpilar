@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell } from "lucide-react";
+import { ShieldCheck, Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell, Star, MessageSquare } from "lucide-react";
 import { AdministradoresCRUD } from "@/components/config/AdministradoresCRUD";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
@@ -13,9 +13,11 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function Config() {
   const { openSubmenu } = useLayout();
+  const navigate = useNavigate();
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
@@ -97,6 +99,37 @@ export default function Config() {
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <EstabelecimentosCRUD />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="atendimento" className="border rounded-lg bg-white shadow-sm">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="font-semibold">Atendimento</div>
+                  <div className="text-sm text-muted-foreground font-normal">
+                    Configurações relacionadas ao atendimento
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <div className="space-y-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-3 h-auto py-4"
+                  onClick={() => navigate('/pesquisas-satisfacao')}
+                >
+                  <Star className="w-5 h-5 text-primary" />
+                  <div className="text-left">
+                    <div className="font-medium">Pesquisas de Satisfação</div>
+                    <div className="text-sm text-muted-foreground font-normal">
+                      Configure e visualize pesquisas CSAT/NPS
+                    </div>
+                  </div>
+                </Button>
+              </div>
             </AccordionContent>
           </AccordionItem>
 
