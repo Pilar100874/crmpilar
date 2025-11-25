@@ -28,7 +28,7 @@ import { FilasManager } from "@/components/atendimento/FilasManager";
 import { SkillsManager } from "@/components/atendimento/SkillsManager";
 import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaManager";
 import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain } from "lucide-react";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle } from "lucide-react";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -975,9 +975,41 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="usuarios-acessos" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <UserCog className="w-4 h-4 text-primary" />
-              <span className="font-medium">Usuários e Acessos</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <UserCog className="w-4 h-4 text-primary" />
+                <span className="font-medium">Usuários e Acessos</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Usuários e Acessos - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">👥 Grupos de Acesso</h4>
+                        <p className="text-sm">Defina perfis de permissão para controlar o que cada tipo de usuário pode visualizar e fazer no sistema. Exemplos: Administrador, Atendente, Supervisor.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">👤 Cadastro de Usuários</h4>
+                        <p className="text-sm">Gerencie os usuários do estabelecimento, atribuindo grupos de acesso e configurando permissões individuais.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🏷️ Segmentos</h4>
+                        <p className="text-sm">Organize seus clientes em segmentos para campanhas direcionadas e relatórios específicos.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">⭐ Atalhos</h4>
+                        <p className="text-sm">Configure atalhos personalizados para acesso rápido às funcionalidades mais utilizadas.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1043,9 +1075,53 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="atendimento" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <MessageSquareQuote className="w-4 h-4 text-primary" />
-              <span className="font-medium">Atendimento</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <MessageSquareQuote className="w-4 h-4 text-primary" />
+                <span className="font-medium">Atendimento</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Atendimento - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">🏆 Skills de Atendimento</h4>
+                        <p className="text-sm">Defina habilidades específicas dos atendentes (idiomas, especialidades) para roteamento inteligente de conversas.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📋 Filas de Atendimento</h4>
+                        <p className="text-sm">Configure filas para organizar e distribuir conversas entre os atendentes de forma eficiente.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📎 Anexos Rápidos</h4>
+                        <p className="text-sm">Cadastre arquivos e documentos para envio rápido durante os atendimentos.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">💬 Respostas Prontas</h4>
+                        <p className="text-sm">Crie mensagens pré-definidas para agilizar o atendimento em situações comuns.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🔗 Redes Sociais</h4>
+                        <p className="text-sm">Conecte suas redes sociais para atendimento omnichannel integrado.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📱 Canais de Atendimento</h4>
+                        <p className="text-sm">Ative ou desative canais como WhatsApp, Telegram e WebChat.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">⚙️ Workflow Builder Omnichannel</h4>
+                        <p className="text-sm">Crie fluxos visuais para roteamento automático e regras de atendimento.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1139,9 +1215,41 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="quality-assurance" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-primary" />
-              <span className="font-medium">Controle de Qualidade</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <ClipboardCheck className="w-4 h-4 text-primary" />
+                <span className="font-medium">Controle de Qualidade</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Controle de Qualidade - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">📋 O que é?</h4>
+                        <p className="text-sm">Sistema completo para avaliar e monitorar a qualidade do atendimento da sua equipe.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">✅ Formulários de Avaliação</h4>
+                        <p className="text-sm">Crie critérios personalizados (booleano, escala 1-5, texto) com pesos e campos obrigatórios.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🎯 Metas por Atendente</h4>
+                        <p className="text-sm">Defina pontuação mínima e número de avaliações esperadas por período.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📊 Dashboard de Qualidade</h4>
+                        <p className="text-sm">Acompanhe scores, evolução temporal, critérios com pior desempenho e atendentes abaixo da meta.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1151,9 +1259,41 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="analise-sentimento" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Brain className="w-4 h-4 text-primary" />
-              <span className="font-medium">Análise de Sentimento</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-primary" />
+                <span className="font-medium">Análise de Sentimento</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Análise de Sentimento - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">🤖 Análise Automática com IA</h4>
+                        <p className="text-sm">Cada mensagem é analisada em tempo real detectando sentimento (positivo/neutro/negativo), emoção e pontuação de 0.0 a 1.0.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🚨 Alertas Proativos</h4>
+                        <p className="text-sm">Notificações automáticas quando detecta múltiplas mensagens negativas, pontuação baixa ou palavras de escalação.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">⚙️ Limites Configuráveis</h4>
+                        <p className="text-sm">Defina os limites de pontuação para classificação negativa/positiva e o número de mensagens negativas para alerta.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📈 Dashboard de Sentimento</h4>
+                        <p className="text-sm">Acompanhe score médio, distribuição de sentimentos, alertas e tendências ao longo do tempo.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1163,9 +1303,37 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="api-webhooks" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-primary" />
-              <span className="font-medium">API E Webhooks</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-primary" />
+                <span className="font-medium">API E Webhooks</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>API E Webhooks - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">🔗 Gerador de APIs</h4>
+                        <p className="text-sm">Crie endpoints REST automaticamente a partir de consultas SQL para integração com sistemas externos.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📤 Webhooks de Saída</h4>
+                        <p className="text-sm">Configure webhooks para enviar dados automaticamente para URLs externas quando eventos ocorrerem.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📥 Webhooks de Entrada</h4>
+                        <p className="text-sm">Receba dados de sistemas externos através de URLs únicas geradas pelo sistema.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1211,9 +1379,37 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="notificacoes" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-primary" />
-              <span className="font-medium">Notificações</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-primary" />
+                <span className="font-medium">Notificações</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Notificações - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">🔔 Notificações em Tempo Real</h4>
+                        <p className="text-sm">Configure alertas instantâneos para eventos importantes como novos chats, violações de SLA, sentimentos negativos e mais.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🔊 Personalização</h4>
+                        <p className="text-sm">Ajuste volume, escolha sons diferentes para cada tipo de notificação e configure notificações de desktop.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📊 Log de Notificações</h4>
+                        <p className="text-sm">Todas as notificações são registradas para auditoria e análise posterior.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1223,9 +1419,37 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="seguranca" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-primary" />
-              <span className="font-medium">Segurança e LGPD</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
+                <span className="font-medium">Segurança e LGPD</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Segurança e LGPD - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">🔒 Controle de Acesso</h4>
+                        <p className="text-sm">Configure políticas de segurança, autenticação de dois fatores e restrições de IP.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📜 Conformidade LGPD</h4>
+                        <p className="text-sm">Gerencie consentimentos, políticas de privacidade e direitos dos titulares de dados.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🗑️ Retenção de Dados</h4>
+                        <p className="text-sm">Configure períodos de retenção e exclusão automática de dados conforme a legislação.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1235,9 +1459,37 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="ucm-config" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-primary" />
-              <span className="font-medium">Configuração PABX (UCM)</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-primary" />
+                <span className="font-medium">Configuração PABX (UCM)</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Configuração PABX (UCM) - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">📞 Integração PABX</h4>
+                        <p className="text-sm">Conecte seu sistema Grandstream UCM para realizar e receber chamadas telefônicas através da plataforma.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🌐 Modo Local ou Web</h4>
+                        <p className="text-sm">Configure se o UCM está na rede local ou acessível pela web para chamadas diretas ou via proxy.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📊 Softphone Integrado</h4>
+                        <p className="text-sm">Use o softphone integrado para fazer e receber chamadas sem sair da plataforma.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1247,9 +1499,41 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="vendas" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <MessageSquareQuote className="w-4 h-4 text-primary" />
-              <span className="font-medium">Vendas</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <MessageSquareQuote className="w-4 h-4 text-primary" />
+                <span className="font-medium">Vendas</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Vendas - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">💳 Tipos de Pagamento</h4>
+                        <p className="text-sm">Configure formas de pagamento aceitas (cartão, PIX, boleto, etc.).</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">💰 Condições de Pagamento</h4>
+                        <p className="text-sm">Defina condições comerciais como à vista, parcelado, prazos e valores mínimos/máximos.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">💵 Tabelas de Preço</h4>
+                        <p className="text-sm">Crie múltiplas tabelas para diferentes segmentos de clientes ou campanhas promocionais.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📦 Produtos, Grupos e Categorias</h4>
+                        <p className="text-sm">Organize seu catálogo de produtos por grupos e categorias para facilitar gestão e busca.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1331,9 +1615,41 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="calendario-regras" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span className="font-medium">Regras do Calendário</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-primary" />
+                <span className="font-medium">Regras do Calendário</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Regras do Calendário - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">📅 Regras Configuráveis</h4>
+                        <p className="text-sm">Crie regras automáticas para gestão inteligente do calendário e tarefas.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🔄 Movimentação Automática</h4>
+                        <p className="text-sm">Configure regras para mover tarefas não realizadas para o próximo dia útil automaticamente.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🚫 Bloqueios</h4>
+                        <p className="text-sm">Defina bloqueios de finais de semana, feriados e horários específicos com confirmação ou realocação.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">⏰ Horário Comercial</h4>
+                        <p className="text-sm">Configure horários de trabalho para validar e realocar tarefas automaticamente.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
@@ -1343,9 +1659,41 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
 
         <AccordionItem value="pesquisas-satisfacao" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-primary" />
-              <span className="font-medium">Pesquisas de Satisfação (Config)</span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-primary" />
+                <span className="font-medium">Pesquisas de Satisfação (Config)</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Pesquisas de Satisfação - Ajuda</DialogTitle>
+                    <DialogDescription className="text-left space-y-4 pt-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">⭐ CSAT e NPS</h4>
+                        <p className="text-sm">Crie pesquisas de satisfação (CSAT) ou probabilidade de recomendação (NPS) personalizadas.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🎯 Disparo Automático</h4>
+                        <p className="text-sm">Configure envio automático após encerramento de chats, com filtros por canal, fila e segmento.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📊 Dashboard Integrado</h4>
+                        <p className="text-sm">Visualize resultados, NPS score, distribuição de notas e comentários em dashboards dedicados.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🔗 Múltiplos Canais</h4>
+                        <p className="text-sm">Envie pesquisas por WhatsApp, Telegram, WebChat, E-mail e SMS automaticamente.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
