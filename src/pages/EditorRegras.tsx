@@ -26,6 +26,16 @@ import {
   BackgroundVariant,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { AutomacaoFlowNode } from "@/components/automacao-vendas/AutomacaoFlowNode";
 import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
 import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
@@ -64,6 +74,8 @@ function EditorRegrasContent() {
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
   const [currentNoteValue, setCurrentNoteValue] = useState("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
@@ -91,6 +103,7 @@ function EditorRegrasContent() {
           description: "Bloco duplicado com sucesso!",
         });
 
+        setHasUnsavedChanges(true);
         return [...nds, newNode];
       });
     },
@@ -118,6 +131,7 @@ function EditorRegrasContent() {
         setSelectedNode(null);
         setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
         
+        setHasUnsavedChanges(true);
         return nds.filter((node) => node.id !== nodeId);
       });
     },
@@ -250,7 +264,10 @@ function EditorRegrasContent() {
   };
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => {
+      setEdges((eds) => addEdge(params, eds));
+      setHasUnsavedChanges(true);
+    },
     [setEdges]
   );
 
@@ -294,13 +311,14 @@ function EditorRegrasContent() {
 
       setNodes((nds) => [...nds, newNode]);
       setSelectedNode(newNode);
+      setHasUnsavedChanges(true);
       
       toast({
         title: "Bloco adicionado",
         description: `Bloco "${blockDef.label}" adicionado com sucesso!`,
       });
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
   );
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -339,6 +357,7 @@ function EditorRegrasContent() {
           return node;
         })
       );
+      setHasUnsavedChanges(true);
     },
     [setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
   );
@@ -438,7 +457,8 @@ function EditorRegrasContent() {
           title: "Sucesso!",
           description: "Regra atualizada com sucesso",
         });
-        navigate("/automacoes-vendas");
+        setHasUnsavedChanges(false);
+        navigate("/config");
       } else {
         const { data, error } = await supabase
           .from("automacoes_vendas")
@@ -449,6 +469,7 @@ function EditorRegrasContent() {
         if (error) throw error;
 
         setCurrentRegraId(data.id);
+        setHasUnsavedChanges(false);
         navigate(`/editor-regras?id=${data.id}`, { replace: true });
 
         toast({
@@ -466,6 +487,35 @@ function EditorRegrasContent() {
     }
   };
 
+  const handleBack = () => {
+    if (hasUnsavedChanges) {
+      setShowExitDialog(true);
+    } else {
+      navigate("/config");
+    }
+  };
+
+  const confirmExit = () => {
+    setShowExitDialog(false);
+    setHasUnsavedChanges(false);
+    navigate("/config");
+  };
+
+  // Rastrear mudanças em nodes e edges
+  useEffect(() => {
+    // Ignora a inicialização
+    if (nodes.length === 0 && edges.length === 0) return;
+    setHasUnsavedChanges(true);
+  }, [nodes.length, edges.length]);
+
+  // Rastrear mudanças nos campos do formulário
+  useEffect(() => {
+    // Só marca como alterado se já tiver carregado uma regra
+    if (currentRegraId) {
+      setHasUnsavedChanges(true);
+    }
+  }, [nomeRegra, isAtiva, prioridade, expiresAt]);
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -474,7 +524,7 @@ function EditorRegrasContent() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/automacoes-vendas")}
+            onClick={handleBack}
             className="h-8 w-8"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -646,6 +696,24 @@ function EditorRegrasContent() {
         currentNote={currentNoteValue}
         onSave={handleSaveNote}
       />
+
+      {/* Dialog de confirmação de saída */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar mudanças?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas. Se sair agora, essas alterações serão perdidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmExit} className="bg-destructive hover:bg-destructive/90">
+              Sair sem salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
