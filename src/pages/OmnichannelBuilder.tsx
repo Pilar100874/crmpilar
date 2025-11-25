@@ -735,14 +735,14 @@ export default function OmnichannelBuilder() {
               fitView
               defaultEdgeOptions={{
                 animated: true,
-                type: "smoothstep",
-                style: { stroke: "#06b6d4", strokeWidth: 2 },
-                markerEnd: { 
-                  type: "arrowclosed", 
+                style: { stroke: '#f97316', strokeWidth: 2 },
+                markerEnd: {
+                  type: 'arrowclosed',
                   width: 20,
                   height: 20,
-                  color: "#06b6d4" 
+                  color: '#f97316',
                 },
+                type: 'smoothstep',
               }}
             >
               <Background />
