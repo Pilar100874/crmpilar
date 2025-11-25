@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/lib/toast-config';
-import { Pencil, Trash2, Plus, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Pencil, Trash2, Plus, Clock, AlertTriangle, TrendingUp, HelpCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { z } from 'zod';
@@ -314,6 +314,8 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     return `${minutos}min`;
   };
 
+  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -325,10 +327,16 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 Gerencie os níveis de serviço (SLA) para suas filas de atendimento
               </CardDescription>
             </div>
-            <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Configuração
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setHelpDialogOpen(true)}>
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Como usar
+              </Button>
+              <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Configuração
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -687,6 +695,65 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               Salvar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Como funciona o SLA?</DialogTitle>
+            <DialogDescription className="space-y-4 text-left">
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">📊 O que é SLA?</h3>
+                <p>SLA (Service Level Agreement) define os tempos máximos de resposta e resolução para seus atendimentos.</p>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">⏱️ Tempos Monitorados</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><strong>Primeira Resposta:</strong> Tempo até a primeira resposta do atendente</li>
+                  <li><strong>Respostas Subsequentes:</strong> Tempo entre mensagens do cliente e respostas</li>
+                  <li><strong>Resolução Total:</strong> Tempo total até encerramento do chat</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">🎯 Multiplicadores de Prioridade</h3>
+                <p>Os tempos são ajustados automaticamente pela prioridade:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><strong>Urgente:</strong> 50% do tempo (2x mais rápido)</li>
+                  <li><strong>Alta:</strong> 75% do tempo</li>
+                  <li><strong>Normal:</strong> 100% do tempo (padrão)</li>
+                  <li><strong>Baixa:</strong> 150% do tempo</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">🔔 Como o Supervisor é Avisado?</h3>
+                <p>Quando você ativa "Notificar Supervisor" e seleciona um usuário:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>O supervisor recebe <strong>notificações em tempo real</strong> na tela de atendimento</li>
+                  <li>Notificações aparecem quando o SLA está próximo de vencer (conforme % de alerta)</li>
+                  <li>Também é notificado quando ocorre violação do SLA</li>
+                  <li>As notificações incluem informações do chat e cliente</li>
+                  <li>Som de notificação toca automaticamente (se habilitado)</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">⚡ Ações Automáticas</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><strong>Aumentar Prioridade:</strong> Chat automaticamente aumenta de prioridade ao violar SLA</li>
+                  <li><strong>Escalar Automaticamente:</strong> Chat é transferido para outra fila quando viola SLA</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">📈 Monitoramento</h3>
+                <p>O sistema verifica os SLAs automaticamente a cada minuto através de um processo em segundo plano.</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
         </DialogContent>
       </Dialog>
 
