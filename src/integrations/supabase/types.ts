@@ -315,6 +315,7 @@ export type Database = {
           created_at: string | null
           descricao: string | null
           estabelecimento_id: string
+          expires_at: string | null
           flow_data: Json
           id: string
           nome: string
@@ -326,6 +327,7 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estabelecimento_id: string
+          expires_at?: string | null
           flow_data: Json
           id?: string
           nome: string
@@ -337,6 +339,7 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estabelecimento_id?: string
+          expires_at?: string | null
           flow_data?: Json
           id?: string
           nome?: string
@@ -6333,6 +6336,7 @@ export type Database = {
         Returns: string
       }
       admins_present: { Args: never; Returns: boolean }
+      desativar_automacoes_vencidas: { Args: never; Returns: undefined }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
       get_user_estabelecimento_id: {
