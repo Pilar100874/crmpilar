@@ -33,6 +33,7 @@ export const MENU_CONFIG = [
   { id: "Testar", label: "Testar Bot" },
   { id: "Desenho", label: "Marketing" },
   { id: "Canvas", label: "Canvas" },
+  { id: "Automações", label: "Automações" },
   { id: "Campanhas Marketing", label: "Campanhas" },
   { id: "Relatórios", label: "Relatórios" },
   { id: "Importação Produtos", label: "Importação de Produtos de Terceiro" },
