@@ -50,6 +50,9 @@ export const MENU_CONFIG = [
   { id: "Variáveis Globais", label: "Variáveis Globais" },
   { id: "Teste Campanhas", label: "Teste Campanhas" },
   { id: "Gerenciar Atalhos", label: "Gerenciar Atalhos" },
+  { id: "Estabelecimentos Cadastrados", label: "Estabelecimentos Cadastrados" },
+  { id: "SLA Config", label: "SLA" },
+  { id: "Config Filas", label: "Filas de Atendimento" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
