@@ -19,6 +19,8 @@ interface SLAConfig {
   multiplicador_normal: number;
   multiplicador_baixa: number;
   alerta_porcentagem: number;
+  notificar_supervisor: boolean;
+  supervisor_id: string | null;
   escalar_automaticamente: boolean;
   fila_escalacao_id: string | null;
 }
@@ -292,7 +294,7 @@ async function enviarNotificacaoViolacao(
     resolucao: 'Resolução Total',
   }[tipo] || tipo;
 
-  // Buscar supervisores e atendente atual
+  // Buscar destinatários
   const destinatarios = [];
 
   // Adicionar atendente atual
@@ -308,26 +310,21 @@ async function enviarNotificacaoViolacao(
     }
   }
 
-  // Adicionar gestores e admins
-  const { data: gestores } = await supabase
-    .from('user_roles')
-    .select('user_id')
-    .in('role', ['admin', 'gestor']);
-
-  if (gestores) {
-    destinatarios.push(...gestores.map((g: any) => g.user_id));
+  // Adicionar supervisor configurado (se notificação estiver habilitada)
+  if (config.notificar_supervisor && config.supervisor_id) {
+    destinatarios.push(config.supervisor_id);
   }
 
   // Enviar notificação para cada destinatário
   for (const usuarioId of [...new Set(destinatarios)]) {
     await supabase.functions.invoke('enviar-notificacao', {
       body: {
-        usuarioId,
-        estabelecimentoId: conv.estabelecimento_id,
+        usuario_id: usuarioId,
+        estabelecimento_id: conv.estabelecimento_id,
         tipo: 'sla_alerta',
         titulo: `⚠️ Violação de SLA - ${tipoLabel}`,
         mensagem: `O chat excedeu o SLA em ${porcentagem.toFixed(0)}%. Ação necessária!`,
-        chatId: conv.id,
+        chat_id: conv.id,
       },
     });
   }
@@ -352,12 +349,12 @@ async function enviarAlertaProximoViolacao(
     if (atendente) {
       await supabase.functions.invoke('enviar-notificacao', {
         body: {
-          usuarioId: atendente.usuario_id,
-          estabelecimentoId: conv.estabelecimento_id,
+          usuario_id: atendente.usuario_id,
+          estabelecimento_id: conv.estabelecimento_id,
           tipo: 'sla_alerta',
           titulo: '⏰ SLA Próximo do Limite',
           mensagem: `Chat está em ${porcentagem.toFixed(0)}% do tempo de SLA. Responda em breve!`,
-          chatId: conv.id,
+          chat_id: conv.id,
         },
       });
     }

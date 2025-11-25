@@ -5125,6 +5125,7 @@ export type Database = {
           multiplicador_urgente: number | null
           nome: string
           notificar_supervisor: boolean | null
+          supervisor_id: string | null
           tempo_primeira_resposta: number
           tempo_resolucao: number
           tempo_resposta_subsequente: number
@@ -5149,6 +5150,7 @@ export type Database = {
           multiplicador_urgente?: number | null
           nome: string
           notificar_supervisor?: boolean | null
+          supervisor_id?: string | null
           tempo_primeira_resposta?: number
           tempo_resolucao?: number
           tempo_resposta_subsequente?: number
@@ -5173,6 +5175,7 @@ export type Database = {
           multiplicador_urgente?: number | null
           nome?: string
           notificar_supervisor?: boolean | null
+          supervisor_id?: string | null
           tempo_primeira_resposta?: number
           tempo_resolucao?: number
           tempo_resposta_subsequente?: number
@@ -5198,6 +5201,13 @@ export type Database = {
             columns: ["fila_id"]
             isOneToOne: false
             referencedRelation: "filas_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_config_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]
