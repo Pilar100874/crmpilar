@@ -39,6 +39,7 @@ import { VariableMonitor } from "@/components/flow/VariableMonitor";
 import { BlockMonitor } from "@/components/flow/BlockMonitor";
 import { EmpresaFieldValidator } from "@/components/flow/EmpresaFieldValidator";
 import { ErrorDialog } from "@/components/flow/ErrorDialog";
+import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "@/lib/toast-config";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
@@ -111,6 +112,9 @@ function BotBuilderContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
+  const [currentNoteValue, setCurrentNoteValue] = useState("");
 
   const lastSavedSignatureRef = useRef<string | null>(null);
   const getFlowSignature = useCallback(() => {
@@ -413,6 +417,42 @@ function BotBuilderContent() {
       toast.success("Bloco excluído!");
     },
     [setNodes, setEdges, nodes]
+  );
+
+  const handleAddNote = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+
+      setCurrentNoteNodeId(nodeId);
+      setCurrentNoteValue((node.data as any).note || "");
+      setNoteDialogOpen(true);
+    },
+    [nodes]
+  );
+
+  const handleSaveNote = useCallback(
+    (note: string) => {
+      if (!currentNoteNodeId) return;
+
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id === currentNoteNodeId) {
+            return {
+              ...n,
+              data: {
+                ...n.data,
+                note: note,
+              },
+            };
+          }
+          return n;
+        })
+      );
+      toast.success(note ? "Nota adicionada com sucesso!" : "Nota removida com sucesso!");
+      setCurrentNoteNodeId(null);
+    },
+    [currentNoteNodeId, setNodes]
   );
 
   // Validar se existem blocos desconectados
@@ -1260,6 +1300,7 @@ function BotBuilderContent() {
                     }
                   },
                   onDelete: handleDeleteNode,
+                  onAddNote: handleAddNote,
                 },
               }))}
               edges={edges.map((edge) => ({
@@ -1402,6 +1443,14 @@ function BotBuilderContent() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Dialog de nota */}
+        <BlockNoteDialog
+          open={noteDialogOpen}
+          onOpenChange={setNoteDialogOpen}
+          currentNote={currentNoteValue}
+          onSave={handleSaveNote}
+        />
       </div>
   );
 }
