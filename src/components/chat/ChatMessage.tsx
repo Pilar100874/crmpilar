@@ -5,9 +5,10 @@ import { format } from "date-fns";
 
 interface ChatMessageProps {
   message: Message;
+  translation?: string | null;
 }
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({ message, translation }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   const renderContent = () => {
@@ -78,7 +79,24 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         );
 
       default:
-        return <p className="text-sm whitespace-pre-wrap">{message.content}</p>;
+        return (
+          <div className="space-y-2">
+            {translation && (
+              <div className="mb-2 pb-2 border-b border-border/50">
+                <p className="text-xs text-muted-foreground font-semibold mb-1">Original:</p>
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              </div>
+            )}
+            {translation ? (
+              <div>
+                <p className="text-xs text-muted-foreground font-semibold mb-1">Tradução:</p>
+                <p className="text-sm whitespace-pre-wrap">{translation}</p>
+              </div>
+            ) : (
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+            )}
+          </div>
+        );
     }
   };
 
