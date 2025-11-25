@@ -776,26 +776,52 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
 
       {/* Gráficos com design melhorado */}
       <Tabs defaultValue="principal" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted/50 backdrop-blur">
-          <TabsTrigger value="principal" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Principal
-          </TabsTrigger>
-          <TabsTrigger value="volume" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Volume
-          </TabsTrigger>
-          <TabsTrigger value="tempos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Tempos
-          </TabsTrigger>
-          <TabsTrigger value="nps" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            NPS/CSAT
-          </TabsTrigger>
-          <TabsTrigger value="atendente" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Por Atendente
-          </TabsTrigger>
-          <TabsTrigger value="canal" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            Por Canal
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
+          <TabsList className="inline-flex w-auto bg-card/50 backdrop-blur-sm border border-border/40 rounded-xl p-1.5 shadow-md">
+            <TabsTrigger 
+              value="principal" 
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap gap-2 inline-flex items-center"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Principal
+            </TabsTrigger>
+            <TabsTrigger 
+              value="volume" 
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap gap-2 inline-flex items-center"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Volume
+            </TabsTrigger>
+            <TabsTrigger 
+              value="tempos" 
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap gap-2 inline-flex items-center"
+            >
+              <Clock className="h-4 w-4" />
+              Tempos
+            </TabsTrigger>
+            <TabsTrigger 
+              value="nps" 
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap gap-2 inline-flex items-center"
+            >
+              <Award className="h-4 w-4" />
+              NPS/CSAT
+            </TabsTrigger>
+            <TabsTrigger 
+              value="atendente" 
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap gap-2 inline-flex items-center"
+            >
+              <Users className="h-4 w-4" />
+              Por Atendente
+            </TabsTrigger>
+            <TabsTrigger 
+              value="canal" 
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap gap-2 inline-flex items-center"
+            >
+              <Target className="h-4 w-4" />
+              Por Canal
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="principal" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
