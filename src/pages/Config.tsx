@@ -35,40 +35,40 @@ export default function Config() {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in bg-white min-h-full">
-        <div className="flex items-center gap-4">
+    <div className="p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in bg-background min-h-full">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
           <SubMenuHeader 
             title="Configurações"
             onOpenSubmenu={() => openSubmenu("Configurações")}
           />
-          <h1 className="text-lg font-bold text-foreground">Configurações Gerais</h1>
+          <h1 className="text-base sm:text-lg font-bold text-foreground">Configurações Gerais</h1>
         </div>
         
-        <p className="text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Gerencie as configurações da plataforma
         </p>
 
-        <Accordion type="single" collapsible className="space-y-4 max-w-4xl">
-          <AccordionItem value="notificacoes-sistema" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+        <Accordion type="single" collapsible className="space-y-3 sm:space-y-4 w-full max-w-5xl">
+          <AccordionItem value="notificacoes-sistema" className="border rounded-lg bg-card shadow-sm">
+            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
-                <Bell className="w-5 h-5 text-primary" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
                 <div className="text-left">
-                  <div className="font-semibold">Notificações do Sistema</div>
-                  <div className="text-sm text-muted-foreground font-normal">
+                  <div className="text-sm sm:text-base font-semibold">Notificações do Sistema</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
                     Configure a exibição de mensagens de confirmação
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border rounded-lg">
                   <div className="space-y-0.5">
-                    <Label htmlFor="show-confirmations" className="text-base font-medium">
+                    <Label htmlFor="show-confirmations" className="text-sm sm:text-base font-medium">
                       Mostrar mensagens de confirmação
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Exibe notificações como "Bot ativado", "Mensagem enviada", etc.
                     </p>
                   </div>
@@ -76,6 +76,7 @@ export default function Config() {
                     id="show-confirmations"
                     checked={showConfirmationMessages}
                     onCheckedChange={handleToggleConfirmationMessages}
+                    className="shrink-0"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -85,85 +86,85 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="cadastro-estabelecimentos" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+          <AccordionItem value="cadastro-estabelecimentos" className="border rounded-lg bg-card shadow-sm">
+            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
-                <Store className="w-5 h-5 text-primary" />
+                <Store className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
                 <div className="text-left">
-                  <div className="font-semibold">Estabelecimento Cadastrado</div>
-                  <div className="text-sm text-muted-foreground font-normal">
+                  <div className="text-sm sm:text-base font-semibold">Estabelecimento Cadastrado</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
                     Gerencie estabelecimentos e configurações relacionadas
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
+            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
               <EstabelecimentosCRUD />
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="cadastro-administradores" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+          <AccordionItem value="cadastro-administradores" className="border rounded-lg bg-card shadow-sm">
+            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-primary" />
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
                 <div className="text-left">
-                  <div className="font-semibold">Cadastro de Administradores</div>
-                  <div className="text-sm text-muted-foreground font-normal">
+                  <div className="text-sm sm:text-base font-semibold">Cadastro de Administradores</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
                     Gerencie administradores do sistema
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
+            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
               <AdministradoresCRUD />
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="recuperar-senha" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+          <AccordionItem value="recuperar-senha" className="border rounded-lg bg-card shadow-sm">
+            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-primary" />
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
                 <div className="text-left">
-                  <div className="font-semibold">Recuperar Senha</div>
-                  <div className="text-sm text-muted-foreground font-normal">
+                  <div className="text-sm sm:text-base font-semibold">Recuperar Senha</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
                     Configure o envio de códigos via WhatsApp
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
+            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
               <WhatsAppConfigCRUD />
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="campanhas" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+          <AccordionItem value="campanhas" className="border rounded-lg bg-card shadow-sm">
+            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-primary" />
+                <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
                 <div className="text-left">
-                  <div className="font-semibold">Campanhas</div>
-                  <div className="text-sm text-muted-foreground font-normal">
+                  <div className="text-sm sm:text-base font-semibold">Campanhas</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
                     Gerencie suas campanhas de mensagens em massa
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
+            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
+              <div className="space-y-4 sm:space-y-6 md:space-y-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground">Suas Campanhas</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground">Suas Campanhas</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Acompanhe o status e desempenho de suas campanhas
                     </p>
                   </div>
-                  <Button className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Nova Campanha
+                  <Button className="gap-2 w-full sm:w-auto" size="sm">
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm">Nova Campanha</span>
                   </Button>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-3">
+                <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
@@ -253,19 +254,19 @@ export default function Config() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="conteudos" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+          <AccordionItem value="conteudos" className="border rounded-lg bg-card shadow-sm">
+            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
                 <div className="text-left">
-                  <div className="font-semibold">Conteúdos</div>
-                  <div className="text-sm text-muted-foreground font-normal">
+                  <div className="text-sm sm:text-base font-semibold">Conteúdos</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
                     Base de conhecimento e materiais de apoio
                   </div>
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
+            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
               <div className="space-y-8">
                 <div className="flex items-center justify-between">
                   <div>
