@@ -3,20 +3,11 @@ import { Plus, Edit, Trash2, Power, PowerOff, CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,138 +138,134 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
       </div>
 
       {automacoes.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-center py-12 text-muted-foreground">
-          <div>
-            <p>Nenhuma regra criada ainda</p>
-            <p className="text-sm mt-1">Clique em "Nova Regra" para começar</p>
-          </div>
+        <div className="text-center py-12 text-muted-foreground">
+          <p>Nenhuma regra criada ainda</p>
+          <p className="text-sm mt-1">Clique em "Nova Regra" para começar</p>
         </div>
       ) : (
-        <div className="flex-1">
-          <div className="p-6">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[150px]">Nome</TableHead>
-                    <TableHead className="hidden md:table-cell min-w-[200px]">Descrição</TableHead>
-                    <TableHead className="min-w-[80px]">Status</TableHead>
-                    <TableHead className="hidden lg:table-cell">Prioridade</TableHead>
-                    <TableHead className="hidden lg:table-cell">Blocos</TableHead>
-                    <TableHead className="hidden xl:table-cell min-w-[150px]">Vencimento</TableHead>
-                    <TableHead className="hidden xl:table-cell">Criado em</TableHead>
-                    <TableHead className="text-right min-w-[120px]">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {automacoes.map((automacao) => {
-                    const flowData = automacao.flow_data as any;
-                    const numBlocos = flowData?.nodes?.length || 0;
-                    
-                    return (
-                      <TableRow key={automacao.id}>
-                        <TableCell className="font-medium">
-                          {automacao.nome}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                          {automacao.descricao || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={automacao.ativo ? "default" : "secondary"} className="whitespace-nowrap">
-                            {automacao.ativo ? "Ativa" : "Inativa"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <Badge variant="outline">
-                            {automacao.prioridade}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <span className="text-sm whitespace-nowrap">{numBlocos} blocos</span>
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className={cn(
-                                  "h-8 justify-start text-left font-normal whitespace-nowrap",
-                                  !automacao.expires_at && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {automacao.expires_at ? (
-                                  format(new Date(automacao.expires_at), "dd/MM/yyyy")
-                                ) : (
-                                  "Indeterminado"
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={automacao.expires_at ? new Date(automacao.expires_at) : undefined}
-                                onSelect={(date) => handleUpdateExpiration(automacao.id, date || null)}
-                                initialFocus
-                                className={cn("p-3 pointer-events-auto")}
-                                disabled={(date) => date < new Date()}
-                              />
-                              {automacao.expires_at && (
-                                <div className="p-3 border-t">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleUpdateExpiration(automacao.id, null)}
-                                    className="w-full"
-                                  >
-                                    Remover vencimento
-                                  </Button>
-                                </div>
-                              )}
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell text-sm whitespace-nowrap">
-                          {new Date(automacao.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+          {automacoes.map((automacao) => {
+            const flowData = automacao.flow_data as any;
+            const numBlocos = flowData?.nodes?.length || 0;
+            
+            return (
+              <Card key={automacao.id} className="p-4 hover:shadow-lg transition-shadow">
+                <div className="space-y-4">
+                  {/* Cabeçalho */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg truncate">{automacao.nome}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {automacao.descricao || "Sem descrição"}
+                      </p>
+                    </div>
+                    <Badge variant={automacao.ativo ? "default" : "secondary"}>
+                      {automacao.ativo ? "Ativa" : "Inativa"}
+                    </Badge>
+                  </div>
+
+                  {/* Informações */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Prioridade:</span>
+                      <Badge variant="outline">{automacao.prioridade}</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Blocos:</span>
+                      <span className="font-medium">{numBlocos}</span>
+                    </div>
+                  </div>
+
+                  {/* Vencimento */}
+                  <div className="space-y-2">
+                    <span className="text-xs text-muted-foreground">Vencimento:</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !automacao.expires_at && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {automacao.expires_at ? (
+                            format(new Date(automacao.expires_at), "dd/MM/yyyy")
+                          ) : (
+                            "Indeterminado"
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={automacao.expires_at ? new Date(automacao.expires_at) : undefined}
+                          onSelect={(date) => handleUpdateExpiration(automacao.id, date || null)}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                          disabled={(date) => date < new Date()}
+                        />
+                        {automacao.expires_at && (
+                          <div className="p-3 border-t">
                             <Button
                               variant="ghost"
-                              size="icon"
-                              onClick={() => handleToggleActive(automacao.id, automacao.ativo)}
-                              title={automacao.ativo ? "Desativar" : "Ativar"}
+                              size="sm"
+                              onClick={() => handleUpdateExpiration(automacao.id, null)}
+                              className="w-full"
                             >
-                              {automacao.ativo ? (
-                                <PowerOff className="h-4 w-4" />
-                              ) : (
-                                <Power className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/editor-regras?id=${automacao.id}`)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteId(automacao.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
+                              Remover vencimento
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Data de criação */}
+                  <div className="text-xs text-muted-foreground">
+                    Criado em {new Date(automacao.created_at).toLocaleDateString()}
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleActive(automacao.id, automacao.ativo)}
+                      className="flex-1"
+                    >
+                      {automacao.ativo ? (
+                        <>
+                          <PowerOff className="h-4 w-4 mr-2" />
+                          Desativar
+                        </>
+                      ) : (
+                        <>
+                          <Power className="h-4 w-4 mr-2" />
+                          Ativar
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/editor-regras?id=${automacao.id}`)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteId(automacao.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 
