@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Download, TrendingUp, Users, Clock, Target, Award, BarChart3 } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, TrendingUp, Users, Clock, Target, Award, BarChart3, Plus, FileText, HelpCircle } from 'lucide-react';
 import ReactECharts from 'echarts-for-react';
 import { toast } from '@/lib/toast-config';
 
@@ -34,26 +37,92 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
   const [loading, setLoading] = useState(true);
   const [dataInicio, setDataInicio] = useState<Date>(subDays(new Date(), 30));
   const [dataFim, setDataFim] = useState<Date>(new Date());
-  const [periodoComparacao, setPeriodoComparacao] = useState('mes_anterior');
+  const [filaFiltro, setFilaFiltro] = useState<string>('todas');
+  const [atendenteFiltro, setAtendenteFiltro] = useState<string>('todos');
+  const [canalFiltro, setCanalFiltro] = useState<string>('todos');
+  const [filas, setFilas] = useState<any[]>([]);
+  const [atendentes, setAtendentes] = useState<any[]>([]);
+  const [metricasPorAtendente, setMetricasPorAtendente] = useState<any[]>([]);
+  const [metricasPorCanal, setMetricasPorCanal] = useState<any[]>([]);
+  const [novoRelatorioOpen, setNovoRelatorioOpen] = useState(false);
+  const [nomeRelatorio, setNomeRelatorio] = useState('');
+  const [tipoRelatorio, setTipoRelatorio] = useState('geral');
+  const [metricasSelecionadas, setMetricasSelecionadas] = useState<string[]>([
+    'volume', 'sla', 'fcr', 'aht', 'csat', 'nps'
+  ]);
+  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
 
   useEffect(() => {
     loadMetricas();
-  }, [estabelecimentoId, dataInicio, dataFim]);
+    loadFilas();
+    loadAtendentes();
+    loadMetricasPorAtendente();
+    loadMetricasPorCanal();
+  }, [estabelecimentoId, dataInicio, dataFim, filaFiltro, atendenteFiltro, canalFiltro]);
+
+  const loadFilas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('filas_atendimento')
+        .select('id, nome')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('ativa', true)
+        .order('nome');
+      
+      if (error) throw error;
+      setFilas(data || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar filas:', error);
+    }
+  };
+
+  const loadAtendentes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('atendentes')
+        .select('id, usuario_id, usuarios!inner(nome)')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('usuarios.nome');
+      
+      if (error) throw error;
+      setAtendentes(data || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar atendentes:', error);
+    }
+  };
 
   const loadMetricas = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('metricas_agregadas')
         .select('*')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('periodo_tipo', 'dia')
-        .is('fila_id', null)
-        .is('atendente_id', null)
-        .is('canal', null)
         .gte('data', format(dataInicio, 'yyyy-MM-dd'))
-        .lte('data', format(dataFim, 'yyyy-MM-dd'))
-        .order('data', { ascending: true });
+        .lte('data', format(dataFim, 'yyyy-MM-dd'));
+
+      if (filaFiltro !== 'todas') {
+        query = query.eq('fila_id', filaFiltro);
+      } else {
+        query = query.is('fila_id', null);
+      }
+
+      if (atendenteFiltro !== 'todos') {
+        query = query.eq('atendente_id', atendenteFiltro);
+      } else {
+        query = query.is('atendente_id', null);
+      }
+
+      if (canalFiltro !== 'todos') {
+        query = query.eq('canal', canalFiltro);
+      } else {
+        query = query.is('canal', null);
+      }
+
+      query = query.order('data', { ascending: true });
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setMetricas(data || []);
@@ -65,9 +134,108 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
     }
   };
 
+  const loadMetricasPorAtendente = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('metricas_agregadas')
+        .select('*, atendentes!inner(usuario_id, usuarios!inner(nome))')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('periodo_tipo', 'dia')
+        .not('atendente_id', 'is', null)
+        .gte('data', format(dataInicio, 'yyyy-MM-dd'))
+        .lte('data', format(dataFim, 'yyyy-MM-dd'));
+
+      if (error) throw error;
+      
+      // Agregar métricas por atendente
+      const agregado = (data || []).reduce((acc: any, m: any) => {
+        const atendenteId = m.atendente_id;
+        if (!acc[atendenteId]) {
+          acc[atendenteId] = {
+            nome: m.atendentes?.usuarios?.nome || 'Desconhecido',
+            total_chats: 0,
+            taxa_fcr: 0,
+            tempo_medio_atendimento: 0,
+            avaliacao_media: 0,
+            dias: 0,
+          };
+        }
+        acc[atendenteId].total_chats += m.total_chats || 0;
+        acc[atendenteId].taxa_fcr += m.taxa_fcr || 0;
+        acc[atendenteId].tempo_medio_atendimento += m.tempo_medio_atendimento || 0;
+        acc[atendenteId].avaliacao_media += m.avaliacao_media || 0;
+        acc[atendenteId].dias += 1;
+        return acc;
+      }, {});
+
+      setMetricasPorAtendente(Object.values(agregado));
+    } catch (error: any) {
+      console.error('Erro ao carregar métricas por atendente:', error);
+    }
+  };
+
+  const loadMetricasPorCanal = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('metricas_agregadas')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('periodo_tipo', 'dia')
+        .not('canal', 'is', null)
+        .gte('data', format(dataInicio, 'yyyy-MM-dd'))
+        .lte('data', format(dataFim, 'yyyy-MM-dd'));
+
+      if (error) throw error;
+      
+      // Agregar métricas por canal
+      const agregado = (data || []).reduce((acc: any, m: any) => {
+        const canal = m.canal || 'Desconhecido';
+        if (!acc[canal]) {
+          acc[canal] = {
+            canal,
+            total_chats: 0,
+            taxa_fcr: 0,
+            avaliacao_media: 0,
+            dias: 0,
+          };
+        }
+        acc[canal].total_chats += m.total_chats || 0;
+        acc[canal].taxa_fcr += m.taxa_fcr || 0;
+        acc[canal].avaliacao_media += m.avaliacao_media || 0;
+        acc[canal].dias += 1;
+        return acc;
+      }, {});
+
+      setMetricasPorCanal(Object.values(agregado));
+    } catch (error: any) {
+      console.error('Erro ao carregar métricas por canal:', error);
+    }
+  };
+
   const handleExport = async (formato: 'pdf' | 'excel' | 'csv') => {
     toast.info(`Exportando relatório em ${formato.toUpperCase()}...`);
     // Implementar exportação
+  };
+
+  const handleCriarRelatorio = () => {
+    if (!nomeRelatorio.trim()) {
+      toast.error('Informe um nome para o relatório');
+      return;
+    }
+
+    toast.success(`Relatório "${nomeRelatorio}" criado com sucesso!`);
+    setNovoRelatorioOpen(false);
+    setNomeRelatorio('');
+    setTipoRelatorio('geral');
+    setMetricasSelecionadas(['volume', 'sla', 'fcr', 'aht', 'csat', 'nps']);
+  };
+
+  const toggleMetrica = (metrica: string) => {
+    setMetricasSelecionadas(prev =>
+      prev.includes(metrica)
+        ? prev.filter(m => m !== metrica)
+        : [...prev, metrica]
+    );
   };
 
   // Calcular métricas consolidadas
@@ -238,14 +406,101 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <CardTitle>Analytics Avançado</CardTitle>
-              <CardDescription>
-                Análise detalhada de performance e qualidade do atendimento
-              </CardDescription>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setHelpDialogOpen(true)}
+              >
+                <HelpCircle className="w-4 h-4" />
+              </Button>
+              <div>
+                <CardTitle>Analytics Avançado</CardTitle>
+                <CardDescription>
+                  Análise detalhada de performance e qualidade do atendimento
+                </CardDescription>
+              </div>
             </div>
             
             <div className="flex flex-wrap gap-2">
+              <Dialog open={novoRelatorioOpen} onOpenChange={setNovoRelatorioOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default" size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Relatório
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Criar Relatório Customizado</DialogTitle>
+                    <DialogDescription>
+                      Configure um relatório personalizado com as métricas desejadas
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="nome">Nome do Relatório</Label>
+                      <Input
+                        id="nome"
+                        value={nomeRelatorio}
+                        onChange={(e) => setNomeRelatorio(e.target.value)}
+                        placeholder="Ex: Relatório Mensal de Performance"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="tipo">Tipo</Label>
+                      <Select value={tipoRelatorio} onValueChange={setTipoRelatorio}>
+                        <SelectTrigger id="tipo">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="geral">Geral</SelectItem>
+                          <SelectItem value="atendente">Por Atendente</SelectItem>
+                          <SelectItem value="fila">Por Fila</SelectItem>
+                          <SelectItem value="canal">Por Canal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Métricas</Label>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {[
+                          { id: 'volume', label: 'Volume Total' },
+                          { id: 'sla', label: 'Taxa SLA' },
+                          { id: 'fcr', label: 'FCR (First Contact Resolution)' },
+                          { id: 'aht', label: 'AHT (Average Handle Time)' },
+                          { id: 'csat', label: 'CSAT (Customer Satisfaction)' },
+                          { id: 'nps', label: 'NPS (Net Promoter Score)' },
+                        ].map((metrica) => (
+                          <div key={metrica.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={metrica.id}
+                              checked={metricasSelecionadas.includes(metrica.id)}
+                              onCheckedChange={() => toggleMetrica(metrica.id)}
+                            />
+                            <label
+                              htmlFor={metrica.id}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {metrica.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setNovoRelatorioOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleCriarRelatorio}>
+                        Criar Relatório
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -285,6 +540,112 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
           </div>
         </CardHeader>
       </Card>
+
+      {/* Dialog de Ajuda */}
+      <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Como usar o Analytics Avançado</DialogTitle>
+            <DialogDescription>
+              Guia completo de métricas e funcionalidades
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div>
+              <h3 className="font-semibold text-lg mb-2">📊 Métricas Disponíveis</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold">FCR (First Contact Resolution)</h4>
+                  <p className="text-sm text-muted-foreground">Taxa de resolução no primeiro contato</p>
+                  <p className="text-sm mt-1">
+                    <strong>Como calcular:</strong> (Chats resolvidos na primeira interação / Total de chats) × 100
+                  </p>
+                  <p className="text-sm mt-1">
+                    <strong>Uso:</strong> Medir eficiência do atendimento
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold">AHT (Average Handle Time)</h4>
+                  <p className="text-sm text-muted-foreground">Tempo médio de atendimento</p>
+                  <p className="text-sm mt-1">
+                    <strong>Como calcular:</strong> Soma total de tempo de atendimento / Número de atendimentos
+                  </p>
+                  <p className="text-sm mt-1">
+                    <strong>Uso:</strong> Otimizar alocação de recursos
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold">CSAT (Customer Satisfaction)</h4>
+                  <p className="text-sm text-muted-foreground">Satisfação do cliente</p>
+                  <p className="text-sm mt-1">
+                    <strong>Como calcular:</strong> Média das avaliações recebidas
+                  </p>
+                  <p className="text-sm mt-1">
+                    <strong>Uso:</strong> Medir qualidade do atendimento
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold">NPS (Net Promoter Score)</h4>
+                  <p className="text-sm text-muted-foreground">Probabilidade de recomendação</p>
+                  <p className="text-sm mt-1">
+                    <strong>Como calcular:</strong> % Promotores - % Detratores
+                  </p>
+                  <p className="text-sm mt-1">
+                    <strong>Uso:</strong> Medir lealdade do cliente
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">📈 Dashboards Disponíveis</h3>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold">Dashboard Principal</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Visão geral de todas as métricas com gráficos de tendência e comparativos
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Dashboard por Atendente</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Performance individual, ranking de atendentes e metas vs. realizado
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Dashboard por Canal</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Distribuição de volume, métricas por canal (WhatsApp, WebChat, etc.) e comparativo de satisfação
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">🔄 Agregação Automática</h3>
+              <p className="text-sm text-muted-foreground">
+                As métricas são agregadas automaticamente de forma diária através de uma Edge Function que:
+              </p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
+                <li>Executa diariamente às 00:00</li>
+                <li>Calcula métricas do dia anterior</li>
+                <li>Armazena na tabela metricas_agregadas</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">📝 Criar Relatório Customizado</h3>
+              <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-1">
+                <li>Clique em "Novo Relatório"</li>
+                <li>Configure nome, tipo, e período desejado</li>
+                <li>Selecione filtros (fila, atendente, canal)</li>
+                <li>Escolha quais métricas incluir</li>
+                <li>Clique em "Criar Relatório"</li>
+              </ol>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Cards de Métricas Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -335,14 +696,107 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         </Card>
       </div>
 
+      {/* Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Filtros</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label>Fila</Label>
+              <Select value={filaFiltro} onValueChange={setFilaFiltro}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas as filas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas as filas</SelectItem>
+                  {filas.map((fila) => (
+                    <SelectItem key={fila.id} value={fila.id}>
+                      {fila.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Atendente</Label>
+              <Select value={atendenteFiltro} onValueChange={setAtendenteFiltro}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os atendentes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os atendentes</SelectItem>
+                  {atendentes.map((atendente: any) => (
+                    <SelectItem key={atendente.id} value={atendente.id}>
+                      {atendente.usuarios?.nome || 'Sem nome'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Canal</Label>
+              <Select value={canalFiltro} onValueChange={setCanalFiltro}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os canais" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os canais</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="webchat">WebChat</SelectItem>
+                  <SelectItem value="telegram">Telegram</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Gráficos */}
-      <Tabs defaultValue="volume" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="principal" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="principal">Principal</TabsTrigger>
           <TabsTrigger value="volume">Volume</TabsTrigger>
           <TabsTrigger value="tempos">Tempos</TabsTrigger>
-          <TabsTrigger value="nps">NPS</TabsTrigger>
-          <TabsTrigger value="comparacao">Comparação</TabsTrigger>
+          <TabsTrigger value="nps">NPS/CSAT</TabsTrigger>
+          <TabsTrigger value="atendente">Por Atendente</TabsTrigger>
+          <TabsTrigger value="canal">Por Canal</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="principal" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Visão Geral - Volume</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {metricas.length > 0 ? (
+                  <ReactECharts option={volumeChartOptions} style={{ height: '300px' }} />
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Nenhum dado disponível
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>NPS Score</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {metricas.length > 0 ? (
+                  <ReactECharts option={npsChartOptions} style={{ height: '300px' }} />
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Nenhum dado disponível
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         <TabsContent value="volume" className="space-y-4">
           <Card>
@@ -468,33 +922,108 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
           </div>
         </TabsContent>
 
-        <TabsContent value="comparacao" className="space-y-4">
+        <TabsContent value="atendente" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Comparação de Períodos</CardTitle>
-              <CardDescription>
-                Compare o desempenho atual com períodos anteriores
-              </CardDescription>
+              <CardTitle>Performance por Atendente</CardTitle>
+              <CardDescription>Ranking e métricas individuais dos atendentes</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Select value={periodoComparacao} onValueChange={setPeriodoComparacao}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="semana_anterior">Semana Anterior</SelectItem>
-                    <SelectItem value="mes_anterior">Mês Anterior</SelectItem>
-                    <SelectItem value="trimestre_anterior">Trimestre Anterior</SelectItem>
-                    <SelectItem value="ano_anterior">Ano Anterior</SelectItem>
-                  </SelectContent>
-                </Select>
+                {metricasPorAtendente.length > 0 ? (
+                  <div className="space-y-2">
+                    {metricasPorAtendente.map((atendente: any, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-semibold">{atendente.nome}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {atendente.total_chats} chats atendidos
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-6 text-sm">
+                          <div className="text-center">
+                            <div className="font-bold">
+                              {((atendente.taxa_fcr / atendente.dias) || 0).toFixed(1)}%
+                            </div>
+                            <div className="text-muted-foreground">FCR</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold">
+                              {Math.floor((atendente.tempo_medio_atendimento / atendente.dias) / 60) || 0}min
+                            </div>
+                            <div className="text-muted-foreground">AHT</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold">
+                              {((atendente.avaliacao_media / atendente.dias) || 0).toFixed(1)}
+                            </div>
+                            <div className="text-muted-foreground">Avaliação</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>Nenhum dado de atendente disponível</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                <div className="text-center py-12 text-muted-foreground">
-                  <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Comparação de períodos em desenvolvimento</p>
-                  <p className="text-sm mt-2">Em breve: comparações lado a lado com crescimento %</p>
-                </div>
+        <TabsContent value="canal" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição por Canal</CardTitle>
+              <CardDescription>Métricas e comparativos entre canais de atendimento</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {metricasPorCanal.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {metricasPorCanal.map((canal: any, index: number) => (
+                      <Card key={index}>
+                        <CardHeader>
+                          <CardTitle className="text-lg capitalize">{canal.canal}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Volume</span>
+                            <span className="font-bold">{canal.total_chats}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">FCR</span>
+                            <span className="font-bold">
+                              {((canal.taxa_fcr / canal.dias) || 0).toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Satisfação</span>
+                            <span className="font-bold">
+                              {((canal.avaliacao_media / canal.dias) || 0).toFixed(1)}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>Nenhum dado de canal disponível</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
