@@ -314,8 +314,6 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     return `${minutos}min`;
   };
 
-  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
-
   return (
     <div className="space-y-6">
       <Card>
@@ -400,15 +398,7 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => setHelpDialogOpen(true)}
-              >
-                <HelpCircle className="w-4 h-4" />
-              </Button>
+            <DialogTitle className="text-xl">
               {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
             </DialogTitle>
           </DialogHeader>
@@ -720,76 +710,6 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               {selectedConfig ? "Atualizar" : "Criar"}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Como funciona o SLA?</DialogTitle>
-            <DialogDescription className="space-y-4 text-left">
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">📊 O que é SLA?</h3>
-                <p>SLA (Service Level Agreement) define os tempos máximos de resposta e resolução para seus atendimentos.</p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">⏱️ Tempos Monitorados</h3>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Primeira Resposta:</strong> Tempo até a primeira resposta do atendente</li>
-                  <li><strong>Respostas Subsequentes:</strong> Tempo entre mensagens do cliente e respostas</li>
-                  <li><strong>Resolução Total:</strong> Tempo total até encerramento do chat</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">🎯 Multiplicadores de Prioridade</h3>
-                <p>Os tempos são ajustados automaticamente pela prioridade:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Urgente:</strong> 50% do tempo (2x mais rápido)</li>
-                  <li><strong>Alta:</strong> 75% do tempo</li>
-                  <li><strong>Normal:</strong> 100% do tempo (padrão)</li>
-                  <li><strong>Baixa:</strong> 150% do tempo</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">🔔 Como o Supervisor é Avisado?</h3>
-                <p>Quando você ativa "Notificar Supervisor" e seleciona um usuário:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>O supervisor recebe <strong>notificações em tempo real</strong> na tela de atendimento</li>
-                  <li>Notificações aparecem quando o SLA está próximo de vencer (conforme % de alerta)</li>
-                  <li>Também é notificado quando ocorre violação do SLA</li>
-                  <li>As notificações incluem informações do chat e cliente</li>
-                  <li>Som de notificação toca automaticamente (se habilitado)</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">⚡ Ações Automáticas</h3>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Aumentar Prioridade:</strong> Chat automaticamente aumenta de prioridade ao violar SLA</li>
-                  <li><strong>Escalar Automaticamente:</strong> Chat é transferido para outra fila quando viola SLA</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">📈 Monitoramento</h3>
-                <p>O sistema verifica os SLAs automaticamente a cada minuto através de um processo em segundo plano.</p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">✅ Configuração Ativa</h3>
-                <p>O flag "Configuração Ativa" controla se esta regra de SLA será aplicada aos novos chats:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Ativo:</strong> A configuração será aplicada automaticamente aos novos chats que entrarem na fila</li>
-                  <li><strong>Inativo:</strong> A configuração fica salva mas não será usada - útil para desativar temporariamente sem excluir</li>
-                  <li>Você pode ter múltiplas configurações, mas apenas as ativas serão aplicadas</li>
-                  <li>Chats em andamento mantêm a configuração que foi aplicada quando iniciaram</li>
-                </ul>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
         </DialogContent>
       </Dialog>
 
