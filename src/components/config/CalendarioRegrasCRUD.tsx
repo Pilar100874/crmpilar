@@ -207,59 +207,117 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
               <p>Nenhuma regra cadastrada ainda</p>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">Ativa</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
-                    <TableHead className="w-24">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {regras.map((regra) => (
-                    <TableRow key={regra.id}>
-                      <TableCell>
+            <>
+              {/* Desktop: Tabela */}
+              <div className="hidden lg:block rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">Ativa</TableHead>
+                      <TableHead className="min-w-[180px]">Nome</TableHead>
+                      <TableHead className="min-w-[150px]">Tipo</TableHead>
+                      <TableHead className="min-w-[200px]">Descrição</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                      <TableHead className="w-32">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {regras.map((regra) => (
+                      <TableRow key={regra.id}>
+                        <TableCell>
+                          <Switch
+                            checked={regra.ativa}
+                            onCheckedChange={(checked) => toggleRegra(regra.id, checked)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{regra.nome}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`${getTipoColor(regra.tipo)} text-white whitespace-nowrap`}>
+                            {getTipoLabel(regra.tipo)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {regra.descricao || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={regra.ativa ? "default" : "secondary"}>
+                            {regra.ativa ? 'Ativa' : 'Inativa'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {(regra.tipo === 'alerta_tarefas_urgentes' || regra.tipo === 'alerta_urgente') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openConfigDialog(regra)}
+                              title="Configurar níveis de alerta"
+                            >
+                              <Settings className="h-4 w-4 mr-1" />
+                              Config
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Tablet/Mobile: Cards */}
+              <div className="lg:hidden space-y-4">
+                {regras.map((regra) => (
+                  <Card key={regra.id} className="overflow-hidden">
+                    <CardContent className="p-4 space-y-3">
+                      {/* Header do Card */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-sm truncate">{regra.nome}</h4>
+                            <Badge variant={regra.ativa ? "default" : "secondary"} className="shrink-0">
+                              {regra.ativa ? 'Ativa' : 'Inativa'}
+                            </Badge>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={`${getTipoColor(regra.tipo)} text-white text-xs`}
+                          >
+                            {getTipoLabel(regra.tipo)}
+                          </Badge>
+                        </div>
                         <Switch
                           checked={regra.ativa}
                           onCheckedChange={(checked) => toggleRegra(regra.id, checked)}
                         />
-                      </TableCell>
-                      <TableCell className="font-medium">{regra.nome}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`${getTipoColor(regra.tipo)} text-white`}>
-                          {getTipoLabel(regra.tipo)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {regra.descricao || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={regra.ativa ? "default" : "secondary"}>
-                          {regra.ativa ? 'Ativa' : 'Inativa'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {(regra.tipo === 'alerta_tarefas_urgentes' || regra.tipo === 'alerta_urgente') && (
+                      </div>
+
+                      {/* Descrição */}
+                      {regra.descricao && (
+                        <div className="pt-2 border-t">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {regra.descricao}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Ações */}
+                      {(regra.tipo === 'alerta_tarefas_urgentes' || regra.tipo === 'alerta_urgente') && (
+                        <div className="pt-2 border-t">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => openConfigDialog(regra)}
-                            title="Configurar níveis de alerta"
+                            className="w-full"
                           >
-                            <Settings className="h-4 w-4 mr-1" />
-                            Configurar
+                            <Settings className="h-4 w-4 mr-2" />
+                            Configurar Alertas
                           </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
           
           <div className="mt-4 flex justify-end">
@@ -277,7 +335,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
 
       {/* Dialog de Configuração */}
       <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Configurar Alerta de Tarefas Urgentes</DialogTitle>
             <DialogDescription>
@@ -288,7 +346,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
             <div className="space-y-2">
               <Label htmlFor="dias_vermelho">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-500 rounded" />
+                  <div className="w-4 h-4 bg-red-500 rounded flex-shrink-0" />
                   <span className="font-semibold">Vermelho (mais crítico)</span>
                 </div>
               </Label>
@@ -310,7 +368,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
             <div className="space-y-2">
               <Label htmlFor="dias_laranja">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-orange-500 rounded" />
+                  <div className="w-4 h-4 bg-orange-500 rounded flex-shrink-0" />
                   <span className="font-semibold">Laranja</span>
                 </div>
               </Label>
@@ -332,7 +390,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
             <div className="space-y-2">
               <Label htmlFor="dias_amarelo">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-yellow-500 rounded" />
+                  <div className="w-4 h-4 bg-yellow-500 rounded flex-shrink-0" />
                   <span className="font-semibold">Amarelo</span>
                 </div>
               </Label>
@@ -354,7 +412,7 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
             <div className="space-y-2">
               <Label htmlFor="dias_verde">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded" />
+                  <div className="w-4 h-4 bg-green-500 rounded flex-shrink-0" />
                   <span className="font-semibold">Verde (em dia)</span>
                 </div>
               </Label>
@@ -374,11 +432,11 @@ export function CalendarioRegrasCRUD({ estabelecimentoId }: CalendarioRegrasCRUD
               </p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setConfigDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={saveConfig}>
+            <Button onClick={saveConfig} className="w-full sm:w-auto">
               Salvar Configuração
             </Button>
           </DialogFooter>
