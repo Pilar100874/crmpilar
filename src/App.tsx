@@ -53,6 +53,7 @@ import SLADashboardPage from "./pages/SLADashboard";
 import ConfigSLAPage from "./pages/ConfigSLA";
 import AdvancedAnalyticsPage from "./pages/AdvancedAnalytics";
 import PesquisasSatisfacaoPage from "./pages/PesquisasSatisfacao";
+import DashboardPesquisasSatisfacao from "./pages/DashboardPesquisasSatisfacao";
 import BaseConhecimento from "./pages/BaseConhecimento";
 import QualityAssurance from "./pages/QualityAssurance";
 
@@ -121,6 +122,7 @@ const App = () => (
             <Route path="/sla-dashboard" element={<SLADashboardPage />} />
             <Route path="/config/sla" element={<ConfigSLAPage />} />
             <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
+            <Route path="/dashboard-pesquisas-satisfacao" element={<DashboardPesquisasSatisfacao />} />
             <Route path="/pesquisas-satisfacao" element={<PesquisasSatisfacaoPage />} />
             <Route path="/base-conhecimento" element={<BaseConhecimento />} />
             <Route path="/quality-assurance" element={<QualityAssurance />} />

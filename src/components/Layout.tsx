@@ -87,6 +87,7 @@ const menuItems: MenuItem[] = [
       { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LayoutDashboard },
       { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: Activity },
       { id: "Analytics Dashboard", title: "Analytics Avançado", url: "/advanced-analytics", icon: FileBarChart },
+      { id: "Dashboard CSAT/NPS", title: "Pesquisas de Satisfação", url: "/dashboard-pesquisas-satisfacao", icon: Star },
     ]
   },
   { id: "Clientes", title: "Funil", url: "/funil", icon: Users },
