@@ -149,7 +149,7 @@ const menuItems: MenuItem[] = [
     icon: Target,
     subItems: [
       { id: "Canvas", title: "Canvas", url: "/marketing/canvas", icon: Palette },
-      { id: "Automações", title: "Automações", url: "/marketing/automacoes", icon: Zap },
+      { id: "Automação de Vendas", title: "Automação de Vendas", url: "/automacoes-vendas", icon: Zap },
       { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: Megaphone },
     ]
   },
