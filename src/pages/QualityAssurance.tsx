@@ -1,10 +1,49 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import QualityAssuranceCRUD from "@/components/config/QualityAssuranceCRUD";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { toast } from "@/lib/toast-config";
 
 export default function QualityAssurance() {
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    document.title = "Quality Assurance - Sistema";
+    const loadEstabelecimento = async () => {
+      try {
+        const id = await getEstabelecimentoId();
+        if (id) {
+          setEstabelecimentoId(id);
+        } else {
+          toast.error("Nenhum estabelecimento selecionado");
+        }
+      } catch (error) {
+        console.error("Erro ao carregar estabelecimento:", error);
+        toast.error("Erro ao carregar estabelecimento");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEstabelecimento();
   }, []);
 
-  return <QualityAssuranceCRUD />;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-muted-foreground">Carregando...</div>
+      </div>
+    );
+  }
+
+  if (!estabelecimentoId) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-muted-foreground">
+          Nenhum estabelecimento encontrado
+        </div>
+      </div>
+    );
+  }
+
+  return <QualityAssuranceCRUD estabelecimentoId={estabelecimentoId} />;
 }
