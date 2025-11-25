@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, ArrowLeft, Download, Upload, Play, MoreVertical, Copy, Trash2, StickyNote } from "lucide-react";
+import { Save, ArrowLeft, Download, Upload, Play } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
 import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
 import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
@@ -24,18 +23,18 @@ interface BlockData {
 }
 
 const BLOCK_COLORS: Record<string, { primary: string; dark: string; darker: string }> = {
-  inicio: { primary: "#4CAF50", dark: "#43A047", darker: "#388E3C" },
-  desconto_valor_compra: { primary: "#5C6BC0", dark: "#3949AB", darker: "#283593" },
-  desconto_quantidade_compras: { primary: "#7E57C2", dark: "#5E35B1", darker: "#4527A0" },
-  desconto_produtos_grupo: { primary: "#FF7043", dark: "#F4511E", darker: "#D84315" },
-  desconto_pagamento_antecipado: { primary: "#FFA726", dark: "#FB8C00", darker: "#EF6C00" },
-  desconto_aniversario_cliente: { primary: "#EC407A", dark: "#D81B60", darker: "#AD1457" },
-  desconto_aniversario_empresa: { primary: "#AB47BC", dark: "#8E24AA", darker: "#6A1B9A" },
-  desconto_data_especial: { primary: "#EF5350", dark: "#E53935", darker: "#C62828" },
-  desconto_historico_crescimento: { primary: "#26A69A", dark: "#00897B", darker: "#00695C" },
-  desconto_tempo_desde_ultimo: { primary: "#29B6F6", dark: "#039BE5", darker: "#0277BD" },
-  aplicar_desconto: { primary: "#66BB6A", dark: "#43A047", darker: "#2E7D32" },
-  fim: { primary: "#78909C", dark: "#546E7A", darker: "#37474F" },
+  inicio: { primary: "#5CB85C", dark: "#4CAE4C", darker: "#449D44" },
+  desconto_valor_compra: { primary: "#5C6BC0", dark: "#3F51B5", darker: "#303F9F" },
+  desconto_quantidade_compras: { primary: "#9575CD", dark: "#673AB7", darker: "#512DA8" },
+  desconto_produtos_grupo: { primary: "#FF8A65", dark: "#FF7043", darker: "#F4511E" },
+  desconto_pagamento_antecipado: { primary: "#FFD54F", dark: "#FFCA28", darker: "#FFC107" },
+  desconto_aniversario_cliente: { primary: "#F06292", dark: "#EC407A", darker: "#E91E63" },
+  desconto_aniversario_empresa: { primary: "#BA68C8", dark: "#AB47BC", darker: "#9C27B0" },
+  desconto_data_especial: { primary: "#EF5350", dark: "#F44336", darker: "#E53935" },
+  desconto_historico_crescimento: { primary: "#4DB6AC", dark: "#26A69A", darker: "#009688" },
+  desconto_tempo_desde_ultimo: { primary: "#4FC3F7", dark: "#29B6F6", darker: "#03A9F4" },
+  aplicar_desconto: { primary: "#81C784", dark: "#66BB6A", darker: "#4CAF50" },
+  fim: { primary: "#90A4AE", dark: "#78909C", darker: "#607D8B" },
 };
 
 export default function AutomacaoVendas() {
@@ -300,14 +299,14 @@ export default function AutomacaoVendas() {
             style={{
               backgroundColor: "#ffffff",
               backgroundImage: `
-                radial-gradient(circle, #d0d0d0 1px, transparent 1px)
+                radial-gradient(circle at 1px 1px, #d0d0d0 1px, transparent 1px)
               `,
               backgroundSize: "20px 20px",
             }}
           >
-            <div className="max-w-4xl mx-auto py-4">
+            <div className="max-w-4xl mx-auto py-8">
               {blocks.map((block) => (
-                <BlocklyBlock
+                <BlocklyStyleBlock
                   key={block.id}
                   block={block}
                   onSelect={() => setSelectedBlock(block)}
@@ -341,7 +340,7 @@ export default function AutomacaoVendas() {
   );
 }
 
-interface BlocklyBlockProps {
+interface BlocklyStyleBlockProps {
   block: BlockData;
   onSelect: () => void;
   onDelete: () => void;
@@ -352,7 +351,7 @@ interface BlocklyBlockProps {
   isSelected: boolean;
 }
 
-function BlocklyBlock({
+function BlocklyStyleBlock({
   block,
   onSelect,
   onDelete,
@@ -361,7 +360,7 @@ function BlocklyBlock({
   onDrop,
   onDragOver,
   isSelected,
-}: BlocklyBlockProps) {
+}: BlocklyStyleBlockProps) {
   const colors = BLOCK_COLORS[block.type] || BLOCK_COLORS.fim;
   const isStart = block.type === "inicio";
   const isEnd = block.type === "fim";
@@ -376,124 +375,106 @@ function BlocklyBlock({
       }`}
       style={{
         filter: isSelected
-          ? `drop-shadow(0 0 8px ${colors.primary})`
-          : "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
+          ? `drop-shadow(0 0 10px ${colors.primary})`
+          : "drop-shadow(0 3px 5px rgba(0,0,0,0.2))",
       }}
     >
-      {/* Encaixe Superior (notch de entrada) */}
+      {/* Notch de Entrada */}
       {!isStart && (
         <svg
-          width="200"
-          height="12"
-          viewBox="0 0 200 12"
-          style={{ display: "block", margin: "0 auto" }}
+          width="240"
+          height="15"
+          viewBox="0 0 240 15"
+          style={{ display: "block" }}
         >
           <path
-            d="M 0,12 L 0,0 L 40,0 L 45,5 L 50,0 L 200,0 L 200,12 Z"
+            d="M 0,15 L 0,0 L 60,0 L 70,7 L 80,0 L 240,0 L 240,15 Z"
             fill={colors.primary}
-          />
-          <path
-            d="M 0,0 L 40,0 L 45,5 L 50,0 L 200,0"
-            fill="none"
             stroke={colors.darker}
-            strokeWidth="1"
+            strokeWidth="1.5"
           />
         </svg>
       )}
 
-      {/* Corpo Principal do Bloco */}
+      {/* Corpo do Bloco */}
       <div
         style={{
           backgroundColor: colors.primary,
           position: "relative",
-          minWidth: "200px",
+          minWidth: "240px",
+          border: `2px solid ${colors.darker}`,
+          borderTop: isStart ? `2px solid ${colors.darker}` : "none",
+          borderBottom: isEnd ? `2px solid ${colors.darker}` : "none",
         }}
       >
-        {/* Borda superior escura (efeito 3D) */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "4px",
-            backgroundColor: colors.dark,
-          }}
-        />
-
-        {/* Conteúdo do Bloco */}
-        <div style={{ padding: "8px 12px", paddingTop: "12px" }}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1">
-              <div
-                style={{
-                  color: "white",
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                  textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                  marginBottom: "2px",
-                }}
-              >
-                {block.label}
-              </div>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-white hover:bg-white/20"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDuplicate();
-                  }}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Duplicar
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddNote();
-                  }}
-                >
-                  <StickyNote className="h-4 w-4 mr-2" />
-                  {block.note ? "Editar Nota" : "Adicionar Nota"}
-                </DropdownMenuItem>
-                {!isStart && (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete();
-                    }}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Deletar
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Nota */}
-          {block.note && (
+        <div style={{ padding: "12px 16px" }}>
+          <div className="flex items-center justify-between gap-4">
             <div
               style={{
-                marginTop: "8px",
-                padding: "6px 8px",
-                backgroundColor: colors.darker,
-                borderRadius: "4px",
                 color: "white",
-                fontSize: "12px",
+                fontWeight: "600",
+                fontSize: "15px",
+                textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                fontFamily: "Helvetica, Arial, sans-serif",
+              }}
+            >
+              {block.label}
+            </div>
+
+            <div className="flex gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate();
+                }}
+                className="px-2 py-1 rounded text-xs font-semibold"
+                style={{
+                  backgroundColor: colors.darker,
+                  color: "white",
+                }}
+                title="Duplicar"
+              >
+                📋
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddNote();
+                }}
+                className="px-2 py-1 rounded text-xs font-semibold"
+                style={{
+                  backgroundColor: colors.darker,
+                  color: "white",
+                }}
+                title="Nota"
+              >
+                📝
+              </button>
+              {!isStart && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  className="px-2 py-1 rounded text-xs font-semibold"
+                  style={{
+                    backgroundColor: colors.darker,
+                    color: "white",
+                  }}
+                  title="Deletar"
+                >
+                  🗑️
+                </button>
+              )}
+            </div>
+          </div>
+
+          {block.note && (
+            <div
+              className="mt-3 p-2 rounded text-sm"
+              style={{
+                backgroundColor: colors.darker,
+                color: "white",
                 textShadow: "0 1px 2px rgba(0,0,0,0.3)",
               }}
             >
@@ -501,37 +482,21 @@ function BlocklyBlock({
             </div>
           )}
         </div>
-
-        {/* Borda inferior clara (efeito 3D) */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "2px",
-            backgroundColor: colors.darker,
-          }}
-        />
       </div>
 
-      {/* Encaixe Inferior (notch de saída) */}
+      {/* Notch de Saída */}
       {!isEnd && (
         <svg
-          width="200"
-          height="8"
-          viewBox="0 0 200 8"
-          style={{ display: "block", margin: "0 auto" }}
+          width="240"
+          height="10"
+          viewBox="0 0 240 10"
+          style={{ display: "block" }}
         >
           <path
-            d="M 0,0 L 0,8 L 50,8 L 45,3 L 40,8 L 200,8 L 200,0 Z"
+            d="M 0,0 L 0,10 L 80,10 L 70,3 L 60,10 L 240,10 L 240,0 Z"
             fill={colors.primary}
-          />
-          <path
-            d="M 0,8 L 50,8 L 45,3 L 40,8 L 200,8"
-            fill="none"
             stroke={colors.darker}
-            strokeWidth="1"
+            strokeWidth="1.5"
           />
         </svg>
       )}
