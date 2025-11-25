@@ -28,6 +28,7 @@ import { FilasManager } from "@/components/atendimento/FilasManager";
 import { SkillsManager } from "@/components/atendimento/SkillsManager";
 import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaManager";
 import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
+import { AutomacaoVendasCRUD } from "./AutomacaoVendasCRUD";
 import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap } from "lucide-react";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
 import { useState, useEffect } from "react";
@@ -2185,24 +2186,49 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionContent>
               </AccordionItem>
 
-              <div className="border rounded-md p-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-primary" />
-                    <span className="font-medium">Automação de Vendas</span>
+              <AccordionItem value="automacao-vendas" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Automação de Vendas</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "automacao-vendas"} onOpenChange={(open) => setHelpDialogOpen(open ? "automacao-vendas" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Automação de Vendas - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🤖 Automação Visual</h4>
+                              <p className="text-sm">Crie regras de negócio com blocos visuais estilo Google Blockly para automatizar descontos e promoções.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">💰 Descontos Inteligentes</h4>
+                              <p className="text-sm">Configure descontos automáticos baseados em valor de compra, frequência, produtos do mesmo grupo, aniversário do cliente, datas especiais e muito mais.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🎯 Regras Condicionais</h4>
+                              <p className="text-sm">Monte fluxos complexos com condições que analisam histórico, crescimento de compras, tempo desde última compra e outros critérios de negócio.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">⚡ Aplicação Automática</h4>
+                              <p className="text-sm">Escolha entre aplicação automática de descontos ou com aprovação gerencial. As regras são executadas automaticamente durante a criação de orçamentos.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Crie e gerencie regras de automação de vendas com editor visual para descontos e promoções.
-                  </p>
-                  <Button
-                    onClick={() => navigate("/automacoes-vendas")}
-                    className="w-full"
-                  >
-                    <Zap className="h-4 w-4 mr-2" />
-                    Abrir Automação de Vendas
-                  </Button>
-                </div>
-              </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <AutomacaoVendasCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
             </Accordion>
           </AccordionContent>
         </AccordionItem>
