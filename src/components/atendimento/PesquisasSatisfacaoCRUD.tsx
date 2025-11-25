@@ -206,26 +206,16 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Pesquisas de Satisfação</h2>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setManualDialogOpen(true)}
-            title="Manual de Uso"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => {
-              resetForm();
-              setEditingPesquisa(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Pesquisa
-          </Button>
-        </div>
+        <Button
+          onClick={() => {
+            resetForm();
+            setEditingPesquisa(null);
+            setDialogOpen(true);
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Pesquisa
+        </Button>
       </div>
 
       <div className="border rounded-lg overflow-hidden">
@@ -303,7 +293,15 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setManualDialogOpen(true)}
+              >
+                <HelpCircle className="w-4 h-4" />
+              </Button>
               {editingPesquisa ? "Editar Pesquisa" : "Nova Pesquisa"}
             </DialogTitle>
           </DialogHeader>
