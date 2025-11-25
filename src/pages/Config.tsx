@@ -25,17 +25,23 @@ export default function Config() {
 
   useEffect(() => {
     const loadEstabelecimento = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
         const { data: usuario } = await supabase
           .from('usuarios')
           .select('estabelecimento_id')
           .eq('auth_user_id', user.id)
-          .single();
-        
-        if (usuario) {
+          .maybeSingle();
+
+        if (usuario?.estabelecimento_id) {
           setEstabelecimentoId(usuario.estabelecimento_id);
+        } else {
+          console.warn('Nenhum estabelecimento encontrado para este usuário em Config');
         }
+      } catch (error) {
+        console.error('Erro ao carregar estabelecimento em Config:', error);
       }
     };
     loadEstabelecimento();
@@ -171,8 +177,8 @@ export default function Config() {
               {estabelecimentoId ? (
                 <SLAConfigCRUD estabelecimentoId={estabelecimentoId} />
               ) : (
-                <div className="text-center text-muted-foreground py-4">
-                  Carregando...
+                <div className="text-center text-muted-foreground py-4 text-sm">
+                  Selecione um estabelecimento para configurar o SLA.
                 </div>
               )}
             </AccordionContent>
