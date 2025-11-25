@@ -72,17 +72,72 @@
       <block type="text_print"></block>
       <block type="text_join"></block>
     </category>
-    <category name="Orçamento" colour="#A65C81">
+    
+    <sep></sep>
+    
+    <category name="📊 Valores Orçamento" colour="#A65C81">
       <block type="valor_total"></block>
       <block type="mes_compra"></block>
       <block type="mes_aniversario"></block>
       <block type="quantidade_produtos"></block>
+      <block type="historico_compras_mes"></block>
+      <block type="dias_desde_ultimo_orcamento"></block>
+      <block type="valor_grupo_produtos"></block>
+      <block type="tempo_cliente_anos"></block>
+      <block type="volume_acumulado_anual"></block>
     </category>
-    <category name="Ações" colour="#A6815C">
+    
+    <category name="💰 Descontos por Valor" colour="#D4AF37">
+      <block type="desconto_por_faixa"></block>
+      <block type="desconto_progressivo"></block>
+      <block type="desconto_se_pagamento_antecipado"></block>
+      <block type="desconto_crescimento_historico"></block>
+    </category>
+    
+    <category name="🎂 Descontos por Data" colour="#FF69B4">
+      <block type="desconto_mes_aniversario"></block>
+      <block type="desconto_dia_aniversario"></block>
+      <block type="desconto_black_friday"></block>
+      <block type="desconto_primeiro_dia_mes"></block>
+      <block type="desconto_em_feriado"></block>
+    </category>
+    
+    <category name="👥 Fidelidade" colour="#4169E1">
+      <block type="desconto_cliente_vip"></block>
+      <block type="desconto_fidelidade_tempo"></block>
+      <block type="frete_gratis_apos_compras"></block>
+      <block type="desconto_sem_cancelamento"></block>
+      <block type="pontos_fidelidade"></block>
+    </category>
+    
+    <category name="📦 Produtos" colour="#32CD32">
+      <block type="combo_produtos"></block>
+      <block type="desconto_quantidade"></block>
+      <block type="desconto_mix_categorias"></block>
+      <block type="desconto_estoque_alto"></block>
+      <block type="desconto_produto_parado"></block>
+    </category>
+    
+    <category name="🧮 Cálculos" colour="#FF8C00">
+      <block type="adicionar_frete"></block>
+      <block type="taxa_urgencia"></block>
+      <block type="calcular_markup"></block>
+      <block type="validar_margem_minima"></block>
+      <block type="calcular_por_unidade"></block>
+    </category>
+    
+    <category name="💳 Financeiro" colour="#8B4513">
+      <block type="desconto_boleto"></block>
+      <block type="acrescimo_parcelamento"></block>
+      <block type="validar_credito"></block>
+      <block type="bloquear_por_inadimplencia"></block>
+    </category>
+    
+    <category name="⚡ Ações" colour="#DC143C">
       <block type="desconto_percentual"></block>
       <block type="desconto_fixo"></block>
-      <block type="adicionar_frete"></block>
       <block type="enviar_alerta"></block>
+      <block type="bloquear_desconto"></block>
     </category>
   </xml>
 
@@ -91,51 +146,505 @@
 
     // Definir blocos customizados
     function defineCustomBlocks() {
-      // Bloco: valor_total
+      // ========== VALORES ORÇAMENTO ==========
+      
       Blockly.Blocks['valor_total'] = {
         init: function() {
           this.appendDummyInput()
               .appendField("valor total do orçamento");
           this.setOutput(true, "Number");
           this.setColour(160);
-          this.setTooltip("Retorna o valor total do orçamento");
         }
       };
 
-      // Bloco: mes_compra
       Blockly.Blocks['mes_compra'] = {
         init: function() {
           this.appendDummyInput()
               .appendField("mês da compra");
           this.setOutput(true, "Number");
           this.setColour(160);
-          this.setTooltip("Retorna o mês da compra (1-12)");
         }
       };
 
-      // Bloco: mes_aniversario
       Blockly.Blocks['mes_aniversario'] = {
         init: function() {
           this.appendDummyInput()
               .appendField("mês de aniversário do cliente");
           this.setOutput(true, "Number");
           this.setColour(160);
-          this.setTooltip("Retorna o mês de aniversário do cliente");
         }
       };
 
-      // Bloco: quantidade_produtos
       Blockly.Blocks['quantidade_produtos'] = {
         init: function() {
           this.appendDummyInput()
               .appendField("quantidade de produtos");
           this.setOutput(true, "Number");
           this.setColour(160);
-          this.setTooltip("Retorna quantidade de produtos no orçamento");
         }
       };
 
-      // Bloco: desconto_percentual
+      Blockly.Blocks['historico_compras_mes'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("compras do cliente este mês");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+        }
+      };
+
+      Blockly.Blocks['dias_desde_ultimo_orcamento'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("dias desde último orçamento");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+        }
+      };
+
+      Blockly.Blocks['valor_grupo_produtos'] = {
+        init: function() {
+          this.appendValueInput("GRUPO")
+              .setCheck("String")
+              .appendField("valor total do grupo");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+        }
+      };
+
+      Blockly.Blocks['tempo_cliente_anos'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("tempo de cliente (anos)");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+        }
+      };
+
+      Blockly.Blocks['volume_acumulado_anual'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("volume acumulado anual R$");
+          this.setOutput(true, "Number");
+          this.setColour(160);
+        }
+      };
+
+      // ========== DESCONTOS POR VALOR ==========
+      
+      Blockly.Blocks['desconto_por_faixa'] = {
+        init: function() {
+          this.appendValueInput("VALOR_MIN")
+              .setCheck("Number")
+              .appendField("se valor ≥ R$");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("aplicar");
+          this.appendDummyInput()
+              .appendField("% de desconto");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(210);
+        }
+      };
+
+      Blockly.Blocks['desconto_progressivo'] = {
+        init: function() {
+          this.appendValueInput("VALOR_BASE")
+              .setCheck("Number")
+              .appendField("a cada R$");
+          this.appendValueInput("PERCENTUAL_INC")
+              .setCheck("Number")
+              .appendField("adicionar");
+          this.appendValueInput("TETO")
+              .setCheck("Number")
+              .appendField("% (teto");
+          this.appendDummyInput()
+              .appendField("%)");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(210);
+        }
+      };
+
+      Blockly.Blocks['desconto_se_pagamento_antecipado'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("se pagamento antecipado aplicar");
+          this.appendDummyInput()
+              .appendField("% desconto");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(210);
+        }
+      };
+
+      Blockly.Blocks['desconto_crescimento_historico'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL_CRESCIMENTO")
+              .setCheck("Number")
+              .appendField("se crescimento ≥");
+          this.appendValueInput("BONUS")
+              .setCheck("Number")
+              .appendField("% aplicar bônus de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(210);
+        }
+      };
+
+      // ========== DESCONTOS POR DATA ==========
+      
+      Blockly.Blocks['desconto_mes_aniversario'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("mês aniversário: desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(330);
+        }
+      };
+
+      Blockly.Blocks['desconto_dia_aniversario'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("dia do aniversário: desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(330);
+        }
+      };
+
+      Blockly.Blocks['desconto_black_friday'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("Black Friday: desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(330);
+        }
+      };
+
+      Blockly.Blocks['desconto_primeiro_dia_mes'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("1º dia do mês: desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(330);
+        }
+      };
+
+      Blockly.Blocks['desconto_em_feriado'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("em feriado: bônus de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(330);
+        }
+      };
+
+      // ========== FIDELIDADE ==========
+      
+      Blockly.Blocks['desconto_cliente_vip'] = {
+        init: function() {
+          this.appendValueInput("MESES_SEM_INADIMPLENCIA")
+              .setCheck("Number")
+              .appendField("se");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("meses sem inadimplência, aplicar");
+          this.appendDummyInput()
+              .appendField("% VIP");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(225);
+        }
+      };
+
+      Blockly.Blocks['desconto_fidelidade_tempo'] = {
+        init: function() {
+          this.appendValueInput("ANOS_MIN")
+              .setCheck("Number")
+              .appendField("se cliente há mais de");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("anos, desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(225);
+        }
+      };
+
+      Blockly.Blocks['frete_gratis_apos_compras'] = {
+        init: function() {
+          this.appendValueInput("NUM_COMPRAS")
+              .setCheck("Number")
+              .appendField("a cada");
+          this.appendDummyInput()
+              .appendField("compras: frete grátis");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(225);
+        }
+      };
+
+      Blockly.Blocks['desconto_sem_cancelamento'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("se nunca cancelou, desconto extra de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(225);
+        }
+      };
+
+      Blockly.Blocks['pontos_fidelidade'] = {
+        init: function() {
+          this.appendValueInput("PONTOS_POR_REAL")
+              .setCheck("Number")
+              .appendField("a cada R$ 1 =");
+          this.appendDummyInput()
+              .appendField("ponto(s)");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(225);
+        }
+      };
+
+      // ========== PRODUTOS ==========
+      
+      Blockly.Blocks['combo_produtos'] = {
+        init: function() {
+          this.appendValueInput("PRODUTO_A")
+              .setCheck("String")
+              .appendField("se produto");
+          this.appendValueInput("PRODUTO_B")
+              .setCheck("String")
+              .appendField("+ produto");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(120);
+        }
+      };
+
+      Blockly.Blocks['desconto_quantidade'] = {
+        init: function() {
+          this.appendValueInput("QUANTIDADE_MIN")
+              .setCheck("Number")
+              .appendField("se levar");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("ou + unidades, desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(120);
+        }
+      };
+
+      Blockly.Blocks['desconto_mix_categorias'] = {
+        init: function() {
+          this.appendValueInput("NUM_CATEGORIAS")
+              .setCheck("Number")
+              .appendField("mix mínimo de");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("categorias, bônus de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(120);
+        }
+      };
+
+      Blockly.Blocks['desconto_estoque_alto'] = {
+        init: function() {
+          this.appendValueInput("PRODUTO")
+              .setCheck("String")
+              .appendField("se estoque de");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("alto, desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(120);
+        }
+      };
+
+      Blockly.Blocks['desconto_produto_parado'] = {
+        init: function() {
+          this.appendValueInput("DIAS_PARADO")
+              .setCheck("Number")
+              .appendField("se produto parado há");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("dias, desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(120);
+        }
+      };
+
+      // ========== CÁLCULOS ==========
+      
+      Blockly.Blocks['adicionar_frete'] = {
+        init: function() {
+          this.appendValueInput("VALOR")
+              .setCheck("Number")
+              .appendField("adicionar frete de R$");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(30);
+        }
+      };
+
+      Blockly.Blocks['taxa_urgencia'] = {
+        init: function() {
+          this.appendValueInput("PRAZO_HORAS")
+              .setCheck("Number")
+              .appendField("se prazo <");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("horas, taxa urgência de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(30);
+        }
+      };
+
+      Blockly.Blocks['calcular_markup'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL_MARKUP")
+              .setCheck("Number")
+              .appendField("aplicar markup de");
+          this.appendDummyInput()
+              .appendField("% sobre custo");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(30);
+        }
+      };
+
+      Blockly.Blocks['validar_margem_minima'] = {
+        init: function() {
+          this.appendValueInput("MARGEM_MIN")
+              .setCheck("Number")
+              .appendField("se margem <");
+          this.appendDummyInput()
+              .appendField("% bloquear desconto extra");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(30);
+        }
+      };
+
+      Blockly.Blocks['calcular_por_unidade'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("calcular por")
+              .appendField(new Blockly.FieldDropdown([
+                ["metro", "METRO"],
+                ["kg", "KG"],
+                ["tonelada", "TONELADA"],
+                ["fardo", "FARDO"]
+              ]), "UNIDADE");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(30);
+        }
+      };
+
+      // ========== FINANCEIRO ==========
+      
+      Blockly.Blocks['desconto_boleto'] = {
+        init: function() {
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("boleto à vista: desconto de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(20);
+        }
+      };
+
+      Blockly.Blocks['acrescimo_parcelamento'] = {
+        init: function() {
+          this.appendValueInput("NUM_PARCELAS")
+              .setCheck("Number")
+              .appendField("se parcelado em");
+          this.appendValueInput("PERCENTUAL")
+              .setCheck("Number")
+              .appendField("x, acréscimo de");
+          this.appendDummyInput()
+              .appendField("%");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(20);
+        }
+      };
+
+      Blockly.Blocks['validar_credito'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("validar se limite de crédito ≥ valor");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(20);
+        }
+      };
+
+      Blockly.Blocks['bloquear_por_inadimplencia'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("se cliente inadimplente, bloquear desconto");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(20);
+        }
+      };
+
+      // ========== AÇÕES ==========
+      
       Blockly.Blocks['desconto_percentual'] = {
         init: function() {
           this.appendValueInput("PERCENTUAL")
@@ -145,12 +654,10 @@
               .appendField("%");
           this.setPreviousStatement(true, null);
           this.setNextStatement(true, null);
-          this.setColour(290);
-          this.setTooltip("Aplica um desconto percentual");
+          this.setColour(350);
         }
       };
 
-      // Bloco: desconto_fixo
       Blockly.Blocks['desconto_fixo'] = {
         init: function() {
           this.appendValueInput("VALOR")
@@ -158,25 +665,10 @@
               .appendField("aplicar desconto fixo de R$");
           this.setPreviousStatement(true, null);
           this.setNextStatement(true, null);
-          this.setColour(290);
-          this.setTooltip("Aplica um desconto fixo em reais");
+          this.setColour(350);
         }
       };
 
-      // Bloco: adicionar_frete
-      Blockly.Blocks['adicionar_frete'] = {
-        init: function() {
-          this.appendValueInput("VALOR")
-              .setCheck("Number")
-              .appendField("adicionar frete de R$");
-          this.setPreviousStatement(true, null);
-          this.setNextStatement(true, null);
-          this.setColour(290);
-          this.setTooltip("Adiciona valor de frete ao orçamento");
-        }
-      };
-
-      // Bloco: enviar_alerta
       Blockly.Blocks['enviar_alerta'] = {
         init: function() {
           this.appendValueInput("MENSAGEM")
@@ -184,9 +676,230 @@
               .appendField("enviar alerta:");
           this.setPreviousStatement(true, null);
           this.setNextStatement(true, null);
-          this.setColour(290);
-          this.setTooltip("Envia uma mensagem de alerta");
+          this.setColour(350);
         }
+      };
+
+      Blockly.Blocks['bloquear_desconto'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("bloquear qualquer desconto");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setColour(350);
+        }
+      };
+
+      // ========== GERADORES DE CÓDIGO JAVASCRIPT ==========
+      
+      Blockly.JavaScript['valor_total'] = function(block) {
+        return ['orcamento.valor_total', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['mes_compra'] = function(block) {
+        return ['orcamento.mes_compra', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['mes_aniversario'] = function(block) {
+        return ['cliente.mes_aniversario', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['quantidade_produtos'] = function(block) {
+        return ['orcamento.quantidade_produtos', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['historico_compras_mes'] = function(block) {
+        return ['(cliente.compras_mes || 0)', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['dias_desde_ultimo_orcamento'] = function(block) {
+        return ['(cliente.dias_ultimo_orcamento || 0)', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['valor_grupo_produtos'] = function(block) {
+        var grupo = Blockly.JavaScript.valueToCode(block, 'GRUPO', Blockly.JavaScript.ORDER_ATOMIC);
+        return ['(orcamento.valor_grupo_' + grupo + ' || 0)', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['tempo_cliente_anos'] = function(block) {
+        return ['(cliente.tempo_anos || 0)', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['volume_acumulado_anual'] = function(block) {
+        return ['(cliente.volume_anual || 0)', Blockly.JavaScript.ORDER_ATOMIC];
+      };
+
+      Blockly.JavaScript['desconto_por_faixa'] = function(block) {
+        var valorMin = Blockly.JavaScript.valueToCode(block, 'VALOR_MIN', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.valor_total >= ' + valorMin + ') {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_progressivo'] = function(block) {
+        var valorBase = Blockly.JavaScript.valueToCode(block, 'VALOR_BASE', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentualInc = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL_INC', Blockly.JavaScript.ORDER_ATOMIC);
+        var teto = Blockly.JavaScript.valueToCode(block, 'TETO', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'var multiplos = Math.floor(orcamento.valor_total / ' + valorBase + ');\n' +
+               'var desconto_prog = Math.min(multiplos * ' + percentualInc + ', ' + teto + ');\n' +
+               'aplicarDescontoPercentual(desconto_prog);\n';
+      };
+
+      Blockly.JavaScript['desconto_se_pagamento_antecipado'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.pagamento_antecipado) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_crescimento_historico'] = function(block) {
+        var percentualCrescimento = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL_CRESCIMENTO', Blockly.JavaScript.ORDER_ATOMIC);
+        var bonus = Blockly.JavaScript.valueToCode(block, 'BONUS', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (cliente.crescimento_percentual >= ' + percentualCrescimento + ') {\n  aplicarDescontoPercentual(' + bonus + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_mes_aniversario'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.mes_compra == cliente.mes_aniversario) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_dia_aniversario'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.dia_compra == cliente.dia_aniversario) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_black_friday'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.mes_compra == 11 && orcamento.semana_mes == 4) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_primeiro_dia_mes'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.dia_compra == 1) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_em_feriado'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.eh_feriado) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_cliente_vip'] = function(block) {
+        var meses = Blockly.JavaScript.valueToCode(block, 'MESES_SEM_INADIMPLENCIA', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (cliente.meses_sem_inadimplencia >= ' + meses + ') {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_fidelidade_tempo'] = function(block) {
+        var anosMin = Blockly.JavaScript.valueToCode(block, 'ANOS_MIN', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (cliente.tempo_anos >= ' + anosMin + ') {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['frete_gratis_apos_compras'] = function(block) {
+        var numCompras = Blockly.JavaScript.valueToCode(block, 'NUM_COMPRAS', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (cliente.total_compras > 0 && cliente.total_compras % ' + numCompras + ' == 0) {\n  aplicarDescontoFixo(orcamento.valor_frete || 0);\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_sem_cancelamento'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (cliente.nunca_cancelou) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['pontos_fidelidade'] = function(block) {
+        var pontosPorReal = Blockly.JavaScript.valueToCode(block, 'PONTOS_POR_REAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'cliente.pontos = (cliente.pontos || 0) + (orcamento.valor_total * ' + pontosPorReal + ');\n';
+      };
+
+      Blockly.JavaScript['combo_produtos'] = function(block) {
+        var produtoA = Blockly.JavaScript.valueToCode(block, 'PRODUTO_A', Blockly.JavaScript.ORDER_ATOMIC);
+        var produtoB = Blockly.JavaScript.valueToCode(block, 'PRODUTO_B', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.tem_produto_' + produtoA + ' && orcamento.tem_produto_' + produtoB + ') {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_quantidade'] = function(block) {
+        var quantidadeMin = Blockly.JavaScript.valueToCode(block, 'QUANTIDADE_MIN', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.quantidade_produtos >= ' + quantidadeMin + ') {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_mix_categorias'] = function(block) {
+        var numCategorias = Blockly.JavaScript.valueToCode(block, 'NUM_CATEGORIAS', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.num_categorias >= ' + numCategorias + ') {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_estoque_alto'] = function(block) {
+        var produto = Blockly.JavaScript.valueToCode(block, 'PRODUTO', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.produto_' + produto + '_estoque_alto) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_produto_parado'] = function(block) {
+        var diasParado = Blockly.JavaScript.valueToCode(block, 'DIAS_PARADO', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.produto_parado_dias >= ' + diasParado + ') {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['adicionar_frete'] = function(block) {
+        var valor = Blockly.JavaScript.valueToCode(block, 'VALOR', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'adicionarFrete(' + valor + ');\n';
+      };
+
+      Blockly.JavaScript['taxa_urgencia'] = function(block) {
+        var prazoHoras = Blockly.JavaScript.valueToCode(block, 'PRAZO_HORAS', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.prazo_horas < ' + prazoHoras + ') {\n  aplicarDescontoPercentual(-' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['calcular_markup'] = function(block) {
+        var percentualMarkup = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL_MARKUP', Blockly.JavaScript.ORDER_ATOMIC);
+        return '// Aplicar markup de ' + percentualMarkup + '%\n';
+      };
+
+      Blockly.JavaScript['validar_margem_minima'] = function(block) {
+        var margemMin = Blockly.JavaScript.valueToCode(block, 'MARGEM_MIN', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.margem_percentual < ' + margemMin + ') {\n  enviarAlerta("Margem abaixo do mínimo");\n}\n';
+      };
+
+      Blockly.JavaScript['calcular_por_unidade'] = function(block) {
+        var unidade = block.getFieldValue('UNIDADE');
+        return '// Calcular por ' + unidade + '\n';
+      };
+
+      Blockly.JavaScript['desconto_boleto'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.forma_pagamento == "boleto") {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['acrescimo_parcelamento'] = function(block) {
+        var numParcelas = Blockly.JavaScript.valueToCode(block, 'NUM_PARCELAS', Blockly.JavaScript.ORDER_ATOMIC);
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'if (orcamento.num_parcelas >= ' + numParcelas + ') {\n  aplicarDescontoPercentual(-' + percentual + ');\n}\n';
+      };
+
+      Blockly.JavaScript['validar_credito'] = function(block) {
+        return 'if (cliente.limite_credito < orcamento.valor_total) {\n  enviarAlerta("Limite de crédito insuficiente");\n}\n';
+      };
+
+      Blockly.JavaScript['bloquear_por_inadimplencia'] = function(block) {
+        return 'if (cliente.inadimplente) {\n  enviarAlerta("Cliente inadimplente - desconto bloqueado");\n}\n';
+      };
+
+      Blockly.JavaScript['desconto_percentual'] = function(block) {
+        var percentual = Blockly.JavaScript.valueToCode(block, 'PERCENTUAL', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'aplicarDescontoPercentual(' + percentual + ');\n';
+      };
+
+      Blockly.JavaScript['desconto_fixo'] = function(block) {
+        var valor = Blockly.JavaScript.valueToCode(block, 'VALOR', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'aplicarDescontoFixo(' + valor + ');\n';
+      };
+
+      Blockly.JavaScript['enviar_alerta'] = function(block) {
+        var mensagem = Blockly.JavaScript.valueToCode(block, 'MENSAGEM', Blockly.JavaScript.ORDER_ATOMIC);
+        return 'enviarAlerta(' + mensagem + ');\n';
+      };
+
+      Blockly.JavaScript['bloquear_desconto'] = function(block) {
+        return 'enviarAlerta("Desconto bloqueado por regra");\n';
       };
     }
 
