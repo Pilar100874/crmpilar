@@ -399,18 +399,16 @@ export default function SLAConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setHelpDialogOpen(true)}
-            className="absolute right-12 top-4 z-50"
-          >
-            <HelpCircle className="w-4 h-4 mr-1" />
-            Como usar
-          </Button>
-          
           <DialogHeader>
-            <DialogTitle className="text-xl">
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setHelpDialogOpen(true)}
+              >
+                <HelpCircle className="w-4 h-4" />
+              </Button>
               {selectedConfig ? "Editar Configuração SLA" : "Nova Configuração SLA"}
             </DialogTitle>
           </DialogHeader>
