@@ -401,36 +401,38 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
   };
 
   return (
-    <div className="space-y-6">
-      {/* Controles e Filtros */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => setHelpDialogOpen(true)}
-              >
-                <HelpCircle className="w-4 h-4" />
-              </Button>
-              <div>
-                <CardTitle>Analytics Avançado</CardTitle>
-                <CardDescription>
-                  Análise detalhada de performance e qualidade do atendimento
-                </CardDescription>
-              </div>
+    <div className="space-y-8 p-6">
+      {/* Header com gradiente */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+        <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-start gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-primary/20 transition-colors"
+              onClick={() => setHelpDialogOpen(true)}
+            >
+              <HelpCircle className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                Analytics Avançado
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Análise detalhada de performance e qualidade do atendimento
+              </p>
             </div>
+          </div>
             
-            <div className="flex flex-wrap gap-2">
-              <Dialog open={novoRelatorioOpen} onOpenChange={setNovoRelatorioOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="default" size="sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Relatório
-                  </Button>
-                </DialogTrigger>
+          <div className="flex flex-wrap gap-3">
+            <Dialog open={novoRelatorioOpen} onOpenChange={setNovoRelatorioOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Relatório
+                </Button>
+              </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Criar Relatório Customizado</DialogTitle>
@@ -501,13 +503,13 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                 </DialogContent>
               </Dialog>
 
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {format(dataInicio, 'dd/MM/yyyy')} - {format(dataFim, 'dd/MM/yyyy')}
-                  </Button>
-                </PopoverTrigger>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  {format(dataInicio, 'dd/MM/yyyy')} - {format(dataFim, 'dd/MM/yyyy')}
+                </Button>
+              </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="end">
                   <div className="p-4 space-y-4">
                     <div>
@@ -532,14 +534,17 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                 </PopoverContent>
               </Popover>
 
-              <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
-                <Download className="w-4 h-4 mr-2" />
-                Exportar
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              onClick={() => handleExport('pdf')}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar
+            </Button>
           </div>
-        </CardHeader>
-      </Card>
+        </div>
+      </div>
 
       {/* Dialog de Ajuda */}
       <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
@@ -647,62 +652,77 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         </DialogContent>
       </Dialog>
 
-      {/* Cards de Métricas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Volume Total</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+      {/* Cards de Métricas Principais com visual aprimorado */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Volume Total</CardTitle>
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <Users className="h-5 w-5 text-blue-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metricsConsolidadas.totalChats}</div>
-            <p className="text-xs text-muted-foreground">Chats no período</p>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{metricsConsolidadas.totalChats}</div>
+            <p className="text-sm text-muted-foreground mt-1">Chats no período</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Taxa SLA</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa SLA</CardTitle>
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Target className="h-5 w-5 text-green-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mediaSLA.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">Cumprimento médio</p>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{mediaSLA.toFixed(1)}%</div>
+            <p className="text-sm text-muted-foreground mt-1">Cumprimento médio</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">FCR</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">FCR</CardTitle>
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <Award className="h-5 w-5 text-purple-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mediaFCR.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">First Contact Resolution</p>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{mediaFCR.toFixed(1)}%</div>
+            <p className="text-sm text-muted-foreground mt-1">First Contact Resolution</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">NPS Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <Card className="relative overflow-hidden border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg group">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <CardTitle className="text-sm font-medium text-muted-foreground">NPS Score</CardTitle>
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <TrendingUp className="h-5 w-5 text-orange-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(mediaNPS)}</div>
-            <p className="text-xs text-muted-foreground">
-              {Math.round(mediaNPS) >= 50 ? 'Excelente' : Math.round(mediaNPS) >= 0 ? 'Bom' : 'Precisa melhorar'}
+          <CardContent className="relative">
+            <div className="text-3xl font-bold tracking-tight">{Math.round(mediaNPS)}</div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {Math.round(mediaNPS) >= 50 ? '🎯 Excelente' : Math.round(mediaNPS) >= 0 ? '✅ Bom' : '⚠️ Precisa melhorar'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filtros */}
-      <Card>
+      {/* Filtros com design aprimorado */}
+      <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle className="text-sm">Filtros</CardTitle>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            Filtros Avançados
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label>Fila</Label>
               <Select value={filaFiltro} onValueChange={setFilaFiltro}>
@@ -754,22 +774,39 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
         </CardContent>
       </Card>
 
-      {/* Gráficos */}
-      <Tabs defaultValue="principal" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="principal">Principal</TabsTrigger>
-          <TabsTrigger value="volume">Volume</TabsTrigger>
-          <TabsTrigger value="tempos">Tempos</TabsTrigger>
-          <TabsTrigger value="nps">NPS/CSAT</TabsTrigger>
-          <TabsTrigger value="atendente">Por Atendente</TabsTrigger>
-          <TabsTrigger value="canal">Por Canal</TabsTrigger>
+      {/* Gráficos com design melhorado */}
+      <Tabs defaultValue="principal" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted/50 backdrop-blur">
+          <TabsTrigger value="principal" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Principal
+          </TabsTrigger>
+          <TabsTrigger value="volume" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Volume
+          </TabsTrigger>
+          <TabsTrigger value="tempos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Tempos
+          </TabsTrigger>
+          <TabsTrigger value="nps" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            NPS/CSAT
+          </TabsTrigger>
+          <TabsTrigger value="atendente" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Por Atendente
+          </TabsTrigger>
+          <TabsTrigger value="canal" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Por Canal
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="principal" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
+        <TabsContent value="principal" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-primary/20 shadow-lg">
               <CardHeader>
-                <CardTitle>Visão Geral - Volume</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                  </div>
+                  Visão Geral - Volume
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {metricas.length > 0 ? (
@@ -781,9 +818,14 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                 )}
               </CardContent>
             </Card>
-            <Card>
+            <Card className="border-primary/20 shadow-lg">
               <CardHeader>
-                <CardTitle>NPS Score</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                  </div>
+                  NPS Score
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {metricas.length > 0 ? (
@@ -798,11 +840,16 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
           </div>
         </TabsContent>
 
-        <TabsContent value="volume" className="space-y-4">
-          <Card>
+        <TabsContent value="volume" className="space-y-6">
+          <Card className="border-primary/20 shadow-lg">
             <CardHeader>
-              <CardTitle>Volume de Atendimentos e SLA</CardTitle>
-              <CardDescription>Evolução diária do volume e cumprimento de SLA</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                Volume de Atendimentos e SLA
+              </CardTitle>
+              <CardDescription className="mt-2">Evolução diária do volume e cumprimento de SLA</CardDescription>
             </CardHeader>
             <CardContent>
               {metricas.length > 0 ? (
@@ -816,11 +863,16 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
           </Card>
         </TabsContent>
 
-        <TabsContent value="tempos" className="space-y-4">
-          <Card>
+        <TabsContent value="tempos" className="space-y-6">
+          <Card className="border-primary/20 shadow-lg">
             <CardHeader>
-              <CardTitle>Tempos de Resposta e Atendimento</CardTitle>
-              <CardDescription>Análise de tempos médios (AHT - Average Handle Time)</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Clock className="w-5 h-5 text-primary" />
+                </div>
+                Tempos de Resposta e Atendimento
+              </CardTitle>
+              <CardDescription className="mt-2">Análise de tempos médios (AHT - Average Handle Time)</CardDescription>
             </CardHeader>
             <CardContent>
               {metricas.length > 0 ? (
@@ -833,38 +885,51 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Tempo Médio Primeira Resposta</CardTitle>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="relative overflow-hidden border-primary/20 hover:shadow-lg transition-all group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardHeader className="relative">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-500" />
+                  Tempo Médio Primeira Resposta
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
+              <CardContent className="relative">
+                <div className="text-4xl font-bold tracking-tight">
                   {Math.floor((metricsConsolidadas.tempoMedioPrimeiraResposta / metricsConsolidadas.dias) / 60) || 0}min
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Média do período</p>
+                <p className="text-sm text-muted-foreground mt-2">Média do período</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">AHT - Average Handle Time</CardTitle>
+            <Card className="relative overflow-hidden border-primary/20 hover:shadow-lg transition-all group">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardHeader className="relative">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Target className="w-4 h-4 text-green-500" />
+                  AHT - Average Handle Time
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
+              <CardContent className="relative">
+                <div className="text-4xl font-bold tracking-tight">
                   {Math.floor((metricsConsolidadas.tempoMedioAtendimento / metricsConsolidadas.dias) / 60) || 0}min
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Tempo médio de atendimento</p>
+                <p className="text-sm text-muted-foreground mt-2">Tempo médio de atendimento</p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="nps" className="space-y-4">
-          <Card>
+        <TabsContent value="nps" className="space-y-6">
+          <Card className="border-primary/20 shadow-lg">
             <CardHeader>
-              <CardTitle>Net Promoter Score (NPS)</CardTitle>
-              <CardDescription>Análise de satisfação do cliente</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Award className="w-5 h-5 text-primary" />
+                </div>
+                Net Promoter Score (NPS)
+              </CardTitle>
+              <CardDescription className="mt-2">Análise de satisfação do cliente</CardDescription>
             </CardHeader>
             <CardContent>
               {metricas.length > 0 ? (
@@ -877,56 +942,67 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="relative overflow-hidden border-green-500/30 hover:shadow-lg hover:shadow-green-500/10 transition-all group">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-green-500 shadow-lg shadow-green-500/50" />
                   Promotores (9-10)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
+              <CardContent className="relative">
+                <div className="text-4xl font-bold tracking-tight text-green-600 dark:text-green-400">
                   {metricas.reduce((acc, m) => acc + (m.nps_promotores || 0), 0)}
                 </div>
+                <p className="text-sm text-muted-foreground mt-2">Clientes leais</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <Card className="relative overflow-hidden border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10 transition-all group">
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-yellow-500 shadow-lg shadow-yellow-500/50" />
                   Neutros (7-8)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
+              <CardContent className="relative">
+                <div className="text-4xl font-bold tracking-tight text-yellow-600 dark:text-yellow-400">
                   {metricas.reduce((acc, m) => acc + (m.nps_neutros || 0), 0)}
                 </div>
+                <p className="text-sm text-muted-foreground mt-2">Clientes passivos</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
+            <Card className="relative overflow-hidden border-red-500/30 hover:shadow-lg hover:shadow-red-500/10 transition-all group">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-red-500 shadow-lg shadow-red-500/50" />
                   Detratores (0-6)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
+              <CardContent className="relative">
+                <div className="text-4xl font-bold tracking-tight text-red-600 dark:text-red-400">
                   {metricas.reduce((acc, m) => acc + (m.nps_detratores || 0), 0)}
                 </div>
+                <p className="text-sm text-muted-foreground mt-2">Requer atenção</p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="atendente" className="space-y-4">
-          <Card>
+        <TabsContent value="atendente" className="space-y-6">
+          <Card className="border-primary/20 shadow-lg">
             <CardHeader>
-              <CardTitle>Performance por Atendente</CardTitle>
-              <CardDescription>Ranking e métricas individuais dos atendentes</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                Performance por Atendente
+              </CardTitle>
+              <CardDescription className="mt-2">Ranking e métricas individuais dos atendentes</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -935,7 +1011,7 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
                     {metricasPorAtendente.map((atendente: any, index: number) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-4 border rounded-lg"
+                        className="flex items-center justify-between p-5 border border-primary/20 rounded-xl hover:shadow-md hover:border-primary/40 transition-all bg-gradient-to-r from-transparent to-primary/5"
                       >
                         <div className="flex items-center gap-4">
                           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">
@@ -982,22 +1058,27 @@ export default function AdvancedAnalyticsDashboard({ estabelecimentoId }: { esta
           </Card>
         </TabsContent>
 
-        <TabsContent value="canal" className="space-y-4">
-          <Card>
+        <TabsContent value="canal" className="space-y-6">
+          <Card className="border-primary/20 shadow-lg">
             <CardHeader>
-              <CardTitle>Distribuição por Canal</CardTitle>
-              <CardDescription>Métricas e comparativos entre canais de atendimento</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                </div>
+                Distribuição por Canal
+              </CardTitle>
+              <CardDescription className="mt-2">Métricas e comparativos entre canais de atendimento</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {metricasPorCanal.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {metricasPorCanal.map((canal: any, index: number) => (
-                      <Card key={index}>
-                        <CardHeader>
-                          <CardTitle className="text-lg capitalize">{canal.canal}</CardTitle>
+                      <Card key={index} className="border-primary/20 hover:shadow-lg transition-all hover:border-primary/40">
+                        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                          <CardTitle className="text-lg capitalize font-semibold">{canal.canal}</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-4 pt-6">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Volume</span>
                             <span className="font-bold">{canal.total_chats}</span>
