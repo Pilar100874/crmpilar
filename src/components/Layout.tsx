@@ -466,26 +466,33 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   // Filtra os menus baseado nas permissões
-  const visibleMenus = menuItems.filter(item => {
-    const permission = allowedMenus[item.id];
-    
-    // Se o menu tem subitems, verifica se pelo menos um tem permissão
-    if (item.subItems) {
-      const hasSubItemPermission = item.subItems.some(subItem => {
-        const subPermission = allowedMenus[subItem.id];
-        return subPermission?.view === true;
-      });
-      return permission?.view === true || hasSubItemPermission;
-    }
-    
-    return permission?.view === true;
-  }).map(item => {
-    // Não filtra subitens por permissão para garantir visibilidade do submenu
-    if (item.subItems) {
+  const visibleMenus = menuItems
+    .filter((item) => {
+      // "Configurações" deve sempre aparecer para usuários autenticados
+      if (item.id === "Configurações") {
+        return true;
+      }
+
+      const permission = allowedMenus[item.id];
+
+      // Se o menu tem subitems, verifica se pelo menos um tem permissão
+      if (item.subItems) {
+        const hasSubItemPermission = item.subItems.some((subItem) => {
+          const subPermission = allowedMenus[subItem.id];
+          return subPermission?.view === true;
+        });
+        return permission?.view === true || hasSubItemPermission;
+      }
+
+      return permission?.view === true;
+    })
+    .map((item) => {
+      // Não filtra subitens por permissão para garantir visibilidade do submenu
+      if (item.subItems) {
+        return item;
+      }
       return item;
-    }
-    return item;
-  });
+    });
 
   return (
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
