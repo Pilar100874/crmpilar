@@ -1,14 +1,12 @@
-/**
- * Página Editor de Regras com React Flow (sistema visual do bot)
- */
-
 import { useCallback, useRef, useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save } from "lucide-react";
+import { Plus, Save, ArrowLeft } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   ReactFlow,
   Background,
@@ -27,9 +25,8 @@ import "@xyflow/react/dist/style.css";
 import { AutomacaoFlowNode } from "@/components/automacao-vendas/AutomacaoFlowNode";
 import { AutomacaoBlockLibrary } from "@/components/automacao-vendas/AutomacaoBlockLibrary";
 import { AutomacaoPropertiesPanel } from "@/components/automacao-vendas/AutomacaoPropertiesPanel";
-import { toast } from "@/lib/toast-config";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
+import { toast } from "@/hooks/use-toast";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
 
 const nodeTypes = {
@@ -37,7 +34,11 @@ const nodeTypes = {
 };
 
 let id = 0;
-const getId = () => `node_${Date.now()}_${id++}`;
+const getId = () => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `node_${timestamp}_${id++}_${random}`;
+};
 
 function EditorRegrasContent() {
   const [searchParams] = useSearchParams();
@@ -66,7 +67,7 @@ function EditorRegrasContent() {
   const [nomeRegra, setNomeRegra] = useState("Nova Regra");
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(1);
-  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
+  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
 
   useEffect(() => {
     if (regraIdFromUrl) {
@@ -101,12 +102,16 @@ function EditorRegrasContent() {
       }
     } catch (error) {
       console.error("Erro ao carregar regra:", error);
-      toast.error("Não foi possível carregar a regra");
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a regra",
+        variant: "destructive",
+      });
     }
   };
 
   const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
@@ -118,17 +123,20 @@ function EditorRegrasContent() {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
+      event.stopPropagation();
 
-      const type = event.dataTransfer.getData("application/reactflow") as AutomacaoVendasBlockType;
+      if (!reactFlowWrapper.current || !reactFlowInstance) return;
 
-      if (typeof type === "undefined" || !type || !reactFlowWrapper.current) {
-        return;
-      }
+      const type = event.dataTransfer.getData("application/reactflow");
+      if (!type) return;
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.project({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+      const blockDef = AUTOMACAO_VENDAS_BLOCKS.find((b) => b.type === type);
+      if (!blockDef) return;
+
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
       });
 
       const newNode: Node = {
@@ -136,19 +144,25 @@ function EditorRegrasContent() {
         type: "custom",
         position,
         data: {
-          label: type.replace(/_/g, " "),
-          type: type,
-          config: {},
+          label: blockDef.label,
+          type: blockDef.type,
+          config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
         },
       };
 
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) => [...nds, newNode]);
+      setSelectedNode(newNode);
+      
+      toast({
+        title: "Bloco adicionado",
+        description: `Bloco "${blockDef.label}" adicionado com sucesso!`,
+      });
     },
     [reactFlowInstance, setNodes]
   );
 
-  const onDragStart = (event: React.DragEvent, type: AutomacaoVendasBlockType) => {
-    event.dataTransfer.setData("application/reactflow", type);
+  const onDragStart = (event: React.DragEvent, nodeType: string) => {
+    event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";
   };
 
@@ -156,11 +170,75 @@ function EditorRegrasContent() {
     setSelectedNode(node);
   }, []);
 
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
+
+  const handleUpdateNode = useCallback(
+    (nodeId: string, data: any) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+                config: {
+                  ...(node.data as any).config,
+                  ...data.config,
+                },
+              },
+            };
+          }
+          return node;
+        })
+      );
+    },
+    [setNodes]
+  );
+
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      const nodeToDelete = nodes.find(n => n.id === nodeId);
+      if (nodeToDelete && (nodeToDelete.data as any).type === "iniciar_validacao") {
+        toast({
+          title: "Ação não permitida",
+          description: "O bloco inicial não pode ser excluído!",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+      setSelectedNode(null);
+      toast({
+        title: "Bloco excluído",
+        description: "Bloco removido com sucesso!",
+      });
+    },
+    [setNodes, setEdges, nodes]
+  );
+
   const handleSave = async () => {
+    if (!nomeRegra.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um nome para a regra.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
-        toast.error("Estabelecimento não encontrado");
+        toast({
+          title: "Erro",
+          description: "Estabelecimento não encontrado",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -185,7 +263,10 @@ function EditorRegrasContent() {
 
         if (error) throw error;
 
-        toast.success("Regra atualizada com sucesso");
+        toast({
+          title: "Sucesso!",
+          description: "Regra atualizada com sucesso",
+        });
       } else {
         const { data, error } = await supabase
           .from("automacoes_vendas")
@@ -198,97 +279,97 @@ function EditorRegrasContent() {
         setCurrentRegraId(data.id);
         navigate(`/editor-regras?id=${data.id}`, { replace: true });
 
-        toast.success("Regra criada com sucesso");
+        toast({
+          title: "Sucesso!",
+          description: "Regra criada com sucesso",
+        });
       }
     } catch (error) {
       console.error("Erro ao salvar regra:", error);
-      toast.error("Não foi possível salvar a regra");
-    }
-  };
-
-  const handleUpdateNode = (updatedNode: Node) => {
-    setNodes((nds) =>
-      nds.map((node) => (node.id === updatedNode.id ? updatedNode : node))
-    );
-    setSelectedNode(updatedNode);
-  };
-
-  const handleSelectBlock = (blockId: string) => {
-    const node = nodes.find((n) => n.id === blockId);
-    if (node) {
-      setSelectedNode(node);
-      reactFlowInstance?.fitView({
-        nodes: [node],
-        duration: 300,
-        padding: 0.5,
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a regra",
+        variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="border-b p-4 flex items-center gap-4 bg-background">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-
-        <Input
-          value={nomeRegra}
-          onChange={(e) => setNomeRegra(e.target.value)}
-          className="max-w-md"
-          placeholder="Nome da regra"
-        />
-
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={isAtiva}
-            onCheckedChange={setIsAtiva}
-            id="ativa"
-          />
-          <Label htmlFor="ativa">Ativa</Label>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Label>Prioridade:</Label>
-          <Input
-            type="number"
-            value={prioridade}
-            onChange={(e) => setPrioridade(parseInt(e.target.value) || 1)}
-            className="w-20"
-            min="1"
-          />
-        </div>
-
-        <div className="ml-auto flex gap-2">
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Salvar
+      <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-gradient-to-r from-primary/5 to-primary/10 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="h-8 w-8"
+          >
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          
+          <div className="h-8 w-px bg-border" />
+          
+          <Button
+            variant={isBlockLibraryExpanded ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
+            className="h-8"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Blocos
+          </Button>
+
+          <div className="h-8 w-px bg-border" />
+
+          <div className="flex items-center gap-2">
+            <Input
+              value={nomeRegra}
+              onChange={(e) => setNomeRegra(e.target.value)}
+              placeholder="Nome da regra"
+              className="h-8 w-64"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="ativa"
+              checked={isAtiva}
+              onCheckedChange={(checked) => setIsAtiva(checked as boolean)}
+            />
+            <Label htmlFor="ativa" className="text-sm cursor-pointer">Ativa</Label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Prioridade:</Label>
+            <Input
+              type="number"
+              value={prioridade}
+              onChange={(e) => setPrioridade(Number(e.target.value))}
+              className="h-8 w-20"
+              min="1"
+              max="100"
+            />
+          </div>
         </div>
+
+        <Button onClick={handleSave} size="sm" className="h-8">
+          <Save className="h-4 w-4 mr-2" />
+          Salvar
+        </Button>
       </div>
 
-      {/* Main Content */}
+      {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
-        <AutomacaoBlockLibrary
+        {/* Block Library */}
+        <AutomacaoBlockLibrary 
           onDragStart={onDragStart}
           isExpanded={isBlockLibraryExpanded}
-          onToggleExpand={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
-          blocks={nodes.map((node) => ({
-            id: node.id,
-            type: (node.data as any).type,
-            label: (node.data as any).label,
-            config: (node.data as any).config,
-            note: (node.data as any).note,
-          }))}
-          onSelectBlock={handleSelectBlock}
+          onToggleExpanded={setIsBlockLibraryExpanded}
         />
 
-        <div className="flex-1 relative" ref={reactFlowWrapper}>
+        {/* Canvas */}
+        <div ref={reactFlowWrapper} className="flex-1 bg-muted/20">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -299,36 +380,37 @@ function EditorRegrasContent() {
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeClick={onNodeClick}
+            onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             fitView
+            className="bg-background"
           >
-            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-            <Controls />
-            <MiniMap />
+            <Background 
+              variant={BackgroundVariant.Dots} 
+              gap={16}
+              size={1}
+              color="hsl(var(--muted-foreground))"
+              className="opacity-20"
+            />
+            <Controls 
+              className="bg-card border border-border shadow-lg rounded-lg"
+              showInteractive={false}
+            />
+            <MiniMap 
+              className="bg-card border border-border shadow-lg rounded-lg"
+              nodeColor="#8B5CF6"
+              maskColor="rgba(0, 0, 0, 0.1)"
+            />
           </ReactFlow>
         </div>
 
+        {/* Properties Panel */}
         {selectedNode && (
           <AutomacaoPropertiesPanel
-            block={{
-              id: selectedNode.id,
-              type: (selectedNode.data as any).type,
-              label: (selectedNode.data as any).label,
-              config: (selectedNode.data as any).config,
-              note: (selectedNode.data as any).note,
-            }}
+            node={selectedNode}
+            onUpdate={handleUpdateNode}
+            onDelete={handleDeleteNode}
             onClose={() => setSelectedNode(null)}
-            onUpdate={(updatedBlock) => {
-              handleUpdateNode({
-                ...selectedNode,
-                data: {
-                  ...selectedNode.data,
-                  label: updatedBlock.label,
-                  config: updatedBlock.config,
-                  note: updatedBlock.note,
-                },
-              });
-            }}
           />
         )}
       </div>
