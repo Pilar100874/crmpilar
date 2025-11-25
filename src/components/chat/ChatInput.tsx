@@ -54,6 +54,7 @@ interface ChatInputProps {
   // Agent Assist props
   conversationId?: string;
   conversationMessages?: any[];
+  onSummaryGenerated?: (summary: string) => void;
 }
 
 export default function ChatInput({ 
@@ -78,6 +79,7 @@ export default function ChatInput({
   showAIChat = false,
   onToggleAIChat,
   aiWebhooks = [],
+  onSummaryGenerated,
   conversationId,
   conversationMessages = []
 }: ChatInputProps) {
@@ -635,6 +637,9 @@ export default function ChatInput({
                 return;
               }
               
+              // Open panel immediately with loading state
+              onSummaryGenerated?.("");
+              
               setIsGeneratingSummary(true);
               try {
                 const { data, error } = await supabase.functions.invoke('agent-assist-summarize', {
@@ -647,10 +652,8 @@ export default function ChatInput({
                 if (error) throw error;
                 
                 const summary = data?.summary || "";
-                // Mostrar resumo em um toast ou modal
-                toast.success("Resumo gerado! Verifique o painel lateral.");
-                // Aqui você pode adicionar lógica para mostrar o resumo em um painel
-                console.log("📝 Resumo:", summary);
+                toast.success("Resumo gerado com sucesso!");
+                onSummaryGenerated?.(summary);
               } catch (error: any) {
                 console.error("Erro ao gerar resumo:", error);
                 toast.error("Erro ao gerar resumo");
