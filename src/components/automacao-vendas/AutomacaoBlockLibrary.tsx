@@ -17,30 +17,34 @@ interface AutomacaoBlockLibraryProps {
 const blockCategories = [
   {
     name: "Sistema",
-    color: "purple",
+    icon: "⚙️",
     gradient: "from-purple-500/10 to-violet-500/10",
     border: "border-purple-500/20",
+    borderHover: "hover:border-purple-500/40",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "sistema"),
   },
   {
     name: "Condições",
-    color: "blue",
+    icon: "🔍",
     gradient: "from-blue-500/10 to-cyan-500/10",
     border: "border-blue-500/20",
+    borderHover: "hover:border-blue-500/40",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "condicao"),
   },
   {
     name: "Ações",
-    color: "orange",
+    icon: "⚡",
     gradient: "from-orange-500/10 to-amber-500/10",
     border: "border-orange-500/20",
+    borderHover: "hover:border-orange-500/40",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "acao"),
   },
   {
     name: "Datas Especiais",
-    color: "rose",
+    icon: "📅",
     gradient: "from-rose-500/10 to-pink-500/10",
     border: "border-rose-500/20",
+    borderHover: "hover:border-rose-500/40",
     blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "data"),
   },
 ];
@@ -106,30 +110,30 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                 open={isOpen}
                 onOpenChange={() => toggleCategory(category.name)}
               >
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all">
+                <CollapsibleTrigger className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all duration-150 group border border-transparent ${category.borderHover}`}>
                   <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded-md bg-gradient-to-br ${category.gradient} border ${category.border}`}>
-                      <span className="text-xs">{category.blocks[0]?.icon || "📦"}</span>
+                    <div className={`p-1 rounded-md bg-gradient-to-br ${category.gradient} border ${category.border} transition-all`}>
+                      <span className="text-base">{category.icon}</span>
                     </div>
-                    <span className="font-semibold text-xs text-foreground">{category.name}</span>
+                    <span className="font-semibold text-xs text-foreground transition-colors">{category.name}</span>
                   </div>
                   <ChevronDown 
-                    className={`w-3 h-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    className={`w-3 h-3 text-muted-foreground transition-all duration-150 ${isOpen ? 'rotate-180' : ''}`}
                   />
                 </CollapsibleTrigger>
 
-                <CollapsibleContent className="pt-1 space-y-1">
+                <CollapsibleContent className="pt-1 space-y-1 animate-accordion-down">
                   {category.blocks.map((block) => {
                     return (
                       <Card
                         key={block.type}
                         draggable
                         onDragStart={(event) => onDragStart(event, block.type)}
-                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all hover:shadow-md group rounded-lg"
+                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-2xl"
                       >
                         <div className="flex items-center gap-2">
-                          <div className="p-1 rounded-md bg-primary/10 border border-primary/20 group-hover:border-primary/40 transition-all flex-shrink-0">
-                            <span className="text-sm">{block.icon}</span>
+                          <div className="p-1 rounded-md bg-gradient-to-br from-primary/15 to-primary/10 border border-primary/25 group-hover:border-primary/50 transition-all flex-shrink-0">
+                            <span className="text-base">{block.icon}</span>
                           </div>
                           <div className="min-w-0 flex-1">
                             <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
@@ -144,6 +148,15 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
               </Collapsible>
             );
           })}
+          {filteredCategories.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="p-3 rounded-full bg-muted w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+                <span className="text-2xl">🔍</span>
+              </div>
+              <p className="text-xs font-medium">Nenhum bloco encontrado</p>
+              <p className="text-[10px] mt-1">Tente outra busca</p>
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>
