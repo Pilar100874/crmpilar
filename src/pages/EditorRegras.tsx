@@ -302,7 +302,7 @@ function EditorRegrasContent() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/orcamentos")}
             className="h-8 w-8"
           >
             <ArrowLeft className="h-4 w-4" />
