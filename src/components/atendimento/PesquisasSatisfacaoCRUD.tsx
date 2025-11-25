@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/toast-config";
-import { Plus, Edit, Trash2, MessageCircle } from "lucide-react";
+import { Plus, Edit, Trash2, MessageCircle, HelpCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface Pesquisa {
@@ -59,6 +59,7 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
   const [pesquisas, setPesquisas] = useState<Pesquisa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [editingPesquisa, setEditingPesquisa] = useState<Pesquisa | null>(null);
   const [formData, setFormData] = useState<Partial<Pesquisa>>({
     nome: "",
@@ -205,16 +206,26 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Pesquisas de Satisfação</h2>
-        <Button
-          onClick={() => {
-            resetForm();
-            setEditingPesquisa(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Pesquisa
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setManualDialogOpen(true)}
+            title="Manual de Uso"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => {
+              resetForm();
+              setEditingPesquisa(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Pesquisa
+          </Button>
+        </div>
       </div>
 
       <div className="border rounded-lg overflow-hidden">
@@ -507,6 +518,100 @@ export default function PesquisasSatisfacaoCRUD({ estabelecimentoId }: Pesquisas
             <Button onClick={handleSave}>
               <MessageCircle className="mr-2 h-4 w-4" />
               {editingPesquisa ? "Atualizar" : "Criar"} Pesquisa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Dialog */}
+      <Dialog open={manualDialogOpen} onOpenChange={setManualDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="h-5 w-5" />
+              Manual de Pesquisas de Satisfação
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 text-sm">
+            <section>
+              <h3 className="font-semibold text-base mb-2">📊 O que são Pesquisas de Satisfação?</h3>
+              <p className="text-muted-foreground">
+                As pesquisas de satisfação permitem coletar feedback dos clientes após interações de atendimento. 
+                O sistema suporta três tipos principais: CSAT (Customer Satisfaction), NPS (Net Promoter Score) e CES (Customer Effort Score).
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎯 Tipos de Pesquisa</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>CSAT:</strong> Avalia a satisfação imediata do cliente com o atendimento (escala de 1-5 ou 1-10)</li>
+                <li><strong>NPS:</strong> Mede a probabilidade do cliente recomendar sua empresa (escala de 0-10)</li>
+                <li><strong>CES:</strong> Avalia o esforço que o cliente precisou fazer para resolver seu problema (escala de 1-7)</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">⚙️ Configuração de Disparos</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Após Encerramento:</strong> Enviada imediatamente após o chat ser finalizado</li>
+                <li><strong>Após Delay:</strong> Enviada X minutos após o encerramento do chat</li>
+                <li><strong>Horário Específico:</strong> Enviada em um horário definido após o atendimento</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">📝 Campos Importantes</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Nome:</strong> Identificação interna da pesquisa</li>
+                <li><strong>Pergunta Principal:</strong> A questão que será enviada ao cliente</li>
+                <li><strong>Escala:</strong> Define os valores mínimo e máximo da avaliação</li>
+                <li><strong>Labels:</strong> Textos explicativos para os extremos da escala (ex: "Muito Insatisfeito" / "Muito Satisfeito")</li>
+                <li><strong>Comentário:</strong> Permite que o cliente deixe um feedback adicional</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">🎯 Filtros Avançados</h3>
+              <p className="text-muted-foreground mb-2">
+                Você pode configurar a pesquisa para ser enviada apenas em situações específicas:
+              </p>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><strong>Canais:</strong> Escolha em quais canais a pesquisa será enviada (WhatsApp, Telegram, etc)</li>
+                <li><strong>Filas:</strong> Restrinja a pesquisa para atendimentos de filas específicas</li>
+                <li><strong>Atendentes:</strong> Envie apenas para atendimentos de certos atendentes</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">💡 Boas Práticas</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>✓ Mantenha as perguntas simples e diretas</li>
+                <li>✓ Use delays curtos para maior taxa de resposta (5-15 minutos)</li>
+                <li>✓ Sempre permita comentários para feedback qualitativo</li>
+                <li>✓ Ative pesquisas apenas para canais relevantes</li>
+                <li>✓ Monitore os resultados no Dashboard de Pesquisas</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">📈 Acompanhamento</h3>
+              <p className="text-muted-foreground">
+                Acesse o <strong>Dashboard de Pesquisas</strong> no menu Dashboards para visualizar:
+              </p>
+              <ul className="space-y-1 mt-2 text-muted-foreground">
+                <li>• Taxas de resposta</li>
+                <li>• Médias de satisfação</li>
+                <li>• Evolução temporal dos indicadores</li>
+                <li>• Comentários dos clientes</li>
+                <li>• Distribuição de scores (Detratores, Neutros, Promotores)</li>
+              </ul>
+            </section>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setManualDialogOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
