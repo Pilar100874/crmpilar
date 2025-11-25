@@ -118,7 +118,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
             Gerencie regras automáticas de desconto e promoções
           </p>
         </div>
-        <Button onClick={() => navigate("/editor-regras")}>
+        <Button onClick={() => navigate("/editor-regras")} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Nova Regra
         </Button>

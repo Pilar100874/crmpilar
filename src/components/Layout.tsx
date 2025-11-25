@@ -102,15 +102,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },
-  { 
-    id: "Orçamentos",
-    title: "Orçamentos", 
-    icon: FileBarChart,
-    subItems: [
-      { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: FileBarChart },
-      { id: "Automação de Vendas", title: "Automação de Vendas", url: "/automacoes-vendas", icon: Zap },
-    ]
-  },
+  { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: FileBarChart },
   { 
     id: "Conteúdos",
     title: "Listas", 
