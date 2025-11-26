@@ -20,6 +20,7 @@ export type AutomacaoVendasBlockType =
   | "validar_empresa"
   | "validar_usuario"
   | "validar_produto"
+  | "desconto_por_total_pedido"
   // Blocos de lógica
   | "logica_e"
   | "logica_ou"
@@ -289,6 +290,21 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     category: "condicao",
     defaultData: {
       produtoId: "",
+    },
+  },
+  {
+    type: "desconto_por_total_pedido",
+    label: "Desconto por Total do Pedido",
+    description: "Aplica diferentes ações baseadas em faixas de valor do pedido total",
+    icon: "TrendingUp",
+    color: "#10b981",
+    category: "condicao",
+    defaultData: {
+      faixas: [
+        { min: 0, max: 100, label: "Até R$ 100" },
+        { min: 100, max: 500, label: "De R$ 100 a R$ 500" },
+        { min: 500, max: null, label: "Acima de R$ 500" }
+      ],
     },
   },
   {

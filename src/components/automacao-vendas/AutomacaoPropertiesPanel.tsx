@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Search, Check, ChevronsUpDown } from "lucide-react";
+import { X, Search, Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import { Node } from "@xyflow/react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -37,6 +37,9 @@ export const AutomacaoPropertiesPanel = ({
   const [openUsuarioCombobox, setOpenUsuarioCombobox] = useState(false);
   const [openProdutoCombobox, setOpenProdutoCombobox] = useState(false);
   const [percentualDesconto, setPercentualDesconto] = useState((node.data as any).config?.percentual || 5);
+  const [faixas, setFaixas] = useState<Array<{ min: number; max: number | null; label: string }>>(
+    (node.data as any).config?.faixas || []
+  );
 
   useEffect(() => {
     setLabel((node.data as any).label || "");
@@ -45,6 +48,7 @@ export const AutomacaoPropertiesPanel = ({
     setSelectedUsuarioId((node.data as any).config?.usuarioId || "");
     setSelectedProdutoId((node.data as any).config?.produtoId || "");
     setPercentualDesconto((node.data as any).config?.percentual || 5);
+    setFaixas((node.data as any).config?.faixas || []);
   }, [node]);
 
   // Carregar empresas
@@ -163,6 +167,44 @@ export const AutomacaoPropertiesPanel = ({
         ...((node.data as any).config || {}),
         percentual 
       } 
+    });
+  };
+
+  const handleAddFaixa = () => {
+    const novasFaixas = [...faixas, { min: 0, max: 100, label: "Nova Faixa" }];
+    setFaixas(novasFaixas);
+    onUpdate(node.id, {
+      config: {
+        ...((node.data as any).config || {}),
+        faixas: novasFaixas
+      }
+    });
+  };
+
+  const handleRemoveFaixa = (index: number) => {
+    const novasFaixas = faixas.filter((_, i) => i !== index);
+    setFaixas(novasFaixas);
+    onUpdate(node.id, {
+      config: {
+        ...((node.data as any).config || {}),
+        faixas: novasFaixas
+      }
+    });
+  };
+
+  const handleUpdateFaixa = (index: number, field: 'min' | 'max' | 'label', value: any) => {
+    const novasFaixas = faixas.map((faixa, i) => {
+      if (i === index) {
+        return { ...faixa, [field]: value };
+      }
+      return faixa;
+    });
+    setFaixas(novasFaixas);
+    onUpdate(node.id, {
+      config: {
+        ...((node.data as any).config || {}),
+        faixas: novasFaixas
+      }
     });
   };
 
@@ -381,6 +423,85 @@ export const AutomacaoPropertiesPanel = ({
               </p>
               <p className="text-xs text-success mt-2 bg-green-500/10 p-2 rounded border border-green-500/20">
                 Ex: Orçamento de R$ 100,00 com 10% = R$ 90,00 final
+              </p>
+            </div>
+          )}
+
+          {/* Campos específicos para desconto_por_total_pedido */}
+          {(node.data as any).type === "desconto_por_total_pedido" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Faixas de Valor</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddFaixa}
+                  className="h-8"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Adicionar Faixa
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {faixas.map((faixa, index) => (
+                  <div key={index} className="p-3 border rounded-lg bg-muted/30 space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Faixa {index + 1}</span>
+                      {faixas.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFaixa(index)}
+                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Rótulo da Saída</Label>
+                      <Input
+                        value={faixa.label}
+                        onChange={(e) => handleUpdateFaixa(index, 'label', e.target.value)}
+                        placeholder="Ex: Até R$ 100"
+                        className="mt-1 h-8 text-sm"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Valor Mínimo (R$)</Label>
+                        <Input
+                          type="number"
+                          value={faixa.min}
+                          onChange={(e) => handleUpdateFaixa(index, 'min', Number(e.target.value))}
+                          placeholder="0"
+                          className="mt-1 h-8 text-sm"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Valor Máximo (R$)</Label>
+                        <Input
+                          type="number"
+                          value={faixa.max || ""}
+                          onChange={(e) => handleUpdateFaixa(index, 'max', e.target.value ? Number(e.target.value) : null)}
+                          placeholder="Sem limite"
+                          className="mt-1 h-8 text-sm"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <p className="text-xs text-muted-foreground bg-blue-500/10 p-2 rounded border border-blue-500/20">
+                💡 <strong>Dica:</strong> Cada faixa criará uma saída diferente no bloco. Conecte ações específicas para cada faixa de valor do pedido.
               </p>
             </div>
           )}
