@@ -131,6 +131,7 @@ export default function POSView({
   const [cartSortBy, setCartSortBy] = useState<"nome" | "quantidade" | "preco" | "subtotal">("nome");
   const [tempCartItems, setTempCartItems] = useState<Map<string, { produto: Produto; quantity: number; preco: number }>>(new Map());
   const [showRegrasDialog, setShowRegrasDialog] = useState(false);
+  const [gruposQuantities, setGruposQuantities] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
     loadProdutos();
@@ -970,7 +971,7 @@ export default function POSView({
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
               {filteredProdutos.map((produto) => {
-                const [gridQuantity, setGridQuantity] = useState(1);
+                const quantity = gruposQuantities.get(produto.id) || 1;
                 return (
                   <Card
                     key={produto.id}
@@ -979,10 +980,14 @@ export default function POSView({
                     <div 
                       className="aspect-square bg-muted relative overflow-hidden cursor-pointer"
                       onClick={() => {
-                        for (let i = 0; i < gridQuantity; i++) {
+                        for (let i = 0; i < quantity; i++) {
                           addToCart(produto);
                         }
-                        setGridQuantity(1);
+                        setGruposQuantities(prev => {
+                          const next = new Map(prev);
+                          next.set(produto.id, 1);
+                          return next;
+                        });
                       }}
                     >
                       {produto.foto_url ? (
@@ -1017,10 +1022,15 @@ export default function POSView({
                         <Input
                           type="number"
                           min="1"
-                          value={gridQuantity}
+                          value={quantity}
                           onChange={(e) => {
                             e.stopPropagation();
-                            setGridQuantity(parseInt(e.target.value) || 1);
+                            const newQty = parseInt(e.target.value) || 1;
+                            setGruposQuantities(prev => {
+                              const next = new Map(prev);
+                              next.set(produto.id, newQty);
+                              return next;
+                            });
                           }}
                           onClick={(e) => e.stopPropagation()}
                           className="w-16 h-7 text-center text-xs p-1 bg-background border-border"
@@ -1034,7 +1044,7 @@ export default function POSView({
           ) : (
             <div className="space-y-2">
               {filteredProdutos.map((produto) => {
-                const [listQuantity, setListQuantity] = useState(1);
+                const quantity = gruposQuantities.get(produto.id) || 1;
                 return (
                   <Card
                     key={produto.id}
@@ -1044,10 +1054,14 @@ export default function POSView({
                       <div 
                         className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden cursor-pointer"
                         onClick={() => {
-                          for (let i = 0; i < listQuantity; i++) {
+                          for (let i = 0; i < quantity; i++) {
                             addToCart(produto);
                           }
-                          setListQuantity(1);
+                          setGruposQuantities(prev => {
+                            const next = new Map(prev);
+                            next.set(produto.id, 1);
+                            return next;
+                          });
                         }}
                       >
                         {produto.foto_url ? (
@@ -1083,10 +1097,15 @@ export default function POSView({
                         <Input
                           type="number"
                           min="1"
-                          value={listQuantity}
+                          value={quantity}
                           onChange={(e) => {
                             e.stopPropagation();
-                            setListQuantity(parseInt(e.target.value) || 1);
+                            const newQty = parseInt(e.target.value) || 1;
+                            setGruposQuantities(prev => {
+                              const next = new Map(prev);
+                              next.set(produto.id, newQty);
+                              return next;
+                            });
                           }}
                           onClick={(e) => e.stopPropagation()}
                           className="w-20 h-9 text-center text-sm p-1 bg-background border-border"
@@ -1096,10 +1115,14 @@ export default function POSView({
                           className="bg-primary hover:bg-primary/90 h-9 w-9"
                           onClick={(e) => {
                             e.stopPropagation();
-                            for (let i = 0; i < listQuantity; i++) {
+                            for (let i = 0; i < quantity; i++) {
                               addToCart(produto);
                             }
-                            setListQuantity(1);
+                            setGruposQuantities(prev => {
+                              const next = new Map(prev);
+                              next.set(produto.id, 1);
+                              return next;
+                            });
                           }}
                         >
                           <Plus className="w-5 h-5" />
