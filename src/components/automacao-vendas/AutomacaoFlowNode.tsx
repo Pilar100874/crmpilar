@@ -127,8 +127,8 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
           </div>
         )}
 
-        {/* Mostrar faixas para desconto_por_total_pedido */}
-        {(data as any).type === "desconto_por_total_pedido" && (data as any).config?.faixas && (
+        {/* Mostrar faixas para valida_faixa_faturamento */}
+        {(data as any).type === "valida_faixa_faturamento" && (data as any).config?.faixas && (
           <div className="mt-2 pt-2 border-t border-slate-200">
             <div className="text-xs font-medium text-slate-600 mb-1">Faixas de Valor:</div>
             <div className="space-y-1">
@@ -143,8 +143,8 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
         )}
         </div>
 
-        {/* Handle inferior - renderizar múltiplas saídas para desconto_por_total_pedido */}
-        {(data as any).type === "desconto_por_total_pedido" ? (
+        {/* Handle inferior - renderizar múltiplas saídas para valida_faixa_faturamento */}
+        {(data as any).type === "valida_faixa_faturamento" ? (
           <>
             {((data as any).config?.faixas || []).map((faixa: any, index: number) => {
               const totalFaixas = ((data as any).config?.faixas || []).length;

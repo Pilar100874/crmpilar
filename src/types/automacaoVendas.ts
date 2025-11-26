@@ -9,18 +9,13 @@ export type AutomacaoVendasBlockType =
   | "condicao_quantidade"
   | "condicao_cliente_acumulado"
   | "desconto_valor_compra"
-  | "desconto_quantidade_compras"
-  | "desconto_produtos_grupo"
-  | "desconto_pagamento_antecipado"
   | "desconto_aniversario_cliente"
   | "desconto_aniversario_empresa"
   | "desconto_data_especial"
-  | "desconto_historico_crescimento"
-  | "desconto_tempo_desde_ultimo"
   | "validar_empresa"
   | "validar_usuario"
   | "validar_produto"
-  | "desconto_por_total_pedido"
+  | "valida_faixa_faturamento"
   // Blocos de lógica
   | "logica_e"
   | "logica_ou"
@@ -162,44 +157,6 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     },
   },
   {
-    type: "desconto_quantidade_compras",
-    label: "Desconto por Frequência",
-    description: "Desconto para clientes que compraram várias vezes no período",
-    icon: "Repeat2",
-    color: "#8b5cf6",
-    category: "condicao",
-    defaultData: {
-      quantidadeMinima: 3,
-      periodoMeses: 1,
-      percentual: 7,
-    },
-  },
-  {
-    type: "desconto_produtos_grupo",
-    label: "Desconto por Grupo",
-    description: "Desconto quando produtos do mesmo grupo atingem valor mínimo",
-    icon: "Boxes",
-    color: "#f59e0b",
-    category: "condicao",
-    defaultData: {
-      grupoId: "",
-      valorMinimo: 1000,
-      percentualExtra: 5,
-    },
-  },
-  {
-    type: "desconto_pagamento_antecipado",
-    label: "Desconto Pagamento Antecipado",
-    description: "Desconto especial para pagamento antecipado",
-    icon: "Zap",
-    color: "#06b6d4",
-    category: "condicao",
-    defaultData: {
-      percentual: 5,
-      diasAntecipacao: 7,
-    },
-  },
-  {
     type: "desconto_aniversario_cliente",
     label: "Aniversário do Cliente",
     description: "Desconto no mês/dia de aniversário do cliente",
@@ -236,30 +193,6 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     },
   },
   {
-    type: "desconto_historico_crescimento",
-    label: "Bônus por Crescimento",
-    description: "Bônus quando compras crescem em relação ao histórico",
-    icon: "TrendingUp",
-    color: "#14b8a6",
-    category: "condicao",
-    defaultData: {
-      percentualCrescimento: 30,
-      bonusPercentual: 5,
-    },
-  },
-  {
-    type: "desconto_tempo_desde_ultimo",
-    label: "Desconto por Retorno Rápido",
-    description: "Desconto se cliente comprar dentro de X dias após último orçamento",
-    icon: "Timer",
-    color: "#f97316",
-    category: "condicao",
-    defaultData: {
-      diasMaximos: 7,
-      percentual: 5,
-    },
-  },
-  {
     type: "validar_empresa",
     label: "Validar Empresa",
     description: "Valida se o orçamento é para uma empresa específica",
@@ -293,9 +226,9 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     },
   },
   {
-    type: "desconto_por_total_pedido",
-    label: "Desconto por Total do Pedido",
-    description: "Aplica diferentes ações baseadas em faixas de valor do pedido total",
+    type: "valida_faixa_faturamento",
+    label: "Valida por Faixa de Faturamento",
+    description: "Aplica diferentes ações baseadas em faixas de valor do faturamento total",
     icon: "TrendingUp",
     color: "#10b981",
     category: "condicao",

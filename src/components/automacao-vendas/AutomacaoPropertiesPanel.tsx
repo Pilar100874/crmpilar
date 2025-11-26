@@ -427,8 +427,8 @@ export const AutomacaoPropertiesPanel = ({
             </div>
           )}
 
-          {/* Campos específicos para desconto_por_total_pedido */}
-          {(node.data as any).type === "desconto_por_total_pedido" && (
+          {/* Campos específicos para valida_faixa_faturamento */}
+          {(node.data as any).type === "valida_faixa_faturamento" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label>Faixas de Valor</Label>
