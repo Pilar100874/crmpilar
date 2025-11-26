@@ -30,13 +30,11 @@ interface ConjuntoPreenchido extends ConjuntoItem {
 interface ConjuntoSelectorDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (items: Array<{ produto_id: string; quantidade: number; preco: number }>) => void;
+  onConfirm: (conjuntoId: string) => void;
 }
 
 export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSelectorDialogProps) {
   const [conjuntos, setConjuntos] = useState<Array<{ id: string; nome: string; created_at: string }>>([]);
-  const [selectedConjunto, setSelectedConjunto] = useState<string | null>(null);
-  const [items, setItems] = useState<ConjuntoPreenchido[]>([]);
   const [loading, setLoading] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [formData, setFormData] = useState({ nome: "", descricao: "" });
@@ -44,8 +42,6 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const [editingConjunto, setEditingConjunto] = useState<{ id: string; nome: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"nome" | "created_at">("nome");
-  const [itemSearchQuery, setItemSearchQuery] = useState("");
-  const [itemSortBy, setItemSortBy] = useState<"nome" | "quantidade" | "preco">("nome");
 
   useEffect(() => {
     if (open) {
@@ -88,71 +84,15 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
     }
   };
 
-  const handleSelectConjunto = async (conjuntoId: string) => {
-    try {
-      setLoading(true);
-      setSelectedConjunto(conjuntoId);
-
-      const { data, error } = await supabase
-        .from("orcamento_conjuntos_itens")
-        .select(`
-          *,
-          produto:produtos(id, nome)
-        `)
-        .eq("conjunto_id", conjuntoId)
-        .order("ordem");
-
-      if (error) throw error;
-
-      // Inicializar itens com valores padrão
-      const itemsPreenchidos = data?.map(item => ({
-        ...item,
-        quantidade: item.quantidade_padrao || 0,
-        preco: item.preco_padrao || 0
-      })) || [];
-
-      setItems(itemsPreenchidos);
-    } catch (error: any) {
-      console.error("Erro ao carregar itens:", error);
-      toast.error("Erro ao carregar itens do conjunto");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateItem = (id: string, field: "quantidade" | "preco", value: number) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
-  };
-
-  const handleConfirm = () => {
-    // Filtrar apenas itens com quantidade > 0
-    const itemsToAdd = items
-      .filter(item => item.quantidade > 0)
-      .map(item => ({
-        produto_id: item.produto_id,
-        quantidade: item.quantidade,
-        preco: item.preco
-      }));
-
-    if (itemsToAdd.length === 0) {
-      toast.error("Adicione quantidade para pelo menos um item");
-      return;
-    }
-
-    onConfirm(itemsToAdd);
-    handleClose();
-  };
-
   const handleClose = () => {
-    setSelectedConjunto(null);
-    setItems([]);
     setShowNewForm(false);
     setFormData({ nome: "", descricao: "" });
-    setItemSearchQuery("");
-    setItemSortBy("nome");
     onClose();
+  };
+
+  const handleSelectConjunto = (conjuntoId: string) => {
+    onConfirm(conjuntoId);
+    handleClose();
   };
 
   const handleCreateConjunto = async () => {
@@ -312,7 +252,7 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
               </Button>
             </div>
           </div>
-        ) : !selectedConjunto ? (
+        ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
               <div className="relative flex-1">
@@ -354,153 +294,47 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
               ) : (
                 <div className="grid gap-2">
                   {filteredConjuntos.map((conjunto) => (
-                  <div
-                    key={conjunto.id}
-                    className="flex gap-2"
-                  >
-                    <Button
-                      variant="outline"
-                      className="flex-1 justify-start h-auto py-4"
-                      onClick={() => handleSelectConjunto(conjunto.id)}
+                    <div
+                      key={conjunto.id}
+                      className="flex gap-2"
                     >
-                      {conjunto.nome}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-auto"
-                      onClick={() => handleEditClick(conjunto)}
-                      title="Editar conjunto"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-auto"
-                      onClick={() => setShowItemsEditor(conjunto.id)}
-                      title="Gerenciar itens"
-                    >
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-auto text-destructive hover:text-destructive"
-                      onClick={() => handleDeleteConjunto(conjunto.id)}
-                      title="Excluir conjunto"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              );
-            })()}
-          </div>
-        ) : loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Carregando itens...
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Pesquisar produtos..."
-                  value={itemSearchQuery}
-                  onChange={(e) => setItemSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={itemSortBy} onValueChange={(value: "nome" | "quantidade" | "preco") => setItemSortBy(value)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nome">Nome (A-Z)</SelectItem>
-                  <SelectItem value="quantidade">Quantidade</SelectItem>
-                  <SelectItem value="preco">Preço</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={() => setSelectedConjunto(null)}>
-                Voltar
-              </Button>
-            </div>
-
-            {(() => {
-              let filteredItems = items.filter(item =>
-                item.produto?.nome.toLowerCase().includes(itemSearchQuery.toLowerCase())
-              );
-
-              // Ordenar itens
-              filteredItems = [...filteredItems].sort((a, b) => {
-                if (itemSortBy === "nome") {
-                  return (a.produto?.nome || "").localeCompare(b.produto?.nome || "");
-                } else if (itemSortBy === "quantidade") {
-                  return b.quantidade - a.quantidade;
-                } else {
-                  return b.preco - a.preco;
-                }
-              });
-
-              return filteredItems.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {itemSearchQuery ? "Nenhum produto encontrado com esse nome." : "Este conjunto não possui itens cadastrados."}
+                      <Button
+                        variant="outline"
+                        className="flex-1 justify-start h-auto py-4"
+                        onClick={() => handleSelectConjunto(conjunto.id)}
+                      >
+                        {conjunto.nome}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-auto"
+                        onClick={() => handleEditClick(conjunto)}
+                        title="Editar conjunto"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-auto"
+                        onClick={() => setShowItemsEditor(conjunto.id)}
+                        title="Gerenciar itens"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-auto text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteConjunto(conjunto.id)}
+                        title="Excluir conjunto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Produto</TableHead>
-                        <TableHead className="w-32">Quantidade</TableHead>
-                        <TableHead className="w-32">Preço Unit.</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">
-                          {item.produto?.nome}
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.quantidade}
-                            onChange={(e) => handleUpdateItem(item.id, "quantidade", parseFloat(e.target.value) || 0)}
-                            className="w-full"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.preco}
-                            onChange={(e) => handleUpdateItem(item.id, "preco", parseFloat(e.target.value) || 0)}
-                            className="w-full"
-                            placeholder="0,00"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" onClick={handleClose}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleConfirm}>
-                    <Check className="h-4 w-4 mr-2" />
-                    Adicionar ao Orçamento
-                  </Button>
-                </div>
-              </>
               );
             })()}
           </div>

@@ -87,6 +87,16 @@ export default function POSView({
   const [showShareModal, setShowShareModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showConjuntoDialog, setShowConjuntoDialog] = useState(false);
+  const [conjuntoSelecionado, setConjuntoSelecionado] = useState<string | null>(null);
+  const [conjuntoItens, setConjuntoItens] = useState<Array<{
+    id: string;
+    produto_id: string;
+    quantidade_padrao: number;
+    preco_padrao?: number;
+    quantidade: number;
+    preco: number;
+    produto?: { id: string; nome: string };
+  }>>([]);
   
   // Filtros avançados
   const [gramaturaMin, setGramaturaMin] = useState<string>("");
@@ -466,22 +476,34 @@ export default function POSView({
     setActiveTab("cart");
   };
 
-  const handleConjuntoConfirm = async (items: Array<{ produto_id: string; quantidade: number; preco: number }>) => {
-    let addedCount = 0;
-    
-    for (const item of items) {
-      const produto = produtos.find(p => p.id === item.produto_id);
-      if (produto) {
-        // Adicionar ao carrinho com quantidade personalizada
-        for (let i = 0; i < item.quantidade; i++) {
-          addToCart(produto);
-        }
-        addedCount++;
-      }
+  const handleConjuntoConfirm = async (conjuntoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("orcamento_conjuntos_itens")
+        .select(`
+          *,
+          produto:produtos(id, nome)
+        `)
+        .eq("conjunto_id", conjuntoId)
+        .order("ordem");
+
+      if (error) throw error;
+
+      // Inicializar itens com valores padrão
+      const itemsPreenchidos = data?.map(item => ({
+        ...item,
+        quantidade: item.quantidade_padrao || 0,
+        preco: item.preco_padrao || 0
+      })) || [];
+
+      setConjuntoSelecionado(conjuntoId);
+      setConjuntoItens(itemsPreenchidos);
+      setShowConjuntoDialog(false);
+      toast.success("Conjunto carregado! Preencha as quantidades e preços.");
+    } catch (error: any) {
+      console.error("Erro ao carregar itens do conjunto:", error);
+      toast.error("Erro ao carregar itens do conjunto");
     }
-    
-    toast.success(`${addedCount} produto(s) com ${items.reduce((sum, i) => sum + i.quantidade, 0)} unidade(s) adicionado(s) ao carrinho!`);
-    setActiveTab("cart");
   };
 
   return (
@@ -648,6 +670,101 @@ export default function POSView({
             </div>
           )}
         </div>
+
+        {/* Itens do Conjunto Selecionado */}
+        {conjuntoSelecionado && conjuntoItens.length > 0 && (
+          <div className="px-4 pb-4">
+            <Card className="bg-card border-border">
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-foreground">Itens do Conjunto</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setConjuntoSelecionado(null);
+                      setConjuntoItens([]);
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Fechar
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-2 text-sm font-medium text-foreground">Produto</th>
+                        <th className="text-center py-2 px-2 text-sm font-medium text-foreground w-32">Quantidade</th>
+                        <th className="text-center py-2 px-2 text-sm font-medium text-foreground w-32">Preço</th>
+                        <th className="text-center py-2 px-2 text-sm font-medium text-foreground w-24">Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {conjuntoItens.map((item) => (
+                        <tr key={item.id} className="border-b border-border/50">
+                          <td className="py-2 px-2 text-sm text-foreground">{item.produto?.nome}</td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.quantidade}
+                              onChange={(e) => {
+                                const newValue = parseFloat(e.target.value) || 0;
+                                setConjuntoItens(conjuntoItens.map(i =>
+                                  i.id === item.id ? { ...i, quantidade: newValue } : i
+                                ));
+                              }}
+                              className="text-center h-8"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.preco}
+                              onChange={(e) => {
+                                const newValue = parseFloat(e.target.value) || 0;
+                                setConjuntoItens(conjuntoItens.map(i =>
+                                  i.id === item.id ? { ...i, preco: newValue } : i
+                                ));
+                              }}
+                              className="text-center h-8"
+                              placeholder="0,00"
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                if (item.quantidade > 0 && item.preco > 0) {
+                                  const produto = produtos.find(p => p.id === item.produto_id);
+                                  if (produto) {
+                                    // Adicionar ao carrinho
+                                    for (let i = 0; i < item.quantidade; i++) {
+                                      addToCart(produto);
+                                    }
+                                    toast.success(`${item.produto?.nome} adicionado ao carrinho`);
+                                  }
+                                } else {
+                                  toast.error("Preencha quantidade e preço");
+                                }
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Grade/Lista de Produtos */}
         <ScrollArea className="flex-1 p-4">
