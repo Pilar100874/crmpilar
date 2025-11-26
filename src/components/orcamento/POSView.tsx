@@ -124,6 +124,8 @@ export default function POSView({
   const [showFilters, setShowFilters] = useState(false);
   const primeiroInputRef = useRef<HTMLInputElement>(null);
   const [showCartDialog, setShowCartDialog] = useState(false);
+  const [cartSearchQuery, setCartSearchQuery] = useState("");
+  const [cartSortBy, setCartSortBy] = useState<"nome" | "quantidade" | "preco" | "subtotal">("nome");
 
   useEffect(() => {
     loadProdutos();
@@ -1368,7 +1370,32 @@ export default function POSView({
           <DialogHeader>
             <DialogTitle>Conferir Itens do Carrinho</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="h-[calc(80vh-120px)]">
+          
+          {/* Pesquisa e Ordenação */}
+          <div className="flex gap-3 mb-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar no carrinho..."
+                value={cartSearchQuery}
+                onChange={(e) => setCartSearchQuery(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+            <Select value={cartSortBy} onValueChange={(value: any) => setCartSortBy(value)}>
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nome">Nome</SelectItem>
+                <SelectItem value="quantidade">Quantidade</SelectItem>
+                <SelectItem value="preco">Preço</SelectItem>
+                <SelectItem value="subtotal">Subtotal</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <ScrollArea className="h-[calc(80vh-200px)]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1381,7 +1408,25 @@ export default function POSView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cartArray.map(({ produto, quantity, preco }) => (
+                {cartArray
+                  .filter(({ produto }) => 
+                    produto.nome.toLowerCase().includes(cartSearchQuery.toLowerCase())
+                  )
+                  .sort((a, b) => {
+                    switch (cartSortBy) {
+                      case "nome":
+                        return a.produto.nome.localeCompare(b.produto.nome);
+                      case "quantidade":
+                        return b.quantity - a.quantity;
+                      case "preco":
+                        return b.preco - a.preco;
+                      case "subtotal":
+                        return (b.quantity * b.preco) - (a.quantity * a.preco);
+                      default:
+                        return 0;
+                    }
+                  })
+                  .map(({ produto, quantity, preco }) => (
                   <TableRow key={produto.id}>
                     <TableCell>
                       <div className="w-12 h-12 bg-muted rounded flex items-center justify-center overflow-hidden">
