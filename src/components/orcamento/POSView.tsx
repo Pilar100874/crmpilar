@@ -130,6 +130,7 @@ export default function POSView({
   const [cartSearchQuery, setCartSearchQuery] = useState("");
   const [cartSortBy, setCartSortBy] = useState<"nome" | "quantidade" | "preco" | "subtotal">("nome");
   const [tempCartItems, setTempCartItems] = useState<Map<string, { produto: Produto; quantity: number; preco: number }>>(new Map());
+  const [showRegrasDialog, setShowRegrasDialog] = useState(false);
 
   useEffect(() => {
     loadProdutos();
@@ -1450,12 +1451,17 @@ export default function POSView({
                     }).format(valorComRegras)}
                   </div>
                   <div className="flex flex-col">
-                    <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
-                      {regrasAplicadas.length} regra(s) aplicada(s)
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-green-500/10 text-green-600 border-green-500/20 text-xs cursor-pointer hover:bg-green-500/20 transition-colors"
+                      onClick={() => setShowRegrasDialog(true)}
+                    >
+                      {regrasAplicadas.length} regra(s) aplicada(s) 
+                      <ChevronRight className="w-3 h-3 ml-1" />
                     </Badge>
                     {detalhesRegras && (
                       <span className="text-[10px] text-muted-foreground mt-1 whitespace-pre-line">
-                        {detalhesRegras}
+                        {detalhesRegras.split('\n')[0]}...
                       </span>
                     )}
                   </div>
@@ -1674,6 +1680,108 @@ export default function POSView({
                 Salvar Alterações
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Regras Aplicadas */}
+      <Dialog open={showRegrasDialog} onOpenChange={setShowRegrasDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="w-5 h-5 text-green-600" />
+              Regras de Automação Aplicadas
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Resumo Financeiro */}
+            <Card className="p-4 bg-muted/50 border-border">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Valor Original</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(getTotal())}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Valor com Desconto</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(valorComRegras)}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Desconto Total</span>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-green-600">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(getTotal() - valorComRegras)}
+                    </span>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      ({((1 - valorComRegras / getTotal()) * 100).toFixed(2)}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Lista de Regras */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Regras Aplicadas ({regrasAplicadas.length})
+              </h3>
+              <div className="space-y-2">
+                {regrasAplicadas.map((regra, index) => (
+                  <Card key={index} className="p-3 border-border hover:border-primary/50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground mb-1">{regra}</p>
+                        {detalhesRegras.split('\n')[index] && (
+                          <p className="text-sm text-muted-foreground">
+                            {detalhesRegras.split('\n')[index]}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 flex-shrink-0">
+                        Ativa
+                      </Badge>
+                    </div>
+                  </Card>
+                ))}
+                {regrasAplicadas.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Tag className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">Nenhuma regra foi aplicada a este orçamento</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Informações Adicionais */}
+            {detalhesRegras && (
+              <Card className="p-4 bg-blue-500/5 border-blue-500/20">
+                <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-blue-600" />
+                  Detalhes Completos
+                </h4>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  {detalhesRegras}
+                </p>
+              </Card>
+            )}
           </div>
         </DialogContent>
       </Dialog>
