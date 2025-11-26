@@ -29,7 +29,8 @@ import {
   Check,
   ChevronsUpDown,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Package
 } from "lucide-react";
 import {
   Select,
@@ -53,6 +54,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
+import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
 
 interface POSViewProps {
   estabelecimentoId: string;
@@ -84,6 +86,7 @@ export default function POSView({
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showConjuntoDialog, setShowConjuntoDialog] = useState(false);
   
   // Filtros avançados
   const [gramaturaMin, setGramaturaMin] = useState<string>("");
@@ -463,6 +466,24 @@ export default function POSView({
     setActiveTab("cart");
   };
 
+  const handleConjuntoConfirm = async (items: Array<{ produto_id: string; quantidade: number; preco: number }>) => {
+    let addedCount = 0;
+    
+    for (const item of items) {
+      const produto = produtos.find(p => p.id === item.produto_id);
+      if (produto) {
+        // Adicionar ao carrinho com quantidade personalizada
+        for (let i = 0; i < item.quantidade; i++) {
+          addToCart(produto);
+        }
+        addedCount++;
+      }
+    }
+    
+    toast.success(`${addedCount} produto(s) com ${items.reduce((sum, i) => sum + i.quantidade, 0)} unidade(s) adicionado(s) ao carrinho!`);
+    setActiveTab("cart");
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <div className="flex flex-1 overflow-hidden">
@@ -498,6 +519,14 @@ export default function POSView({
               </Button>
             </div>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="bg-background border-border hover:bg-muted"
+                onClick={() => setShowConjuntoDialog(true)}
+              >
+                <Package className="w-4 h-4 mr-2" />
+                Usar Conjunto
+              </Button>
               {onClose && (
                 <Button 
                   variant="outline" 
@@ -1101,6 +1130,13 @@ export default function POSView({
           <span className="ml-2">→</span>
         </Button>
       </div>
+
+      {/* Diálogo de Conjuntos de Itens */}
+      <ConjuntoSelectorDialog
+        open={showConjuntoDialog}
+        onClose={() => setShowConjuntoDialog(false)}
+        onConfirm={handleConjuntoConfirm}
+      />
     </div>
   );
 }
