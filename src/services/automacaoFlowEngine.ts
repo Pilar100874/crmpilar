@@ -195,6 +195,54 @@ async function executarRegra(
         }
         break;
 
+      case 'valida_faixa_faturamento':
+        // Validar faixa de faturamento
+        const faixas = configBloco.faixas || [];
+        const valorTotal = orcamento.valor_total;
+        
+        // Encontrar a faixa correspondente
+        let faixaEncontrada = -1;
+        for (let i = 0; i < faixas.length; i++) {
+          const faixa = faixas[i];
+          const dentroDoMin = valorTotal >= faixa.min;
+          const dentroDoMax = faixa.max === null || valorTotal <= faixa.max;
+          
+          if (dentroDoMin && dentroDoMax) {
+            faixaEncontrada = i;
+            resultado.detalhes.push(
+              `${regra.nome}: Valor R$ ${valorTotal.toFixed(2)} está na faixa "${faixa.label}"`
+            );
+            break;
+          }
+        }
+        
+        if (faixaEncontrada >= 0) {
+          // Encontrar próximo bloco conectado a essa faixa específica
+          const proximaConexao = edges.find(
+            e => e.source === blocoAtual.id && e.sourceHandle === `faixa-${faixaEncontrada}`
+          );
+          
+          if (proximaConexao) {
+            blocoAtual = nodes.find(n => n.id === proximaConexao.target) || null;
+            continue; // Pular a lógica padrão de encontrar próximo bloco
+          } else {
+            // Nenhuma conexão para essa faixa, parar execução
+            resultado.detalhes.push(
+              `${regra.nome}: Nenhuma ação configurada para a faixa "${faixas[faixaEncontrada].label}"`
+            );
+            continuar = false;
+          }
+        } else {
+          // Valor não se encaixa em nenhuma faixa
+          resultado.detalhes.push(
+            `${regra.nome}: Valor R$ ${valorTotal.toFixed(2)} não se encaixa em nenhuma faixa configurada`
+          );
+          continuar = false;
+          resultado.aplicada = false;
+          return resultado;
+        }
+        break;
+
       case 'fim':
         // Fim do fluxo
         continuar = false;
