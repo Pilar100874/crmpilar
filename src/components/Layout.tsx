@@ -287,10 +287,11 @@ export default function Layout({ children }: LayoutProps) {
         }
 
         // Verifica se o usuário tem role admin na tabela user_roles
+        // IMPORTANTE: user_roles.user_id referencia usuarios.id, não auth.users.id
         const { data: userRole } = await supabase
           .from("user_roles")
           .select("role")
-          .eq("user_id", user.id)
+          .eq("user_id", usuario.id) // CORRIGIDO: usar usuario.id ao invés de user.id
           .eq("role", "admin")
           .maybeSingle();
 
