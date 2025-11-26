@@ -238,6 +238,15 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       return;
     }
 
+    if (!unidadeId) {
+      toast({
+        title: "Unidade obrigatória",
+        description: "Selecione a unidade do usuário",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!estabelecimentoId) {
       toast({
         title: "Estabelecimento obrigatório",
@@ -823,7 +832,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           </div>
 
           <div>
-            <Label htmlFor="usuario-unidade">Unidade</Label>
+            <Label htmlFor="usuario-unidade">Unidade *</Label>
             <Select value={unidadeId} onValueChange={setUnidadeId}>
               <SelectTrigger id="usuario-unidade">
                 <SelectValue placeholder="Selecione a unidade" />
