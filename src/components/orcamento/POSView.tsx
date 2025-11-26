@@ -31,7 +31,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Package,
-  Maximize2
+  Maximize2,
+  Eye
 } from "lucide-react";
 import {
   Select,
@@ -132,6 +133,7 @@ export default function POSView({
   const [tempCartItems, setTempCartItems] = useState<Map<string, { produto: Produto; quantity: number; preco: number }>>(new Map());
   const [showRegrasDialog, setShowRegrasDialog] = useState(false);
   const [gruposQuantities, setGruposQuantities] = useState<Map<string, number>>(new Map());
+  const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
 
   useEffect(() => {
     loadProdutos();
@@ -1008,6 +1010,19 @@ export default function POSView({
                           {cartItems.get(produto.id)?.quantity}
                         </Badge>
                       )}
+                      
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProduto(produto);
+                          setActiveTab("details");
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                     </div>
                     
                     <div className="p-3">
@@ -1094,6 +1109,18 @@ export default function POSView({
                       </div>
                       
                       <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-9 w-9"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProduto(produto);
+                            setActiveTab("details");
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                         <Input
                           type="number"
                           min="1"
@@ -1282,42 +1309,142 @@ export default function POSView({
 
           <TabsContent value="details" className="flex-1 m-0">
             <ScrollArea className="h-[calc(100vh-400px)] p-2">
-              <div className="space-y-2">
-                <div className="bg-muted/50 rounded p-2.5 border border-border/50">
-                  <h4 className="text-xs font-medium text-foreground mb-2">Status</h4>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                      <span className="text-xs text-foreground">Em Orçamento</span>
+              {selectedProduto ? (
+                <div className="space-y-2">
+                  {/* Imagem do Produto */}
+                  {selectedProduto.foto_url && (
+                    <div className="aspect-square bg-muted rounded overflow-hidden border border-border">
+                      <img 
+                        src={selectedProduto.foto_url} 
+                        alt={selectedProduto.nome}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <p className="text-[10px] text-muted-foreground ml-4">
-                      Aguardando finalização
-                    </p>
+                  )}
+                  
+                  {/* Nome */}
+                  <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Nome</h4>
+                    <p className="text-sm text-foreground font-semibold">{selectedProduto.nome}</p>
                   </div>
-                </div>
-
-                <div className="bg-muted/50 rounded p-2.5 border border-border/50">
-                  <h4 className="text-xs font-medium text-foreground mb-2">Informações</h4>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground text-[10px]">Produtos:</span>
-                      <span className="text-foreground">{cartArray.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground text-[10px]">Qtd. Total:</span>
-                      <span className="text-foreground">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
-                    </div>
-                    {selectedEmpresa && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground text-[10px]">Empresa:</span>
-                        <span className="text-foreground text-[10px] truncate max-w-[140px]">
-                          {empresas.find(e => e.id === selectedEmpresa)?.nome_fantasia}
-                        </span>
+                  
+                  {/* Categoria e Grupo */}
+                  {(selectedProduto.categoria || selectedProduto.grupo) && (
+                    <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Classificação</h4>
+                      <div className="space-y-1.5 text-xs">
+                        {selectedProduto.categoria && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Categoria:</span>
+                            <span className="text-foreground font-medium">{selectedProduto.categoria.nome}</span>
+                          </div>
+                        )}
+                        {selectedProduto.grupo && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Grupo:</span>
+                            <span className="text-foreground font-medium">{selectedProduto.grupo.nome}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
+                  )}
+                  
+                  {/* Dimensões */}
+                  {(selectedProduto.largura || selectedProduto.comprimento || selectedProduto.gramatura || selectedProduto.peso_unitario) && (
+                    <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Especificações</h4>
+                      <div className="space-y-1.5 text-xs">
+                        {selectedProduto.largura && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Largura:</span>
+                            <span className="text-foreground font-medium">{selectedProduto.largura} cm</span>
+                          </div>
+                        )}
+                        {selectedProduto.comprimento && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Comprimento:</span>
+                            <span className="text-foreground font-medium">{selectedProduto.comprimento} cm</span>
+                          </div>
+                        )}
+                        {selectedProduto.gramatura && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Gramatura:</span>
+                            <span className="text-foreground font-medium">{selectedProduto.gramatura} g/m²</span>
+                          </div>
+                        )}
+                        {selectedProduto.peso_unitario && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Peso:</span>
+                            <span className="text-foreground font-medium">{selectedProduto.peso_unitario} kg</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Status */}
+                  <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Status</h4>
+                    <Badge variant={selectedProduto.ativo ? "default" : "secondary"}>
+                      {selectedProduto.ativo ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </div>
+                  
+                  {/* Botão para voltar */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setSelectedProduto(null)}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Fechar Detalhes
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                    <h4 className="text-xs font-medium text-foreground mb-2">Status</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span className="text-xs text-foreground">Em Orçamento</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground ml-4">
+                        Aguardando finalização
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/50 rounded p-2.5 border border-border/50">
+                    <h4 className="text-xs font-medium text-foreground mb-2">Informações</h4>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground text-[10px]">Produtos:</span>
+                        <span className="text-foreground">{cartArray.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground text-[10px]">Qtd. Total:</span>
+                        <span className="text-foreground">{cartArray.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                      </div>
+                      {selectedEmpresa && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground text-[10px]">Empresa:</span>
+                          <span className="text-foreground text-[10px] truncate max-w-[140px]">
+                            {empresas.find(e => e.id === selectedEmpresa)?.nome_fantasia}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                    <Eye className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-xs text-center">Clique no ícone de olho em um produto</p>
+                    <p className="text-xs text-center mt-1">para ver seus detalhes aqui</p>
                   </div>
                 </div>
-              </div>
+              )}
             </ScrollArea>
           </TabsContent>
         </Tabs>
