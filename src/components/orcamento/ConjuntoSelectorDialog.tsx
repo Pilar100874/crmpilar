@@ -46,16 +46,20 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      const { data: userData } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from("usuarios")
         .select("id")
         .eq("auth_user_id", user.id)
         .single();
 
+      if (userError || !userData) {
+        throw new Error("Usuário não encontrado na base de dados");
+      }
+
       const { data, error } = await supabase
         .from("orcamento_conjuntos_usuario")
         .select("id, nome")
-        .eq("usuario_id", userData?.id)
+        .eq("usuario_id", userData.id)
         .order("nome");
 
       if (error) throw error;

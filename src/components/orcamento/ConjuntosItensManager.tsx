@@ -49,7 +49,9 @@ export function ConjuntosItensManager() {
         .eq("auth_user_id", user.id)
         .single();
 
-      if (userError) throw userError;
+      if (userError || !userData) {
+        throw new Error("Usuário não encontrado na base de dados");
+      }
 
       // Buscar conjuntos do usuário
       const { data, error } = await supabase
@@ -94,7 +96,9 @@ export function ConjuntosItensManager() {
         .eq("auth_user_id", user.id)
         .single();
 
-      if (userError) throw userError;
+      if (userError || !userData) {
+        throw new Error("Usuário não encontrado na base de dados");
+      }
 
       if (editingConjunto) {
         // Atualizar conjunto existente
