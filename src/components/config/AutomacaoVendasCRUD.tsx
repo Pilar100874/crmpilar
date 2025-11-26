@@ -324,12 +324,12 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                   </div>
 
                   {/* Ações */}
-                  <div className="flex items-center gap-2 pt-2 border-t">
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleToggleActive(automacao.id, automacao.ativo)}
-                      className="flex-1"
+                      className="flex-1 min-w-[140px]"
                     >
                       {automacao.ativo ? (
                         <>
@@ -348,6 +348,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                       size="sm"
                       onClick={() => navigate(`/editor-regras?id=${automacao.id}`)}
                       title="Editar regra"
+                      className="shrink-0"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -356,6 +357,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                       size="sm"
                       onClick={() => handleDuplicate(automacao)}
                       title="Duplicar regra"
+                      className="shrink-0"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -364,6 +366,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                       size="sm"
                       onClick={() => setDeleteId(automacao.id)}
                       title="Excluir regra"
+                      className="shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
