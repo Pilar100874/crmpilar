@@ -190,69 +190,79 @@ export default function DashboardGastosIA() {
   return (
     <Layout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Brain className="h-8 w-8" />
-              Gastos com IA
-            </h1>
-            <p className="text-muted-foreground">
-              Monitore o uso e custos de IA em tempo real
-            </p>
-          </div>
+        {/* Header com gradiente moderno */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border shadow-lg">
+          <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                <Brain className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">Gastos com IA</h1>
+                <p className="text-muted-foreground mt-1">
+                  Monitore o uso e custos de IA em tempo real
+                </p>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-2">
-            {isAdmin && estabelecimentos.length > 0 && (
-              <Select value={estabelecimentoId || ""} onValueChange={setEstabelecimentoId}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Selecione o estabelecimento" />
+            <div className="flex items-center gap-2">
+              {isAdmin && estabelecimentos.length > 0 && (
+                <Select value={estabelecimentoId || ""} onValueChange={setEstabelecimentoId}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Selecione o estabelecimento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {estabelecimentos.map((est) => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={periodo} onValueChange={setPeriodo}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {estabelecimentos.map((est) => (
-                    <SelectItem key={est.id} value={est.id}>
-                      {est.nome}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="1">Últimas 24 horas</SelectItem>
+                  <SelectItem value="7">Últimos 7 dias</SelectItem>
+                  <SelectItem value="30">Últimos 30 dias</SelectItem>
+                  <SelectItem value="90">Últimos 90 dias</SelectItem>
                 </SelectContent>
               </Select>
-            )}
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={periodo} onValueChange={setPeriodo}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Últimas 24 horas</SelectItem>
-                <SelectItem value="7">Últimos 7 dias</SelectItem>
-                <SelectItem value="30">Últimos 30 dias</SelectItem>
-                <SelectItem value="90">Últimos 90 dias</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={loadLogs} variant="outline" size="icon">
-              <Activity className="h-4 w-4" />
-            </Button>
+              <Button onClick={loadLogs} variant="outline" size="icon">
+                <Activity className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Cards de Métricas */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Chamadas</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Activity className="h-4 w-4 text-blue-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalChamadas.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                {chamadasSucesso} sucesso ({((chamadasSucesso / totalChamadas) * 100).toFixed(1)}%)
+                {chamadasSucesso} sucesso ({totalChamadas > 0 ? ((chamadasSucesso / totalChamadas) * 100).toFixed(1) : 0}%)
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <DollarSign className="h-4 w-4 text-green-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -264,10 +274,12 @@ export default function DashboardGastosIA() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Tokens</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-orange-500/10">
+                <TrendingUp className="h-4 w-4 text-orange-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -279,10 +291,12 @@ export default function DashboardGastosIA() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Tempo Médio</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-purple-500/10">
+                <Calendar className="h-4 w-4 text-purple-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -295,14 +309,29 @@ export default function DashboardGastosIA() {
           </Card>
         </div>
 
+        {/* Mensagem quando não há dados */}
+        {logs.length === 0 && (
+          <Card className="border-2 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Brain className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhum dado disponível</h3>
+              <p className="text-sm text-muted-foreground text-center max-w-md">
+                Ainda não há registros de uso de IA para este estabelecimento no período selecionado.
+                Os dados aparecerão aqui assim que o sistema de IA for utilizado.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Gráficos */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Uso ao Longo do Tempo</CardTitle>
-              <CardDescription>Chamadas e custos por dia</CardDescription>
-            </CardHeader>
-            <CardContent>
+        {logs.length > 0 && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle>Uso ao Longo do Tempo</CardTitle>
+                <CardDescription>Chamadas e custos por dia</CardDescription>
+              </CardHeader>
+              <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={usoPorDia}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -318,11 +347,11 @@ export default function DashboardGastosIA() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Uso por Provedor</CardTitle>
-              <CardDescription>Distribuição de chamadas por provedor</CardDescription>
-            </CardHeader>
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle>Uso por Provedor</CardTitle>
+                <CardDescription>Distribuição de chamadas por provedor</CardDescription>
+              </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -346,11 +375,11 @@ export default function DashboardGastosIA() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Uso por Contexto</CardTitle>
-              <CardDescription>Chamadas por funcionalidade</CardDescription>
-            </CardHeader>
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle>Uso por Contexto</CardTitle>
+                <CardDescription>Chamadas por funcionalidade</CardDescription>
+              </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={usoPorContexto}>
@@ -365,11 +394,11 @@ export default function DashboardGastosIA() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Custo por Contexto</CardTitle>
-              <CardDescription>Gastos por funcionalidade</CardDescription>
-            </CardHeader>
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle>Custo por Contexto</CardTitle>
+                <CardDescription>Gastos por funcionalidade</CardDescription>
+              </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={usoPorContexto}>
@@ -384,37 +413,40 @@ export default function DashboardGastosIA() {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Logs Recentes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Chamadas Recentes</CardTitle>
-            <CardDescription>Últimas {Math.min(10, logs.length)} chamadas de IA</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {logs.slice(0, 10).map((log) => (
-                <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex-1">
-                    <div className="font-medium">{CONTEXTO_LABELS[log.contexto] || log.contexto}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {log.provider} • {log.model}
+        {logs.length > 0 && (
+          <Card className="border shadow-sm">
+            <CardHeader>
+              <CardTitle>Chamadas Recentes</CardTitle>
+              <CardDescription>Últimas {Math.min(10, logs.length)} chamadas de IA</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {logs.slice(0, 10).map((log) => (
+                  <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex-1">
+                      <div className="font-medium">{CONTEXTO_LABELS[log.contexto] || log.contexto}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {log.provider} • {log.model}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">${parseFloat(log.custo_estimado.toString()).toFixed(4)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {log.total_tokens.toLocaleString()} tokens
+                      </div>
+                    </div>
+                    <div className="ml-4 text-xs text-muted-foreground">
+                      {format(new Date(log.created_at), "dd/MM HH:mm", { locale: ptBR })}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium">${parseFloat(log.custo_estimado.toString()).toFixed(4)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {log.total_tokens.toLocaleString()} tokens
-                    </div>
-                  </div>
-                  <div className="ml-4 text-xs text-muted-foreground">
-                    {format(new Date(log.created_at), "dd/MM HH:mm", { locale: ptBR })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );
