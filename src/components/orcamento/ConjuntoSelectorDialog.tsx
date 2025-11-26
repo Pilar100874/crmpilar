@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Check, Plus, ArrowLeft, Settings, Edit, Trash2 } from "lucide-react";
+import { Check, Plus, ArrowLeft, Settings, Edit, Trash2, Search } from "lucide-react";
 import { ConjuntoItensEditor } from "./ConjuntoItensEditor";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ConjuntoItem {
   id: string;
@@ -33,7 +34,7 @@ interface ConjuntoSelectorDialogProps {
 }
 
 export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSelectorDialogProps) {
-  const [conjuntos, setConjuntos] = useState<Array<{ id: string; nome: string }>>([]);
+  const [conjuntos, setConjuntos] = useState<Array<{ id: string; nome: string; created_at: string }>>([]);
   const [selectedConjunto, setSelectedConjunto] = useState<string | null>(null);
   const [items, setItems] = useState<ConjuntoPreenchido[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,12 +42,14 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const [formData, setFormData] = useState({ nome: "", descricao: "" });
   const [showItemsEditor, setShowItemsEditor] = useState<string | null>(null);
   const [editingConjunto, setEditingConjunto] = useState<{ id: string; nome: string } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"nome" | "created_at">("nome");
 
   useEffect(() => {
     if (open) {
       loadConjuntos();
     }
-  }, [open]);
+  }, [open, sortBy]);
 
   const loadConjuntos = async () => {
     try {
@@ -71,9 +74,9 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
 
       const { data, error } = await supabase
         .from("orcamento_conjuntos_usuario")
-        .select("id, nome")
+        .select("id, nome, created_at")
         .eq("usuario_id", userData.id)
-        .order("nome");
+        .order(sortBy === "nome" ? "nome" : "created_at", { ascending: sortBy === "nome" });
 
       if (error) throw error;
       setConjuntos(data || []);
@@ -306,26 +309,47 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
             </div>
           </div>
         ) : !selectedConjunto ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-muted-foreground">
-                Selecione um conjunto para carregar os itens:
-              </p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar conjuntos..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={sortBy} onValueChange={(value: "nome" | "created_at") => setSortBy(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nome">Nome (A-Z)</SelectItem>
+                  <SelectItem value="created_at">Mais recentes</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 size="sm"
                 onClick={() => setShowNewForm(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Novo Conjunto
+                Novo
               </Button>
             </div>
-            {conjuntos.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum conjunto disponível. Crie um conjunto primeiro.
-              </div>
-            ) : (
-              <div className="grid gap-2">
-                {conjuntos.map((conjunto) => (
+            
+            {(() => {
+              const filteredConjuntos = conjuntos.filter(conjunto =>
+                conjunto.nome.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+              
+              return filteredConjuntos.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchQuery ? "Nenhum conjunto encontrado com esse nome." : "Nenhum conjunto disponível. Crie um conjunto primeiro."}
+                </div>
+              ) : (
+                <div className="grid gap-2">
+                  {filteredConjuntos.map((conjunto) => (
                   <div
                     key={conjunto.id}
                     className="flex gap-2"
@@ -367,7 +391,8 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
                   </div>
                 ))}
               </div>
-            )}
+              );
+            })()}
           </div>
         ) : loading ? (
           <div className="text-center py-8 text-muted-foreground">
