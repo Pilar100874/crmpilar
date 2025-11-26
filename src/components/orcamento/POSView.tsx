@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
@@ -107,6 +107,7 @@ export default function POSView({
   const [comprimentoMax, setComprimentoMax] = useState<string>("");
   const [selectedGrupo, setSelectedGrupo] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
+  const primeiroInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadProdutos();
@@ -500,6 +501,11 @@ export default function POSView({
       setConjuntoItens(itemsPreenchidos);
       setShowConjuntoDialog(false);
       toast.success("Conjunto carregado! Preencha as quantidades e preços.");
+      
+      // Focar no primeiro input após um pequeno delay para garantir que o componente foi renderizado
+      setTimeout(() => {
+        primeiroInputRef.current?.focus();
+      }, 100);
     } catch (error: any) {
       console.error("Erro ao carregar itens do conjunto:", error);
       toast.error("Erro ao carregar itens do conjunto");
@@ -730,11 +736,12 @@ export default function POSView({
                       </tr>
                     </thead>
                     <tbody>
-                      {conjuntoItens.map((item) => (
+                      {conjuntoItens.map((item, index) => (
                         <tr key={item.id} className="border-b border-border/50">
                           <td className="py-2 px-2 text-sm text-foreground">{item.produto?.nome}</td>
                           <td className="py-2 px-2">
                             <Input
+                              ref={index === 0 ? primeiroInputRef : null}
                               type="number"
                               min="0"
                               step="0.01"
@@ -767,6 +774,7 @@ export default function POSView({
                           <td className="py-2 px-2 text-center">
                             <Button
                               size="sm"
+                              tabIndex={-1}
                               onClick={() => {
                                 if (item.quantidade > 0 && item.preco > 0) {
                                   const produto = produtos.find(p => p.id === item.produto_id);
