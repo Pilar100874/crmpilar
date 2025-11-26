@@ -114,11 +114,9 @@ export default function GerenciarAtalhos() {
   };
 
   const isMenuPermitted = (menuId: string) => {
-    // Usa grupos de acesso se estiverem configurados, senão mostra tudo
-    if (menusPermitidos.size === 0) return true;
-    return menusPermitidos.has(menuId);
+    // Nesta tela mostramos todos os menus, independentemente do grupo de acesso
+    return true;
   };
-
   const renderCategoriaComSubmenus = (category: MenuCategory) => {
     const IconComponent = category.icon;
     const rows: JSX.Element[] = [];
