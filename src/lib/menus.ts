@@ -12,6 +12,7 @@ export const MENU_CONFIG = [
   { id: "SLA Dashboard", label: "Dashboard SLA" },
   { id: "Analytics Dashboard", label: "Analytics Avançado" },
   { id: "Dashboard CSAT/NPS", label: "Pesquisas de Satisfação" },
+  { id: "Dashboard Gastos IA", label: "Gastos com IA" },
   { id: "CSAT/NPS", label: "Pesquisas de Satisfação (Config)" },
   { id: "Base de Conhecimento", label: "Base de Conhecimento" },
   { id: "Quality Assurance", label: "Quality Assurance" },
