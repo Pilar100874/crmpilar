@@ -9,12 +9,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY não configurada');
     }
 
-    const { text, targetLanguage } = await req.json();
+    const { text, targetLanguage, estabelecimentoId } = await req.json();
 
     console.log(`🌍 Traduzindo texto para ${targetLanguage}`);
 
@@ -76,8 +77,32 @@ Deno.serve(async (req) => {
 
     const aiData = await aiResponse.json();
     const translation = aiData.choices[0].message.content;
+    const duracao = Date.now() - startTime;
 
     console.log(`✅ Tradução concluída`);
+
+    // Log usage to Supabase
+    if (estabelecimentoId) {
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      await supabase.from('ia_usage_log').insert({
+        estabelecimento_id: estabelecimentoId,
+        contexto: 'translate',
+        provider: 'lovable',
+        model: 'google/gemini-2.5-flash',
+        prompt_tokens: aiData.usage?.prompt_tokens || 0,
+        completion_tokens: aiData.usage?.completion_tokens || 0,
+        total_tokens: aiData.usage?.total_tokens || 0,
+        custo_estimado: 0,
+        duracao_ms: duracao,
+        sucesso: true,
+        metadata: { target_language: targetLanguage }
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,

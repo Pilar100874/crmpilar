@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -127,6 +128,27 @@ Regras:
     if (analysis.sentimento === 'negativo' && analysis.score < config.threshold_negativo) {
       await verificarAlerta(supabase, conversationId, estabelecimentoId, analysis, config);
     }
+
+    // Log usage
+    const duracao = Date.now() - startTime;
+    await supabase.from('ia_usage_log').insert({
+      estabelecimento_id: estabelecimentoId,
+      contexto: 'sentiment',
+      provider: 'lovable',
+      model: 'google/gemini-2.5-flash',
+      prompt_tokens: aiData.usage?.prompt_tokens || 0,
+      completion_tokens: aiData.usage?.completion_tokens || 0,
+      total_tokens: aiData.usage?.total_tokens || 0,
+      custo_estimado: 0,
+      duracao_ms: duracao,
+      sucesso: true,
+      metadata: { 
+        message_id: messageId, 
+        conversation_id: conversationId,
+        sentimento: analysis.sentimento,
+        score: analysis.score 
+      }
+    });
 
     return new Response(JSON.stringify({
       success: true,
