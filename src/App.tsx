@@ -59,6 +59,7 @@ import BaseConhecimento from "./pages/BaseConhecimento";
 import QualityAssurance from "./pages/QualityAssurance";
 import EditorRegras from "./pages/EditorRegras";
 import AutomacoesVendas from "./pages/AutomacoesVendas";
+import MeusConjuntos from "./pages/MeusConjuntos";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,7 @@ const App = () => (
             <Route path="/importacao-produtos" element={<ImportacaoProdutosLista />} />
             <Route path="/importacao-produtos/novo" element={<ImportacaoProdutos />} />
             <Route path="/importacao-produtos/editar/:id" element={<ImportacaoProdutos />} />
+            <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
             <Route path="/softphone" element={<Softphone />} />
             <Route path="/videocall" element={<VideoCall />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />

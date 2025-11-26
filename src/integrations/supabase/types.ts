@@ -3255,6 +3255,96 @@ export type Database = {
           },
         ]
       }
+      orcamento_conjuntos_itens: {
+        Row: {
+          conjunto_id: string
+          created_at: string | null
+          id: string
+          ordem: number | null
+          preco_padrao: number | null
+          produto_id: string
+          quantidade_padrao: number | null
+        }
+        Insert: {
+          conjunto_id: string
+          created_at?: string | null
+          id?: string
+          ordem?: number | null
+          preco_padrao?: number | null
+          produto_id: string
+          quantidade_padrao?: number | null
+        }
+        Update: {
+          conjunto_id?: string
+          created_at?: string | null
+          id?: string
+          ordem?: number | null
+          preco_padrao?: number | null
+          produto_id?: string
+          quantidade_padrao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_orcamento_conjuntos_itens_conjunto"
+            columns: ["conjunto_id"]
+            isOneToOne: false
+            referencedRelation: "orcamento_conjuntos_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_orcamento_conjuntos_itens_produto"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamento_conjuntos_usuario: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_orcamento_conjuntos_usuario_estabelecimento"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_orcamento_conjuntos_usuario_usuario"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_historico: {
         Row: {
           acao: string
