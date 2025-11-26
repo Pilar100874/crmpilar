@@ -92,7 +92,7 @@ export default function POSView({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmpresa, setSelectedEmpresa] = useState<string>("");
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
-  const [cartItems, setCartItems] = useState<Map<string, { produto: Produto; quantity: number }>>(new Map());
+  const [cartItems, setCartItems] = useState<Map<string, { produto: Produto; quantity: number; preco: number }>>(new Map());
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("cart");
   const [currentOrcamentoId, setCurrentOrcamentoId] = useState<string | null>(null);
@@ -206,12 +206,13 @@ export default function POSView({
         setSelectedEmpresa(data.empresa_id);
         
         // Preencher carrinho com itens
-        const newCart = new Map<string, { produto: Produto; quantity: number }>();
+        const newCart = new Map<string, { produto: Produto; quantity: number; preco: number }>();
         data.itens?.forEach((item: any) => {
           if (item.produto) {
             newCart.set(item.produto.id, {
               produto: item.produto,
-              quantity: item.quantidade
+              quantity: item.quantidade,
+              preco: item.preco_unitario || 10
             });
           }
         });
@@ -279,10 +280,11 @@ export default function POSView({
       if (existing) {
         newCart.set(produto.id, {
           produto,
-          quantity: existing.quantity + 1
+          quantity: existing.quantity + 1,
+          preco: existing.preco
         });
       } else {
-        newCart.set(produto.id, { produto, quantity: 1 });
+        newCart.set(produto.id, { produto, quantity: 1, preco: 10 });
       }
       
       return newCart;
@@ -315,9 +317,22 @@ export default function POSView({
     });
   };
 
+  const updatePrice = (produtoId: string, newPrice: number) => {
+    setCartItems(prev => {
+      const newCart = new Map(prev);
+      const item = newCart.get(produtoId);
+      
+      if (item) {
+        newCart.set(produtoId, { ...item, preco: newPrice });
+      }
+      
+      return newCart;
+    });
+  };
+
   const getTotal = () => {
     return Array.from(cartItems.values()).reduce((sum, item) => {
-      return sum + (item.quantity * 10); // Preço fixo de exemplo
+      return sum + (item.quantity * item.preco);
     }, 0);
   };
 
@@ -795,10 +810,27 @@ export default function POSView({
                                 if (item.quantidade > 0 && item.preco > 0) {
                                   const produto = produtos.find(p => p.id === item.produto_id);
                                   if (produto) {
-                                    // Adicionar ao carrinho
-                                    for (let i = 0; i < item.quantidade; i++) {
-                                      addToCart(produto);
-                                    }
+                                    // Adicionar ao carrinho com preço customizado
+                                    setCartItems(prev => {
+                                      const newCart = new Map(prev);
+                                      const existing = newCart.get(produto.id);
+                                      
+                                      if (existing) {
+                                        newCart.set(produto.id, {
+                                          produto,
+                                          quantity: existing.quantity + item.quantidade,
+                                          preco: item.preco
+                                        });
+                                      } else {
+                                        newCart.set(produto.id, { 
+                                          produto, 
+                                          quantity: item.quantidade, 
+                                          preco: item.preco 
+                                        });
+                                      }
+                                      
+                                      return newCart;
+                                    });
                                     toast.success(`${item.produto?.nome} adicionado ao carrinho`);
                                   }
                                 } else {
@@ -981,7 +1013,7 @@ export default function POSView({
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  {cartArray.map(({ produto, quantity }) => (
+                  {cartArray.map(({ produto, quantity, preco }) => (
                     <div key={produto.id} className="bg-muted/50 rounded p-2 border border-border/50">
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-muted rounded flex items-center justify-center flex-shrink-0">
@@ -994,7 +1026,12 @@ export default function POSView({
                         
                         <div className="flex-1 min-w-0">
                           <p className="text-foreground text-xs font-medium truncate">{produto.nome}</p>
-                          <p className="text-muted-foreground text-[10px]">R$ 10,00</p>
+                          <p className="text-muted-foreground text-[10px]">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(preco)}
+                          </p>
                         </div>
 
                         <Button
@@ -1028,7 +1065,10 @@ export default function POSView({
                           </Button>
                         </div>
                         <span className="text-foreground text-xs font-bold">
-                          R$ {(quantity * 10).toFixed(2)}
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(quantity * preco)}
                         </span>
                       </div>
                     </div>
@@ -1341,7 +1381,7 @@ export default function POSView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cartArray.map(({ produto, quantity }) => (
+                {cartArray.map(({ produto, quantity, preco }) => (
                   <TableRow key={produto.id}>
                     <TableCell>
                       <div className="w-12 h-12 bg-muted rounded flex items-center justify-center overflow-hidden">
@@ -1354,37 +1394,42 @@ export default function POSView({
                     </TableCell>
                     <TableCell className="font-medium">{produto.nome}</TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-8 w-8"
-                          onClick={() => updateQuantity(produto.id, -1)}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </Button>
-                        <span className="w-12 text-center font-semibold">{quantity}</span>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-8 w-8"
-                          onClick={() => updateQuantity(produto.id, 1)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(e) => {
+                          const newQty = parseInt(e.target.value) || 1;
+                          setCartItems(prev => {
+                            const newCart = new Map(prev);
+                            const item = newCart.get(produto.id);
+                            if (item) {
+                              newCart.set(produto.id, { ...item, quantity: newQty });
+                            }
+                            return newCart;
+                          });
+                        }}
+                        className="w-20 text-center"
+                      />
                     </TableCell>
                     <TableCell className="text-right">
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL'
-                      }).format(10)}
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={preco}
+                        onChange={(e) => {
+                          const newPrice = parseFloat(e.target.value) || 0;
+                          updatePrice(produto.id, newPrice);
+                        }}
+                        className="w-28 text-right"
+                      />
                     </TableCell>
                     <TableCell className="text-right font-semibold">
                       {new Intl.NumberFormat('pt-BR', {
                         style: 'currency',
                         currency: 'BRL'
-                      }).format(quantity * 10)}
+                      }).format(quantity * preco)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Button
