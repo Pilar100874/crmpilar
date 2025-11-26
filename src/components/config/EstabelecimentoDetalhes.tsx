@@ -34,7 +34,7 @@ import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfaca
 import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
 import IAConfigCRUD from "./IAConfigCRUD";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -910,8 +910,22 @@ function SkillsManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string
 
 export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome }: EstabelecimentoDetalhesProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const subsecaoParam = searchParams.get('subsecao');
+  const subsubsecaoParam = searchParams.get('subsubsecao');
   const [userEstabId, setUserEstabId] = useState<string | null>(null);
   const [helpDialogOpen, setHelpDialogOpen] = useState<string | null>(null);
+  const [accordionValue, setAccordionValue] = useState<string | undefined>(subsecaoParam || undefined);
+  const [nestedAccordionValue, setNestedAccordionValue] = useState<string | undefined>(subsubsecaoParam || undefined);
+
+  useEffect(() => {
+    if (subsecaoParam) {
+      setAccordionValue(subsecaoParam);
+    }
+    if (subsubsecaoParam) {
+      setNestedAccordionValue(subsubsecaoParam);
+    }
+  }, [subsecaoParam, subsubsecaoParam]);
 
   useEffect(() => {
     (async () => {
@@ -942,7 +956,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
         </Alert>
       )}
 
-      <Accordion type="single" collapsible className="space-y-2">
+      <Accordion type="single" collapsible className="space-y-2" value={accordionValue} onValueChange={setAccordionValue}>
         <AccordionItem value="resend-config" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center justify-between w-full pr-2">
@@ -1111,7 +1125,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <Accordion type="single" collapsible className="space-y-2 pl-4">
+            <Accordion type="single" collapsible className="space-y-2 pl-4" value={nestedAccordionValue} onValueChange={setNestedAccordionValue}>
               <AccordionItem value="grupos-acesso" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
                   <div className="flex items-center justify-between w-full pr-2">
@@ -1319,7 +1333,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <Accordion type="single" collapsible className="space-y-2 pl-4">
+            <Accordion type="single" collapsible className="space-y-2 pl-4" value={nestedAccordionValue} onValueChange={setNestedAccordionValue}>
               <AccordionItem value="skills-atendimento" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
                   <div className="flex items-center justify-between w-full pr-2">
@@ -1794,7 +1808,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <Accordion type="single" collapsible className="space-y-2 pl-4">
+            <Accordion type="single" collapsible className="space-y-2 pl-4" value={nestedAccordionValue} onValueChange={setNestedAccordionValue}>
               <AccordionItem value="gerador-api" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
                   <div className="flex items-center justify-between w-full pr-2">
@@ -2066,7 +2080,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <Accordion type="single" collapsible className="space-y-2 pl-4">
+            <Accordion type="single" collapsible className="space-y-2 pl-4" value={nestedAccordionValue} onValueChange={setNestedAccordionValue}>
               <AccordionItem value="tipos-pagamento" className="border rounded-md">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
                   <div className="flex items-center justify-between w-full pr-2">
