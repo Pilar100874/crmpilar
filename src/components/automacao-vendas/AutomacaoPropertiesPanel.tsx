@@ -283,14 +283,17 @@ export const AutomacaoPropertiesPanel = ({
                 type="number"
                 value={percentualDesconto}
                 onChange={(e) => handlePercentualChange(Number(e.target.value))}
-                placeholder="Ex: 5"
+                placeholder="Ex: 10"
                 className="mt-1"
                 min="0"
                 max="100"
                 step="0.01"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Este desconto será aplicado ao valor total do orçamento
+                <strong>Desconto direto:</strong> Este percentual é aplicado imediatamente no valor total do orçamento, sem validação de valor mínimo de compra.
+              </p>
+              <p className="text-xs text-success mt-2 bg-green-500/10 p-2 rounded border border-green-500/20">
+                Ex: Orçamento de R$ 100,00 com 10% = R$ 90,00 final
               </p>
             </div>
           )}
