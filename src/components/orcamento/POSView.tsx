@@ -55,6 +55,7 @@ import {
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
+import { ConjuntosItensManager } from "./ConjuntosItensManager";
 
 interface POSViewProps {
   estabelecimentoId: string;
@@ -769,6 +770,10 @@ export default function POSView({
                 <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
                 Carrinho
               </TabsTrigger>
+              <TabsTrigger value="conjuntos" className="data-[state=active]:bg-muted text-xs flex-1">
+                <Package className="w-3.5 h-3.5 mr-1.5" />
+                Conjuntos
+              </TabsTrigger>
               <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs flex-1">
                 <Tag className="w-3.5 h-3.5 mr-1.5" />
                 Detalhes
@@ -851,6 +856,12 @@ export default function POSView({
                   ))}
                 </div>
               )}
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="conjuntos" className="flex-1 m-0">
+            <ScrollArea className="h-[calc(100vh-400px)] p-2">
+              <ConjuntosItensManager />
             </ScrollArea>
           </TabsContent>
 
