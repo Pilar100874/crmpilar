@@ -611,6 +611,8 @@ function EditorRegrasContent() {
             deleteKeyCode="Delete"
             multiSelectionKeyCode="Shift"
             selectNodesOnDrag={false}
+            edgesFocusable={true}
+            edgesReconnectable={true}
             className="bg-background"
               defaultEdgeOptions={{
                 animated: true,
