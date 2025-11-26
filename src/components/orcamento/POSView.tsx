@@ -1185,7 +1185,7 @@ export default function POSView({
                                 return newCart;
                               });
                             }}
-                            className="w-12 h-6 text-center text-xs p-0 bg-background border-border"
+                            className="w-20 h-6 text-center text-xs p-1 bg-background border-border"
                           />
                           <Button
                             size="icon"
