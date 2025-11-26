@@ -911,8 +911,13 @@ function SkillsManagerWrapper({ estabelecimentoId }: { estabelecimentoId: string
 export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome }: EstabelecimentoDetalhesProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const subsecaoParam = searchParams.get('subsecao');
-  const subsubsecaoParam = searchParams.get('subsubsecao');
+  // Normaliza possíveis valores antigos de subsubsecao para os atuais valores dos Accordions
+  const rawSubsecaoParam = searchParams.get('subsecao');
+  const rawSubsubsecaoParam = searchParams.get('subsubsecao');
+  const subsecaoParam = rawSubsecaoParam || null;
+  const subsubsecaoParam = rawSubsubsecaoParam === 'workflows-omnichannel'
+    ? 'omnichannel-workflows'
+    : rawSubsubsecaoParam;
   const [userEstabId, setUserEstabId] = useState<string | null>(null);
   const [helpDialogOpen, setHelpDialogOpen] = useState<string | null>(null);
   const [accordionValue, setAccordionValue] = useState<string | undefined>(subsecaoParam || undefined);
