@@ -137,6 +137,78 @@ export default function GerenciarAtalhos() {
     return category.subItems.some(subItem => isMenuPermitted(subItem.id));
   };
 
+  const renderMenuItem = (item: MenuCategory, level: number = 0): JSX.Element => {
+    const paddingLeft = level * 16; // 16px por nível
+    
+    // Menu sem subitens (item final)
+    if (!item.subItems || item.subItems.length === 0) {
+      const isAdicionado = item.url && isAtalho(item.url);
+      const IconComponent = item.icon;
+      
+      return (
+        <div
+          key={item.id}
+          className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+            isAdicionado ? "border-primary bg-primary/5" : "bg-card"
+          }`}
+          style={{ marginLeft: `${paddingLeft}px` }}
+        >
+          <div className="flex items-center gap-3">
+            {renderIcon(IconComponent)}
+            <p className="font-medium text-sm">{item.title}</p>
+          </div>
+          <Button
+            variant={isAdicionado ? "default" : "outline"}
+            size="icon"
+            onClick={() => handleToggleAtalho(item.title, IconComponent.name || "Star", item.url!)}
+          >
+            <Star
+              className={`h-4 w-4 ${
+                isAdicionado ? "fill-current" : ""
+              }`}
+            />
+          </Button>
+        </div>
+      );
+    }
+    
+    // Menu com subitens (categoria/submenu)
+    const isExpanded = expandedCategories.has(item.id);
+    const IconComponent = item.icon;
+    
+    return (
+      <Collapsible
+        key={item.id}
+        open={isExpanded}
+        onOpenChange={() => toggleCategory(item.id)}
+        defaultOpen={true}
+      >
+        <Card style={{ marginLeft: level > 0 ? `${paddingLeft}px` : '0' }}>
+          <CollapsibleTrigger asChild>
+            <CardContent className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {renderIcon(IconComponent)}
+                  <p className="font-medium">{item.title}</p>
+                </div>
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+            </CardContent>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-4 pb-4 space-y-2">
+              {item.subItems?.map((subItem) => renderMenuItem(subItem, level + 1))}
+            </div>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+    );
+  };
+
   if (loading || atalhosLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -162,106 +234,7 @@ export default function GerenciarAtalhos() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {menuStructure.map((category) => {
-              // Menu sem subitens
-              if (!category.subItems) {
-                const isAdicionado = category.url && isAtalho(category.url);
-                const IconComponent = category.icon;
-                
-                return (
-                  <Card 
-                    key={category.id}
-                    className={`transition-all ${
-                      isAdicionado ? "border-primary bg-primary/5" : ""
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {renderIcon(IconComponent)}
-                          <p className="font-medium">{category.title}</p>
-                        </div>
-                        <Button
-                          variant={isAdicionado ? "default" : "outline"}
-                          size="icon"
-                          onClick={() => handleToggleAtalho(category.title, IconComponent.name || "Star", category.url!)}
-                        >
-                          <Star
-                            className={`h-4 w-4 ${
-                              isAdicionado ? "fill-current" : ""
-                            }`}
-                          />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              }
-              
-              // Menu com subitens (categoria)
-              const isExpanded = expandedCategories.has(category.id);
-              const IconComponent = category.icon;
-              
-              return (
-                <Collapsible
-                  key={category.id}
-                  open={isExpanded}
-                  onOpenChange={() => toggleCategory(category.id)}
-                  defaultOpen={true}
-                >
-                  <Card>
-                    <CollapsibleTrigger asChild>
-                      <CardContent className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {renderIcon(IconComponent)}
-                            <p className="font-medium">{category.title}</p>
-                          </div>
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                      </CardContent>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="px-4 pb-4 space-y-2">
-                        {category.subItems?.map((subItem) => {
-                          const isAdicionado = isAtalho(subItem.url);
-                          const SubIconComponent = subItem.icon;
-                          
-                          return (
-                            <div
-                              key={subItem.id}
-                              className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                                isAdicionado ? "border-primary bg-primary/5" : "bg-card"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 ml-4">
-                                {renderIcon(SubIconComponent)}
-                                <p className="font-medium text-sm">{subItem.title}</p>
-                              </div>
-                              <Button
-                                variant={isAdicionado ? "default" : "outline"}
-                                size="icon"
-                                onClick={() => handleToggleAtalho(subItem.title, SubIconComponent.name || "Star", subItem.url)}
-                              >
-                                <Star
-                                  className={`h-4 w-4 ${
-                                    isAdicionado ? "fill-current" : ""
-                                  }`}
-                                />
-                              </Button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CollapsibleContent>
-                  </Card>
-                </Collapsible>
-              );
-            })}
+            {menuStructure.map((category) => renderMenuItem(category, 0))}
           </div>
         </CardContent>
       </Card>
