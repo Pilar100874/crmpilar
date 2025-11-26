@@ -1500,16 +1500,29 @@ export default function POSView({
           </ScrollArea>
           <div className="border-t pt-4 flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              {cartArray.length} item(ns) no carrinho
+              {cartArray.filter(({ produto }) => 
+                produto.nome.toLowerCase().includes(cartSearchQuery.toLowerCase())
+              ).length} item(ns) no carrinho
             </div>
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground mb-1">Total</div>
-              <div className="text-2xl font-bold text-foreground">
-                {new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                }).format(getTotal())}
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground mb-1">Total</div>
+                <div className="text-2xl font-bold text-foreground">
+                  {new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                  }).format(getTotal())}
+                </div>
               </div>
+              <Button 
+                onClick={() => {
+                  setShowCartDialog(false);
+                  toast.success("Alterações salvas no carrinho!");
+                }}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Salvar Alterações
+              </Button>
             </div>
           </div>
         </DialogContent>
