@@ -207,8 +207,25 @@ function EditorRegrasContent() {
   useEffect(() => {
     if (regraIdFromUrl) {
       loadRegra(regraIdFromUrl);
+    } else {
+      // Nova regra: criar bloco inicial automaticamente
+      const initialNode: Node = {
+        id: getId(),
+        type: "custom",
+        position: { x: 250, y: 100 },
+        data: {
+          label: "Iniciar Validação",
+          type: "iniciar_validacao",
+          config: {},
+          onDuplicate: handleDuplicateNode,
+          onDelete: handleDeleteNode,
+          onAddNote: handleAddNote,
+        },
+      };
+      setNodes([initialNode]);
+      setEdges([]);
     }
-  }, [regraIdFromUrl]);
+  }, [regraIdFromUrl, handleDuplicateNode, handleDeleteNode, handleAddNote, setNodes, setEdges]);
 
   const loadRegra = async (regraId: string) => {
     try {
