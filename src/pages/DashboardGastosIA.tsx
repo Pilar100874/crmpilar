@@ -42,6 +42,8 @@ export default function DashboardGastosIA() {
   const [loading, setLoading] = useState(true);
   const [periodo, setPeriodo] = useState("7");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [estabelecimentos, setEstabelecimentos] = useState<{ id: string; nome: string }[]>([]);
 
   useEffect(() => {
     loadEstabelecimento();
@@ -58,14 +60,36 @@ export default function DashboardGastosIA() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: usuario } = await supabase
-        .from("usuarios")
-        .select("estabelecimento_id")
-        .eq("auth_user_id", user.id)
+      // Verificar se é administrador de sistema
+      const { data: admin } = await supabase
+        .from("administradores")
+        .select("id")
+        .eq("id", user.id)
         .single();
 
-      if (usuario) {
-        setEstabelecimentoId(usuario.estabelecimento_id);
+      if (admin) {
+        setIsAdmin(true);
+        // Carregar todos os estabelecimentos para seleção
+        const { data: estabs } = await supabase
+          .from("estabelecimentos")
+          .select("id, nome")
+          .order("nome");
+        
+        if (estabs && estabs.length > 0) {
+          setEstabelecimentos(estabs);
+          setEstabelecimentoId(estabs[0].id); // Seleciona o primeiro por padrão
+        }
+      } else {
+        // Usuário comum - buscar estabelecimento vinculado
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("estabelecimento_id")
+          .eq("auth_user_id", user.id)
+          .single();
+
+        if (usuario) {
+          setEstabelecimentoId(usuario.estabelecimento_id);
+        }
       }
     } catch (error: any) {
       console.error("Erro ao carregar estabelecimento:", error);
@@ -178,6 +202,20 @@ export default function DashboardGastosIA() {
           </div>
 
           <div className="flex items-center gap-2">
+            {isAdmin && estabelecimentos.length > 0 && (
+              <Select value={estabelecimentoId || ""} onValueChange={setEstabelecimentoId}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Selecione o estabelecimento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {estabelecimentos.map((est) => (
+                    <SelectItem key={est.id} value={est.id}>
+                      {est.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={periodo} onValueChange={setPeriodo}>
               <SelectTrigger className="w-[180px]">
