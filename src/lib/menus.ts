@@ -56,6 +56,7 @@ export const MENU_CONFIG = [
   { id: "Análise de Sentimento", label: "Análise de Sentimento" },
   { id: "Automação de Vendas", label: "Regras para o Orçamento" },
   { id: "Editor de Regras", label: "Editor de Regras" },
+  { id: "Base de Conhecimento", label: "Base de Conhecimento" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
