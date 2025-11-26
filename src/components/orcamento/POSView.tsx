@@ -126,6 +126,7 @@ export default function POSView({
   const [showCartDialog, setShowCartDialog] = useState(false);
   const [cartSearchQuery, setCartSearchQuery] = useState("");
   const [cartSortBy, setCartSortBy] = useState<"nome" | "quantidade" | "preco" | "subtotal">("nome");
+  const [tempCartItems, setTempCartItems] = useState<Map<string, { produto: Produto; quantity: number; preco: number }>>(new Map());
 
   useEffect(() => {
     loadProdutos();
@@ -1000,7 +1001,10 @@ export default function POSView({
                 variant="outline"
                 size="sm"
                 className="w-full mb-2"
-                onClick={() => setShowCartDialog(true)}
+                onClick={() => {
+                  setTempCartItems(new Map(cartItems));
+                  setShowCartDialog(true);
+                }}
                 disabled={cartArray.length === 0}
               >
                 <Maximize2 className="w-4 h-4 mr-2" />
@@ -1365,14 +1369,21 @@ export default function POSView({
       />
 
       {/* Diálogo de Conferência do Carrinho */}
-      <Dialog open={showCartDialog} onOpenChange={setShowCartDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+      <Dialog open={showCartDialog} onOpenChange={(open) => {
+        if (!open) {
+          // Descartar alterações ao fechar sem salvar
+          setTempCartItems(new Map());
+          setCartSearchQuery("");
+        }
+        setShowCartDialog(open);
+      }}>
+        <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Conferir Itens do Carrinho</DialogTitle>
           </DialogHeader>
           
           {/* Pesquisa e Ordenação */}
-          <div className="flex gap-3 mb-3">
+          <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -1395,7 +1406,7 @@ export default function POSView({
             </Select>
           </div>
           
-          <ScrollArea className="h-[calc(80vh-200px)]">
+          <ScrollArea className="flex-1 -mx-6 px-6">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1408,7 +1419,7 @@ export default function POSView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cartArray
+                {Array.from(tempCartItems.values())
                   .filter(({ produto }) => 
                     produto.nome.toLowerCase().includes(cartSearchQuery.toLowerCase())
                   )
@@ -1445,7 +1456,7 @@ export default function POSView({
                         value={quantity}
                         onChange={(e) => {
                           const newQty = parseInt(e.target.value) || 1;
-                          setCartItems(prev => {
+                          setTempCartItems(prev => {
                             const newCart = new Map(prev);
                             const item = newCart.get(produto.id);
                             if (item) {
@@ -1465,7 +1476,14 @@ export default function POSView({
                         value={preco}
                         onChange={(e) => {
                           const newPrice = parseFloat(e.target.value) || 0;
-                          updatePrice(produto.id, newPrice);
+                          setTempCartItems(prev => {
+                            const newCart = new Map(prev);
+                            const item = newCart.get(produto.id);
+                            if (item) {
+                              newCart.set(produto.id, { ...item, preco: newPrice });
+                            }
+                            return newCart;
+                          });
                         }}
                         className="w-28 text-right"
                       />
@@ -1481,14 +1499,20 @@ export default function POSView({
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => removeFromCart(produto.id)}
+                        onClick={() => {
+                          setTempCartItems(prev => {
+                            const newCart = new Map(prev);
+                            newCart.delete(produto.id);
+                            return newCart;
+                          });
+                        }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
-                {cartArray.length === 0 && (
+                {tempCartItems.size === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Carrinho vazio
@@ -1498,9 +1522,11 @@ export default function POSView({
               </TableBody>
             </Table>
           </ScrollArea>
-          <div className="border-t pt-4 flex items-center justify-between">
+          
+          {/* Rodapé fixo com totais e botão */}
+          <div className="border-t pt-4 flex items-center justify-between bg-background">
             <div className="text-sm text-muted-foreground">
-              {cartArray.filter(({ produto }) => 
+              {Array.from(tempCartItems.values()).filter(({ produto }) => 
                 produto.nome.toLowerCase().includes(cartSearchQuery.toLowerCase())
               ).length} item(ns) no carrinho
             </div>
@@ -1511,15 +1537,18 @@ export default function POSView({
                   {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
-                  }).format(getTotal())}
+                  }).format(Array.from(tempCartItems.values()).reduce((sum, item) => sum + (item.quantity * item.preco), 0))}
                 </div>
               </div>
               <Button 
                 onClick={() => {
+                  setCartItems(new Map(tempCartItems));
                   setShowCartDialog(false);
+                  setCartSearchQuery("");
                   toast.success("Alterações salvas no carrinho!");
                 }}
                 className="bg-primary hover:bg-primary/90"
+                size="lg"
               >
                 Salvar Alterações
               </Button>
