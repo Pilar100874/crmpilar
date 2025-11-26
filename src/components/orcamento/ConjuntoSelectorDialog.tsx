@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Check, Plus, ArrowLeft, Settings } from "lucide-react";
+import { Check, Plus, ArrowLeft, Settings, Edit, Trash2 } from "lucide-react";
 import { ConjuntoItensEditor } from "./ConjuntoItensEditor";
 
 interface ConjuntoItem {
@@ -40,6 +40,7 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const [showNewForm, setShowNewForm] = useState(false);
   const [formData, setFormData] = useState({ nome: "", descricao: "" });
   const [showItemsEditor, setShowItemsEditor] = useState<string | null>(null);
+  const [editingConjunto, setEditingConjunto] = useState<{ id: string; nome: string } | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -187,11 +188,67 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
       toast.success("Conjunto criado com sucesso!");
       setShowNewForm(false);
       setFormData({ nome: "", descricao: "" });
+      setEditingConjunto(null);
       loadConjuntos();
     } catch (error: any) {
       console.error("Erro ao criar conjunto:", error);
       toast.error("Erro ao criar conjunto");
     }
+  };
+
+  const handleUpdateConjunto = async () => {
+    if (!formData.nome.trim() || !editingConjunto) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("orcamento_conjuntos_usuario")
+        .update({
+          nome: formData.nome,
+          descricao: formData.descricao
+        })
+        .eq("id", editingConjunto.id);
+
+      if (error) throw error;
+      
+      toast.success("Conjunto atualizado com sucesso!");
+      setShowNewForm(false);
+      setFormData({ nome: "", descricao: "" });
+      setEditingConjunto(null);
+      loadConjuntos();
+    } catch (error: any) {
+      console.error("Erro ao atualizar conjunto:", error);
+      toast.error("Erro ao atualizar conjunto");
+    }
+  };
+
+  const handleDeleteConjunto = async (conjuntoId: string) => {
+    if (!confirm("Deseja realmente excluir este conjunto? Todos os itens associados também serão removidos.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("orcamento_conjuntos_usuario")
+        .delete()
+        .eq("id", conjuntoId);
+
+      if (error) throw error;
+      
+      toast.success("Conjunto excluído com sucesso!");
+      loadConjuntos();
+    } catch (error: any) {
+      console.error("Erro ao excluir conjunto:", error);
+      toast.error("Erro ao excluir conjunto");
+    }
+  };
+
+  const handleEditClick = (conjunto: { id: string; nome: string }) => {
+    setEditingConjunto(conjunto);
+    setFormData({ nome: conjunto.nome, descricao: "" });
+    setShowNewForm(true);
   };
 
   return (
@@ -210,6 +267,7 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
                 onClick={() => {
                   setShowNewForm(false);
                   setFormData({ nome: "", descricao: "" });
+                  setEditingConjunto(null);
                 }}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -236,11 +294,14 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
               />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowNewForm(false)}>
+              <Button variant="outline" onClick={() => {
+                setShowNewForm(false);
+                setEditingConjunto(null);
+              }}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreateConjunto}>
-                Criar Conjunto
+              <Button onClick={editingConjunto ? handleUpdateConjunto : handleCreateConjunto}>
+                {editingConjunto ? "Atualizar" : "Criar"} Conjunto
               </Button>
             </div>
           </div>
@@ -280,10 +341,28 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
                       variant="outline"
                       size="icon"
                       className="h-auto"
+                      onClick={() => handleEditClick(conjunto)}
+                      title="Editar conjunto"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-auto"
                       onClick={() => setShowItemsEditor(conjunto.id)}
                       title="Gerenciar itens"
                     >
                       <Settings className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-auto text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteConjunto(conjunto.id)}
+                      title="Excluir conjunto"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
