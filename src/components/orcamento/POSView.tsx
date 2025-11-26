@@ -30,7 +30,8 @@ import {
   ChevronsUpDown,
   ChevronRight,
   ChevronLeft,
-  Package
+  Package,
+  Maximize2
 } from "lucide-react";
 import {
   Select,
@@ -55,6 +56,20 @@ import {
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface POSViewProps {
   estabelecimentoId: string;
@@ -108,6 +123,7 @@ export default function POSView({
   const [selectedGrupo, setSelectedGrupo] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
   const primeiroInputRef = useRef<HTMLInputElement>(null);
+  const [showCartDialog, setShowCartDialog] = useState(false);
 
   useEffect(() => {
     loadProdutos();
@@ -945,7 +961,19 @@ export default function POSView({
 
           {/* Conteúdo das Tabs */}
           <TabsContent value="cart" className="flex-1 m-0">
-            <ScrollArea className="h-[calc(100vh-400px)] p-2">
+            <div className="px-2 py-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mb-2"
+                onClick={() => setShowCartDialog(true)}
+                disabled={cartArray.length === 0}
+              >
+                <Maximize2 className="w-4 h-4 mr-2" />
+                Conferir Itens
+              </Button>
+            </div>
+            <ScrollArea className="h-[calc(100vh-460px)] p-2">
               {cartArray.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <ShoppingCart className="w-10 h-10 mb-2 opacity-20" />
@@ -1293,6 +1321,109 @@ export default function POSView({
         onClose={() => setShowConjuntoDialog(false)}
         onConfirm={handleConjuntoConfirm}
       />
+
+      {/* Diálogo de Conferência do Carrinho */}
+      <Dialog open={showCartDialog} onOpenChange={setShowCartDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Conferir Itens do Carrinho</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[calc(80vh-120px)]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px]">Foto</TableHead>
+                  <TableHead>Produto</TableHead>
+                  <TableHead className="text-center w-[120px]">Quantidade</TableHead>
+                  <TableHead className="text-right w-[120px]">Preço Unit.</TableHead>
+                  <TableHead className="text-right w-[120px]">Subtotal</TableHead>
+                  <TableHead className="text-center w-[80px]">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cartArray.map(({ produto, quantity }) => (
+                  <TableRow key={produto.id}>
+                    <TableCell>
+                      <div className="w-12 h-12 bg-muted rounded flex items-center justify-center overflow-hidden">
+                        {produto.foto_url ? (
+                          <img src={produto.foto_url} alt={produto.nome} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-muted-foreground text-lg">{produto.nome[0]}</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{produto.nome}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(produto.id, -1)}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="w-12 text-center font-semibold">{quantity}</span>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(produto.id, 1)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(10)}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(quantity * 10)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => removeFromCart(produto.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {cartArray.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Carrinho vazio
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+          <div className="border-t pt-4 flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              {cartArray.length} item(ns) no carrinho
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground mb-1">Total</div>
+              <div className="text-2xl font-bold text-foreground">
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL'
+                }).format(getTotal())}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
