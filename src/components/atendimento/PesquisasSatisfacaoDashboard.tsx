@@ -72,6 +72,11 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
   useEffect(() => {
     if (pesquisas.length > 0) {
       loadRespostas();
+    } else if (pesquisas.length === 0 && !isLoading) {
+      // Sem pesquisas cadastradas - mostra estado vazio
+      setRespostas([]);
+      setMetricas(null);
+      setIsLoading(false);
     }
   }, [selectedPesquisa, selectedPeriodo, estabelecimentoId, pesquisas]);
 
@@ -84,9 +89,15 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
 
       if (error) throw error;
       setPesquisas(data || []);
+      
+      // Se não há pesquisas, seta loading como false
+      if (!data || data.length === 0) {
+        setIsLoading(false);
+      }
     } catch (error: any) {
       console.error("Erro ao carregar pesquisas:", error);
       toast.error("Erro ao carregar pesquisas");
+      setIsLoading(false);
     }
   };
 
