@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Check, Plus, ArrowLeft } from "lucide-react";
+import { Check, Plus, ArrowLeft, Settings } from "lucide-react";
+import { ConjuntoItensEditor } from "./ConjuntoItensEditor";
 
 interface ConjuntoItem {
   id: string;
@@ -38,6 +39,7 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const [loading, setLoading] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [formData, setFormData] = useState({ nome: "", descricao: "" });
+  const [showItemsEditor, setShowItemsEditor] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -263,14 +265,27 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
             ) : (
               <div className="grid gap-2">
                 {conjuntos.map((conjunto) => (
-                  <Button
+                  <div
                     key={conjunto.id}
-                    variant="outline"
-                    className="justify-start h-auto py-4"
-                    onClick={() => handleSelectConjunto(conjunto.id)}
+                    className="flex gap-2"
                   >
-                    {conjunto.nome}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 justify-start h-auto py-4"
+                      onClick={() => handleSelectConjunto(conjunto.id)}
+                    >
+                      {conjunto.nome}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-auto"
+                      onClick={() => setShowItemsEditor(conjunto.id)}
+                      title="Gerenciar itens"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             )}
@@ -350,6 +365,16 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
           </div>
         )}
       </DialogContent>
+
+      {showItemsEditor && (
+        <ConjuntoItensEditor
+          conjuntoId={showItemsEditor}
+          onClose={() => {
+            setShowItemsEditor(null);
+            loadConjuntos();
+          }}
+        />
+      )}
     </Dialog>
   );
 }
