@@ -595,7 +595,7 @@ function EditorRegrasContent() {
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
-            fitView
+            defaultViewport={{ x: 0, y: 0, zoom: 0.33 }}
             className="bg-background"
               defaultEdgeOptions={{
                 animated: true,
