@@ -6,8 +6,7 @@ import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Star, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Star, Loader2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { menuStructure, MenuCategory } from "@/lib/menuStructure";
@@ -16,30 +15,27 @@ export default function GerenciarAtalhos() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { openSubmenu } = useContext(LayoutContext);
-  const { atalhos, adicionarAtalho, removerAtalho, isAtalho, loading: atalhosLoading } = useAtalhos();
+  const {
+    atalhos,
+    adicionarAtalho,
+    removerAtalho,
+    isAtalho,
+    loading: atalhosLoading,
+  } = useAtalhos();
+
   const [menusPermitidos, setMenusPermitidos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadMenusPermitidos();
   }, []);
 
-  // Inicializar com todas as categorias expandidas
-  useEffect(() => {
-    const todasCategorias = new Set<string>();
-    menuStructure.forEach(category => {
-      if (category.subItems && category.subItems.length > 0) {
-        todasCategorias.add(category.id);
-      }
-    });
-    setExpandedCategories(todasCategorias);
-  }, []);
-
   const loadMenusPermitidos = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Buscar grupos de acesso do usuário pelo email
@@ -91,7 +87,6 @@ export default function GerenciarAtalhos() {
         return;
       }
 
-      // Extrair IDs dos menus permitidos
       const menusPermitidosIds = Object.keys(grupoData.menus_permitidos);
       setMenusPermitidos(new Set(menusPermitidosIds));
     } catch (error) {
@@ -104,16 +99,6 @@ export default function GerenciarAtalhos() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const toggleCategory = (categoryId: string) => {
-    const newExpanded = new Set(expandedCategories);
-    if (newExpanded.has(categoryId)) {
-      newExpanded.delete(categoryId);
-    } else {
-      newExpanded.add(categoryId);
-    }
-    setExpandedCategories(newExpanded);
   };
 
   const handleToggleAtalho = async (title: string, iconName: string, path: string) => {
@@ -129,84 +114,84 @@ export default function GerenciarAtalhos() {
   };
 
   const isMenuPermitted = (menuId: string) => {
+    // Usa grupos de acesso se estiverem configurados, senão mostra tudo
+    if (menusPermitidos.size === 0) return true;
     return menusPermitidos.has(menuId);
   };
 
-  const hasPermittedSubItems = (category: MenuCategory) => {
-    if (!category.subItems) return false;
-    return category.subItems.some(subItem => isMenuPermitted(subItem.id));
-  };
+  const renderCategoriaComSubmenus = (category: MenuCategory) => {
+    const IconComponent = category.icon;
+    const rows: JSX.Element[] = [];
 
-  const renderMenuItem = (item: MenuCategory, level: number = 0): JSX.Element => {
-    const paddingLeft = level * 16; // 16px por nível
-    
-    // Menu sem subitens (item final)
-    if (!item.subItems || item.subItems.length === 0) {
-      const isAdicionado = item.url && isAtalho(item.url);
-      const IconComponent = item.icon;
-      
-      return (
+    // Linha da categoria (nível 0)
+    if (!category.subItems || category.subItems.length === 0) {
+      if (!category.url || !isMenuPermitted(category.id)) return null;
+      const isAdicionado = isAtalho(category.url);
+
+      rows.push(
         <div
-          key={item.id}
+          key={category.id}
           className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
             isAdicionado ? "border-primary bg-primary/5" : "bg-card"
           }`}
-          style={{ marginLeft: `${paddingLeft}px` }}
         >
           <div className="flex items-center gap-3">
             {renderIcon(IconComponent)}
-            <p className="font-medium text-sm">{item.title}</p>
+            <p className="font-medium text-sm">{category.title}</p>
           </div>
           <Button
             variant={isAdicionado ? "default" : "outline"}
             size="icon"
-            onClick={() => handleToggleAtalho(item.title, IconComponent.name || "Star", item.url!)}
+            onClick={() => handleToggleAtalho(category.title, IconComponent.name || "Star", category.url!)}
           >
-            <Star
-              className={`h-4 w-4 ${
-                isAdicionado ? "fill-current" : ""
-              }`}
-            />
+            <Star className={`h-4 w-4 ${isAdicionado ? "fill-current" : ""}`} />
           </Button>
         </div>
       );
-    }
-    
-    // Menu com subitens (categoria/submenu)
-    const isExpanded = expandedCategories.has(item.id);
-    const IconComponent = item.icon;
-    
-    return (
-      <Collapsible
-        key={item.id}
-        open={isExpanded}
-        onOpenChange={() => toggleCategory(item.id)}
-        defaultOpen={true}
-      >
-        <Card style={{ marginLeft: level > 0 ? `${paddingLeft}px` : '0' }}>
-          <CollapsibleTrigger asChild>
-            <CardContent className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {renderIcon(IconComponent)}
-                  <p className="font-medium">{item.title}</p>
-                </div>
-                {isExpanded ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-            </CardContent>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 pb-4 space-y-2">
-              {item.subItems?.map((subItem) => renderMenuItem(subItem, level + 1))}
+    } else {
+      // Cabeçalho da categoria (agrupador, sempre visível)
+      rows.push(
+        <div
+          key={category.id}
+          className="flex items-center gap-3 py-2 border-b border-border/40 mb-1"
+        >
+          {renderIcon(IconComponent)}
+          <p className="font-semibold text-sm">{category.title}</p>
+        </div>
+      );
+
+      // Todos os submenus de primeiro nível, SEM esconder nada
+      category.subItems.forEach((subItem) => {
+        if (!isMenuPermitted(subItem.id)) return;
+        const isAdicionado = isAtalho(subItem.url);
+        const SubIconComponent = subItem.icon;
+
+        rows.push(
+          <div
+            key={subItem.id}
+            className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+              isAdicionado ? "border-primary bg-primary/5" : "bg-card"
+            }`}
+          >
+            <div className="flex items-center gap-3 ml-4">
+              {renderIcon(SubIconComponent)}
+              <p className="font-medium text-sm">{subItem.title}</p>
             </div>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
-    );
+            <Button
+              variant={isAdicionado ? "default" : "outline"}
+              size="icon"
+              onClick={() =>
+                handleToggleAtalho(subItem.title, SubIconComponent.name || "Star", subItem.url)
+              }
+            >
+              <Star className={`h-4 w-4 ${isAdicionado ? "fill-current" : ""}`} />
+            </Button>
+          </div>
+        );
+      });
+    }
+
+    return <div key={`wrap-${category.id}`} className="space-y-1">{rows}</div>;
   };
 
   if (loading || atalhosLoading) {
@@ -219,8 +204,8 @@ export default function GerenciarAtalhos() {
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6">
-      <SubMenuHeader 
-        title="Gerenciar Atalhos" 
+      <SubMenuHeader
+        title="Gerenciar Atalhos"
         onOpenSubmenu={() => openSubmenu?.("atalhos")}
       />
 
@@ -233,8 +218,8 @@ export default function GerenciarAtalhos() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {menuStructure.map((category) => renderMenuItem(category, 0))}
+          <div className="space-y-3">
+            {menuStructure.map((category) => renderCategoriaComSubmenus(category))}
           </div>
         </CardContent>
       </Card>
@@ -244,32 +229,29 @@ export default function GerenciarAtalhos() {
           <CardHeader>
             <CardTitle>Atalhos Ativos</CardTitle>
             <CardDescription>
-              {atalhos.length} {atalhos.length === 1 ? "atalho" : "atalhos"} adicionado{atalhos.length === 1 ? "" : "s"} ao menu
+              {atalhos.length} {atalhos.length === 1 ? "atalho" : "atalhos"} adicionado
+              {atalhos.length === 1 ? "" : "s"} ao menu
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {atalhos.map((atalho) => {
                 const IconComponent = (LucideIcons as any)[atalho.icone] || LucideIcons.Star;
-                
+
                 return (
-                <div
-                  key={atalho.id}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                >
-                  <div className="flex items-center gap-3">
-                    {renderIcon(IconComponent)}
-                    <p className="font-medium">{atalho.titulo}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removerAtalho(atalho.path)}
+                  <div
+                    key={atalho.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
                   >
-                    Remover
-                  </Button>
-                </div>
-              );
+                    <div className="flex items-center gap-3">
+                      {renderIcon(IconComponent)}
+                      <p className="font-medium">{atalho.titulo}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => removerAtalho(atalho.path)}>
+                      Remover
+                    </Button>
+                  </div>
+                );
               })}
             </div>
           </CardContent>
