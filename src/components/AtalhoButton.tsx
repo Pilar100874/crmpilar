@@ -11,8 +11,8 @@ interface AtalhoButtonProps {
 
 export const AtalhoButton = ({ titulo, icone, className }: AtalhoButtonProps) => {
   const location = useLocation();
+  const currentPath = `${location.pathname}${location.search || ""}`;
   const { isAtalho, adicionarAtalho, removerAtalho } = useAtalhos();
-  const currentPath = location.pathname;
   const isCurrentAtalho = isAtalho(currentPath);
 
   const handleClick = () => {
