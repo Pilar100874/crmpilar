@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ interface Estabelecimento {
 }
 
 export function EstabelecimentosCRUD() {
+  const [searchParams] = useSearchParams();
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -35,6 +37,16 @@ export function EstabelecimentosCRUD() {
     checkUserType();
     fetchEstabelecimentos();
   }, []);
+
+  // Auto-expandir primeiro estabelecimento se houver parâmetros de subsecao na URL
+  useEffect(() => {
+    const subsecao = searchParams.get('subsecao');
+    const subsubsecao = searchParams.get('subsubsecao');
+    
+    if ((subsecao || subsubsecao) && estabelecimentos.length > 0 && !expandedId) {
+      setExpandedId(estabelecimentos[0].id);
+    }
+  }, [searchParams, estabelecimentos, expandedId]);
 
   const checkUserType = async () => {
     try {
