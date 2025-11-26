@@ -33,12 +33,14 @@ export const AutomacaoPropertiesPanel = ({
   const [selectedUsuarioId, setSelectedUsuarioId] = useState((node.data as any).config?.usuarioId || "");
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
   const [openUsuarioCombobox, setOpenUsuarioCombobox] = useState(false);
+  const [percentualDesconto, setPercentualDesconto] = useState((node.data as any).config?.percentual || 5);
 
   useEffect(() => {
     setLabel((node.data as any).label || "");
     setNote((node.data as any).note || "");
     setSelectedEmpresaId((node.data as any).config?.empresaId || "");
     setSelectedUsuarioId((node.data as any).config?.usuarioId || "");
+    setPercentualDesconto((node.data as any).config?.percentual || 5);
   }, [node]);
 
   // Carregar empresas
@@ -113,6 +115,16 @@ export const AutomacaoPropertiesPanel = ({
       config: { 
         ...((node.data as any).config || {}),
         usuarioId 
+      } 
+    });
+  };
+
+  const handlePercentualChange = (percentual: number) => {
+    setPercentualDesconto(percentual);
+    onUpdate(node.id, { 
+      config: { 
+        ...((node.data as any).config || {}),
+        percentual 
       } 
     });
   };
@@ -259,6 +271,27 @@ export const AutomacaoPropertiesPanel = ({
                   </Command>
                 </PopoverContent>
               </Popover>
+            </div>
+          )}
+
+          {/* Campos específicos para desconto_valor_compra */}
+          {(node.data as any).type === "desconto_valor_compra" && (
+            <div>
+              <Label htmlFor="percentual">Percentual de Desconto (%)</Label>
+              <Input
+                id="percentual"
+                type="number"
+                value={percentualDesconto}
+                onChange={(e) => handlePercentualChange(Number(e.target.value))}
+                placeholder="Ex: 5"
+                className="mt-1"
+                min="0"
+                max="100"
+                step="0.01"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Este desconto será aplicado ao valor total do orçamento
+              </p>
             </div>
           )}
 

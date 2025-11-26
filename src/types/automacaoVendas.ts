@@ -150,17 +150,13 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
   },
   {
     type: "desconto_valor_compra",
-    label: "Desconto por Valor",
-    description: "Aplica desconto baseado no valor total da compra",
-    icon: "CircleDollarSign",
+    label: "Desconto no Valor Total",
+    description: "Aplica desconto percentual no valor total do orçamento",
+    icon: "Percent",
     color: "#3b82f6",
-    category: "condicao",
+    category: "acao",
     defaultData: {
-      regras: [
-        { valorMinimo: 1000, percentual: 5 },
-        { valorMinimo: 2000, percentual: 10 },
-        { valorMinimo: 5000, percentual: 15 },
-      ],
+      percentual: 5,
     },
   },
   {
