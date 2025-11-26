@@ -766,7 +766,8 @@ export default function POSView({
           </div>
         )}
 
-        {/* Grade/Lista de Produtos */}
+        {/* Grade/Lista de Produtos - Oculto quando conjunto está selecionado */}
+        {conjuntoItens.length === 0 && (
         <ScrollArea className="flex-1 p-4">
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
@@ -873,6 +874,7 @@ export default function POSView({
             </div>
           )}
         </ScrollArea>
+        )}
         </div>
 
       {/* Painel Lateral - Lado Direito */}
