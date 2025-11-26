@@ -4,6 +4,7 @@ export type AutomacaoVendasBlockType =
   | "iniciar_validacao"
   | "fim"
   // Blocos de condição
+  | "condicao_se"
   | "condicao_valor"
   | "condicao_mes"
   | "condicao_quantidade"
@@ -144,6 +145,36 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     icon: "Play",
     color: "#10b981",
     category: "sistema",
+  },
+  {
+    type: "condicao_se",
+    label: "Condição SE",
+    description: "Avalia uma ou mais condições e direciona para Sim ou Não",
+    icon: "GitBranch",
+    color: "#3b82f6",
+    category: "condicao",
+    defaultData: {
+      condicoes: [
+        { campo: "valor_total", operador: ">", valor: 0 }
+      ],
+      logica: "E"
+    },
+  },
+  {
+    type: "logica_e",
+    label: "Operador E",
+    description: "Todas as condições anteriores devem ser verdadeiras",
+    icon: "Grid2x2",
+    color: "#8b5cf6",
+    category: "condicao",
+  },
+  {
+    type: "logica_ou",
+    label: "Operador OU",
+    description: "Pelo menos uma das condições anteriores deve ser verdadeira",
+    icon: "Rows3",
+    color: "#a855f7",
+    category: "condicao",
   },
   {
     type: "desconto_valor_compra",

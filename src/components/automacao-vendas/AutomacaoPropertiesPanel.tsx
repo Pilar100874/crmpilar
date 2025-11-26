@@ -11,6 +11,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AutomacaoPropertiesPanelProps {
   node: Node;
@@ -40,6 +41,10 @@ export const AutomacaoPropertiesPanel = ({
   const [faixas, setFaixas] = useState<Array<{ min: number; max: number | null; label: string }>>(
     (node.data as any).config?.faixas || []
   );
+  const [condicoes, setCondicoes] = useState<Array<{ campo: string; operador: string; valor: any }>>(
+    (node.data as any).config?.condicoes || []
+  );
+  const [logicaCondicao, setLogicaCondicao] = useState((node.data as any).config?.logica || "E");
 
   useEffect(() => {
     setLabel((node.data as any).label || "");
@@ -49,6 +54,8 @@ export const AutomacaoPropertiesPanel = ({
     setSelectedProdutoId((node.data as any).config?.produtoId || "");
     setPercentualDesconto((node.data as any).config?.percentual || 5);
     setFaixas((node.data as any).config?.faixas || []);
+    setCondicoes((node.data as any).config?.condicoes || []);
+    setLogicaCondicao((node.data as any).config?.logica || "E");
   }, [node]);
 
   // Carregar empresas
@@ -204,6 +211,54 @@ export const AutomacaoPropertiesPanel = ({
       config: {
         ...((node.data as any).config || {}),
         faixas: novasFaixas
+      }
+    });
+  };
+
+  const handleAddCondicao = () => {
+    const novasCondicoes = [...condicoes, { campo: "valor_total", operador: ">", valor: 0 }];
+    setCondicoes(novasCondicoes);
+    onUpdate(node.id, {
+      config: {
+        ...((node.data as any).config || {}),
+        condicoes: novasCondicoes
+      }
+    });
+  };
+
+  const handleRemoveCondicao = (index: number) => {
+    const novasCondicoes = condicoes.filter((_, i) => i !== index);
+    setCondicoes(novasCondicoes);
+    onUpdate(node.id, {
+      config: {
+        ...((node.data as any).config || {}),
+        condicoes: novasCondicoes
+      }
+    });
+  };
+
+  const handleUpdateCondicao = (index: number, field: 'campo' | 'operador' | 'valor', value: any) => {
+    const novasCondicoes = condicoes.map((condicao, i) => {
+      if (i === index) {
+        return { ...condicao, [field]: value };
+      }
+      return condicao;
+    });
+    setCondicoes(novasCondicoes);
+    onUpdate(node.id, {
+      config: {
+        ...((node.data as any).config || {}),
+        condicoes: novasCondicoes
+      }
+    });
+  };
+
+  const handleLogicaCondicaoChange = (logica: string) => {
+    setLogicaCondicao(logica);
+    onUpdate(node.id, {
+      config: {
+        ...((node.data as any).config || {}),
+        logica
       }
     });
   };
@@ -502,6 +557,111 @@ export const AutomacaoPropertiesPanel = ({
               
               <p className="text-xs text-muted-foreground bg-blue-500/10 p-2 rounded border border-blue-500/20">
                 💡 <strong>Dica:</strong> Cada faixa criará uma saída diferente no bloco. Conecte ações específicas para cada faixa de valor do pedido.
+              </p>
+            </div>
+          )}
+
+          {/* Campos específicos para condicao_se */}
+          {(node.data as any).type === "condicao_se" && (
+            <div className="space-y-4">
+              <div>
+                <Label>Lógica entre Condições</Label>
+                <Select value={logicaCondicao} onValueChange={handleLogicaCondicaoChange}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="E">E (AND) - Todas devem ser verdadeiras</SelectItem>
+                    <SelectItem value="OU">OU (OR) - Pelo menos uma deve ser verdadeira</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Condições</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddCondicao}
+                  className="h-8"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Adicionar Condição
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {condicoes.map((condicao, index) => (
+                  <div key={index} className="p-3 border rounded-lg bg-muted/30 space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Condição {index + 1}</span>
+                      {condicoes.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveCondicao(index)}
+                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Campo</Label>
+                      <Select 
+                        value={condicao.campo} 
+                        onValueChange={(value) => handleUpdateCondicao(index, 'campo', value)}
+                      >
+                        <SelectTrigger className="mt-1 h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="valor_total">Valor Total do Pedido</SelectItem>
+                          <SelectItem value="quantidade_produtos">Quantidade de Produtos</SelectItem>
+                          <SelectItem value="mes_compra">Mês da Compra</SelectItem>
+                          <SelectItem value="dia_semana">Dia da Semana</SelectItem>
+                          <SelectItem value="cliente_aniversario">Cliente Aniversariante</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Operador</Label>
+                      <Select 
+                        value={condicao.operador} 
+                        onValueChange={(value) => handleUpdateCondicao(index, 'operador', value)}
+                      >
+                        <SelectTrigger className="mt-1 h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value=">">Maior que (&gt;)</SelectItem>
+                          <SelectItem value=">=">Maior ou igual (&gt;=)</SelectItem>
+                          <SelectItem value="=">Igual (=)</SelectItem>
+                          <SelectItem value="<">Menor que (&lt;)</SelectItem>
+                          <SelectItem value="<=">Menor ou igual (&lt;=)</SelectItem>
+                          <SelectItem value="!=">Diferente (≠)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Valor</Label>
+                      <Input
+                        type="text"
+                        value={condicao.valor}
+                        onChange={(e) => handleUpdateCondicao(index, 'valor', e.target.value)}
+                        placeholder="Ex: 100"
+                        className="mt-1 h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <p className="text-xs text-muted-foreground bg-blue-500/10 p-2 rounded border border-blue-500/20">
+                💡 <strong>Saídas:</strong> Este bloco terá 2 saídas - <strong className="text-green-600">Sim</strong> (condições satisfeitas) e <strong className="text-red-600">Não</strong> (condições não satisfeitas).
               </p>
             </div>
           )}
