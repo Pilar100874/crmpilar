@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
-import { aplicarRegrasBlockly } from "@/services/blocklyAutomacaoEngine";
+import { aplicarRegrasAutomacao } from "@/services/automacaoFlowEngine";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -379,27 +379,19 @@ export default function POSView({
         const customFields = empresaData?.custom_fields as any;
         const mesAniversario = customFields?.mes_aniversario;
 
-        const resultado = await aplicarRegrasBlockly(
+        const resultado = await aplicarRegrasAutomacao(
           {
             valor_total: valorInicial,
             quantidade_produtos: cartItems.size,
-            mes_compra: new Date().getMonth() + 1,
+            data_compra: new Date(),
             cliente: {
+              id: empresaData?.id || '',
               mes_aniversario: mesAniversario
-            }
+            },
+            empresa_id: selectedEmpresa,
+            vendedor_id: undefined // Pode ser adicionado futuramente
           },
-          regras.map(r => {
-            const flowData = r.flow_data as any;
-            return {
-              id: r.id,
-              name: r.nome,
-              trigger: '',
-              xml: flowData?.xml || '',
-              code: flowData?.code || '',
-              ativo: r.ativo,
-              prioridade: r.prioridade
-            };
-          })
+          regras as any[]
         );
 
         valorFinal = resultado.valorFinal;
@@ -408,6 +400,7 @@ export default function POSView({
 
         if (regrasAplicadas.length > 0) {
           toast.success(`${regrasAplicadas.length} regra(s) de automação aplicada(s)!`);
+          console.log('Detalhes das regras:', resultado.detalhes);
         }
       }
 
