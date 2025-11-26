@@ -39,7 +39,8 @@ export interface AutomacaoVendas {
  */
 export async function aplicarRegrasAutomacao(
   orcamento: DadosOrcamento,
-  regras: AutomacaoVendas[]
+  regras: AutomacaoVendas[],
+  config?: { nao_acumular_descontos?: boolean }
 ): Promise<ResultadoAutomacao> {
   const resultado: ResultadoAutomacao = {
     regrasAplicadas: [],
@@ -54,20 +55,58 @@ export async function aplicarRegrasAutomacao(
     .filter(r => r.ativo)
     .sort((a, b) => (b.prioridade || 0) - (a.prioridade || 0));
 
-  // Aplicar cada regra
-  for (const regra of regrasOrdenadas) {
-    try {
-      const resultadoRegra = await executarRegra(orcamento, regra, resultado.valorFinal);
-      
-      if (resultadoRegra.aplicada) {
-        resultado.regrasAplicadas.push(regra.nome);
-        resultado.descontos.push(...resultadoRegra.descontos);
-        resultado.valorFinal = resultadoRegra.valorFinal;
-        resultado.detalhes.push(...resultadoRegra.detalhes);
+  // Se configurado para não acumular, coletar todos os descontos e aplicar apenas o maior
+  if (config?.nao_acumular_descontos) {
+    let maiorDesconto = { valor: 0, regra: '', percentual: 0, detalhes: '' };
+    
+    for (const regra of regrasOrdenadas) {
+      try {
+        const resultadoRegra = await executarRegra(orcamento, regra, resultado.valorOriginal);
+        
+        if (resultadoRegra.aplicada && resultadoRegra.descontos.length > 0) {
+          const descontoRegra = resultadoRegra.descontos[0];
+          if (descontoRegra.valor > maiorDesconto.valor) {
+            maiorDesconto = {
+              valor: descontoRegra.valor,
+              regra: regra.nome,
+              percentual: descontoRegra.percentual || 0,
+              detalhes: resultadoRegra.detalhes[0] || ''
+            };
+          }
+        }
+      } catch (error) {
+        console.error(`Erro ao avaliar regra ${regra.nome}:`, error);
       }
-    } catch (error) {
-      console.error(`Erro ao aplicar regra ${regra.nome}:`, error);
-      resultado.detalhes.push(`ERRO na regra ${regra.nome}: ${error}`);
+    }
+    
+    if (maiorDesconto.valor > 0) {
+      resultado.regrasAplicadas.push(maiorDesconto.regra);
+      resultado.descontos.push({
+        tipo: 'percentual',
+        valor: maiorDesconto.valor,
+        percentual: maiorDesconto.percentual,
+        regra: maiorDesconto.regra
+      });
+      resultado.valorFinal = resultado.valorOriginal - maiorDesconto.valor;
+      resultado.detalhes.push(maiorDesconto.detalhes);
+      resultado.detalhes.push(`⚠️ Modo "não acumular" ativado: aplicado apenas o maior desconto`);
+    }
+  } else {
+    // Aplicar cada regra acumulando os descontos
+    for (const regra of regrasOrdenadas) {
+      try {
+        const resultadoRegra = await executarRegra(orcamento, regra, resultado.valorFinal);
+        
+        if (resultadoRegra.aplicada) {
+          resultado.regrasAplicadas.push(regra.nome);
+          resultado.descontos.push(...resultadoRegra.descontos);
+          resultado.valorFinal = resultadoRegra.valorFinal;
+          resultado.detalhes.push(...resultadoRegra.detalhes);
+        }
+      } catch (error) {
+        console.error(`Erro ao aplicar regra ${regra.nome}:`, error);
+        resultado.detalhes.push(`ERRO na regra ${regra.nome}: ${error}`);
+      }
     }
   }
 

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Power, PowerOff, CalendarIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Power, PowerOff, CalendarIcon, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -34,10 +36,12 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
   const [automacoes, setAutomacoes] = useState<AutomacaoVenda[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [config, setConfig] = useState<any>({ nao_acumular_descontos: false });
 
   useEffect(() => {
     if (estabelecimentoId) {
       loadAutomacoes();
+      loadConfig();
     }
   }, [estabelecimentoId]);
 
@@ -59,6 +63,45 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
       toast.error("Erro ao carregar automações");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadConfig = async () => {
+    if (!estabelecimentoId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("estabelecimentos")
+        .select("automacao_vendas_config")
+        .eq("id", estabelecimentoId)
+        .single();
+
+      if (error) throw error;
+      
+      if (data?.automacao_vendas_config) {
+        setConfig(data.automacao_vendas_config);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar configurações:", error);
+    }
+  };
+
+  const updateConfig = async (newConfig: any) => {
+    if (!estabelecimentoId) return;
+    
+    try {
+      const { error } = await supabase
+        .from("estabelecimentos")
+        .update({ automacao_vendas_config: newConfig })
+        .eq("id", estabelecimentoId);
+
+      if (error) throw error;
+      
+      setConfig(newConfig);
+      toast.success("Configuração atualizada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar configuração:", error);
+      toast.error("Erro ao atualizar configuração");
     }
   };
 
@@ -135,6 +178,33 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
           <Plus className="h-4 w-4 mr-2" />
           Nova Regra
         </Button>
+      </div>
+
+      {/* Configurações Globais */}
+      <div className="p-6 border-b bg-muted/30">
+        <div className="flex items-center gap-3 mb-4">
+          <Settings className="h-5 w-5 text-muted-foreground" />
+          <h3 className="text-lg font-semibold">Configurações Globais</h3>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4 p-4 bg-background rounded-lg border">
+            <div className="flex-1">
+              <Label htmlFor="nao-acumular" className="text-base font-medium cursor-pointer">
+                Não acumular descontos
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Quando ativado, apenas o maior desconto será aplicado ao invés de acumular múltiplos descontos
+              </p>
+            </div>
+            <Switch
+              id="nao-acumular"
+              checked={config.nao_acumular_descontos || false}
+              onCheckedChange={(checked) => 
+                updateConfig({ ...config, nao_acumular_descontos: checked })
+              }
+            />
+          </div>
+        </div>
       </div>
 
       {automacoes.length === 0 ? (
