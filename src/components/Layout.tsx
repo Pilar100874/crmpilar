@@ -38,6 +38,7 @@ import {
   Star,
   KeyRound,
   Building,
+  Brain,
   Clock,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -88,6 +89,7 @@ const menuItems: MenuItem[] = [
       { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: Activity },
       { id: "Analytics Dashboard", title: "Analytics Avançado", url: "/advanced-analytics", icon: FileBarChart },
       { id: "Dashboard CSAT/NPS", title: "Pesquisas de Satisfação", url: "/dashboard-pesquisas-satisfacao", icon: Star },
+      { id: "Dashboard Gastos IA", title: "Gastos com IA", url: "/dashboard-gastos-ia", icon: Brain },
     ]
   },
   { id: "Clientes", title: "Funil", url: "/funil", icon: Users },

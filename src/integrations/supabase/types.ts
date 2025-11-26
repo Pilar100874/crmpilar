@@ -2224,6 +2224,65 @@ export type Database = {
           },
         ]
       }
+      ia_usage_log: {
+        Row: {
+          completion_tokens: number
+          contexto: string
+          created_at: string | null
+          custo_estimado: number | null
+          duracao_ms: number | null
+          erro_mensagem: string | null
+          estabelecimento_id: string
+          id: string
+          metadata: Json | null
+          model: string
+          prompt_tokens: number
+          provider: string
+          sucesso: boolean | null
+          total_tokens: number
+        }
+        Insert: {
+          completion_tokens?: number
+          contexto: string
+          created_at?: string | null
+          custo_estimado?: number | null
+          duracao_ms?: number | null
+          erro_mensagem?: string | null
+          estabelecimento_id: string
+          id?: string
+          metadata?: Json | null
+          model: string
+          prompt_tokens?: number
+          provider: string
+          sucesso?: boolean | null
+          total_tokens?: number
+        }
+        Update: {
+          completion_tokens?: number
+          contexto?: string
+          created_at?: string | null
+          custo_estimado?: number | null
+          duracao_ms?: number | null
+          erro_mensagem?: string | null
+          estabelecimento_id?: string
+          id?: string
+          metadata?: Json | null
+          model?: string
+          prompt_tokens?: number
+          provider?: string
+          sucesso?: boolean | null
+          total_tokens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_usage_log_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kb_anexos: {
         Row: {
           artigo_id: string
