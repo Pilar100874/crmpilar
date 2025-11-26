@@ -29,10 +29,13 @@ export const AutomacaoPropertiesPanel = ({
   const [note, setNote] = useState((node.data as any).note || "");
   const [empresas, setEmpresas] = useState<Array<{ id: string; nome: string }>>([]);
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
+  const [produtos, setProdutos] = useState<Array<{ id: string; nome: string }>>([]);
   const [selectedEmpresaId, setSelectedEmpresaId] = useState((node.data as any).config?.empresaId || "");
   const [selectedUsuarioId, setSelectedUsuarioId] = useState((node.data as any).config?.usuarioId || "");
+  const [selectedProdutoId, setSelectedProdutoId] = useState((node.data as any).config?.produtoId || "");
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
   const [openUsuarioCombobox, setOpenUsuarioCombobox] = useState(false);
+  const [openProdutoCombobox, setOpenProdutoCombobox] = useState(false);
   const [percentualDesconto, setPercentualDesconto] = useState((node.data as any).config?.percentual || 5);
 
   useEffect(() => {
@@ -40,6 +43,7 @@ export const AutomacaoPropertiesPanel = ({
     setNote((node.data as any).note || "");
     setSelectedEmpresaId((node.data as any).config?.empresaId || "");
     setSelectedUsuarioId((node.data as any).config?.usuarioId || "");
+    setSelectedProdutoId((node.data as any).config?.produtoId || "");
     setPercentualDesconto((node.data as any).config?.percentual || 5);
   }, [node]);
 
@@ -89,6 +93,29 @@ export const AutomacaoPropertiesPanel = ({
     }
   }, [node]);
 
+  // Carregar produtos
+  useEffect(() => {
+    const loadProdutos = async () => {
+      try {
+        const estabelecimentoId = await getEstabelecimentoId();
+        const { data, error } = await supabase
+          .from("produtos")
+          .select("id, nome")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .order("nome");
+        
+        if (error) throw error;
+        setProdutos(data || []);
+      } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
+      }
+    };
+
+    if ((node.data as any).type === "validar_produto") {
+      loadProdutos();
+    }
+  }, [node]);
+
   const handleLabelChange = (newLabel: string) => {
     setLabel(newLabel);
     onUpdate(node.id, { label: newLabel });
@@ -115,6 +142,16 @@ export const AutomacaoPropertiesPanel = ({
       config: { 
         ...((node.data as any).config || {}),
         usuarioId 
+      } 
+    });
+  };
+
+  const handleProdutoChange = (produtoId: string) => {
+    setSelectedProdutoId(produtoId);
+    onUpdate(node.id, { 
+      config: { 
+        ...((node.data as any).config || {}),
+        produtoId 
       } 
     });
   };
@@ -264,6 +301,56 @@ export const AutomacaoPropertiesPanel = ({
                               )}
                             />
                             {usuario.nome}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          {/* Campos específicos para validar_produto */}
+          {(node.data as any).type === "validar_produto" && (
+            <div>
+              <Label>Produto</Label>
+              <Popover open={openProdutoCombobox} onOpenChange={setOpenProdutoCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openProdutoCombobox}
+                    className="w-full justify-between mt-1"
+                  >
+                    {selectedProdutoId
+                      ? produtos.find((produto) => produto.id === selectedProdutoId)?.nome
+                      : "Selecione um produto..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Pesquisar produto..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {produtos.map((produto) => (
+                          <CommandItem
+                            key={produto.id}
+                            value={produto.nome}
+                            onSelect={() => {
+                              handleProdutoChange(produto.id);
+                              setOpenProdutoCombobox(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedProdutoId === produto.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {produto.nome}
                           </CommandItem>
                         ))}
                       </CommandGroup>
