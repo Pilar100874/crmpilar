@@ -29,8 +29,9 @@ import { SkillsManager } from "@/components/atendimento/SkillsManager";
 import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaManager";
 import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
 import { AutomacaoVendasCRUD } from "./AutomacaoVendasCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap } from "lucide-react";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen } from "lucide-react";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
+import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -1567,6 +1568,50 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <OmnichannelFlowsCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="base-conhecimento" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Base de Conhecimento</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "base-conhecimento"} onOpenChange={(open) => setHelpDialogOpen(open ? "base-conhecimento" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Base de Conhecimento - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📚 Biblioteca de Artigos</h4>
+                              <p className="text-sm">Centralize documentos, tutoriais e informações para consulta de atendentes e clientes.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🗂️ Organização</h4>
+                              <p className="text-sm">Organize por categorias, tags e palavras-chave para facilitar a busca e navegação.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🔍 Busca Inteligente</h4>
+                              <p className="text-sm">Sistema de busca avançado com ranking de relevância e filtros para encontrar informações rapidamente.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">📊 Feedback e Métricas</h4>
+                              <p className="text-sm">Colete feedback de utilidade e acompanhe quais artigos são mais acessados.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <KnowledgeBaseCRUD estabelecimentoId={estabelecimentoId} />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
