@@ -25,8 +25,8 @@ export default function GerenciarAtalhos() {
     loadMenusPermitidos();
   }, []);
 
+  // Inicializar com todas as categorias expandidas
   useEffect(() => {
-    // Expandir automaticamente TODAS as categorias com subitens
     const todasCategorias = new Set<string>();
     menuStructure.forEach(category => {
       if (category.subItems && category.subItems.length > 0) {
@@ -207,6 +207,7 @@ export default function GerenciarAtalhos() {
                   key={category.id}
                   open={isExpanded}
                   onOpenChange={() => toggleCategory(category.id)}
+                  defaultOpen={true}
                 >
                   <Card>
                     <CollapsibleTrigger asChild>
