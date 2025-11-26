@@ -371,6 +371,10 @@ export default function OmnichannelBuilder() {
     }
   }, [nodes]);
 
+  const onEdgesDelete = useCallback(() => {
+    toast.success("Conexão removida");
+  }, []);
+
   const handleZoomIn = useCallback(() => {
     reactFlowInstance?.zoomIn({ duration: 300 });
   }, [reactFlowInstance]);
@@ -718,10 +722,24 @@ export default function OmnichannelBuilder() {
                   onAddNote: handleAddNote,
                 }
               }))}
-              edges={edges}
+              edges={edges.map((edge) => ({
+                ...edge,
+                style: {
+                  stroke: edge.selected ? '#ea580c' : '#f97316',
+                  strokeWidth: edge.selected ? 2.5 : 1.33,
+                },
+                markerEnd: {
+                  type: 'arrowclosed',
+                  width: 20,
+                  height: 20,
+                  color: edge.selected ? '#ea580c' : '#f97316',
+                },
+                type: 'smoothstep',
+              }))}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              onEdgesDelete={onEdgesDelete}
               onNodeClick={onNodeClick}
               onPaneClick={onPaneClick}
               onDrop={onDrop}
@@ -732,18 +750,8 @@ export default function OmnichannelBuilder() {
               nodesConnectable={!isLocked}
               nodesFocusable={!isLocked}
               edgesFocusable={!isLocked}
-              fitView
-              defaultEdgeOptions={{
-                animated: true,
-                style: { stroke: '#f97316', strokeWidth: 2 },
-                markerEnd: {
-                  type: 'arrowclosed',
-                  width: 20,
-                  height: 20,
-                  color: '#f97316',
-                },
-                type: 'smoothstep',
-              }}
+              deleteKeyCode={isLocked ? null : "Delete"}
+              className="bg-background"
             >
               <Background />
               <Controls />

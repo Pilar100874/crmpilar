@@ -625,12 +625,24 @@ function EditorRegrasContent() {
         <div ref={reactFlowWrapper} className="flex-1 bg-muted/20">
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={edges.map((edge) => ({
+              ...edge,
+              style: {
+                stroke: edge.selected ? '#ea580c' : '#f97316',
+                strokeWidth: edge.selected ? 2.5 : 1.33,
+              },
+              markerEnd: {
+                type: 'arrowclosed',
+                width: 20,
+                height: 20,
+                color: edge.selected ? '#ea580c' : '#f97316',
+              },
+              type: 'smoothstep',
+            }))}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onEdgesDelete={onEdgesDelete}
-            onEdgeClick={onEdgeClick}
             onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
@@ -638,6 +650,7 @@ function EditorRegrasContent() {
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             defaultViewport={{ x: 0, y: 0, zoom: 0.33 }}
+            deleteKeyCode="Delete"
             className="bg-background"
               defaultEdgeOptions={{
                 animated: true,
