@@ -2,8 +2,8 @@
 // Este arquivo é usado para sincronizar os menus do Layout.tsx com as permissões do GruposAcessoCRUD
 
 export const MENU_CONFIG = [
-  { id: "Dashboard", label: "Painel" },
   { id: "Dashboards", label: "Dashboards" },
+  { id: "Dashboard", label: "Painel" },
   { id: "Clientes", label: "Leads" },
   { id: "Atendimento", label: "Chats" },
   { id: "Painel Chats", label: "Painel" },
