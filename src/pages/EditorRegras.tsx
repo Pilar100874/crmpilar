@@ -61,6 +61,7 @@ function EditorRegrasContent() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [currentRegraId, setCurrentRegraId] = useState<string | null>(null);
   const [nomeRegra, setNomeRegra] = useState("Nova Regra");
   const [isAtiva, setIsAtiva] = useState(true);
@@ -264,12 +265,20 @@ function EditorRegrasContent() {
   );
 
   const onEdgesDelete = useCallback(
-    (edgesToDelete: Edge[]) => {
+    (_edgesToDelete: Edge[]) => {
       setHasUnsavedChanges(true);
       toast({
         title: "Conexão excluída",
         description: "Conexão removida com sucesso!",
       });
+    },
+    []
+  );
+
+  const onEdgeClick = useCallback(
+    (_event: React.MouseEvent, edge: Edge) => {
+      setSelectedEdgeId(edge.id);
+      setSelectedNode(null);
     },
     []
   );
@@ -331,10 +340,12 @@ function EditorRegrasContent() {
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
+    setSelectedEdgeId(null);
   }, []);
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
+    setSelectedEdgeId(null);
   }, []);
 
   const handleUpdateNode = useCallback(
@@ -497,6 +508,17 @@ function EditorRegrasContent() {
     }
   };
 
+  const handleDeleteSelectedEdge = () => {
+    if (!selectedEdgeId) return;
+    setEdges((eds) => eds.filter((e) => e.id !== selectedEdgeId));
+    setSelectedEdgeId(null);
+    setHasUnsavedChanges(true);
+    toast({
+      title: "Conexão excluída",
+      description: "Conexão removida com sucesso!",
+    });
+  };
+
   const confirmExit = () => {
     setShowExitDialog(false);
     setHasUnsavedChanges(false);
@@ -577,10 +599,17 @@ function EditorRegrasContent() {
           </div>
         </div>
 
-        <Button onClick={handleSave} size="sm" className="h-8">
-          <Save className="h-4 w-4 mr-2" />
-          Salvar
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedEdgeId && (
+            <Button variant="outline" size="sm" className="h-8" onClick={handleDeleteSelectedEdge}>
+              Remover conexão selecionada
+            </Button>
+          )}
+          <Button onClick={handleSave} size="sm" className="h-8">
+            <Save className="h-4 w-4 mr-2" />
+            Salvar
+          </Button>
+        </div>
       </div>
 
       {/* Main content */}
@@ -601,6 +630,7 @@ function EditorRegrasContent() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onEdgesDelete={onEdgesDelete}
+            onEdgeClick={onEdgeClick}
             onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
@@ -608,11 +638,6 @@ function EditorRegrasContent() {
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             defaultViewport={{ x: 0, y: 0, zoom: 0.33 }}
-            deleteKeyCode="Delete"
-            multiSelectionKeyCode="Shift"
-            selectNodesOnDrag={false}
-            edgesFocusable={true}
-            edgesReconnectable={true}
             className="bg-background"
               defaultEdgeOptions={{
                 animated: true,
