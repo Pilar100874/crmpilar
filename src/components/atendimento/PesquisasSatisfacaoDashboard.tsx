@@ -200,11 +200,26 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
     return <div className="text-center py-8">Carregando...</div>;
   }
 
+  const semDados = respostas.length === 0;
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Dashboard de Satisfação</h2>
-        <div className="flex gap-4">
+      {/* Header com gradiente moderno */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border shadow-lg">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
+        <div className="relative flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+              <Star className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold">Dashboard de Satisfação</h2>
+              <p className="text-muted-foreground mt-1">
+                Acompanhe as métricas de satisfação dos clientes
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-4">
           <Select value={selectedPesquisa} onValueChange={setSelectedPesquisa}>
             <SelectTrigger className="w-[200px]">
               <SelectValue />
@@ -228,16 +243,33 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
               <SelectItem value="30">Últimos 30 dias</SelectItem>
               <SelectItem value="90">Últimos 90 dias</SelectItem>
             </SelectContent>
-          </Select>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {metricas && (
+      {/* Mensagem quando não há dados */}
+      {semDados && (
+        <Card className="border-2 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum dado disponível</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              Ainda não há respostas de pesquisas de satisfação para este estabelecimento no período selecionado.
+              Configure pesquisas em Configurações → Estabelecimento Cadastrado → Pesquisas de Satisfação.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {metricas && !semDados && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+          <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Enviadas</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <MessageSquare className="h-4 w-4 text-blue-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metricas.total_enviadas}</div>
@@ -247,10 +279,12 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Taxa de Resposta</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Users className="h-4 w-4 text-green-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metricas.taxa_resposta.toFixed(1)}%</div>
@@ -258,10 +292,12 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Nota Média</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-yellow-500/10">
+                <Star className="h-4 w-4 text-yellow-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metricas.nota_media.toFixed(1)}</div>
@@ -270,16 +306,22 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
           </Card>
 
           {metricas.nps_score !== undefined && (
-            <Card>
+            <Card className="border shadow-sm hover:shadow-md transition-all duration-200">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">NPS Score</CardTitle>
-                {metricas.nps_score > 0 ? (
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                ) : metricas.nps_score < 0 ? (
-                  <TrendingDown className="h-4 w-4 text-red-500" />
-                ) : (
-                  <Minus className="h-4 w-4 text-muted-foreground" />
-                )}
+                <div className={`p-2 rounded-lg ${
+                  metricas.nps_score > 0 ? 'bg-green-500/10' : 
+                  metricas.nps_score < 0 ? 'bg-red-500/10' : 
+                  'bg-gray-500/10'
+                }`}>
+                  {metricas.nps_score > 0 ? (
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  ) : metricas.nps_score < 0 ? (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  ) : (
+                    <Minus className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{metricas.nps_score.toFixed(0)}</div>
@@ -292,15 +334,16 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
         </div>
       )}
 
-      <Tabs defaultValue="respostas" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="respostas">Respostas</TabsTrigger>
-          <TabsTrigger value="comentarios">Comentários</TabsTrigger>
-        </TabsList>
+      {!semDados && (
+        <Tabs defaultValue="respostas" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="respostas">Respostas</TabsTrigger>
+            <TabsTrigger value="comentarios">Comentários</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="respostas" className="space-y-4">
-          <Card>
-            <CardContent className="pt-6">
+          <TabsContent value="respostas" className="space-y-4">
+            <Card className="border shadow-sm">
+              <CardContent className="pt-6">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -364,11 +407,11 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="comentarios" className="space-y-4">
-          <Card>
-            <CardContent className="pt-6">
+          <TabsContent value="comentarios" className="space-y-4">
+            <Card className="border shadow-sm">
+              <CardContent className="pt-6">
               <div className="space-y-4">
                 {respostas
                   .filter((r: any) => r.comentario && r.comentario.trim() !== "")
@@ -411,10 +454,11 @@ export default function PesquisasSatisfacaoDashboard({ estabelecimentoId }: Pesq
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }
