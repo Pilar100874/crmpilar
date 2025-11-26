@@ -24,7 +24,7 @@ const blockCategories = [
     border: "border-purple-500/20",
     borderHover: "hover:border-purple-500/40",
     iconColor: "text-purple-600",
-    blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "sistema"),
+    blocks: AUTOMACAO_VENDAS_BLOCKS.filter(b => b.category === "sistema" && b.type !== "iniciar_validacao"),
   },
   {
     name: "Condições",
