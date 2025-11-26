@@ -17,6 +17,8 @@ export type AutomacaoVendasBlockType =
   | "desconto_data_especial"
   | "desconto_historico_crescimento"
   | "desconto_tempo_desde_ultimo"
+  | "validar_empresa"
+  | "validar_usuario"
   // Blocos de lógica
   | "logica_e"
   | "logica_ou"
@@ -257,6 +259,28 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     defaultData: {
       diasMaximos: 7,
       percentual: 5,
+    },
+  },
+  {
+    type: "validar_empresa",
+    label: "Validar Empresa",
+    description: "Valida se o orçamento é para uma empresa específica",
+    icon: "Building",
+    color: "#8b5cf6",
+    category: "condicao",
+    defaultData: {
+      empresaId: "",
+    },
+  },
+  {
+    type: "validar_usuario",
+    label: "Validar Usuário",
+    description: "Valida se o orçamento está sendo feito por um usuário específico",
+    icon: "User",
+    color: "#06b6d4",
+    category: "condicao",
+    defaultData: {
+      usuarioId: "",
     },
   },
   {
