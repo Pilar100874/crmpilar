@@ -169,12 +169,20 @@ export default function POSView({
         }
 
         // Buscar regras ativas
+        // Buscar regras ativas de automação
         const { data: regras, error: regrasError } = await supabase
           .from('automacoes_vendas')
           .select('*')
           .eq('estabelecimento_id', estabelecimentoId)
           .eq('ativo', true)
           .order('prioridade', { ascending: false });
+
+        // Buscar configuração de automação
+        const { data: estabelecimentoConfig } = await supabase
+          .from('estabelecimentos')
+          .select('automacao_vendas_config')
+          .eq('id', estabelecimentoId)
+          .single();
 
         if (regrasError) {
           console.error("Erro ao buscar regras:", regrasError);
@@ -207,7 +215,8 @@ export default function POSView({
             empresa_id: selectedEmpresa,
             vendedor_id: undefined
           },
-          regras as any[]
+          regras as any[],
+          (estabelecimentoConfig?.automacao_vendas_config || { nao_acumular_descontos: false }) as { nao_acumular_descontos?: boolean }
         );
 
         setValorComRegras(resultado.valorFinal);
@@ -467,6 +476,13 @@ export default function POSView({
         .eq('ativo', true)
         .order('prioridade', { ascending: false });
 
+      // Buscar configuração de automação
+      const { data: estabelecimentoConfig } = await supabase
+        .from('estabelecimentos')
+        .select('automacao_vendas_config')
+        .eq('id', estabelecimentoId)
+        .single();
+
       // Calcular valor total inicial
       const valorInicial = getTotal();
 
@@ -491,7 +507,8 @@ export default function POSView({
             empresa_id: selectedEmpresa,
             vendedor_id: undefined // Pode ser adicionado futuramente
           },
-          regras as any[]
+          regras as any[],
+          (estabelecimentoConfig?.automacao_vendas_config || { nao_acumular_descontos: false }) as { nao_acumular_descontos?: boolean }
         );
 
         valorFinal = resultado.valorFinal;

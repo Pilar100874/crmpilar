@@ -1695,6 +1695,7 @@ export type Database = {
       }
       estabelecimentos: {
         Row: {
+          automacao_vendas_config: Json | null
           cnpj: string
           created_at: string | null
           id: string
@@ -1703,6 +1704,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          automacao_vendas_config?: Json | null
           cnpj: string
           created_at?: string | null
           id?: string
@@ -1711,6 +1713,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          automacao_vendas_config?: Json | null
           cnpj?: string
           created_at?: string | null
           id?: string
