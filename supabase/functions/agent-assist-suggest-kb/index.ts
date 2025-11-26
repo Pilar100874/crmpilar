@@ -11,6 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -96,6 +97,7 @@ Se nenhum artigo for relevante, retorne array vazio.`
 
     const aiData = await aiResponse.json();
     const result = JSON.parse(aiData.choices[0].message.content);
+    const duracao = Date.now() - startTime;
 
     // Buscar detalhes dos artigos sugeridos
     const suggestedArticles = artigos.filter(a => 
@@ -103,6 +105,21 @@ Se nenhum artigo for relevante, retorne array vazio.`
     );
 
     console.log(`✅ ${suggestedArticles.length} artigos sugeridos`);
+
+    // Log usage
+    await supabase.from('ia_usage_log').insert({
+      estabelecimento_id: estabelecimentoId,
+      contexto: 'kb_articles',
+      provider: 'lovable',
+      model: 'google/gemini-2.5-flash',
+      prompt_tokens: aiData.usage?.prompt_tokens || 0,
+      completion_tokens: aiData.usage?.completion_tokens || 0,
+      total_tokens: aiData.usage?.total_tokens || 0,
+      custo_estimado: 0,
+      duracao_ms: duracao,
+      sucesso: true,
+      metadata: { conversation_id: conversationId, articles_count: suggestedArticles.length }
+    });
 
     return new Response(JSON.stringify({
       success: true,

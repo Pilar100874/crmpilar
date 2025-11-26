@@ -11,7 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const startTime = Date.now();
+    const { imageBase64, estabelecimentoId } = await req.json();
     
     if (!imageBase64) {
       throw new Error('Imagem não fornecida');
@@ -137,7 +138,31 @@ Retorne TODOS os itens que conseguir identificar, mesmo que parcialmente.`
     }
 
     const extractedData = JSON.parse(toolCall.function.arguments);
+    const duracao = Date.now() - startTime;
     console.log('Dados extraídos:', JSON.stringify(extractedData, null, 2));
+
+    // Log usage
+    if (estabelecimentoId) {
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      await supabase.from('ia_usage_log').insert({
+        estabelecimento_id: estabelecimentoId,
+        contexto: 'extract_items',
+        provider: 'lovable',
+        model: 'google/gemini-2.5-flash',
+        prompt_tokens: data.usage?.prompt_tokens || 0,
+        completion_tokens: data.usage?.completion_tokens || 0,
+        total_tokens: data.usage?.total_tokens || 0,
+        custo_estimado: 0,
+        duracao_ms: duracao,
+        sucesso: true,
+        metadata: { items_count: extractedData.items?.length || 0 }
+      });
+    }
 
     return new Response(
       JSON.stringify({ 

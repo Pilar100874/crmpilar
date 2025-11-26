@@ -12,7 +12,8 @@ serve(async (req) => {
   }
 
   try {
-    const { clienteId, orcamentoId } = await req.json();
+    const startTime = Date.now();
+    const { clienteId, orcamentoId, estabelecimentoId } = await req.json();
     console.log('Generating product suggestions for cliente:', clienteId, 'orcamento:', orcamentoId);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -187,6 +188,7 @@ Responda com o ID e nome dos produtos sugeridos.
     }
 
     const suggestions = JSON.parse(toolCall.function.arguments).suggestions;
+    const duracao = Date.now() - startTime;
 
     // Salvar sugestões no banco
     const sugestoesParaInserir = suggestions.map((s: any) => ({
@@ -202,6 +204,23 @@ Responda com o ID e nome dos produtos sugeridos.
 
     if (insertError) {
       console.error('Error inserting suggestions:', insertError);
+    }
+
+    // Log usage
+    if (estabelecimentoId) {
+      await supabase.from('ia_usage_log').insert({
+        estabelecimento_id: estabelecimentoId,
+        contexto: 'suggest_products',
+        provider: 'lovable',
+        model: 'google/gemini-2.5-flash',
+        prompt_tokens: aiData.usage?.prompt_tokens || 0,
+        completion_tokens: aiData.usage?.completion_tokens || 0,
+        total_tokens: aiData.usage?.total_tokens || 0,
+        custo_estimado: 0,
+        duracao_ms: duracao,
+        sucesso: true,
+        metadata: { orcamento_id: orcamentoId, suggestions_count: suggestions.length }
+      });
     }
 
     return new Response(JSON.stringify({ suggestions }), {
