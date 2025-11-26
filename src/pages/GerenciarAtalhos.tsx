@@ -26,9 +26,22 @@ interface MenuCategory {
   subItems?: SubMenuItem[];
 }
 
-// Estrutura de menus igual ao Layout.tsx
+// Estrutura de menus completa do sistema
 const menuStructure: MenuCategory[] = [
-  { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LucideIcons.LayoutDashboard },
+  { 
+    id: "Dashboards",
+    title: "Dashboards", 
+    icon: LucideIcons.LayoutDashboard,
+    subItems: [
+      { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LucideIcons.LayoutDashboard },
+      { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: LucideIcons.Users },
+      { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LucideIcons.LayoutDashboard },
+      { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: LucideIcons.Activity },
+      { id: "Analytics Dashboard", title: "Analytics Avançado", url: "/advanced-analytics", icon: LucideIcons.FileBarChart },
+      { id: "Dashboard CSAT/NPS", title: "Pesquisas de Satisfação", url: "/dashboard-pesquisas-satisfacao", icon: LucideIcons.Star },
+      { id: "Dashboard Gastos IA", title: "Gastos com IA", url: "/dashboard-gastos-ia", icon: LucideIcons.Brain },
+    ]
+  },
   { id: "Clientes", title: "Funil", url: "/funil", icon: LucideIcons.Users },
   { 
     id: "Atendimento",
@@ -36,9 +49,8 @@ const menuStructure: MenuCategory[] = [
     icon: LucideIcons.MessageSquare,
     subItems: [
       { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: LucideIcons.MessageSquare },
-      { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: LucideIcons.Users },
-      { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LucideIcons.LayoutDashboard },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: LucideIcons.Activity },
+      { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: LucideIcons.TestTube2 },
     ]
   },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: LucideIcons.Megaphone },
@@ -87,6 +99,8 @@ const menuStructure: MenuCategory[] = [
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
   { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: LucideIcons.Upload },
+  { id: "Meus Conjuntos", title: "Meus Conjuntos de Itens", url: "/meus-conjuntos", icon: LucideIcons.Package },
+  { id: "Editor de Regras", title: "Editor de Regras", url: "/editor-regras", icon: LucideIcons.Workflow },
   { 
     id: "Telefonia",
     title: "Telefonia", 
@@ -103,10 +117,13 @@ const menuStructure: MenuCategory[] = [
     subItems: [
       { id: "Config Geral", title: "Configurações", url: "/config", icon: LucideIcons.Settings },
       { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: LucideIcons.Users },
+      { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: LucideIcons.ListOrdered },
+      { id: "SLA Config", title: "SLA", url: "/config/sla", icon: LucideIcons.Clock },
       { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: LucideIcons.Workflow },
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
       { id: "Variáveis Globais", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
       { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: LucideIcons.Megaphone },
+      { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: LucideIcons.Star },
     ]
   },
 ];
