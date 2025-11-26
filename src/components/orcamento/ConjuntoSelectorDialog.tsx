@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Check } from "lucide-react";
+import { Check, Plus, ArrowLeft } from "lucide-react";
 
 interface ConjuntoItem {
   id: string;
@@ -34,6 +36,8 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const [selectedConjunto, setSelectedConjunto] = useState<string | null>(null);
   const [items, setItems] = useState<ConjuntoPreenchido[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [formData, setFormData] = useState({ nome: "", descricao: "" });
 
   useEffect(() => {
     if (open) {
@@ -130,7 +134,50 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const handleClose = () => {
     setSelectedConjunto(null);
     setItems([]);
+    setShowNewForm(false);
+    setFormData({ nome: "", descricao: "" });
     onClose();
+  };
+
+  const handleCreateConjunto = async () => {
+    if (!formData.nome.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const { data: userData, error: userError } = await supabase
+        .from("usuarios")
+        .select("id, estabelecimento_id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error("Usuário não encontrado na base de dados");
+      }
+
+      const { error } = await supabase
+        .from("orcamento_conjuntos_usuario")
+        .insert({
+          usuario_id: userData.id,
+          estabelecimento_id: userData.estabelecimento_id,
+          nome: formData.nome,
+          descricao: formData.descricao
+        });
+
+      if (error) throw error;
+      
+      toast.success("Conjunto criado com sucesso!");
+      setShowNewForm(false);
+      setFormData({ nome: "", descricao: "" });
+      loadConjuntos();
+    } catch (error: any) {
+      console.error("Erro ao criar conjunto:", error);
+      toast.error("Erro ao criar conjunto");
+    }
   };
 
   return (
@@ -140,11 +187,63 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
           <DialogTitle>Selecionar Conjunto de Itens</DialogTitle>
         </DialogHeader>
 
-        {!selectedConjunto ? (
+        {showNewForm ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowNewForm(false);
+                  setFormData({ nome: "", descricao: "" });
+                }}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
+            </div>
+            <div>
+              <Label htmlFor="nome">Nome *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder="Ex: Conjunto Produtos Alimentícios"
+              />
+            </div>
+            <div>
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                placeholder="Descrição opcional"
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowNewForm(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleCreateConjunto}>
+                Criar Conjunto
+              </Button>
+            </div>
+          </div>
+        ) : !selectedConjunto ? (
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground mb-4">
-              Selecione um conjunto para carregar os itens:
-            </p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">
+                Selecione um conjunto para carregar os itens:
+              </p>
+              <Button
+                size="sm"
+                onClick={() => setShowNewForm(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Conjunto
+              </Button>
+            </div>
             {conjuntos.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 Nenhum conjunto disponível. Crie um conjunto primeiro.
