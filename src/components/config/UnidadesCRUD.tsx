@@ -368,12 +368,11 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
 
           <div>
             <Label htmlFor="unidade-uf">UF</Label>
-            <Select value={uf || ""} onValueChange={setUf}>
+            <Select value={uf} onValueChange={setUf}>
               <SelectTrigger id="unidade-uf">
                 <SelectValue placeholder="Selecione o estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Selecione</SelectItem>
                 <SelectItem value="AC">AC</SelectItem>
                 <SelectItem value="AL">AL</SelectItem>
                 <SelectItem value="AP">AP</SelectItem>
