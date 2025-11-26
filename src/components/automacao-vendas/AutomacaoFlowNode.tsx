@@ -132,12 +132,20 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
           <div className="mt-2 pt-2 border-t border-slate-200">
             <div className="text-xs font-medium text-slate-600 mb-1">Faixas de Valor:</div>
             <div className="space-y-1">
-              {((data as any).config.faixas || []).map((faixa: any, index: number) => (
-                <div key={index} className="text-xs text-slate-500 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                  {faixa.label}
-                </div>
-              ))}
+              {((data as any).config.faixas || []).map((faixa: any, index: number) => {
+                const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+                const color = colors[index % colors.length];
+                
+                return (
+                  <div key={index} className="text-xs text-slate-500 flex items-center gap-1">
+                    <span 
+                      className="w-1.5 h-1.5 rounded-full" 
+                      style={{ backgroundColor: color }}
+                    ></span>
+                    {faixa.label}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -150,6 +158,8 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
               const totalFaixas = ((data as any).config?.faixas || []).length;
               const step = 100 / (totalFaixas + 1);
               const left = step * (index + 1);
+              const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+              const color = colors[index % colors.length];
               
               return (
                 <Handle
@@ -157,8 +167,11 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   type="source"
                   position={Position.Bottom}
                   id={`faixa-${index}`}
-                  className="!bg-primary !w-3 !h-3 !border-2 !border-white"
-                  style={{ left: `${left}%` }}
+                  className="!w-3 !h-3 !border-2 !border-white"
+                  style={{ 
+                    left: `${left}%`,
+                    backgroundColor: color
+                  }}
                   title={faixa.label}
                 />
               );
