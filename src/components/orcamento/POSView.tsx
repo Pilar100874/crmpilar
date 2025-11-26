@@ -969,99 +969,146 @@ export default function POSView({
         <ScrollArea className="flex-1 p-4">
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
-              {filteredProdutos.map((produto) => (
-                <Card
-                  key={produto.id}
-                  className="bg-background border-border hover:border-primary cursor-pointer transition-all overflow-hidden group"
-                  onClick={() => addToCart(produto)}
-                >
-                  <div className="aspect-square bg-muted relative overflow-hidden">
-                    {produto.foto_url ? (
-                      <img 
-                        src={produto.foto_url} 
-                        alt={produto.nome}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-4xl text-muted-foreground">{produto.nome[0]}</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-                    
-                    {cartItems.has(produto.id) && (
-                      <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">
-                        {cartItems.get(produto.id)?.quantity}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <div className="p-3">
-                    <h3 className="font-medium text-sm line-clamp-2 min-h-[2.5rem]">
-                      {produto.nome}
-                    </h3>
-                    
-                    <div className="mt-2">
-                      <span className="text-base font-bold text-primary">
-                        R$ 10,00
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredProdutos.map((produto) => (
-                <Card
-                  key={produto.id}
-                  className="bg-card border-border hover:border-primary cursor-pointer transition-all overflow-hidden"
-                  onClick={() => addToCart(produto)}
-                >
-                  <div className="flex items-center gap-4 p-3">
-                    <div className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden">
+              {filteredProdutos.map((produto) => {
+                const [gridQuantity, setGridQuantity] = useState(1);
+                return (
+                  <Card
+                    key={produto.id}
+                    className="bg-background border-border hover:border-primary transition-all overflow-hidden group"
+                  >
+                    <div 
+                      className="aspect-square bg-muted relative overflow-hidden cursor-pointer"
+                      onClick={() => {
+                        for (let i = 0; i < gridQuantity; i++) {
+                          addToCart(produto);
+                        }
+                        setGridQuantity(1);
+                      }}
+                    >
                       {produto.foto_url ? (
                         <img 
                           src={produto.foto_url} 
                           alt={produto.nome}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-2xl text-muted-foreground">{produto.nome[0]}</span>
+                          <span className="text-4xl text-muted-foreground">{produto.nome[0]}</span>
                         </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                      
+                      {cartItems.has(produto.id) && (
+                        <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">
+                          {cartItems.get(produto.id)?.quantity}
+                        </Badge>
                       )}
                     </div>
                     
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm truncate">
+                    <div className="p-3">
+                      <h3 className="font-medium text-sm line-clamp-2 min-h-[2.5rem]">
                         {produto.nome}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
+                      
+                      <div className="mt-2 flex items-center justify-between gap-2">
                         <span className="text-base font-bold text-primary">
                           R$ 10,00
                         </span>
-                        {cartItems.has(produto.id) && (
-                          <Badge className="bg-primary text-primary-foreground text-xs">
-                            {cartItems.get(produto.id)?.quantity} no carrinho
-                          </Badge>
-                        )}
+                        <Input
+                          type="number"
+                          min="1"
+                          value={gridQuantity}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setGridQuantity(parseInt(e.target.value) || 1);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-16 h-7 text-center text-xs p-1 bg-background border-border"
+                        />
                       </div>
                     </div>
-                    
-                    <Button
-                      size="icon"
-                      className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(produto);
-                      }}
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredProdutos.map((produto) => {
+                const [listQuantity, setListQuantity] = useState(1);
+                return (
+                  <Card
+                    key={produto.id}
+                    className="bg-card border-border hover:border-primary transition-all overflow-hidden"
+                  >
+                    <div className="flex items-center gap-4 p-3">
+                      <div 
+                        className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden cursor-pointer"
+                        onClick={() => {
+                          for (let i = 0; i < listQuantity; i++) {
+                            addToCart(produto);
+                          }
+                          setListQuantity(1);
+                        }}
+                      >
+                        {produto.foto_url ? (
+                          <img 
+                            src={produto.foto_url} 
+                            alt={produto.nome}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="text-2xl text-muted-foreground">{produto.nome[0]}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm truncate">
+                          {produto.nome}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-base font-bold text-primary">
+                            R$ 10,00
+                          </span>
+                          {cartItems.has(produto.id) && (
+                            <Badge className="bg-primary text-primary-foreground text-xs">
+                              {cartItems.get(produto.id)?.quantity} no carrinho
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Input
+                          type="number"
+                          min="1"
+                          value={listQuantity}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setListQuantity(parseInt(e.target.value) || 1);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-20 h-9 text-center text-sm p-1 bg-background border-border"
+                        />
+                        <Button
+                          size="icon"
+                          className="bg-primary hover:bg-primary/90 h-9 w-9"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            for (let i = 0; i < listQuantity; i++) {
+                              addToCart(produto);
+                            }
+                            setListQuantity(1);
+                          }}
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
