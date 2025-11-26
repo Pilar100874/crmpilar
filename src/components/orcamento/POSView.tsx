@@ -143,28 +143,45 @@ export default function POSView({
   // Aplicar regras em tempo real
   useEffect(() => {
     const aplicarRegrasTempoReal = async () => {
+      // Resetar se não houver itens ou empresa
       if (cartItems.size === 0 || !selectedEmpresa) {
         setRegrasAplicadas([]);
-        setValorComRegras(0);
+        setValorComRegras(getTotal());
         setDetalhesRegras("");
         return;
       }
 
       try {
         // Buscar empresa selecionada
-        const { data: empresaData } = await supabase
+        const { data: empresaData, error: empresaError } = await supabase
           .from('empresas')
           .select('*')
           .eq('id', selectedEmpresa)
           .single();
 
+        if (empresaError || !empresaData) {
+          console.error("Erro ao buscar empresa:", empresaError);
+          setRegrasAplicadas([]);
+          setValorComRegras(getTotal());
+          setDetalhesRegras("");
+          return;
+        }
+
         // Buscar regras ativas
-        const { data: regras } = await supabase
+        const { data: regras, error: regrasError } = await supabase
           .from('automacoes_vendas')
           .select('*')
           .eq('estabelecimento_id', estabelecimentoId)
           .eq('ativo', true)
           .order('prioridade', { ascending: false });
+
+        if (regrasError) {
+          console.error("Erro ao buscar regras:", regrasError);
+          setRegrasAplicadas([]);
+          setValorComRegras(getTotal());
+          setDetalhesRegras("");
+          return;
+        }
 
         if (!regras || regras.length === 0) {
           setRegrasAplicadas([]);
@@ -209,6 +226,10 @@ export default function POSView({
         setDetalhesRegras(detalhes);
       } catch (error) {
         console.error("Erro ao aplicar regras:", error);
+        // Em caso de erro, manter o valor sem regras
+        setRegrasAplicadas([]);
+        setValorComRegras(getTotal());
+        setDetalhesRegras("");
       }
     };
 
