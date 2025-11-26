@@ -101,6 +101,13 @@ export function ConjuntoItensEditor({ conjuntoId, onClose }: ConjuntoItensEditor
       return;
     }
 
+    // Verificar se o produto já existe no conjunto
+    const produtoJaExiste = items.some(item => item.produto_id === newItem.produto_id);
+    if (produtoJaExiste) {
+      toast.error("Este produto já está no conjunto");
+      return;
+    }
+
     try {
       const maxOrdem = items.length > 0 ? Math.max(...items.map(i => i.ordem)) : 0;
 
