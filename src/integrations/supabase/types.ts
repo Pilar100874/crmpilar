@@ -5888,24 +5888,45 @@ export type Database = {
       }
       unidades: {
         Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
           created_at: string | null
           estabelecimento_id: string | null
           id: string
+          logradouro: string | null
           nome: string
+          numero: string | null
+          uf: string | null
           updated_at: string | null
         }
         Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          logradouro?: string | null
           nome: string
+          numero?: string | null
+          uf?: string | null
           updated_at?: string | null
         }
         Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          logradouro?: string | null
           nome?: string
+          numero?: string | null
+          uf?: string | null
           updated_at?: string | null
         }
         Relationships: [
