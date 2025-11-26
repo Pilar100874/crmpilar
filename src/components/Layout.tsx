@@ -34,7 +34,6 @@ import {
   Phone,
   Video,
   Upload,
-  Package,
   Activity,
   Star,
   KeyRound,
@@ -150,10 +149,9 @@ const menuItems: MenuItem[] = [
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
   { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: Upload },
-  { id: "Meus Conjuntos", title: "Meus Conjuntos de Itens", url: "/meus-conjuntos", icon: Package },
   { 
     id: "Telefonia",
-    title: "Telefonia", 
+    title: "Telefonia",
     icon: Phone,
     subItems: [
       { id: "Softphone", title: "Softphone", url: "/softphone", icon: Phone },
