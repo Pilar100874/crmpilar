@@ -32,6 +32,7 @@ import { AutomacaoVendasCRUD } from "./AutomacaoVendasCRUD";
 import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen } from "lucide-react";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
 import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
+import IAConfigCRUD from "./IAConfigCRUD";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -1615,6 +1616,57 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="ia-config" className="border rounded-md">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-primary" />
+                <span className="font-medium">Configurações de IA</span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>💡 Configurações de IA - Guia Completo</DialogTitle>
+                    <DialogDescription className="space-y-4 text-left pt-4">
+                      <p>
+                        Configure qual provedor e modelo de IA será usado em cada contexto do sistema.
+                      </p>
+                      <div>
+                        <h4 className="font-semibold mb-2">🤖 Provedor Padrão (Lovable AI)</h4>
+                        <p className="text-sm">Por padrão, o sistema usa Lovable AI sem necessidade de chaves API. Configure apenas se desejar usar outro provedor.</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">📍 Contextos Disponíveis</h4>
+                        <ul className="text-sm space-y-1 list-disc list-inside">
+                          <li>Sugestão de Resposta: IA sugere respostas baseadas no contexto</li>
+                          <li>Resumo: IA resume conversas longas</li>
+                          <li>Tradução: IA traduz mensagens em tempo real</li>
+                          <li>Análise de Sentimento: IA analisa sentimento das mensagens</li>
+                          <li>Sugestão de Artigos KB: IA sugere artigos da base de conhecimento</li>
+                          <li>Extração de Itens: IA extrai itens de orçamento</li>
+                          <li>Sugestão de Produtos: IA sugere produtos</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">🔑 Provedores Externos</h4>
+                        <p className="text-sm">Para usar OpenAI, Anthropic ou Google diretamente, você precisará fornecer suas próprias chaves API.</p>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <IAConfigCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 

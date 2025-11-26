@@ -2177,6 +2177,53 @@ export type Database = {
           },
         ]
       }
+      ia_config: {
+        Row: {
+          api_key: string | null
+          ativo: boolean | null
+          configuracoes: Json | null
+          contexto: string
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          model: string | null
+          provider: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          ativo?: boolean | null
+          configuracoes?: Json | null
+          contexto: string
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          model?: string | null
+          provider?: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          ativo?: boolean | null
+          configuracoes?: Json | null
+          contexto?: string
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          model?: string | null
+          provider?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kb_anexos: {
         Row: {
           artigo_id: string
