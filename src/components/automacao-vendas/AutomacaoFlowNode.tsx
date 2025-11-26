@@ -127,6 +127,23 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
           </div>
         )}
 
+        {/* Mostrar condições para condicao_se */}
+        {(data as any).type === "condicao_se" && (data as any).config?.condicoes && (
+          <div className="mt-2 pt-2 border-t border-slate-200">
+            <div className="text-xs font-medium text-slate-600 mb-1">
+              Lógica: {(data as any).config.logica || "E"}
+            </div>
+            <div className="space-y-1">
+              {((data as any).config.condicoes || []).map((condicao: any, index: number) => (
+                <div key={index} className="text-xs text-slate-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  {condicao.campo} {condicao.operador} {condicao.valor}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Mostrar faixas para valida_faixa_faturamento */}
         {(data as any).type === "valida_faixa_faturamento" && (data as any).config?.faixas && (
           <div className="mt-2 pt-2 border-t border-slate-200">
@@ -176,6 +193,31 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                 />
               );
             })}
+          </>
+        ) : (data as any).type === "condicao_se" ? (
+          <>
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              id="sim"
+              className="!w-3 !h-3 !border-2 !border-white"
+              style={{ 
+                left: '33%',
+                backgroundColor: '#10b981'
+              }}
+              title="Sim"
+            />
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              id="nao"
+              className="!w-3 !h-3 !border-2 !border-white"
+              style={{ 
+                left: '67%',
+                backgroundColor: '#ef4444'
+              }}
+              title="Não"
+            />
           </>
         ) : (data as any).type !== "fim" ? (
           <Handle 
