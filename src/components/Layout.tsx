@@ -77,12 +77,12 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
   { 
     id: "Dashboards",
     title: "Dashboards", 
     icon: LayoutDashboard,
     subItems: [
+      { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LayoutDashboard },
       { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: Users },
       { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LayoutDashboard },
       { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: Activity },
