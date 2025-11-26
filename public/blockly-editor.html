@@ -335,6 +335,42 @@
         }
       };
 
+      // ========== VALIDAÇÃO ==========
+      
+      Blockly.Blocks['validar_empresa'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("empresa é")
+              .appendField(new Blockly.FieldDropdown([
+                ["Selecione...", ""],
+                ["Empresa A", "empresa_a"],
+                ["Empresa B", "empresa_b"],
+                ["Empresa C", "empresa_c"]
+              ]), "EMPRESA_ID");
+          this.setOutput(true, "Boolean");
+          this.setColour(139);
+          this.setTooltip("Valida se o orçamento é para uma empresa específica");
+          this.setHelpUrl("");
+        }
+      };
+
+      Blockly.Blocks['validar_usuario'] = {
+        init: function() {
+          this.appendDummyInput()
+              .appendField("usuário é")
+              .appendField(new Blockly.FieldDropdown([
+                ["Selecione...", ""],
+                ["Usuário 1", "usuario_1"],
+                ["Usuário 2", "usuario_2"],
+                ["Usuário 3", "usuario_3"]
+              ]), "USUARIO_ID");
+          this.setOutput(true, "Boolean");
+          this.setColour(139);
+          this.setTooltip("Valida se o orçamento está sendo feito por um usuário específico");
+          this.setHelpUrl("");
+        }
+      };
+
       Blockly.Blocks['pontos_fidelidade'] = {
         init: function() {
           this.appendValueInput("PONTOS_POR_REAL")
@@ -714,6 +750,20 @@
         return 'if (cliente.nunca_cancelou) {\n  aplicarDescontoPercentual(' + percentual + ');\n}\n';
       };
 
+      // ========== VALIDAÇÃO ==========
+
+      Blockly.JavaScript['validar_empresa'] = function(block) {
+        var empresaId = block.getFieldValue('EMPRESA_ID');
+        var code = '(orcamento.empresa_id === "' + empresaId + '")';
+        return [code, Blockly.JavaScript.ORDER_EQUALITY];
+      };
+
+      Blockly.JavaScript['validar_usuario'] = function(block) {
+        var usuarioId = block.getFieldValue('USUARIO_ID');
+        var code = '(orcamento.usuario_id === "' + usuarioId + '")';
+        return [code, Blockly.JavaScript.ORDER_EQUALITY];
+      };
+
       Blockly.JavaScript['pontos_fidelidade'] = function(block) {
         var pontosPorReal = Blockly.JavaScript.valueToCode(block, 'PONTOS_POR_REAL', Blockly.JavaScript.ORDER_ATOMIC);
         return 'cliente.pontos = (cliente.pontos || 0) + (orcamento.valor_total * ' + pontosPorReal + ');\n';
@@ -991,6 +1041,15 @@
               { kind: 'block', type: 'desconto_mix_categorias' },
               { kind: 'block', type: 'desconto_estoque_alto' },
               { kind: 'block', type: 'desconto_produto_parado' }
+            ]
+          },
+          {
+            kind: 'category',
+            name: '✅ Condições de Validação',
+            colour: '#8B4789',
+            contents: [
+              { kind: 'block', type: 'validar_empresa' },
+              { kind: 'block', type: 'validar_usuario' }
             ]
           },
           {
