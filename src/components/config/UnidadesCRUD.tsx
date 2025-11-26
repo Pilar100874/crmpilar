@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,11 +42,7 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
   const { toast } = useToast();
   const { lookupCEP, loading: cepLoading } = useAddressLookup();
 
-  useEffect(() => {
-    fetchUnidades();
-  }, [estabelecimentoId]);
-
-  const fetchUnidades = async () => {
+  const fetchUnidades = useCallback(async () => {
     let targetEstabelecimentoId = estabelecimentoId;
 
     if (!targetEstabelecimentoId) {
@@ -80,10 +76,16 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
     } else {
       setUnidades(data || []);
     }
-  };
+  }, [estabelecimentoId, toast]);
+
+  useEffect(() => {
+    fetchUnidades();
+  }, [fetchUnidades]);
 
   const handleCepBlur = async () => {
-    if (cep && cep.length >= 8) {
+    if (!cep || cep.length < 8) return;
+    
+    try {
       const data = await lookupCEP(cep);
       if (data) {
         setLogradouro(data.logradouro || "");
@@ -91,6 +93,8 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
         setCidade(data.localidade || "");
         setUf(data.uf || "");
       }
+    } catch (error) {
+      console.error("Erro ao buscar CEP:", error);
     }
   };
 
@@ -364,11 +368,12 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
 
           <div>
             <Label htmlFor="unidade-uf">UF</Label>
-            <Select value={uf} onValueChange={setUf}>
+            <Select value={uf || ""} onValueChange={setUf}>
               <SelectTrigger id="unidade-uf">
                 <SelectValue placeholder="Selecione o estado" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Selecione</SelectItem>
                 <SelectItem value="AC">AC</SelectItem>
                 <SelectItem value="AL">AL</SelectItem>
                 <SelectItem value="AP">AP</SelectItem>
@@ -428,12 +433,19 @@ export const UnidadesCRUD = ({ estabelecimentoId }: UnidadesCRUDProps) => {
       </form>
 
       <div className="space-y-2">
-        {unidades.map((unidade) => (
+        {unidades && unidades.length > 0 && unidades.map((unidade) => (
           <div
             key={unidade.id}
             className="flex items-center justify-between p-3 border rounded-md"
           >
-            <span>{unidade.nome}</span>
+            <div className="flex flex-col">
+              <span className="font-medium">{unidade.nome}</span>
+              {unidade.cidade && unidade.uf && (
+                <span className="text-sm text-muted-foreground">
+                  {unidade.cidade} - {unidade.uf}
+                </span>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="ghost"
