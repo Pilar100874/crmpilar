@@ -145,9 +145,22 @@ export default function OrcamentoItemCard({ item, onUpdate }: OrcamentoItemCardP
                 </div>
               </div>
             ) : (
-              <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                <span>Qtd: {item.quantidade}</span>
-                <span>
+              <div className="flex gap-4 mt-2 text-sm items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Qtd:</span>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={editData.quantidade}
+                    onChange={(e) => {
+                      const newQty = Number(e.target.value) || 1;
+                      setEditData({ ...editData, quantidade: newQty });
+                    }}
+                    onBlur={handleSave}
+                    className="w-20 h-7 text-center text-sm p-1 bg-background border-border"
+                  />
+                </div>
+                <span className="text-muted-foreground">
                   Unit: {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
@@ -157,7 +170,7 @@ export default function OrcamentoItemCard({ item, onUpdate }: OrcamentoItemCardP
                   Total: {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
-                  }).format(item.subtotal)}
+                  }).format(editData.quantidade * item.preco_unitario)}
                 </span>
               </div>
             )}
