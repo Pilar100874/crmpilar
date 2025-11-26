@@ -49,11 +49,14 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
   return (
     <>
       <Card className={getCardClassName()}>
-        <Handle 
-          type="target" 
-          position={Position.Top} 
-          className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
-        />
+        {/* Handle de entrada: ocultar no bloco inicial */}
+        {!isStartBlock && (
+          <Handle 
+            type="target" 
+            position={Position.Top} 
+            className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
+          />
+        )}
         
         <div className="p-3">
           {/* Cabeçalho com checkbox, ícone, título e menu */}
