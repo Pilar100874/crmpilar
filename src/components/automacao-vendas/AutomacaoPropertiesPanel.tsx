@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { Node } from "@xyflow/react";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface AutomacaoPropertiesPanelProps {
   node: Node;
@@ -22,10 +25,62 @@ export const AutomacaoPropertiesPanel = ({
 }: AutomacaoPropertiesPanelProps) => {
   const [label, setLabel] = useState((node.data as any).label || "");
   const [note, setNote] = useState((node.data as any).note || "");
+  const [empresas, setEmpresas] = useState<Array<{ id: string; nome: string }>>([]);
+  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState((node.data as any).config?.empresaId || "");
+  const [selectedUsuarioId, setSelectedUsuarioId] = useState((node.data as any).config?.usuarioId || "");
 
   useEffect(() => {
     setLabel((node.data as any).label || "");
     setNote((node.data as any).note || "");
+    setSelectedEmpresaId((node.data as any).config?.empresaId || "");
+    setSelectedUsuarioId((node.data as any).config?.usuarioId || "");
+  }, [node]);
+
+  // Carregar empresas
+  useEffect(() => {
+    const loadEmpresas = async () => {
+      try {
+        const estabelecimentoId = await getEstabelecimentoId();
+        const { data, error } = await supabase
+          .from("empresas")
+          .select("id, nome")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .order("nome");
+        
+        if (error) throw error;
+        setEmpresas(data || []);
+      } catch (error) {
+        console.error("Erro ao carregar empresas:", error);
+      }
+    };
+
+    if ((node.data as any).type === "validar_empresa") {
+      loadEmpresas();
+    }
+  }, [node]);
+
+  // Carregar usuários
+  useEffect(() => {
+    const loadUsuarios = async () => {
+      try {
+        const estabelecimentoId = await getEstabelecimentoId();
+        const { data, error } = await supabase
+          .from("usuarios")
+          .select("id, nome")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .order("nome");
+        
+        if (error) throw error;
+        setUsuarios(data || []);
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+      }
+    };
+
+    if ((node.data as any).type === "validar_usuario") {
+      loadUsuarios();
+    }
   }, [node]);
 
   const handleLabelChange = (newLabel: string) => {
@@ -36,6 +91,26 @@ export const AutomacaoPropertiesPanel = ({
   const handleNoteChange = (newNote: string) => {
     setNote(newNote);
     onUpdate(node.id, { note: newNote });
+  };
+
+  const handleEmpresaChange = (empresaId: string) => {
+    setSelectedEmpresaId(empresaId);
+    onUpdate(node.id, { 
+      config: { 
+        ...((node.data as any).config || {}),
+        empresaId 
+      } 
+    });
+  };
+
+  const handleUsuarioChange = (usuarioId: string) => {
+    setSelectedUsuarioId(usuarioId);
+    onUpdate(node.id, { 
+      config: { 
+        ...((node.data as any).config || {}),
+        usuarioId 
+      } 
+    });
   };
 
   return (
@@ -82,6 +157,44 @@ export const AutomacaoPropertiesPanel = ({
               rows={3}
             />
           </div>
+
+          {/* Campos específicos para validar_empresa */}
+          {(node.data as any).type === "validar_empresa" && (
+            <div>
+              <Label htmlFor="empresa">Empresa</Label>
+              <Select value={selectedEmpresaId} onValueChange={handleEmpresaChange}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione uma empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {empresas.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id}>
+                      {empresa.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Campos específicos para validar_usuario */}
+          {(node.data as any).type === "validar_usuario" && (
+            <div>
+              <Label htmlFor="usuario">Usuário</Label>
+              <Select value={selectedUsuarioId} onValueChange={handleUsuarioChange}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione um usuário" />
+                </SelectTrigger>
+                <SelectContent>
+                  {usuarios.map((usuario) => (
+                    <SelectItem key={usuario.id} value={usuario.id}>
+                      {usuario.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Botão deletar */}
           <div className="pt-4 border-t border-border">
