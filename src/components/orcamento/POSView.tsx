@@ -1170,7 +1170,23 @@ export default function POSView({
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
-                          <span className="text-foreground text-xs font-medium w-8 text-center">{quantity}</span>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={quantity}
+                            onChange={(e) => {
+                              const newQty = parseInt(e.target.value) || 1;
+                              setCartItems(prev => {
+                                const newCart = new Map(prev);
+                                const item = newCart.get(produto.id);
+                                if (item) {
+                                  newCart.set(produto.id, { ...item, quantity: newQty });
+                                }
+                                return newCart;
+                              });
+                            }}
+                            className="w-12 h-6 text-center text-xs p-0 bg-background border-border"
+                          />
                           <Button
                             size="icon"
                             variant="outline"
