@@ -48,16 +48,22 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const loadConjuntos = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!user) {
+        toast.error("Você precisa estar autenticado");
+        return;
+      }
 
       const { data: userData, error: userError } = await supabase
         .from("usuarios")
         .select("id")
         .eq("auth_user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (userError || !userData) {
-        throw new Error("Usuário não encontrado na base de dados");
+      if (userError) throw userError;
+      
+      if (!userData) {
+        toast.error("Usuário não encontrado. Entre em contato com o administrador.");
+        return;
       }
 
       const { data, error } = await supabase
@@ -147,16 +153,22 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!user) {
+        toast.error("Você precisa estar autenticado");
+        return;
+      }
 
       const { data: userData, error: userError } = await supabase
         .from("usuarios")
         .select("id, estabelecimento_id")
         .eq("auth_user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (userError || !userData) {
-        throw new Error("Usuário não encontrado na base de dados");
+      if (userError) throw userError;
+      
+      if (!userData) {
+        toast.error("Usuário não encontrado. Entre em contato com o administrador.");
+        return;
       }
 
       const { error } = await supabase
