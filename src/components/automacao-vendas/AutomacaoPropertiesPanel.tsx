@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { X, Search, Check, ChevronsUpDown } from "lucide-react";
 import { Node } from "@xyflow/react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface AutomacaoPropertiesPanelProps {
   node: Node;
@@ -29,6 +31,8 @@ export const AutomacaoPropertiesPanel = ({
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [selectedEmpresaId, setSelectedEmpresaId] = useState((node.data as any).config?.empresaId || "");
   const [selectedUsuarioId, setSelectedUsuarioId] = useState((node.data as any).config?.usuarioId || "");
+  const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
+  const [openUsuarioCombobox, setOpenUsuarioCombobox] = useState(false);
 
   useEffect(() => {
     setLabel((node.data as any).label || "");
@@ -161,38 +165,100 @@ export const AutomacaoPropertiesPanel = ({
           {/* Campos específicos para validar_empresa */}
           {(node.data as any).type === "validar_empresa" && (
             <div>
-              <Label htmlFor="empresa">Empresa</Label>
-              <Select value={selectedEmpresaId} onValueChange={handleEmpresaChange}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Selecione uma empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {empresas.map((empresa) => (
-                    <SelectItem key={empresa.id} value={empresa.id}>
-                      {empresa.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Empresa</Label>
+              <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openEmpresaCombobox}
+                    className="w-full justify-between mt-1"
+                  >
+                    {selectedEmpresaId
+                      ? empresas.find((empresa) => empresa.id === selectedEmpresaId)?.nome
+                      : "Selecione uma empresa..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Pesquisar empresa..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhuma empresa encontrada.</CommandEmpty>
+                      <CommandGroup>
+                        {empresas.map((empresa) => (
+                          <CommandItem
+                            key={empresa.id}
+                            value={empresa.nome}
+                            onSelect={() => {
+                              handleEmpresaChange(empresa.id);
+                              setOpenEmpresaCombobox(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedEmpresaId === empresa.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {empresa.nome}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
 
           {/* Campos específicos para validar_usuario */}
           {(node.data as any).type === "validar_usuario" && (
             <div>
-              <Label htmlFor="usuario">Usuário</Label>
-              <Select value={selectedUsuarioId} onValueChange={handleUsuarioChange}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Selecione um usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {usuarios.map((usuario) => (
-                    <SelectItem key={usuario.id} value={usuario.id}>
-                      {usuario.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Usuário</Label>
+              <Popover open={openUsuarioCombobox} onOpenChange={setOpenUsuarioCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openUsuarioCombobox}
+                    className="w-full justify-between mt-1"
+                  >
+                    {selectedUsuarioId
+                      ? usuarios.find((usuario) => usuario.id === selectedUsuarioId)?.nome
+                      : "Selecione um usuário..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Pesquisar usuário..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum usuário encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {usuarios.map((usuario) => (
+                          <CommandItem
+                            key={usuario.id}
+                            value={usuario.nome}
+                            onSelect={() => {
+                              handleUsuarioChange(usuario.id);
+                              setOpenUsuarioCombobox(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedUsuarioId === usuario.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {usuario.nome}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
 
