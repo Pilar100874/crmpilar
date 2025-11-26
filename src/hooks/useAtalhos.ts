@@ -23,11 +23,11 @@ export const useAtalhos = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar ID do usuário na tabela usuarios
+      // Buscar ID do usuário na tabela usuarios por auth_user_id
       const { data: userData } = await supabase
         .from("usuarios")
         .select("id")
-        .ilike("email", user.email || "")
+        .eq("auth_user_id", user.id)
         .maybeSingle();
 
       if (!userData?.id) return;
@@ -56,11 +56,11 @@ export const useAtalhos = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar id e estabelecimento_id do usuário
+      // Buscar id e estabelecimento_id do usuário por auth_user_id
       const { data: userData } = await supabase
         .from("usuarios")
         .select("id, estabelecimento_id")
-        .ilike("email", user.email || "")
+        .eq("auth_user_id", user.id)
         .maybeSingle();
 
       if (!userData?.id || !userData?.estabelecimento_id) {
@@ -120,11 +120,11 @@ export const useAtalhos = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar ID do usuário na tabela usuarios
+      // Buscar ID do usuário na tabela usuarios por auth_user_id
       const { data: userData } = await supabase
         .from("usuarios")
         .select("id")
-        .ilike("email", user.email || "")
+        .eq("auth_user_id", user.id)
         .maybeSingle();
 
       if (!userData?.id) return;
