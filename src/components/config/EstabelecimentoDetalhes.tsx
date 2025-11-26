@@ -925,15 +925,21 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
   
   const [userEstabId, setUserEstabId] = useState<string | null>(null);
   const [helpDialogOpen, setHelpDialogOpen] = useState<string | null>(null);
-  const [accordionValue, setAccordionValue] = useState<string | undefined>(subsecaoParam || undefined);
-  const [nestedAccordionValue, setNestedAccordionValue] = useState<string | undefined>(subsubsecaoParam || undefined);
+  const [accordionValue, setAccordionValue] = useState<string | undefined>(undefined);
+  const [nestedAccordionValue, setNestedAccordionValue] = useState<string | undefined>(undefined);
 
+  // Força a abertura do accordion quando há parâmetros na URL
   useEffect(() => {
     if (subsecaoParam) {
-      setAccordionValue(subsecaoParam);
+      // Pequeno delay para garantir que o accordion está montado
+      setTimeout(() => {
+        setAccordionValue(subsecaoParam);
+      }, 50);
     }
     if (subsubsecaoParam) {
-      setNestedAccordionValue(subsubsecaoParam);
+      setTimeout(() => {
+        setNestedAccordionValue(subsubsecaoParam);
+      }, 50);
     }
   }, [subsecaoParam, subsubsecaoParam]);
 
