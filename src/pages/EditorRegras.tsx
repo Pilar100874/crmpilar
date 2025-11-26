@@ -403,17 +403,6 @@ function EditorRegrasContent() {
       return;
     }
 
-    // Validar se existe pelo menos um bloco fim
-    const hasEndBlock = nodes.some((node) => (node.data as any).type === "fim");
-    if (!hasEndBlock) {
-      toast({
-        title: "Erro de Validação",
-        description: "É necessário adicionar pelo menos um bloco 'Fim' antes de salvar.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Validar se todos os blocos estão conectados
     const connectedNodeIds = new Set<string>();
     
@@ -488,7 +477,7 @@ function EditorRegrasContent() {
           description: "Regra atualizada com sucesso",
         });
         setHasUnsavedChanges(false);
-        navigate("/config");
+        navigate("/config?secao=cadastro-estabelecimentos&subsecao=automacao-vendas");
       } else {
         const { data, error } = await supabase
           .from("automacoes_vendas")
@@ -521,7 +510,7 @@ function EditorRegrasContent() {
     if (hasUnsavedChanges) {
       setShowExitDialog(true);
     } else {
-      navigate("/config");
+      navigate("/config?secao=cadastro-estabelecimentos&subsecao=automacao-vendas");
     }
   };
 
@@ -539,7 +528,7 @@ function EditorRegrasContent() {
   const confirmExit = () => {
     setShowExitDialog(false);
     setHasUnsavedChanges(false);
-    navigate("/config");
+    navigate("/config?secao=cadastro-estabelecimentos&subsecao=automacao-vendas");
   };
 
   // Rastrear mudanças em nodes e edges
