@@ -10,123 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Star, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface SubMenuItem {
-  id: string;
-  title: string;
-  url: string;
-  icon: any;
-}
-
-interface MenuCategory {
-  id: string;
-  title: string;
-  icon: any;
-  url?: string;
-  subItems?: SubMenuItem[];
-}
-
-// Estrutura de menus completa do sistema
-const menuStructure: MenuCategory[] = [
-  { 
-    id: "Dashboards",
-    title: "Dashboards", 
-    icon: LucideIcons.LayoutDashboard,
-    subItems: [
-      { id: "Dashboard", title: "Painel", url: "/dashboard", icon: LucideIcons.LayoutDashboard },
-      { id: "Dashboard Atendente", title: "Dashboard Atendente", url: "/dashboard-atendente", icon: LucideIcons.Users },
-      { id: "Dashboard Supervisor", title: "Dashboard Supervisor", url: "/dashboard-supervisor", icon: LucideIcons.LayoutDashboard },
-      { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: LucideIcons.Activity },
-      { id: "Analytics Dashboard", title: "Analytics Avançado", url: "/advanced-analytics", icon: LucideIcons.FileBarChart },
-      { id: "Dashboard CSAT/NPS", title: "Pesquisas de Satisfação", url: "/dashboard-pesquisas-satisfacao", icon: LucideIcons.Star },
-      { id: "Dashboard Gastos IA", title: "Gastos com IA", url: "/dashboard-gastos-ia", icon: LucideIcons.Brain },
-    ]
-  },
-  { id: "Clientes", title: "Funil", url: "/funil", icon: LucideIcons.Users },
-  { 
-    id: "Atendimento",
-    title: "Chats", 
-    icon: LucideIcons.MessageSquare,
-    subItems: [
-      { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: LucideIcons.MessageSquare },
-      { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: LucideIcons.Activity },
-      { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: LucideIcons.TestTube2 },
-    ]
-  },
-  { id: "Campanhas", title: "Calendário", url: "/calendario", icon: LucideIcons.Megaphone },
-  { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: LucideIcons.FileBarChart },
-  { 
-    id: "Conteúdos",
-    title: "Listas", 
-    icon: LucideIcons.FileText,
-    subItems: [
-      { id: "Contatos", title: "Contatos", url: "/contatos", icon: LucideIcons.User },
-      { id: "Empresas", title: "Empresas", url: "/empresas", icon: LucideIcons.Building2 },
-      { id: "Todos", title: "Todos", url: "/todos", icon: LucideIcons.Users },
-      { id: "Vínculos Empresas", title: "Vínculo Empresas X Usuário / Segmento", url: "/vinculos-empresas", icon: LucideIcons.Building2 },
-      { id: "Vínculos Contatos", title: "Vínculo Contatos X Usuário / Segmento", url: "/vinculos-contatos", icon: LucideIcons.User },
-    ]
-  },
-  { 
-    id: "Email",
-    title: "E-mail", 
-    icon: LucideIcons.Mail,
-    subItems: [
-      { id: "Caixa de Entrada", title: "Caixa de Entrada", url: "/email/inbox", icon: LucideIcons.MessageSquare },
-      { id: "Enviados", title: "Enviados", url: "/email/sent", icon: LucideIcons.MessageSquare },
-      { id: "Arquivados", title: "Arquivados", url: "/email/archive", icon: LucideIcons.MessageSquare },
-      { id: "Lixeira", title: "Lixeira", url: "/email/trash", icon: LucideIcons.MessageSquare },
-    ]
-  },
-  { 
-    id: "Bot Test", 
-    title: "Bot", 
-    icon: LucideIcons.Workflow,
-    subItems: [
-      { id: "Criar Bot", title: "Criar / Editar", url: "/bot-create", icon: LucideIcons.Plus },
-      { id: "Testar", title: "Testar", url: "/bot-test", icon: LucideIcons.TestTube2 },
-    ]
-  },
-  { 
-    id: "Desenho", 
-    title: "Marketing", 
-    icon: LucideIcons.Target,
-    subItems: [
-      { id: "Canvas", title: "Canvas", url: "/marketing/canvas", icon: LucideIcons.Palette },
-      { id: "Automações", title: "Automações", url: "/marketing/automacoes", icon: LucideIcons.Zap },
-      { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: LucideIcons.Megaphone },
-    ]
-  },
-  { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
-  { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: LucideIcons.Upload },
-  { id: "Meus Conjuntos", title: "Meus Conjuntos de Itens", url: "/meus-conjuntos", icon: LucideIcons.Package },
-  { id: "Editor de Regras", title: "Editor de Regras", url: "/editor-regras", icon: LucideIcons.Workflow },
-  { 
-    id: "Telefonia",
-    title: "Telefonia", 
-    icon: LucideIcons.Phone,
-    subItems: [
-      { id: "Softphone", title: "Softphone", url: "/softphone", icon: LucideIcons.Phone },
-      { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: LucideIcons.Video },
-    ]
-  },
-  { 
-    id: "Configurações",
-    title: "Configurações", 
-    icon: LucideIcons.Settings,
-    subItems: [
-      { id: "Config Geral", title: "Configurações", url: "/config", icon: LucideIcons.Settings },
-      { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: LucideIcons.Users },
-      { id: "Config Filas", title: "Filas de Atendimento", url: "/config/filas", icon: LucideIcons.ListOrdered },
-      { id: "SLA Config", title: "SLA", url: "/config/sla", icon: LucideIcons.Clock },
-      { id: "Omnichannel Builder", title: "Workflow Builder Omnichannel", url: "/omnichannel-builder", icon: LucideIcons.Workflow },
-      { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
-      { id: "Variáveis Globais", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
-      { id: "Teste Campanhas", title: "Teste Campanhas", url: "/config/campanhas", icon: LucideIcons.Megaphone },
-      { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: LucideIcons.Star },
-    ]
-  },
-];
+import { menuStructure, MenuCategory } from "@/lib/menuStructure";
 
 export default function GerenciarAtalhos() {
   const navigate = useNavigate();
@@ -142,17 +26,15 @@ export default function GerenciarAtalhos() {
   }, []);
 
   useEffect(() => {
-    // Expandir automaticamente categorias com subitens permitidos
-    if (menusPermitidos.size > 0) {
-      const categoriasComPermissao = new Set<string>();
-      menuStructure.forEach(category => {
-        if (category.subItems && hasPermittedSubItems(category)) {
-          categoriasComPermissao.add(category.id);
-        }
-      });
-      setExpandedCategories(categoriasComPermissao);
-    }
-  }, [menusPermitidos]);
+    // Expandir automaticamente TODAS as categorias com subitens
+    const todasCategorias = new Set<string>();
+    menuStructure.forEach(category => {
+      if (category.subItems && category.subItems.length > 0) {
+        todasCategorias.add(category.id);
+      }
+    });
+    setExpandedCategories(todasCategorias);
+  }, []);
 
   const loadMenusPermitidos = async () => {
     try {
@@ -275,123 +157,111 @@ export default function GerenciarAtalhos() {
           <CardTitle>Menus Disponíveis</CardTitle>
           <CardDescription>
             Adicione ou remova atalhos para acessar rapidamente suas telas favoritas.
-            Apenas os menus que você tem permissão são exibidos aqui.
+            Todos os menus do sistema são exibidos aqui automaticamente.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {menusPermitidos.size === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum menu disponível para adicionar aos atalhos.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {menuStructure.map((category) => {
-                // Menu sem subitens
-                if (!category.subItems) {
-                  if (!isMenuPermitted(category.id)) return null;
-                  
-                  const isAdicionado = category.url && isAtalho(category.url);
-                  const IconComponent = category.icon;
-                  
-                  return (
-                    <Card 
-                      key={category.id}
-                      className={`transition-all ${
-                        isAdicionado ? "border-primary bg-primary/5" : ""
-                      }`}
-                    >
-                      <CardContent className="p-4">
+          <div className="space-y-2">
+            {menuStructure.map((category) => {
+              // Menu sem subitens
+              if (!category.subItems) {
+                const isAdicionado = category.url && isAtalho(category.url);
+                const IconComponent = category.icon;
+                
+                return (
+                  <Card 
+                    key={category.id}
+                    className={`transition-all ${
+                      isAdicionado ? "border-primary bg-primary/5" : ""
+                    }`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {renderIcon(IconComponent)}
+                          <p className="font-medium">{category.title}</p>
+                        </div>
+                        <Button
+                          variant={isAdicionado ? "default" : "outline"}
+                          size="icon"
+                          onClick={() => handleToggleAtalho(category.title, IconComponent.name || "Star", category.url!)}
+                        >
+                          <Star
+                            className={`h-4 w-4 ${
+                              isAdicionado ? "fill-current" : ""
+                            }`}
+                          />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              }
+              
+              // Menu com subitens (categoria)
+              const isExpanded = expandedCategories.has(category.id);
+              const IconComponent = category.icon;
+              
+              return (
+                <Collapsible
+                  key={category.id}
+                  open={isExpanded}
+                  onOpenChange={() => toggleCategory(category.id)}
+                >
+                  <Card>
+                    <CollapsibleTrigger asChild>
+                      <CardContent className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             {renderIcon(IconComponent)}
                             <p className="font-medium">{category.title}</p>
                           </div>
-                          <Button
-                            variant={isAdicionado ? "default" : "outline"}
-                            size="icon"
-                            onClick={() => handleToggleAtalho(category.title, IconComponent.name || "Star", category.url!)}
-                          >
-                            <Star
-                              className={`h-4 w-4 ${
-                                isAdicionado ? "fill-current" : ""
-                              }`}
-                            />
-                          </Button>
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
                         </div>
                       </CardContent>
-                    </Card>
-                  );
-                }
-                
-                // Menu com subitens (categoria)
-                if (!hasPermittedSubItems(category)) return null;
-                
-                const isExpanded = expandedCategories.has(category.id);
-                const IconComponent = category.icon;
-                
-                return (
-                  <Collapsible
-                    key={category.id}
-                    open={isExpanded}
-                    onOpenChange={() => toggleCategory(category.id)}
-                  >
-                    <Card>
-                      <CollapsibleTrigger asChild>
-                        <CardContent className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {renderIcon(IconComponent)}
-                              <p className="font-medium">{category.title}</p>
-                            </div>
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </div>
-                        </CardContent>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="px-4 pb-4 space-y-2">
-                          {category.subItems?.map((subItem) => {
-                            if (!isMenuPermitted(subItem.id)) return null;
-                            
-                            const isAdicionado = isAtalho(subItem.url);
-                            const SubIconComponent = subItem.icon;
-                            
-                            return (
-                              <div
-                                key={subItem.id}
-                                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                                  isAdicionado ? "border-primary bg-primary/5" : "bg-card"
-                                }`}
-                              >
-                                <div className="flex items-center gap-3 ml-4">
-                                  {renderIcon(SubIconComponent)}
-                                  <p className="font-medium text-sm">{subItem.title}</p>
-                                </div>
-                                <Button
-                                  variant={isAdicionado ? "default" : "outline"}
-                                  size="icon"
-                                  onClick={() => handleToggleAtalho(subItem.title, SubIconComponent.name || "Star", subItem.url)}
-                                >
-                                  <Star
-                                    className={`h-4 w-4 ${
-                                      isAdicionado ? "fill-current" : ""
-                                    }`}
-                                  />
-                                </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-4 pb-4 space-y-2">
+                        {category.subItems?.map((subItem) => {
+                          const isAdicionado = isAtalho(subItem.url);
+                          const SubIconComponent = subItem.icon;
+                          
+                          return (
+                            <div
+                              key={subItem.id}
+                              className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                                isAdicionado ? "border-primary bg-primary/5" : "bg-card"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 ml-4">
+                                {renderIcon(SubIconComponent)}
+                                <p className="font-medium text-sm">{subItem.title}</p>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </CollapsibleContent>
-                    </Card>
-                  </Collapsible>
-                );
-              })}
-            </div>
-          )}
+                              <Button
+                                variant={isAdicionado ? "default" : "outline"}
+                                size="icon"
+                                onClick={() => handleToggleAtalho(subItem.title, SubIconComponent.name || "Star", subItem.url)}
+                              >
+                                <Star
+                                  className={`h-4 w-4 ${
+                                    isAdicionado ? "fill-current" : ""
+                                  }`}
+                                />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 
