@@ -13,14 +13,25 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Config() {
   const { openSubmenu } = useLayout();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const secaoParam = searchParams.get('secao');
+  
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
+  const [accordionValue, setAccordionValue] = useState<string | undefined>(secaoParam || undefined);
+
+  // Atualiza o accordion quando o parâmetro da URL muda
+  useEffect(() => {
+    if (secaoParam) {
+      setAccordionValue(secaoParam);
+    }
+  }, [secaoParam]);
 
   const handleToggleConfirmationMessages = (checked: boolean) => {
     setShowConfirmationMessages(checked);
@@ -48,7 +59,13 @@ export default function Config() {
           Gerencie as configurações da plataforma
         </p>
 
-        <Accordion type="single" collapsible className="space-y-3 sm:space-y-4 w-full max-w-5xl">
+        <Accordion 
+          type="single" 
+          collapsible 
+          className="space-y-3 sm:space-y-4 w-full max-w-5xl"
+          value={accordionValue}
+          onValueChange={setAccordionValue}
+        >
           <AccordionItem value="notificacoes-sistema" className="border rounded-lg bg-card shadow-sm">
             <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
               <div className="flex items-center gap-2">
