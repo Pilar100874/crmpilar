@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Power, PowerOff, CalendarIcon, Settings } from "lucide-react";
+import { Plus, Edit, Trash2, Power, PowerOff, CalendarIcon, Settings, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +138,32 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
     } catch (error) {
       console.error("Erro ao atualizar vencimento:", error);
       toast.error("Erro ao atualizar vencimento");
+    }
+  };
+
+  const handleDuplicate = async (regra: AutomacaoVenda) => {
+    if (!estabelecimentoId) return;
+
+    try {
+      const { error } = await supabase
+        .from("automacoes_vendas")
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          nome: `${regra.nome} (Cópia)`,
+          descricao: regra.descricao,
+          ativo: false, // Duplicatas começam desativadas
+          prioridade: regra.prioridade,
+          flow_data: regra.flow_data,
+          expires_at: null // Remove data de vencimento da cópia
+        });
+
+      if (error) throw error;
+
+      toast.success("Regra duplicada com sucesso!");
+      loadAutomacoes();
+    } catch (error) {
+      console.error("Erro ao duplicar regra:", error);
+      toast.error("Erro ao duplicar regra");
     }
   };
 
@@ -321,13 +347,23 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/editor-regras?id=${automacao.id}`)}
+                      title="Editar regra"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleDuplicate(automacao)}
+                      title="Duplicar regra"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setDeleteId(automacao.id)}
+                      title="Excluir regra"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
