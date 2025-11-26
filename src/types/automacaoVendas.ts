@@ -150,8 +150,8 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
   },
   {
     type: "desconto_valor_compra",
-    label: "Desconto no Valor Total",
-    description: "Aplica desconto percentual no valor total do orçamento",
+    label: "Desconto Percentual",
+    description: "Aplica desconto percentual diretamente no valor total (sem validação de valor mínimo)",
     icon: "Percent",
     color: "#3b82f6",
     category: "acao",
