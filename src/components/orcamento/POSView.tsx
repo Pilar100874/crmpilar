@@ -98,6 +98,9 @@ export default function POSView({
   const [currentOrcamentoId, setCurrentOrcamentoId] = useState<string | null>(null);
   const [shareLink, setShareLink] = useState<string>("");
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [regrasAplicadas, setRegrasAplicadas] = useState<string[]>([]);
+  const [valorComRegras, setValorComRegras] = useState<number>(0);
+  const [detalhesRegras, setDetalhesRegras] = useState<string>("");
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -136,6 +139,81 @@ export default function POSView({
       loadOrcamento(orcamentoId);
     }
   }, [orcamentoId]);
+
+  // Aplicar regras em tempo real
+  useEffect(() => {
+    const aplicarRegrasTempoReal = async () => {
+      if (cartItems.size === 0 || !selectedEmpresa) {
+        setRegrasAplicadas([]);
+        setValorComRegras(0);
+        setDetalhesRegras("");
+        return;
+      }
+
+      try {
+        // Buscar empresa selecionada
+        const { data: empresaData } = await supabase
+          .from('empresas')
+          .select('*')
+          .eq('id', selectedEmpresa)
+          .single();
+
+        // Buscar regras ativas
+        const { data: regras } = await supabase
+          .from('automacoes_vendas')
+          .select('*')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .eq('ativo', true)
+          .order('prioridade', { ascending: false });
+
+        if (!regras || regras.length === 0) {
+          setRegrasAplicadas([]);
+          setValorComRegras(getTotal());
+          setDetalhesRegras("");
+          return;
+        }
+
+        const valorInicial = getTotal();
+        const customFields = empresaData?.custom_fields as any;
+        const mesAniversario = customFields?.mes_aniversario;
+
+        const resultado = await aplicarRegrasAutomacao(
+          {
+            valor_total: valorInicial,
+            quantidade_produtos: cartItems.size,
+            data_compra: new Date(),
+            cliente: {
+              id: empresaData?.id || '',
+              mes_aniversario: mesAniversario
+            },
+            empresa_id: selectedEmpresa,
+            vendedor_id: undefined
+          },
+          regras as any[]
+        );
+
+        setValorComRegras(resultado.valorFinal);
+        setRegrasAplicadas(resultado.regrasAplicadas);
+        
+        // Criar texto descritivo das regras
+        let detalhes = "";
+        if (resultado.descontos.length > 0) {
+          resultado.descontos.forEach((desconto: any) => {
+            const valorDesconto = valorInicial - resultado.valorFinal;
+            detalhes += `${desconto.regra}: -${new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL'
+            }).format(valorDesconto)}\n`;
+          });
+        }
+        setDetalhesRegras(detalhes);
+      } catch (error) {
+        console.error("Erro ao aplicar regras:", error);
+      }
+    };
+
+    aplicarRegrasTempoReal();
+  }, [cartItems, selectedEmpresa, estabelecimentoId]);
 
   const loadProdutos = async () => {
     try {
@@ -1335,11 +1413,40 @@ export default function POSView({
           <div className="h-8 w-px bg-border" />
           <div>
             <div className="text-muted-foreground text-xs mb-1">Total</div>
-            <div className="text-foreground font-bold text-3xl">
-              {new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-              }).format(getTotal())}
+            <div className="flex items-baseline gap-3">
+              {regrasAplicadas.length > 0 ? (
+                <>
+                  <div className="text-muted-foreground font-semibold text-xl line-through">
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(getTotal())}
+                  </div>
+                  <div className="text-foreground font-bold text-3xl">
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(valorComRegras)}
+                  </div>
+                  <div className="flex flex-col">
+                    <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
+                      {regrasAplicadas.length} regra(s) aplicada(s)
+                    </Badge>
+                    {detalhesRegras && (
+                      <span className="text-[10px] text-muted-foreground mt-1 whitespace-pre-line">
+                        {detalhesRegras}
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-foreground font-bold text-3xl">
+                  {new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                  }).format(getTotal())}
+                </div>
+              )}
             </div>
           </div>
         </div>
